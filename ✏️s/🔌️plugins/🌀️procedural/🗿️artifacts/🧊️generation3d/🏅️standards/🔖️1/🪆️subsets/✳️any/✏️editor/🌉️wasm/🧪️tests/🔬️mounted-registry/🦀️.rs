@@ -275,7 +275,7 @@ impl Generation3dMountedRegistry {
 
 impl Drop for Generation3dMountedRegistry {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d mounted registry reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation3d mounted registry reached Drop before terminal-empty close");
     }
 }
 //#endregion 🔖️MountedRegistry
@@ -452,6 +452,7 @@ mod mounted_laws {
     #[test]
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
+        let _serial = crate::publication_authority::lock();
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
@@ -461,7 +462,13 @@ mod mounted_laws {
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.wrong-operation"));
+        // 🔐️ A DIFFERENT operation id owns no lease at all, so the fail-closed answer is
+        // `authority-missing`, not `wrong-operation`: leases are keyed BY operation
+        // (`FixedOperationRegistry::get_operation`), so a lease whose recorded operation disagrees
+        // with the id it was found under is unreachable without the `#[cfg(test)]` hostile
+        // injection that `editor::…::unit`'s own hostile law drives
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.authority-missing"));
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
         crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation3d-publication.wrong-base"));
@@ -485,7 +492,7 @@ mod mounted_laws {
 
         assert!(owner_source.contains("mutation.delete-widget-position.3d-only"));
         assert!(owner_source.contains("GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR"));
-        let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P3 mounted snapshot region").1.split_once("#[cfg(test)]\nmod retained_mounted_laws").expect("P3 mounted production boundary").0;
+        let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P3 mounted snapshot region").1.split_once("//#endregion 🔖️MountedCanonicalPackSession").expect("P3 mounted production boundary").0;
         let forbidden_whole_routes = [
             "OwnedSchemaHexAuthority",
             "hex::decode",

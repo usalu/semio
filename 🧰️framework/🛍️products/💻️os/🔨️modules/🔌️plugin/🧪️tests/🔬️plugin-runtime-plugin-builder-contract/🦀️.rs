@@ -2617,6 +2617,32 @@ mod plugin_builder_contract_tests {
         assert_eq!(decoded.domains[0].domain, "items");
         assert_eq!(decoded.domains[0].selected, vec!["item-1".to_string()]);
     }
+
+    /// 🧵️ Every world/graph pick is one framework-reserved `interactionSelect` dispatch, and it must fit
+    /// a bounded thread stack. `dispatch_framework_reserved_action` used to spell all nineteen reserved
+    /// routes as separate `run_framework_reserved_job` awaits inside ONE generator; an unoptimized build
+    /// gives each such await its own non-overlapping slot, so that single resume frame reserved 1.80 MiB
+    /// and every pick aborted the process with `fatal runtime error: stack overflow` on the 2 MiB stack a
+    /// plain OS thread gets (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️selection-overflow-2026-09-09.md`). 2 MiB is exactly that default thread; the whole
+    /// construct-select-close lifecycle measures ~1.75 MiB against it today, and measured ≥3.3 MiB
+    /// before the split.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn one_framework_reserved_route_fits_a_bounded_thread_stack() {
+        std::thread::Builder::new()
+            .stack_size(2 * 1024 * 1024)
+            .spawn(|| {
+                semio_framework_async::block_on(async {
+                    let mut app = interaction_app_under_test().await;
+                    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+                    testkit::close_registered_fixture_app(&mut app);
+                });
+            })
+            .expect("bounded-stack worker")
+            .join()
+            .expect("one interactionSelect must fit a default 2 MiB thread stack");
+    }
     //#endregion 🔖️EphemeralLaneTests
 
     //#region 🔖️AdoptPresenceTests
@@ -3629,6 +3655,38 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_clips_an_oversized_operation_description() {
+        let history = HistoryView {
+            columns: Vec::new(),
+            can_undo: true,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: vec![CommandView {
+                seq: 1,
+                action_id: "fill".into(),
+                label: "Fill".into(),
+                kind: ActionKind::Mutation,
+                timestamp: "0".into(),
+                edit_id: Some("e1".into()),
+                config_edit_id: None,
+                child_edit_ids: Vec::new(),
+                op_lines: vec![format!("register-mesh vertices=[{}]", "1.0 ".repeat(1_024))],
+                applied: true,
+                revertible: true,
+                count: 1,
+                inverse: None,
+            }],
+            command_filter: HistoryCommandFilter::All,
+        };
+        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("an oversized operation line must not fail admission");
+        let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
+        let description = props.description.as_ref().expect("clipped description").as_str();
+        assert!(description.starts_with("register-mesh vertices=[1.0 "));
+        assert!(description.ends_with(UI_TEXT_CLIP_MARK));
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
@@ -4054,6 +4112,125 @@ mod plugin_builder_contract_tests {
         assert_eq!(chunks.concat(), payload);
         eprintln!("[DEBUG] section carrier paged {} bytes into {} bounded text leaves at depth {depth}", payload.len(), chunks.len());
     }
+
+    //#region 🚚️World3dSceneLaneCarriers
+    /// 🚚️ Projects one built surface node and returns `(projection, lane subtree by carrier key)`.
+    fn project_scene_surface(node: crate::app::BuiltNode) -> (Value, BTreeMap<String, Value>) {
+        let projection: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(crate::app::built_to_component_tree(node)).unwrap()).unwrap();
+        let lanes = projection["children"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|child| (child["key"].as_str().unwrap().to_string(), child.clone()))
+            .collect();
+        (projection, lanes)
+    }
+
+    /// 🚚️ Asserts one lane carrier obeys the contract's own bounds and reproduces `payload` exactly.
+    fn assert_lane_carrier(carrier: &Value, payload: &str) -> (usize, usize) {
+        let mut leaves = 0usize;
+        let mut depth = 0usize;
+        let mut frontier = vec![(carrier, 0usize)];
+        while let Some((node, level)) = frontier.pop() {
+            assert!(node["children"].as_array().unwrap().len() <= UI_BUILT_CHILDREN_MAX);
+            if node["component"]["type"] == "text" {
+                leaves += 1;
+                depth = depth.max(level);
+                assert!(node["component"]["value"].as_str().unwrap().len() <= UI_TEXT_MAX_BYTES);
+            }
+            for child in node["children"].as_array().unwrap().iter().rev() {
+                frontier.push((child, level + 1));
+            }
+        }
+        assert_eq!(testkit::fixture_carrier_text(carrier), payload);
+        (leaves, depth)
+    }
+
+    /// 🌍️ A world-3d scene whose payload is far past the 32 KiB `UiFixedBytes` doc ceiling.
+    fn oversized_world_scene(camera: &str, selection: &str) -> semio_framework_ui_scene::World3dScene {
+        let instances = serde_json::to_string(
+            &(0..600)
+                .map(|index| json!({"id": format!("capsule-{index:04}"), "meshId": "box", "position": [index as f64, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0]}))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
+        let mut scene = semio_framework_ui_scene::World3dScene::base(camera.into(), r#"[{"id":"box","kind":"box"}]"#.into(), instances, selection.into());
+        scene.vortices_json = Some(serde_json::to_string(&(0..40).map(|index| json!({"id": format!("vortex-{index}"), "position": [0.0, index as f64, 0.0]})).collect::<Vec<_>>()).unwrap());
+        scene.lod_json = Some(r#"{"maxInstances":8000}"#.into());
+        scene.chunking_json = Some(r#"{"chunkSize":64,"radius":8000}"#.into());
+        scene.domain_id = Some("puzzle3d".into());
+        scene
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn world3d_scene_surface_pages_every_lane_beside_a_spine_that_fits_the_fixed_doc() {
+        let scene = oversized_world_scene("{}", r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#);
+        let assembled_bytes = <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::encode_pack(&scene).unwrap().len();
+        assert!(assembled_bytes > semio_framework_ui_contract::UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling to prove anything");
+
+        let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let (projection, lanes) = project_scene_surface(node);
+
+        let doc_bytes = projection["component"]["doc"]["bytes"].as_array().unwrap().len();
+        assert!(doc_bytes <= semio_framework_ui_contract::UI_FIXED_BYTES);
+
+        let (spine, expected) = semio_framework_ui_scene::SceneDoc::split_lanes(&scene);
+        assert_eq!(lanes.len(), expected.len());
+        let mut total = 0usize;
+        for lane in &expected {
+            let carrier = lanes.get(lane.key).unwrap_or_else(|| panic!("lane {} publishes a carrier", lane.key));
+            assert!(semio_framework_ui_scene::World3dSceneLane::from_body_key(lane.key).is_some());
+            assert_lane_carrier(carrier, &lane.payload);
+            total += lane.payload.len();
+        }
+        for reference in &spine.lanes {
+            let lane = semio_framework_ui_scene::World3dSceneLane::from_name(&reference.lane).unwrap();
+            assert_eq!(reference.bytes as usize, expected.iter().find(|entry| entry.key == lane.body_key()).unwrap().payload.len());
+            assert_eq!(reference.hash, semio_framework_ui_scene::world3d_scene_lane_hash(&expected.iter().find(|entry| entry.key == lane.body_key()).unwrap().payload));
+        }
+
+        let mut reassembled: semio_framework_ui_scene::World3dScene = testkit::decode_fixture_scene_with_lanes(&serde_json::to_string(&projection).unwrap()).unwrap();
+        reassembled.lanes = Vec::new();
+        assert_eq!(reassembled, scene);
+        eprintln!("[DEBUG] world-3d scene of {assembled_bytes} packed bytes published a {doc_bytes}-byte spine plus {} lane carriers holding {total} payload bytes", lanes.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn world3d_scene_surface_republishes_only_the_lanes_that_changed() {
+        let selection = r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#;
+        let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+
+        let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+        assert_eq!(moved, first, "a camera move must leave every lane carrier byte-identical");
+
+        let picked = r#"{"method":"rectangle","mode":"replace","ids":["capsule-0007"],"hoveredId":null}"#;
+        let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+        let changed: Vec<&String> = picked_lanes.keys().filter(|key| picked_lanes.get(*key) != first.get(*key)).collect();
+        assert_eq!(changed, vec![semio_framework_ui_scene::World3dSceneLane::Selection.body_key()]);
+        assert_ne!(picked_projection["component"], moved_projection["component"], "a changed lane must still move the spine so its consumer re-reads");
+        eprintln!("[DEBUG] a camera move republished 0 of {} lanes; a selection edit republished exactly {}", first.len(), changed.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn world3d_scene_surface_pages_one_oversized_lane_instead_of_faulting() {
+        let instances = serde_json::to_string(&(0..3_000).map(|index| json!({"id": format!("capsule-{index:05}"), "meshId": "box"})).collect::<Vec<_>>()).unwrap();
+        assert!(instances.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX, "one lane must be past a single carrier level to prove paging");
+        let scene = semio_framework_ui_scene::World3dScene::base("{}".into(), "[]".into(), instances.clone(), "{}".into());
+        let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+        let (leaves, depth) = assert_lane_carrier(lanes.get(semio_framework_ui_scene::World3dSceneLane::Instances.body_key()).unwrap(), &instances);
+        assert!(depth > 1, "a lane past one node of children must page into a nested carrier");
+        eprintln!("[DEBUG] one {}-byte instances lane paged into {leaves} bounded text leaves at depth {depth}", instances.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_scene_that_declares_no_lanes_still_publishes_one_childless_surface() {
+        let scene = semio_framework_ui_scene::TableScene::base("[]", "[]");
+        let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+        assert!(lanes.is_empty());
+        assert_eq!(projection["component"]["type"], "surface");
+        assert_eq!(testkit::decode_fixture_scene_with_lanes::<semio_framework_ui_scene::TableScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
+    }
+    //#endregion 🚚️World3dSceneLaneCarriers
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_presence_targets_each_concrete_surface() {

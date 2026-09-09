@@ -24,7 +24,7 @@ fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_defa
     let inserted = content.nodes.last().expect("appended node");
     assert_eq!(inserted.position, SemioPoint2 { x: 40.0, y: 51.0 });
     assert_eq!(
-        flow::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(inserted)),
+        serde_json::from_str::<serde_json::Value>(&flow::os_pack::json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
         serde_json::json!({
             "id": "note_3",
             "kind": "inputNote",
@@ -88,7 +88,7 @@ fn child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default()
         let inserted = content.nodes.last().expect("appended node");
         let params = case.params.iter().map(|(key, value)| serde_json::json!({ "key": key, "value": value })).collect::<Vec<_>>();
         assert_eq!(
-            flow::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(inserted)),
+            serde_json::from_str::<serde_json::Value>(&flow::os_pack::json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
             serde_json::json!({
                 "id": case.id,
                 "kind": case.kind,

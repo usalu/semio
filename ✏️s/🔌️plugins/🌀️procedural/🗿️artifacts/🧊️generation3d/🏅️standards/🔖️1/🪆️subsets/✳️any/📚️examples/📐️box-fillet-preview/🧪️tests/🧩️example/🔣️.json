@@ -10,13 +10,13 @@
     "channel": "solid",
     "kind": "solid"
   },
-  "tessellationTolerance": 0.01,
+  "tessellationTolerance": 0.0005,
   "expect": {
     "minTriangles": 24,
     "closed": true,
     "volume": 7.888634923940582,
     "volumeTolerance": 0.005,
-    "volumeSource": "analytic rounded box: Minkowski sum of a (2-2r)^3 cube with a ball of r=0.15",
+    "volumeSource": "analytic rounded box: Minkowski sum of a (2-2r)^3 cube with a ball of r=0.15 — the only curved example, so its chord deflection is 0.0005 rather than the polyhedral examples' 0.01: an inscribed polygonisation of the twelve quarter-cylinders and eight sphere octants under-measures this solid by ~n*(r^2/2)*(theta-sin theta) per unit edge, which at 0.01 is 0.017 and at 0.0005 is 0.002",
     "edgePerimeter": null,
     "edgePerimeterTolerance": 0.0,
     "boundingBoxMin": [
@@ -31,7 +31,8 @@
     ],
     "boundingBoxTolerance": 0.001,
     "kernelVolumeNode": null,
-    "kernelVolumeChannel": null
+    "kernelVolumeChannel": null,
+    "kernelVolumeTolerance": null
   },
   "kernelStatus": "green"
 }

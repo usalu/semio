@@ -82,6 +82,7 @@ fn the_interaction_topology_declares_node_handle_and_edge_targets() {
     let granularities: std::collections::BTreeSet<&str> = domain.ordered.iter().map(|node| node.granularity.as_str()).collect();
     assert!(granularities.contains("node"), "every widget must be a declared node target");
     assert!(granularities.contains("handle"), "every visible port must be a declared handle target");
+    snapshot.retire_cold();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -98,7 +99,7 @@ async fn the_viewer_renders_a_world3d_preview_for_the_default_document() {
 async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
     let _serial = testkit::lock();
     let mut app = app().await;
-    let before = app.snapshot().expect("snapshot");
+    let before = testkit::snapshot(&app);
     let commands = vec![
         Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
         Generation3dViewCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
@@ -111,6 +112,6 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
     for command in commands {
         let id = command.command_id();
         dispatch(&mut app, command).await;
-        assert_eq!(app.snapshot().expect("snapshot"), before, "viewer action {id} must not mutate the document");
+        assert_eq!(testkit::snapshot(&app), before, "viewer action {id} must not mutate the document");
     }
 }

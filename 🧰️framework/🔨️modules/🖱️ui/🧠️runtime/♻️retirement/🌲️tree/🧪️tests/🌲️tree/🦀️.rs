@@ -51,6 +51,7 @@ fn chain(pages: usize) -> crate::TreeNode {
 
 #[test]
 fn runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️contract/♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     let foreign: ui_contract::UiValue = serde_json::from_value(fixture["foreign"].clone()).unwrap();
@@ -93,6 +94,7 @@ fn runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads(
 
 #[test]
 fn runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmission() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = fixture();
     let pages = fixture["pages"].as_u64().unwrap() as usize;
     for maintenance in [false, true] {
@@ -123,6 +125,7 @@ fn runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmissi
 
 #[test]
 fn runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let generation = 91_403;
     let mut reservations = HandbackReservations(Vec::new());
     while let Some(reservation) = reserve_surface_reconcile_handback(generation) { reservations.0.push(reservation); }

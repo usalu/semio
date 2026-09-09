@@ -140,6 +140,7 @@ fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
 
 #[test]
 fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let fixture = &fixture["cancelledAdmission"];
     for drop_grant in [false, true] {
@@ -164,6 +165,7 @@ fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation()
 
 #[test]
 fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let mut outputs = SurfaceReconcileOutputs::default();
     let mut reservations = Vec::new();
@@ -192,6 +194,7 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
 
 #[test]
 fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
     reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap().commit_source(leaf("root", "owned-é").root).unwrap();
@@ -221,6 +224,7 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
 
 #[test]
 fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
     reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap().commit_source(leaf("owned-root", "é").root).unwrap();
@@ -259,6 +263,7 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
 
 #[test]
 fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["capturedLifetime"];
     let instance = law["instance"].as_u64().unwrap() as u32;
@@ -308,6 +313,7 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
 
 #[test]
 fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let key = NativeCloseKey::fixture(76, 1);
     let grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from("76:grant").unwrap(), key).unwrap();
@@ -327,6 +333,7 @@ fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
 
 #[test]
 fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["concurrentAdmission"];
     let mut occupied = SurfaceReconcileOutputs::default();
@@ -393,6 +400,7 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
 
 #[test]
 fn tracker_initialization_fits_the_component_stack_budget() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let bytes = size_of::<PatchTrackerState>();
     assert!(bytes <= 256, "PatchTrackerState requires {bytes} bytes");
     let state = PatchTrackerState::default();
@@ -403,6 +411,7 @@ fn tracker_initialization_fits_the_component_stack_budget() {
 
 #[test]
 fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
     assert!(tracker.take_ready_patch().is_none());
@@ -414,6 +423,7 @@ fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
 
 #[test]
 fn mounted_document_tree_publishes_nested_interactive_rows() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     fn row(value: &serde_json::Value) -> ui_contract::BuiltNode {
         let id = value["id"].as_str().unwrap();
@@ -462,6 +472,7 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
 
 #[test]
 fn mounted_settings_controls_publish_with_authored_fields() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️settings-surface.json")).expect("language-neutral settings");
     let fields = fixture["fields"].as_array().unwrap();
@@ -495,6 +506,7 @@ fn mounted_settings_controls_publish_with_authored_fields() {
 
 #[test]
 fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let rows = fixture["rowsPerSection"].as_u64().unwrap();
@@ -546,6 +558,7 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
 
 #[test]
 fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["failure"];
     let key = failure["key"].as_str().unwrap();
@@ -573,6 +586,7 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
 
 #[test]
 fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["capacityFailure"];
     assert_eq!(ui_contract::UI_DOCUMENT_NODES as u64, failure["nodeLimit"].as_u64().unwrap());
@@ -605,6 +619,7 @@ fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
 
 #[test]
 fn mounted_sources_publish_every_window_and_panel_tree() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️mounted-surfaces.json")).expect("language-neutral surface fixtures");
     let fixtures = fixtures.as_array().expect("surface list");
@@ -643,6 +658,7 @@ fn mounted_sources_publish_every_window_and_panel_tree() {
 
 #[test]
 fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let steps = [0, SURFACE_RECONCILE_ADMISSION_SLOTS - 1].map(|index| {
         let tracker = PatchTracker::new();
         tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
@@ -663,6 +679,7 @@ fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps
 
 #[test]
 fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use super::super::pending::PendingPatchAuthority;
     use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📨️pending/🧫️fixtures/🩹️receipt.json")).unwrap();
@@ -722,6 +739,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
 
 #[test]
 fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_aba_without_authority_loss() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let mut published = Some(published(&tracker, "71:ack"));
     let revision = published.as_ref().unwrap().revision().0;
@@ -750,6 +768,7 @@ fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_ab
 
 #[test]
 fn cap_plus_one_returns_the_exact_tree_owner() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -778,6 +797,7 @@ fn cap_plus_one_returns_the_exact_tree_owner() {
 
 #[test]
 fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["residentCapacity"];
     let aggregate = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
@@ -840,6 +860,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
 
 #[test]
 fn stale_generation_fault_is_publicly_retrievable() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
     reject_current(&tracker, "main");
@@ -854,6 +875,7 @@ fn stale_generation_fault_is_publicly_retrievable() {
 
 #[test]
 fn resize_storm_coalesces_to_one_deferred_surface_owner() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("7:main".into(), leaf("root", "a")).expect("admitted");
     for _ in 0..128 {
@@ -873,6 +895,7 @@ fn resize_storm_coalesces_to_one_deferred_surface_owner() {
 
 #[test]
 fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("1:first".into(), leaf("root", "a")).expect("first");
     tracker.begin("1:second".into(), leaf("root", "b")).expect("second");
@@ -884,6 +907,7 @@ fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
 
 #[test]
 fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let old = tracker.begin("9:first".into(), leaf("root", "a")).expect("old generation");
     reject_current(&tracker, "9:first");
@@ -902,6 +926,7 @@ fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_sl
 
 #[test]
 fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️surface-close.json")).unwrap();
     let instance = fixture["instance"].as_u64().unwrap() as u32;
     let surface = |key: &str| fixture["surfaces"][key].as_str().unwrap();
@@ -942,6 +967,7 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
 
 #[test]
 fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -971,6 +997,7 @@ fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() 
 
 #[test]
 fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     saturate_terminals(&tracker, 51, 510_000);
     tracker.retain_unadmitted("51:queued".into(), leaf("root", "queued")).expect("pre-admitted owner");
@@ -979,6 +1006,7 @@ fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() 
 
 #[test]
 fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let identifier_bytes = semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_identifier_bytes;
     tracker.begin(format!("52:{}", "x".repeat(identifier_bytes)), leaf("root", "rejected")).expect("fixed surface slot");
@@ -989,6 +1017,7 @@ fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
 
 #[test]
 fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -1012,6 +1041,7 @@ fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
 
 #[test]
 fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -1034,6 +1064,7 @@ fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_wi
 
 #[test]
 fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_reservation() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -1067,4 +1098,85 @@ fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_re
     assert_eq!(state.next_generation, u64::MAX);
     assert!(state.generation_exhausted);
     assert!(state.terminals.iter().flatten().any(|terminal| terminal.authority.generation() == u64::MAX));
+}
+
+#[test]
+fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let tracker = PatchTracker::new();
+    tracker.begin("5:main".into(), tree_with_owned_child("a")).expect("admitted");
+    for _ in 0..4_096 {
+        tracker.drive_one();
+        if tracker.state.borrow().slots.iter().flatten().any(|slot| slot.job.is_some()) {
+            break;
+        }
+    }
+    {
+        let mut state = tracker.state.borrow_mut();
+        let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "5:main").expect("mounted test surface");
+        assert!(slot.job.is_some(), "the fixture must reach the reconcile job before a newer root arrives");
+        slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
+    }
+    for _ in 0..4_096 {
+        tracker.drive_one();
+        tracker.close_step();
+        let _ = tracker.take_deferred_ready();
+        if !tracker.has_work() {
+            break;
+        }
+    }
+    assert!(!tracker.has_work(), "an abandoned job must not strand its reserved output: {}", tracker.debug_state());
+}
+
+#[test]
+fn a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let tracker = PatchTracker::new();
+    let generation = tracker.begin("6:main".into(), tree_with_owned_child("a")).expect("admitted");
+    let patch = finish(&tracker).expect("first publication");
+    close_test_patch(patch);
+    assert!(tracker.mark_rejected("6:main", generation), "the published generation must be rejectable into a terminal");
+    let mut steps = 0;
+    while tracker.has_work() {
+        tracker.close_step();
+        let _ = tracker.take_deferred_ready();
+        steps += 1;
+        assert!(steps < 1_024, "a single closing terminal must drain one unit per close step, not one per 64: {}", tracker.debug_state());
+    }
+}
+
+#[test]
+fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let tracker = PatchTracker::new();
+    tracker.begin("9:main".into(), leaf("root", "a")).expect("admitted");
+    for _ in 0..4_096 {
+        tracker.drive_one();
+        tracker.close_step();
+        if !tracker.state.borrow().slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some()) {
+            break;
+        }
+    }
+    {
+        let mut state = tracker.state.borrow_mut();
+        for ready in state.ready.iter_mut().flatten() {
+            ready.published = true;
+            ready.closing = true;
+        }
+        let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "9:main").expect("mounted test surface");
+        assert!(slot.producer.is_none() && slot.job.is_none(), "the fixture must publish before the host falls behind: {}", tracker.debug_state());
+        let revision = slot.reconciler.as_ref().expect("published canonical root").revision();
+        slot.acknowledged_revision = ui_contract::UiRevision(revision.0.saturating_sub(1));
+    }
+    assert!(tracker.defer(ui_contract::SurfaceId::try_from("9:main").expect("bounded surface")).is_ok());
+    assert!(tracker.take_deferred_ready().is_none(), "an unacknowledged revision keeps the surface deferred");
+    assert!(tracker.has_work(), "the deferred surface is still tracked work: {}", tracker.debug_state());
+    assert!(!tracker.has_publishable_work(), "a host-blocked deferred surface must not hold the actor in more-work: {}", tracker.debug_state());
+    {
+        let mut state = tracker.state.borrow_mut();
+        let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "9:main").expect("mounted test surface");
+        slot.acknowledged_revision = slot.reconciler.as_ref().expect("published canonical root").revision();
+    }
+    assert!(tracker.has_publishable_work(), "an acknowledged deferred surface is re-admittable work");
+    assert_eq!(tracker.take_deferred_ready().as_ref().map(AsRef::as_ref), Some("9:main"));
 }

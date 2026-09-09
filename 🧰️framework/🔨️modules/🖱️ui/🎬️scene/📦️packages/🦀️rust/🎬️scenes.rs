@@ -42,14 +42,51 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
     fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
         crate::pack::from_bytes(bytes)
     }
+
+    /// 🚚️ Splits this doc into the SPINE that still rides inside the fixed-capacity
+    /// `SurfaceProps.doc` and the payload lanes that ride outside it, each as its own retained,
+    /// individually paged text carrier keyed by [`SceneLanePayload::key`].
+    ///
+    /// `SurfaceDoc.bytes` is `ui_contract::UiFixedBytes` — a hard `UI_FIXED_BYTES` (32 KiB) ceiling
+    /// that cannot page — so any scene whose payload is proportional to its document outgrows one
+    /// doc as soon as the document is large enough (measured: a 57 281-byte world-3d scene refused
+    /// admission outright at `scene-surface.encode`). A doc that returns lanes here keeps only its
+    /// per-frame spine inside that ceiling; everything else is bounded by the number of carrier
+    /// pages, not by 32 KiB, and re-publishes per lane instead of per scene.
+    ///
+    /// The default is "no lanes" — a scene whose payload is a bounded per-frame descriptor
+    /// (`Canvas2dScene`, `IconRenderScene`, …) has nothing to gain and stays one atomic doc.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>)
+    where
+        Self: Sized,
+    {
+        (self.clone(), Vec::new())
+    }
+
+    /// 🚚️ Re-attaches one lane's payload to a spine decoded from the surface doc — the exact inverse
+    /// of [`SceneDoc::split_lanes`]. Returns `false` for a key this doc does not own.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let _ = (key, payload);
+        false
+    }
+}
+
+/// 🚚️ One scene lane on its way out of a [`SceneDoc`]: the reserved carrier key its retained subtree
+/// is rooted at, and the payload text that subtree's depth-first leaf concatenation reproduces.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SceneLanePayload {
+    pub key: &'static str,
+    pub payload: String,
 }
 
 macro_rules! scene_pack_wire {
-    ($wire:ident, $scene:ident { $($field:ident: $ty:ty),+ $(,)? }) => {
+    ($wire:ident, $scene:ident { $($(#[$attribute:meta])* $field:ident: $ty:ty),+ $(,)? }) => {
         #[derive(Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct $wire {
-            $($field: $ty),+
+            $($(#[$attribute])* $field: $ty),+
         }
 
         impl From<&$scene> for $wire {
@@ -222,6 +259,40 @@ pub struct World3dScene {
     /// hit — `None` when `domain_id` is `None` or the domain has no plain-hit granularity.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_granularity_id: Option<String>,
+    /// 🚚️ On a scene SPINE (what [`SceneDoc::split_lanes`] leaves inside the fixed-capacity surface
+    /// doc) this names every payload lane that rides outside it, with the byte length and content
+    /// hash of each. Empty on an assembled scene — a renderer that reassembles the lanes back into
+    /// their `*_json` fields leaves the list in place, and a producer that never publishes through a
+    /// surface (the wgpu target builds `World3dScene` directly) never populates it.
+    ///
+    /// `bytes` is what lets a consumer tell a fully arrived lane from one still spread across
+    /// reconcile pages; `hash` is what makes the spine itself change — and therefore the surface
+    /// node's own `Component` differ — exactly when a lane's content changed, so an unchanged lane
+    /// costs nothing on a partial refresh.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<World3dSceneLaneRef>,
+}
+
+/// 🚚️ One entry of [`World3dScene::lanes`] — see that field's doc.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct World3dSceneLaneRef {
+    pub lane: String,
+    pub bytes: u32,
+    pub hash: String,
+}
+
+impl ToValue for World3dSceneLaneRef {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([("lane".to_string(), self.lane.to_value()), ("bytes".to_string(), self.bytes.to_value()), ("hash".to_string(), self.hash.to_value())])
+    }
+}
+
+impl FromValue for World3dSceneLaneRef {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        Ok(Self { lane: value_decode(&entries, "lane")?, bytes: value_decode(&entries, "bytes")?, hash: value_decode(&entries, "hash")? })
+    }
 }
 
 scene_pack_wire!(World3dScenePack, World3dScene {
@@ -247,6 +318,11 @@ scene_pack_wire!(World3dScenePack, World3dScene {
     status_json: Option<String>,
     domain_id: Option<String>,
     domain_granularity_id: Option<String>,
+    // 🚚️ An assembled scene carries no manifest, and neither does a scene built by a producer that
+    // never publishes through a surface — so a missing key decodes to "no lanes", exactly as serde
+    // already treats every `Option` field above.
+    #[serde(default)]
+    lanes: Vec<World3dSceneLaneRef>,
 });
 
 impl SceneDoc for World3dScene {
@@ -258,6 +334,25 @@ impl SceneDoc for World3dScene {
 
     fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
         crate::pack::from_bytes::<World3dScenePack>(bytes).map(Into::into)
+    }
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in World3dSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(World3dSceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: world3d_scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let Some(lane) = World3dSceneLane::from_body_key(key) else { return false };
+        lane.put(self, payload);
+        true
     }
 }
 
@@ -297,6 +392,7 @@ impl World3dScene {
             status_json: None,
             domain_id: None,
             domain_granularity_id: None,
+            lanes: Vec::new(),
         }
     }
 }
@@ -326,6 +422,7 @@ impl ToValue for World3dScene {
         value_push_option(&mut entries, "statusJson", &self.status_json);
         value_push_option(&mut entries, "domainId", &self.domain_id);
         value_push_option(&mut entries, "domainGranularityId", &self.domain_granularity_id);
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
     }
 }
@@ -356,10 +453,249 @@ impl FromValue for World3dScene {
             status_json: value_decode_option(&entries, "statusJson")?,
             domain_id: value_decode_option(&entries, "domainId")?,
             domain_granularity_id: value_decode_option(&entries, "domainGranularityId")?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })
     }
 }
 //#endregion 🔖️World3dScene
+
+//#region 🔖️World3dSceneLanes
+/// 🚚️ The eighteen world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
+///
+/// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
+/// every consumer needs synchronously), the wgpu `snapshot` lease, the interaction `domain_id`/
+/// `domain_granularity_id`, and the `lanes` manifest itself. Splitting is what removes the 32 KiB
+/// `UiFixedBytes` ceiling from the scene as a whole (see [`SceneDoc::split_lanes`]); keeping the
+/// lanes SEPARATE — rather than one big out-of-doc blob — is what lets the reconciler re-publish only
+/// the lanes that actually changed, which matters because `instances`, `interaction` and `lod` have
+/// very different change rates.
+///
+/// Mirrored in TypeScript by `WORLD3D_SCENE_LANES` in `🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`. Both
+/// sides are pinned against the one language-neutral declaration in
+/// `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`, so neither can drift.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dSceneLane {
+    Meshes,
+    Instances,
+    Selection,
+    Vortices,
+    Attractions,
+    TargetVolumes,
+    References,
+    BrushPreview,
+    Interaction,
+    EngagementPreview,
+    Lod,
+    Chunking,
+    Environment,
+    Frame,
+    Fit,
+    Terrain,
+    Points,
+    Status,
+}
+
+/// 🚚️ Reserved carrier-key namespace. Dotted and `framework.`-prefixed so a lane root can never
+/// collide with an app-authored node id, exactly like `UI_REFRESH_SECTION_BODY_KEYS`.
+pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
+
+/// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
+pub const WORLD3D_SCENE_LANE_NAMES: [&str; 18] = [
+    "meshes",
+    "instances",
+    "selection",
+    "vortices",
+    "attractions",
+    "targetVolumes",
+    "references",
+    "brushPreview",
+    "interaction",
+    "engagementPreview",
+    "lod",
+    "chunking",
+    "environment",
+    "frame",
+    "fit",
+    "terrain",
+    "points",
+    "status",
+];
+
+/// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 18] = [
+    "meshesJson",
+    "instancesJson",
+    "selectionJson",
+    "vorticesJson",
+    "attractionsJson",
+    "targetVolumesJson",
+    "referencesJson",
+    "brushPreviewJson",
+    "interactionJson",
+    "engagementPreviewJson",
+    "lodJson",
+    "chunkingJson",
+    "environmentJson",
+    "frameJson",
+    "fitJson",
+    "terrainJson",
+    "pointsJson",
+    "statusJson",
+];
+
+/// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
+/// so the constant is greppable and pinnable rather than assembled at runtime.
+pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 18] = [
+    "framework.scene.world3d.meshes",
+    "framework.scene.world3d.instances",
+    "framework.scene.world3d.selection",
+    "framework.scene.world3d.vortices",
+    "framework.scene.world3d.attractions",
+    "framework.scene.world3d.targetVolumes",
+    "framework.scene.world3d.references",
+    "framework.scene.world3d.brushPreview",
+    "framework.scene.world3d.interaction",
+    "framework.scene.world3d.engagementPreview",
+    "framework.scene.world3d.lod",
+    "framework.scene.world3d.chunking",
+    "framework.scene.world3d.environment",
+    "framework.scene.world3d.frame",
+    "framework.scene.world3d.fit",
+    "framework.scene.world3d.terrain",
+    "framework.scene.world3d.points",
+    "framework.scene.world3d.status",
+];
+
+/// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
+/// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
+/// — while an absent optional lane publishes no carrier at all.
+pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 18] = [false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+
+impl World3dSceneLane {
+    pub const ALL: [Self; 18] = [
+        Self::Meshes,
+        Self::Instances,
+        Self::Selection,
+        Self::Vortices,
+        Self::Attractions,
+        Self::TargetVolumes,
+        Self::References,
+        Self::BrushPreview,
+        Self::Interaction,
+        Self::EngagementPreview,
+        Self::Lod,
+        Self::Chunking,
+        Self::Environment,
+        Self::Frame,
+        Self::Fit,
+        Self::Terrain,
+        Self::Points,
+        Self::Status,
+    ];
+
+    /// 🏷️ See [`WORLD3D_SCENE_LANE_NAMES`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn name(self) -> &'static str {
+        WORLD3D_SCENE_LANE_NAMES[self as usize]
+    }
+
+    /// 🏷️ See [`WORLD3D_SCENE_LANE_FIELDS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn field(self) -> &'static str {
+        WORLD3D_SCENE_LANE_FIELDS[self as usize]
+    }
+
+    /// 🪧️ See [`WORLD3D_SCENE_LANE_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        WORLD3D_SCENE_LANE_BODY_KEYS[self as usize]
+    }
+
+    /// 🏷️ See [`WORLD3D_SCENE_LANE_OPTIONAL`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn optional(self) -> bool {
+        WORLD3D_SCENE_LANE_OPTIONAL[self as usize]
+    }
+
+    /// 🔎️ Resolves a carrier root key back to the lane it carries, `None` for every other node key.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
+    }
+
+    /// 🔎️ Resolves a lane wire name back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.name() == name)
+    }
+
+    /// 📤️ Removes this lane's payload from `scene`, leaving the field empty/absent. `None` when an
+    /// optional lane is unset — that lane publishes no carrier at all.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn take(self, scene: &mut World3dScene) -> Option<String> {
+        match self {
+            Self::Meshes => Some(std::mem::take(&mut scene.meshes_json)),
+            Self::Instances => Some(std::mem::take(&mut scene.instances_json)),
+            Self::Selection => Some(std::mem::take(&mut scene.selection_json)),
+            Self::Vortices => scene.vortices_json.take(),
+            Self::Attractions => scene.attractions_json.take(),
+            Self::TargetVolumes => scene.target_volumes_json.take(),
+            Self::References => scene.references_json.take(),
+            Self::BrushPreview => scene.brush_preview_json.take(),
+            Self::Interaction => scene.interaction_json.take(),
+            Self::EngagementPreview => scene.engagement_preview_json.take(),
+            Self::Lod => scene.lod_json.take(),
+            Self::Chunking => scene.chunking_json.take(),
+            Self::Environment => scene.environment_json.take(),
+            Self::Frame => scene.frame_json.take(),
+            Self::Fit => scene.fit_json.take(),
+            Self::Terrain => scene.terrain_json.take(),
+            Self::Points => scene.points_json.take(),
+            Self::Status => scene.status_json.take(),
+        }
+    }
+
+    /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`World3dSceneLane::take`].
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn put(self, scene: &mut World3dScene, payload: String) {
+        match self {
+            Self::Meshes => scene.meshes_json = payload,
+            Self::Instances => scene.instances_json = payload,
+            Self::Selection => scene.selection_json = payload,
+            Self::Vortices => scene.vortices_json = Some(payload),
+            Self::Attractions => scene.attractions_json = Some(payload),
+            Self::TargetVolumes => scene.target_volumes_json = Some(payload),
+            Self::References => scene.references_json = Some(payload),
+            Self::BrushPreview => scene.brush_preview_json = Some(payload),
+            Self::Interaction => scene.interaction_json = Some(payload),
+            Self::EngagementPreview => scene.engagement_preview_json = Some(payload),
+            Self::Lod => scene.lod_json = Some(payload),
+            Self::Chunking => scene.chunking_json = Some(payload),
+            Self::Environment => scene.environment_json = Some(payload),
+            Self::Frame => scene.frame_json = Some(payload),
+            Self::Fit => scene.fit_json = Some(payload),
+            Self::Terrain => scene.terrain_json = Some(payload),
+            Self::Points => scene.points_json = Some(payload),
+            Self::Status => scene.status_json = Some(payload),
+        }
+    }
+}
+
+/// 🔢️ FNV-1a/64 of a lane payload, lowercase hex — the ONE thing that makes a scene spine differ
+/// when a lane's content differs, and stay byte-identical when it does not. Hand-rolled rather than
+/// pulled from a hashing crate because this crate depends on nothing beyond `ui_contract`/`serde`,
+/// and because the digest is part of a wire payload two languages have to agree on.
+// 🚫️async: E6 sync payload construction — see this module's own header.
+pub fn world3d_scene_lane_hash(payload: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in payload.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("{hash:016x}")
+}
+//#endregion 🔖️World3dSceneLanes
 
 //#region 🔖️NodeGraphRecords
 /// 🔌️ One port on a node-graph node: identity + display label. Direction is implied by whether the
@@ -795,6 +1131,13 @@ pub struct NodeGraphScene {
     pub viewport: Option<NodeGraphViewport>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub editable: Option<bool>,
+    /// 🔌️ DOCUMENT-DERIVED operator records only — one per node this very graph holds, the way the OS
+    /// workflow window derives a record per workflow node so the canvas can lay its ports out. The
+    /// app's REGISTERED operator catalogue is NOT carried here: it is app-static, ~100 KB with the real
+    /// `brep`/`math` sets installed against a 32 KiB fixed per-surface admission, and rides the reserved
+    /// `framework.section.catalogue` surface once per app instance instead
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). A flow-backed scene leaves this empty and names
+    /// its operators by kind id through `fixture_json`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operators: Vec<NodeGraphOperatorRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -811,8 +1154,6 @@ pub struct NodeGraphScene {
     pub preview_off_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lod_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub catalogue_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controls_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -850,7 +1191,6 @@ impl NodeGraphScene {
             highlighted: Vec::new(),
             preview_off_json: None,
             lod_json: None,
-            catalogue_json: None,
             controls_json: None,
             clusters_json: None,
             computing_json: None,
@@ -877,7 +1217,6 @@ impl ToValue for NodeGraphScene {
         value_push_if_nonempty(&mut entries, "highlighted", &self.highlighted);
         value_push_option(&mut entries, "previewOffJson", &self.preview_off_json);
         value_push_option(&mut entries, "lodJson", &self.lod_json);
-        value_push_option(&mut entries, "catalogueJson", &self.catalogue_json);
         value_push_option(&mut entries, "controlsJson", &self.controls_json);
         value_push_option(&mut entries, "clustersJson", &self.clusters_json);
         value_push_option(&mut entries, "computingJson", &self.computing_json);
@@ -905,7 +1244,6 @@ impl FromValue for NodeGraphScene {
             highlighted: value_decode_default(&entries, "highlighted", Vec::new)?,
             preview_off_json: value_decode_option(&entries, "previewOffJson")?,
             lod_json: value_decode_option(&entries, "lodJson")?,
-            catalogue_json: value_decode_option(&entries, "catalogueJson")?,
             controls_json: value_decode_option(&entries, "controlsJson")?,
             clusters_json: value_decode_option(&entries, "clustersJson")?,
             computing_json: value_decode_option(&entries, "computingJson")?,

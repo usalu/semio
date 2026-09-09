@@ -1,8 +1,21 @@
 {
   "schema": "semio.shell.space-administration-delete-space-fixture.v1",
   "spaceId": "space-admin-01",
-  "acceptedOutcomes": ["accepted", "previously-accepted"],
-  "refusedPhases": ["loading", "submitting", "receipt", "refreshing", "cancelled", "denied", "stale", "failed", "deleted"],
+  "acceptedOutcomes": [
+    "accepted",
+    "previously-accepted"
+  ],
+  "refusedPhases": [
+    "loading",
+    "submitting",
+    "receipt",
+    "refreshing",
+    "cancelled",
+    "denied",
+    "stale",
+    "failed",
+    "deleted"
+  ],
   "locales": [
     {
       "locale": "en",
@@ -20,5 +33,13 @@
       "cancel": "Space behalten",
       "deleted": "Die Löschung des Space wurde vom Server angenommen."
     }
+  ],
+  "missingPageStatus": 404,
+  "confirmation": "get-after-accepted-receipt",
+  "hostiles": [
+    "refresh-success-after-delete",
+    "foreign-space-page",
+    "non-accepted-receipt",
+    "extra-fields"
   ]
 }

@@ -275,7 +275,7 @@ impl Generation2dMountedRegistry {
 
 impl Drop for Generation2dMountedRegistry {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d mounted registry reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mounted registry reached Drop before terminal-empty close");
     }
 }
 //#endregion 🔖️MountedRegistry
@@ -405,6 +405,10 @@ mod mounted_laws {
         assert!(registry.terminal_is_empty());
     }
 
+    /// 🔐️ The atomic authority is keyed BY operation id, so an unknown operation has no lease at
+    /// all and is refused `authority-missing` — `wrong-operation` is reachable only through the
+    /// hostile injector (`generation2d_arm_publication_hostile`), which `✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+    /// drives for all five hostile codes.
     #[test]
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
@@ -417,7 +421,7 @@ mod mounted_laws {
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::standards::v1::subsets::any::schema::mutations::binary::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.wrong-operation"));
+        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.authority-missing"));
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation2d-publication.wrong-generation"));
         crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation2d-publication.wrong-base"));

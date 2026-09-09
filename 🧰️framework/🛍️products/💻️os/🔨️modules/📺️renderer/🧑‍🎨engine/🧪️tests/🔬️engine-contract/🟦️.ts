@@ -1520,7 +1520,6 @@ import {
   resolveWindowActions,
   resolveModeTools,
   partitionWindowMeasures,
-  SET_ACTIVE_TOOL_ACTION_ID,
   type ActionArgDef,
   type ActionDefinition,
   type AppDefinition,
@@ -1540,6 +1539,7 @@ import {
   type LayoutSpec,
   createMemoryStoragePort,
   createTurnOutcomeBroadcast,
+  pendingPanelUiNode,
   type TurnOutcome,
 } from "@semio-tech/framework";
 import {
@@ -1551,7 +1551,7 @@ import {
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../🧑‍💻dev/🏷️brand/🟦️.ts";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
-import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
+import { Footer, navbarFillItem, progressPanelTabSelection, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { parseWorldBrushPreview } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1794,6 +1794,8 @@ import {
   renderWindowMeasuresTree,
   buildToolTabs,
   toolIdFromPanelTabId,
+  reconcileToolTabSelection,
+  type ToolTabSelection,
   sceneToSyncPack,
   FrameworkOsShell,
   TutorialRecorder,
@@ -2131,6 +2133,43 @@ describe("in-flight skipping interval", () => {
     timers[0]!();
     expect(runs).toEqual([1, 2]);
     stop();
+  });
+
+  it("gates on exactly what run returns — a discarded dispatch promise gates nothing", async () => {
+    // 🏁️ The measured 2026-09-09 20:55 defect: `World3dHost`'s fill tick body was
+    // `() => { if (busy) return; dispatch("fillBuildTick"); }`, whose block form DISCARDS the dispatch
+    // promise, so the in-flight flag cleared on the same microtask and 120 ms ticks queued into the
+    // serialized guest until the per-actor turn queue overflowed. This pins the difference so the shape
+    // cannot silently regress: same slow work, only the return value differs.
+    const started: number[] = [];
+    const timers: Array<() => void> = [];
+    const never = new Promise<void>(() => {});
+    // 🕰️ Ticks 120 ms apart are many microtask turns apart, so each `Promise.resolve(undefined)` the
+    // swallowing form produces has long since cleared the flag by the next tick — the awaits below are
+    // what make this test see the real interval, not one synchronous burst.
+    const drive = async (run: () => unknown) => {
+      timers.length = 0;
+      const stop = createInFlightSkippingInterval(run, 10, (fn) => (timers.push(fn), 1), () => {});
+      for (let tick = 0; tick < 3; tick += 1) {
+        timers[0]!();
+        await Promise.resolve();
+        await Promise.resolve();
+      }
+      stop();
+    };
+
+    await drive(() => {
+      started.push(started.length + 1);
+      void never;
+    });
+    expect(started, "a run that swallows its dispatch cannot be gated — every tick fires").toHaveLength(3);
+
+    started.length = 0;
+    await drive(() => {
+      started.push(started.length + 1);
+      return never;
+    });
+    expect(started, "returning the dispatch is what keeps exactly one tick outstanding").toHaveLength(1);
   });
 });
 
@@ -2900,6 +2939,29 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     const cache: UiRefreshCache = new Map();
     applyUiRefreshResponseToCache(cache, { tools: { key: "tools", hash: "tools-hash", value: { fill: [] } } });
     expect(cache.get("tools")).toEqual({ hash: "tools-hash", value: { fill: [] } });
+  });
+
+  // 🛍️ The app-static operator/palette catalogue rides its OWN reserved section, never a node-graph
+  // scene payload — with the real `brep`/`math` operator sets installed it is ~100 KB against the fixed
+  // 32 KiB per-surface admission (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). It is app-static, so it
+  // has no `UiDirtyScope` flag: only a full scope asks for it, and the cached hash makes the repeat free.
+  it("buildUiRefreshRequest asks for the app catalogue on a full scope only, carrying its cached hash", () => {
+    const full = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(full?.catalogue).toBeDefined();
+    expect(full?.catalogue?.hash).toBeUndefined();
+    const cache: UiRefreshCache = new Map([["catalogue", { hash: "cat-hash", value: { operators: [] } }]]);
+    expect(buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, cache)?.catalogue?.hash).toBe("cat-hash");
+    const partial = buildUiRefreshRequest({ kind: "partial" as const, engagements: true }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(partial?.catalogue).toBeUndefined();
+  });
+
+  it("applyUiRefreshResponseToCache caches the app catalogue and leaves it untouched on an unchanged hash", () => {
+    const cache: UiRefreshCache = new Map();
+    const value = { operators: [{ id: "math.add", extension: "math", name: "Add", abbreviation: "Add", icon: "emoji:+", summary: "Adds", inputs: [], outputs: [] }], sections: [{ id: "math", title: "Math", items: [] }] };
+    applyUiRefreshResponseToCache(cache, { catalogue: { key: "catalogue", hash: "cat-hash", value } });
+    expect(cache.get("catalogue")).toEqual({ hash: "cat-hash", value });
+    applyUiRefreshResponseToCache(cache, { catalogue: { key: "catalogue", hash: "cat-hash" } });
+    expect(cache.get("catalogue")).toEqual({ hash: "cat-hash", value });
   });
 });
 
@@ -4608,6 +4670,34 @@ describe("framework renderer hosts", () => {
     expect(items[0]).toMatchObject({ checked: true });
     expect(items[1]).toMatchObject({ checked: false });
     expect(items[0]?.shortcut).toBeUndefined();
+  });
+
+  it("resolves taxonomy group rows from the chrome ribbon-parent bundle in both locales", async () => {
+    // 🗂️ The guest emits `menu.group.<category>` with `label: undefined` by contract (the host owns the
+    // chrome taxonomy vocabulary), and the React shell used to render the raw id — `menu.group.history`,
+    // `menu.group.selection`, … — where the wgpu target resolved a real label through
+    // `ribbon_parent_label`. The label must come from the SAME `ui.ribbon.parent.*` bundle the ribbon
+    // reads, so EN and DE both follow the active locale with no second string table.
+    const specs = [
+      { id: "menu.group.history", children: [{ id: "undo", label: "Undo", action: "undo" }] },
+      { id: "menu.group.selection", children: [{ id: "duplicate", label: "Duplicate", action: "duplicateSelection" }] },
+      { id: "menu.group.more", children: [{ id: "fit", label: "Fit", action: "fitWorld" }] },
+    ];
+    await uiI18n.changeLanguage("en");
+    const english = mapContextMenuSpecs(specs, () => {});
+    expect(english.map((item) => item.label)).toEqual(["History", "Selection", "More"]);
+    expect(english.map((item) => item.icon)).toEqual(["folder", "folder", "folder"]);
+    expect(english[0]?.children?.[0]).toMatchObject({ id: "undo", label: "Undo" });
+
+    await uiI18n.changeLanguage("de");
+    expect(mapContextMenuSpecs(specs, () => {}).map((item) => item.label)).toEqual(["Verlauf", "Auswahl", "Mehr"]);
+    await uiI18n.changeLanguage("en");
+
+    // 🗂️ Only group rows are resolved: an ordinary label-less row (a bare separator) keeps none, and an
+    // unknown category resolves to nothing rather than inventing chrome vocabulary.
+    const untouched = mapContextMenuSpecs([{ id: "sep", separator: true }, { id: "menu.group.not-a-category", children: [{ id: "x", label: "X" }] }], () => {});
+    expect(untouched[0]?.label).toBeUndefined();
+    expect(untouched[1]?.label).toBeUndefined();
   });
 
   it("enriches context menu shortcuts from app keybindings via mapContextMenuSpecs", () => {
@@ -6565,6 +6655,56 @@ describe("s workflow flow routing", () => {
     expect(flowSpotlightSuggestionListScrollClass(true)).toContain("max-h-[min(24rem,70vh)]");
   });
 
+  // 🔍️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave N — the inspection panel "shows nothing" defect
+  // (measured 2026-09-09 21:05). The guest cannot render an empty inspection body
+  // (`selected_object_inspector_renders_that_object_field_group` in the puzzle3d crate proves a pick
+  // yields the object field group, and `render` always falls back to the document summary), and the
+  // panel leaf above proves a delivered tree body renders. What was left was the third state: a body
+  // the shell has NOT received yet is `pendingPanelUiNode()` — a `tree` node with `activity: "loading"`
+  // and no children — and `<Tree sections={[]}/>` drew literally nothing for it. Loading, empty and
+  // dropped were one and the same blank rectangle.
+  it("renders a panel body that has not arrived yet as a loading surface, never as a silently empty panel", () => {
+    const control = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction).sections[0]?.items?.[0]?.control as ReactElement;
+    const rendered = render(control);
+    expect(rendered.container.querySelector("[data-ui-status=\"loading\"]")).toBeTruthy();
+    expect(rendered.container.querySelector("[aria-busy=\"true\"]")).toBeTruthy();
+  });
+
+  // 🈳️ The blank-panel state: a tree body that IS settled (`activity: "idle"`) and resolves to zero
+  // `treeSection` children used to render `<Tree sections={[]}/>`, i.e. literally nothing — no ring, no
+  // text, no marker — which is indistinguishable from a body that was dropped on the way in. It now says
+  // so. A guest-rendered panel body always carries at least one section (`PanelTreeBuilder::build`), so
+  // reaching this state at all means something upstream lost the body.
+  it("renders an idle tree body with no sections as an explicit empty state, distinct from loading", () => {
+    const idleEmpty = { ...pendingPanelUiNode(), activity: "idle" as const };
+    const empty = render(uiNodeToTreePanelConfig(idleEmpty, noopAction).sections[0]?.items?.[0]?.control as ReactElement);
+    expect(empty.container.querySelector("[data-ui-status=\"loading\"]")).toBeNull();
+    expect(empty.container.textContent?.replace(/\u2026/g, "").trim()).not.toBe("");
+    expect(empty.container.textContent).toContain(resolveTranslationLabel(uiI18n.t("ui.common.noData")));
+  });
+
+  // 🐢️ The host half of the puzzle3d scope table (`puzzle3d_command_scope_class`): a partial scope that
+  // NAMES the inspection panel body is what puts that panel in the batched `refresh-ui` request. A
+  // partial scope that names only window bodies — which is what every puzzle3d partial scope used to be
+  // — leaves the inspector out of the request entirely, so it keeps whatever it last rendered.
+  it("a partial scope naming a panel body requests that panel, and one that omits it does not", () => {
+    const leaves = [
+      { kind: { kind: "app" as const, id: "framework.panel.artifact" }, bodyKey: "puzzle.3d.play.document" },
+      { kind: { kind: "app" as const, id: "framework.panel.inspection" }, bodyKey: "puzzle.3d.play.inspector" },
+    ];
+    const windows = [{ id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" }];
+    const named = buildUiRefreshRequest(
+      { kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: ["puzzle.3d.play.inspector", "puzzle.3d.play.document"], measures: true },
+      windows,
+      leaves,
+      {},
+      new Map(),
+    );
+    expect(named?.panels?.map((panel) => panel.key)).toEqual(["framework.panel.artifact", "framework.panel.inspection"]);
+    const omitted = buildUiRefreshRequest({ kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: [] }, windows, leaves, {}, new Map());
+    expect(omitted?.panels).toEqual([]);
+  });
+
   it("hosts a semantic tree document inside a panel leaf", () => {
     const config = uiNodeToTreePanelConfig(
       buildContractNode({
@@ -7311,13 +7451,12 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(resolveModeTools(toolApp, "nonexistent")).toEqual([]);
   });
 
-  it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
-    const activeToolIdRef = { current: "fill" as string | null };
+  it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree carries that tool's own measures", () => {
     const toolMeasuresByToolIdRef = {
       current: { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 3, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] } as Readonly<Record<string, readonly WindowMeasure[]>>,
     };
     const onAction = vi.fn();
-    const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
+    const tabs = buildToolTabs(toolApp.tools, toolMeasuresByToolIdRef, onAction);
     expect(tabs.map((tab) => tab.id)).toEqual(["tool.fill", "tool.brush"]);
     const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
     const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[]; sortableSections: false } };
@@ -7331,23 +7470,73 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
 
     const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
     const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    // brush is not the active tool — only the flat activation toggle renders (no nested Fill-style label row).
+    // A tool whose program published no measures yet resolves to an EMPTY options section — never to a
+    // second activation control (see the element-identity law below).
     const brushResolved = brushTree.resolveTree();
     expect(brushResolved.sections).toHaveLength(1);
-    expect(brushResolved.sections[0]!.id).toBe("tool.brush.activate");
-    expect(brushResolved.sections[0]!.items![0]!.label).toBe("");
+    expect(brushResolved.sections[0]!.id).toBe("tool.brush.options");
+    expect(brushResolved.sections[0]!.items).toEqual([]);
   });
 
-  it("buildToolTabs' activation toggle dispatches setActiveTool with this tool's id", () => {
-    const activeToolIdRef = { current: null as string | null };
+  // 🛠️ W-G law (browser-verified 2026-09-09): the `tool.<id>` leaf tab IS the activation control. A tool
+  // tree that renders its own toggle carried the leaf tab's element id (`tool.fill` appeared twice in the
+  // document) and disagreed with it — the tab read "selected" while the toggle read "not pressed", so the
+  // first press on a restored Fill tab deactivated instead of arming the tool.
+  it("no tool tree carries a control that duplicates its own leaf tab id", () => {
     const toolMeasuresByToolIdRef = { current: {} as Readonly<Record<string, readonly WindowMeasure[]>> };
-    const onAction = vi.fn();
-    const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
-    const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
-    const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    const activateControl = fillTree.resolveTree().sections[0]!.items![0]!.control as ReactElement<{ onPressedChange: (pressed: boolean) => void }>;
-    activateControl.props.onPressedChange(true);
-    expect(onAction).toHaveBeenCalledWith({ controllerId: "puzzle3d-play", action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "fill" } });
+    const tabs = buildToolTabs(toolApp.tools, toolMeasuresByToolIdRef, vi.fn());
+    for (const tab of tabs as Extract<PanelTabNode, { kind: "leaf" }>[]) {
+      const tree = tab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
+      for (const section of tree.resolveTree().sections) {
+        for (const item of section.items ?? []) {
+          const control = item.control as ReactElement<{ id?: string }> | undefined;
+          expect(control?.props?.id).not.toBe(tab.id);
+        }
+      }
+    }
+  });
+
+  // 🛠️ W-G law: tool activation and the selected tool leaf are ONE state, whatever route set the path.
+  it("reconcileToolTabSelection arms the tool a restored dock arrangement already selects", () => {
+    // Boot: `DockUiStateStore` restores bottom-middle at ["framework.category.tool", "tool.fill"] while no
+    // tool is active. Before W-G nothing reconciled this, so the FIRST press on the selected leaf read as a
+    // re-press and collapsed it (`progressPanelTabSelection` below) instead of arming Fill.
+    const restored = ["framework.category.tool", "tool.fill"];
+    const hydrate = reconcileToolTabSelection(null, null, toolIdFromPanelTabId(restored[restored.length - 1]!));
+    expect(hydrate.effect).toEqual({ kind: "activate", toolId: "fill" });
+    expect(hydrate.next).toEqual({ toolId: "fill", selected: "fill" });
+    // Once armed the pass is idle — no bounce between the two representations.
+    expect(reconcileToolTabSelection(hydrate.next, "fill", "fill").effect).toEqual({ kind: "idle" });
+  });
+
+  it("reconcileToolTabSelection disarms the tool when its leaf collapses, and re-arms on the next press", () => {
+    const armed: ToolTabSelection = { toolId: "fill", selected: "fill" };
+    const collapsed = reconcileToolTabSelection(armed, "fill", null);
+    expect(collapsed.effect).toEqual({ kind: "activate", toolId: null });
+    expect(reconcileToolTabSelection(collapsed.next, null, "fill").effect).toEqual({ kind: "activate", toolId: "fill" });
+  });
+
+  it("reconcileToolTabSelection selects the leaf of a tool armed by the program, and collapses when a utility clears it", () => {
+    const idle: ToolTabSelection = { toolId: null, selected: null };
+    const armedByProgram = reconcileToolTabSelection(idle, "fill", null);
+    expect(armedByProgram.effect).toEqual({ kind: "select", toolId: "fill" });
+    expect(reconcileToolTabSelection(armedByProgram.next, null, "fill").effect).toEqual({ kind: "select", toolId: null });
+  });
+
+  it("reconcileToolTabSelection self-heals a refused activation instead of looping", () => {
+    const refused = reconcileToolTabSelection(null, null, "fill");
+    expect(refused.effect).toEqual({ kind: "activate", toolId: "fill" });
+    expect(reconcileToolTabSelection(refused.next, null, "fill").effect).toEqual({ kind: "select", toolId: null });
+  });
+
+  // 🛠️ W-G law: one press on the Tool category is enough — the remembered drill-down lands on the tool
+  // leaf and the same reconciliation arms it, so its ribbon items are live without a second press.
+  it("one press on the Tool category reveals its remembered tool leaf and arms that tool", () => {
+    const tabs: PanelTabNode[] = [{ kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: buildToolTabs(toolApp.tools, { current: {} }, vi.fn()) }];
+    const opened = progressPanelTabSelection(tabs, [], ["framework.category.tool"], { "framework.category.tool": "tool.fill" });
+    expect(opened.fold).toBe(false);
+    expect(opened.path).toEqual(["framework.category.tool", "tool.fill"]);
+    expect(reconcileToolTabSelection(null, null, toolIdFromPanelTabId(opened.path[opened.path.length - 1])).effect).toEqual({ kind: "activate", toolId: "fill" });
   });
 
   it("toolIdFromPanelTabId extracts the mode tool id from a tool leaf tab id", () => {
@@ -8422,3 +8611,172 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
     expect(portalLayer?.className).not.toContain("z-tutorial");
   });
 });
+
+//#region 🥽️Puzzle3dBrushMeshUpload
+import {
+  PUZZLE3D_MESH_COMMAND_RAW_BYTES,
+  PUZZLE3D_MESH_PAGE_VALUES,
+  PUZZLE3D_MESH_UPLOAD_MAX_PAGES,
+  PUZZLE3D_MESH_UPLOAD_SLOTS,
+  puzzle3dBrushMeshDigest,
+  Puzzle3dBrushMeshRegistry,
+  puzzle3dBrushMeshPages,
+} from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import brushMeshUploadFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🥽️brush-mesh-upload/🔣️.json";
+
+/** 🥽️ The values one page carries, read back out of its two base64 payloads exactly as the plugin's
+ * `decode_brush_mesh_page_values` reads them (`✏️editor/⏳️precompute/🦀️.rs`). */
+function decodeBrushMeshPage(page: { readonly positionsB64?: string; readonly indicesB64?: string }): { positions: number[]; indices: number[] } {
+  const positionBytes = Buffer.from(page.positionsB64 ?? "", "base64");
+  const indexBytes = Buffer.from(page.indicesB64 ?? "", "base64");
+  return {
+    positions: Array.from(new Float32Array(positionBytes.buffer, positionBytes.byteOffset, positionBytes.byteLength / 4)),
+    indices: Array.from(new Uint32Array(indexBytes.buffer, indexBytes.byteOffset, indexBytes.byteLength / 4)),
+  };
+}
+
+describe("puzzle3d brush mesh paged upload", () => {
+  it("encodes the language-neutral page run the plugin decodes, with the Node base64 oracle", () => {
+    expect(PUZZLE3D_MESH_COMMAND_RAW_BYTES).toBe(brushMeshUploadFixture.commandRawBytes);
+    expect(PUZZLE3D_MESH_PAGE_VALUES).toBe(brushMeshUploadFixture.pageValues);
+    expect(PUZZLE3D_MESH_UPLOAD_SLOTS).toBe(brushMeshUploadFixture.uploadSlots);
+    expect(PUZZLE3D_MESH_UPLOAD_MAX_PAGES).toBe(brushMeshUploadFixture.maxPages);
+    const example = brushMeshUploadFixture.example;
+    expect(puzzle3dBrushMeshDigest(example.positions, example.indices)).toBe(example.digest);
+    const pages = puzzle3dBrushMeshPages(example.url, example.surfaceId, example.positions, example.indices);
+    expect(pages).toEqual(example.pages.map((page) => ({ url: example.url, digest: example.digest, ...page })));
+    expect(pages[0]!.positionsB64).toBe(Buffer.from(new Uint8Array(Float32Array.from(example.positions).buffer)).toString("base64"));
+    expect(pages[0]!.indicesB64).toBe(Buffer.from(new Uint8Array(Uint32Array.from(example.indices).buffer)).toString("base64"));
+    expect(decodeBrushMeshPage(pages[0]!)).toEqual({ positions: example.positions, indices: example.indices });
+  });
+
+  it("pages a document-scale GLB into a run that never exceeds one retained command's raw wire", () => {
+    for (const scale of brushMeshUploadFixture.documentScale) {
+      const vertices = scale.positions / 3;
+      const positions = Array.from({ length: scale.positions }, (_, value) => value * 0.5);
+      const indices = Array.from({ length: scale.indices }, (_, value) => value % vertices);
+      const pages = puzzle3dBrushMeshPages(scale.url, "world-3d", positions, indices);
+      expect(pages.length).toBe(scale.pages);
+      const reassembled: { positions: number[]; indices: number[] } = { positions: [], indices: [] };
+      for (const [index, page] of pages.entries()) {
+        expect(page).toMatchObject({ url: scale.url, page: index, pageCount: scale.pages });
+        expect(Buffer.byteLength(JSON.stringify(["registerBrushMesh", { surfaceId: "world-3d", ...page }]), "utf8")).toBeLessThanOrEqual(PUZZLE3D_MESH_COMMAND_RAW_BYTES);
+        const decoded = decodeBrushMeshPage(page);
+        expect(decoded.positions.length + decoded.indices.length).toBeLessThanOrEqual(PUZZLE3D_MESH_PAGE_VALUES);
+        reassembled.positions.push(...decoded.positions);
+        reassembled.indices.push(...decoded.indices);
+      }
+      expect(reassembled.positions).toEqual(positions);
+      expect(reassembled.indices).toEqual(indices);
+    }
+  });
+
+  it("re-announces a mesh this guest already holds by id and digest alone", () => {
+    const example = brushMeshUploadFixture.example;
+    const url = "/test/already-paged.glb";
+    const registry = new Puzzle3dBrushMeshRegistry();
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    expect(registry.holds(url, digest)).toBe(false);
+    registry.confirm(url, digest);
+    expect(registry.holds(url, digest)).toBe(true);
+    expect(registry.holds(url, puzzle3dBrushMeshDigest(example.positions, example.indices.slice(0, 3)))).toBe(false);
+    registry.forget(url);
+    expect(registry.holds(url, digest)).toBe(false);
+  });
+
+  // 🚚️ Wave W-H: the host's claim about what the guest holds is scoped to the guest instantiation that
+  // justified it. A restored actor's mesh store is empty (it is deliberately not part of any checkpoint),
+  // and the only evidence the host ever gets is `interactionJson.meshResidency` falling. Before this the
+  // claim lived in a page-lifetime `Map`, so every window activation after a restart re-announced seven
+  // identities by id alone, every one was refused into a notice nothing read, and the brush utility kept
+  // no collision geometry until a full browser reload.
+  it("re-pages every mesh instead of re-announcing when the guest restarted", () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const urls = ["/test/restart-a.glb", "/test/restart-b.glb"];
+    const registry = new Puzzle3dBrushMeshRegistry();
+    expect(registry.observeResidency(0)).toBe(false);
+    for (const [index, url] of urls.entries()) {
+      registry.confirm(url, digest);
+      expect(registry.observeResidency(index + 1)).toBe(false);
+    }
+    expect(urls.every((url) => registry.holds(url, digest))).toBe(true);
+    expect(registry.residency).toBe(urls.length);
+
+    expect(registry.observeResidency(0)).toBe(true);
+    expect(urls.some((url) => registry.holds(url, digest))).toBe(false);
+    expect(registry.size).toBe(0);
+
+    registry.confirm(urls[0]!, digest);
+    expect(registry.observeResidency(1)).toBe(false);
+    expect(registry.holds(urls[0]!, digest)).toBe(true);
+    expect(registry.holds(urls[1]!, digest)).toBe(false);
+  });
+
+  // 🚚️ Wave W-H: a guest that refuses an id-only announcement publishes the identity on the world body
+  // (`meshReuploadUrls`) and republishes it until the bytes land, so the claim must be answered exactly
+  // once per publishing residency — re-driving on every republish would be an upload storm, not recovery.
+  it("claims a guest re-upload request once per residency and drops the stale claim", () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const url = "/test/reupload-claim.glb";
+    const registry = new Puzzle3dBrushMeshRegistry();
+    registry.observeResidency(4);
+    registry.confirm(url, digest);
+    expect(registry.claimReupload(url, 4)).toBe(true);
+    expect(registry.holds(url, digest)).toBe(false);
+    expect(registry.claimReupload(url, 4)).toBe(false);
+    registry.confirm(url, digest);
+    expect(registry.claimReupload(url, 5)).toBe(true);
+    expect(registry.claimReupload(url, 5)).toBe(false);
+    expect(registry.observeResidency(0)).toBe(true);
+    expect(registry.claimReupload(url, 0)).toBe(true);
+    registry.clear();
+    expect(registry.residency).toBe(-1);
+    expect(registry.size).toBe(0);
+  });
+});
+//#endregion 🥽️Puzzle3dBrushMeshUpload
+
+//#region 🥽️SceneMeshKindReferences
+import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import sceneMeshKindFixture from "../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
+
+/** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
+ * the two generators (Rust `mesh_from_kind`, this host's `meshDataFromKind`). */
+function meshKindBounds(kind: string): { min: number[]; max: number[] } {
+  const positions = meshDataFromKind(kind).positions;
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let index = 0; index < positions.length; index += 3) {
+    for (let axis = 0; axis < 3; axis += 1) {
+      min[axis] = Math.min(min[axis]!, positions[index + axis]!);
+      max[axis] = Math.max(max[axis]!, positions[index + axis]!);
+    }
+  }
+  return { min, max };
+}
+
+describe("world-3d scene mesh kind references", () => {
+  it("resolves every built-in kind to the language-neutral fixture's local bounding box", () => {
+    expect(sceneMeshKindFixture.kinds.length).toBeGreaterThan(0);
+    for (const entry of sceneMeshKindFixture.kinds) {
+      const bounds = meshKindBounds(entry.kind);
+      for (let axis = 0; axis < 3; axis += 1) {
+        expect(Math.abs(bounds.min[axis]! - entry.min[axis]!)).toBeLessThanOrEqual(sceneMeshKindFixture.tolerance);
+        expect(Math.abs(bounds.max[axis]! - entry.max[axis]!)).toBeLessThanOrEqual(sceneMeshKindFixture.tolerance);
+      }
+      expect(meshDataFromKind(entry.kind).indices.length).toBeGreaterThan(0);
+      expect(meshDataFromKind(entry.kind).normals.length).toBe(meshDataFromKind(entry.kind).positions.length);
+    }
+  });
+
+  it("falls back to the fixture's fallback kind for a kind it never authored", () => {
+    expect(meshKindBounds("totally-unknown-kind")).toEqual(meshKindBounds(sceneMeshKindFixture.fallbackKind));
+  });
+
+  it("memoizes each kind so a scene refresh never re-tessellates", () => {
+    expect(meshDataFromKind("vortex-marker")).toBe(meshDataFromKind("vortex-marker"));
+  });
+});
+//#endregion 🥽️SceneMeshKindReferences

@@ -30,9 +30,22 @@ fn inference_determinism_law() {
     assert_eq!(Generation3dInference::infer(&snapshot), Generation3dInference::infer(&snapshot));
 }
 
+/// 💡️ LAW (totality on the identity element): the EMPTY document infers an empty topology — no
+/// nodes, no edges, an empty order, zero depth, and trivially cycle-free.
+///
+/// This is deliberately not `infer(Default::default()) == Inference::default()`: neither side of
+/// that equation holds. `Generation3dSnapshot::default()` is the three-widget demo graph
+/// (`default_generation3d_snapshot`'s docstring), and `Generation3dTopology::default()` is the
+/// DERIVED zero value, whose `cycle_free: false` contradicts the empty graph's real semantics
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn inference_default_law() {
-    assert_eq!(Generation3dInference::infer(&Generation3dSnapshot::default()), Generation3dInference::default());
+fn inference_of_the_empty_document_is_empty_and_trivially_cycle_free() {
+    let empty = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    assert_eq!(
+        Generation3dInference::infer(&empty),
+        Generation3dInference { topology: Generation3dTopology { node_count: 0, edge_count: 0, topo_order: Vec::new(), depth: 0, cycle_free: true } }
+    );
+    empty.retire_cold();
 }
 
 #[test]

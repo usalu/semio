@@ -5,7 +5,7 @@
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 
@@ -77,7 +77,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const formattedArgs = [...args];
   if (cmd === "bun" || cmd === process.execPath) {
-    if (formattedArgs[0] && !formattedArgs[0].startsWith("-") && !formattedArgs[0].includes("/") && !formattedArgs[0].includes("\\")) {
+    if (formattedArgs[0] && !formattedArgs[0].startsWith("-") && !formattedArgs[0].includes("/") && !formattedArgs[0].includes("\\") && !workspaceScriptExists(formattedArgs[0])) {
       const resolved = resolveWorkspaceBin(formattedArgs[0], opts.cwd ?? process.cwd());
       if (resolved) {
         formattedArgs[0] = resolved;
@@ -134,6 +134,21 @@ export function resolveWorkspaceBin(binName: string, cwd: string = process.cwd()
   const rootBin = join(getWorkspaceRoot(), "node_modules", ".bin", shortName);
   if (existsSync(rootBin)) return rootBin;
   return null;
+}
+
+let workspaceScriptNames: ReadonlySet<string> | null = null;
+
+/** 📜️Whether the workspace `package.json` declares a script under `name`. A declared script is the
+ * workspace's deliberate wrapper for that tool (`nx` routes through the caching bootstrap, which
+ * owns the daemon-served project graph the async ES-module inference plugin needs), so `bun <name>`
+ * must reach the script and never the bare `node_modules/.bin` entry of the same name. */
+export function workspaceScriptExists(name: string): boolean {
+  if (workspaceScriptNames === null) {
+    const manifest = join(getWorkspaceRoot(), "package.json");
+    const scripts = existsSync(manifest) ? (JSON.parse(readFileSync(manifest, "utf8")) as { scripts?: Record<string, string> }).scripts ?? {} : {};
+    workspaceScriptNames = new Set(Object.keys(scripts));
+  }
+  return workspaceScriptNames.has(name);
 }
 
 /** 🟢️Runs a CLI tool using `node` synchronously in `cwd`, returning status code. */

@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_fixture, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{commit_fixture, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_os_flow::FlowEvalSession;
@@ -22,32 +22,33 @@ fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
 }
 
 fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let mut host = host_from_fixture(fixture);
-    for operation in sub_operations {
-        match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-            "setFixture" => {
-                if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
-                    host.replace_fixture(new_fixture);
+    let operations = with_host(fixture, |host| {
+        for operation in sub_operations {
+            match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
+                "setFixture" => {
+                    if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
+                        host.replace_fixture(new_fixture);
+                    }
                 }
-            }
-            "deleteSelection" => {
-                for id in selected {
-                    let _ = host.remove_widget(id);
+                "deleteSelection" => {
+                    for id in selected {
+                        let _ = host.remove_widget(id);
+                    }
                 }
-            }
-            "connect" => {
-                let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
-                let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
-                let to = operation.get("targetNodeId").and_then(|value| value.as_str());
-                let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
-                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                    let _ = host.connect_ports(from, from_port, to, to_port);
+                "connect" => {
+                    let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                    let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
+                    let to = operation.get("targetNodeId").and_then(|value| value.as_str());
+                    let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
+                    if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                        let _ = host.connect_ports(from, from_port, to, to_port);
+                    }
                 }
+                _ => {}
             }
-            _ => {}
         }
-    }
-    let operations = commit_fixture(fixture, &host.fixture);
+        commit_fixture(fixture, &host.fixture)
+    });
     Emit { artifact_mutations: operations, ..Default::default() }
 }
 

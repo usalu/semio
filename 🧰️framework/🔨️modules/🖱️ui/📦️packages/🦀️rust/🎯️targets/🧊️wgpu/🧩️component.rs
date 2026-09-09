@@ -338,6 +338,29 @@ pub mod layout {
         })
     }
 
+    /// 🗂️ Every context-menu GROUP row id carries this prefix — the one spelling `organize_context_menu`
+    /// synthesizes and `shell_context_menu_item_from_spec` resolves against. Twin of ui-react's
+    /// `CONTEXT_MENU_GROUP_ID_PREFIX` (`🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`).
+    pub const CONTEXT_MENU_GROUP_ID_PREFIX: &str = "menu.group.";
+    /// 🗂️ The one group category OUTSIDE [`RIBBON_PARENT_CATEGORIES`]: the overflow bucket
+    /// `organize_context_menu` synthesizes when the row budget is exceeded. Twin of ui-react's
+    /// `CONTEXT_MENU_OVERFLOW_CATEGORY`.
+    pub const CONTEXT_MENU_OVERFLOW_CATEGORY: &str = "more";
+
+    /// 🗂️ EN/DE display label for a `menu.group.<category>` row, which the guest emits with `label: None`
+    /// by contract (the host owns the chrome vocabulary). Taxonomy categories resolve through
+    /// [`ribbon_parent_label`]; [`CONTEXT_MENU_OVERFLOW_CATEGORY`] — the one id outside the closed 20-id
+    /// taxonomy, and therefore the one that used to render with an EMPTY label — resolves here. `None`
+    /// for a row that is not a group row, or a group row whose category is unknown. Twin of ui-react's
+    /// `contextMenuGroupLabel` (`🛠️ShellHelpers/🟦️.tsx`), which reads `ui.contextMenu.more` for the same id.
+    pub fn context_menu_group_label(id: &str, is_de: bool) -> Option<&'static str> {
+        let category = id.strip_prefix(CONTEXT_MENU_GROUP_ID_PREFIX)?;
+        if category == CONTEXT_MENU_OVERFLOW_CATEGORY {
+            return Some(if is_de { "Mehr" } else { "More" });
+        }
+        ribbon_parent_label(category, is_de)
+    }
+
     const CONTEXT_MENU_ROW_BUDGET: usize = 9;
     const CONTEXT_MENU_PRIMARY_BUDGET: usize = 5;
 
@@ -354,12 +377,12 @@ pub mod layout {
 
     // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
     fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
-        item.id.starts_with("menu.group.")
+        item.id.starts_with(CONTEXT_MENU_GROUP_ID_PREFIX)
     }
 
     // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
     fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
-        item.id.strip_prefix("menu.group.").unwrap_or(item.id.as_str())
+        item.id.strip_prefix(CONTEXT_MENU_GROUP_ID_PREFIX).unwrap_or(item.id.as_str())
     }
 
     // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
@@ -482,7 +505,7 @@ pub mod layout {
             }
             if let Some(header_label) = &current_header_key {
                 let slug = header_label.to_lowercase().split_whitespace().collect::<Vec<_>>().join("-");
-                let index = bucket_mut(&mut bucketed_groups, format!("menu.group.{slug}"));
+                let index = bucket_mut(&mut bucketed_groups, format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{slug}"));
                 bucketed_groups[index].children.get_or_insert_with(Vec::new).push(item);
                 continue;
             }
@@ -491,7 +514,7 @@ pub mod layout {
                 continue;
             }
             let category = category_of(item.action.as_deref().unwrap_or(item.id.as_str())).unwrap_or_else(|| "actions".into());
-            let index = bucket_mut(&mut bucketed_groups, format!("menu.group.{category}"));
+            let index = bucket_mut(&mut bucketed_groups, format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{category}"));
             bucketed_groups[index].children.get_or_insert_with(Vec::new).push(item);
         }
 
@@ -508,7 +531,7 @@ pub mod layout {
             for group in overflowing_groups {
                 folded_children.extend(group.children.unwrap_or_default());
             }
-            out.push(ContextMenuItemSpec { id: "menu.group.more".into(), label: None, children: Some(folded_children), ..Default::default() });
+            out.push(ContextMenuItemSpec { id: format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{CONTEXT_MENU_OVERFLOW_CATEGORY}"), label: None, children: Some(folded_children), ..Default::default() });
         }
         if !destructive_leaves.is_empty() {
             out.push(context_menu_separator_row(out.len()));
@@ -1830,7 +1853,7 @@ pub mod ui {
     use std::collections::HashMap;
 
     //#region 🔖Action
-    pub use super::layout::{build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label, ShellMenuAction, RIBBON_PARENT_CATEGORIES};
+    pub use super::layout::{build_shell_context_menu_specs, context_menu_group_label, organize_context_menu, ribbon_parent_label, ShellMenuAction, CONTEXT_MENU_GROUP_ID_PREFIX, CONTEXT_MENU_OVERFLOW_CATEGORY, RIBBON_PARENT_CATEGORIES};
     pub use super::layout::{ActionDescriptor, StyleSpec, UiPeerMark, UiPresence, UiState, UiStatus};
     pub use super::layout::{ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef};
     //#endregion 🔖Action

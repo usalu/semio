@@ -17,7 +17,7 @@
 #[cfg(test)]
 use std::collections::HashSet;
 use std::mem::{size_of, take};
-use std::sync::{LazyLock, Mutex};
+use std::sync::{LazyLock, Mutex, MutexGuard, OnceLock};
 
 #[path = "../../📤️output/🦀️.rs"]
 mod output;
@@ -2378,8 +2378,7 @@ fn try_reserve_surface_reconcile_handback(generation: u64) -> Option<SurfaceReco
 }
 
 #[expect(clippy::needless_pass_by_value, reason = "Releasing a reservation consumes its unique slot authority so callers cannot reuse it.")]
-fn release_surface_reconcile_handback(reservation: SurfaceReconcileHandbackReservation) {
-    let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+fn release_surface_reconcile_handback_in(registry: &mut SurfaceReconcileHandbackRegistry, reservation: SurfaceReconcileHandbackReservation) {
     let should_free = {
         let Some(slot) = registry.slots.get_mut(reservation.key.slot) else { return };
         if !slot.reserved || slot.epoch != reservation.key.epoch || slot.generation != reservation.key.generation || slot.state.is_some() {
@@ -2394,6 +2393,11 @@ fn release_surface_reconcile_handback(reservation: SurfaceReconcileHandbackReser
         registry.free[index] = reservation.key.slot;
         registry.free_len += 1;
     }
+}
+
+fn release_surface_reconcile_handback(reservation: SurfaceReconcileHandbackReservation) {
+    let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    release_surface_reconcile_handback_in(&mut registry, reservation);
 }
 
 fn release_surface_reconcile_handback_one(owner: &mut Option<SurfaceReconcileHandbackReservation>) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
@@ -3379,6 +3383,50 @@ pub fn close_surface_reconcile_handback_one() -> Result<bool, &'static str> {
         registry.retirement_len += 1;
     }
     Ok(registry.retirement_len == 0 && !ui_contract::UiResidentPermit::has_pending_returns())
+}
+
+
+/// 🔒️ Serializes laws that admit into the process-wide surface output, resident, and handback registries.
+pub fn surface_reconcile_registry_test_guard() -> SurfaceReconcileRegistryTestGuard {
+    SurfaceReconcileRegistryTestGuard::acquire()
+}
+
+pub struct SurfaceReconcileRegistryTestGuard {
+    _lock: MutexGuard<'static, ()>,
+}
+
+impl SurfaceReconcileRegistryTestGuard {
+    fn acquire() -> Self {
+        static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
+        let lock = GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        drain_surface_reconcile_registry_until_idle();
+        Self { _lock: lock }
+    }
+}
+
+impl Drop for SurfaceReconcileRegistryTestGuard {
+    fn drop(&mut self) {
+        drain_surface_reconcile_registry_until_idle();
+    }
+}
+
+fn drain_surface_reconcile_registry_until_idle() {
+    output::recover_output_registry_poison();
+    drop(SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+    for _ in 0..(64 * 4 + SURFACE_RECONCILE_HANDBACK_SLOTS * 8) {
+        let output_pending = output::output_registry_has_pending_returns();
+        if output_pending {
+            let _ = SurfaceReconcileOutputs::drain_one(1, SURFACE_RECONCILE_PAGE_BYTES);
+        }
+        let resident_pending = ui_contract::UiResidentPermit::has_pending_returns();
+        if resident_pending {
+            let _ = ui_contract::UiResidentPermit::drain_one();
+        }
+        let handback_idle = close_surface_reconcile_handback_one().unwrap_or(false);
+        if !output_pending && !resident_pending && handback_idle {
+            return;
+        }
+    }
 }
 
 #[cfg(test)]

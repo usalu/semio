@@ -2,9 +2,9 @@
   "fixture": {
     "schema": "flow.fixture",
     "camera": {
-      "x": 0,
-      "y": 0,
-      "zoom": 1
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
     },
     "widgets": [
       {
@@ -21,8 +21,8 @@
     "synapses": [],
     "layout": {
       "note-a": {
-        "x": 0,
-        "y": 0
+        "x": 0.0,
+        "y": 0.0
       }
     }
   },

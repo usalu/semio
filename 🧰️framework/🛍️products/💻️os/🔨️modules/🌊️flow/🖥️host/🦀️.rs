@@ -1089,7 +1089,16 @@ impl FlowHost {
         }
         let tree = self.build_tree();
         let mut outputs = self.build_seeds();
-        outputs.extend(self.outputs.clone());
+        // 🧹️ `self.outputs` republishes every SEEDED widget's channel too, so a plain `extend`
+        // displaces those seed dictionaries and lets `HashMap::insert`'s returned `Option<Dictionary>`
+        // drop — and `Dictionary` fail-closes on a bare drop
+        // (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`). Retire what is displaced
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        for (widget_id, channels) in self.outputs.clone() {
+            if let Some(displaced) = outputs.insert(widget_id, channels) {
+                displaced.retire_cold();
+            }
+        }
         let mut missing = Vec::new();
         for channel in &operator_info.inputs {
             if channel.name == "*" {
@@ -2093,7 +2102,7 @@ pub struct FlowHostRetirement {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FlowHostRetirementFault {
+pub enum FlowHostRetirementFault {
     NoCredit,
     Failed,
 }
@@ -2177,7 +2186,7 @@ impl FlowHostRetirement {
     }
 
     /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
-    pub(crate) fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
+    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
         use crate::os_store::ErasedSnapshotRetirement;
         use crate::retained::FlowOwner;
         let state = &mut *self.state;
@@ -2299,6 +2308,27 @@ impl Drop for FlowHostRetirement {
     }
 }
 
+impl FlowHost {
+    /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowFixture::retire_cold`].
+    /// A `FlowHost` owns a `FlowFixture`, whose `layout: OrderedMap<WidgetLayout>` panics on a bare
+    /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
+    /// dropped. Retained callers drive [`FlowHostRetirement::close_step`] under their own grant
+    /// instead; this drains the same ladder in one uninterrupted cold pass.
+    pub fn retire_cold(self) {
+        let mut retirement = FlowHostRetirement::new(self);
+        while !retirement.close_page(1, 4096).expect("cold flow host retirement") {}
+    }
+
+    /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
+    /// caller that only needs a host for the length of an expression should use.
+    pub fn with_fixture<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+        let mut host = Self::from_fixture(fixture.clone());
+        let result = body(&mut host);
+        host.retire_cold();
+        result
+    }
+}
+
 // #region 🔖️EvalSession
 #[cfg(test)]
 #[path = "🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs"]
@@ -2342,11 +2372,28 @@ pub struct FlowEvalSessionState {
     status_json: String,
     tick_scheduled: bool,
     live_geometry_handles: BTreeSet<String>,
-    /// 🧊 Tessellated preview meshes keyed by geometry handle — filled via extension `tessellate`
-    /// because runtime-installable brep owns the kernel that minted the handles.
-    preview_mesh_json_by_handle: BTreeMap<String, String>,
-    /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`.
+    /// 🧊 Tessellated preview meshes keyed by geometry handle, each one a base64 `pack` record body
+    /// (see `brep_geometry::encode_mesh_pack`) — filled via extension `tessellate` because
+    /// runtime-installable brep owns the kernel that minted the handles. Binary, not a JSON number
+    /// array: the render path decodes typed arrays instead of parsing millions of JSON tokens.
+    preview_mesh_pack_by_handle: BTreeMap<String, String>,
+    /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`. A
+    /// request is removed the moment its answer is folded, even a partial one — the continuation
+    /// re-admits it on the next tick.
     pending_tessellate_by_hash: BTreeMap<u64, String>,
+    /// 🔗 The handle every admitted `nodeHash` belongs to, kept for as long as the tessellation is
+    /// unfinished. This is what makes a MULTI-STEP tessellation survive `retain_preview_meshes`:
+    /// its progress row and its half-received mesh body are keyed by hash, and pruning them by the
+    /// (already emptied) pending table would restart the transfer from chunk zero forever.
+    tessellate_handle_by_hash: BTreeMap<u64, String>,
+    /// 📈 Progress of every tessellation this session has admitted, keyed by `nodeHash`. Plain
+    /// `Copy` rows — no heap, so retirement is a single take.
+    tessellate_progress_by_hash: BTreeMap<u64, PreviewTessellateProgress>,
+    /// 🧱 Partially received mesh bodies keyed by `nodeHash`, accumulated one intake-sized base64
+    /// chunk per round trip until `next_chunk == chunks`.
+    tessellate_chunks_by_hash: BTreeMap<u64, String>,
+    /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
+    preview_diagnostics_by_handle: BTreeMap<String, String>,
     retiring_cache: Option<neural::NeuralCacheRetirement>,
     retirement: neural::ValueRetirement,
     retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
@@ -2405,8 +2452,12 @@ impl FlowEvalSession {
                 status_json: "{}".into(),
                 tick_scheduled: false,
                 live_geometry_handles: BTreeSet::new(),
-                preview_mesh_json_by_handle: BTreeMap::new(),
+                preview_mesh_pack_by_handle: BTreeMap::new(),
                 pending_tessellate_by_hash: BTreeMap::new(),
+                tessellate_handle_by_hash: BTreeMap::new(),
+                tessellate_progress_by_hash: BTreeMap::new(),
+                tessellate_chunks_by_hash: BTreeMap::new(),
+                preview_diagnostics_by_handle: BTreeMap::new(),
                 retiring_cache: None,
                 retirement: neural::ValueRetirement::default(),
                 retiring_collections: std::collections::LinkedList::new(),
@@ -2493,8 +2544,12 @@ impl FlowEvalSession {
         }
         state.retirement.text(std::mem::replace(&mut state.status_json, "{}".into()));
         state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_json_by_handle)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)));
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
+        state.tessellate_progress_by_hash.clear();
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
             if let Some(previous) = map.remove(&state.session_id) {
                 state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
@@ -2512,42 +2567,166 @@ impl FlowEvalSession {
         seed_flow_eval_node_cache(cache, node_hash, output_json)
     }
 
-    /// 🧊 Preview mesh JSON previously resolved through the owning geometry extension.
-    pub fn preview_mesh_json(&self, handle: &str) -> Option<&str> {
-        self.preview_mesh_json_by_handle.get(handle).map(String::as_str)
+    /// 🧊 Preview mesh body (base64 `pack` record body) previously resolved through the owning
+    /// geometry extension.
+    pub fn preview_mesh_pack(&self, handle: &str) -> Option<&str> {
+        self.preview_mesh_pack_by_handle.get(handle).map(String::as_str)
     }
 
-    /// 🧹 Drops preview meshes/pending tessellates whose handles are no longer live.
+    /// 🩺 Blocking validate-gate findings for `handle`, as a JSON array string.
+    pub fn preview_diagnostics(&self, handle: &str) -> Option<&str> {
+        self.preview_diagnostics_by_handle.get(handle).map(String::as_str)
+    }
+
+    /// 🩺 Every handle the validate gate rejected, paired with its JSON issue array.
+    pub fn preview_diagnostic_entries(&self) -> Vec<(&str, &str)> {
+        self.preview_diagnostics_by_handle.iter().map(|(handle, issues)| (handle.as_str(), issues.as_str())).collect()
+    }
+
+    /// 🧹 Drops preview meshes/pending tessellates whose handles are no longer live. A tessellation
+    /// still in progress keeps its row and its half-received body — liveness is judged by HANDLE
+    /// (`tessellate_handle_by_hash`), never by the pending table, which a partial answer empties.
     pub fn retain_preview_meshes(&mut self, live_handles: &HashSet<String>) {
-        self.preview_mesh_json_by_handle.retain(|handle, _| live_handles.contains(handle));
+        self.preview_mesh_pack_by_handle.retain(|handle, _| live_handles.contains(handle));
+        self.preview_diagnostics_by_handle.retain(|handle, _| live_handles.contains(handle));
+        self.tessellate_handle_by_hash.retain(|_, handle| live_handles.contains(handle));
         self.pending_tessellate_by_hash.retain(|_, handle| live_handles.contains(handle));
+        let live_hashes: BTreeSet<u64> = self.tessellate_handle_by_hash.keys().copied().collect();
+        self.tessellate_progress_by_hash.retain(|hash, _| live_hashes.contains(hash));
+        self.tessellate_chunks_by_hash.retain(|hash, _| live_hashes.contains(hash));
     }
 
     /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
     pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String) -> bool {
-        if let Some(json) = self.preview_mesh_json_by_handle.get(&handle) {
-            if preview_mesh_json_has_geometry(json) {
+        if let Some(pack) = self.preview_mesh_pack_by_handle.get(&handle) {
+            if preview_mesh_pack_has_geometry(pack) {
                 return false;
             }
-            self.preview_mesh_json_by_handle.remove(&handle);
+            self.preview_mesh_pack_by_handle.remove(&handle);
+        }
+        if self.preview_diagnostics_by_handle.contains_key(&handle) {
+            return false;
         }
         if self.pending_tessellate_by_hash.values().any(|pending| pending == &handle) {
             return false;
         }
+        self.tessellate_handle_by_hash.insert(node_hash, handle.clone());
         self.pending_tessellate_by_hash.insert(node_hash, handle);
         true
     }
 
-    /// ✅ Stores a tessellate response under the handle recorded for `node_hash`.
-    pub fn resolve_preview_tessellate(&mut self, node_hash: u64, output_json: &str) -> bool {
-        let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
-            return false;
-        };
-        if !preview_mesh_json_has_geometry(output_json) {
-            return false;
+    /// 🧱 The mesh-body chunk index the next `tessellate` round trip for `node_hash` must ask for.
+    pub fn next_tessellate_chunk(&self, node_hash: u64) -> u32 {
+        self.tessellate_progress_by_hash.get(&node_hash).map_or(0, |progress| progress.next_chunk)
+    }
+
+    /// 📈 Aggregate progress of every tessellation this session has admitted and not yet finished —
+    /// what the preview window's status object reports.
+    pub fn preview_tessellate_status(&self) -> PreviewTessellateStatus {
+        let mut status = PreviewTessellateStatus::default();
+        status.in_flight = self.pending_tessellate_by_hash.len() as u32;
+        status.diagnostics = self.preview_diagnostics_by_handle.len() as u32;
+        for progress in self.tessellate_progress_by_hash.values() {
+            status.units_done = status.units_done.saturating_add(progress.units_done);
+            status.units_total = status.units_total.saturating_add(progress.units_total);
+            status.faces_done = status.faces_done.saturating_add(progress.faces_done);
+            status.faces_total = status.faces_total.saturating_add(progress.faces_total);
+            if progress.phase != PreviewTessellatePhase::Complete {
+                status.phase = progress.phase;
+            }
         }
-        self.preview_mesh_json_by_handle.insert(handle, output_json.to_string());
-        true
+        if status.units_total == 0 && status.in_flight > 0 {
+            status.phase = PreviewTessellatePhase::SamplingEdges;
+        }
+        status
+    }
+
+    /// 🛑 Retires every in-flight preview evaluation and tessellation: the kernel jobs are cancelled
+    /// in place, every pending request is forgotten and every partial mesh body is dropped. Returns
+    /// how many in-flight tessellations were retired. Idempotent — a second cancel is a no-op.
+    pub fn cancel_preview_evaluation(&mut self) -> usize {
+        let retired = self.pending_tessellate_by_hash.len();
+        crate::brep_geometry::cancel_all_tessellations();
+        let state = &mut *self.state;
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
+        for progress in state.tessellate_progress_by_hash.values_mut() {
+            if progress.phase != PreviewTessellatePhase::Complete {
+                progress.phase = PreviewTessellatePhase::Cancelled;
+            }
+        }
+        state.tick_scheduled = false;
+        retired
+    }
+
+    /// 🧹 Retires one tessellation's transfer state (its handle binding and any half-received mesh
+    /// body) without touching the progress row the status object still reports.
+    fn retire_tessellate_transfer(&mut self, node_hash: u64) {
+        let state = &mut *self.state;
+        state.tessellate_handle_by_hash.remove(&node_hash);
+        if let Some(partial) = state.tessellate_chunks_by_hash.remove(&node_hash) {
+            state.retirement.text(partial);
+        }
+    }
+
+    /// ✅ Folds one `tessellate` response envelope into this session. The mesh only lands once every
+    /// chunk of its `pack` body has arrived; until then the caller re-arms another round trip.
+    pub fn resolve_preview_tessellate(&mut self, node_hash: u64, output_json: &str) -> PreviewTessellateOutcome {
+        let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
+            return PreviewTessellateOutcome::Unknown;
+        };
+        let Ok(envelope) = crate::os_pack::json::parse(output_json) else {
+            return PreviewTessellateOutcome::Failed;
+        };
+        let phase = envelope.get("phase").and_then(|value| value.as_str()).unwrap_or_default();
+        let uint = |key: &str| envelope.get(key).and_then(|value| value.as_f64()).unwrap_or_default().max(0.0) as u32;
+        let mut progress = PreviewTessellateProgress { units_done: uint("unitsDone"), units_total: uint("unitsTotal"), faces_done: uint("facesDone"), faces_total: uint("facesTotal"), phase: PreviewTessellatePhase::from_tag(phase), next_chunk: 0, chunks: uint("chunks") };
+        match progress.phase {
+            PreviewTessellatePhase::Invalid => {
+                let diagnostics = envelope.get("diagnostics").cloned().unwrap_or(crate::os_pack::json::Value::Array(Vec::new()));
+                self.preview_diagnostics_by_handle.insert(handle, crate::os_pack::json::to_string(&diagnostics));
+                self.retire_tessellate_transfer(node_hash);
+                self.tessellate_progress_by_hash.insert(node_hash, progress);
+                PreviewTessellateOutcome::Invalid
+            }
+            PreviewTessellatePhase::Failed => {
+                self.retire_tessellate_transfer(node_hash);
+                self.tessellate_progress_by_hash.insert(node_hash, progress);
+                PreviewTessellateOutcome::Failed
+            }
+            PreviewTessellatePhase::Cancelled => {
+                self.retire_tessellate_transfer(node_hash);
+                self.tessellate_progress_by_hash.insert(node_hash, progress);
+                PreviewTessellateOutcome::Cancelled
+            }
+            PreviewTessellatePhase::Complete => {
+                let chunk = envelope.get("meshPack").and_then(|value| value.as_str()).unwrap_or_default();
+                let index = uint("chunk");
+                let assembled = self.tessellate_chunks_by_hash.entry(node_hash).or_default();
+                assembled.push_str(chunk);
+                progress.next_chunk = index.saturating_add(1);
+                if progress.next_chunk < progress.chunks {
+                    self.tessellate_progress_by_hash.insert(node_hash, progress);
+                    return PreviewTessellateOutcome::Working;
+                }
+                let Some(body) = self.tessellate_chunks_by_hash.remove(&node_hash) else {
+                    return PreviewTessellateOutcome::Failed;
+                };
+                if !preview_mesh_pack_has_geometry(&body) {
+                    self.tessellate_progress_by_hash.insert(node_hash, progress);
+                    return PreviewTessellateOutcome::Failed;
+                }
+                self.preview_mesh_pack_by_handle.insert(handle, body);
+                self.tessellate_handle_by_hash.remove(&node_hash);
+                self.tessellate_progress_by_hash.insert(node_hash, progress);
+                PreviewTessellateOutcome::Ready
+            }
+            _ => {
+                self.tessellate_progress_by_hash.insert(node_hash, progress);
+                PreviewTessellateOutcome::Working
+            }
+        }
     }
 
     /// 🧹 Begins exact incremental retirement of this instance-owned evaluation session.
@@ -2606,8 +2785,16 @@ impl FlowEvalSession {
             }
             return Step::Pending { released_items: 1, released_bytes: 0 };
         }
-        if !state.preview_mesh_json_by_handle.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_json_by_handle)));
+        if !state.preview_mesh_pack_by_handle.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)));
+        } else if !state.preview_diagnostics_by_handle.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)));
+        } else if !state.tessellate_chunks_by_hash.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
+        } else if !state.tessellate_handle_by_hash.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
+        } else if !state.tessellate_progress_by_hash.is_empty() {
+            state.tessellate_progress_by_hash.clear();
         } else if !state.pending_tessellate_by_hash.is_empty() {
             state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
         } else if !state.live_geometry_handles.is_empty() {
@@ -2646,7 +2833,11 @@ impl FlowEvalSession {
             && self.eval_json.capacity() == 0
             && self.status_json.capacity() == 0
             && self.live_geometry_handles.is_empty()
-            && self.preview_mesh_json_by_handle.is_empty()
+            && self.preview_mesh_pack_by_handle.is_empty()
+            && self.preview_diagnostics_by_handle.is_empty()
+            && self.tessellate_chunks_by_hash.is_empty()
+            && self.tessellate_handle_by_hash.is_empty()
+            && self.tessellate_progress_by_hash.is_empty()
             && self.pending_tessellate_by_hash.is_empty()
             && self.retiring_cache.is_none()
             && self.retirement.terminal_is_empty()
@@ -2654,17 +2845,147 @@ impl FlowEvalSession {
     }
 }
 
-fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
-    let Ok(value) = crate::os_pack::json::parse(output_json) else {
+/// 🧊 True when a base64 `pack` mesh body carries something paintable — decoded once, structurally,
+/// never by re-parsing prose.
+fn preview_mesh_pack_has_geometry(base64_body: &str) -> bool {
+    let Ok(bytes) = crate::brep_geometry::decode_base64(base64_body) else {
         return false;
     };
-    if value.get("error").is_some() {
+    let Ok(mesh) = crate::brep_geometry::decode_mesh_pack(&bytes) else {
         return false;
+    };
+    (!mesh.indices.is_empty() && mesh.positions.len() >= 9) || mesh.edge_positions.len() >= 6 || (mesh.positions.len() >= 3 && mesh.indices.is_empty())
+}
+
+/// ⏱️ Where one preview tessellation currently is — the wire-stable mirror of the kernel's own
+/// `TessellationPhase`, widened by the two boundary-only outcomes (`invalid`, `failed`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PreviewTessellatePhase {
+    #[default]
+    Idle,
+    SamplingEdges,
+    MeshingFaces,
+    PackingEdges,
+    Transferring,
+    Complete,
+    Cancelled,
+    Invalid,
+    Failed,
+}
+
+impl PreviewTessellatePhase {
+    /// 🏷️ The stable wire tag, shared by the extension envelope, the status object and the UI.
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Idle => "idle",
+            Self::SamplingEdges => "samplingEdges",
+            Self::MeshingFaces => "meshingFaces",
+            Self::PackingEdges => "packingEdges",
+            Self::Transferring => "transferring",
+            Self::Complete => "complete",
+            Self::Cancelled => "cancelled",
+            Self::Invalid => "invalid",
+            Self::Failed => "failed",
+        }
     }
-    let positions = value.get("positions").and_then(|v| v.as_array()).map_or(0, |a| a.len());
-    let indices = value.get("indices").and_then(|v| v.as_array()).map_or(0, |a| a.len());
-    let edges = value.get("edgePositions").or_else(|| value.get("edge_positions")).and_then(|v| v.as_array()).map_or(0, |a| a.len());
-    (indices > 0 && positions >= 9) || edges >= 6 || (positions >= 3 && indices == 0)
+
+    /// 🏷️ Inverse of [`PreviewTessellatePhase::tag`]; an unknown tag reads as `Idle`.
+    pub fn from_tag(tag: &str) -> Self {
+        match tag {
+            "samplingEdges" => Self::SamplingEdges,
+            "meshingFaces" => Self::MeshingFaces,
+            "packingEdges" => Self::PackingEdges,
+            "transferring" => Self::Transferring,
+            "complete" => Self::Complete,
+            "cancelled" => Self::Cancelled,
+            "invalid" => Self::Invalid,
+            "failed" => Self::Failed,
+            _ => Self::Idle,
+        }
+    }
+
+    /// 🛑 True while a cancel can still retire the job.
+    pub fn is_cancellable(self) -> bool {
+        matches!(self, Self::SamplingEdges | Self::MeshingFaces | Self::PackingEdges | Self::Transferring)
+    }
+
+    /// 🌍 English and German labels — the UI carries both, with no default language.
+    pub fn labels(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Idle => ("Idle", "Bereit"),
+            Self::SamplingEdges => ("Sampling edges", "Kanten werden abgetastet"),
+            Self::MeshingFaces => ("Meshing faces", "Flächen werden vernetzt"),
+            Self::PackingEdges => ("Packing edges", "Kanten werden gepackt"),
+            Self::Transferring => ("Transferring mesh", "Netz wird übertragen"),
+            Self::Complete => ("Complete", "Fertig"),
+            Self::Cancelled => ("Cancelled", "Abgebrochen"),
+            Self::Invalid => ("Invalid geometry", "Ungültige Geometrie"),
+            Self::Failed => ("Failed", "Fehlgeschlagen"),
+        }
+    }
+}
+
+/// 📈 One tessellation's monotone progress plus its mesh-body chunk cursor.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewTessellateProgress {
+    pub units_done: u32,
+    pub units_total: u32,
+    pub faces_done: u32,
+    pub faces_total: u32,
+    pub phase: PreviewTessellatePhase,
+    pub next_chunk: u32,
+    pub chunks: u32,
+}
+
+/// 📈 The whole session's preview tessellation state, as the status object reports it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewTessellateStatus {
+    pub units_done: u32,
+    pub units_total: u32,
+    pub faces_done: u32,
+    pub faces_total: u32,
+    pub in_flight: u32,
+    pub diagnostics: u32,
+    pub phase: PreviewTessellatePhase,
+}
+
+impl PreviewTessellateStatus {
+    /// 📈 Fraction of the admitted work already done, in `[0, 1]`.
+    pub fn ratio(&self) -> f64 {
+        if self.units_total == 0 {
+            return if self.in_flight == 0 { 1.0 } else { 0.0 };
+        }
+        (f64::from(self.units_done) / f64::from(self.units_total)).clamp(0.0, 1.0)
+    }
+
+    /// 🛑 True while an explicit cancel would still retire something.
+    pub fn is_cancellable(&self) -> bool {
+        self.in_flight > 0 || self.phase.is_cancellable()
+    }
+}
+
+/// ✅ What one folded `tessellate` response did to the session.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PreviewTessellateOutcome {
+    /// 🔁 More units or more mesh-body chunks remain — re-arm another round trip.
+    Working,
+    /// ✅ The complete mesh landed under its handle.
+    Ready,
+    /// 🩺 The validate gate rejected the topology; a typed diagnostic is stored for the handle.
+    Invalid,
+    /// 🛑 The job was cancelled.
+    Cancelled,
+    /// 💥 The extension faulted or sent an undecodable body.
+    Failed,
+    /// ❓ No pending request carried this `nodeHash` — a stale or superseded response.
+    Unknown,
+}
+
+impl PreviewTessellateOutcome {
+    /// 🔁 True when the caller must dispatch another tick to continue this tessellation.
+    pub fn needs_another_round_trip(self) -> bool {
+        matches!(self, Self::Working)
+    }
 }
 
 /// 🧬 Stable `nodeHash` for an extension tessellate request (mirrored through ShellHost).

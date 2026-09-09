@@ -175,7 +175,7 @@ fn node_graph_scene_payload_from_json_defaults_missing_fields() {
     assert!(payload.nodes.is_empty());
     assert!(payload.edges.is_empty());
     assert!(payload.viewport.is_none());
-    assert!(payload.catalogue_json.is_none());
+    assert!(payload.controls_json.is_none());
 }
 
 #[test]
@@ -186,7 +186,6 @@ fn node_graph_scene_payload_from_json_reads_optional_fields() {
         "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
         "previewOffJson": "[]",
         "lodJson": "{}",
-        "catalogueJson": "cat",
         "controlsJson": "ctl",
         "clustersJson": "clu",
         "computingJson": "{}",
@@ -196,7 +195,6 @@ fn node_graph_scene_payload_from_json_reads_optional_fields() {
     let payload = NodeGraphScenePayload::from_json(&value);
     assert_eq!(payload.nodes.len(), 1);
     assert_eq!(payload.edges.len(), 1);
-    assert_eq!(payload.catalogue_json.as_deref(), Some("cat"));
     assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
     assert_eq!(payload.clusters_json.as_deref(), Some("clu"));
     assert_eq!(payload.capabilities_json.as_deref(), Some("cap"));
@@ -222,14 +220,17 @@ fn payload_with_node(id: &str) -> NodeGraphScenePayload {
     }
 }
 
+/// 🛍️ The app-static palette catalogue arrives on its OWN channel — never on a scene payload, whose
+/// fixed 32 KiB admission it would blow with real operator sets installed
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1) — and a scene sync must never clear it.
 #[test]
-fn graph_host_sync_from_payload_updates_catalogue_without_signature_change() {
+fn graph_host_keeps_the_app_catalogue_across_scene_syncs() {
     let mut host = GraphHost::default();
-    let mut payload = payload_with_node("a");
-    payload.catalogue_json = Some("first".into());
+    let payload = payload_with_node("a");
+    host.set_catalogue_json("first");
     host.sync_from_payload(&payload).expect("sync");
     assert_eq!(host.catalogue_json, "first");
-    payload.catalogue_json = Some("second".into());
+    host.set_catalogue_json("second");
     host.sync_from_payload(&payload).expect("sync");
     assert_eq!(host.catalogue_json, "second");
 }

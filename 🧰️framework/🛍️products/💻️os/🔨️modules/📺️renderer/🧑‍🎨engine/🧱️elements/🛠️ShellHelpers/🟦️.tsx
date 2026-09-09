@@ -48,6 +48,8 @@ import {
   dialectCoordinate,
   type CommandAddress,
   type CommandDefinition,
+  CONTEXT_MENU_GROUP_ID_PREFIX,
+  CONTEXT_MENU_OVERFLOW_CATEGORY,
   type CommandInvocation,
   type DerivedUtilitySpec,
   deriveUtilityNodes,
@@ -74,6 +76,7 @@ import {
   panelTabKindId,
   partitionWindowMeasures,
   pendingPanelUiNode,
+  type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginCatalog,
   type PluginUiRefreshRequest,
@@ -85,7 +88,6 @@ import {
   resolvePluginHostConfig,
   resolveUiDirtyScope,
   resolveWindowActions,
-  SET_ACTIVE_TOOL_ACTION_ID,
   SET_ACTIVE_UTILITY_ACTION_ID,
   SHELL_LOCALES,
   START_INTRODUCTION_ACTION_ID,
@@ -1604,13 +1606,9 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
   return resolved;
 }
 
-/** 🧰️ Chrome-known ribbon-group ids that already have a `ui.ribbon.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
-
-/** 🧰️ Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id. */
+/** 🧰️ Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids ({@link ribbonParentLabel}), else the raw id. */
 function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
-  const known = UI_RIBBON_PARENT_CATEGORIES.find((category) => category === group);
-  const fallback = known === undefined ? group : shellLabel(`ui.ribbon.parent.${known}`);
-  return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
+  return resolveAppLabel(appLabelsOverlay, "group", group, ribbonParentLabel(group) ?? group);
 }
 
 /** 🧰️ One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label (and, for grouped utilities, the group label) through the app's locale/terminology overlay. `UtilityDefinition.label` is a manifest `LocalizedLabel` field. */
@@ -1752,6 +1750,29 @@ export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: numbe
  * interpolation for keys with `{{placeholders}}`. */
 export function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): UiLabel {
   return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
+}
+
+/** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`
+ * chrome bundle the ribbon itself reads (`uiRibbonParentEn`/`uiRibbonParentDe`) — the TypeScript twin
+ * of `ui_wgpu::wgpu::ribbon_parent_label`. `undefined` for any id outside the closed 20-id taxonomy;
+ * callers fall back to whatever raw id or overlay label they hold. The one resolver behind every
+ * ribbon-parent lookup in this shell ({@link resolveUtilityGroupLabel}, `actionCategoryLabel`,
+ * {@link contextMenuGroupLabel}) so the taxonomy never grows a second string table. */
+export function ribbonParentLabel(category: string): UiLabel | undefined {
+  const known = UI_RIBBON_PARENT_CATEGORIES.find((value) => value === category);
+  return known === undefined ? undefined : shellLabel(`ui.ribbon.parent.${known}`);
+}
+
+/** 🗂️ Display label for a `menu.group.<category>` row, which the guest emits with `label: None` on
+ * purpose (the host owns the chrome vocabulary — see `plugin/🦀️.rs`'s `Menu::group` doc and the wgpu
+ * twin `shell_context_menu_item_from_spec`). Taxonomy categories resolve through
+ * {@link ribbonParentLabel}; the overflow row `organizeContextMenu` synthesizes (`menu.group.more`)
+ * is the one id outside the taxonomy and resolves through `ui.contextMenu.more`. `undefined` for any
+ * row that is not a group row, or a group row whose category is unknown. */
+export function contextMenuGroupLabel(id: string): UiLabel | undefined {
+  if (!id.startsWith(CONTEXT_MENU_GROUP_ID_PREFIX)) return undefined;
+  const category = id.slice(CONTEXT_MENU_GROUP_ID_PREFIX.length);
+  return category === CONTEXT_MENU_OVERFLOW_CATEGORY ? shellLabel("ui.contextMenu.more") : ribbonParentLabel(category);
 }
 
 //#region 👁️✏️SurfaceRoleLabels
@@ -2021,6 +2042,10 @@ export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   introductionLabels: {},
   groupLabels: {},
 };
+
+/** @emoji 🛍️ Stable empty catalogue reference so scene hosts depending on `AppCatalogueContext` don't
+ * re-render before the first `catalogue` section fetch resolves. */
+export const EMPTY_APP_CATALOGUE: AppCatalogue = Object.freeze({});
 
 /** 🗺️ Synthesizes a full `LocalizedLabel` matrix from a user-authored string by broadcasting it across all cells (native/reuse × en/de), matching Rust's `LocalizedLabel::data(...)`. Also accepts an existing `LocalizedLabel` idempotently. */
 export function synthesizeLocalizedLabel(label: string | LocalizedLabel): LocalizedLabel {
@@ -2514,6 +2539,20 @@ export const PUZZLE3D_MESH_PAGE_VALUES = 1_024;
 /** 🔤️ Base64 padding characters reserved per page — one group per payload string. */
 const PUZZLE3D_MESH_PAGE_PADDING_CHARS = 8;
 
+/** 📦️ Partial uploads the plugin stages at once — `PUZZLE3D_MESH_UPLOAD_SLOTS`
+ * (`✏️editor/⏳️precompute/🦀️.rs`). The host drains its queue one page at a time, so it only ever holds
+ * one run open; the count bounds how many runs may wait behind it. */
+export const PUZZLE3D_MESH_UPLOAD_SLOTS = 4;
+
+/** 🧮️ Longest page run one mesh identity may claim — `PUZZLE3D_MESH_UPLOAD_MAX_PAGES`
+ * (`✏️editor/⏳️precompute/🦀️.rs`). A mesh needing more pages than this is beyond what the collision
+ * engine admits at all, so it is never paged onto the wire. */
+export const PUZZLE3D_MESH_UPLOAD_MAX_PAGES = 384;
+
+/** 📦️ Pages the host may hold undispatched: every staging slot the plugin owns, each at its own run
+ * ceiling. A run that would overrun this is refused here rather than queued into unbounded memory. */
+export const PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES = PUZZLE3D_MESH_UPLOAD_SLOTS * PUZZLE3D_MESH_UPLOAD_MAX_PAGES;
+
 /** 🥽️ One page of a `registerBrushMesh` upload run. Positions fill a page first; the indices stream
  * continues in whatever of the page's value budget is left, so the run is dense and its last page is
  * the only partial one. */
@@ -2526,10 +2565,83 @@ export type Puzzle3dBrushMeshPage = {
   readonly indicesB64?: string;
 };
 
-/** 🥽️ Mesh identities this process already paged to the plugin, by id — the value is the digest that
- * was uploaded, so a later window adopts the same geometry by `{url, digest}` alone instead of paging
- * it again, and a mesh whose bytes changed uploads afresh. */
-export const registeredPuzzle3dBrushMeshes = new Map<string, string>();
+/** 🥽️ What this page believes ONE guest instantiation holds: mesh identities it paged, by id, with the
+ * digest that was uploaded — so a later window adopts the same geometry by `{url, digest}` alone
+ * instead of paging it again, and a mesh whose bytes changed uploads afresh.
+ *
+ * The claim is bounded by the guest's lifetime, never by the tab's. A plain `Map` outlived every fact
+ * it recorded: the plugin's own mesh store is a `static OnceLock` in the wasm instantiation
+ * (`✏️editor/⏳️precompute/🦀️.rs`), so a restored actor holds nothing, and the seven id-only
+ * re-announcements that every later window activation then sent were each refused and each dropped on
+ * the floor — the brush utility silently kept no collision geometry until a full page reload. Two
+ * guest-published facts close that hole, both on `interactionJson`:
+ *
+ * - `meshResidency` — the guest's monotone install counter. It only ever climbs inside one
+ *   instantiation and starts at zero in a fresh one, so a value below the high-water mark this page
+ *   saw is proof of a restart and voids every entry ({@link observeResidency}).
+ * - `meshReuploadUrls` — identities a refused id-only announcement is waiting on bytes for
+ *   ({@link claimReupload}), claimed at most once per publishing residency so a republished stale
+ *   scene cannot re-drive an upload that already ran. */
+export class Puzzle3dBrushMeshRegistry {
+  #residency = -1;
+  readonly #entries = new Map<string, string>();
+  readonly #repaged = new Map<string, number>();
+
+  /** 🔄️ Folds one published `meshResidency` in. Answers `true` exactly when the count went backwards —
+   * the guest was re-instantiated and holds nothing this page uploaded — having dropped every claim. */
+  observeResidency(installs: number): boolean {
+    if (!Number.isFinite(installs) || installs < 0) return false;
+    const restarted = installs < this.#residency;
+    this.#residency = installs;
+    if (restarted) {
+      this.#entries.clear();
+      this.#repaged.clear();
+    }
+    return restarted;
+  }
+
+  /** 🔢️ The last residency this registry observed, `-1` before the guest published one. */
+  get residency(): number {
+    return this.#residency;
+  }
+
+  holds(url: string, digest: string): boolean {
+    return this.#entries.get(url) === digest;
+  }
+
+  /** ✅️ Records an upload as this guest's, at the residency it was dispatched under. Called when the
+   * run's LAST page goes out, never when it is queued: a queued run confirms nothing. */
+  confirm(url: string, digest: string): void {
+    this.#entries.set(url, digest);
+  }
+
+  forget(url: string): void {
+    this.#entries.delete(url);
+  }
+
+  /** 🚚️ Claims one guest-side re-upload request, dropping the stale claim. `false` for a request this
+   * registry already answered at that residency or later — the guest republishes the same world body
+   * until the bytes land, and re-driving on each of those would be an upload storm, not a recovery. */
+  claimReupload(url: string, residency: number): boolean {
+    if (!Number.isFinite(residency) || residency <= (this.#repaged.get(url) ?? -1)) return false;
+    this.#repaged.set(url, residency);
+    this.#entries.delete(url);
+    return true;
+  }
+
+  clear(): void {
+    this.#entries.clear();
+    this.#repaged.clear();
+    this.#residency = -1;
+  }
+
+  get size(): number {
+    return this.#entries.size;
+  }
+}
+
+/** 🥽️ The page's single {@link Puzzle3dBrushMeshRegistry} — one guest per tab, so one registry. */
+export const puzzle3dBrushMeshRegistry = new Puzzle3dBrushMeshRegistry();
 
 /** 📏️ Upper bound on the bytes a JSON string costs on the retained wire: ASCII exactly, every other
  * UTF-16 code unit charged as a six-character `\uXXXX` escape, which no JSON encoder exceeds. */
@@ -2571,14 +2683,17 @@ function puzzle3dBrushMeshPageCapacity(url: string, surfaceId: string, digest: s
 }
 
 /** 🥽️ Splits one loaded GLB's collision geometry into the `registerBrushMesh` page run that carries it
- * inside the retained command contract. An empty result means the mesh id leaves no room for a payload
- * on the wire — the caller uploads nothing rather than emitting a command the framework will refuse. */
+ * inside the retained command contract. An empty result means the mesh cannot be uploaded at all — the
+ * id leaves no room for a payload on the wire, or the run would be longer than
+ * {@link PUZZLE3D_MESH_UPLOAD_MAX_PAGES} — and the caller uploads nothing rather than emitting a command
+ * the framework will refuse. */
 export function puzzle3dBrushMeshPages(url: string, surfaceId: string, positions: readonly number[], indices: readonly number[]): readonly Puzzle3dBrushMeshPage[] {
   const digest = puzzle3dBrushMeshDigest(positions, indices);
   const capacity = puzzle3dBrushMeshPageCapacity(url, surfaceId, digest);
   const total = positions.length + indices.length;
   if (capacity === 0 || total === 0) return [];
   const pageCount = Math.ceil(total / capacity);
+  if (pageCount > PUZZLE3D_MESH_UPLOAD_MAX_PAGES) return [];
   const pages: Puzzle3dBrushMeshPage[] = [];
   for (let page = 0; page < pageCount; page += 1) {
     const start = page * capacity;
@@ -3082,11 +3197,9 @@ export function actionCategoryId(action: Pick<ActionDefinition, "category" | "ki
   return action.category ?? (action.kind === "history" ? "history" : "actions");
 }
 
-/** 🗂️ Resolves an action category's display label: the app's own group-label overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id (mirrors {@link resolveUtilityGroupLabel}). */
+/** 🗂️ Resolves an action category's display label: the app's own group-label overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids ({@link ribbonParentLabel}), else the raw id (mirrors {@link resolveUtilityGroupLabel}). */
 function actionCategoryLabel(category: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
-  const known = UI_RIBBON_PARENT_CATEGORIES.find((value) => value === category);
-  const fallback = known === undefined ? category : shellLabel(`ui.ribbon.parent.${known}`);
-  return resolveAppLabel(appLabelsOverlay, "group", category, fallback);
+  return resolveAppLabel(appLabelsOverlay, "group", category, ribbonParentLabel(category) ?? category);
 }
 
 /** 🗂️ Ordered, deduped categories from resolved actions (sibling of {@link commandCategories}). */
@@ -3729,47 +3842,23 @@ export function buildCommandCategoryTabs(
 
 //#region 🛠️ToolRegistry
 /**
- * 🛠️ One tool's measure-tree content. Selecting the tool tab activates it (see `buildToolTabs` /
- * panel path change); the tree itself is a single headerless section mapped to native `TreeDataItem`s
- * so Fill opens directly onto count + distribution with the same chrome as left-corner panel trees.
+ * 🛠️ One tool's measure-tree content — a single headerless section mapped to native `TreeDataItem`s, so
+ * Fill opens directly onto count + distribution with the same chrome as left-corner panel trees. The
+ * `tool.<id>` leaf tab IS the activation control (see {@link reconcileToolTabSelection}): a selected tool
+ * leaf always means that tool is active, so the tree never renders a second activation toggle of its own —
+ * that toggle carried the leaf tab's own element id, so the tab and the toggle disagreed about the same
+ * state and the first press on an already-selected leaf deactivated the tool instead of arming it. A tool
+ * whose program publishes no measures yet resolves to an empty options section.
  */
-function buildToolTree(tool: ResolvedToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
-  const iconName: IconName = tool.iconId;
-  if (isActive && measures && measures.length > 0) {
-    return {
-      sortableSections: false,
-      sections: [
-        {
-          id: `tool.${tool.id}.options`,
-          label: "",
-          defaultOpen: true,
-          items: windowMeasuresToTreeItems(measures, onAction),
-        },
-      ],
-    };
-  }
+function buildToolTree(tool: ResolvedToolDefinition, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
   return {
     sortableSections: false,
     sections: [
       {
-        id: `tool.${tool.id}.activate`,
+        id: `tool.${tool.id}.options`,
         label: "",
         defaultOpen: true,
-        items: [
-          {
-            id: `tool.${tool.id}.activate.toggle`,
-            label: "",
-            control: (
-              <Toggle
-                id={`tool.${tool.id}`}
-                pressed={isActive}
-                text={uiDataLabel(tool.label)}
-                icon={<Icon icon={iconName} size="small" />}
-                onPressedChange={(pressed) => onAction({ controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: pressed ? tool.id : "" } })}
-              />
-            ),
-          },
-        ],
+        items: measures && measures.length > 0 ? windowMeasuresToTreeItems(measures, onAction) : [],
       },
     ],
   };
@@ -3780,16 +3869,10 @@ function buildToolTree(tool: ResolvedToolDefinition, controllerId: string, isAct
  * (`FRAMEWORK_CATEGORY_TOOL_ID`) on `defaultDock.anchors["bottom-middle"]`, ordered left of the Command
  * branch, so the folded chrome shows a single Tool toggle. Content is a *lazy* `resolveTree` (mirrors
  * `buildCommandCategoryTabs`'s windows tab) so this array — and therefore `defaultDock`'s own memo —
- * never depends on `activeToolId`/`toolMeasuresByToolId`, which change on every activation/slider tick;
- * `resolveTree` reads those fresh off refs at render time instead.
+ * never depends on `toolMeasuresByToolId`, which changes on every activation/slider tick; `resolveTree`
+ * reads those fresh off the ref at render time instead.
  */
-export function buildToolTabs(
-  tools: readonly ResolvedToolDefinition[],
-  controllerId: string,
-  activeToolIdRef: React.RefObject<string | null>,
-  toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>,
-  onAction: (action: ActionDescriptor) => unknown,
-): PanelTabNode[] {
+export function buildToolTabs(tools: readonly ResolvedToolDefinition[], toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>, onAction: (action: ActionDescriptor) => unknown): PanelTabNode[] {
   return tools.map((tool) =>
     singleTreeLeaf({
       id: `tool.${tool.id}`,
@@ -3797,7 +3880,7 @@ export function buildToolTabs(
       name: tool.label,
       tree: {
         resolveTree: () => {
-          const tree = buildToolTree(tool, controllerId, activeToolIdRef.current === tool.id, toolMeasuresByToolIdRef.current[tool.id], onAction);
+          const tree = buildToolTree(tool, toolMeasuresByToolIdRef.current[tool.id], onAction);
           return { sections: tree.sections, sortableSections: tree.sortableSections };
         },
       },
@@ -3805,7 +3888,38 @@ export function buildToolTabs(
   );
 }
 
-/** 🛠️ Activates the mode tool whose footer tab was just selected (`tool.<id>`), mirroring utility-bar press → options. */
+/** 🛠️ Which of the two halves of the one tool state changed since the last reconciliation, and therefore what the shell owes the other half (see {@link reconcileToolTabSelection}). */
+export type ToolTabSelectionEffect = { readonly kind: "idle" } | { readonly kind: "activate"; readonly toolId: string | null } | { readonly kind: "select"; readonly toolId: string | null };
+
+/** 🛠️ The pair reconciled by {@link reconcileToolTabSelection}: the mode's active tool and the `tool.<id>` leaf selected under the Tool category (`null` = no tool / the category collapsed to its branch). */
+export interface ToolTabSelection {
+  readonly toolId: string | null;
+  readonly selected: string | null;
+}
+
+/**
+ * 🛠️ Tool activation and the selected `tool.<id>` leaf tab are ONE state with two representations, and this
+ * is its single owner. Every route into the panel path — a user press, a restored `DockUiStateStore`
+ * arrangement, an introduction step, a dock reset — has to end at the same place, so activation may not
+ * hang off the press callback alone: a hydrated path that already selects `tool.fill` used to render a
+ * selected tab over a tool that was never activated, after which the user's first press read as a re-press
+ * and *collapsed* the leaf instead of arming the tool.
+ *
+ * Last change wins: when the active tool moved (program `setActiveTool` effect, utility mutual exclusion,
+ * introduction keep-alive) the selection follows it; otherwise a moved selection drives activation. Both
+ * outcomes record the value they are about to establish, so the follow-up pass sees no change and cannot
+ * bounce — and a refused activation self-heals on the next pass by deselecting the leaf. Callers must skip
+ * reconciliation entirely (without updating `previous`) while the Tool category is not the active root, so
+ * a tool stays live while the user browses another category and is re-reconciled on re-entry.
+ */
+export function reconcileToolTabSelection(previous: ToolTabSelection | null, activeToolId: string | null, selectedToolId: string | null): { readonly next: ToolTabSelection; readonly effect: ToolTabSelectionEffect } {
+  const last = previous ?? { toolId: null, selected: null };
+  if (activeToolId !== last.toolId) return { next: { toolId: activeToolId, selected: activeToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "select", toolId: activeToolId } };
+  if (selectedToolId !== last.selected) return { next: { toolId: selectedToolId, selected: selectedToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "activate", toolId: selectedToolId } };
+  return { next: last, effect: { kind: "idle" } };
+}
+
+/** 🛠️ The mode tool a footer tab id (`tool.<id>`) names — the selected leaf and the active tool are reconciled by {@link reconcileToolTabSelection}. */
 export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
   if (!tabId?.startsWith("tool.")) return null;
   const toolId = tabId.slice("tool.".length);
@@ -3878,6 +3992,13 @@ function uiRefreshWantsPanel(scope: UiDirtyScope, bodyKey: string): boolean {
 function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures" | "tools" | "labels"): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && scope[flag] === true);
 }
+/** 🛍️ The app-static operator/palette catalogue never goes stale within an app instance, so it has no
+ * `UiDirtyScope` flag of its own: only a full scope (a session switch, or the first fetch) asks for it,
+ * and even then the cached hash means an unchanged catalogue costs one hash compare instead of a
+ * ~100 KB re-serialize. See `ArtifactApp::app_catalogue_json`. */
+function uiRefreshWantsCatalogue(scope: UiDirtyScope): boolean {
+  return scope.kind === "full";
+}
 
 /**
  * 🪟️ Every live window instance for a session — one per base `AppDefinition.windowKinds` entry (id ==
@@ -3943,8 +4064,9 @@ export function buildUiRefreshRequest(
   const measures = uiRefreshWantsFlag(scope, "measures") ? { hash: cache.get("measures")?.hash } : undefined;
   const tools = uiRefreshWantsFlag(scope, "tools") ? { hash: cache.get("tools")?.hash } : undefined;
   const labels = uiRefreshWantsFlag(scope, "labels") ? { hash: cache.get("labels")?.hash } : undefined;
-  if (windows.length === 0 && panels.length === 0 && !engagements && !measures && !tools && !labels) return null;
-  return { viewState, windows, panels, engagements, measures, tools, labels };
+  const catalogue = uiRefreshWantsCatalogue(scope) ? { hash: cache.get("catalogue")?.hash } : undefined;
+  if (windows.length === 0 && panels.length === 0 && !engagements && !measures && !tools && !labels && !catalogue) return null;
+  return { viewState, windows, panels, engagements, measures, tools, catalogue, labels };
 }
 
 /** @emoji 🐢️ Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
@@ -3960,6 +4082,7 @@ export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: P
   if (response.engagements?.value !== undefined) cache.set("engagements", { hash: response.engagements.hash, value: response.engagements.value });
   if (response.measures?.value !== undefined) cache.set("measures", { hash: response.measures.hash, value: response.measures.value });
   if (response.tools?.value !== undefined) cache.set("tools", { hash: response.tools.hash, value: response.tools.value });
+  if (response.catalogue?.value !== undefined) cache.set("catalogue", { hash: response.catalogue.hash, value: response.catalogue.value });
   if (response.labels?.value !== undefined) cache.set("labels", { hash: response.labels.hash, value: response.labels.value });
 }
 //#endregion UiRefresh

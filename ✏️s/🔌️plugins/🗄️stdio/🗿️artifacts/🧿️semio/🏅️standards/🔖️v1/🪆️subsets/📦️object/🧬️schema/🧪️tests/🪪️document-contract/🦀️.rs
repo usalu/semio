@@ -17,7 +17,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
             let snapshot = snapshot.expect("valid snapshot");
             assert_eq!(artifact.expect("valid artifact").to_snapshot(), snapshot);
             assert_eq!(SemioObjectSnapshot::parse_dsl(&snapshot.print_dsl()).expect("Object text"), snapshot);
-            assert_eq!(SemioObjectSnapshot::decode_pack(&snapshot.encode_pack().expect("Object Pack")).expect("Object Pack decode"), snapshot);
+            assert_eq!(SemioObjectSnapshot::decode_pack(&snapshot.encode_pack()).expect("Object Pack decode"), snapshot);
             let encoded = dsl::json::to_json_string(&snapshot);
             assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).expect("independent JSON decode"), *input);
         }
@@ -64,7 +64,7 @@ async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     assert_eq!(snapshot, before);
     assert!(mutation.inverse(&before).is_empty(), "rejected creation has no inverse effect");
     assert_eq!(outcome.messages().len(), 1);
-    assert_eq!(outcome.messages()[0].code.to_string(), "mutation.child-identity");
+    assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.child-identity");
     let foreign = serde_json::json!({"CreateMesh": {"child_id": "mesh-1", "target": {"artifactId": "mesh-1", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "mesh"}}, "locale": "de"}});
     assert!(dsl::json::from_json_str::<SemioObjectMutation>(&foreign.to_string()).is_err(), "closed mutation payload rejects OS settings");
     eprintln!("[DEBUG] Object mutation rejects mismatched child identity before modifying the parent");

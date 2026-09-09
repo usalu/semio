@@ -16,6 +16,7 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
     assert_eq!(mutations.len(), GENERATION2D_MUTATION_VARIANT_COUNT);
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P2 retained mutation fixture encode");
+        eprintln!("[DEBUG] retained fixture kind={:?} bytes={}", protocol::SemanticMutation::semantics(&mutation).kind, bytes.len());
         let mut session = Generation2dMutationSession::new(bytes.len(), GENERATION2D_MAXIMUM_DOMAIN_ITEMS).expect("P2 retained mutation preflight");
         for byte in bytes {
             assert!(session.ingress_ready());
@@ -37,8 +38,13 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
             }
         }
         assert!(ready, "retained P2 mutation owner must converge");
-        assert_eq!(session.take().expect("typed P2 mutation handoff"), mutation);
+        let decoded = session.take().expect("typed P2 mutation handoff");
+        let matches = decoded == mutation;
+        let report = matches.then(String::new).unwrap_or_else(|| format!("decoded={decoded:?} fixture={mutation:?}"));
+        generation2d_retire_mutation_cold(decoded);
+        generation2d_retire_mutation_cold(mutation);
         close_session(&mut session);
+        assert!(matches, "retained decode must recover the exact fixture mutation; {report}");
     }
 }
 
@@ -52,5 +58,7 @@ fn deterministic_all_field_ledger_includes_the_2d_only_variant() {
         generation2d_observe_mutation(&mut right, mutation);
     }
     assert_eq!(left.finish(), right.finish());
-    assert!(mutations.iter().any(|mutation| matches!(mutation, Generation2dMutation::ClearWidgetLayout(_))));
+    let carries_the_2d_only_variant = mutations.iter().any(|mutation| matches!(mutation, Generation2dMutation::ClearWidgetLayout(_)));
+    generation2d_retire_mutations_cold(mutations);
+    assert!(carries_the_2d_only_variant);
 }

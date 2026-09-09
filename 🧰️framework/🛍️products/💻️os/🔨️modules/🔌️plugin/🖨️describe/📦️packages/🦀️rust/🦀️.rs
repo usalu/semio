@@ -251,8 +251,12 @@ const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
 /// runaway bound.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
-/// 🛡️ Descriptor inputs and outputs share the strict catalog's per-artifact ceiling.
-pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 64 * 1024 * 1024;
+/// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and
+/// jco's extracted core, both built with the UNOPTIMIZED `wasm-dev` profile. This is a build-time
+/// input bound and deliberately NOT the strict catalog's runtime ceiling
+/// (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`), which applies to the optimized artifact that
+/// actually ships. Mirrored by `FRESH_COMPONENT_MAX_BYTES` in this crate's `📜️script.ts`.
+pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 128 * 1024 * 1024;
 
 /// 🧱 Fixed-size IO keeps hashing and publication memory/work bounded and observable.
 pub const DESCRIBE_IO_CHUNK_BYTES: usize = 64 * 1024;

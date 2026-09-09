@@ -118,6 +118,7 @@ mod ui_node_wire_format_tests {
                         status_json: None,
                         domain_id: None,
                         domain_granularity_id: None,
+                        lanes: Vec::new(),
                     }),
                     node_graph: None,
                     text_editor: None,
@@ -563,6 +564,48 @@ mod ui_node_wire_format_tests {
             assert!(ribbon_parent_label(category, true).is_some(), "missing DE label for {category:?}");
         }
         assert_eq!(ribbon_parent_label("not-a-category", false), None);
+    }
+
+    /// 🗂️ Every group row `organize_context_menu` can emit resolves to a real label in BOTH locales —
+    /// the 20 taxonomy ids AND the overflow bucket it synthesizes itself. `menu.group.more` is the one
+    /// id outside the taxonomy, so resolving group rows through `ribbon_parent_label` alone rendered the
+    /// overflow row with an empty label in the wgpu shell (React twin: the `ui.contextMenu.more` key).
+    #[semio_framework_async_macros::async_test]
+    async fn context_menu_group_label_covers_every_group_row_organize_context_menu_can_emit() {
+        for category in RIBBON_PARENT_CATEGORIES {
+            let id = format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{category}");
+            assert_eq!(context_menu_group_label(&id, false), ribbon_parent_label(category, false), "taxonomy rows keep the ribbon-parent table as their only source: {id}");
+            assert!(context_menu_group_label(&id, true).is_some(), "missing DE label for {id}");
+        }
+        let overflow = format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{CONTEXT_MENU_OVERFLOW_CATEGORY}");
+        assert_eq!(context_menu_group_label(&overflow, false), Some("More"));
+        assert_eq!(context_menu_group_label(&overflow, true), Some("Mehr"));
+        assert_eq!(context_menu_group_label("shell.rename", false), None, "a leaf row is not a group row");
+        assert_eq!(context_menu_group_label("menu.group.not-a-category", false), None);
+    }
+
+    /// 🗂️ The overflow row the organizer synthesizes when the row budget is exceeded carries the
+    /// declared overflow id and no label of its own — the host resolves it. Pins the id the
+    /// `context_menu_group_label` law above answers for against the producer that mints it.
+    #[semio_framework_async_macros::async_test]
+    async fn organize_context_menu_overflow_row_is_the_declared_unlabeled_group_id() {
+        let mut items: Vec<ContextMenuItemSpec> = Vec::new();
+        for index in 0..5 {
+            items.push(menu_leaf(&format!("primary{index}")));
+        }
+        for category in ["hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform"] {
+            items.push(menu_group(category, vec![menu_leaf(&format!("{category}-child"))]));
+        }
+        let organized = organize_context_menu(items, &no_category);
+        let overflow_id = format!("{CONTEXT_MENU_GROUP_ID_PREFIX}{CONTEXT_MENU_OVERFLOW_CATEGORY}");
+        let overflow = organized.iter().find(|row| row.id == overflow_id).unwrap_or_else(|| panic!("40 rows overflow the budget: {organized:?}"));
+        assert_eq!(overflow.label, None, "the host owns a group row's label");
+        assert!(context_menu_group_label(&overflow.id, false).is_some(), "and the host must be able to resolve it");
+        for row in &organized {
+            if row.id.starts_with(CONTEXT_MENU_GROUP_ID_PREFIX) {
+                assert!(context_menu_group_label(&row.id, false).is_some(), "every group row the organizer emits must resolve: {}", row.id);
+            }
+        }
     }
 
     #[semio_framework_async_macros::async_test]

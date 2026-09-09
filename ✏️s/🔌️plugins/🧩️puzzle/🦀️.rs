@@ -55,6 +55,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
 pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
+    semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::initialize();
     Plugin::<PuzzleApps>::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
@@ -68,7 +69,6 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<semio_s_artifact_puzzle_3d::viewer::puzzle3d::Puzzle3dViewer>()
         .editor_mutation_roster::<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>()
-        .job(semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::FILL_JOB_KIND, semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::fill_job)
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for
         // stdio/draw/forms/mathematical/layout/raster. One activation per owned artifact kind, read

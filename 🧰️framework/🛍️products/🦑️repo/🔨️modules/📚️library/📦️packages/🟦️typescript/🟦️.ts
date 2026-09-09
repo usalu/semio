@@ -1654,9 +1654,11 @@ export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = pr
  * `slow-timeout`), appending cumulative `--skip <level>::` filters for every level above it (tests live in
  * `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`).
  * Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g. `--nocapture`) still
- * compose correctly.
+ * compose correctly. Guarantees a 128 MiB `RUST_MIN_STACK` floor for every assertion thread unless the
+ * caller sets its own, because app-fixture laws routinely exceed libtest's 2 MiB default stack.
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  env = env.RUST_MIN_STACK ? env : { ...env, RUST_MIN_STACK: "134217728" };
   const resolvedPackages = resolveCargoPackageNames(packages, cwd);
   const packageArgs = resolvedPackages.flatMap((pkg) => ["-p", pkg]);
   const dashIdx = extraArgs.indexOf("--");

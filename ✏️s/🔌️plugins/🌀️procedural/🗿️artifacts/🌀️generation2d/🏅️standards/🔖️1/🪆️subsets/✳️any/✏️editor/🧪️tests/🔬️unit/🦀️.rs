@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation2d::testkit::{app, app_with_registry};
+use crate::editor::generation2d::testkit::{app, app_with_registry, close, snapshot_read};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 use semio_framework_plugin::PluginApp;
@@ -178,51 +178,31 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 13);
-    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 13);
-    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 13);
+    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 21);
+    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 21);
+    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 21);
     assert_eq!(generation2d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation2d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION2D_BOUNDED_TOOL_IDS.iter().all(|tool_id| Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
-    for blocked in ["nodeGraphEdit", "moveMediaNode", "addWidget", "removeWidget", "connectMediaPorts", "reorganize", "setEvalOutputs", "flowEvalTick"] {
-        assert!(!GENERATION2D_BOUNDED_TOOL_IDS.contains(&blocked));
+    for migrated in ["nodeGraphEdit", "moveMediaNode", "addWidget", "removeWidget", "connectMediaPorts", "reorganize", "setEvalOutputs"] {
+        assert!(GENERATION2D_BOUNDED_TOOL_IDS.contains(&migrated), "{migrated} must own an exact retained reducer route");
+        assert!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().iter().any(|proof| proof.tool_id() == migrated), "{migrated} must carry its bounded first-step proof row");
     }
+    assert!(every_command().iter().all(|command| GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id())), "every declared command routes through the retained ladder");
 }
 
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    let mut artifact = 0;
-    let mut config = 0;
-    let mut transient = 0;
-    while app.has_pending_typed_operations() {
-        if std::time::Instant::now() >= deadline {
-            return Err("Generation2d preview operation did not finish".into());
-        }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-        while let Some(page) = app.take_typed_operation_result_page(1) {
-            use semio_framework_plugin::app::TypedOperationResultLane;
-            if page.lane == TypedOperationResultLane::Fault {
-                return Err(format!("preview operation fault: {:?}", page.bytes()));
-            }
-            artifact += u64::from(page.lane == TypedOperationResultLane::Artifact);
-            config += u64::from(page.lane == TypedOperationResultLane::Config);
-            transient += u64::from(page.lane == TypedOperationResultLane::Transient);
-            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-        }
-        app.take_typed_operation_effect();
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        std::thread::yield_now();
-    }
-    Ok((artifact, config, transient))
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    let receipt = semio_framework_plugin::testkit::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;
+    let count = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count() as u64;
+    Ok((count(TypedOperationResultLane::Artifact), count(TypedOperationResultLane::Config), count(TypedOperationResultLane::Transient)))
 }
 
 #[semio_framework_async_macros::async_test]
 async fn generation_preview_is_one_app_transient_shared_by_two_generation_windows() {
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
-        let before_document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let before_document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
         let before_generation = app.ephemeral_snapshot().await.transient_generation;
         app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::testkit::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
         if drive_preview_operation(&mut app).await? != (1, 1, 1) {
@@ -231,7 +211,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         if app.ephemeral_snapshot().await.transient_generation != before_generation + 1 {
             return Err("preview app transient generation did not advance exactly once".into());
         }
-        if app.snapshot().map_err(|error| format!("{error:?}"))?.generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
+        if snapshot_read(&app).generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
             return Err("addGeneration did not preserve its document behavior".into());
         }
         let view = semio_framework_plugin::ViewModel {
@@ -256,7 +236,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         Ok(())
     }
     .await;
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    close(app);
     result.expect("Generation2d preview ownership runtime");
 }
 
@@ -268,7 +248,7 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 22, "every Generation2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 21, "every Generation2dCommand row must be covered by every_command()");
 }
 
 #[test]
@@ -371,25 +351,42 @@ async fn declared_actions_bridge_to_commands() {
     semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(testkit::generation2d_manifest_for_testkit).await;
 }
 
+/// 🧩️ `addWidget` is a MIGRATED interactive job now, so `dispatch_typed` only ENQUEUES it — the
+/// document grows once the retained ladder is driven to its publication, exactly as the runtime
+/// drives it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
-    let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-    app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).await.expect("add widget");
-    assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
+    let result: Result<(usize, usize), String> = async {
+        let before = snapshot_read(&app).fixture.widgets.len();
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local"))
+            .await
+            .map_err(|error| format!("{error:?}"))?;
+        let (artifact, _, _) = drive_preview_operation(&mut app).await?;
+        if artifact != 1 {
+            return Err(format!("addWidget must publish its artifact lane exactly once, got {artifact}"));
+        }
+        Ok((before, snapshot_read(&app).fixture.widgets.len()))
+    }
+    .await;
+    close(app);
+    let (before, after) = result.expect("Generation2d addWidget retained runtime");
+    assert_eq!(after, before + 1);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
-    let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1)
-        .await;
+    let before = snapshot_read(&app).fixture.widgets.len();
+    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| snapshot_read(app).fixture.widgets.len(), before, before + 1).await;
+    close(app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_widget_moves() {
-    let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let fixture = app().await;
+    let widgets: Vec<String> = snapshot_read(&fixture).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
     semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>)>(
@@ -397,8 +394,8 @@ async fn two_instances_converge_disjoint_widget_moves() {
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
-            let layout = &app.snapshot().expect("snapshot").fixture.layout;
-            (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
+            let projection = snapshot_read(app);
+            (projection.fixture.layout.get(&w0).map(|entry| entry.x), projection.fixture.layout.get(&w1).map(|entry| entry.x))
         },
     )
     .await;
@@ -408,9 +405,45 @@ async fn two_instances_converge_disjoint_widget_moves() {
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     use crate::editor::generation2d::testkit::render;
     let mut app = app().await;
-    assert!(render(&mut app, "generation2d.play.nope").await.contains("Unknown body"));
+    let rendered = render(&mut app, "generation2d.play.nope").await;
+    close(app);
+    assert!(rendered.contains("Unknown body"), "{rendered}");
 }
 //#endregion 🔖️CrossCutting
+
+//#region 📏️SurfaceBudgetTests
+/// 🗂️ Every authored body key, in the order `generation2d_render_body` matches them.
+const GENERATION2D_BODY_KEYS: [&str; 8] = [
+    flow_window::GENERATION2D_PLAY_BODY_MAIN,
+    edit_preview::GENERATION2D_PLAY_BODY_PREVIEW,
+    generations::GENERATION2D_PLAY_BODY_GENERATIONS,
+    form::GENERATION2D_PLAY_BODY_GENERATE_FORM,
+    generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW,
+    document_panel::GENERATION2D_PLAY_BODY_DOCUMENT,
+    catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE,
+    inspection_panel::GENERATION2D_PLAY_BODY_INSPECTION,
+];
+
+/// 📏️ The generation2d twin of generation3d's surface-bound law. Every window and panel body must fit
+/// the framework's ONE resident surface capacity (`ui_contract::UI_RESIDENT_SURFACE_BYTES`, which
+/// `ui_runtime`'s `SURFACE_RECONCILE_SURFACE_BYTES` is defined as). The registered operator catalogue is
+/// APP-STATIC and rides the reserved `framework.section.catalogue` surface, so no body may grow with the
+/// installed operator set — the exact failure that made the node-graph window unrenderable
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+#[semio_framework_async_macros::async_test]
+async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
+    use crate::editor::generation2d::testkit::render;
+    let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
+    let mut app = app_with_registry().await;
+    for body_key in GENERATION2D_BODY_KEYS {
+        let rendered = render(&mut app, body_key).await;
+        println!("[STATS] surface body={body_key} bytes={} bound={bound}", rendered.len());
+        assert!(!rendered.is_empty(), "{body_key} rendered empty");
+        assert!(rendered.len() <= bound, "{body_key} is {} B, over the {bound} B resident surface bound", rendered.len());
+    }
+    close(app);
+}
+//#endregion 📏️SurfaceBudgetTests
 
 //#region 🔖️ContextMenuTests
 /// 🕹️ `context_menu` no longer has anything to dispatch a selection command WITH (`setSelection`
@@ -424,6 +457,7 @@ async fn context_menu_stays_within_disclosure_budget() {
     let mut app = app_with_registry().await;
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
     let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    close(app);
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
     assert!(items.iter().all(|item| item.id != "delete-selection"), "no interaction data at context_menu time means delete-selection cannot appear");
 }
@@ -434,6 +468,7 @@ async fn context_menu_stays_within_disclosure_budget() {
 async fn export_drawing_out_returns_vector_media() {
     let mut app = app().await;
     let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
+    close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
 }
 
@@ -441,6 +476,7 @@ async fn export_drawing_out_returns_vector_media() {
 async fn export_document_out_returns_flow_media() {
     let mut app = app().await;
     let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
+    close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
     assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == GENERATION_2D_SCHEMA));
 }
@@ -448,10 +484,8 @@ async fn export_document_out_returns_flow_media() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_in_patches_matching_input_slider() {
     let mut app = app().await;
-    app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).await.expect("add slider");
-    let slider_id = app
-        .snapshot()
-        .expect("snapshot")
+    crate::editor::generation2d::testkit::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None })).await;
+    let slider_id = snapshot_read(&app)
         .fixture
         .widgets
         .iter()
@@ -465,10 +499,11 @@ async fn import_params_in_patches_matching_input_slider() {
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
     };
     app.import_media("params:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
-    let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
+    let value = snapshot_read(&app).fixture.widgets.iter().find_map(|widget| match widget {
         Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
         _ => None,
     });
+    close(app);
     assert_eq!(value, Some(42.0));
 }
 

@@ -61,9 +61,23 @@ struct Expectation {
     bounding_box_tolerance: f64,
     kernel_volume_node: Option<String>,
     kernel_volume_channel: Option<String>,
+    kernel_volume_tolerance: Option<f64>,
 }
 
 const FIXTURE_SCHEMA: &str = "s.procedural.generation3d.example-geometry/v1";
+
+/// 🚧️ The machine-readable kernel standings a fixture may declare. Each `blocked-*` value names one
+/// SPECIFIC located kernel defect that this lane's run reproduced, never a licence to relax an
+/// expectation: the numbers stay exactly what the geometry must be, and the run keeps failing until
+/// the named defect is fixed. A defect that gets fixed takes its value out of this list with it —
+/// a standing nothing declares is dead vocabulary.
+///
+/// - `green` — the example's whole chain is exact today.
+///
+/// `blocked-on-fillet-kernel` was the last such standing and is gone with the defect it named:
+/// `diff::blend`'s analytic rewrite (ticket 26/09/09/PROCEDURAL-3D-END-TO-END) mints the corner
+/// patches `📐️box-fillet-preview` was missing, so every bundled example is `green`.
+const KERNEL_STATUSES: [&str; 1] = ["green"];
 //#endregion 🔖️Fixture
 
 //#region 🔖️Harness
@@ -119,6 +133,7 @@ struct MeshStats {
     non_manifold_edges: usize,
     orientation_defects: usize,
     volume: f64,
+    signed_volume: f64,
     bounding_box_min: [f64; 3],
     bounding_box_max: [f64; 3],
 }
@@ -145,8 +160,11 @@ fn output_channel<'a>(eval: &'a serde_json::Value, node: &str, channel: &str) ->
     entry.get("out").and_then(|out| out.get(channel)).unwrap_or_else(|| panic!("node {node:?} has no {channel:?} output: {entry}"))
 }
 
-/// 🧮️ Signed volume of a closed triangle soup by the divergence theorem.
-fn divergence_volume(positions: &[f32], indices: &[u32]) -> f64 {
+/// 🧮️ Signed volume of a closed triangle soup by the divergence theorem — POSITIVE exactly when the
+/// soup's own winding faces outward, so its sign is the compact statement of whether every face is
+/// oriented the way a renderer and a mass-property integrator both need. Reported as its own
+/// `[STATS]` field beside the magnitude the expectations are stated in.
+fn signed_divergence_volume(positions: &[f32], indices: &[u32]) -> f64 {
     let point = |index: u32| {
         let base = index as usize * 3;
         [positions[base] as f64, positions[base + 1] as f64, positions[base + 2] as f64]
@@ -157,7 +175,7 @@ fn divergence_volume(positions: &[f32], indices: &[u32]) -> f64 {
         let cross = [b[1] * c[2] - b[2] * c[1], b[2] * c[0] - b[0] * c[2], b[0] * c[1] - b[1] * c[0]];
         total += (a[0] * cross[0] + a[1] * cross[1] + a[2] * cross[2]) / 6.0;
     }
-    total.abs()
+    total
 }
 
 /// 🧵️ Per-edge incidence of a triangle soup: how many edges are used once (a boundary), more than
@@ -245,6 +263,7 @@ fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     let mesh = tessellate_geometry(&handle, fixture.tessellation_tolerance).expect("preview tessellates");
     let incidence = edge_incidence(&mesh.positions, &mesh.indices);
     let (surface_min, surface_max) = bounds(if mesh.positions.is_empty() { &mesh.edge_positions } else { &mesh.positions });
+    let signed_volume = signed_divergence_volume(&mesh.positions, &mesh.indices);
     let stats = MeshStats {
         triangles: mesh.indices.len() / 3,
         vertices: mesh.positions.len() / 3,
@@ -254,7 +273,8 @@ fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
         boundary_edges: incidence.boundary,
         non_manifold_edges: incidence.non_manifold,
         orientation_defects: incidence.orientation_defects,
-        volume: divergence_volume(&mesh.positions, &mesh.indices),
+        volume: signed_volume.abs(),
+        signed_volume,
         bounding_box_min: surface_min,
         bounding_box_max: surface_max,
     };
@@ -295,8 +315,8 @@ fn assert_example(dsl: &str, fixture_json: &str) {
     }
     let run = run_example(dsl, &fixture);
     let stats = &run.stats;
-    println!("[STATS] {} handle={} triangles={} vertices={} edgeSegments={} edgeLength={:.9} closed={} boundary={} nonManifold={} orientationDefects={} volume={:.9} parryVolume={:.9} kernelVolume={:?} bboxMin={:?} bboxMax={:?} parryBboxMin={:?} parryBboxMax={:?}",
-        fixture.example, run.handle, stats.triangles, stats.vertices, stats.edge_segments, stats.edge_length, stats.closed, stats.boundary_edges, stats.non_manifold_edges, stats.orientation_defects, stats.volume, run.oracle_volume, run.kernel_volume, stats.bounding_box_min, stats.bounding_box_max, run.oracle_bounding_box_min, run.oracle_bounding_box_max);
+    println!("[STATS] {} handle={} triangles={} vertices={} edgeSegments={} edgeLength={:.9} closed={} boundary={} nonManifold={} orientationDefects={} volume={:.9} signedVolume={:.9} parryVolume={:.9} kernelVolume={:?} bboxMin={:?} bboxMax={:?} parryBboxMin={:?} parryBboxMax={:?}",
+        fixture.example, run.handle, stats.triangles, stats.vertices, stats.edge_segments, stats.edge_length, stats.closed, stats.boundary_edges, stats.non_manifold_edges, stats.orientation_defects, stats.volume, stats.signed_volume, run.oracle_volume, run.kernel_volume, stats.bounding_box_min, stats.bounding_box_max, run.oracle_bounding_box_min, run.oracle_bounding_box_max);
     assert!(stats.triangles >= fixture.expect.min_triangles, "{}: {} triangles, expected at least {}", fixture.example, stats.triangles, fixture.expect.min_triangles);
     assert_eq!(stats.closed, fixture.expect.closed, "{}: closed surface (boundary edges {}, non-manifold edges {})", fixture.example, stats.boundary_edges, stats.non_manifold_edges);
     if fixture.expect.closed {
@@ -306,7 +326,8 @@ fn assert_example(dsl: &str, fixture_json: &str) {
         assert!((stats.volume - expected).abs() <= fixture.expect.volume_tolerance, "{}: tessellated volume {} vs expected {} ({}) beyond {}", fixture.example, stats.volume, expected, fixture.expect.volume_source, fixture.expect.volume_tolerance);
         assert!((run.oracle_volume - expected).abs() <= fixture.expect.volume_tolerance, "{}: parry3d volume {} vs expected {} beyond {}", fixture.example, run.oracle_volume, expected, fixture.expect.volume_tolerance);
         if let Some(kernel) = run.kernel_volume {
-            assert!((kernel - expected).abs() <= fixture.expect.volume_tolerance, "{}: kernel brep.measure.volume {} vs expected {} beyond {}", fixture.example, kernel, expected, fixture.expect.volume_tolerance);
+            let tolerance = fixture.expect.kernel_volume_tolerance.unwrap_or_else(|| panic!("{}: a fixture naming a kernelVolumeNode must state its own kernelVolumeTolerance", fixture.example));
+            assert!((kernel - expected).abs() <= tolerance, "{}: kernel brep.measure.volume {} vs expected {} beyond {}", fixture.example, kernel, expected, tolerance);
         }
     }
     if let Some(expected) = fixture.expect.edge_perimeter {
@@ -322,7 +343,7 @@ fn assert_example(dsl: &str, fixture_json: &str) {
         assert!((run.oracle_bounding_box_max[axis] - fixture.expect.bounding_box_max[axis]).abs() <= fixture.expect.bounding_box_tolerance, "{}: parry3d bbox max axis {axis} is {}", fixture.example, run.oracle_bounding_box_max[axis]);
     }
     assert!(!run.eval.as_object().map(|entries| entries.is_empty()).unwrap_or(true), "{}: evaluation json is empty", fixture.example);
-    assert!(fixture.kernel_status == "green" || fixture.kernel_status == "blocked-on-boolean-kernel", "{}: unknown kernel status {:?}", fixture.example, fixture.kernel_status);
+    assert!(KERNEL_STATUSES.contains(&fixture.kernel_status.as_str()), "{}: unknown kernel status {:?}", fixture.example, fixture.kernel_status);
 }
 //#endregion 🔖️Harness
 

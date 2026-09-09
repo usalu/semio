@@ -38,12 +38,9 @@ pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
 
 pub async fn world_scene(app: &mut ShootingApp) -> semio_framework_plugin::World3dScene {
     let tree = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::default()).await.expect("render scene");
-    let decoded = match &tree.root.component {
-        semio_framework_plugin::Component::Surface(props) => semio_framework_ui_scene::decode(props),
-        _ => panic!("3D surface"),
-    };
+    let decoded = semio_framework_plugin::testkit::built_surface_scene(&tree.root);
     semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire scene tree");
-    decoded.expect("packed 3D scene")
+    decoded.expect("assembled 3D scene")
 }
 
 pub async fn icon_scene(app: &mut ShootingApp) -> semio_framework_plugin::IconRenderScene {

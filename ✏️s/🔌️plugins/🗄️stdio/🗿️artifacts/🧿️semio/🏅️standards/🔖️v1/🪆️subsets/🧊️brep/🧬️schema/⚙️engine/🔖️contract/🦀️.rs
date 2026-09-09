@@ -228,20 +228,23 @@ pub const BREP_KERNEL_OPERATIONS: &[&str] = &[
 
 /// 📊️ `(method name, quality)` table reflecting the CURRENT engine implementation (audit
 /// `📓️explore-engine-handles-primitives.md` §3, ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME):
-/// primitives/transforms/booleans/sweeps (excluding the single-profile `extrude` prism case)/
-/// blends/offsets/draft/mesh-format IO still tessellate-and-rebuild from a triangle soup
-/// (`MeshDerivedBRep`); box/wires/curves/planar-face construction/evaluation/STEP IO/topology
-/// bookkeeping stay on the exact analytic supports (`ExactAnalytic`); mass properties and point
-/// classification integrate/traverse numerically to within a tolerance
-/// (`ExactNumericalWithinTolerance`); curve/surface fitting is least-squares/control-point-only
-/// (`ApproximateBRep`). No operation is `Unsupported` today (DWG round-trips through the same
-/// triangle-soup bridge as STL/OBJ/glTF).
+/// patterns/defeature/split/mesh-format IO still tessellate-and-rebuild from a triangle soup
+/// (`MeshDerivedBRep`); primitives/wires/curves/planar-face construction/evaluation/STEP IO/
+/// topology bookkeeping stay on the exact analytic supports (`ExactAnalytic`); mass properties,
+/// point classification, booleans, sweeps with an arbitrary-curvature path, blends and offsets
+/// integrate/traverse/clip numerically to within a tolerance (`ExactNumericalWithinTolerance`);
+/// curve/surface fitting is least-squares/control-point-only (`ApproximateBRep`). No operation is
+/// `Unsupported` today (DWG round-trips through the same triangle-soup bridge as STL/OBJ/glTF).
 const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("box_prim", OpQuality::ExactAnalytic),
-    ("sphere_prim", OpQuality::MeshDerivedBRep),
-    ("cylinder_prim", OpQuality::MeshDerivedBRep),
-    ("cone_prim", OpQuality::MeshDerivedBRep),
-    ("torus_prim", OpQuality::MeshDerivedBRep),
+    // 🧱 W1-E (26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME) rewrote all four of these onto their
+    // own analytic support — one `Surface::Sphere`/`Cylinder`/`Cone`/`Torus` face (plus exact
+    // planar caps) with hand-derived exact p-curves, no tessellation anywhere on the path — so the
+    // `MeshDerivedBRep` tag they kept until 26/09/09 described a pipeline that no longer exists.
+    ("sphere_prim", OpQuality::ExactAnalytic),
+    ("cylinder_prim", OpQuality::ExactAnalytic),
+    ("cone_prim", OpQuality::ExactAnalytic),
+    ("torus_prim", OpQuality::ExactAnalytic),
     ("convex_hull", OpQuality::ExactAnalytic),
     ("line_curve", OpQuality::ExactAnalytic),
     ("circle_curve", OpQuality::ExactAnalytic),
@@ -295,12 +298,22 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("linear_pattern", OpQuality::MeshDerivedBRep),
     ("circular_pattern", OpQuality::MeshDerivedBRep),
     ("grid_pattern", OpQuality::MeshDerivedBRep),
-    ("fillet", OpQuality::ExactNumericalWithinTolerance),
+    // 🎨️ 26/09/09/PROCEDURAL-3D-END-TO-END: `diff::blend` carries every constant-radius patch on
+    // its own ANALYTIC support — a `Cylinder` between two planes, a `Torus` at a cylinder's cap,
+    // a `Sphere` octant at a fully blended corner, a `Plane` or `Cone` frustum for a chamfer — and
+    // every one of their trims is an ISO-LINE whose p-curve is derived in closed form and verified
+    // against its own 3D curve. No sampling, no fit, no tolerance anywhere in the construction,
+    // and the rounded-box Minkowski closed form comes out to `1e-6` relative
+    // (`[[test]] brep_analytic_blend`, cross-checked by `parry3d`). `fillet_variable` is the one
+    // exception and stays a rung lower: its cone's oblique cap trim is a conic whose image in the
+    // cone's own `(u, v)` is transcendental, so that ONE p-curve is interpolated and certified to
+    // `1e-8` rather than derived.
+    ("fillet", OpQuality::ExactAnalytic),
     ("fillet_variable", OpQuality::ExactNumericalWithinTolerance),
-    ("fillet_edges", OpQuality::ExactNumericalWithinTolerance),
-    ("chamfer", OpQuality::ExactNumericalWithinTolerance),
-    ("chamfer_asymmetric", OpQuality::ExactNumericalWithinTolerance),
-    ("chamfer_edges", OpQuality::ExactNumericalWithinTolerance),
+    ("fillet_edges", OpQuality::ExactAnalytic),
+    ("chamfer", OpQuality::ExactAnalytic),
+    ("chamfer_asymmetric", OpQuality::ExactAnalytic),
+    ("chamfer_edges", OpQuality::ExactAnalytic),
     ("shell", OpQuality::ExactNumericalWithinTolerance),
     ("draft", OpQuality::ExactNumericalWithinTolerance),
     ("offset_solid", OpQuality::ExactNumericalWithinTolerance),

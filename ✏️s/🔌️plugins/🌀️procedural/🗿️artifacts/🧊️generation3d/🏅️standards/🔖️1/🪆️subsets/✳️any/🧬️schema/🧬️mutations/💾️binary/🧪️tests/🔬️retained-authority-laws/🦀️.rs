@@ -111,10 +111,13 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
     let owned = semantic_result(&snapshot, "source");
     assert_eq!(owned, oracle, "owned P3 move result must equal the independent serde_json projection");
     assert_eq!(semantic_digest(&owned), semantic_digest(&oracle), "owned and oracle semantic digests must match exactly");
+    snapshot.retire_cold();
 }
 //#endregion 🔮️ThirdPartyOracle
 
 //#region ⏱️BoundedInitializer
+/// 🔐️ The lease table is process-global and four slots deep — every initializer law holds this for
+/// its whole body (`crate::publication_authority`).
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
     generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
         .expect("P3 initializer law publication authority");
@@ -135,6 +138,7 @@ fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
 #[test]
 fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    let _serial = crate::publication_authority::lock();
     let operation = semio_framework_job::OperationId(u64::MAX - 301);
     let generation = semio_framework_job::Generation(301);
     let mut authority = initializer(operation, generation);
@@ -153,6 +157,7 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
 #[test]
 fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    let _serial = crate::publication_authority::lock();
     let cancelled_operation = semio_framework_job::OperationId(u64::MAX - 302);
     let cancelled_generation = semio_framework_job::Generation(302);
     let mut cancelled = initializer(cancelled_operation, cancelled_generation);
@@ -238,7 +243,10 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
             }
         }
         assert!(ready, "retained P3 mutation owner must converge");
-        assert_eq!(session.take().expect("typed P3 mutation handoff"), mutation);
+        let decoded = session.take().expect("typed P3 mutation handoff");
+        assert_eq!(decoded, mutation, "the retained ingress route must recover the exact mutation it was handed");
+        decoded.retire_cold();
+        mutation.retire_cold();
         close_session(&mut session);
     }
 }
@@ -254,4 +262,7 @@ fn deterministic_all_field_ledger_includes_the_3d_only_variant() {
     }
     assert_eq!(left.finish(), right.finish());
     assert!(mutations.iter().any(|mutation| matches!(mutation, Generation3dMutation::DeleteWidgetPosition(_))));
+    for mutation in mutations {
+        mutation.retire_cold();
+    }
 }

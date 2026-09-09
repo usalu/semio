@@ -2590,7 +2590,15 @@ pub(super) struct DemoOneItemPreparationFactory {
 
 impl DemoOneItemPreparationFactory {
     pub(super) fn admissible() -> Self {
-        Self { footprint: ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 }, published_root: Arc::new(Mutex::new(None)), forge_digest: false }
+        Self { footprint: ArtifactStoreOneItemFootprint::for_one_invertible_item(512), published_root: Arc::new(Mutex::new(None)), forge_digest: false }
+    }
+
+    /// 🚫️ The repo-wide app-side defect, as a fixture: a durable preflight that declares ONE work item
+    /// for a point-invertible mutation. `work_items` counts staged edit ROWS, so the item's forward row
+    /// plus its inverse row overrun the declaration and the fold refuses
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn under_declared() -> Self {
+        Self { footprint: ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }, ..Self::admissible() }
     }
 
     fn forged_digest() -> Self {
@@ -2993,7 +3001,19 @@ async fn publish_demo_batch(
     mutations: Vec<DemoMutation>,
     description: Option<String>,
 ) -> (ArtifactStoreBatchPublication<DemoSnapshot, DemoMutation>, Result<LaneItemReceipt, VcsError>) {
-    let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
+    publish_demo_batch_with(store, operation, mutations, description, DemoOneItemPreparationFactory::admissible()).await
+}
+
+/// 🧺️ The same drive against an explicitly chosen app preflight, so a footprint declaration can be
+/// varied without touching any other admission gate.
+async fn publish_demo_batch_with(
+    store: &mut ArtifactStore<DemoSnapshot, DemoMutation>,
+    operation: u64,
+    mutations: Vec<DemoMutation>,
+    description: Option<String>,
+    app_factory: DemoOneItemPreparationFactory,
+) -> (ArtifactStoreBatchPublication<DemoSnapshot, DemoMutation>, Result<LaneItemReceipt, VcsError>) {
+    let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(app_factory);
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), "retained-test".into(), mutations, description, HistoryLane::Document, Some(&factory))
         .unwrap_or_else(|rejected| panic!("batched admission: {}", rejected.reason));
@@ -3103,6 +3123,99 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut store);
+}
+
+/// 🧺️ The fold contract, stated from both sides — the law the whole procedural 3d app boot broke.
+/// `ArtifactStoreOneItemFootprint::work_items` counts staged edit ROWS (one forward plus every
+/// inverse row), so a durable preflight that declares ONE work item for a point-invertible mutation
+/// fail-closes its own single-item gesture inside `fold_batch_item`, with the exact message the
+/// runtime reported; the very same gesture through
+/// [`ArtifactStoreOneItemFootprint::for_one_invertible_item`] publishes and stages both rows. The
+/// store's contract is therefore exactly what its own fixtures declare — the `work_items: 1` that ~40
+/// app preflights carried was the defect (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accepts_the_invertible_one() {
+    assert_eq!(ArtifactStoreOneItemFootprint::for_one_invertible_item(512), ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 });
+    assert_eq!(ArtifactStoreOneItemFootprint::for_one_item(3, 512), ArtifactStoreOneItemFootprint { work_items: 4, retained_bytes: 512 });
+
+    let mut under = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
+    under.install_member_store_owners_exact(demo_closable_store_owners());
+    let generation = under.generation_now();
+    let (mut publication, receipt) = publish_demo_batch_with(&mut under, 7, vec![DemoMutation::SetN(SetN { n: 9 })], None, DemoOneItemPreparationFactory::under_declared()).await;
+    assert_eq!(receipt.expect_err("a one-work-item declaration cannot carry a point-invertible item"), VcsError::ValidationFailed("batched item candidate failed its exact fixed fold contract".into()));
+    assert_eq!(under.generation_now(), generation, "a refused fold publishes nothing");
+    assert_eq!(under.snapshot_ref().n, Some(0));
+    assert!(under.applied_edit_ids().is_empty());
+    publication.begin_close();
+    close_durable_publication(&mut publication);
+    close_demo_artifact_store(&mut under);
+
+    let mut exact = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-invertible", DemoSnapshot { n: Some(0) }, None)).await;
+    exact.install_member_store_owners_exact(demo_closable_store_owners());
+    let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 8, vec![DemoMutation::SetN(SetN { n: 9 })], None, DemoOneItemPreparationFactory::admissible()).await;
+    receipt.expect("the invertible declaration carries the same item");
+    assert_eq!(exact.snapshot_ref().n, Some(9));
+    let staged = exact.envelope.vcs.edits.last().expect("staged edit");
+    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items, "the exact declaration is the rows the item actually folds");
+    assert!(publication.acknowledge());
+    close_durable_publication(&mut publication);
+    close_demo_artifact_store(&mut exact);
+    eprintln!("[DEBUG] fold contract: work_items counts forward+inverse ROWS; 1 refuses a point-invertible item, 2 stages it");
+}
+
+/// 🧺️ The SAME law for the multi-item gesture, and the reason the defect stayed invisible until a
+/// one-mutation command ran it: `fold_batch_item` compares each candidate against the GESTURE-WIDE
+/// merged declaration, so `N` under-declared items still fold (2 rows ≤ `N` for every `N ≥ 2`) and
+/// only the `PreflightingCommit` gate catches the overrun — with the sibling message
+/// `batched prepared candidate failed its exact fixed commit contract`, `2N` staged rows against a
+/// declared `N`. The single-item case is the one with zero slack, which is why the boot-time
+/// `setActiveExample` was the first thing to die. Both gates pass exactly when every item declares
+/// through [`ArtifactStoreOneItemFootprint::for_one_invertible_item`]
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gesture_and_accepts_the_invertible_one() {
+    const ITEMS: usize = 3;
+    let mutations = || (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
+    assert_eq!(
+        ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }.merged(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }).work_items,
+        2,
+        "a merged declaration sums the items' rows"
+    );
+
+    let mut under = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
+    under.install_member_store_owners_exact(demo_closable_store_owners());
+    let generation = under.generation_now();
+    let (mut publication, receipt) = publish_demo_batch_with(&mut under, 9, mutations(), Some("under-declared gesture".into()), DemoOneItemPreparationFactory::under_declared()).await;
+    assert_eq!(
+        receipt.expect_err("an under-declared multi-item gesture cannot commit its inverse rows"),
+        VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()),
+        "the per-item fold admits every candidate at N >= 2; the gesture-wide commit gate is what refuses"
+    );
+    assert_eq!(under.generation_now(), generation, "a refused commit publishes nothing");
+    assert_eq!(under.snapshot_ref().n, Some(0));
+    assert!(under.applied_edit_ids().is_empty());
+    assert!(under.envelope.vcs.edits.is_empty(), "a refused gesture consumes no ledger slot");
+    publication.begin_close();
+    close_durable_publication(&mut publication);
+    close_demo_artifact_store(&mut under);
+
+    let mut exact = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-invertible", DemoSnapshot { n: Some(0) }, None)).await;
+    exact.install_member_store_owners_exact(demo_closable_store_owners());
+    let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 10, mutations(), Some("under-declared gesture".into()), DemoOneItemPreparationFactory::admissible()).await;
+    receipt.expect("the invertible declaration carries the same gesture");
+    assert_eq!(exact.snapshot_ref().n, Some(ITEMS as i32));
+    let staged = exact.envelope.vcs.edits.last().expect("staged gesture edit");
+    assert_eq!(staged.forwards.len(), ITEMS);
+    assert_eq!(staged.inverse.len(), ITEMS);
+    assert_eq!(
+        staged.forwards.len() + staged.inverse.len(),
+        ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items * ITEMS,
+        "the merged invertible declaration is exactly the rows the gesture folds"
+    );
+    assert!(publication.acknowledge());
+    close_durable_publication(&mut publication);
+    close_demo_artifact_store(&mut exact);
+    eprintln!("[DEBUG] fold contract batched: {ITEMS} under-declared items pass the per-item fold and die at the commit gate; the invertible declaration stages {} rows", ITEMS * 2);
 }
 
 /// 🧺️ A gesture whose fourth mutation cannot prepare against the running post root commits

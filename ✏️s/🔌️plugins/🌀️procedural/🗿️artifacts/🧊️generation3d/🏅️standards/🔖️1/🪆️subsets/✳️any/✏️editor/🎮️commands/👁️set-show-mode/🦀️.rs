@@ -14,5 +14,5 @@ pub struct SetShowMode {
 }
 
 pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetShowMode { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetShowMode(crate::editor::generation3d::config::SetShowMode { value: payload.value.clone() })]))
 }

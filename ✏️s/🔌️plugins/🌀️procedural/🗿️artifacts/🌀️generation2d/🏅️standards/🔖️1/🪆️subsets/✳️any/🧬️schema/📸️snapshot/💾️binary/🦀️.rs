@@ -926,7 +926,7 @@ impl Generation2dMountedTypedSnapshotOwner {
 
 impl Drop for Generation2dMountedTypedSnapshotOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -960,6 +960,9 @@ pub struct Generation2dMountedPackSession {
     value: std::mem::ManuallyDrop<Option<mounted::RetainedValueCursor>>,
     typed: std::mem::ManuallyDrop<Option<Generation2dMountedTypedSnapshotOwner>>,
     catalog_value: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalog>>,
+    /// 🚦️ One-slot ingress backpressure between the catalog's document-byte stream and the value
+    /// producer: a byte the producer cannot take yet waits HERE instead of being handed back.
+    document_byte: Option<(u64, u8)>,
     source_complete: bool,
     segment_complete: bool,
     anchor_ready: bool,
@@ -990,6 +993,7 @@ impl Generation2dMountedPackSession {
             value: std::mem::ManuallyDrop::new(None),
             typed: std::mem::ManuallyDrop::new(None),
             catalog_value: std::mem::ManuallyDrop::new(None),
+            document_byte: None,
             source_complete: false,
             segment_complete: false,
             anchor_ready: false,
@@ -1085,6 +1089,13 @@ impl Generation2dMountedPackSession {
         if self.typed.as_mut().ok_or("generation2d-mounted.typed-owner")?.grant_symbol(self.catalog.as_ref().ok_or("generation2d-mounted.catalog-owner")?)? {
             return Ok(false);
         }
+        if let Some((index, byte)) = self.document_byte {
+            if self.value.as_ref().ok_or("generation2d-mounted.value-owner")?.ingress_ready() {
+                self.document_byte = None;
+                self.value.as_mut().expect("P2 value retained").admit_byte(index, byte).map_err(|_| "generation2d-mounted.value-backpressure")?;
+                return Ok(false);
+            }
+        }
         if !self.value_complete {
             if let Some(token) = self.value.as_mut().ok_or("generation2d-mounted.value-owner")?.grant().map_err(|_| "generation2d-mounted.value-malformed")? {
                 self.value_complete = matches!(token, mounted::RetainedValueToken::Complete { .. });
@@ -1098,14 +1109,14 @@ impl Generation2dMountedPackSession {
             self.value_sealed = true;
             return Ok(false);
         }
-        if !self.segment_complete && (self.segment.as_ref().ok_or("generation2d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
+        if self.document_byte.is_none() && !self.segment_complete && (self.segment.as_ref().ok_or("generation2d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
             if let Some(event) = self.segment.as_mut().expect("P2 segment retained").grant().map_err(|_| "generation2d-mounted.segment-malformed")? {
                 self.segment_complete = matches!(event, mounted::RetainedPackSegmentEvent::PackComplete { .. });
                 let catalog = self.catalog.as_mut().expect("P2 catalog retained");
                 catalog.admit(event).map_err(|_| "generation2d-mounted.catalog-backpressure")?;
                 if let Some(event) = catalog.grant().map_err(|_| "generation2d-mounted.catalog-malformed")? {
                     match event {
-                        mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.value.as_mut().expect("P2 value retained").admit_byte(index, value).map_err(|_| "generation2d-mounted.value-backpressure")?,
+                        mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.document_byte = Some((index, value)),
                         mounted::RetainedPackCatalogEvent::Complete => self.catalog_complete = true,
                         _ => {}
                     }
@@ -1169,6 +1180,9 @@ impl Generation2dMountedPackSession {
         if maximum_items == 0 || maximum_bytes < mounted::RETAINED_PACK_PAGE_BYTES {
             return Ok(false);
         }
+        if self.document_byte.take().is_some() {
+            return Ok(false);
+        }
         if let Some(catalog) = self.catalog_value.as_mut() {
             if catalog.symbols.pop().is_some() || catalog.chunks.pop().is_some() {
                 return Ok(false);
@@ -1219,13 +1233,13 @@ impl Generation2dMountedPackSession {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == Generation2dMountedPackPhase::Closed && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none()
+        self.phase == Generation2dMountedPackPhase::Closed && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none() && self.document_byte.is_none()
     }
 }
 
 impl Drop for Generation2dMountedPackSession {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d mounted canonical pack session reached Drop before exact terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mounted canonical pack session reached Drop before exact terminal-empty close");
     }
 }
 //#endregion 🔖️MountedCanonicalPackSession

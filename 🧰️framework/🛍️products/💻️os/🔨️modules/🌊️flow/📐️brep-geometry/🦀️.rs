@@ -9,6 +9,7 @@
 use base64::Engine;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::{TessellationJob, TessellationStep};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
@@ -506,26 +507,266 @@ pub fn retain_geometry_handles(live: &[String]) {
         guard.retain(&live_set);
     }
     evict_mesh_cache_for_handles(live);
+    retain_tessellation_jobs(live);
+}
+
+/// 🩺️ One blocking finding from the pre-tessellation validate gate, in the typed shape the preview
+/// status object carries — never a re-parsed prose string.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PreviewDiagnostic {
+    pub entity: String,
+    pub code: String,
+    pub message: String,
+}
+
+/// ⏱️ What one budgeted [`tessellate_step`] call achieved.
+#[derive(Clone, Debug, PartialEq)]
+pub enum TessellationStepOutcome {
+    /// 🔁 Budget spent, work remains — step again next turn.
+    Working { units_done: usize, units_total: usize, faces_done: usize, faces_total: usize, phase: &'static str },
+    /// ✅ The mesh is ready (freshly tessellated, or served from the LOD cache).
+    Ready { mesh: semio_framework::MeshData, units_total: usize, faces_total: usize },
+    /// 🛑 A cancel retired the job; nothing is produced and the slot is free.
+    Cancelled,
+    /// 🩺️ The validate gate rejected the topology before any triangle was produced.
+    Invalid { issues: Vec<PreviewDiagnostic> },
+    /// 💥 The kernel refused the handle or a unit faulted.
+    Failed { message: String },
+}
+
+/// ⏱️ Retained resumable tessellations keyed by `(handle, tolerance bits)`. Bounded: a new job past
+/// the ceiling evicts the least recently stepped one rather than growing without limit.
+const TESSELLATION_JOB_CAPACITY: usize = 32;
+
+struct RetainedTessellation {
+    job: TessellationJob,
+    last_step: u64,
+}
+
+#[derive(Default)]
+struct TessellationJobRegistry {
+    jobs: HashMap<(String, u64), RetainedTessellation>,
+    clock: u64,
+}
+
+static TESSELLATION_JOBS: OnceLock<Mutex<TessellationJobRegistry>> = OnceLock::new();
+
+fn tessellation_jobs() -> &'static Mutex<TessellationJobRegistry> {
+    TESSELLATION_JOBS.get_or_init(|| Mutex::new(TessellationJobRegistry::default()))
+}
+
+/// 🧹️ Drops retained tessellations whose handle is no longer live. An empty `live` clears them all.
+pub fn retain_tessellation_jobs(live: &[String]) {
+    let Ok(mut registry) = tessellation_jobs().lock() else { return };
+    if live.is_empty() {
+        registry.jobs.clear();
+        return;
+    }
+    let live_set: HashSet<&str> = live.iter().map(String::as_str).collect();
+    registry.jobs.retain(|(handle, _), _| live_set.contains(handle.as_str()));
+}
+
+/// 🛑️ Retires the in-flight tessellation of `handle` at `tolerance`. Returns true when a job was
+/// actually retired — a cancel for an already-finished or never-started job is a no-op, not a fault.
+pub fn cancel_tessellation(handle: &str, tolerance: f64) -> bool {
+    let Ok(mut registry) = tessellation_jobs().lock() else { return false };
+    match registry.jobs.remove(&(handle.to_string(), tolerance.to_bits())) {
+        Some(mut retained) => {
+            retained.job.cancel();
+            true
+        }
+        None => false,
+    }
+}
+
+/// 🛑️ Retires every in-flight tessellation — the explicit "cancel preview evaluation" gesture.
+pub fn cancel_all_tessellations() -> usize {
+    let Ok(mut registry) = tessellation_jobs().lock() else { return 0 };
+    let count = registry.jobs.len();
+    for (_, retained) in registry.jobs.iter_mut() {
+        retained.job.cancel();
+    }
+    registry.jobs.clear();
+    count
+}
+
+/// 📈️ Progress of the in-flight tessellation of `handle` at `tolerance`, if one is retained.
+pub fn tessellation_progress(handle: &str, tolerance: f64) -> Option<(usize, usize, &'static str)> {
+    let registry = tessellation_jobs().lock().ok()?;
+    let retained = registry.jobs.get(&(handle.to_string(), tolerance.to_bits()))?;
+    let progress = retained.job.progress();
+    Some((progress.units_done, progress.units_total, progress.phase.tag()))
+}
+
+/// 🎚️ The cached mesh for `handle` at `tolerance` OR at any FINER tolerance already computed — a
+/// finer mesh is a valid, better-than-requested answer, so switching the LOD mode from fine to
+/// coarse serves the existing mesh instead of retessellating.
+pub fn cached_mesh_at_or_finer(handle: &str, tolerance: f64) -> Option<semio_framework::MeshData> {
+    let cache = mesh_cache().lock().ok()?;
+    if let Some(exact) = cache.get(&(handle.to_string(), tolerance.to_bits())) {
+        return Some(exact.clone());
+    }
+    let mut best: Option<(f64, &semio_framework::MeshData)> = None;
+    for ((cached_handle, bits), mesh) in cache.iter() {
+        if cached_handle != handle {
+            continue;
+        }
+        let cached_tolerance = f64::from_bits(*bits);
+        if cached_tolerance > tolerance {
+            continue;
+        }
+        if best.is_none_or(|(current, _)| cached_tolerance > current) {
+            best = Some((cached_tolerance, mesh));
+        }
+    }
+    best.map(|(_, mesh)| mesh.clone())
+}
+
+/// ⏱️ Advances the tessellation of `handle` at `tolerance` by at most `budget` units and reports
+/// what happened. This is the ONLY tessellation entry point that respects an interactive step
+/// ceiling: it never runs more than `budget` face/edge units before returning, so a host can drive
+/// it from inside its own maintenance budget, paint progress, and cancel it.
+///
+/// The validate gate runs once, on first admission of a `(handle, tolerance)` pair — a solid with a
+/// blocking (`code` not prefixed `warning-`) validation issue never reaches the tessellator.
+pub fn tessellate_step(handle: &str, tolerance: f64, budget: usize) -> TessellationStepOutcome {
+    if let Some(mesh) = cached_mesh_at_or_finer(handle, tolerance) {
+        return TessellationStepOutcome::Ready { units_total: 0, faces_total: 0, mesh };
+    }
+    let key = (handle.to_string(), tolerance.to_bits());
+    let Ok(guard) = kernel().read() else {
+        return TessellationStepOutcome::Failed { message: "brep kernel lock poisoned".to_string() };
+    };
+    let geometry = GeometryHandle(handle.to_string());
+    let Ok(mut registry) = tessellation_jobs().lock() else {
+        return TessellationStepOutcome::Failed { message: "tessellation job registry lock poisoned".to_string() };
+    };
+    if !registry.jobs.contains_key(&key) {
+        if let Err(issues) = guard.validate_gate_sync(&geometry) {
+            return TessellationStepOutcome::Invalid { issues: issues.into_iter().map(|issue| PreviewDiagnostic { entity: issue.entity, code: issue.code.to_string(), message: issue.message }).collect() };
+        }
+        let job = match guard.tessellate_job_sync(&geometry, tolerance) {
+            Ok(job) => job,
+            Err(error) => return TessellationStepOutcome::Failed { message: error.to_string() },
+        };
+        if registry.jobs.len() >= TESSELLATION_JOB_CAPACITY {
+            if let Some(oldest) = registry.jobs.iter().min_by_key(|(_, retained)| retained.last_step).map(|(key, _)| key.clone()) {
+                registry.jobs.remove(&oldest);
+            }
+        }
+        let clock = registry.clock;
+        registry.jobs.insert(key.clone(), RetainedTessellation { job, last_step: clock });
+    }
+    registry.clock += 1;
+    let clock = registry.clock;
+    let Some(retained) = registry.jobs.get_mut(&key) else {
+        return TessellationStepOutcome::Failed { message: "tessellation job vanished between admission and step".to_string() };
+    };
+    retained.last_step = clock;
+    let step = retained.job.step(guard.tessellation_body(), budget);
+    match step {
+        Err(error) => {
+            registry.jobs.remove(&key);
+            TessellationStepOutcome::Failed { message: error.to_string() }
+        }
+        Ok(TessellationStep::Working(progress)) => TessellationStepOutcome::Working { units_done: progress.units_done, units_total: progress.units_total, faces_done: progress.faces_done, faces_total: progress.faces_total, phase: progress.phase.tag() },
+        Ok(TessellationStep::Cancelled(_)) => {
+            registry.jobs.remove(&key);
+            TessellationStepOutcome::Cancelled
+        }
+        Ok(TessellationStep::Done(progress)) => {
+            let Some(retained) = registry.jobs.remove(&key) else {
+                return TessellationStepOutcome::Failed { message: "finished tessellation job vanished".to_string() };
+            };
+            let Some((transfer, _report)) = retained.job.into_mesh() else {
+                return TessellationStepOutcome::Failed { message: "finished tessellation job produced no mesh".to_string() };
+            };
+            let mesh = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
+            if let Ok(mut cache) = mesh_cache().lock() {
+                cache.insert(key, mesh.clone());
+            }
+            TessellationStepOutcome::Ready { mesh, units_total: progress.units_total, faces_total: progress.faces_total }
+        }
+    }
 }
 
 /// 🧊️ Tessellates a geometry handle owned by the in-process brep kernel into preview `MeshData`.
+/// Unbudgeted convenience over [`tessellate_step`] for callers with no interactive ceiling (export
+/// bridges, schema tests) — the incremental path is still the only algorithm underneath.
 pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framework::MeshData, String> {
-    let key = (handle.to_string(), tolerance.to_bits());
-    if let Ok(cache) = mesh_cache().lock() {
-        if let Some(cached) = cache.get(&key) {
-            return Ok(cached.clone());
+    loop {
+        match tessellate_step(handle, tolerance, usize::MAX) {
+            TessellationStepOutcome::Ready { mesh, .. } => return Ok(mesh),
+            TessellationStepOutcome::Working { .. } => continue,
+            TessellationStepOutcome::Cancelled => return Err("tessellation cancelled".to_string()),
+            TessellationStepOutcome::Failed { message } => return Err(message),
+            TessellationStepOutcome::Invalid { issues } => {
+                let joined = issues.iter().map(|issue| format!("[{}] {}: {}", issue.code, issue.entity, issue.message)).collect::<Vec<_>>().join("; ");
+                return Err(format!("validation rejected the solid before tessellation: {joined}"));
+            }
         }
     }
-    let guard = kernel().read().map_err(|_| "brep kernel lock poisoned".to_string())?;
-    let mesh = {
-        let geometry = GeometryHandle(handle.to_string());
-        guard.tessellate(&geometry, tolerance).map_err(|error| error.to_string())?
+}
+
+/// 🌐️ One budgeted tessellate step as the extension-boundary JSON envelope: progress/phase always,
+/// plus one base64 `pack` mesh-body chunk per continuation once the mesh is ready. `chunk` selects
+/// which chunk to ship; `chunks` tells the caller how many there are in total.
+pub fn tessellate_step_envelope_json(handle: &str, tolerance: f64, budget: usize, chunk: usize) -> String {
+    use crate::os_pack::json::{object, Value};
+    let outcome = tessellate_step(handle, tolerance, budget);
+    let envelope = match outcome {
+        TessellationStepOutcome::Working { units_done, units_total, faces_done, faces_total, phase } => object([
+            ("done".to_string(), Value::Bool(false)),
+            ("cancellable".to_string(), Value::Bool(true)),
+            ("phase".to_string(), Value::String(phase.to_string())),
+            ("unitsDone".to_string(), Value::from(units_done as u64)),
+            ("unitsTotal".to_string(), Value::from(units_total as u64)),
+            ("facesDone".to_string(), Value::from(faces_done as u64)),
+            ("facesTotal".to_string(), Value::from(faces_total as u64)),
+        ]),
+        TessellationStepOutcome::Ready { mesh, units_total, faces_total } => {
+            let body = match encode_mesh_pack(&mesh) {
+                Ok(bytes) => bytes,
+                Err(message) => return failed_envelope_json("tessellate.encode", &message),
+            };
+            let chunks = chunk_mesh_base64(&encode_base64(&body));
+            let index = chunk.min(chunks.len().saturating_sub(1));
+            object([
+                ("done".to_string(), Value::Bool(true)),
+                ("cancellable".to_string(), Value::Bool(false)),
+                ("phase".to_string(), Value::String("complete".to_string())),
+                ("unitsDone".to_string(), Value::from(units_total as u64)),
+                ("unitsTotal".to_string(), Value::from(units_total as u64)),
+                ("facesDone".to_string(), Value::from(faces_total as u64)),
+                ("facesTotal".to_string(), Value::from(faces_total as u64)),
+                ("chunk".to_string(), Value::from(index as u64)),
+                ("chunks".to_string(), Value::from(chunks.len() as u64)),
+                ("packBytes".to_string(), Value::from(body.len() as u64)),
+                ("meshPack".to_string(), Value::String(chunks[index].clone())),
+            ])
+        }
+        TessellationStepOutcome::Cancelled => object([("done".to_string(), Value::Bool(true)), ("cancellable".to_string(), Value::Bool(false)), ("phase".to_string(), Value::String("cancelled".to_string()))]),
+        TessellationStepOutcome::Invalid { issues } => object([
+            ("done".to_string(), Value::Bool(true)),
+            ("cancellable".to_string(), Value::Bool(false)),
+            ("phase".to_string(), Value::String("invalid".to_string())),
+            ("diagnostics".to_string(), Value::Array(issues.iter().map(|issue| object([("entity".to_string(), Value::String(issue.entity.clone())), ("code".to_string(), Value::String(issue.code.clone())), ("message".to_string(), Value::String(issue.message.clone()))])).collect())),
+        ]),
+        TessellationStepOutcome::Failed { message } => return failed_envelope_json("tessellate.failed", &message),
     };
-    let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&mesh);
-    if let Ok(mut cache) = mesh_cache().lock() {
-        cache.insert(key, data.clone());
-    }
-    Ok(data)
+    crate::os_pack::json::to_string(&envelope)
+}
+
+// 🚫️async: E1 pure codec helper (no I/O), consumed from sync envelope call sites — see R9
+fn failed_envelope_json(code: &str, message: &str) -> String {
+    use crate::os_pack::json::{object, Value};
+    crate::os_pack::json::to_string(&object([
+        ("done".to_string(), Value::Bool(true)),
+        ("cancellable".to_string(), Value::Bool(false)),
+        ("phase".to_string(), Value::String("failed".to_string())),
+        ("error".to_string(), Value::String(message.to_string())),
+        ("errorCode".to_string(), Value::String(code.to_string())),
+    ]))
 }
 
 pub fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
@@ -538,11 +779,162 @@ pub fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String
 /// 🗑️ Disposes a geometry handle owned by the in-process brep kernel.
 pub fn dispose_geometry(handle: &str) {
     evict_mesh_cache_for_handle(handle);
+    if let Ok(mut registry) = tessellation_jobs().lock() {
+        registry.jobs.retain(|(cached_handle, _), _| cached_handle != handle);
+    }
     if let Ok(mut kernel) = kernel().write() {
         kernel.dispose(&GeometryHandle(handle.to_string()));
     }
 }
 // #endregion 🔖️Tessellation
+
+// #region 🎒️MeshPackCodec
+
+/// 🎒️ Field ids of the mesh record body — stable wire identity shared by the Rust encoder, the
+/// TypeScript decoder (`decodeMeshPackBody` in `🧰️framework/🛍️products/💻️os/🟦️.ts`) and every
+/// fixture test. Every array rides as one `Shape::Bytes64` little-endian blob rather than a JSON
+/// number array, which is what makes the payload a typed array on arrival instead of a parse.
+pub const MESH_PACK_FIELD_POSITIONS: u16 = 1;
+pub const MESH_PACK_FIELD_NORMALS: u16 = 2;
+pub const MESH_PACK_FIELD_INDICES: u16 = 3;
+pub const MESH_PACK_FIELD_COLORS: u16 = 4;
+pub const MESH_PACK_FIELD_UVS: u16 = 5;
+pub const MESH_PACK_FIELD_FACE_IDS: u16 = 6;
+pub const MESH_PACK_FIELD_VERTEX_IDS: u16 = 7;
+pub const MESH_PACK_FIELD_EDGE_POSITIONS: u16 = 8;
+pub const MESH_PACK_FIELD_EDGE_IDS: u16 = 9;
+pub const MESH_PACK_FIELD_EDGE_UVS: u16 = 10;
+pub const MESH_PACK_FIELD_EDGE_IS_SEAM: u16 = 11;
+pub const MESH_PACK_FIELD_PAINT_TEXTURE: u16 = 12;
+
+/// 🎒️ The `RecordSpec` both `pack::encode_record_body` and `pack::decode_record_body_exact` drive
+/// the mesh payload through — container-less, no chunk table, no manifest.
+pub fn mesh_pack_spec() -> crate::os_dsl::schema::RecordSpec {
+    use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
+    let bytes = |id: u16, key: &str| FieldSpec::new(id, key, Shape::Bytes64).optional();
+    RecordSpec::new(
+        Some("mesh"),
+        RecordLayout::Lines,
+        vec![
+            bytes(MESH_PACK_FIELD_POSITIONS, "positions"),
+            bytes(MESH_PACK_FIELD_NORMALS, "normals"),
+            bytes(MESH_PACK_FIELD_INDICES, "indices"),
+            bytes(MESH_PACK_FIELD_COLORS, "colors"),
+            bytes(MESH_PACK_FIELD_UVS, "uvs"),
+            bytes(MESH_PACK_FIELD_FACE_IDS, "faceIds"),
+            bytes(MESH_PACK_FIELD_VERTEX_IDS, "vertexIds"),
+            bytes(MESH_PACK_FIELD_EDGE_POSITIONS, "edgePositions"),
+            bytes(MESH_PACK_FIELD_EDGE_IDS, "edgeIds"),
+            bytes(MESH_PACK_FIELD_EDGE_UVS, "edgeUvs"),
+            bytes(MESH_PACK_FIELD_EDGE_IS_SEAM, "edgeIsSeam"),
+            FieldSpec::new(MESH_PACK_FIELD_PAINT_TEXTURE, "paintTextureBase64", Shape::Text).optional(),
+        ],
+    )
+}
+
+// 🚫️async: E1 pure codec helper (no I/O), consumed from sync encode/decode call sites — see R9
+fn f32_blob(values: &[f32]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(values.len() * 4);
+    for value in values {
+        out.extend_from_slice(&value.to_le_bytes());
+    }
+    out
+}
+
+// 🚫️async: E1 pure codec helper (no I/O), consumed from sync encode/decode call sites — see R9
+fn u32_blob(values: &[u32]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(values.len() * 4);
+    for value in values {
+        out.extend_from_slice(&value.to_le_bytes());
+    }
+    out
+}
+
+// 🚫️async: E1 pure codec helper (no I/O), consumed from sync encode/decode call sites — see R9
+fn f32_from_blob(bytes: &[u8]) -> Result<Vec<f32>, String> {
+    if bytes.len() % 4 != 0 {
+        return Err("mesh pack f32 blob length is not a multiple of 4".to_string());
+    }
+    Ok(bytes.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect())
+}
+
+// 🚫️async: E1 pure codec helper (no I/O), consumed from sync encode/decode call sites — see R9
+fn u32_from_blob(bytes: &[u8]) -> Result<Vec<u32>, String> {
+    if bytes.len() % 4 != 0 {
+        return Err("mesh pack u32 blob length is not a multiple of 4".to_string());
+    }
+    Ok(bytes.chunks_exact(4).map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect())
+}
+
+/// 🎒️ Encodes `mesh` as one `pack` record body — the compact binary form the preview mesh crosses
+/// the host↔extension boundary in, replacing the JSON number-array string.
+pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, String> {
+    use crate::os_dsl::schema::{FieldValue, RecordValue};
+    let mut record = RecordValue::default();
+    let mut put = |id: u16, bytes: Vec<u8>| {
+        if !bytes.is_empty() {
+            record.fields.insert(id, FieldValue::Bytes64(bytes));
+        }
+    };
+    put(MESH_PACK_FIELD_POSITIONS, f32_blob(&mesh.positions));
+    put(MESH_PACK_FIELD_NORMALS, f32_blob(&mesh.normals));
+    put(MESH_PACK_FIELD_INDICES, u32_blob(&mesh.indices));
+    put(MESH_PACK_FIELD_COLORS, f32_blob(&mesh.colors));
+    put(MESH_PACK_FIELD_UVS, f32_blob(&mesh.uvs));
+    put(MESH_PACK_FIELD_FACE_IDS, u32_blob(&mesh.face_ids));
+    put(MESH_PACK_FIELD_VERTEX_IDS, u32_blob(&mesh.vertex_ids));
+    put(MESH_PACK_FIELD_EDGE_POSITIONS, f32_blob(&mesh.edge_positions));
+    put(MESH_PACK_FIELD_EDGE_IDS, u32_blob(&mesh.edge_ids));
+    put(MESH_PACK_FIELD_EDGE_UVS, f32_blob(&mesh.edge_uvs));
+    put(MESH_PACK_FIELD_EDGE_IS_SEAM, mesh.edge_is_seam.clone());
+    if let Some(texture) = mesh.paint_texture_base64.as_ref() {
+        record.fields.insert(MESH_PACK_FIELD_PAINT_TEXTURE, FieldValue::Text(texture.clone()));
+    }
+    crate::os_pack::encode_record_body(&mesh_pack_spec(), &record, &crate::os_pack::EncodeOptions::default()).map_err(|error| error.to_string())
+}
+
+/// 🎒️ Decodes an [`encode_mesh_pack`] body back into `MeshData` — the exact inverse, byte-for-byte.
+pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, String> {
+    use crate::os_dsl::schema::FieldValue;
+    let record = crate::os_pack::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::DecodeOptions::default()).map_err(|error| error.to_string())?;
+    let blob = |id: u16| match record.get(id) {
+        Some(FieldValue::Bytes64(bytes)) => bytes.as_slice(),
+        _ => &[][..],
+    };
+    Ok(semio_framework::MeshData {
+        positions: f32_from_blob(blob(MESH_PACK_FIELD_POSITIONS))?,
+        normals: f32_from_blob(blob(MESH_PACK_FIELD_NORMALS))?,
+        colors: f32_from_blob(blob(MESH_PACK_FIELD_COLORS))?,
+        indices: u32_from_blob(blob(MESH_PACK_FIELD_INDICES))?,
+        uvs: f32_from_blob(blob(MESH_PACK_FIELD_UVS))?,
+        face_ids: u32_from_blob(blob(MESH_PACK_FIELD_FACE_IDS))?,
+        vertex_ids: u32_from_blob(blob(MESH_PACK_FIELD_VERTEX_IDS))?,
+        edge_positions: f32_from_blob(blob(MESH_PACK_FIELD_EDGE_POSITIONS))?,
+        edge_ids: u32_from_blob(blob(MESH_PACK_FIELD_EDGE_IDS))?,
+        edge_uvs: f32_from_blob(blob(MESH_PACK_FIELD_EDGE_UVS))?,
+        edge_is_seam: blob(MESH_PACK_FIELD_EDGE_IS_SEAM).to_vec(),
+        paint_texture_base64: match record.get(MESH_PACK_FIELD_PAINT_TEXTURE) {
+            Some(FieldValue::Text(text)) => Some(text.clone()),
+            _ => None,
+        },
+    })
+}
+
+/// 🧱️ Base64 characters per continuation chunk. One `flowTessellateResolve` dispatch carries at most
+/// this much of the mesh body, so a dense mesh streams across turns instead of blowing one turn's
+/// intake budget on a single oversized continuation.
+pub const MESH_PACK_CHUNK_BASE64_CHARS: usize = 48 * 1024;
+
+/// 🧱️ Splits a base64 mesh body into intake-sized chunks (never an empty vector — an empty mesh
+/// still transfers as exactly one empty chunk so the receiver's chunk accounting is uniform).
+pub fn chunk_mesh_base64(base64: &str) -> Vec<String> {
+    if base64.is_empty() {
+        return vec![String::new()];
+    }
+    base64.as_bytes().chunks(MESH_PACK_CHUNK_BASE64_CHARS).map(|chunk| String::from_utf8_lossy(chunk).into_owned()).collect()
+}
+
+// #endregion 🎒️MeshPackCodec
 
 // #region 🔖️WasmTessellationBridge
 /// 🌐️ Direct JS-callable wasm-bindgen exports for the flow-core brep tessellation bridge

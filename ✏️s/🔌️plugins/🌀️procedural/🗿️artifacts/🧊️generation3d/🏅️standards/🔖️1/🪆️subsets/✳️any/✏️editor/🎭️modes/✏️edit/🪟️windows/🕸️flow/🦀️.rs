@@ -3,7 +3,7 @@
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::PreviewInteractionMarks;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -54,8 +54,7 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
-    let host = host_from_fixture(fixture);
-    let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+    let (nodes, edges) = with_host(fixture, |host| fixture_to_workflow(&host.dag.fixture));
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
@@ -65,8 +64,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
         &NodeGraphScene {
             editable: Some(true),
-            operators: flow_extras.operators,
-            catalogue_json: flow_extras.catalogue_json,
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json,

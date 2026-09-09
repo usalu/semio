@@ -281,9 +281,7 @@ fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &
 /// 🧮️ Evaluates the whole fixture once. Callers prefer the viewer's ephemeral `preview_eval_text`
 /// and only fall back here when no command has computed it yet.
 pub fn evaluate_fixture(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> String {
-    let mut host = semio_framework_os_flow::FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
-    host.evaluate().unwrap_or_default()
+    crate::standards::v1::subsets::any::schema::with_host(fixture, |host| host.evaluate().unwrap_or_default())
 }
 
 /// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL, each carrying its

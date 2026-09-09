@@ -1,20 +1,19 @@
 use super::*;
-use crate::GENERATION_2D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
 use store::ArtifactDsl;
 
 //#region 🔖️DslTests
 #[test]
 fn dsl_round_trip_empty_projection() {
-    test_support::assert_dsl_round_trip(&Generation2dSnapshot::default());
-    test_support::assert_dsl_pack_equivalence(&Generation2dSnapshot::default());
+    test_support::assert_dsl_round_trip_cold(&Generation2dSnapshot::default(), Generation2dSnapshot::retire_cold);
+    test_support::assert_dsl_pack_equivalence_cold(&Generation2dSnapshot::default(), Generation2dSnapshot::retire_cold);
 }
 
 #[test]
 fn dsl_round_trip_example_fixture() {
-    let projection = Generation2dSnapshot::parse_dsl(GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture");
-    test_support::assert_dsl_round_trip(&projection);
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::parse_dsl(GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture"));
+    test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 
 #[test]
@@ -30,8 +29,9 @@ fn dsl_round_trip_with_generation_state() {
     projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
     projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
     projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
-    test_support::assert_dsl_round_trip(&projection);
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 
 #[test]
@@ -46,24 +46,33 @@ fn dsl_round_trip_covers_every_widget_kind() {
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.fixture.synapses = vec![];
-    test_support::assert_dsl_round_trip(&projection);
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 //#endregion 🔖️DslTests
 
 //#region 🔖️CommandEnvelopeTests
 /// 🎫️ CW7 command-envelope law: proves `Generation2dMutation`'s `Edit` round-trips through
 /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
+///
+/// The replaced id is READ OUT of the very document the store is opened on — `replace-widget` is
+/// fail-closed on an unknown id (`mutation.target-missing`), and the 2d default document is
+/// `semio_framework_artifact_flow_flow::FlowFixture::default()`'s three-widget starter graph, which
+/// carries no `note-*` widget at all.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::ArtifactCommand;
 
-    let mut store: ArtifactStore<Generation2dSnapshot, Generation2dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
+    let document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
+    let replaced_id = crate::widget_id(document.fixture.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
+    let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], description: None }).await.expect("apply");
     let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    crate::store_fixture::close(store);
 }
 //#endregion 🔖️CommandEnvelopeTests
 

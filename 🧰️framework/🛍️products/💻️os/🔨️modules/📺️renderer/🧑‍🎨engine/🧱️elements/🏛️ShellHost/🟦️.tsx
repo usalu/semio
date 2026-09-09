@@ -84,6 +84,7 @@ import {
   pendingPanelUiNode,
   pendingWindowUiNode,
   parseResolvedPluginViewState,
+  type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
   type PluginSource,
@@ -354,6 +355,7 @@ import {
 } from "@semio-tech/ui-react";
 import { canonicalUiDriver, canonicalUiTheme, commitUiPreferencesConfigMutation, readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import {
+  AppCatalogueContext,
   InterpretedUiNode,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
@@ -398,6 +400,7 @@ import {
 } from "../🌐️World3dHost/🟦️.tsx";
 import {
   DEFAULT_PANEL_WIDTH_PX,
+  EMPTY_APP_CATALOGUE,
   EMPTY_APP_LABELS_OVERLAY,
   FRAMEWORK_CATEGORY_COMMAND_ID,
   FRAMEWORK_CATEGORY_DISPLAY_ID,
@@ -470,6 +473,7 @@ import {
   createLatestAsyncDispatcher,
   presenceClientIdentity,
   preserveJsonIdentity,
+  reconcileToolTabSelection,
   renderStagedArgControl,
   requestFileOpen,
   resolveAppLabel,
@@ -516,6 +520,7 @@ import {
   type ActionPaneSlice,
   type PluginInstallOutcome,
   type ResolvedCommand,
+  type ToolTabSelection,
   type TutorialUiBridgeContext,
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
@@ -553,7 +558,7 @@ import { type WindowFault, type WindowFaultClass, windowFaultFromError } from ".
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
+import { BootstrapStatusNotice, ExecutionTargetStatusNotice, GisMapInferenceRequestControl, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🏦️.tsx";
 import {
   DirectoryBootstrapStatusNotice,
@@ -740,6 +745,31 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
       return "ui.mutation.rejected.title";
   }
 }
+
+//#region 🏁️OperationSettle
+/** 🏁️ Concurrent `onAction` callers that may wait on a typed operation's terminal completion at once.
+ * Sized for a live desktop session (a few background tick loops plus whatever the user is driving) —
+ * a caller past the ceiling settles immediately rather than growing an unbounded map. */
+const OPERATION_SETTLE_WAITER_SLOTS = 32;
+/** 🏁️ Completions remembered for a waiter that has not registered yet — the admitting reply and the
+ * `OperationCompleted` frame race, and the completion can win. Older ids fall off the ring. */
+const OPERATION_SETTLE_RING_SLOTS = 64;
+/** 🏁️ Ceiling on how long an `onAction` promise may wait for a completion frame that never arrives (a
+ * faulted worker, a torn-down instance). Past it the caller resumes: a background tick loop must be
+ * able to recover from a lost frame, never wedge on one. */
+const OPERATION_SETTLE_WATCHDOG_MS = 30_000;
+
+/** 🏁️ The typed-operation id an admitting `InvocationResult` started, or `undefined` when the action
+ * started none. `dispatch_typed_command_inner` (`🔌️plugin/🦀️.rs`) answers a started operation with
+ * `output = { operationId, generation }`, both decimal STRINGS; `OperationCompletionV1.operation` is
+ * the same id as a number, so this is where the two representations meet. */
+function startedTypedOperationId(output: unknown): number | undefined {
+  if (typeof output !== "object" || output === null) return undefined;
+  const raw = (output as { readonly operationId?: unknown }).operationId;
+  const operation = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : Number.NaN;
+  return Number.isSafeInteger(operation) && operation >= 0 ? operation : undefined;
+}
+//#endregion 🏁️OperationSettle
 
 /** 🩺️ `WindowFaultClass` → its `ui.windowFault.*` label key. Total by construction, so a new class
  * cannot silently render as a blank body. */
@@ -1715,8 +1745,13 @@ function FrameworkOsShellInner({
     return () => {
       cancelled = true;
     };
-  }, [applyHistoryPatch, session]);
-  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+    // 🧾️ Keyed on the plugin INSTANCE, not the `session` object: a full history snapshot is only ever
+    // owed when the instance being shown changes. Depending on the whole session re-read the projection
+    // on every session mint — see `applyHostEffects`'s `viewStateRewrittenByEffects` for the churn that
+    // used to produce (one `readHistory` guest round trip per dispatch).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applyHistoryPatch, session?.pluginId, session?.instanceId]);
+  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
@@ -1775,6 +1810,54 @@ function FrameworkOsShellInner({
   // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
   const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
   extraWindowInstancesRef.current = extraWindowInstances;
+  //#region 🏁️OperationSettle
+  /** 🏁️ Waiters for typed operations whose terminal completion has not arrived yet, keyed by operation
+   * id, plus the ids that completed BEFORE anyone asked to wait (the admitting `handleAction` reply and
+   * the `OperationCompleted` frame race — the completion can land first). Both are fixed-capacity: a
+   * waiter that would exceed the ceiling resolves at once rather than growing the map, and the settled
+   * ring keeps only the newest ids. Nothing here is state — a settle is not something to re-render for. */
+  const operationSettlersRef = useRef(new Map<number, () => void>());
+  const settledOperationsRef = useRef<number[]>([]);
+  /** 🏁️ Resolves every waiter for `operation`, or records it as already settled for a waiter that has
+   * not registered yet. Called from the operation-completion subscription. */
+  const settleOperation = useCallback((operation: number) => {
+    const settler = operationSettlersRef.current.get(operation);
+    if (settler) {
+      settler();
+      return;
+    }
+    const settled = settledOperationsRef.current;
+    settled.push(operation);
+    if (settled.length > OPERATION_SETTLE_RING_SLOTS) settled.splice(0, settled.length - OPERATION_SETTLE_RING_SLOTS);
+  }, []);
+  /** 🏁️ The promise `onAction` returns: settles when the operation the admitting reply started reaches
+   * its terminal completion. An action that started no operation (a framework-reserved verb, a
+   * config-only emit, a rejected admission) settles at once, and a watchdog bounds a completion that
+   * never arrives so a caller can never wedge forever on a lost frame. */
+  const awaitOperationSettle = useCallback((output: unknown): Promise<void> => {
+    const operation = startedTypedOperationId(output);
+    if (operation === undefined) return Promise.resolve();
+    const settled = settledOperationsRef.current;
+    const alreadySettled = settled.indexOf(operation);
+    if (alreadySettled !== -1) {
+      settled.splice(alreadySettled, 1);
+      return Promise.resolve();
+    }
+    const settlers = operationSettlersRef.current;
+    if (settlers.has(operation) || settlers.size >= OPERATION_SETTLE_WAITER_SLOTS) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        operationSettlersRef.current.delete(operation);
+        resolve();
+      }, OPERATION_SETTLE_WATCHDOG_MS);
+      settlers.set(operation, () => {
+        clearTimeout(timer);
+        operationSettlersRef.current.delete(operation);
+        resolve();
+      });
+    });
+  }, []);
+  //#endregion 🏁️OperationSettle
   const setWindowTitle = useCallback((windowId: string, title: string) => {
     dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
   }, []);
@@ -3256,8 +3339,15 @@ function FrameworkOsShellInner({
     const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active.pluginId);
     if (!pluginEntry) return;
     try {
-      const wire = encodeWindowActionInvocation(active, { controllerId: active.app.controllerId, action, args }, extraWindowInstancesRef.current);
-      await pluginEntry.handle.handleAction(active.instanceId, wire, { ...active.viewState, locale: uiLocaleRef.current, terminology: uiTerminologyRef.current });
+      const viewState = panelViewContext({
+        ...active.viewState,
+        locale: uiLocaleRef.current,
+        terminology: uiTerminologyRef.current,
+        windowInstances: sessionWindowInstances(active.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+      });
+      const wire = encodeWindowActionInvocation({ ...active, viewState }, { controllerId: active.app.controllerId, action, args }, extraWindowInstancesRef.current);
+      await pluginEntry.handle.handleAction(active.instanceId, wire, viewState);
       console.log("[DEBUG] space extension ledger op dispatched", { action, args });
     } catch (error) {
       console.warn("[DEBUG] space extension ledger op skipped", action, error instanceof Error ? error.message : String(error));
@@ -4097,6 +4187,10 @@ function FrameworkOsShellInner({
       });
       const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
+      // 🛍️ App-static: fetched once per app instance and kept by identity, so a scene host subscribing
+      // through `AppCatalogueContext` never re-renders on an unchanged catalogue.
+      const freshAppCatalogue = (cache.get("catalogue")?.value as AppCatalogue | undefined) ?? EMPTY_APP_CATALOGUE;
+      dispatch({ type: "SET_APP_CATALOGUE", value: (current) => preserveJsonIdentity(current, freshAppCatalogue) });
       dispatch({
         type: "SET_PANEL_UI_BY_KEY",
         value: (current) =>
@@ -4748,30 +4842,72 @@ function FrameworkOsShellInner({
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
       if (!isCurrentEffectOwner(effectOwner)) return;
+      // 🐢️ Did any EFFECT above actually rewrite the view state? Reference-comparing `nextViewState`
+      // against the LIVE session's own `viewState` cannot answer that: every dispatch enters here with a
+      // freshly built per-call projection (`onAction`'s `dispatchViewState` — locale/terminology/
+      // `windowInstances`/`activeUtilityByWindowId` re-derived from refs, plus `windowId` pinned to the
+      // dispatch's target window), so the identity check below was false on EVERY action and minted a new
+      // `session` object each time. That churn re-ran the history-snapshot effect (one `readHistory` guest
+      // round trip per dispatch) and re-subscribed the operation-completion effect — measured 2026-09-09
+      // as 7 `readHistory` calls for the 7 boot mesh pages and 90 during a 35 s fill run. Comparing
+      // against `baseSession.viewState` asks the question the comment below always meant to ask, and a
+      // per-call projection is never written back into the session (`refreshUi` re-derives it anyway).
+      const viewStateRewrittenByEffects = nextViewState !== baseSession.viewState;
       const isSpawnedPluginSession = hostMode && !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session);
       dispatch({
         type: "SET_SESSION",
         value: (current) => {
           if (!shellDialogOriginIsCurrentV1(effectOrigin, captureDialogOrigin(current))) return current;
           if (!current) return current;
-          if (isSpawnedPluginSession) return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
+          if (isSpawnedPluginSession) return viewStateRewrittenByEffects ? { ...current, viewState: nextViewState } : current;
           if (!shellDialogSessionIsCurrentV1(current, nextSession)) return current;
           // 🐢️ Preserve `current`'s identity when the viewState didn't actually change — otherwise every
           // action mints a new `session` object, which cascades into a new `onAction` identity, which
           // busts every memo keyed on it (windows, panels, the boot-refresh effect below) even when
           // nothing about the session changed.
-          return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
+          return viewStateRewrittenByEffects ? { ...current, viewState: nextViewState } : current;
         },
       });
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
+        console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ scope: uiScope, viewStateSame: nextViewState === baseSession.viewState }));
         await refreshUi(nextSession, uiScope);
+      } else {
+        console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: uiScope }));
       }
     },
     [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, session, setActiveUtilityForWindow, hostMode],
   );
+
+  /** 🏁️ Applies one retained typed operation's terminal publication. The command that started the
+   * operation resolved on its FIRST reactor turn — its `InvocationResult` carries no outcome at all —
+   * so a selection like "open the Nakagin example" used to leave the outliner, the inspection panel
+   * and the History list showing the previous document forever. `PluginWasmHandle
+   * .subscribeOperationCompletions` is the only carrier of that outcome: the operation's own history
+   * delta, its final `UiDirtyScope`, and every host effect its continuation turns requested. */
+  useEffect(() => {
+    if (!session) return;
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    const target = session;
+    try {
+      return plugin.subscribeOperationCompletions(target.instanceId, (completion) => {
+        // 🏁️ Release every `onAction` promise waiting on this operation BEFORE the (async) effect pass —
+        // the caller's contract is "the guest work is finished", and the host-effect pass that follows is
+        // this same subscription's own work, not the guest's.
+        settleOperation(completion.operation);
+        applyHistoryPatch(completion.historyPatch);
+        const owner = captureEffectOwner(target, captureDialogOrigin(target));
+        console.warn("[DEBUG] completion apply", JSON.stringify({ operation: completion.operation, scope: completion.uiScope, historyPatch: completion.historyPatch !== undefined, ownerCurrent: isCurrentEffectOwner(owner), sessionCurrent: shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, target), targetInstance: target.instanceId, currentInstance: shellStateRef.current.pluginRuntime.session?.instanceId }));
+        void applyHostEffects(completion.requestedEffects, target, resolveUiDirtyScope(completion.uiScope), owner).catch((error) => console.error("[DEBUG] typed-operation completion effects failed", error));
+      });
+    } catch (error) {
+      console.error("[DEBUG] typed-operation completion subscription failed", error);
+      return;
+    }
+  }, [applyHistoryPatch, applyHostEffects, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, session, settleOperation]);
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
@@ -5258,10 +5394,21 @@ function FrameworkOsShellInner({
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
         if (program) {
-          const viewState: ViewModel = { ...session.viewState, locale: uiLocaleRef.current, terminology: uiTerminologyRef.current, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
+          const toolWindowId = activeWindowIdRef.current ?? undefined;
+          const baseToolViewState: ViewModel = {
+            ...session.viewState,
+            locale: uiLocaleRef.current,
+            terminology: uiTerminologyRef.current,
+            activeToolId: next ?? undefined,
+            activeUtilityId: next ? undefined : session.viewState.activeUtilityId,
+            windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+            activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+          };
+          const viewState = toolWindowId ? windowViewContext(baseToolViewState, toolWindowId) : panelViewContext(baseToolViewState);
+          if (!viewState) return;
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
-            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, activeWindowIdRef.current ?? undefined), viewState)
+            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
@@ -5436,6 +5583,11 @@ function FrameworkOsShellInner({
           applyHistoryPatch(response.historyPatch);
           await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
           if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
+          // 🏁️ `handleAction` answers on the guest's FIRST reactor turn — a typed command is only ADMITTED
+          // there, its work runs on later turns and lands as an `OperationCompleted` frame. Awaiting that
+          // frame here is what makes this promise mean "the action finished", which every self-gating
+          // background tick loop depends on (`ComponentSceneHostProps.onAction`).
+          await awaitOperationSettle(response.output);
         })
         .catch((actionError) => {
           if (propagateFailure) throw actionError;
@@ -5455,6 +5607,7 @@ function FrameworkOsShellInner({
     },
     [
       applyHostEffects,
+      awaitOperationSettle,
       captureDialogOrigin,
       isCurrentDialogOrigin,
       captureEffectOwner,
@@ -7842,10 +7995,10 @@ function FrameworkOsShellInner({
     [session?.app, activeModeId, uiTerminology, uiLocale],
   );
 
-  const toolTabs = useMemo(
-    () => (session ? buildToolTabs(resolvedModeTools, session.app.controllerId, activeToolIdRef, toolMeasuresByToolIdRef, onActionStable) : []),
-    [resolvedModeTools, session?.app.controllerId, onActionStable],
-  );
+  // 🐢️ Only the presence of a session gates the tool tabs, so this memo (and `defaultDock`'s, which
+  // consumes it) keeps its identity across every session object churn.
+  const hasToolSession = session !== null && session !== undefined;
+  const toolTabs = useMemo(() => (hasToolSession ? buildToolTabs(resolvedModeTools, toolMeasuresByToolIdRef, onActionStable) : []), [hasToolSession, resolvedModeTools, onActionStable]);
 
   //#region 🧭️DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
@@ -8227,6 +8380,36 @@ function FrameworkOsShellInner({
     const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
   }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
+
+  /**
+   * 🛠️ Single owner of "the selected `tool.<id>` leaf tab IS the active tool" (see
+   * {@link reconcileToolTabSelection}). Every route into the Tool category's path lands here — a user
+   * press, a `DockUiStateStore` arrangement restored on boot, an introduction step, a program
+   * `setActiveTool` effect, a utility claiming the pointer — so the tab and the tool can never disagree,
+   * and the very first press on a restored `tool.fill` leaf arms Fill instead of reading as a re-press.
+   * Skipped wholesale (leaving `toolTabSelectionRef` untouched) while the Tool category is not the active
+   * root, so an armed tool survives browsing the Command palette and is reconciled again on re-entry.
+   */
+  const toolTabSelectionRef = useRef<ToolTabSelection | null>(null);
+  useEffect(() => {
+    if (!session) return;
+    const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
+    const toolCategoryTabs = mobile ? mobilePanelTabs : dock.anchors[toolAnchor];
+    const branchPath = findPanelTabPath(toolCategoryTabs, FRAMEWORK_CATEGORY_TOOL_ID);
+    if (!branchPath) return;
+    const path = mobile ? mobilePanelPath : panelActivePaths[toolAnchor];
+    if (branchPath.some((segment, index) => path[index] !== segment)) return;
+    const { next, effect } = reconcileToolTabSelection(toolTabSelectionRef.current, activeToolId, toolIdFromPanelTabId(path[path.length - 1]));
+    toolTabSelectionRef.current = next;
+    if (effect.kind === "activate") {
+      onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: effect.toolId ?? "" } });
+      return;
+    }
+    if (effect.kind === "select") {
+      const value = (effect.toolId ? findPanelTabPath(toolCategoryTabs, `tool.${effect.toolId}`) : undefined) ?? branchPath;
+      dispatch(mobile ? { type: "SET_MOBILE_PANEL_PATH", value } : { type: "SET_PANEL_PATH", anchor: toolAnchor, value });
+    }
+  }, [activeToolId, dock, mobile, mobilePanelPath, mobilePanelTabs, onActionStable, panelActivePaths, session]);
   //#endregion 🧭️DockAssembly
 
   const mobilePanel = useMemo(() => {
@@ -8301,14 +8484,9 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
         }
         const tabId = path[path.length - 1];
-        // 🛠️ Selecting a mode-tool leaf (`tool.<id>`) activates that tool so its measures render immediately
-        // under the tab — no nested Fill toggle inside the tree.
-        if (anchor === "bottom-middle" && session && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
-          const selectedToolId = toolIdFromPanelTabId(tabId);
-          if (selectedToolId && selectedToolId !== activeToolIdRef.current) {
-            onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: selectedToolId } });
-          }
-        }
+        // 🛠️ Selecting/deselecting a mode-tool leaf (`tool.<id>`) arms or disarms that tool — owned by the
+        // single `reconcileToolTabSelection` pass in 🧭️DockAssembly, never by this press callback, so a
+        // restored or programmatically-set path reaches exactly the same state a press does.
         // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
         if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
@@ -9110,6 +9288,7 @@ function FrameworkOsShellInner({
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
+    <AppCatalogueContext.Provider value={appCatalogue}>
     <UiKeybindingsProvider bindings={controlKeybindings}>
     <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
     <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
@@ -9143,6 +9322,11 @@ function FrameworkOsShellInner({
           {/* 💡️ The host-owned ephemeral inference port for exactly one document. It is mounted
            * only while the retained worker operation is live, renders solely from the worker's own
            * bounded status, and writes nothing into the document. */}
+          {inferencePortRuntimeKey === null && inferencePort === undefined && session?.app.dialect.artifactKind === "s.gis.gismap" ? (
+            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+              <GisMapInferenceRequestControl locale={uiLocale === "de" ? "de" : "en"} onRequest={() => { void requestInferenceProposal(session, () => shellStateRef.current.pluginRuntime.session === session).catch((error) => { console.log("[DEBUG] gis-map-inference-request", error); }); }} />
+            </div>
+          ) : null}
           {inferencePortRuntimeKey !== null && inferencePort !== undefined ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               <InferencePortPanel status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />
@@ -9286,6 +9470,7 @@ function FrameworkOsShellInner({
     </ShellContextMenuFallbackContext.Provider>
     </PluginSurfaceActionsContext.Provider>
     </UiKeybindingsProvider>
+    </AppCatalogueContext.Provider>
     </AppKeybindingsContext.Provider>
     </SetWindowIconContext.Provider>
     </SetWindowTitleContext.Provider>

@@ -1,5 +1,5 @@
 import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse, DocumentScope, GisMapInferencePortStatusV1 } from "@semio-tech/framework-os";
-import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, documentExecutionTargetStatusRoleV1, documentRuntimeKeyV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1 } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, documentExecutionTargetStatusRoleV1, documentRuntimeKeyV1, gisMapInferencePortAffordancesV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1, projectGisMapInferencePreviewOverlayV1 } from "@semio-tech/framework-os";
 import React from "react";
 
 export interface HostAppIdentity {
@@ -196,6 +196,21 @@ export type InferencePortUiAction =
  * no job transport, origin, path, receipt, proposal body or user identity appears, and nothing here
  * is persisted into the document. Focus moves to the region when it opens and returns to whatever
  * held it before when it closes. */
+export function GisMapInferenceRequestControl({
+  locale,
+  onRequest,
+}: {
+  readonly locale: "en" | "de";
+  readonly onRequest: () => void;
+}) {
+  const control = GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1;
+  return (
+    <section aria-label={control.heading[locale]} data-semio-inference-request="">
+      <button type="button" onClick={onRequest}>{control.request[locale]}</button>
+    </section>
+  );
+}
+
 export function InferencePortPanel({
   status,
   locale,
@@ -215,15 +230,15 @@ export function InferencePortPanel({
   }, []);
   const control = GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1;
   const phaseText = GIS_MAP_INFERENCE_PORT_TEXT_V1[status.phase][locale];
-  const text = status.code === null ? phaseText : `${phaseText} ${GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1[status.code][locale]}`;
+  const liveText = status.code === null ? phaseText : `${phaseText} ${GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1[status.code][locale]}`;
   const role = gisMapInferencePortRoleV1(status.phase);
   const terminal = gisMapInferencePortTerminalV1(status.phase);
-  const cancellable = !terminal && status.phase !== "idle" && !status.cancelRequested;
-  const approvable = status.phase === "offered" && status.proposalHash !== null && status.preview?.proposalHash === status.proposalHash && status.preview.jobId === status.jobId && !status.cancelRequested;
+  const chrome = gisMapInferencePortAffordancesV1(status);
+  const overlay = status.preview && chrome.overlay ? projectGisMapInferencePreviewOverlayV1(status.preview) : null;
   return (
     <section aria-label={control.heading[locale]} data-semio-inference-port={status.phase}>
       <h2 ref={headingRef} tabIndex={-1}>{control.heading[locale]}</h2>
-      <p role={role} aria-live={role === "status" ? "polite" : "assertive"}>{text}</p>
+      <p role={role} aria-live={role === "status" ? "polite" : "assertive"}>{liveText}</p>
       {status.preview ? (
         <dl data-semio-inference-preview={status.preview.regionId}>
           <dt>{control.region[locale]}</dt><dd>{status.preview.regionId}</dd>
@@ -231,12 +246,17 @@ export function InferencePortPanel({
           <dt>{control.latitude[locale]}</dt><dd>{status.preview.ring[0][1]}–{status.preview.ring[2][1]}</dd>
         </dl>
       ) : null}
-      {status.total > 0 && !terminal ? <progress aria-label={control.progress[locale]} value={status.completed} max={status.total} /> : null}
-      {status.phase === "idle" ? (
-        <button type="button" onClick={() => onAction({ kind: "propose" })}>{control.heading[locale]}</button>
+      {overlay ? (
+        <svg data-semio-inference-overlay={overlay.regionId} viewBox={overlay.viewBox} role="img" aria-label={control.overlay[locale]}>
+          <title>{control.overlay[locale]}</title>
+          <path d={overlay.path} fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
       ) : null}
-      {cancellable ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.cancel[locale]}</button> : null}
-      {approvable ? <button type="button" onClick={() => onAction({ kind: "approve" })}>{control.approve[locale]}</button> : null}
+      {status.total > 0 && !terminal ? <progress aria-label={control.progress[locale]} value={status.completed} max={status.total} /> : null}
+      {chrome.request ? <button type="button" onClick={() => onAction({ kind: "propose" })}>{control.request[locale]}</button> : null}
+      {chrome.cancel ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.cancel[locale]}</button> : null}
+      {chrome.reject ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.reject[locale]}</button> : null}
+      {chrome.approve ? <button type="button" onClick={() => onAction({ kind: "approve" })}>{control.approve[locale]}</button> : null}
       <button type="button" onClick={() => onAction({ kind: "close" })}>{control.close[locale]}</button>
     </section>
   );

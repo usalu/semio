@@ -2419,10 +2419,13 @@ impl GisMapInferencePortPhaseV1 {
 #[value(rename_all = "kebab-case")]
 pub enum GisMapInferencePortControlV1 {
     Heading,
+    Request,
     Cancel,
+    Reject,
     Approve,
     Close,
     Progress,
+    Overlay,
 }
 
 impl GisMapInferencePortControlV1 {
@@ -2431,14 +2434,20 @@ impl GisMapInferencePortControlV1 {
         match (self, locale) {
             (Self::Heading, DocumentExecutionTargetLocaleV1::En) => "Bounds proposal",
             (Self::Heading, DocumentExecutionTargetLocaleV1::De) => "Begrenzungsvorschlag",
+            (Self::Request, DocumentExecutionTargetLocaleV1::En) => "Request bounds proposal",
+            (Self::Request, DocumentExecutionTargetLocaleV1::De) => "Begrenzungsvorschlag anfordern",
             (Self::Cancel, DocumentExecutionTargetLocaleV1::En) => "Cancel proposal",
             (Self::Cancel, DocumentExecutionTargetLocaleV1::De) => "Vorschlag abbrechen",
+            (Self::Reject, DocumentExecutionTargetLocaleV1::En) => "Reject proposal",
+            (Self::Reject, DocumentExecutionTargetLocaleV1::De) => "Vorschlag ablehnen",
             (Self::Approve, DocumentExecutionTargetLocaleV1::En) => "Approve proposal",
             (Self::Approve, DocumentExecutionTargetLocaleV1::De) => "Vorschlag freigeben",
             (Self::Close, DocumentExecutionTargetLocaleV1::En) => "Close proposal",
             (Self::Close, DocumentExecutionTargetLocaleV1::De) => "Vorschlag schließen",
             (Self::Progress, DocumentExecutionTargetLocaleV1::En) => "Proposal progress",
             (Self::Progress, DocumentExecutionTargetLocaleV1::De) => "Fortschritt des Vorschlags",
+            (Self::Overlay, DocumentExecutionTargetLocaleV1::En) => "Proposed bounds on the map",
+            (Self::Overlay, DocumentExecutionTargetLocaleV1::De) => "Vorgeschlagene Grenzen auf der Karte",
         }
     }
 }

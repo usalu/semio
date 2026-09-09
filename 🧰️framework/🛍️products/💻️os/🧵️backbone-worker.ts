@@ -4724,7 +4724,41 @@ function terminateDirectoryAdministration(operation: DirectoryAdministrationOper
   if (notify) postDirectoryAdministrationState(operation, code);
 }
 
-/** 🗑️ Settles the destructive command only from its exact request-bound accepted receipt. */
+/** ⛔️ Confirms deletion only after the exact space page is missing. A surviving page is not success. */
+async function confirmDirectoryAdministrationDeletion(operationEpoch: number, receipt: DirectoryCommandReceiptV1): Promise<void> {
+  const operation = liveDirectoryAdministration(operationEpoch);
+  if (operation === null) return;
+  const client = directoryClient;
+  if (client === null) {
+    terminateDirectoryAdministration(operation, "failed", "transport");
+    return;
+  }
+  const read = new AbortController();
+  operation.pageRead?.abort(new Error("directory administration deletion confirmation"));
+  operation.pageRead = read;
+  try {
+    await client.spaceAdministrationPage(operation.spaceId, undefined, { signal: read.signal });
+    const live = liveDirectoryAdministration(operationEpoch);
+    if (live === null || live !== operation || operation.pageRead !== read) return;
+    terminateDirectoryAdministration(operation, "failed", "invalid");
+  } catch (error) {
+    if (operation.closed || operation.pageRead !== read) return;
+    if (read.signal.aborted) {
+      terminateDirectoryAdministration(operation, "cancelled", "cancelled");
+      return;
+    }
+    if (directoryRejectionStatus(error) === 404) {
+      completeDirectoryAdministrationDeletion(operation, receipt);
+      return;
+    }
+    const termination = directoryAdministrationPageTermination(error, false);
+    terminateDirectoryAdministration(operation, termination.phase, termination.code);
+  } finally {
+    if (operation.pageRead === read) operation.pageRead = null;
+  }
+}
+
+/** 🗑️ Settles the destructive command only after an accepted receipt and a missing page. */
 function completeDirectoryAdministrationDeletion(operation: DirectoryAdministrationOperationV1, receipt: DirectoryCommandReceiptV1): void {
   operation.closed = true;
   operation.abort.abort(new Error("directory administration deleted"));
@@ -4894,7 +4928,12 @@ async function submitDirectoryAdministrationCommand(operationEpoch: number, requ
       terminateDirectoryAdministration(operation, "failed", "invalid");
       return;
     }
-    completeDirectoryAdministrationDeletion(operation, receipt);
+    operation.receiptSha256 = receipt.receiptSha256;
+    operation.outcome = receipt.outcome;
+    operation.inviteToken = null;
+    operation.inviteCapabilityStatus = null;
+    operation.inviteTransferEpoch = null;
+    await confirmDirectoryAdministrationDeletion(operationEpoch, receipt);
     return;
   }
   operation.requestId = null;

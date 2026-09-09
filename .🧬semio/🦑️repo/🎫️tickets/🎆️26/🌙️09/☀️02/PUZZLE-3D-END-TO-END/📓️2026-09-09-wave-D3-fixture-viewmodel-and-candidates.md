@@ -163,10 +163,311 @@ plus one `HashMap` lookup.
 
 ## 4. Verification
 
-*(filled in below)*
+Every command below ran FOREGROUND with
+
+```
+RUSTC_WRAPPER="" RUST_MIN_STACK=134217728 \
+CARGO_TARGET_DIR=/private/tmp/claude-501/…/scratchpad/target-p3d \
+cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly -j 4 <filter> -- --test-threads=1
+```
+
+against a `target-p3d` seeded from the repo's own `target/debug` at 18:04 (the seed marker `.seeded`).
+Machine load stayed between 25 and 60 for the whole window.
+
+### 4.0 Whole-module runs
+
+| run | tree | result |
+| --- | --- | --- |
+| A (18:05→18:31) | this wave's edits exactly as the killed agent left them | `FAILED. 81 passed; 58 failed; 456 filtered out; finished in 1424.12s` |
+| B (18:35→19:06) | A + §4.2(a) | `FAILED. 87 passed; 56 failed; 462 filtered out; finished in 1072.62s` |
+| C (19:45→20:04) | B + §4.2(b) + §4.2(c) | `FAILED. 87 passed; 57 failed; 462 filtered out; finished in 1123.82s` |
+
+The audit's 89/44 baseline is **not** comparable: it was taken six waves earlier on a 456-test module
+that is now 462 tests, and — decisively — the whole-module number is dominated by two PROCESS-WIDE
+leaks that no per-test fix can move (§5.3, §5.4). 48 of run A's 58 failures and 49 of run C's 57 are
+one of exactly two messages: `puzzle3d app never quiesced` (34) and
+`interactive-job.admission-capacity` / *"process-wide session capacity"* (15). **Per-test isolated runs
+are therefore the measurement this wave reports**, and the whole-module runs are reported only as the
+honest, unflattering total.
+
+### 4.1 §3.2's root fault is gone
+
+```
+$ grep -c "missing-owned-reducer" run-after-1.txt
+0
+```
+
+Zero occurrences across the whole module, against **17** tests that failed on exactly that fault in the
+audit. Every `setActiveTool` / `setActiveUtility` dispatch now completes: the fixture's own
+`ViewModel` (§1) carries the activation from the dispatch that made it to the next `render` /
+`window_measures`, and the framework's empty-`Emit` arm
+(`🧰️framework/…/🔌️plugin/🦀️.rs:21352`) is what the fixture now models.
+
+Isolated §3.2 verdicts, one filtered process per batch:
+
+```
+$ cargo test … -- --test-threads=1 <8 utility/suggestion filters>          # after §1 + §4.2(a)
+brush_placement_picker_appears_only_for_a_live_brush_target ... FAILED
+gumball_active_only_for_transform_utilities_with_object_selection ... FAILED
+gumball_inactive_when_every_handle_flag_is_off ... ok
+hover_suggestion_updates_the_brush_candidate_index_and_live_preview ... FAILED
+open_and_accept_vortex_suggestions_preserve_active_utility ... FAILED
+set_active_utility_emits_no_ops_and_no_history_entry ... ok
+transform_utility_is_local_to_the_window_instance_not_shared_across_split_panes ... ok
+transform_utility_options_expose_move_and_rotate_flags ... ok
+test result: FAILED. 4 passed; 4 failed; 598 filtered out; finished in 1.56s
+```
+
+Not one of those four failures is `missing-owned-reducer` any more; each is a further, separate defect,
+and two of them (`hover_suggestion`, `open_and_accept…`) are §4.2(b) below.
+
+### 4.2 Three repairs this wave had to make to reach its own subject
+
+**(a) The fixture never drained the typed-operation COMPLETION witness.**
+`settle` (`🔬️testkit/🦀️.rs`) drove `maintenance_step` → `advance_typed_operation_publication` → result
+page + ACK → effect → event → UI scope, but never `take_typed_operation_completion`. Every terminal
+typed operation pushes one witness into a 64-slot outbox that ONLY that take drains
+(`🔌️plugin/🦀️.rs:22214` pushes, `:24169` pops), and `has_pending_typed_operations` counts it
+(`:24027`) — so after its first completed operation a fixture could never observe quiescence again.
+The trace is unambiguous: `operations=[]  latest_wins_empty=true effects=0 events=0 ui=0 query=none`,
+printed every 4096 turns to the settle loop's 1 048 576-iteration guard. This is a term the framework
+gained TODAY (the whole `typed_completion_outbox` block is a `+` in `git diff HEAD` on
+`🔌️plugin/🦀️.rs`, whose last commit is 9b605a4550 12:10), which is why the audit's older baseline never
+saw it. Fixed in `🔬️testkit/🦀️.rs` `settle` and in `🔬️unit/🦀️.rs` `measured_host_turn`, in exactly the
+host's own position — between the event and the UI scope, as `advance_typed_operation_output`
+(`🔌️plugin/🦀️.rs:30617`) takes it.
+
+```
+$ cargo test … editor::puzzle3d::component::tests::open_vortex_suggestions -- --test-threads=1
+open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_nakagin ... ok
+open_vortex_suggestions_opens_the_suggestion_popup ... ok
+open_vortex_suggestions_records_explicit_window_id ... ok
+test result: ok. 3 passed; 0 failed; 602 filtered out; finished in 1.03s
+```
+
+**(b) A no-op scene sync discarded the brush lane — which is why §3's warm stage looked like it did
+nothing.** With a `[DEBUG]` probe on both sides of the boundary the warm stage was proved to work and
+the render proved to throw the result away:
+
+```
+[DEBUG] warm turn=0 target=seed-left-001:v0 more=true free=0 pending=true  resume=0
+[DEBUG] warm turn=1 target=seed-left-001:v0 more=true free=7 pending=false resume=0
+… (turns 2-7 all free=7)
+[DEBUG] set_scene_config no-op (scene unchanged)
+[DEBUG] start_fill_preparation clears brush cache entries=7
+[DEBUG] render brush_candidates target=seed-left-001:v0 free=0 pending=true
+```
+
+`Puzzle3dPrecomputeSession::install_scene` (`⏳️precompute/🦀️.rs`) ran `rebuild_queue()` whenever the
+fill builder was absent — and a session hand-off carries the scene and the brush cache but never the
+fill builder, so EVERY `render`'s `sync_precompute_session` came through there, and `rebuild_queue` →
+`start_fill_preparation` wiped `brush_queue`/`brush_cache`. Repair: the brush-lane reset moved OUT of
+`start_fill_preparation` (fill-only, and now documented as such) INTO `rebuild_queue` (scene-invalidated
+only), `install_scene` restores the fill with `start_fill_preparation(true)` instead of rebuilding, and
+`install_collision_mesh` keeps its own exact reset. `PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE = 8`
+(`🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs`) bounds what the popup publishes, because the scene surface it
+travels on is a fixed-capacity payload and the candidate list was unbounded.
+
+```
+$ cargo test … <suggestion family> -- --test-threads=1
+accept_suggestion_appends_an_object_and_closes_the_menu ... ok
+accept_suggestion_closes_menu_even_when_placement_fails ... FAILED     ← §5.1
+accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin ... ok
+accept_suggestion_extent_fits_within_cap_for_nakagin ... ok
+accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin ... ok
+accept_suggestion_with_full_id_places_even_if_selection_was_cleared ... ok
+brush_placement_picker_appears_only_for_a_live_brush_target ... FAILED  ← §5.2
+close_vortex_suggestions_clears_sticky_hover ... ok
+close_vortex_suggestions_clears_the_menu ... ok
+hover_suggestion_updates_the_brush_candidate_index_and_live_preview ... ok
+open_and_accept_vortex_suggestions_preserve_active_utility ... ok
+open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_nakagin ... ok
+open_vortex_suggestions_opens_the_suggestion_popup ... ok
+open_vortex_suggestions_records_explicit_window_id ... ok
+test result: FAILED. 12 passed; 2 failed; 592 filtered out; finished in 3.61s
+```
+
+Same eight filters as §4.1, re-run once §4.2(c) had landed — the §3.2 cohort this wave owns:
+
+```
+brush_placement_picker_appears_only_for_a_live_brush_target ... FAILED   ← §5.2, the only one left
+gumball_active_only_for_transform_utilities_with_object_selection ... ok
+gumball_inactive_when_every_handle_flag_is_off ... ok
+hover_suggestion_updates_the_brush_candidate_index_and_live_preview ... ok
+open_and_accept_vortex_suggestions_preserve_active_utility ... ok
+set_active_utility_emits_no_ops_and_no_history_entry ... ok
+transform_utility_is_local_to_the_window_instance_not_shared_across_split_panes ... ok
+transform_utility_options_expose_move_and_rotate_flags ... ok
+test result: FAILED. 7 passed; 1 failed; 603 filtered out; finished in 1.17s
+```
+
+i.e. 4 passed / 4 failed before §4.2(b)+(c), 7 passed / 1 failed after.
+
+**Both of this wave's two named targets are green**:
+`hover_suggestion_updates_the_brush_candidate_index_and_live_preview` and
+`open_and_accept_vortex_suggestions_preserve_active_utility`. So is
+`open_vortex_suggestions_opens_the_suggestion_popup`, i.e. the audit's §3.4 / §2 item 4 —
+*"the vortex suggestion popup never visibly opens"* — is closed.
+
+**(c) The 120 ms tick never warmed the target the user is looking at, and the chrome read a cold
+session.** `suggestions_tick` spent its whole slice on the lane's round-robin, so the brush utility's
+own target waited behind the document enumeration; it now resolves the open popup's pinned vortex, else
+`puzzle3d_brush_target_vortex`, and refreshes it only while the entry is still `unknown_pending` (so a
+resolved target costs nothing per tick). Separately, `window_measures_body` and `tool_measures`
+(`✏️editor/🦀️.rs`) built a `restored_precompute_session(&envelope, &[])` — a COLD session — where
+`render` reads `app.precompute`; both now read the app's own live session, as `render` does. Measured
+through the tick's own probe (`free=2 → 6 → 6 …` across ticks) the lane does converge and does persist,
+which is what §4.2(b) bought.
+
+### 4.3 The Warm stage of §3 is NOT the never-quiesce cause
+
+Bisected directly rather than argued: with `warm_target_of` short-circuited to `None`
+(`[DEBUG] bisect` guard, since removed) and everything else identical,
+
+```
+open_vortex_suggestions_opens_the_suggestion_popup ... FAILED   (never quiesced)
+open_vortex_suggestions_records_explicit_window_id ... FAILED   (never quiesced)
+test result: FAILED. 1 passed; 2 failed; 601 filtered out; finished in 13.65s
+```
+
+— the failure survives the warm stage's removal, so it belonged to (a). With (a) landed and the warm
+stage restored, both pass (§4.2(a) block above), and
+`open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_nakagin` — the law that the
+warm turn count must be fixed, never wall-clock-terminated — passes in every run.
+
+### 4.4 Hostile static laws
+
+`suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_missing_boundaries` failed
+in run A and passes from run B on; its run-A failure was a peer's in-flight state, confirmed by
+re-running every marker of `suggestion_and_precompute_routes_are_cursorized` against the source as it
+stands (all 19 positive markers present, all 6 negative markers absent).
+`retained_command_catalog_excludes_framework_owned_shared_actions` — the law that
+`PUZZLE3D_RETAINED_TOOL_IDS` may not contain `setActiveTool`/`setActiveUtility`, i.e. the law this
+wave's §2 deletion had to keep — passes in all three runs.
+
+§2's own two new laws live under `editor::puzzle3d::window::component` (NOT the `component` filter this
+report's module runs use), and were run separately:
+
+```
+$ cargo test … editor::puzzle3d::window::component -- --test-threads=1
+app_pack_and_spr_exclude_window_transient_and_operation_fields ... ok
+every_oversized_string_capacity_returns_the_exact_puzzle3d_owner ... ok
+host_activation_reads_the_tool_first_then_the_addressed_window_utility ... ok
+same_kind_windows_compose_independently ... ok
+suggestion_and_input_retirement_reaches_terminal_empty_with_tiny_grants ... ok
+window_transient_scratch_does_not_outlive_the_activation_it_was_captured_under ... ok
+test result: ok. 6 passed; 0 failed; 605 filtered out; finished in 0.01s
+```
+
+The crate's own `cargo test --no-run` ends with **zero library warnings** (the two remaining
+`unnecessary qualification` warnings are a peer's, at `🔬️unit/🦀️.rs:88` and `:121`); the dead
+`restored_precompute_session` left by §4.2(c) was deleted rather than left behind.
+
+### 4.5 Temporary instrumentation
+
+Six `[DEBUG]` probes were added and **all six removed**: the warm-stage candidate readout
+(`✏️editor/🦀️.rs`), the render-side `brush_candidates` readout and the scene byte census
+(`🎭️modes/…/🧊️main/🦀️.rs`), the brush-options readout (`🪛️utilities/🖌️brush/🦀️.rs`), the
+`start_fill_preparation` / `set_scene_config` pair (`⏳️precompute/🦀️.rs`), the session-check-in drop
+(`✏️editor/🦀️.rs`) and the `suggestions_tick` readout. Verified absent:
+`grep -rn 'eprintln!("\[DEBUG\]' 🧊️3d/…/✳️any/` outside `🧪️tests/` returns nothing. The coordinator's
+own `[DEBUG]` traces in `🔌️plugin/🦀️.rs` were not touched.
 
 ---
 
 ## 5. Not verified
 
-*(filled in below)*
+### 5.1 `accept_suggestion_closes_menu_even_when_placement_fails` — REGRESSED by §4.2(b), scene budget
+
+It was green in runs A and B and is red in run C:
+
+```
+render: Fault { origin: Plugin, code: FaultCode("plugin.internal"),
+  message: "ui.fixed-capacity: fixed UI admission failed at scene-surface.encode:
+            surface payload exceeds fixed capacity with 33289 bytes" }
+```
+
+It regressed because the popup now carries the content it is supposed to carry. Byte census of that
+window's `World3dScene`, measured:
+
+```
+meshes=27673 instances=270 selection=212 vortices=2639 attractions=2 volumes=2
+refs=327 preview=281 interaction=1094 lod=125 chunk=40 env=92        → 33289 packed
+```
+
+`meshes_json` alone is **27 673 of a 32 KiB fixed surface payload** — 83 %. The scene had ~1 KB of
+headroom before this wave; a resolved 6-row popup (1094) plus its brush preview (281) uses it. The same
+test with a sticky hover is what pushes `vortices_json` from 2 to 2639. This is a scene-payload budget
+defect (mesh geometry re-sent inline in every scene), NOT a suggestion defect: capping the candidate
+page at 8 does not save it, and neither would capping it at 2. It belongs to whoever owns the 3d scene
+payload (W-D4 / W-S). Bounding the popup (`PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE`) was landed anyway,
+because an unbounded list would fail-close the whole 3D render of a richly catalogued document.
+
+### 5.2 `brush_placement_picker_appears_only_for_a_live_brush_target` — still red, cause located, not fixed
+
+Probed to the exact line. The tick resolves the target and keeps it
+(`[DEBUG] suggestions_tick after refresh free=6` on every tick), and the measures call *does* resolve
+the same target (`brush options target=seed-left-001:v0`) — but reads `candidates=0`, because the app it
+runs on has **no session at all**: `puzzle3d_view_session_key(doc)` (`✏️editor/🦀️.rs:2669`) answers
+`None` when the view carries neither `operation_optional()` nor `render_operation()`, which is the case
+for the fixture's bare `window_measures(&view)` call, so `with_puzzle3d_app_for(None, …)` takes no
+lease and every chrome call starts cold (`[DEBUG] set_scene_config CHANGED … prior=None`, four times in
+one test). Both halves of the repair that CAN be made from this wave were made — the tick prioritizes
+the live target, and the chrome reads `app.precompute` instead of a cold
+`restored_precompute_session` — and neither is sufficient while the fixture's measures call carries no
+document-instance identity. Giving the fixture (or the framework accessor) that identity is the
+remaining work. The test itself was updated to play the host's own `suggestionsTick` clock
+(`PUZZLE3D_BRUSH_PICKER_TICKS = 8`), which is what a running host does between the click and the next
+frame — this wave deleted the `setActiveTool` reducer that used to warm the lane, and §2(ii) already
+recorded that consequence.
+
+### 5.3 The fill family — process-wide worker-session leak, not this wave's
+
+Isolated, one process, ten filters:
+
+```
+fill_build_tick_is_ignored_when_fill_tool_is_inactive ... ok
+fill_build_tick_is_a_view_action_with_narrow_ui_scope ... FAILED
+  expected a Partial ui_scope for fillBuildTick, got None
+<the other eight> ... FAILED
+  retained operation faulted: typed operation worker session admission was refused
+  by the process-wide session capacity
+test result: FAILED. 1 passed; 9 failed; 601 filtered out; finished in 13.05s
+```
+
+Every app boot mounts a fill worker (`start_fill_preparation` → `mount_fill_worker`) and the process
+pool's session slots are never returned, so the N-th app in one test process cannot admit one. This is
+the same exhaustion that surfaces as `interactive-job.admission-capacity` on 15 further tests in the
+whole-module runs, and it is what makes those runs order-dependent (`close_vortex_suggestions_clears_the_menu`
+passes in run C's full sweep and fails alone; `open_vortex_suggestions_opens_the_suggestion_popup` does
+the opposite). Owner: the fill lane (W-F / `⏳️precompute`).
+
+### 5.4 The 34 whole-module `never quiesced` failures
+
+After §4.2(a) the ones this wave could reach are green in isolation; the 34 that remain in run C are the
+downstream of §5.3 (an operation whose worker session was refused sits in `Worker` with
+`has_runnable_work() == true` forever) plus §3.1 of the audit, whose own test
+`one_window_config_mutation_publishes_exactly_one_generation_and_quiesces` is still red. Neither was
+traced further by this wave.
+
+### 5.5 Red for reasons outside this wave entirely
+
+`retained_publication_contracts_are_an_exact_nonempty_tool_bijection` — the fixture
+`🧫️fixtures/🗄️retained-jobs/🔣️.json:25` still lists `setFillCountStep`, which no longer exists in
+`PUZZLE3D_RETAINED_TOOL_IDS`; `app_definition_labels_resolve_german_reuse_branded_for_aggregator` and
+`document_and_kinds_trees_use_german_reuse_section_labels` (terminology wave);
+`set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin`;
+`two_instances_converge_disjoint_object_edits_via_backbone` (`module.vcs`);
+`local_interaction_read_of_a_selected_document_terminates`; the whole `world_pick_*` / `world_vortex_*`
+/ inspector cohort (all `admission-capacity`, i.e. §5.3).
+
+### 5.6 Not attempted at all
+
+No wasm build and no browser/runtime verification (explicitly out of this wave's scope): every claim
+above is a native `--test-threads=1` measurement. `⚛️reactor/🔄️turn`, `🕹️interaction/**`, `🧵️job` and
+the coordinator's `[DEBUG]` traces were not touched.
+
+One interruption is worth recording because it cost a re-run: the volume holding both the scratchpad
+and the repo hit `ENOSPC` mid-session (a peer's build; 44 GiB free again minutes later) and NO command
+could execute at all — the Bash and Write tools each fail before running, because both open a temp file
+first. `Read` and `Edit` kept working throughout.

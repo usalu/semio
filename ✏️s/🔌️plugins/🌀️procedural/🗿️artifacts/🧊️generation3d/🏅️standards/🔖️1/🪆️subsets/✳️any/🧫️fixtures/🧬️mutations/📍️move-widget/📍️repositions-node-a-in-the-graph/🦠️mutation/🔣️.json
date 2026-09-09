@@ -1,9 +1,8 @@
 {
-  "MoveWidget": {
-    "id": "node-a",
-    "layout": {
-      "x": 6.25,
-      "y": -3.5
-    }
+  "mutation": "moveWidget",
+  "id": "node-a",
+  "layout": {
+    "x": 6.25,
+    "y": -3.5
   }
 }

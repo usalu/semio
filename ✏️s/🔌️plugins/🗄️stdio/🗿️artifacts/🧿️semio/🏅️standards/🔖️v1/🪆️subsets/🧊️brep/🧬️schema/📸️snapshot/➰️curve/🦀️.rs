@@ -269,6 +269,21 @@ pub enum Curve2 {
 }
 
 impl Curve2 {
+    /// ➰️ The same curve translated by `delta` in parameter space — the exact operation, per
+    /// kind, not a refit. A p-curve on a periodic surface is only defined up to whole periods in
+    /// the periodic directions, and the branch a p-curve was born in (whatever the surface
+    /// inversion that produced it happened to return) need not be the branch the face's own
+    /// boundary ring is written in; imprinting one into the other without re-aligning it produces a
+    /// UV polygon whose pieces sit periods apart, which has no interior at all.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn translated(&self, delta: Vec2) -> Curve2 {
+        match self {
+            Curve2::Line { origin, dir } => Curve2::Line { origin: *origin + delta, dir: *dir },
+            Curve2::Circle { center, radius } => Curve2::Circle { center: *center + delta, radius: *radius },
+            Curve2::Ellipse { center, x_axis, major_radius, minor_radius } => Curve2::Ellipse { center: *center + delta, x_axis: *x_axis, major_radius: *major_radius, minor_radius: *minor_radius },
+            Curve2::Nurbs { knots, controls, weights } => Curve2::Nurbs { knots: knots.clone(), controls: controls.iter().map(|p| *p + delta).collect(), weights: weights.clone() },
+        }
+    }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn domain(&self) -> (f64, f64) {
         match self {

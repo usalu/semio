@@ -12,7 +12,7 @@
     "channel": "solid",
     "kind": "solid"
   },
-  "tessellationTolerance": 0.01,
+  "tessellationTolerance": 0.0025,
   "expect": {
     "minTriangles": 24,
     "closed": true,
@@ -22,18 +22,19 @@
     "edgePerimeter": null,
     "edgePerimeterTolerance": 0.0,
     "boundingBoxMin": [
-      -2.2,
-      -2.2,
+      -2.1475,
+      -2.1475,
       -2.2
     ],
     "boundingBoxMax": [
-      2.2,
-      2.2,
+      2.1475,
+      2.1475,
       2.2
     ],
     "boundingBoxTolerance": 0.005,
     "kernelVolumeNode": "brep_measure_volume_2",
-    "kernelVolumeChannel": "volume"
+    "kernelVolumeChannel": "volume",
+    "kernelVolumeTolerance": 1e-05
   },
-  "kernelStatus": "blocked-on-boolean-kernel"
+  "kernelStatus": "green"
 }

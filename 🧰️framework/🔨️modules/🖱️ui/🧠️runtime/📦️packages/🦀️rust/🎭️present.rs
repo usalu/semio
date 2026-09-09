@@ -251,6 +251,9 @@ impl ComponentTreeProducer {
         self.fault
     }
 
+    /// 🧹️ Releases one owned unit per call, then retires one queued built-child page and completes
+    /// once the retire queue is empty — pages still reserved by other live trees are not waited for
+    /// (that condition never holds while surfaces are mounted; the reactor turn drains the queue too).
     pub fn close_step(&mut self) -> bool {
         if let Some(tree) = self.complete.take() {
             drop(tree);

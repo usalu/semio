@@ -369,9 +369,9 @@ export class OwnedUiSurfacePatch {
     this.#phase = "staging"; this.#epoch = epochOf(this.#owner!).begin(this.#revision); this.#scan = firstCell(this.#owner!); yield 96;
     while (this.#scan) {
       this.#cell = this.#scan; this.#scan = this.#cell.next; yield 32;
-      while (this.#cell.active && !this.#cell.initialized) yield 16;
+      if (this.#cell.active && !this.#cell.initialized) { yield 16; continue; }
       if (this.#cell.active && this.#cell.id !== null && (yield* this.#touched.lookup(this.#cell.id))) {
-        while (this.#cell.active && !this.#cell.lease!.hasCapacity) yield 16;
+        if (this.#cell.active && !this.#cell.lease!.hasCapacity) { yield 16; continue; }
         if (this.#cell.active) {
           yield* this.#lookupBinding(this.#bindings!, this.#cell.id);
           if (this.#cell.active) { if (!this.#cell.lease!.stage(this.#epoch, this.#binding)) throw new Error("Owned UI staging reservation changed"); this.#staged = { cell: this.#cell, next: this.#staged }; }

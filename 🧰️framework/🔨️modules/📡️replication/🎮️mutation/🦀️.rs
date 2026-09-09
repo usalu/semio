@@ -117,6 +117,30 @@ pub trait MutationDiff<P>: Clone + Default + crate::value::ToValue + crate::valu
     /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
     /// rejection; absorb must not manufacture an implicit success path.
     fn absorb(&mut self, other: Self);
+
+    /// 🧊️ Explicit cold disposal of a diff nobody will apply again. The default IS a plain drop,
+    /// which is correct for every diff built out of plain values; a technology whose delta owns a
+    /// fail-closed root (an `OrderedMap`, a neural `Dictionary`) MUST override it, because such a
+    /// root aborts the process on a bare drop (`🌱️value/🗂️ordered/🦀️.rs`'s `Drop`). Every generic
+    /// replay/fold seam that builds a delta and throws it away — `os_vcs::apply_mutation` and the
+    /// store's history folds — routes through this instead of dropping
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn retire_cold(self)
+    where
+        Self: Sized,
+    {
+    }
+
+    /// 🧊️ Explicit cold disposal of a SCRATCH projection the replay arithmetic built and displaced.
+    /// A history fold walks `base → mid₁ → mid₂ → … → head`, and every intermediate is an owned `P`
+    /// the next step's assignment throws away; when `P` owns a fail-closed root that bare drop aborts
+    /// the process, so `undo`/`redo` and every `.pack`/`.spr` reload aborted the app for any artifact
+    /// whose projection carries an `OrderedMap`. It hangs off the DIFF, not off the projection, because
+    /// `P` itself carries no bound at those seams while `Self::Diff` always does
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn retire_projection(projection: P) {
+        drop(projection);
+    }
 }
 
 /// @emoji 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
@@ -156,6 +180,14 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn descriptor(&self) -> &'static MutationLeafDescriptor;
     fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
     fn inverse(&self, base: &P) -> Vec<Self>;
+
+    /// 🧊️ Explicit cold disposal of one owned operation, for the same reason [`MutationDiff::retire_cold`]
+    /// exists: a row that carries a domain value with a fail-closed root cannot be dropped.
+    fn retire_cold(self)
+    where
+        Self: Sized,
+    {
+    }
 
     fn mutation_id(&self) -> Option<crate::ids::MutationId> {
         None

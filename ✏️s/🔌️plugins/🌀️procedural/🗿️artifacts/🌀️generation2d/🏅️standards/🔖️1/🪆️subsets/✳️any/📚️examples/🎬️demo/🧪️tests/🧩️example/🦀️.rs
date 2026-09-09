@@ -11,7 +11,7 @@ fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
+    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses"));
     assert_eq!(Generation2dInference::infer(&snapshot), Generation2dInference::infer(&snapshot));
 }
 

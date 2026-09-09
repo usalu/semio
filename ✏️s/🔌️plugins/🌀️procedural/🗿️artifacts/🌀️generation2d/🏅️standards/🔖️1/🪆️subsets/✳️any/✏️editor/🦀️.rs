@@ -177,11 +177,36 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] =
-    &["nodeGraphViewport", "setShowMode", "generate", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration", "flowEvalResolve"];
+const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] = &[
+    "nodeGraphViewport",
+    "setShowMode",
+    "generate",
+    "canvasPointerDown",
+    "canvasPointerMove",
+    "canvasPointerUp",
+    "canvasWheel",
+    "addGeneration",
+    "removeGeneration",
+    "renameGeneration",
+    "updateGenerationValues",
+    "selectGeneration",
+    "flowEvalTick",
+    "flowEvalResolve",
+    "nodeGraphEdit",
+    "moveMediaNode",
+    "addWidget",
+    "removeWidget",
+    "connectMediaPorts",
+    "reorganize",
+    "setEvalOutputs",
+];
 const GENERATION2D_PREVIEW_TOOL_IDS: &[&str] = &["addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
 const GENERATION2D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.2d.tool-command.v1";
 const GENERATION2D_RETAINED_RAW_BYTES: usize = 8_192;
+/// 🎟️ The fixed semantic work budget every retained 2d command is admitted against — the preview
+/// ladder walks one item per fixture widget plus its own two framing steps, so a per-tool `1` would
+/// refuse every generation command on a non-trivial document.
+const GENERATION2D_RETAINED_WORK_ITEMS: usize = 32;
 
 fn generation2d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
@@ -198,7 +223,7 @@ fn generation2d_retained_reduce(
     snapshot: &Generation2dSnapshot,
     config: &Generation2dConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
@@ -209,7 +234,10 @@ fn generation2d_retained_reduce(
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
-    command.dispatch(&doc, &cfg, session)
+    match command {
+        Generation2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply_selected(payload, &doc, &interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default()),
+        _ => command.dispatch(&doc, &cfg, session),
+    }
 }
 
 /// 🧵️ The retained-session twin of `BoundedArtifactCommandWork` — see
@@ -258,13 +286,16 @@ struct Generation2dPreviewCommandWork {
     initialized: bool,
     emit: Option<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>>,
     host: Option<FlowHost>,
+    /// 🧹️ The host's explicit retirement ladder — a bare `Option<FlowHost>::take()`-and-drop panics
+    /// on the cloned fixture's `OrderedMap<WidgetLayout>` root, so it is drained under the grant.
+    host_retirement: Option<semio_framework_os_flow::FlowHostRetirement>,
     session: Option<FlowEvalSession>,
     closing: bool,
 }
 
 impl Generation2dPreviewCommandWork {
     fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, initialized: false, emit: None, host: None, session: None, closing: false }
+        Self { tool_id, initialized: false, emit: None, host: None, host_retirement: None, session: None, closing: false }
     }
 }
 
@@ -280,7 +311,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreview
         _interaction: &protocol::InteractionState,
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
-        Some(snapshot.fixture.widgets.len().max(1))
+        snapshot.fixture.widgets.len().checked_add(2).filter(|extent| *extent <= GENERATION2D_RETAINED_WORK_ITEMS)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
@@ -321,17 +352,33 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreview
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        let Some(session) = self.session.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        let step = session.close_step(maximum_items, maximum_bytes);
-        if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) && session.terminal_is_empty() {
-            self.session.take();
-            self.host.take();
+        use semio_framework_job::InteractiveJobCloseStep;
+        if let Some(session) = self.session.as_mut() {
+            let step = session.close_step(maximum_items, maximum_bytes);
+            if matches!(step, InteractiveJobCloseStep::Complete) && session.terminal_is_empty() {
+                self.session.take();
+                if let Some(host) = self.host.take() {
+                    self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
+                }
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return step;
         }
-        step
+        if let Some(retirement) = self.host_retirement.as_mut() {
+            return match retirement.close_page(maximum_items, maximum_bytes) {
+                Ok(false) => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                Ok(true) => {
+                    self.host_retirement = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                Err(_) => InteractiveJobCloseStep::Blocked,
+            };
+        }
+        InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.session.is_none()
+        self.closing && self.session.is_none() && self.host.is_none() && self.host_retirement.is_none()
     }
 }
 
@@ -400,11 +447,204 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
         ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setEvalOutputs", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ArtifactStorePreparation
+/// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the two lanes differ only in `M`
+/// and their id prefix, so this one generic helper replaces two copies of the same literal.
+fn generation2d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+const GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 262_144;
+
+fn generation2d_artifact_mutation_retained_bytes(mutation: &Generation2dMutation) -> Result<usize, String> {
+    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation2d-artifact-mutation-encode-failed".to_string())
+}
+
+/// 🎟️ TWO work items per mutation: one forward and one inverse slot. `ArtifactStore`'s batch fold
+/// sizes the staged inverse vector as `footprint.work_items - admitted_items`
+/// (`🧰️framework/…/🏪️store/🦀️.rs`'s `fold_batch_item`), so a `work_items: 1` footprint leaves ZERO
+/// inverse capacity and refuses every undoable mutation. Every `Generation2dMutation` inverse is
+/// `Vec` of length 0 or 1 (`🧬️mutations/*/↩️inverse/🦀️.rs`), so two is exact, not a margin.
+const GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION: usize = 2;
+
+fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = generation2d_artifact_mutation_retained_bytes(mutation)?;
+    if retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("generation2d-artifact-mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION, retained_bytes })
+}
+
+/// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation2dDiff` owns the
+/// projections it displaces, so the intermediate delta is retired rather than dropped.
+fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: Generation2dMutation) -> Result<(Generation2dSnapshot, Vec<Generation2dMutation>, Generation2dMutation), String> {
+    admit_generation2d_artifact_mutation(&mutation)?;
+    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
+    let applied = protocol::MutationDiff::apply(&diff, base);
+    diff.retire_cold();
+    let post = applied.map_err(|_| "generation2d-artifact-diff-apply-failed".to_string())?;
+    Ok((post, inverse, mutation))
+}
+
+struct Generation2dArtifactStorePreparationFactory;
+
+struct Generation2dArtifactStorePreparation {
+    base: Option<store::SnapshotRead<Generation2dSnapshot>>,
+    mutation: Option<Generation2dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &Generation2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("generation2d-artifact-lane-or-description-envelope".into());
+        }
+        admit_generation2d_artifact_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation>> {
+        let retained_bytes = generation2d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Generation2dArtifactStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "generation2d-artifact-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "generation2d-artifact-mutation-owner-missing".to_string())?;
+        let (post, inverse, forward) = prepare_generation2d_artifact(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "generation2d-artifact-authority-missing".to_string())?;
+        let edit = generation2d_next_edit("generation2d-artifact-retained", forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if let Some(mutation) = self.mutation.take() {
+            crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_retire_mutation_cold(mutation);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("generation2d-artifact-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
 
 //#region 📬️ConfigStorePreparation
 const GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;
@@ -435,7 +675,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
             return Err("generation2d-config-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: generation2d_config_publication_bytes(mutation)? })
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION, retained_bytes: generation2d_config_publication_bytes(mutation)? })
     }
 
     fn begin(
@@ -594,6 +834,14 @@ mod generation2d_config_preparation_laws;
 pub struct Generation2dPlayApp;
 
 impl ArtifactEditor for Generation2dPlayApp {
+    /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
+    /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
+    /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+    fn app_catalogue_json() -> String {
+        semio_framework_os_flow::flow_app_catalogue_json()
+    }
+
     type Snapshot = Generation2dSnapshot;
     type Mutation = Generation2dMutation;
     type Config = Generation2dConfig;
@@ -670,6 +918,10 @@ impl ArtifactEditor for Generation2dPlayApp {
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Generation2dArtifactStorePreparationFactory))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Generation2dConfigPreparationFactory))
     }
@@ -706,7 +958,15 @@ impl ArtifactEditor for Generation2dPlayApp {
             "renameGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "updateGenerationValues" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "flowEvalResolve" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "nodeGraphEdit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "moveMediaNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addWidget" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeWidget" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "connectMediaPorts" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "reorganize" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setEvalOutputs" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 
@@ -746,7 +1006,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             },
             Generation2dCommand::command_id,
             GENERATION2D_RETAINED_RAW_BYTES,
-            1,
+            GENERATION2D_RETAINED_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -887,8 +1147,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// action re-checking.
     fn pending_effects(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>) -> Vec<Effect> {
         let mut session = FlowEvalSession::new();
-        let host = crate::standards::v1::subsets::any::schema::host_from_fixture_with_session(&doc.snapshot.fixture, &session);
-        let effects = if session.sync(&host) { vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+        let pending = crate::standards::v1::subsets::any::schema::with_host_session(&doc.snapshot.fixture, &mut session, |host, session| session.sync(host));
+        let effects = if pending { vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
         close_flow_session(&mut session);
         effects
     }
@@ -1048,12 +1308,12 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), ActionKind::View) })
-        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addWidget", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeWidget", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::Migrated)
+        .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
         .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
         .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
@@ -1061,14 +1321,14 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
         .action_interactive_job("generate", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setEvalOutputs", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("setEvalOutputs", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
         .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
         .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
-        .action_interactive_job("flowEvalTick", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![

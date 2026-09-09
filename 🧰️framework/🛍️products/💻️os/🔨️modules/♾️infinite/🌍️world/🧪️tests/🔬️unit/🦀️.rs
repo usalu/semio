@@ -1554,6 +1554,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             status_json: None,
             domain_id: domain.map(|(id, _)| id.to_string()),
             domain_granularity_id: domain.map(|(_, granularity)| granularity.to_string()),
+            lanes: Vec::new(),
         }),
         node_graph: None,
         text_editor: None,

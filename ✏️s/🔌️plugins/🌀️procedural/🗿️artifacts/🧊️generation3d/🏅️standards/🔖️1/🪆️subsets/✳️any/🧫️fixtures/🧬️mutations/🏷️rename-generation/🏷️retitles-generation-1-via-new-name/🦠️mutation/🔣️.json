@@ -1,6 +1,5 @@
 {
-  "RenameGeneration": {
-    "id": "gen-1",
-    "newName": "Baseline, reviewed"
-  }
+  "mutation": "renameGeneration",
+  "id": "gen-1",
+  "newName": "Baseline, reviewed"
 }

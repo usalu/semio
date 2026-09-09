@@ -22,3 +22,9 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation2dSna
     let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
     Ok(Emit { effects: vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(102), action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

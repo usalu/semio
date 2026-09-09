@@ -7,7 +7,33 @@
 
 // #region 🔌️Adapters
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense, useSyncExternalStore, type ComponentProps, type DragEvent, type MouseEvent } from "react";
-import { Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, Object3D, OrthographicCamera, PointsMaterial, Quaternion, ShaderMaterial, TextureLoader, Vector3 } from "three";
+import {
+  Box3,
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  EdgesGeometry,
+  Group,
+  IcosahedronGeometry,
+  LineBasicMaterial,
+  LineSegments,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  OrthographicCamera,
+  PlaneGeometry,
+  PointsMaterial,
+  Quaternion,
+  ShaderMaterial,
+  SphereGeometry,
+  TextureLoader,
+  TorusGeometry,
+  Vector3,
+} from "three";
 import type { ThreeEvent } from "@semio-tech/ui-react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -91,7 +117,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -125,6 +151,10 @@ type WorldMeshRecord = {
   readonly id: string;
   readonly data?: WorldMeshData;
   readonly url?: string;
+  /** 🥽️ Built-in procedural mesh kind (`box`, `vortex-marker`, `torus`, …) — a REFERENCE this host resolves
+   * itself through {@link meshDataFromKind}. Scene payloads never carry a built-in kind's tessellation:
+   * `vortex-marker` alone cost ~26 KiB of the 32 KiB fixed surface payload on every refresh. */
+  readonly kind?: string;
 };
 
 export type WorldInstanceRecord = {
@@ -232,6 +262,12 @@ type WorldInteractionRecord = {
   /** 🪣️ Committed reveal cutoff per reveal group id (see `WindowMeasure.Slider.reveal`) — instances
    * tagged `revealIndex` below this value are shown. Seeds `RevealCutoffStore` when no drag is live. */
   readonly revealCutoffs?: Readonly<Record<string, number>>;
+  /** 🔢️ The guest's monotone brush-mesh install counter. Climbs inside one guest instantiation and
+   * starts at zero in a fresh one, so a value below the last one this page read proves the guest was
+   * restarted and holds nothing this page uploaded — see {@link Puzzle3dBrushMeshRegistry}. */
+  readonly meshResidency?: number;
+  /** 🚚️ Mesh ids the guest was announced by id alone and cannot serve; it is asking for the bytes. */
+  readonly meshReuploadUrls?: readonly string[];
 };
 
 type WorldLodRecord = {
@@ -1036,10 +1072,65 @@ function WorldProjectionContentFrame(props: {
   return null;
 }
 
+/** @emoji 🥽️ One built-in mesh kind's geometry, built from the engine's own primitives. The placement and
+ * extent are pinned against `🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json`,
+ * the same fixture Rust's `mesh_from_kind` answers to — the two tessellate differently on purpose, so the
+ * local bounding box, not the triangle list, is the contract. `cone` and `plane`/`torus` are re-placed
+ * because the engine's primitives are centred / lie in a different plane than the scene convention. */
+function worldMeshKindGeometry(kind: string): BufferGeometry {
+  switch (kind) {
+    case "plane":
+      return new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    case "sphere":
+    case "uvSphere":
+      return new SphereGeometry(0.5, 16, 12);
+    case "icoSphere":
+      return new IcosahedronGeometry(0.5, 1);
+    case "vortex-marker":
+      return new IcosahedronGeometry(0.12, 1);
+    case "vertex-marker":
+      return new IcosahedronGeometry(1, 1);
+    case "cylinder":
+      return new CylinderGeometry(0.5, 0.5, 1, 16);
+    case "cone":
+      return new ConeGeometry(0.5, 1, 16).translate(0, 0.5, 0);
+    case "torus":
+      return new TorusGeometry(0.5, 0.15, 16, 12).rotateX(-Math.PI / 2);
+    default:
+      return new BoxGeometry(1, 1, 1);
+  }
+}
+
+const worldMeshKindData = new Map<string, WorldMeshData>();
+
+/** @emoji 🥽️ Resolves a `{ id, kind }` scene mesh reference into the buffers every downstream path
+ * (shading, edge outlines, marquee bounds, component overlays) already expects. Memoized per kind: the
+ * set is closed and tiny, and a scene refresh must not re-tessellate. */
+export function meshDataFromKind(kind: string): WorldMeshData {
+  const cached = worldMeshKindData.get(kind);
+  if (cached) return cached;
+  const geometry = worldMeshKindGeometry(kind);
+  if (!geometry.getAttribute("normal")) geometry.computeVertexNormals();
+  const index = geometry.getIndex();
+  const positions = Array.from(geometry.getAttribute("position").array as ArrayLike<number>);
+  const data: WorldMeshData = {
+    positions,
+    normals: Array.from(geometry.getAttribute("normal").array as ArrayLike<number>),
+    // 🔺️ A non-indexed engine primitive (the polyhedra) still owes this record a triangle list: every
+    // downstream reader gates shaded rendering, face overlays and pick on `indices.length > 0`, and the
+    // Rust generator emits the same trivial sequential run for its own non-indexed triangles.
+    indices: index ? Array.from(index.array as ArrayLike<number>) : Array.from({ length: positions.length / 3 }, (_unused, vertex) => vertex),
+  };
+  geometry.dispose();
+  worldMeshKindData.set(kind, data);
+  return data;
+}
+
 function parseMeshes(meshesJson: string): WorldMeshRecord[] {
   try {
     const parsed = JSON.parse(meshesJson);
-    return Array.isArray(parsed) ? (parsed as WorldMeshRecord[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return (parsed as WorldMeshRecord[]).map((record) => (record.data || !record.kind ? record : { ...record, data: meshDataFromKind(record.kind) }));
   } catch {
     return [];
   }
@@ -1100,7 +1191,15 @@ export function selectionGroupsFromDomains(domains: { readonly nodes: string[]; 
   return groups;
 }
 
-/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`.
+ *
+ * 🗂️ A `menu.group.<category>` row travels from the guest with `label: undefined` by contract — the
+ * taxonomy is chrome vocabulary the SHELL owns, not app vocabulary (`plugin/🦀️.rs`'s `Menu::group`,
+ * asserted by `plugin-runtime-plugin-builder-contract`'s "group rows travel with no label"). So the
+ * label is resolved here from the same EN/DE `ui.ribbon.parent.*` bundle the ribbon reads, exactly
+ * like the wgpu target's `shell_context_menu_item_from_spec` does through `ribbon_parent_label` —
+ * including its default folder icon. Without this the React shell rendered the raw ids
+ * (`menu.group.history`, `menu.group.selection`, …), measured 2026-09-09 21:05. */
 export function mapContextMenuSpecs(
   specs: readonly ContextMenuItemSpec[] | null | undefined,
   dispatch: (action: string, args?: Record<string, unknown>) => void,
@@ -1109,10 +1208,11 @@ export function mapContextMenuSpecs(
   return (specs ?? []).map((spec) => {
     const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
     const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
+    const groupLabel = spec.label === undefined ? contextMenuGroupLabel(spec.id) : undefined;
     return {
       id: spec.id,
-      label: spec.label === undefined ? undefined : wireLabel(spec.label),
-      icon: spec.icon && isIconName(spec.icon) ? spec.icon : undefined,
+      label: spec.label === undefined ? groupLabel : wireLabel(spec.label),
+      icon: spec.icon && isIconName(spec.icon) ? spec.icon : groupLabel === undefined ? undefined : "folder",
       color: spec.color,
       shortcut,
       disabled: spec.disabled,
@@ -1613,13 +1713,18 @@ function extractGlbCollisionMesh(gltf: Awaited<ReturnType<GLTFLoader["loadAsync"
   return { positions, indices };
 }
 
-function BrushMeshRegistrar({ url, onRegister }: { readonly url: string; readonly onRegister: (url: string, positions: number[], indices: number[]) => void }) {
+/** 🥽️ Announces one loaded GLB's collision geometry to the guest. `revision` is the ONLY thing that
+ * re-announces an already-loaded mesh: the GLB is `useLoader`-cached for the page's lifetime, so without
+ * it the announcement happens exactly once per mount and a guest that lost the geometry (a restored
+ * actor, whose mesh store is not part of any checkpoint) could never be told again — see
+ * {@link Puzzle3dBrushMeshRegistry}. */
+function BrushMeshRegistrar({ url, revision, onRegister }: { readonly url: string; readonly revision: number; readonly onRegister: (url: string, positions: number[], indices: number[]) => void }) {
   const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
   useEffect(() => {
     const mesh = extractGlbCollisionMesh(gltf);
     if (mesh.positions.length === 0 || mesh.indices.length === 0) return;
     onRegister(url, mesh.positions, mesh.indices);
-  }, [gltf, onRegister, url]);
+  }, [gltf, onRegister, revision, url]);
   return null;
 }
 
@@ -3886,6 +3991,13 @@ export function world3dMarkerInteractionTarget(layer: World3dMarkerLayer, id: st
 //#endregion 🎯️WorldInteractionDomain
 
 //#region World3dHost
+/** 🚚️ `node.world3d` arrives ASSEMBLED. Its payload fields (`instancesJson`, `vorticesJson`, … — see
+ * `WORLD3D_SCENE_LANES`) no longer ride inside the surface doc's 32 KiB `UiFixedBytes` blob, which
+ * cannot page and refused a 57 KB Nakagin world outright; each is published as its own retained,
+ * individually paged text carrier beside the surface node and reattached by the Interpreter's
+ * `PagedSurfaceView` before this host ever sees it (ticket 26/09/02 wave P). Every `*Json` field is
+ * therefore still a plain string here, and the per-lane `useMemo`s below stay the incremental seam:
+ * a lane whose content did not change keeps its identical string, so its parse never re-runs. */
 export function World3dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
   // 🪟️ Non-empty only — an empty-string `domainId` (never emitted by the Rust side, but defensive
@@ -4248,28 +4360,40 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // 🥽️ One GLB's collision geometry never fitted a single retained command: the shared puzzle contract
   // admits 8 192 raw JSON bytes and the Concrete Forest mesh alone encoded to 64 KB, so every upload is
   // a page run (`puzzle3dBrushMeshPages`) drained one page per macrotask — the plugin stages the pages
-  // under `(url, digest)` and installs the mesh when the last one lands. A mesh this process already
-  // paged is re-announced by `{url, digest}` alone, which the plugin serves from its own process-wide
-  // content-addressed store instead of taking the bytes again.
-  const registeredBrushMeshesRef = useRef(registeredPuzzle3dBrushMeshes);
+  // under `(url, digest)` and installs the mesh when the last one lands. A mesh THIS GUEST already holds
+  // is re-announced by `{url, digest}` alone, which it serves from its own content-addressed store
+  // instead of taking the bytes again.
+  //
+  // 🚚️ Which meshes that is is `puzzle3dBrushMeshRegistry`'s to say, not this component's: the claim is
+  // scoped to the guest instantiation that justified it, confirmed only when a run's LAST page goes out,
+  // and voided by a fallen `meshResidency`. The claim used to live in a bare page-lifetime `Map` written
+  // at enqueue time, so every activation after a guest restart re-announced seven identities the guest
+  // held nothing for and the brush utility silently kept no collision geometry until a full reload.
   const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
+  const brushMeshRunsRef = useRef(new Map<string, string>());
   const brushMeshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [brushMeshRevisions, setBrushMeshRevisions] = useState<{ readonly generation: number; readonly urls: Readonly<Record<string, number>> }>({ generation: 0, urls: {} });
   const handleRegisterBrushMesh = useCallback(
     (url: string, positions: number[], indices: number[]) => {
       const digest = puzzle3dBrushMeshDigest(positions, indices);
-      if (registeredBrushMeshesRef.current.get(url) === digest) {
+      if (puzzle3dBrushMeshRegistry.holds(url, digest)) {
         dispatch("registerBrushMesh", { url, digest });
         return;
       }
+      if (brushMeshRunsRef.current.get(url) === digest) return;
       const pages = puzzle3dBrushMeshPages(url, node.surfaceId, positions, indices);
-      if (pages.length === 0) return;
-      registeredBrushMeshesRef.current.set(url, digest);
+      if (pages.length === 0 || brushMeshQueueRef.current.length + pages.length > PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES) return;
+      brushMeshRunsRef.current.set(url, digest);
       brushMeshQueueRef.current.push(...pages);
       const drain = () => {
         brushMeshTimerRef.current = null;
         const page = brushMeshQueueRef.current.shift();
         if (!page) return;
         dispatch("registerBrushMesh", page);
+        if (page.page === page.pageCount - 1) {
+          brushMeshRunsRef.current.delete(page.url);
+          puzzle3dBrushMeshRegistry.confirm(page.url, page.digest);
+        }
         if (brushMeshQueueRef.current.length > 0) brushMeshTimerRef.current = setTimeout(drain, 0);
       };
       if (brushMeshTimerRef.current === null) brushMeshTimerRef.current = setTimeout(drain, 0);
@@ -4280,10 +4404,32 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => () => {
       if (brushMeshTimerRef.current !== null) clearTimeout(brushMeshTimerRef.current);
       brushMeshTimerRef.current = null;
-      for (const page of brushMeshQueueRef.current.splice(0)) registeredBrushMeshesRef.current.delete(page.url);
+      for (const page of brushMeshQueueRef.current.splice(0)) {
+        brushMeshRunsRef.current.delete(page.url);
+        puzzle3dBrushMeshRegistry.forget(page.url);
+      }
     },
     [],
   );
+  // 🚚️ The guest's two published facts about what it actually holds, folded in before anything is
+  // announced: a residency that fell proves a restarted guest (its mesh store is not part of any
+  // checkpoint), which voids EVERY claim this page holds, and `meshReuploadUrls` names identities an
+  // announcement already sent is waiting on bytes for. Either way the answer is the same — bump the
+  // revision the mounted `BrushMeshRegistrar`s carry, so they re-announce their already-loaded GLB
+  // and, with the claim gone, take the page path instead of the id-only one.
+  const meshResidency = interaction.meshResidency;
+  const meshReuploadUrls = interaction.meshReuploadUrls;
+  useEffect(() => {
+    if (meshResidency === undefined) return;
+    const restarted = puzzle3dBrushMeshRegistry.observeResidency(meshResidency);
+    const claimed = (meshReuploadUrls ?? []).filter((url) => puzzle3dBrushMeshRegistry.claimReupload(url, meshResidency));
+    if (!restarted && claimed.length === 0) return;
+    setBrushMeshRevisions((previous) => {
+      const urls: Record<string, number> = { ...previous.urls };
+      for (const url of claimed) urls[url] = (previous.urls[url] ?? 0) + 1;
+      return { generation: previous.generation + (restarted ? 1 : 0), urls };
+    });
+  }, [meshResidency, meshReuploadUrls]);
 
   // 👻️ Include the live brush/suggestion ghost URL so collision precompute can register kinds that are
   // not yet placed in the scene — otherwise suggestions stay pending and never emit a 3D preview.
@@ -4410,11 +4556,18 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // 🐢️ Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
   // a blind `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle fill into an
   // unbounded backlog that starves every other utility action (the fill utility appears to "die").
+  //
+  // 🏁️ `createInFlightSkippingInterval` gates on the promise `run` RETURNS, so the tick must return the
+  // dispatch — a `run` that swallowed it cleared the in-flight flag on the same microtask and the gate
+  // did nothing (measured 2026-09-09 20:55: 252 `fillBuildTick`s enqueued in 35 s, 38 rejected with
+  // `serializePerActor: queue is full (>256 pending turns)`). `onAction` settles on the dispatched
+  // action's own `OperationCompleted` frame (`ComponentSceneHostProps.onAction`), so exactly one tick is
+  // ever outstanding and the cadence degrades to the guest's real turn time instead of overflowing.
   useEffect(() => {
     if (!(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending)) return;
     return createInFlightSkippingInterval(() => {
-      if (interactivePluginActionInFlight()) return;
-      dispatch("suggestionsTick");
+      if (interactivePluginActionInFlight()) return undefined;
+      return dispatch("suggestionsTick");
     }, 120);
   }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
@@ -4422,8 +4575,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   useEffect(() => {
     if (!(activeUtility === "fill" && fillBuildPending)) return;
     return createInFlightSkippingInterval(() => {
-      if (interactivePluginActionInFlight()) return;
-      dispatch("fillBuildTick");
+      if (interactivePluginActionInFlight()) return undefined;
+      return dispatch("fillBuildTick");
     }, 120);
   }, [activeUtility, dispatch, fillBuildPending]);
 
@@ -5244,7 +5397,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             ) : null}
             {brushMeshUrls.map((url) => (
               <Suspense key={url} fallback={null}>
-                <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
+                <BrushMeshRegistrar url={url} revision={brushMeshRevisions.generation + (brushMeshRevisions.urls[url] ?? 0)} onRegister={handleRegisterBrushMesh} />
               </Suspense>
             ))}
             <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} />

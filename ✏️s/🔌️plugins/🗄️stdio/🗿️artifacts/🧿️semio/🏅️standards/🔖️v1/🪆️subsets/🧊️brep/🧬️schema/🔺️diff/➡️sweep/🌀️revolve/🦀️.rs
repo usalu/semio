@@ -45,8 +45,8 @@ enum RevSurface {
     // normalized()`, i.e. "outward FROM the axis", since that is what anchors the seam edge's own
     // `u = 0` position exactly — see `lateral_pcurves`) needs negating to be the correct outward-
     // from-SOLID direction for THIS particular profile edge. Computed here (where the edge's own
-    // local geometry is available), consumed by the caller's `build_face(..., flip, ...)` — mirrors
-    // `🧮️core::build_prism`'s analogous `lateral_flipped` fix for the SAME class of issue.
+    // local geometry is available), consumed by the caller's `build_face(..., flip, ...)` — the
+    // same fact `🧮️core::build_prism`'s `lateral_flipped` reads off the profile loop's own winding.
     AngleLinear { surface: Surface, v_at: Box<dyn Fn(f64) -> f64>, flip: bool },
     PlanarAnnulus { surface: Surface, uv_at: Box<dyn Fn(f64) -> (f64, f64)>, radius_at: Box<dyn Fn(f64) -> f64>, flip: bool },
 }

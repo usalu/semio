@@ -556,7 +556,7 @@ impl store::ErasedSnapshotRetirement for Generation2dReplayRetirement {
 
 impl Drop for Generation2dReplayRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Generation2d replay displacement reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || (self.value.is_none()), "Generation2d replay displacement reached Drop before terminal-empty close");
     }
 }
 
@@ -709,7 +709,7 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedSnapshotRetirement 
 impl Drop for Generation2dRetainedSnapshotRetirement {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d snapshot reached Drop before typed retirement");
+            assert!(std::thread::panicking() || (store::ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation2d snapshot reached Drop before typed retirement");
         }
     }
 }
@@ -751,7 +751,7 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedSnapshotArcRetireme
 impl Drop for Generation2dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation2d Arc snapshot reached Drop before retained close");
+            assert!(std::thread::panicking() || (store::ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation2d Arc snapshot reached Drop before retained close");
         }
     }
 }
@@ -797,7 +797,7 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedMutationRetirement 
 
 impl Drop for Generation2dRetainedMutationRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "fresh Generation2d mutation retirement fail-closed with an impossible populated-history owner");
+        assert!(std::thread::panicking() || (self.value.is_none()), "fresh Generation2d mutation retirement fail-closed with an impossible populated-history owner");
     }
 }
 
@@ -841,6 +841,18 @@ enum Generation2dMutationDictionaryDestination {
     Value { parent: usize },
 }
 
+/// 🗂️ Where a decoded `neural::Value` belongs. A `neural::Dictionary` reaches the wire in TWO exact
+/// shapes and both are canonical: a field whose declared shape is `Shape::Table` (`Widget::Neuron`'s
+/// `params`) is columnar `TAG_TABLE_SOA`, while the same dictionary nested inside
+/// `neural::Value::Dictionary` carries no declared shape and falls back to `encode_seq` — a plain
+/// `TAG_LIST` of two-field entry records (`🎒️pack/🌱️value/🦀️.rs`'s `FieldValue::List` arm). The value
+/// owner therefore addresses either a table row or a list entry.
+#[derive(Clone, Copy)]
+enum Generation2dMutationNeuralOwner {
+    TableRow { table: usize, row: usize },
+    EntryRow { entries: usize, row: usize },
+}
+
 enum Generation2dMutationFrame {
     Root { field: Option<u16> },
     Statements { keyword: Option<String> },
@@ -850,7 +862,9 @@ enum Generation2dMutationFrame {
     Camera { field: Option<u16>, value: semio_framework_artifact_flow_flow::CameraJson },
     Generation { field: Option<u16>, id: String, name: String, values: Vec<(String, dsl::DslValue)> },
     Dictionary { destination: Generation2dMutationDictionaryDestination, rows: Vec<Generation2dMutationDictionaryEntryOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
-    NeuralValue { table: usize, row: usize, field: Option<u16>, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
+    DictionaryEntries { destination: Generation2dMutationDictionaryDestination, rows: Vec<Generation2dMutationDictionaryEntryOwner> },
+    DictionaryEntry { entries: usize, row: usize, field: Option<u16> },
+    NeuralValue { owner: Generation2dMutationNeuralOwner, field: Option<u16>, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
     Strings { parent: usize, field: u16, values: Vec<String> },
     Wire { parent: usize, roles: [u8; 6], roles_len: usize, role: usize, nodes: usize },
     Structural(store::mounted_pack_rt::RetainedValueContainer),
@@ -862,6 +876,7 @@ enum Generation2dMutationStringTarget {
     Widget(usize, u16),
     Generation(usize, u16),
     DictionaryKey(usize, usize),
+    DictionaryEntryKey(usize),
     NeuralText(usize),
     Sequence(usize),
     Statement(usize),
@@ -993,6 +1008,7 @@ impl Generation2dRetainedMutationOwner {
                 *next = row + 1;
                 Ok(Generation2dMutationStringTarget::DictionaryKey(index, row))
             }
+            Generation2dMutationFrame::DictionaryEntry { field: Some(0), .. } => Ok(Generation2dMutationStringTarget::DictionaryEntryKey(index)),
             Generation2dMutationFrame::NeuralValue { field: Some(4), .. } => Ok(Generation2dMutationStringTarget::NeuralText(index)),
             Generation2dMutationFrame::Strings { .. } => Ok(Generation2dMutationStringTarget::Sequence(index)),
             Generation2dMutationFrame::Synapse { field: Some(0), .. } => Ok(Generation2dMutationStringTarget::SynapseId(index)),
@@ -1082,6 +1098,19 @@ impl Generation2dRetainedMutationOwner {
                 Some(Generation2dMutationFrame::Dictionary { rows, .. }) => rows.get_mut(row).ok_or("generation2d-mutation.dictionary-key-row")?.key = owner.value,
                 _ => return Err("generation2d-mutation.dictionary-key-owner"),
             },
+            Generation2dMutationStringTarget::DictionaryEntryKey(index) => {
+                let (entries, row) = match self.stack.get_mut(index) {
+                    Some(Generation2dMutationFrame::DictionaryEntry { entries, row, field }) => {
+                        *field = None;
+                        (*entries, *row)
+                    }
+                    _ => return Err("generation2d-mutation.dictionary-entry-owner"),
+                };
+                match self.stack.get_mut(entries) {
+                    Some(Generation2dMutationFrame::DictionaryEntries { rows, .. }) => rows.get_mut(row).ok_or("generation2d-mutation.dictionary-entry-row")?.key = owner.value,
+                    _ => return Err("generation2d-mutation.dictionary-entries-owner"),
+                }
+            }
             Generation2dMutationStringTarget::NeuralText(index) => match self.stack.get_mut(index) {
                 Some(Generation2dMutationFrame::NeuralValue { field, value, .. }) if *field == Some(4) && value.is_none() => {
                     *value = Some(semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(owner.value)));
@@ -1290,7 +1319,17 @@ impl Generation2dRetainedMutationOwner {
         if let Some(Generation2dMutationFrame::Dictionary { field: Some(1), present, next, .. }) = self.stack.get_mut(table) {
             let row = (*next..present.len()).find(|row| present[*row]).ok_or("generation2d-mutation.dictionary-value-row")?;
             *next = row + 1;
-            return self.push(Generation2dMutationFrame::NeuralValue { table, row, field: None, value: None });
+            return self.push(Generation2dMutationFrame::NeuralValue { owner: Generation2dMutationNeuralOwner::TableRow { table, row }, field: None, value: None });
+        }
+        if let Some(Generation2dMutationFrame::DictionaryEntries { rows, .. }) = self.stack.get_mut(table) {
+            let row = rows.len();
+            rows.try_reserve(1).map_err(|_| "generation2d-mutation.dictionary-entry-preflight")?;
+            rows.push(Generation2dMutationDictionaryEntryOwner::default());
+            return self.push(Generation2dMutationFrame::DictionaryEntry { entries: table, row, field: None });
+        }
+        if let Some(Generation2dMutationFrame::DictionaryEntry { entries, row, field: Some(1) }) = self.stack.get_mut(table) {
+            let owner = Generation2dMutationNeuralOwner::EntryRow { entries: *entries, row: *row };
+            return self.push(Generation2dMutationFrame::NeuralValue { owner, field: None, value: None });
         }
         let root = self.root_field();
         let frame = match self.stack.last_mut() {
@@ -1369,6 +1408,12 @@ impl Generation2dRetainedMutationOwner {
             Token::Begin { kind: Container::Statements, .. } => self.push(Generation2dMutationFrame::Statements { keyword: None })?,
             Token::Begin { kind: Container::List | Container::Tuple, count } => {
                 let (parent, field) = match self.stack.last() {
+                    Some(Generation2dMutationFrame::NeuralValue { field: Some(5), value: None, .. }) => {
+                        let parent = self.stack.len() - 1;
+                        let mut rows = Vec::new();
+                        rows.try_reserve_exact(usize::try_from(count).map_err(|_| "generation2d-mutation.dictionary-entry-count")?).map_err(|_| "generation2d-mutation.dictionary-entry-preflight")?;
+                        return self.push(Generation2dMutationFrame::DictionaryEntries { destination: Generation2dMutationDictionaryDestination::Value { parent }, rows });
+                    }
                     Some(Generation2dMutationFrame::Widget { field: Some(field), .. }) => (self.stack.len() - 1, *field),
                     _ => {
                         self.push(Generation2dMutationFrame::Structural(Container::List))?;
@@ -1392,6 +1437,7 @@ impl Generation2dRetainedMutationOwner {
                     | Generation2dMutationFrame::Layout { field, .. }
                     | Generation2dMutationFrame::Camera { field, .. }
                     | Generation2dMutationFrame::Generation { field, .. }
+                    | Generation2dMutationFrame::DictionaryEntry { field, .. }
                     | Generation2dMutationFrame::NeuralValue { field, .. },
                 ) if field.is_none() => *field = Some(value as u16),
                 _ => return Err("generation2d-mutation.field-owner"),
@@ -1551,12 +1597,27 @@ impl Generation2dRetainedMutationOwner {
                     Generation2dMutationFrame::Generation { field: None, id, name, values } if kind == Container::Record => {
                         self.generation = Some(semio_framework_artifact_playbook_playbook::FormGeneration { id, name, values: values.into_iter().collect() });
                     }
-                    Generation2dMutationFrame::NeuralValue { table, row, field: None, value: Some(value) } if kind == Container::Record => match self.stack.get_mut(table) {
-                        Some(Generation2dMutationFrame::Dictionary { rows, field: Some(1), .. }) => {
-                            rows.get_mut(row).ok_or("generation2d-mutation.dictionary-value-row")?.value = Some(value);
+                    Generation2dMutationFrame::NeuralValue { owner: Generation2dMutationNeuralOwner::TableRow { table, row }, field: None, value: Some(value) } if kind == Container::Record => {
+                        match self.stack.get_mut(table) {
+                            Some(Generation2dMutationFrame::Dictionary { rows, field: Some(1), .. }) => {
+                                rows.get_mut(row).ok_or("generation2d-mutation.dictionary-value-row")?.value = Some(value);
+                            }
+                            _ => return Err("generation2d-mutation.dictionary-value-table"),
                         }
-                        _ => return Err("generation2d-mutation.dictionary-value-table"),
-                    },
+                    }
+                    Generation2dMutationFrame::NeuralValue { owner: Generation2dMutationNeuralOwner::EntryRow { entries, row }, field: None, value: Some(value) } if kind == Container::Record => {
+                        match self.stack.get_mut(entries) {
+                            Some(Generation2dMutationFrame::DictionaryEntries { rows, .. }) => {
+                                rows.get_mut(row).ok_or("generation2d-mutation.dictionary-entry-row")?.value = Some(value);
+                            }
+                            _ => return Err("generation2d-mutation.dictionary-entry-list"),
+                        }
+                        if let Some(Generation2dMutationFrame::DictionaryEntry { field, .. }) = self.stack.last_mut() {
+                            *field = None;
+                        }
+                    }
+                    Generation2dMutationFrame::DictionaryEntry { field: None, .. } if kind == Container::Record => {}
+                    Generation2dMutationFrame::DictionaryEntries { destination, rows } if matches!(kind, Container::List | Container::Tuple) => self.finish_dictionary(destination, rows)?,
                     Generation2dMutationFrame::Dictionary { destination, rows, field: Some(1), .. } if kind == Container::Table => self.finish_dictionary(destination, rows)?,
                     Generation2dMutationFrame::Strings { parent, field, values } => match self.stack.get_mut(parent) {
                         Some(Generation2dMutationFrame::Widget { field: active, owner }) => {
@@ -1658,7 +1719,7 @@ impl Generation2dRetainedMutationOwner {
 
 impl Drop for Generation2dRetainedMutationOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d retained mutation owner reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d retained mutation owner reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -1775,14 +1836,21 @@ impl Generation2dMutationSession {
                 }
             }
             Generation2dMutationSessionPhase::Body => {
-                if let Some((_, byte)) = self.pending.take() {
+                // 🚦️ The byte STAYS in this session's ingress slot until the record-body cursor —
+                // and, through it, the value producer it feeds — can actually take it. A single
+                // admitted byte costs several `grant` turns whenever the producer has control frames
+                // to pop first, so handing the next one down on a fixed cadence is what the cursor
+                // rejects as `value producer handback`.
+                if self.pending.is_some() && self.body.as_ref().ok_or("generation2d-mutation.body-owner")?.ingress_ready() {
+                    let (_, byte) = self.pending.take().ok_or("generation2d-mutation.body-input")?;
                     self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.admit_byte(self.body_bytes, byte).map_err(|(_, byte)| if byte == 0 { "generation2d-mutation.body-handback-zero" } else { "generation2d-mutation.body-handback" })?;
                     self.body_bytes += 1;
                 }
-                if let Some(store::mounted_pack_rt::RetainedRecordBodyToken::Value(token)) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|_| "generation2d-mutation.body-malformed")? {
+                if let Some(store::mounted_pack_rt::RetainedRecordBodyToken::Value(token)) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|error| { eprintln!("[DEBUG] body-malformed error={error:?}"); "generation2d-mutation.body-malformed" })? {
                     let complete = matches!(token, store::mounted_pack_rt::RetainedValueToken::Complete { .. });
                     let body = self.body.as_ref().expect("P2 retained mutation body");
-                    self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body)?;
+                    let debug = format!("{token:?}");
+                    self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body).inspect_err(|error| eprintln!("[DEBUG] accept token={debug} err={error}")).inspect(|()| eprintln!("[DEBUG] accept token={debug}"))?;
                     if complete {
                         self.phase = Generation2dMutationSessionPhase::Ready;
                         return Ok(true);
@@ -1834,7 +1902,7 @@ impl Generation2dMutationSession {
 
 impl Drop for Generation2dMutationSession {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d mutation session reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mutation session reached Drop before terminal-empty close");
     }
 }
 
@@ -2039,7 +2107,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
 
 impl Drop for Generation2dPackSnapshotAuthority {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "Generation2d pack snapshot authority reached Drop before publication or bounded retirement");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Generation2d pack snapshot authority reached Drop before publication or bounded retirement");
     }
 }
 
@@ -2251,7 +2319,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
 
 impl Drop for Generation2dMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "Generation2d mutation authority reached Drop before publication or terminal-empty close");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Generation2d mutation authority reached Drop before publication or terminal-empty close");
     }
 }
 
@@ -2644,7 +2712,7 @@ impl Generation2dSnapshotCopyCursor {
 
 impl Drop for Generation2dSnapshotCopyCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation2d snapshot copy cursor reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d snapshot copy cursor reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -3385,7 +3453,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
 
 impl Drop for Generation2dStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "Generation2d initializer reached Drop before candidate handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty_inner()), "Generation2d initializer reached Drop before candidate handoff or terminal-empty close");
     }
 }
 
@@ -3397,6 +3465,37 @@ pub fn generation2d_document_store_initialization_job(
     semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(Generation2dStoreInitializationAuthority::new(envelope, operation, generation)))
 }
 //#endregion 🔖️RetainedStoreInitialization
+
+/// 🧊️ Cold-only disposal of a detached mutation — `CreateWidget`/`ReplaceWidget` carry an owned
+/// `Widget` whose `Dictionary`/`Tree`/`OrderedSet` payloads reject a bare drop
+/// (`🧠️neural/⚙️engine/🦀️.rs`'s `Dictionary::drop`, `🌱️value/🗂️ordered/🦀️.rs`'s roots). Every other
+/// variant is plain owned text/floats and closes on drop.
+pub fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) {
+    match mutation {
+        Generation2dMutation::CreateWidget(payload) => payload.widget.retire_cold(),
+        Generation2dMutation::ReplaceWidget(payload) => payload.widget.retire_cold(),
+        Generation2dMutation::DeleteWidget(_)
+        | Generation2dMutation::ConnectSynapse(_)
+        | Generation2dMutation::ReplaceSynapse(_)
+        | Generation2dMutation::DisconnectSynapse(_)
+        | Generation2dMutation::MoveWidget(_)
+        | Generation2dMutation::ClearWidgetLayout(_)
+        | Generation2dMutation::UpdateCamera(_)
+        | Generation2dMutation::ChangeSchema(_)
+        | Generation2dMutation::CreateGeneration(_)
+        | Generation2dMutation::DeleteGeneration(_)
+        | Generation2dMutation::RenameGeneration(_)
+        | Generation2dMutation::ChangeGenerationValue(_) => {}
+    }
+}
+
+/// 🧊️ The plural twin of [`generation2d_retire_mutation_cold`].
+#[cfg(test)]
+pub fn generation2d_retire_mutations_cold(mutations: Vec<Generation2dMutation>) {
+    for mutation in mutations {
+        generation2d_retire_mutation_cold(mutation);
+    }
+}
 
 #[cfg(test)]
 pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2dMutation> {

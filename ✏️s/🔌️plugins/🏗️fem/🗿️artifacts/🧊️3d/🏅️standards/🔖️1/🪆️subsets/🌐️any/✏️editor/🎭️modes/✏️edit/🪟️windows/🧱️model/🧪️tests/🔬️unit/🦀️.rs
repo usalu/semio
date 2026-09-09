@@ -14,8 +14,7 @@ async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
     crate::editor::fem3d::testkit::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = render(&snapshot, &FemCamera::default()).expect("fixture surface admission");
-    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected world surface") };
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assemble world scene");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected a solid mesh for the example fixture: {}", scene.meshes_json);
     assert!(scene.instances_json.contains("el-e1"), "expected a single oriented box instance per member: {}", scene.instances_json);
     assert!(!scene.instances_json.contains("\"sphere\""), "sphere markers should be gone: {}", scene.instances_json);

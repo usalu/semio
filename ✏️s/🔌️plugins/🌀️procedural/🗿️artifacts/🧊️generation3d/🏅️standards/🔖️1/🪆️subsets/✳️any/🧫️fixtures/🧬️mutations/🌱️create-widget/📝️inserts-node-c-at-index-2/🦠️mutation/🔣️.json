@@ -1,10 +1,9 @@
 {
-  "CreateWidget": {
-    "index": 2,
-    "widget": {
-      "kind": "inputNote",
-      "id": "node-c",
-      "text": "Capital"
-    }
+  "mutation": "createWidget",
+  "index": 2,
+  "widget": {
+    "kind": "inputNote",
+    "id": "node-c",
+    "text": "Capital"
   }
 }

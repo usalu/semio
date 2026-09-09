@@ -1924,6 +1924,20 @@ pub enum AppFrame {
     UiSnapshotEnd {
         revision: u64,
     },
+    /// 🏁️ One mounted typed operation reached its terminal result. Unsolicited and NEVER a reply:
+    /// the command that started the operation already returned its "started" `Invocation` long
+    /// before the retained job finished, so no `in_reply_to` sequence exists to correlate against —
+    /// `operation` (the host-allocated `semio_framework_job::OperationId`) is the correlation key
+    /// instead. `revision` is the artifact store's content revision at completion; `ui_scope` is the
+    /// operation's final `kernel::UiDirtyScope` and `history_patch` its command-log delta (empty
+    /// bytes when the operation recorded nothing), both `store::pack_rt::encode_wire_value`-encoded
+    /// exactly like `Invocation`'s same-named fields. CHANNEL_VERSION 15 wire addition.
+    OperationCompleted {
+        operation: u64,
+        revision: u64,
+        ui_scope: Vec<u8>,
+        history_patch: Vec<u8>,
+    },
     /// 📃️ ACK-owned local-only pages are independent of ordinary command outcomes.
     LocalInteractionQuery {
         reply: protocol::LocalInteractionQueryReply,
@@ -2655,6 +2669,13 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(22);
             crate::os_spr::write_varint_u64(&mut out, *revision);
         }
+        AppFrame::OperationCompleted { operation, revision, ui_scope, history_patch } => {
+            out.push(25);
+            crate::os_spr::write_varint_u64(&mut out, *operation);
+            crate::os_spr::write_varint_u64(&mut out, *revision);
+            crate::os_spr::write_bytes(&mut out, ui_scope);
+            crate::os_spr::write_bytes(&mut out, history_patch);
+        }
     }
     out
 }
@@ -2735,6 +2756,12 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
         24 => AppFrame::WindowConfigs {
             in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             entries: read_vec_window_config_pack(bytes, &mut pos).await?,
+        },
+        25 => AppFrame::OperationCompleted {
+            operation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            revision: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };

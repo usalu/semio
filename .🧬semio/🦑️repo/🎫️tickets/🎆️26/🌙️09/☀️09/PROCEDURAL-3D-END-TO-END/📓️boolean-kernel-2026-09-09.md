@@ -367,3 +367,146 @@ rather than fixed, being outside the boolean path:
   `MeshDerivedBRep`** (`⚙️engine/🔖️contract/🦀️.rs:241-244`) although the W1-E rewrite made all four
   exact analytic — already noted as gap 6 in `📓️kernel-and-preview-audit-2026-09-09.md`, still
   unfixed, and still misleading anyone auditing kernel fidelity from the table alone.
+
+## 5. Resumed 18:00 — both examples exact
+
+The lane above was killed by a machine reboot. Everything it left on disk was verified present
+(`git status --porcelain` / `git diff HEAD --stat` on the paths §3 names) and re-measured before
+anything new was built on it; §4's after-state reproduced exactly (boolean 12/2, engine 26/1,
+examples 0/2), so the numbers below are relative to that.
+
+The harness (§3.1) was extended to mount the crate's own `[[test]]` example target as a unit-test
+module (`extern crate self as semio_s_artifact_stdio_semio;` makes the file's absolute `use` paths
+resolve unchanged), which brought the two examples into the same ~20 s edit→test cycle as
+everything else, plus a `ticket_probe` module with the face-by-face dumps the offset work needed.
+
+### 5.1 After
+
+| Family | §4 after | Now |
+| --- | --- | --- |
+| `brep_procedural_example_booleans` (the two examples) | 0 passed / **2 failed** | **2 passed / 0 failed** |
+| boolean | 12 passed / **2 failed** | **14 passed / 0 failed** |
+| engine | 26 passed / **1 failed** | **27 passed / 0 failed** |
+| offset | 10 passed / **3 failed** (+2 runtime bombs) | **12 passed / 1 failed** (one bomb left, §5.6) |
+| euler | — | **10 passed / 0 failed** |
+| primitives | — | **13 passed / 0 failed** |
+| inferences (classification, mass-properties, tessellation, validation) | — | **72 passed / 0 failed** |
+| snapshot (arena, curve, surface, topology, tolerance, …) | — | **219 passed / 0 failed** |
+| sweep / intersect / blend / sew / transform | — | **13 / 38 / 7 / 8 / 7 passed, 0 failed** |
+
+`sphere_box_fuse_example_is_a_closed_oriented_solid` and
+`sphere_cut_with_torus_example_is_a_closed_oriented_solid` now assert and get: `validate_body`
+silent, χ = 2, our own `solid_volume` within 5e-3 of the independent oracle, and `parry3d`'s
+`trimesh_signed_volume_and_center_of_mass` over the tessellated result POSITIVE and within 2e-2 —
+i.e. closed, 2-manifold, coherently oriented, outward, and the right size, cross-checked by a
+third-party integrator. No soup, no hull, no fallback: `boolean_solid` reaches
+`exact_imprint_boolean` for both.
+
+### 5.2 The clip stage (§4.3's three symptoms, one cause)
+
+`point_in_face_uv` returns `status == Inside`, so a point ON the trim boundary reads as OUTSIDE.
+Every one of §4.3's symptoms follows from the clip having been built on it:
+
+* a sphere's POLE *is* its own `v = ±π/2` boundary, so the clip stopped one sampling cell short of
+  it (`(0, 0.1176, 1.1942)` instead of `(0, 0, 1.2)`);
+* a periodic SEAM is the ring's own edge, so an arc could never reach it;
+* an arc running exactly ALONG an operand's boundary is on it at every sample, so it shredded into
+  three borderline fragments.
+
+| # | Change | File |
+| --- | --- | --- |
+| R13 | New `point_in_face_uv_closure` (`status != Outside`) and its periodic wrapper; the clip's `valid` predicate now tests the trim's CLOSURE. Membership of the closure is what "still on this face" means; deciding which SIDE of a shared boundary something is on stays the open test's job. | `💡️inferences/🏷️classification`, `🔀️boolean` |
+| R14 | New `snap_clip_endpoint`: alternating projection (project the bisected endpoint onto the boundary curve it is nearest, re-solve the intersection curve's own parameter for that point, repeat) pulls each clip endpoint onto the boundary EXACTLY. `refine_boundary` could only ever locate a crossing to within `tol`, and the two faces of a pair flip in opposite directions, so the same physical corner arrived from two face pairs `1.4e-6` apart — outside the `1e-6` weld radius, which is why the arcs never chained. Endpoints now land at 1e-16. | `🔀️boolean` |
+| R15 | New `boundary_touch_parameters` + `golden_section_minimum`: a closed curve's seam touches are now SOLVED for (distance to the supports' boundary curves, local minima refined by golden section) instead of read off gaps in the trim sampling — which the closure predicate no longer produces, and which were never better than the sampling that made them. | `🔀️boolean` |
+| R16 | New `pcurve_for_clip` + `affine_pcurve_through`: an SSI p-curve is certified over the curve's FULL domain and a boolean only ever imprints a clipped SUB-range. A global interpolation can be arbitrarily wrong on one — a great circle through a sphere's poles has a `u` that jumps by π there, so the fit oscillated by 0.14 on an r = 1.2 sphere while still passing through every one of its own 33 nodes (hence reporting ~1e-16 to the sampling that produced it). Measured on the range actually used and, when it misses, rebuilt there by exact inversion (poles' undefined `u` carried from the neighbour, periodics unwrapped) and an AFFINE fit — which is not a simplification but the exact answer for every sub-arc this stage produces (latitude circle, meridian branch, ruling). A genuinely non-affine sub-range keeps the original rather than trading one wrong answer for another. | `🔀️boolean` |
+
+### 5.3 The chord splitter and the periodic ring (§4.2 and §4.3 shared this)
+
+| # | Change | File |
+| --- | --- | --- |
+| R17 | `edge_param_at_point`'s `Curve3::Line` branch returned the projection parameter WITHOUT checking the point is on the line. `splice_boundary_vertex` splits the first ring edge whose parameter lands strictly inside, so the sphere's north pole was spliced into the box's `x = 1.5` face — a face it is nowhere near — because it happens to project onto that face's own edge at an interior parameter. The non-line branch had always checked its distance; this one now does too. | `🔺️euler` |
+| R18 | New `member_uv`, `ring_index_at_uv`, `splice_boundary_vertex_at_uv`, `chain_endpoint_uv`; `split_face_by_chain` locates its chord ends by `(u, v)` instead of by vertex id. A periodic face's seam vertex legitimately appears TWICE on its own ring (`u = 0` and `u = 2π`), and so does a pole; taking the first occurrence partitioned the face the wrong way round half the time, handing the piece on the `u > 0` side the `u = 2π` boundary. The p-curve says unambiguously which occurrence the chord meets. The UV route also handles a chord ending on a DEGENERATE edge (a pole), where the 3D splice has nothing to solve and stops: in `(u, v)` that edge is an ordinary segment and the arrival is an ordinary interior parameter on it. | `🔺️euler` |
+| R19 | `split_face_by_seam_crossing` pushed its closed imprint edge as `forward = false` on one piece and `true` on the other, FIXED. Topology cannot choose (a closed edge has `v0 == v1`, so both senses connect) but the p-curve can, and must: the edge has to continue from where the boundary chain it closes left off. Fixing it was right half the time; the other half handed one piece a reversed ring, which then traversed every edge it shared with the other operand the same way that operand did. | `🔺️euler` |
+| R20 | New `align_pcurve_branch` + `Curve2::translated`: a closed imprint's p-curve is re-expressed in the same periodic BRANCH as the target face's own ring before splitting. `🍩️sphere-cut-with-torus`'s second intersection circle arrived at `u ∈ [2π, 4π]`, `v = −1.271` against a ring written on `u ∈ [0, 2π]`, `v ∈ [0, 2π]`; imprinted unchanged, the resulting face's UV polygon had its pieces sitting periods apart — a shape with no interior at all, which `interior_point_of_face` then correctly refused to sample. Applied to closed imprints only: an open chain's members can legitimately have been born in different branches from EACH OTHER, so a single group shift would tear it; those are aligned per traversal at split time instead. | `🔀️boolean`, `📸️snapshot/➰️curve` |
+
+### 5.4 Orientation, poles, and the p-curve sense (found by finishing the two examples)
+
+| # | Change | File |
+| --- | --- | --- |
+| R21 | `make_sphere`/`make_torus` wound their outer ring CLOCKWISE in `(u, v)` while `make_box`/`make_cylinder`/`make_cone` wind counter-clockwise, and every one of those surfaces has `du × dv` pointing outward. Nothing caught it: a solid whose faces agree WITH EACH OTHER validates whichever convention it picked, and a sphere has one face. It surfaces the instant a boolean makes a sphere piece adjacent to a box piece. Both rewound (members and p-curves reordered, no geometry changed). | `🧱️primitives` |
+| R22 | `make_cone`'s lateral frame paired `z = −Z` with an unmirrored `y = Y` — a LEFT-handed frame, which negates `du × dv` and built the whole face with an inward normal (`shell-orientation-inward`, signed volume exactly `−πr²h/3`). Mirrored `y`, the same right-handed reflection its own base cap already used; the base circle's p-curve now states the resulting backwards azimuth explicitly, and the two seam traversals get their own `u = 0` / `u = 2π` p-curves like the sphere's. §4.5's first item. | `🧱️primitives` |
+| R23 | `check_shell_closure_and_orientation` compared raw `forward` flags. A coedge's `forward` is stated in its SURFACE's sense; the face's outward normal is that sense only when `flipped` is false, so the flag to compare is `forward XOR flipped`. Every boolean `Cut` reported `orientation-inconsistent` — a cut flips the tool's faces to face into the cavity and their rings quite correctly stay put. | `✅validation-report/🧪️body` |
+| R24 | New `Surface::is_degenerate_uv`, used everywhere a pole was previously detected via `normal(u, v).is_none()`. That asks a different question with an ABSOLUTE threshold (`Vec3::normalized` rejects at `f64::EPSILON`), so a pole was detected on a UNIT sphere (`\|du × dv\| ≈ 6e-17`) and MISSED on a radius-2.2 one (`≈ 3e-16`) — the same geometry, decided by scale. A missed pole makes the two `u` branches meeting there unwrap onto one another and the face measure ZERO area: the last thing standing between `🍩️sphere-cut-with-torus` and a clean `validate_body`. | `📸️snapshot/🏄️surface` + `📏mass-properties`, `🧩tessellation`, `🔀️boolean` |
+| R25 | New `planar_pcurve_sense`: `build_pcurve`'s `(Plane, Circle/Ellipse)` shortcut ignored handedness. `Curve2::Ellipse::eval` derives its second axis as a FIXED right-handed `x_axis.perp()`, so when the conic's normal runs anti-parallel to the plane's — a cylinder's intersection circle against a box's bottom face — every parameter mapped to the ANTIPODE, `2r` away. Negating `minor_radius` flips exactly that term, the same signed-radius convention `offset::exact_pcurve_for_circle_on_plane` already documents. This was §4.2's `same-parameter-violated ... disagree by 1`. | `✂️intersect/🏄️surface-surface` |
+| R26 | `analytic_primitives_are_structurally_valid` now covers the CONE too and asserts each primitive's closed-form volume WITH ITS SIGN — a positive magnitude alone proves nothing about orientation, and the inward cone had exactly the right magnitude. | `🔀️boolean/🧪️tests/🔬️unit` |
+| R27 | `OPERATION_QUALITY` now tags `sphere_prim`/`cylinder_prim`/`cone_prim`/`torus_prim` `ExactAnalytic`; the table's own header paragraph was rewritten to describe the current pipeline rather than the pre-W1-E/W2-B one (patterns/defeature/split/mesh IO are what is still `MeshDerivedBRep`). §4.5's second item. | `⚙️engine/🔖️contract` |
+
+### 5.5 Offset (§4.4)
+
+§4.4's diagnosis — `ear_clip`'s O(n³) on dense `chord_tol = 1e-6` boundaries — was not what the
+profiler found. A live `sample(1)` of the hung `thicken_planar_face_matches_box_volume` puts 100 %
+of its time in `set_face_pcurves → Surface::project_curve → fit_pcurve`, which on a NURBS support
+inverts up to 1025 samples through a `1e-9` Bézier-subdivision `closest_uv` and re-interpolates the
+lot, once per doubling, per edge, per face.
+
+| # | Change | File |
+| --- | --- | --- |
+| R28 | New `exact_pcurve_on_ruled_boundary`, first in the `exact_pcurve` chain: a boundary that is an ISO-LINE of its own NURBS patch — which every boundary of a ruled/lofted patch is, those patches being built ALONG their boundaries — has a straight `(u, v)` image and needs no fit at all. Ten candidates, each VERIFIED against the real curve before it is returned, so a boundary whose parameter is not affine in the patch's (a circular rail, whose `to_nurbs` parameter is a Möbius map of angle) still falls through to the fit. `thicken_planar_face_matches_box_volume` went from ≫30 min to **0.01 s**. | `↔️offset` |
+| R29 | New `offset_point_map`; `offset_face` now REBUILDS its boundary through it instead of sharing the original face's edges. Sharing them left a face whose surface had moved and whose rim had not — `thicken_face` then ruled every side between an edge and ITSELF, so all four sides were degenerate and zero-area and the thickened box measured a volume of exactly 0. The map is exact and affine for `Plane` (translation), `Sphere` (uniform scale about the centre), `Cylinder` (scale about the AXIS — affine, not a similarity) and `Cone` (apex translation); a `Torus` tube offset is not affine, and `offset_face` reports rather than guessing. | `↔️offset` |
+| R30 | `thicken_face` reversed the FAR cap. The solid grows along the original face's outward normal, so the offset cap already faces outward and it is the ORIGINAL that now faces into the new material; reversing the wrong one left both caps pointing the same way and their contributions cancelled (a 2 × 1 × 0.5 thickened quad measured 1/3 of its volume). | `↔️offset` |
+| R31 | `rebuild_topology` skipped every edge whose two faces were untouched — even when one of its ENDS had moved, so the vertex it stopped at no longer existed on the solid. A drafted unit box came out with TEN vertices, its far edges still ending at the original corner while the drafted face ended at the new one; the volume landed between the two shapes (0.9324 where the trapezoid is 0.8986 — §4.4's "pyramid rather than prism", which was really "half of each"). Edges are now rebuilt when a face changed OR an end moved, and the vertex lookups fall back to the current position for the end that did not move. | `↔️offset` |
+| R32 | `shell_solid_with_open_faces` offset the OPEN faces' surfaces too. An opening is not a wall: the cavity runs up to it. A 2³ box shelled at 0.2 with its top open came out with a 1.6-tall cavity instead of 1.8 and a slanted ruled rim instead of the flat frame the opening actually is. Open faces keep their surface (and still trim the inner faces that meet them), and the vertex target now solves each touched face's OWN final plane — displaced for a wall, not displaced for an opening — instead of dragging every rim corner inward along all three normals. | `↔️offset` |
+
+Fixed by R28–R32: `thicken_planar_face_matches_box_volume`, `shell_box_one_open_face_matches_closed_form`,
+`draft_box_side_face_matches_trapezoid_magnitude` — offset is now 12 passed / 1 failed.
+
+### 5.6 Remaining: `offset_solid_box_round_matches_minkowski_closed_form`
+
+Still a runtime bomb (> 15 min, no verdict), and for a reason R28 cannot reach.
+`offset_solid_with_corner(Round)` delegates its corners to `blend::fillet_edges`, whose rolling-ball
+patches are `Surface::Nurbs` whose boundaries are NOT affine iso-lines, so every one of them goes
+through `fit_pcurve`. A `sample(1)` of the hung run puts its time in
+`bspline::basis_function_derivatives` / `surface_derivatives_rational` /
+`surface_ops::closest_on_nurbs_surface` under `set_face_pcurves` — the same fit, now unavoidable.
+
+The exact surgery is the one the ticket names: a rolling-ball edge blend between two planes IS a
+cylinder and a vertex blend IS a sphere, and built as `Surface::Cylinder`/`Surface::Sphere` they
+need no p-curve fit at all (`exact_pcurve_for_circle_on_cylinder` / `_line_on_cylinder` already
+cover their boundaries) and the Minkowski closed form falls out exactly. That is a rewrite of
+`diff::blend`'s patch construction, not of `diff::offset`, and is left as the one open item.
+
+### 5.7 Compilation
+
+All three in a private `CARGO_TARGET_DIR` seeded by an APFS clone of the repo's `target/debug`,
+`RUSTC_WRAPPER=""`, and each log shows the crate genuinely recompiling (`Checking
+semio-s-artifact-stdio-semio`), not a cache hit:
+
+* `cargo check -p semio-s-artifact-stdio-semio --lib --keep-going` — **exit 0, 0 errors, 0 warnings**.
+* `cargo check -p semio-s-artifact-stdio-semio --lib --keep-going --target wasm32-wasip2 --profile
+  wasm-dev` with `CARGO_PROFILE_WASM_DEV_DEBUG=false` — **exit 0, 0 errors, 0 warnings**. (§4.1's
+  blocker, `semio-framework-plugin`'s `E0639`, is gone — that neighbouring session's change landed.)
+* `cargo check -p semio-s-artifact-stdio-semio --test brep_procedural_example_booleans` — **exit 0,
+  0 errors, 0 warnings**: the `[[test]]` target and its `parry3d` oracle type-check against the real
+  crate, which is where the two example tests live for CI.
+
+### 5.8 Raw logs
+
+`🗑️generated/resumed-*.txt` — one per family (`resumed-boolean-after.txt`, `resumed-ex-after.txt`,
+`resumed-engine-after.txt`, …), the three compilation receipts
+(`resumed-native-check.txt`, `resumed-wasm-check.txt`, `resumed-example-test-check.txt`) and the two
+`sample(1)` profiles that pinned the offset runtimes (`resumed-thicken-profile.txt`,
+`resumed-round-minkowski-profile.txt`). `resumed-offset-after.txt` is truncated at the one test that
+never returns (§5.6).
+
+### 5.9 Files changed in this pass
+
+`🧬️schema/🔺️diff/🔀️boolean/🦀️.rs`, `…/🔀️boolean/🧪️tests/🔬️unit/🦀️.rs`,
+`🧬️schema/🔺️diff/🔺️euler/🦀️.rs`, `🧬️schema/🔺️diff/🧱️primitives/🦀️.rs`,
+`🧬️schema/🔺️diff/↔️offset/🦀️.rs`, `🧬️schema/🔺️diff/✂️intersect/🏄️surface-surface/🦀️.rs`,
+`🧬️schema/💡️inferences/🏷️classification/🦀️.rs`, `🧬️schema/💡️inferences/📏mass-properties/🦀️.rs`,
+`🧬️schema/💡️inferences/🧩tessellation/🦀️.rs`,
+`🧬️schema/💡️inferences/✅validation-report/🧪️body/🦀️.rs`,
+`🧬️schema/📸️snapshot/🏄️surface/🦀️.rs`, `🧬️schema/📸️snapshot/➰️curve/🦀️.rs`,
+`🧬️schema/⚙️engine/🔖️contract/🦀️.rs` (all under
+`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/`), plus this
+ticket's `🔬️harness/lib.rs`.

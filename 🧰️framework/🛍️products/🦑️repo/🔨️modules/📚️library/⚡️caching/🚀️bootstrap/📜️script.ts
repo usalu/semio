@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
@@ -22,6 +22,18 @@ function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts")
 
 //#region 🔖️NxScript
 export class NxScript extends Script {
+  /** 🧿️ `nx watch` refuses to run without the daemon, and Nx disables its daemon for every later
+   * client by writing `<workspace-data>/d/disabled` whenever one start fails — a marker that outlives
+   * the crash it records (seen: a 2026-09-08 start failure still blocked `bun dev:puzzle:3d` two days
+   * later while `nx daemon --start` ran fine). A watching invocation therefore drops a stale marker
+   * and starts the daemon itself, so a developer's first `dev` never depends on a manual reset. */
+  static ensureDaemon(nxCli: string, root: string, env: NodeJS.ProcessEnv): void {
+    const marker = join(env.NX_WORKSPACE_DATA_DIRECTORY ?? join(root, ".nx", "workspace-data"), "d", "disabled");
+    if (existsSync(marker)) rmSync(marker, { force: true });
+    const started = stopNxProcessTree("node", [nxCli, "daemon", "--start"], { cwd: root, env, stdio: "inherit" });
+    if (started.status !== 0) throw new Error(`Nx daemon did not start (status ${started.status ?? started.signal})`);
+  }
+
   static ownedDescendants(roots: readonly number[], rows: readonly { pid: number; parent: number; command: string }[], daemonScript: string): number[] {
     const children = new Map<number, typeof rows[number][]>(), normalize = (path: string): string => path.replaceAll("\\", "/").toLowerCase();
     for (const row of rows) { const siblings = children.get(row.parent) ?? []; siblings.push(row); children.set(row.parent, siblings); }
@@ -96,6 +108,7 @@ export class NxScript extends Script {
     const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
     try {
       if (invocation.watch) {
+        NxScript.ensureDaemon(nxCli, this.root, env);
         watcher = launch(["watch", "--all", "--includeGlobalWorkspaceFiles", "--verbose", "--", "bun", "nx", "run", invocation.watch, "--output-style=stream"], true);
         await new Promise<void>((accept, reject) => {
           let pending = "";

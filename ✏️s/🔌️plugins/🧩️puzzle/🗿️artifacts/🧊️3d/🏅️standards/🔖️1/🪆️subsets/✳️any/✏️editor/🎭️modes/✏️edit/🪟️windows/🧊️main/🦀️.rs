@@ -317,6 +317,13 @@ pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
+/// 🖌️ How many placement candidates ONE suggestion popup publishes. The scene surface it travels on is
+/// a fixed-capacity payload (`semio_framework_ui_scene::encode`), and a vortex on a richly catalogued
+/// document resolves arbitrarily many collision-free candidates — an unbounded list would make the whole
+/// 3D render of that window fail closed the moment the popup opened. It is also the interaction answer:
+/// a picker the user reads at a glance shows a bounded page, and `cycleBrushCandidate` walks the rest.
+pub const PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE: usize = 8;
+
 pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, interaction: &Puzzle3dInteractionSnapshot) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
@@ -325,6 +332,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                 let candidates: Vec<Value> = result
                     .free
                     .iter()
+                    .take(PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE)
                     .enumerate()
                     .map(|(index, candidate)| {
                         let object_kind = Some(candidate.object_kind_id.as_str());
@@ -364,6 +372,12 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     // `world_instances_geometry_json`) below this value are shown, the rest (already planned, not yet
     // committed) stay hidden until the host commits a higher value or the live drag store overrides
     // it locally. Keyed so future reveal-driven measures/tools can share the same channel.
+    // 🥽️ Brush-mesh residency, the client's only handle on the fact that what a guest instantiation
+    // holds does not outlive that instantiation: `meshResidency` is the guest's monotone install
+    // counter (a lower value than the client last saw proves a restart, so its "already uploaded"
+    // bookkeeping is void), and `meshReuploadUrls` names the identities a refused id-only announcement
+    // is waiting on bytes for. Both are read by `Puzzle3dBrushMeshRegistry`
+    // (`🧰️framework/…/🛠️ShellHelpers/🟦️.tsx`).
     let mut value = json!({
         "activeUtility": scene_mode(&envelope.active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
@@ -372,6 +386,8 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         "suggestionMenu": suggestion_menu,
         "fillBuild": fill_build,
         "revealCutoffs": { "puzzle3d-fill": runtime.fill_count },
+        "meshResidency": crate::editor::puzzle3d::precompute::shared_brush_mesh_installs(),
+        "meshReuploadUrls": session.mesh_reupload_requests(),
     });
     // 🐁️ `hoveredVortexFullId` is the host's Alt+right-click suggestion target and its context-menu
     // priority key (`resolveWorldContextMenuTarget`) — it lives on the interaction record, not on

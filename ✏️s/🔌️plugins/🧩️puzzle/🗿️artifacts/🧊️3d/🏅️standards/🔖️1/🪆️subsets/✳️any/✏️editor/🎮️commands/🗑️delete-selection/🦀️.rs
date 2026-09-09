@@ -9,6 +9,10 @@ pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let attraction_ids: Vec<String> = ctx.selected_attraction_ids();
     let target_volume_ids: Vec<String> = ctx.selected_target_volume_ids();
     let reference_ids: Vec<String> = ctx.selected_reference_ids();
+    let marked: Vec<String> = object_ids.iter().chain(vortex_ids.iter()).chain(attraction_ids.iter()).chain(target_volume_ids.iter()).chain(reference_ids.iter()).cloned().collect();
+    if ctx.refuse_without_selection(&marked) {
+        return;
+    }
     ctx.scene.fixture.objects.retain(|object| !object_ids.contains(&object.id));
     if !vortex_ids.is_empty() {
         for object in ctx.scene.fixture.objects.iter_mut() {

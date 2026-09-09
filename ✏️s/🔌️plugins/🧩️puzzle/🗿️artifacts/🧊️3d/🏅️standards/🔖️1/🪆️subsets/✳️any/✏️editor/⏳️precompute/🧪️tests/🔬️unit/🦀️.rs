@@ -476,7 +476,7 @@ fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
     }
     drive_fill_preparation(&mut engine);
     engine.fill.as_ref().expect("fill").lock().expect("fill lock").max_count = FILL_COUNT_MAX;
-    Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
+    Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
 }
 
 fn close_fill_envelope(session: &mut Puzzle3dPrecomputeSession) {
@@ -495,11 +495,6 @@ fn enqueue_measured_fill_job(session: &mut Puzzle3dPrecomputeSession) -> Option<
         }
     }
     None
-}
-
-fn fill_envelope_test_guard() -> std::sync::MutexGuard<'static, ()> {
-    static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
-    GUARD.get_or_init(|| Mutex::new(())).lock().expect("fill envelope test guard")
 }
 
 /// 📏️ Close grants one envelope spends before the admitted fill reaches its own retirement cursor:
@@ -1328,4 +1323,420 @@ fn fill_cancel_stops_only_the_named_job_and_a_stale_cancel_is_a_no_operation() {
     let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
     while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
     assert!(terminal.terminal_is_empty());
+}
+
+//#region 🧩️PagedBrushMeshUploads
+/// 🥽️ The language-neutral upload contract both ends implement: this decoder, and the renderer's pager
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`),
+/// which is held to the same fixture by `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
+const BRUSH_MESH_UPLOAD_FIXTURE: &str = include_str!("../../../../🧫️fixtures/🥽️brush-mesh-upload/🔣️.json");
+
+fn brush_mesh_upload_fixture() -> serde_json::Value {
+    serde_json::from_str(BRUSH_MESH_UPLOAD_FIXTURE).expect("brush mesh upload fixture")
+}
+
+fn fixture_count(value: &serde_json::Value) -> usize {
+    usize::try_from(value.as_u64().expect("whole count")).expect("count fits this target")
+}
+
+/// 🧮️ One client page run encoded exactly as `puzzle3dBrushMeshPages` encodes it: positions fill each
+/// page first, the indices stream continues in whatever of the page's value budget is left.
+fn brush_mesh_pages(positions: &[f32], indices: &[u32]) -> Vec<(String, String)> {
+    let total = positions.len() + indices.len();
+    let mut pages = Vec::new();
+    let mut start = 0usize;
+    while start < total {
+        let end = (start + PUZZLE3D_MESH_PAGE_VALUES).min(total);
+        let position_slice = &positions[start.min(positions.len())..end.min(positions.len())];
+        let index_slice = &indices[start.saturating_sub(positions.len())..end.saturating_sub(positions.len())];
+        let position_bytes: Vec<u8> = position_slice.iter().flat_map(|value| value.to_le_bytes()).collect();
+        let index_bytes: Vec<u8> = index_slice.iter().flat_map(|value| value.to_le_bytes()).collect();
+        pages.push((semio_framework_io_base64::base64_standard_encode(&position_bytes), semio_framework_io_base64::base64_standard_encode(&index_bytes)));
+        start = end;
+    }
+    pages
+}
+
+/// 🚚️ One page as the plugin receives it: decoded out of the two base64 payloads under the same value
+/// budget the `registerBrushMesh` arm applies, then admitted into the staging area.
+fn admit_brush_mesh_page(url: &str, digest: &str, page: u32, page_count: u32, positions_b64: &str, indices_b64: &str) -> Result<Puzzle3dMeshUploadStep, Puzzle3dMeshUploadFault> {
+    let positions: Vec<f32> = decode_brush_mesh_page_values(positions_b64, PUZZLE3D_MESH_PAGE_VALUES).expect("positions payload").iter().map(|bytes| f32::from_le_bytes(*bytes)).collect();
+    let indices: Vec<u32> = decode_brush_mesh_page_values(indices_b64, PUZZLE3D_MESH_PAGE_VALUES - positions.len()).expect("indices payload").iter().map(|bytes| u32::from_le_bytes(*bytes)).collect();
+    stage_brush_mesh_page(url, digest, page, page_count, &positions, &indices)
+}
+
+/// 📏️ The wire one page actually costs, byte-for-byte what the plugin host writes for a UI dispatch:
+/// `to_json_string(&(verb, args))` over the args the world layer sends.
+fn brush_mesh_page_wire_bytes(url: &str, digest: &str, page: u32, page_count: u32, positions_b64: &str, indices_b64: &str) -> usize {
+    serde_json::to_string(&serde_json::json!(["registerBrushMesh", { "surfaceId": "world-3d", "url": url, "digest": digest, "page": page, "pageCount": page_count, "positionsB64": positions_b64, "indicesB64": indices_b64 }])).expect("wire json").len()
+}
+
+/// 🥽️ Wave W-M2: a document-scale GLB — the Nakagin capsule `🧊️placeholder.glb`, 25 344 positions and
+/// 48 384 indices — reaches the plugin only as a page run, because one whole mesh is 64 KB of JSON and
+/// the shared retained command admits 8 192 raw bytes. Every page fits that wire, the run closes on its
+/// last page, and the reassembled geometry is byte-identical to what the client loaded.
+#[test]
+fn a_document_scale_mesh_uploads_in_pages_and_registers() {
+    let fixture = brush_mesh_upload_fixture();
+    let scale = &fixture["documentScale"][0];
+    let position_count = fixture_count(&scale["positions"]);
+    let index_count = fixture_count(&scale["indices"]);
+    let positions: Vec<f32> = (0..position_count).map(|value| value as f32 * 0.5).collect();
+    let vertices = u32::try_from(position_count / 3).expect("vertex count");
+    let indices: Vec<u32> = (0..index_count).map(|value| u32::try_from(value).expect("index") % vertices).collect();
+    let url = "/test/document-scale.glb";
+    let digest = brush_mesh_digest(&positions, &indices);
+    let pages = brush_mesh_pages(&positions, &indices);
+    assert_eq!(pages.len(), fixture_count(&scale["pages"]), "the document-scale mesh pages exactly as the language-neutral fixture declares");
+    let page_count = u32::try_from(pages.len()).expect("page count");
+    let mut closed = None;
+    for (index, (positions_b64, indices_b64)) in pages.iter().enumerate() {
+        let page = u32::try_from(index).expect("page");
+        assert!(positions_b64.len() <= PUZZLE3D_MESH_PAGE_BASE64_CHARS && indices_b64.len() <= PUZZLE3D_MESH_PAGE_BASE64_CHARS, "page {page} payload stays inside one page's base64 budget");
+        let wire = brush_mesh_page_wire_bytes(url, &digest, page, page_count, positions_b64, indices_b64);
+        assert!(wire <= crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "page {page} costs {wire} raw wire bytes; the shared retained command admits {}", crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
+        match admit_brush_mesh_page(url, &digest, page, page_count, positions_b64, indices_b64).expect("page admitted") {
+            Puzzle3dMeshUploadStep::Staged { next_page, page_count: staged_count } => {
+                assert_eq!((next_page, staged_count), (page + 1, page_count), "an open run advances exactly one page");
+                assert!(staged_brush_mesh_uploads().iter().any(|(staged_url, staged_digest, _, _)| staged_url == url && staged_digest == &digest), "the open run holds exactly one staging slot");
+            }
+            Puzzle3dMeshUploadStep::Complete(staged_positions, staged_indices) => closed = Some((page, staged_positions, staged_indices)),
+        }
+    }
+    let (last_page, staged_positions, staged_indices) = closed.expect("the run closes");
+    assert_eq!(last_page, page_count - 1, "only the last page closes the run");
+    assert_eq!(staged_positions, positions, "the reassembled positions are the client's own buffer");
+    assert_eq!(staged_indices, indices, "the reassembled indices are the client's own buffer");
+    assert!(!staged_brush_mesh_uploads().iter().any(|(staged_url, _, _, _)| staged_url == url), "a closed run leaves no staging slot behind");
+    let mut session = Puzzle3dPrecomputeSession::new();
+    session.register_mesh(url, &staged_positions, &staged_indices);
+    assert!(session.has_mesh(url), "the reassembled mesh is live collision geometry, not just staged bytes");
+}
+
+/// 🕳️ Wave W-M2: a run that skips a page, contradicts its own page count, or reassembles into bytes the
+/// client never announced is refused with a named fault — never silently half-installed.
+#[test]
+fn a_gapped_or_mismatched_page_run_is_refused() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let url = "/test/gapped.glb";
+    let digest = brush_mesh_digest(&positions, &indices);
+    assert_eq!(stage_brush_mesh_page(url, "", 0, 3, &positions, &[]), Err(Puzzle3dMeshUploadFault::Envelope), "a page without a declared identity is refused");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 3, 3, &positions, &[]), Err(Puzzle3dMeshUploadFault::Envelope), "a page beyond its own run is refused");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 0, PUZZLE3D_MESH_UPLOAD_MAX_PAGES + 1, &positions, &[]), Err(Puzzle3dMeshUploadFault::Envelope), "a run longer than the staging ceiling is refused");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 1, 3, &positions, &[]), Err(Puzzle3dMeshUploadFault::Gap), "a run that does not open at page 0 is refused");
+    assert!(matches!(stage_brush_mesh_page(url, &digest, 0, 3, &positions, &[]), Ok(Puzzle3dMeshUploadStep::Staged { next_page: 1, page_count: 3 })), "the run opens on page 0");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 2, 3, &[], &indices), Err(Puzzle3dMeshUploadFault::Gap), "a skipped page is refused");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 1, 4, &[], &indices), Err(Puzzle3dMeshUploadFault::Gap), "a page contradicting the run's own page count is refused");
+    assert_eq!(decode_brush_mesh_page_values("not base64!!", PUZZLE3D_MESH_PAGE_VALUES), None, "a payload that is not base64 never reaches the staging area");
+    assert_eq!(decode_brush_mesh_page_values(&"A".repeat(PUZZLE3D_MESH_PAGE_BASE64_CHARS + 4), PUZZLE3D_MESH_PAGE_VALUES), None, "a payload longer than one page is refused before decoding");
+    let mismatched = "/test/mismatched.glb";
+    assert!(matches!(stage_brush_mesh_page(mismatched, &digest, 0, 2, &positions, &[]), Ok(Puzzle3dMeshUploadStep::Staged { next_page: 1, page_count: 2 })));
+    let foreign: Vec<u32> = indices.iter().map(|index| index % 4).collect();
+    assert_eq!(stage_brush_mesh_page(mismatched, &digest, 1, 2, &[], &foreign), Err(Puzzle3dMeshUploadFault::Digest), "a run that closes on bytes the client never announced is refused");
+    assert!(!staged_brush_mesh_uploads().iter().any(|(staged_url, _, _, _)| staged_url == url || staged_url == mismatched), "every refused run releases its staging slot");
+}
+
+/// 🪪️ Wave W-M2: a mesh this process already paged is adopted by `(url, digest)` alone — the wire never
+/// carries the buffers twice — and a stale digest never adopts foreign bytes.
+#[test]
+fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let url = "/test/adopt-by-digest.glb";
+    let digest = brush_mesh_digest(&positions, &indices);
+    let mut session = Puzzle3dPrecomputeSession::new();
+    assert_eq!(session.stage_mesh_page(url, &digest, 0, 1, &positions, &indices), Ok(None), "a one-page run installs the mesh the moment it closes");
+    assert!(session.has_mesh(url), "the closed run is live collision geometry");
+    let mut fresh = Puzzle3dCollision::new();
+    assert!(fresh.adopt_shared_mesh(url, Some(&digest)), "the id plus its announced digest installs the shared geometry");
+    assert!(fresh.has_mesh(url), "the adopted mesh is live in a session that never saw a page");
+    let mut foreign = Puzzle3dCollision::new();
+    assert!(!foreign.adopt_shared_mesh(url, Some(&"0".repeat(64))), "a stale digest never adopts foreign bytes");
+    assert!(!foreign.has_mesh(url), "a refused adoption installs nothing");
+    let mut unknown = Puzzle3dCollision::new();
+    assert!(!unknown.adopt_shared_mesh("/test/never-uploaded.glb", Some(&digest)), "an id this process never paged has nothing to adopt");
+}
+
+/// 🚚️ Wave W-H: what a guest holds does not outlive the guest. A client whose own bookkeeping survived
+/// a restart re-announces identities by id alone, and this instantiation can serve none of them — so the
+/// refusal must be a REQUEST for the bytes, not a report. The identity is recorded once however often it
+/// is re-announced, survives the session hand-off that carries the brush lane between workers, and
+/// retires the instant real geometry installs, so a steady state never carries a standing request.
+#[test]
+fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let digest = brush_mesh_digest(&positions, &indices);
+    let url = "/test/reupload-requested.glb";
+    let mut session = Puzzle3dPrecomputeSession::new();
+    assert!(!session.adopt_shared_mesh(url, Some(&digest)), "an identity this instantiation never derived cannot be adopted by id alone");
+    assert!(session.mesh_reupload_requests().is_empty(), "a refusal is only a request once the arm records it");
+    session.request_mesh_reupload(url);
+    session.request_mesh_reupload(url);
+    assert_eq!(session.mesh_reupload_requests(), [url.to_string()], "a re-announced dead identity is one standing request, never a growing list");
+    let mut moved = Puzzle3dPrecomputeSession::new();
+    moved.install_collision_session(session.take_collision_session());
+    assert_eq!(moved.mesh_reupload_requests(), [url.to_string()], "the request travels with the brush lane's session hand-off");
+    assert!(session.mesh_reupload_requests().is_empty(), "the checked-out session keeps nothing");
+    let installs_before = shared_brush_mesh_installs();
+    assert_eq!(moved.stage_mesh_page(url, &digest, 0, 1, &positions, &indices), Ok(None), "the client answers the request with the page run");
+    assert!(moved.has_mesh(url), "the answered request is live collision geometry");
+    assert!(moved.mesh_reupload_requests().is_empty(), "an answered request retires the moment the geometry installs");
+    assert!(shared_brush_mesh_installs() > installs_before, "a newly derived identity raises the residency counter the client watches");
+}
+
+/// 🔢️ Wave W-H: the residency counter is the client's ONLY evidence that its "already uploaded" map is
+/// void, so it may only ever climb inside one instantiation — a counter that could fall for any reason
+/// other than a fresh guest would void the map on a healthy one. The request set is bounded by the same
+/// mesh ceiling the collision engine admits, so a client re-announcing junk can never grow the world body.
+#[test]
+fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let digest = brush_mesh_digest(&positions, &indices);
+    let mut session = Puzzle3dPrecomputeSession::new();
+    let mut residency = shared_brush_mesh_installs();
+    for identity in 0..3 {
+        let url = format!("/test/residency-{identity}.glb");
+        assert_eq!(session.stage_mesh_page(&url, &digest, 0, 1, &positions, &indices), Ok(None));
+        let observed = shared_brush_mesh_installs();
+        assert!(observed > residency, "identity {identity} raised the residency counter");
+        residency = observed;
+    }
+    assert!(!session.adopt_shared_mesh("/test/residency-0.glb", Some(&"0".repeat(64))), "a stale digest is refused even for a resident identity");
+    assert_eq!(shared_brush_mesh_installs(), residency, "a refusal derives nothing, so the counter stands still");
+    let mut bounded = Puzzle3dPrecomputeSession::new();
+    for identity in 0..(FILL_WORKER_MAX_MESHES + 8) {
+        bounded.request_mesh_reupload(&format!("/test/bounded-{identity:04}.glb"));
+    }
+    assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "the request set stops at the mesh ceiling instead of growing with the client's noise");
+    let published: Vec<String> = bounded.mesh_reupload_requests().to_vec();
+    let mut sorted = published.clone();
+    sorted.sort();
+    assert_eq!(published, sorted, "requests publish in a stable order, so an unchanged set hashes to an unchanged world-body lane");
+    bounded.request_mesh_reupload(&"x".repeat(FILL_WORKER_MAX_URL_BYTES + 1));
+    assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "an id longer than the engine admits is never recorded");
+}
+
+/// 🧾️ Wave W-M2: the paged wire is one contract, written down once. Every constant, fault code, page
+/// payload and digest the plugin decodes is the one the renderer's pager encodes.
+#[test]
+fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
+    let fixture = brush_mesh_upload_fixture();
+    assert_eq!(fixture_count(&fixture["commandRawBytes"]), crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
+    assert_eq!(fixture_count(&fixture["pageValues"]), PUZZLE3D_MESH_PAGE_VALUES);
+    assert_eq!(fixture_count(&fixture["pageBase64Chars"]), PUZZLE3D_MESH_PAGE_BASE64_CHARS);
+    assert_eq!(fixture_count(&fixture["uploadSlots"]), PUZZLE3D_MESH_UPLOAD_SLOTS);
+    assert_eq!(fixture_count(&fixture["maxPages"]), usize::try_from(PUZZLE3D_MESH_UPLOAD_MAX_PAGES).expect("page ceiling"));
+    let declared: Vec<&str> = fixture["faults"].as_array().expect("fault codes").iter().map(|code| code.as_str().expect("fault code")).collect();
+    let owned = [Puzzle3dMeshUploadFault::Envelope, Puzzle3dMeshUploadFault::Payload, Puzzle3dMeshUploadFault::Gap, Puzzle3dMeshUploadFault::Capacity, Puzzle3dMeshUploadFault::Digest, Puzzle3dMeshUploadFault::Geometry];
+    assert_eq!(declared, owned.iter().map(|fault| fault.code()).collect::<Vec<&str>>(), "every fault the plugin can raise is named in the shared contract");
+    let example = &fixture["example"];
+    let positions: Vec<f32> = example["positions"].as_array().expect("positions").iter().map(|value| value.as_f64().expect("position") as f32).collect();
+    let indices: Vec<u32> = example["indices"].as_array().expect("indices").iter().map(|value| u32::try_from(value.as_u64().expect("index")).expect("index fits")).collect();
+    let url = example["url"].as_str().expect("url");
+    let digest = example["digest"].as_str().expect("digest");
+    assert_eq!(brush_mesh_digest(&positions, &indices), digest, "the Rust digest is the digest the TypeScript pager announced");
+    assert_eq!(brush_mesh_pages(&positions, &indices).len(), example["pages"].as_array().expect("pages").len());
+    let page = &example["pages"][0];
+    let positions_b64 = page["positionsB64"].as_str().expect("positions payload");
+    let indices_b64 = page["indicesB64"].as_str().expect("indices payload");
+    assert_eq!(brush_mesh_pages(&positions, &indices)[0], (positions_b64.to_string(), indices_b64.to_string()), "the Rust encoding is the payload the fixture pins");
+    let staged = admit_brush_mesh_page(url, digest, 0, 1, positions_b64, indices_b64).expect("the fixture page closes its own run");
+    assert_eq!(staged, Puzzle3dMeshUploadStep::Complete(positions, indices), "the fixture page reassembles into the fixture's own geometry");
+}
+
+/// 🧹️ Wave W-M2: a page run a closed document abandoned costs one staging slot until the session
+/// registry's own retirement sweeps it — never unbounded memory, and never a live run.
+#[test]
+fn an_abandoned_page_run_is_retired_and_a_live_one_survives() {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    let abandoned = "/test/abandoned.glb";
+    let live = "/test/live.glb";
+    let digest = brush_mesh_digest(&positions, &indices);
+    assert!(matches!(stage_brush_mesh_page(abandoned, &digest, 0, 2, &positions, &[]), Ok(Puzzle3dMeshUploadStep::Staged { .. })));
+    retire_abandoned_brush_mesh_uploads();
+    assert!(staged_brush_mesh_uploads().iter().any(|(url, _, _, _)| url == abandoned), "one sweep is not yet a whole abandonment cycle");
+    assert!(matches!(stage_brush_mesh_page(live, &digest, 0, 2, &positions, &[]), Ok(Puzzle3dMeshUploadStep::Staged { .. })));
+    retire_abandoned_brush_mesh_uploads();
+    assert!(!staged_brush_mesh_uploads().iter().any(|(url, _, _, _)| url == abandoned), "the run that did not advance across a whole cycle is dropped");
+    assert!(staged_brush_mesh_uploads().iter().any(|(url, _, _, _)| url == live), "the run that advanced inside the cycle survives");
+    assert!(matches!(stage_brush_mesh_page(live, &digest, 1, 2, &[], &indices), Ok(Puzzle3dMeshUploadStep::Complete(_, _))), "the surviving run still closes");
+}
+//#endregion 🧩️PagedBrushMeshUploads
+
+//#region 💼️BoundedFillJob
+use semio_framework_plugin::reactor::jobs as reactor_jobs;
+
+/// 📏️ The smallest budget the host can grant. The bounded fill owner spends exactly one cursor
+/// field or one `drive_fill_envelope` call per `step-job` regardless of it, which is precisely what
+/// makes it sliceable; a law that passed only on a fat budget would prove nothing.
+const FILL_JOB_LAW_BUDGET: JobBudget = JobBudget { fuel: 1, deadline_ms: 1 };
+
+/// 📏️ Slices one fill run may spend before a law calls it non-terminating. The measured run on the
+/// single-host fixture stalls in far fewer; this is an order of magnitude of headroom.
+const FILL_JOB_LAW_SLICES: usize = 8192;
+
+/// 📏️ Ticks one law drives through the tick path — more than four times the ≈115 the browser needed
+/// to exhaust the guest heap on 2026-09-09.
+const FILL_TICK_LAW_TICKS: usize = 512;
+
+const FILL_JOB_LAW_EXPLICIT_KIND: &str = "semio.puzzle3d.fill-law-explicit";
+
+/// 🧪️ A deliberately plain `JobFn` registration — the exact shape `FILL_JOB_KIND` used to have. It
+/// is the negative control for `fill_job_kind_is_bounded_and_a_plain_job_fn_is_not`: without it the
+/// bounded assertion could pass against a runtime that never rejected anything.
+fn explicit_control_job(_context: reactor_jobs::JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move { Ok(Vec::new()) })
+}
+
+/// 🧩️ W-J law (b). `semio-framework-plugin` is NOT built in `cfg(test)` when this crate's tests run,
+/// so `spawn_job` takes exactly the production branch: a kind with no `BoundedJobFactory` becomes
+/// `JobBody::ExplicitStateMachineRequired` and every `step-job` answers
+/// `job.explicit-state-machine-required`. That is the whole defect this wave fixes — the fill tool's
+/// planned count sat at zero in the browser because its kind took that branch on every one of the
+/// 120 ms tick loop's spawns.
+#[semio_framework_async_macros::async_test]
+async fn fill_job_kind_is_bounded_and_a_plain_job_fn_is_not() {
+    let _guard = fill_envelope_test_guard();
+    initialize();
+    let mut admitted = fill_worker_session(61);
+    let (job, input) = enqueue_measured_fill_job(&mut admitted).expect("fill job");
+    reactor_jobs::start_job(job, FILL_JOB_KIND, &input).await;
+    let bounded = reactor_jobs::step_job(job, FILL_JOB_LAW_BUDGET).await;
+    assert!(matches!(bounded, JobStep::Running(_)), "the registered fill kind must step as a bounded state machine");
+
+    reactor_jobs::register_job_kind(FILL_JOB_LAW_EXPLICIT_KIND, explicit_control_job as reactor_jobs::JobFn);
+    let control = job.checked_add(1).expect("control job identity");
+    reactor_jobs::start_job(control, FILL_JOB_LAW_EXPLICIT_KIND, &input).await;
+    let JobStep::Failed(refusal) = reactor_jobs::step_job(control, FILL_JOB_LAW_BUDGET).await else {
+        panic!("a plain JobFn registration must never step in a production build");
+    };
+    assert!(String::from_utf8_lossy(&refusal).contains("explicit-state-machine-required"), "the control proves the runtime really does refuse un-bounded kinds");
+
+    reactor_jobs::cancel_job(job).await;
+    close_fill_envelope(&mut admitted);
+}
+
+/// 🧩️ W-J law (a) + the checkpoint half of the restore contract. `BoundedJobFactory` receives only
+/// `(job, input)` — `restore_job`'s `restored` bytes never reach it — so the fill kind's checkpoint
+/// MUST equal its own spawn input for a restored actor to rebind the identical envelope. Pinned
+/// here rather than assumed.
+#[semio_framework_async_macros::async_test]
+async fn bounded_fill_job_reaches_done_publishing_its_envelope_token_as_progress_and_checkpoint() {
+    let _guard = fill_envelope_test_guard();
+    initialize();
+    let mut admitted = fill_worker_session(63);
+    let (job, input) = enqueue_measured_fill_job(&mut admitted).expect("fill job");
+    reactor_jobs::start_job(job, FILL_JOB_KIND, &input).await;
+    let mut progress = 0_usize;
+    let mut done: Option<Vec<u8>> = None;
+    let mut checkpointed = false;
+    for _ in 0..FILL_JOB_LAW_SLICES {
+        match reactor_jobs::step_job(job, FILL_JOB_LAW_BUDGET).await {
+            JobStep::Running(Some(bytes)) => {
+                assert_eq!(bytes, input, "published progress is the envelope token the host already holds");
+                progress += 1;
+            }
+            JobStep::Running(None) => {}
+            JobStep::Done(bytes) => {
+                done = Some(bytes);
+                break;
+            }
+            JobStep::Failed(bytes) => panic!("bounded fill job failed: {}", String::from_utf8_lossy(&bytes)),
+        }
+        if !checkpointed {
+            if let Some(entry) = reactor_jobs::checkpoint_jobs().await.into_iter().find(|entry| entry.job == job) {
+                assert_eq!(entry.input, input, "the checkpoint pack carries the spawn input verbatim");
+                if entry.checkpoint.is_some() {
+                    assert_eq!(entry.checkpoint.as_deref(), Some(input.as_slice()), "the fill checkpoint must equal its spawn input, because a bounded factory only ever sees the input");
+                    checkpointed = true;
+                }
+            }
+        }
+    }
+    assert_eq!(done.as_deref(), Some(input.as_slice()), "a bounded fill run terminates on its own envelope token");
+    assert!(progress > 0, "a bounded fill run publishes at least one progress slice");
+    assert!(checkpointed, "a live bounded fill run always offers a checkpoint");
+    let request = decode_fill_envelope_token(&input).expect("fill identity");
+    let published = fill_envelope_registry().lock().expect("registry").observation(&request).expect("the finished envelope still publishes its observation");
+    assert!(published.done, "the registry publication the session reads is what marks the plan finished");
+    drain_fill_envelope(&mut admitted, &request);
+}
+
+/// ♻️ Pumps ONE session's own terminal cursor until its envelope slot is empty — the mounted
+/// counterpart of `drain_orphaned_fill_envelope`, for a run whose terminal this session already
+/// checked out through `poll_fill_job`.
+fn drain_fill_envelope(session: &mut Puzzle3dPrecomputeSession, request: &FillJobRequest) {
+    for _ in 0..FILL_ENVELOPE_MAX_ITEMS {
+        session.poll_fill_job();
+        if fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none() {
+            return;
+        }
+    }
+    panic!("a terminal fill envelope must reach an empty slot within its own bounded close turns");
+}
+
+/// 🧯️ W-J law (c), first half. A job the host never steps — exactly what the React target did to
+/// every isolated job — must cost ONE spawn and ONE envelope, no matter how long the 120 ms tick
+/// loop runs.
+#[test]
+fn an_unstepped_fill_job_is_enqueued_once_across_five_hundred_ticks() {
+    let _guard = fill_envelope_test_guard();
+    let mut session = fill_worker_session(65);
+    let mut spawns = 0_usize;
+    let mut admitted_bytes = None;
+    for _ in 0..FILL_TICK_LAW_TICKS {
+        session.poll_fill_job();
+        if session.enqueue_fill_job().is_some() {
+            spawns += 1;
+            admitted_bytes = Some(fill_envelope_registry().lock().expect("registry").aggregate_bytes);
+        }
+    }
+    assert_eq!(spawns, 1, "a live fill job must never be re-enqueued by a later tick");
+    assert_eq!(fill_envelope_registry().lock().expect("registry").aggregate_bytes, admitted_bytes.expect("one admission"), "an unstepped fill job reserves no further process bytes per tick");
+    close_fill_envelope(&mut session);
+}
+
+/// 🧯️ W-J law (c), second half. A FAULTED envelope used to be closed and immediately re-measured by
+/// the next tick — an unbounded measure→admit→spawn→fault→close cycle, each turn rebuilding a whole
+/// `FillBuilder` preparation, which is what exhausted the guest heap. It must now stop, once, and
+/// say so.
+#[test]
+fn a_faulted_fill_envelope_latches_one_notice_and_never_silently_retries() {
+    let _guard = fill_envelope_test_guard();
+    let mut session = fill_worker_session(67);
+    let (_, input) = enqueue_measured_fill_job(&mut session).expect("fill job");
+    let request = decode_fill_envelope_token(&input).expect("fill identity");
+    terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Fault);
+    let mut spawns = 0_usize;
+    for _ in 0..FILL_TICK_LAW_TICKS {
+        session.poll_fill_job();
+        if session.enqueue_fill_job().is_some() {
+            spawns += 1;
+        }
+    }
+    assert_eq!(spawns, 0, "a faulted fill job must never be silently re-enqueued");
+    assert!(session.fill_is_faulted(), "the fault latches until an edit supersedes the plan");
+    assert!(session.take_fill_fault_notice(), "the fault surfaces as exactly one user-visible notice");
+    assert!(!session.take_fill_fault_notice(), "the notice is taken once, never repeated per tick");
+    assert_eq!(fill_envelope_registry().lock().expect("registry").aggregate_bytes, 0, "the faulted envelope returns its whole process byte credit");
+}
+//#endregion 💼️BoundedFillJob
+
+#[test]
+fn probe_precompute_member_sizes() {
+    macro_rules! show {
+        ($ty:ty) => {
+            println!("[DEBUG] size_of<{}> = {}", stringify!($ty), std::mem::size_of::<$ty>());
+        };
+    }
+    show!(Puzzle3dPrecomputeSession);
+    show!(Puzzle3dCollision);
+    show!(MountedFillWorker);
+    show!(RejectedFillWorker);
+    show!(StepOutcome);
+    show!(CollisionSpatialIndex);
+    show!(FillEnvelopeAdmissionCursor);
+    show!(FillEnvelopeTerminalHandle);
+    show!(BrushIndexSync);
+    show!(FillBuilder);
+    show!(FillBuilderOwnerCensusCursor);
 }

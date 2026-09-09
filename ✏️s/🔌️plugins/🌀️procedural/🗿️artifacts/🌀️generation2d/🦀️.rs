@@ -148,6 +148,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
+pub(crate) mod store_fixture;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

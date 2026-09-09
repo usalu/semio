@@ -30,12 +30,18 @@ fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
     GL5_NODES.iter().zip(GL5_WEIGHTS.iter()).map(|(&x, &w)| w * f(mid + half * x)).sum::<f64>() * half
 }
 
-/// 📏️ Adaptive-quadrature arc length of `curve` over `[t0, t1]`: recursively halves the interval
-/// until the 5-point Gauss-Legendre estimate agrees with the sum of its two half-interval
+/// 📏️ Adaptive-quadrature arc length of `curve` between `t0` and `t1`: recursively halves the
+/// interval until the 5-point Gauss-Legendre estimate agrees with the sum of its two half-interval
 /// estimates to within `tol` (Richardson-style error control), or `max_depth` is reached.
+///
+/// The endpoints are ORDERED first, because a length is a magnitude: read with `t0 > t1` the raw
+/// quadrature returns the negative of the length, and every caller compares it against a positive
+/// tolerance — so a descending-range edge read as `-1.6` was BOTH flagged `degenerate-edge` and
+/// accepted by `is_point_edge`, which then exempted it from the shell-closure rule entirely
+/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `🐚️box-shell-preview`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
-    arc_length_recursive(curve, t0, t1, tol, 24)
+    arc_length_recursive(curve, t0.min(t1), t0.max(t1), tol, 24)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

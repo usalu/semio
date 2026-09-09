@@ -29,6 +29,25 @@ mod tests;
 //#endregion 🧪️Tests
 
 use store::mounted_pack_rt as mounted;
+/// 📡️ The producer counterpart of [`Generation3dMountedPackSession`]: this artifact's own `P3D3`
+/// discriminator followed by the canonical `.spk` stream — the SAME bytes [`encode`] produces,
+/// with the outer `\x89SEM` semio container unwrapped, since the mounted cursors decode a pack
+/// file and not a semio envelope.
+///
+/// The mounted ingress route refuses any stream that does not lead with `P3D3` (`admit_byte`'s
+/// prefix gate), and a whole-document `ArtifactPack` encode carries the repo-wide container magic
+/// and no artifact discriminator — exactly like every committed `🎒️.pack.semio` asset — so it is
+/// not admissible there and never was. generation2d builds the same shape inside its own
+/// `ArtifactPack` impl (`P2D2` + `pack_rt::encode_document`), which is the cross-artifact
+/// inconsistency this keeps out of the pack contract (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn encode_mounted(document: &Generation3dSnapshot) -> Vec<u8> {
+    let container = encode(document);
+    let (_envelope, canonical) = store::semio_format::unwrap_binary(&container).expect("this artifact's own pack encode is a well-formed semio binary container");
+    let mut bytes = Vec::with_capacity(GENERATION3D_MOUNTED_PREFIX.len() + canonical.len());
+    bytes.extend_from_slice(&GENERATION3D_MOUNTED_PREFIX);
+    bytes.extend_from_slice(&canonical);
+    bytes
+}
 
 //#region 🔖️MountedCanonicalPackSession
 const GENERATION3D_MOUNTED_PREFIX: [u8; 4] = *b"P3D3";
@@ -957,7 +976,7 @@ impl Generation3dMountedTypedSnapshotOwner {
 
 impl Drop for Generation3dMountedTypedSnapshotOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation3d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -1256,7 +1275,7 @@ impl Generation3dMountedPackSession {
 
 impl Drop for Generation3dMountedPackSession {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d mounted canonical pack session reached Drop before exact terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation3d mounted canonical pack session reached Drop before exact terminal-empty close");
     }
 }
 //#endregion 🔖️MountedCanonicalPackSession

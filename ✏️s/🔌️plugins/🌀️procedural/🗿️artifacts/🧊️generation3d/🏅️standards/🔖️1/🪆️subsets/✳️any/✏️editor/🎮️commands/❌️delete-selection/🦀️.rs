@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_fixture, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{commit_fixture, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -13,11 +13,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct DeleteSelection {}
 
 fn delete_selected(fixture: &semio_framework_artifact_flow_flow::FlowFixture, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let mut host = host_from_fixture(fixture);
-    for id in selected {
-        let _ = host.remove_widget(id);
-    }
-    let operations = commit_fixture(fixture, &host.fixture);
+    let operations = with_host(fixture, |host| {
+        for id in selected {
+            let _ = host.remove_widget(id);
+        }
+        commit_fixture(fixture, &host.fixture)
+    });
     Emit { artifact_mutations: operations, ..Default::default() }
 }
 

@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_fixture, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{commit_fixture, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -33,11 +33,12 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
     };
     let x = payload.x.unwrap_or(120.0);
     let y = payload.y.unwrap_or(120.0);
-    let mut host = host_from_fixture(fixture);
-    if host.add_widget(&descriptor, x, y).is_ok() {
-        let operations = commit_fixture(fixture, &host.fixture);
-        Ok(Emit { artifact_mutations: operations, ..Default::default() })
-    } else {
-        Ok(Emit::default())
-    }
+    with_host(fixture, |host| {
+        if host.add_widget(&descriptor, x, y).is_ok() {
+            let operations = commit_fixture(fixture, &host.fixture);
+            Ok(Emit { artifact_mutations: operations, ..Default::default() })
+        } else {
+            Ok(Emit::default())
+        }
+    })
 }

@@ -67,9 +67,11 @@ export interface ShardBudget {
   readonly maxPatchBytes: number;
 }
 
-/** ⚖️ Stand-in for `semio_framework_actor::JobBudget` (design-abi.md `jobs::job-budget`). */
+/** ⚖️ Stand-in for `semio_framework_actor::JobBudget` (design-abi.md `jobs::job-budget`). `fuel` is
+ * a WIT `u64` and therefore a `bigint` — the worker hands this record straight to the guest's
+ * `step-job`, whose `u64` lowering rejects a `number`. */
 export interface ShardJobBudget {
-  readonly fuel: number;
+  readonly fuel: bigint;
   readonly deadlineMs: number;
 }
 
@@ -360,9 +362,9 @@ const MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
 type OutboundMessage =
   | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
   | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget }
-  | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly jobKind: string; readonly input: Uint8Array }
-  | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly budget: ShardJobBudget }
-  | { readonly kind: "cancelJob"; readonly actorId: string; readonly job: number }
+  | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly jobKind: string; readonly input: Uint8Array }
+  | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly budget: ShardJobBudget }
+  | { readonly kind: "cancelJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint }
   | { readonly kind: "takeSegmentedDownloadChunk"; readonly requestId: string; readonly actorId: string; readonly instanceId: number; readonly operationId: bigint }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
@@ -1939,21 +1941,22 @@ export class ShardClient {
     return this.send(slot, { kind: "frame", requestId, actorId, activationGeneration: activation.activationGeneration, frame: { kind: "Grant", actor: actorId, budget, envelopes: ordered } }, requestId);
   }
 
-  async startJob(actorId: string, job: number, jobKind: string, input: Uint8Array): Promise<void> {
+  async startJob(actorId: string, job: bigint, jobKind: string, input: Uint8Array): Promise<void> {
     const slot = this.requireShard(actorId);
     const requestId = this.nextRequestId();
     await this.send<void>(slot, { kind: "startJob", requestId, actorId, job, jobKind, input }, requestId);
   }
 
-  async stepJob(actorId: string, job: number, budget: ShardJobBudget): Promise<ShardJobStep> {
+  async stepJob(actorId: string, job: bigint, budget: ShardJobBudget): Promise<ShardJobStep> {
     const slot = this.requireShard(actorId);
     const requestId = this.nextRequestId();
     return this.send<ShardJobStep>(slot, { kind: "stepJob", requestId, actorId, job, budget }, requestId);
   }
 
-  cancelJob(actorId: string, job: number): void {
+  async cancelJob(actorId: string, job: bigint): Promise<void> {
     const slot = this.requireShard(actorId);
-    void this.send(slot, { kind: "cancelJob", actorId, job }, null);
+    const requestId = this.nextRequestId();
+    await this.send<void>(slot, { kind: "cancelJob", requestId, actorId, job }, requestId);
   }
 
   /** 🧵 Requests exactly one operation-owned item and enforces the transport byte credit. */

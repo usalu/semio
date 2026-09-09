@@ -289,20 +289,28 @@ async fn tangent_spheres_union_volume_is_exact_sum() {
 /// 🐛 Both halves of this were live: the sphere's two collapsed POLE edges (one use each, zero
 /// length) were reported as `shell-not-closed` + `degenerate-edge`, and its single face measured
 /// ZERO area (`sliver-face`) because the duplicate pole vertex in its UV boundary blocked every
-/// ear of the triangulation.
+/// ear of the triangulation. 🐛 And the cone was born INWARD: its lateral surface's frame paired a
+/// `z = −Z` axis with an unmirrored `y = Y`, making the frame left-handed and negating `du × dv`,
+/// so its signed volume came out exactly `−πr²h/3`. Each primitive's own closed-form volume is
+/// asserted here WITH ITS SIGN, since `validate_body`'s orientation check is the only thing that
+/// would otherwise catch it and a positive magnitude alone proves nothing.
 #[semio_framework_async_macros::async_test]
 async fn analytic_primitives_are_structurally_valid() {
-    for name in ["sphere", "torus", "cylinder", "box"] {
+    let pi = std::f64::consts::PI;
+    for (name, expected) in [("sphere", 4.0 / 3.0 * pi), ("torus", 2.0 * pi * pi * 2.0 * 0.25), ("cylinder", 2.0 * pi), ("cone", pi / 3.0 * 2.0), ("box", 1.0)] {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        match name {
-            "sphere" => make_sphere(&mut body, 1.0, &mut rec).map(|_| ()),
-            "torus" => crate::standards::v1::subsets::brep::schema::diff::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec).map(|_| ()),
-            "cylinder" => make_cylinder(&mut body, 1.0, 2.0, &mut rec).map(|_| ()),
-            _ => make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).map(|_| ()),
+        let solid = match name {
+            "sphere" => make_sphere(&mut body, 1.0, &mut rec),
+            "torus" => crate::standards::v1::subsets::brep::schema::diff::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec),
+            "cylinder" => make_cylinder(&mut body, 1.0, 2.0, &mut rec),
+            "cone" => crate::standards::v1::subsets::brep::schema::diff::primitives::make_cone(&mut body, 1.0, 2.0, &mut rec),
+            _ => make_box(&mut body, 1.0, 1.0, 1.0, &mut rec),
         }
         .unwrap();
         let issues = validate_body(&body);
         assert!(issues.is_empty(), "{name}: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+        let signed = crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_signed_volume(&body, solid, 1e-4).unwrap();
+        assert!((signed - expected).abs() <= 5e-3 * expected, "{name}: signed volume {signed}, expected {expected}");
     }
 }

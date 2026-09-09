@@ -148,6 +148,7 @@ fn drive_stepped<S: crate::CommandSink, D: crate::ProjectionDelta>(transaction: 
 //#region 🔖️IntentMutatesAndPatches
 #[test]
 fn an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
@@ -166,6 +167,7 @@ fn an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch() {
 //#region 🔖️StaleIntentDropped
 #[test]
 fn a_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
@@ -195,6 +197,7 @@ fn a_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command() {
 //#region 🔖️BulkCoalescing
 #[test]
 fn a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_patch() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (_presenter, model) = register_test_surface(&mut runtime, surface);
@@ -212,6 +215,7 @@ fn a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_p
 //#region 🔖️UnreadEntityProducesNoPatch
 #[test]
 fn an_entity_notified_but_not_read_by_any_surface_produces_no_patch() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     register_test_surface(&mut runtime, surface);
@@ -231,6 +235,7 @@ fn an_entity_notified_but_not_read_by_any_surface_produces_no_patch() {
 //#region 🔖️EffectStorm
 #[test]
 fn the_effect_fixpoint_terminates_and_a_pathological_observer_hits_the_storm_budget() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let entity = runtime.store_mut().insert(0i32);
     let looping = entity.clone();
@@ -253,6 +258,7 @@ fn the_effect_fixpoint_terminates_and_a_pathological_observer_hits_the_storm_bud
 //#region 🔖️GatewayBackpressure
 #[test]
 fn a_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime: UiRuntime<FailsAfterSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(10, FailsAfterSink { calls: Cell::new(0), accepts: 1 }), 16, apply_fake_delta);
     let surface = surface("s");
     let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
@@ -269,6 +275,7 @@ fn a_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction
 //#region 🔖️NextWake
 #[test]
 fn next_wake_ms_is_none_when_idle_and_some_earliest_when_a_deadline_is_pending() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     assert_eq!(runtime.transact(0).next_wake_ms, None);
 
@@ -283,6 +290,7 @@ fn next_wake_ms_is_none_when_idle_and_some_earliest_when_a_deadline_is_pending()
 //#region 🔖️PresenceOwnChannel
 #[test]
 fn presence_flushes_on_its_own_channel_and_never_appears_in_a_patch() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
@@ -300,6 +308,7 @@ fn presence_flushes_on_its_own_channel_and_never_appears_in_a_patch() {
 //#region 🔖️IndependentSurfaces
 #[test]
 fn two_surfaces_are_independent_dirtying_one_does_not_re_present_the_other() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface_a = surface("a");
     let surface_b = surface("b");
@@ -322,6 +331,7 @@ fn two_surfaces_are_independent_dirtying_one_does_not_re_present_the_other() {
 //#region 🔖️ResumableStress
 #[test]
 fn one_fuel_slices_bound_an_intent_storm_and_preserve_fifo_output() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime: UiRuntime<AlwaysAcceptsSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(128, AlwaysAcceptsSink), 16, apply_fake_delta);
     let surface = surface("s");
     let (presenter, _) = register_test_surface(&mut runtime, surface.clone());
@@ -339,6 +349,7 @@ fn one_fuel_slices_bound_an_intent_storm_and_preserve_fifo_output() {
 
 #[test]
 fn an_effect_storm_remains_resumable_and_retains_the_cycle_fault_semantics() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let entity = runtime.store_mut().insert(0i32);
     let looping = entity.clone();
@@ -354,6 +365,7 @@ fn an_effect_storm_remains_resumable_and_retains_the_cycle_fault_semantics() {
 
 #[test]
 fn repeated_new_input_supersedes_staged_presentation_without_losing_an_accepted_command() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
@@ -379,6 +391,7 @@ fn repeated_new_input_supersedes_staged_presentation_without_losing_an_accepted_
 
 #[test]
 fn cancellation_discards_an_active_node_cursor_without_advancing_the_surface_revision() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     fn clock() -> Option<u64> {
         Some(0)
     }
@@ -405,6 +418,7 @@ fn cancellation_discards_an_active_node_cursor_without_advancing_the_surface_rev
 
 #[test]
 fn deterministic_surface_order_is_independent_of_hash_map_insertion_order() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     fn build(order: [&str; 2]) -> UiRuntime<AlwaysAcceptsSink, FakeDelta> {
         let mut runtime = test_runtime();
         for surface in order {
@@ -424,6 +438,7 @@ fn deterministic_surface_order_is_independent_of_hash_map_insertion_order() {
 
 #[test]
 fn an_expired_wall_clock_budget_returns_before_consuming_input() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     fn clock() -> Option<u64> {
         Some(10)
     }
@@ -441,6 +456,7 @@ fn an_expired_wall_clock_budget_returns_before_consuming_input() {
 
 #[test]
 fn transaction_canonical_job_preserves_independent_node_credit() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔄️transaction/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut runtime = test_runtime();
@@ -455,6 +471,7 @@ fn transaction_canonical_job_preserves_independent_node_credit() {
 
 #[test]
 fn hard_credits_fault_before_any_candidate_snapshot_is_published() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     register_test_surface(&mut runtime, surface("s"));
     let mut transaction = FrameTransaction::new(FrameTransactionLimits { max_items: 0, max_nodes: 0, max_bytes: 0 });

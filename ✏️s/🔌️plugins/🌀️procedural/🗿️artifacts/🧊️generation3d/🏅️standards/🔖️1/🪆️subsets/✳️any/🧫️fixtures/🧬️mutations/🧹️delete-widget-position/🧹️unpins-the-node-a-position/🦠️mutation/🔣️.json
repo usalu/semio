@@ -1,5 +1,4 @@
 {
-  "DeleteWidgetPosition": {
-    "id": "node-a"
-  }
+  "mutation": "deleteWidgetPosition",
+  "id": "node-a"
 }

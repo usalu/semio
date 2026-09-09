@@ -16,5 +16,5 @@ pub struct NodeGraphViewport {
 }
 
 pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetCamera(crate::editor::generation3d::config::SetCamera { camera: payload.camera.clone() })]))
 }

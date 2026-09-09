@@ -13,7 +13,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, Profiler, useContext, useMemo, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ContextMenuController,
@@ -57,12 +57,19 @@ import {
 import { uiSpacingRem } from "@semio-tech/ui-styling";
 import {
   type ActionDescriptor,
+  type AppCatalogue,
   type ComponentKind,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
   type PluginContextMenuRequest,
   type UiComponentSceneNode,
   type UiMenuRef,
+  type World3dScene,
+  type World3dSceneLaneRef,
+  WORLD3D_SCENE_LANES,
+  WORLD3D_SCENE_LANE_KEY_PREFIX,
+  world3dSceneFromLanes,
+  world3dSceneLaneForBodyKey,
 } from "@semio-tech/framework";
 import {
   DEFAULT_UI_DOCUMENT_LIMITS,
@@ -383,7 +390,7 @@ function isWellFormedDocSchema(docSchema: string): boolean {
  * (both optional on `UiComponentSceneNode`). Returns `null`, never throws, on a malformed `docSchema`
  * or a decode failure — the caller renders a placeholder + logs the fault, per this ticket's own
  * "never throw, never drop the surrounding patch" rule for an unknown `doc_schema`. */
-function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps): UiComponentSceneNode | null {
+function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps, assemble?: SurfaceSceneAssembler): UiComponentSceneNode | null {
   if (!isWellFormedDocSchema(props.docSchema)) {
     console.error("[Interpreter] malformed Component::Surface docSchema", { nodeId: record.id, kind: props.kind, docSchema: props.docSchema });
     return null;
@@ -403,12 +410,23 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
     componentKind: props.kind,
     menu: menuRefFromContract(record.menu),
   };
-  if (sceneField && decoded !== undefined) node[sceneField] = decoded;
+  if (sceneField && decoded !== undefined) node[sceneField] = assemble ? assemble(decoded) : decoded;
   return node as unknown as UiComponentSceneNode;
 }
 
-function renderComponentSceneHost(record: UiNodeRecord, props: SurfaceProps, onAction: (action: ActionDescriptor) => void, requestContextMenu?: UiInterpreterContext["requestContextMenu"]): ReactNode {
-  const node = surfacePropsToComponentSceneNode(record, props);
+/** 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to. Only a
+ * scene kind that declares lanes has one (`world-3d`); every other kind renders its decoded doc
+ * verbatim. See {@link PagedSurfaceView}. */
+type SurfaceSceneAssembler = (spine: Record<string, unknown>) => Record<string, unknown>;
+
+function renderComponentSceneHost(
+  record: UiNodeRecord,
+  props: SurfaceProps,
+  onAction: (action: ActionDescriptor) => void,
+  requestContextMenu?: UiInterpreterContext["requestContextMenu"],
+  assemble?: SurfaceSceneAssembler,
+): ReactNode {
+  const node = surfacePropsToComponentSceneNode(record, props, assemble);
   if (!node) {
     return (
       <p className="text-muted-foreground text-xs" data-unknown-surface-schema={props.docSchema}>
@@ -437,6 +455,98 @@ function renderComponentSceneHost(record: UiNodeRecord, props: SurfaceProps, onA
     </ShellFaultBoundary>
   );
 }
+
+//#region 🚚️SurfaceSceneLanes
+/** 🚚️ Last COMPLETE text of one `${nodeId}:${lane}` carrier, keyed by the producer's own content
+ * hash. Two jobs, both load-bearing:
+ *
+ * 1. **Incremental per lane.** A lane whose hash is unchanged is never re-walked or re-concatenated,
+ *    so a camera nudge on a 57 KB Nakagin world costs one map lookup per lane instead of 57 KB of
+ *    string building — which matters because the spine changes on every frame the camera moves while
+ *    `instances` changes only when the document does.
+ * 2. **Partial arrival.** A surface tree larger than `SURFACE_RECONCILE_PAGE_BYTES` arrives across
+ *    several patches, so a spine can land before the leaves it declares. A lane whose concatenation
+ *    does not yet match the declared byte length falls back to its last complete text instead of
+ *    handing the host a truncated JSON string that would parse to nothing.
+ *
+ * Bounded by {@link SURFACE_SCENE_LANE_CACHE_ENTRIES} with plain insertion-order eviction — an entry
+ * is one lane of one live surface node, and a torn-down document simply stops touching its own. */
+const SURFACE_SCENE_LANE_CACHE_ENTRIES = 512;
+const surfaceSceneLaneCache = new Map<string, { readonly hash: string; readonly text: string }>();
+
+function rememberSurfaceSceneLane(key: string, hash: string, text: string): void {
+  surfaceSceneLaneCache.delete(key);
+  surfaceSceneLaneCache.set(key, { hash, text });
+  while (surfaceSceneLaneCache.size > SURFACE_SCENE_LANE_CACHE_ENTRIES) {
+    const oldest = surfaceSceneLaneCache.keys().next();
+    if (oldest.done) break;
+    surfaceSceneLaneCache.delete(oldest.value);
+  }
+}
+
+/** 📏️ UTF-8 length of a JS string without allocating a `Uint8Array` — the producer counts lane bytes
+ * in UTF-8 (`String::len` in Rust), so a lane carrying a German label must be compared in the same
+ * unit or its completeness check would never agree. */
+function utf8ByteLength(value: string): number {
+  let bytes = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 0x80) bytes += 1;
+    else if (code < 0x800) bytes += 2;
+    else if (code >= 0xd800 && code <= 0xdbff) {
+      bytes += 4;
+      index += 1;
+    } else bytes += 3;
+  }
+  return bytes;
+}
+
+/** 🧩️ Depth-first concatenation of every `text` leaf under `root` — the exact inverse of the plugin
+ * host's `paged_text_carrier`, and the same walk `sectionValueFromBuiltNode` does for a reserved
+ * refresh section. */
+function surfaceSceneLaneText(state: UiDocumentState, root: UiNodeRecord): string {
+  let payload = "";
+  const stack: UiNodeId[] = [...(root.children ?? [])].reverse();
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    const record = state.nodes.get(id);
+    if (!record) continue;
+    if (record.component.type === "text" && typeof record.component.value === "string") payload += record.component.value;
+    for (let index = (record.children ?? []).length - 1; index >= 0; index -= 1) stack.push(record.children[index]!);
+  }
+  return payload;
+}
+
+/** 🚚️ Collects one world-3d surface's arrived lane texts, keyed by reserved carrier key, ready for
+ * `world3dSceneFromLanes`. A lane the spine does not declare is ignored; a lane that is declared but
+ * not yet fully arrived falls back to its last complete text, or is omitted when there is none. */
+function world3dSurfaceLaneTexts(record: UiNodeRecord, state: UiDocumentState, declared: readonly World3dSceneLaneRef[]): ReadonlyMap<string, string> {
+  const texts = new Map<string, string>();
+  if (declared.length === 0) return texts;
+  const refByLane = new Map(declared.map((ref) => [ref.lane, ref]));
+  for (const childId of record.children ?? []) {
+    const child = state.nodes.get(childId);
+    if (!child) continue;
+    const lane = world3dSceneLaneForBodyKey(String(child.key));
+    const ref = lane && refByLane.get(lane.lane);
+    if (!lane || !ref) continue;
+    const cacheKey = `${record.id}:${lane.lane}`;
+    const cached = surfaceSceneLaneCache.get(cacheKey);
+    if (cached?.hash === ref.hash) {
+      texts.set(lane.bodyKey, cached.text);
+      continue;
+    }
+    const text = surfaceSceneLaneText(state, child);
+    if (utf8ByteLength(text) === ref.bytes) {
+      rememberSurfaceSceneLane(cacheKey, ref.hash, text);
+      texts.set(lane.bodyKey, text);
+    } else if (cached) {
+      texts.set(lane.bodyKey, cached.text);
+    }
+  }
+  return texts;
+}
+//#endregion 🚚️SurfaceSceneLanes
 //#endregion SurfaceBridge
 
 //#region UiInterpreterContext
@@ -451,6 +561,22 @@ export type UiInterpreterContext = {
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion UiInterpreterContext
+
+/** @emoji 🛍️ The APP-STATIC operator/palette catalogue for the app owning this subtree — fetched ONCE
+ * per app instance from the reserved `framework.section.catalogue` retained surface and cached by
+ * `ShellHost` for that instance's whole lifetime. Never read off a scene: with the real `brep`/`math`
+ * operator sets installed the payload is ~100 KB, more than three times the 32 KiB fixed per-surface
+ * admission every scene is encoded against, so carrying it per scene made the node-graph window
+ * unrenderable (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). A scene names an operator by KIND ID;
+ * this is where that kind's record, ports and palette entry come from. Declared here, beside the other
+ * scene-host contexts, so neither `ShellHost` (the provider) nor `NodeGraph` (the consumer) has to
+ * import the other for it. */
+export const AppCatalogueContext = createContext<AppCatalogue>(Object.freeze({}));
+
+/** @emoji 🛍️ Reads the nearest {@link AppCatalogueContext} — `{}` when no app instance provides one. */
+export function useAppCatalogue(): AppCatalogue {
+  return useContext(AppCatalogueContext);
+}
 
 export const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestContextMenu"]>(undefined);
 
@@ -1095,8 +1221,32 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
     return { handleDrop: () => dispatchTrigger(context, record, "drop") };
   }, [record, context]);
   return (
-    <Tree className="min-h-0 min-w-0 flex-1 overflow-auto" sections={sections} selectionMode="single" showLines dragAndDropController={dragController} sortableSections={sections.length > 1} />
+    <Tree
+      className="min-h-0 min-w-0 flex-1 overflow-auto"
+      sections={sections.length > 0 ? sections : [treeStatusSection(record)]}
+      selectionMode="single"
+      showLines
+      dragAndDropController={dragController}
+      sortableSections={sections.length > 1}
+    />
   );
+}
+
+/** @emoji 🦴 The one section a tree with NO resolvable `treeSection` child renders, so "still loading"
+ * and "genuinely nothing to show" are never the same blank rectangle.
+ *
+ * 🧯️ A panel body the shell has not received yet is `pendingPanelUiNode()` — a `tree` node with
+ * `activity: "loading"` and no children (`🖥️platform/🟦️.ts`) — and `<Tree sections={[]}/>` draws
+ * exactly nothing for it, which is how the inspection panel presented as an empty panel in the browser
+ * (measured 2026-09-09 21:05) while `refreshUi` reported ok. The root record's own `activity` is the
+ * contract's declared mechanism for this state, and it was the one thing this view dropped: a
+ * `treeSection` carries `loading`/`waiting` for exactly this purpose. An idle tree with no sections is
+ * a real, rendered empty body and says so instead. */
+function treeStatusSection(record: UiNodeRecord): TreeDataSection {
+  const loading = record.activity === "loading";
+  const waiting = record.activity === "waiting";
+  const status = loading || waiting ? interpLabel("ui.common.loadingSurface") : interpLabel("ui.common.noData");
+  return { id: `node-${record.id}-status`, label: status, defaultOpen: true, loading, waiting, items: [], emptyState: status };
 }
 //#endregion Tree
 
@@ -1105,8 +1255,27 @@ function ImageView({ record }: { readonly record: UiNodeRecord }) {
   return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} />;
 }
 
+/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`). Its `doc.bytes` carry only
+ * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
+ * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
+ * this node's own record, and a tree larger than one reconcile page arrives across several patches. */
+function PagedSurfaceView({ record, component, context }: { readonly record: UiNodeRecord; readonly component: Extract<Component, { type: "surface" }>; readonly context: UiInterpreterContext }) {
+  const store = context.store;
+  const revision = useUiDocumentRevision(store);
+  const assemble = useCallback(
+    (spine: Record<string, unknown>): Record<string, unknown> => {
+      void revision;
+      const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly World3dSceneLaneRef[]) : [];
+      return world3dSceneFromLanes(spine as unknown as World3dScene, world3dSurfaceLaneTexts(record, store.getState(), declared)) as unknown as Record<string, unknown>;
+    },
+    [record, store, revision],
+  );
+  return <>{renderComponentSceneHost(record, component, context.onAction, context.requestContextMenu, assemble)}</>;
+}
+
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
+  if (component.kind === "world-3d") return <PagedSurfaceView record={record} component={component} context={context} />;
   return <>{renderComponentSceneHost(record, component, context.onAction, context.requestContextMenu)}</>;
 }
 
@@ -1223,5 +1392,11 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onActi
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
+  await registerSurfaceSceneLaneTests(
+    import.meta.vitest,
+    { UiDocumentStore, UiNodeView, surfaceSceneLaneText, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, world3dSceneFromLanes, WORLD3D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey },
+    { url: import.meta.url },
+  );
 }
 //#endregion 🧪️Tests

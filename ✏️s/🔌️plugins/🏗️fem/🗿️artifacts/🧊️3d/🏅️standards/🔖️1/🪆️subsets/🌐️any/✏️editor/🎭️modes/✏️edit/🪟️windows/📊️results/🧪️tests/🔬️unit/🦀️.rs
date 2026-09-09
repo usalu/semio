@@ -45,15 +45,8 @@ async fn results_scene_includes_solid_vertex_colors_3d() {
     let snapshot = app.snapshot().expect("snapshot");
     let config = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem3dConfig::default() };
     let node = render(&snapshot, &config).expect("fixture surface admission");
-    let props = node
-        .children
-        .iter()
-        .find_map(|child| match &child.component {
-            semio_framework_ui_contract::Component::Surface(props) => Some(props),
-            _ => None,
-        })
-        .expect("world surface child");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");
+    let surface = node.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(surface).expect("assemble world scene");
     let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);
     assert!(scene.meshes_json.contains("\"colors\""), "expected a vertex colors array on the solid mesh data: {}", scene.meshes_json);

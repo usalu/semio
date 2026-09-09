@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "stdio",
+  "packageId": "semio:stdio",
+  "version": "0.1.0",
+  "nativeCodecs": [
+    {
+      "artifactKind": "s.stdio.gltf",
+      "artifactSchema": "stdio.gltf",
+      "packSchemaHash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
+      "factoryId": "stdio.native.gltf.v1",
+      "extension": "gltf"
+    },
+    {
+      "artifactKind": "stdio.avi",
+      "artifactSchema": "stdio.avi",
+      "packSchemaHash": "de0d04905741068debee64bacacaf53197ac57741bd12991074e49f34ab9c690",
+      "factoryId": "stdio.native.avi.v1",
+      "extension": "semio"
+    },
+    {
+      "artifactKind": "stdio.bcf",
+      "artifactSchema": "stdio.bcf",
+      "packSchemaHash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
+      "factoryId": "stdio.native.bcf.v1",
+      "extension": "bcf"
+    },
+    {
+      "artifactKind": "stdio.csv",
+      "artifactSchema": "stdio.csv",
+      "packSchemaHash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+      "factoryId": "stdio.native.csv.v1",
+      "extension": "csv"
+    },
+    {
+      "artifactKind": "stdio.deflate",
+      "artifactSchema": "stdio.deflate",
+      "packSchemaHash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+      "factoryId": "stdio.native.deflate.v1",
+      "extension": "zz"
+    },
+    {
+      "artifactKind": "stdio.docx",
+      "artifactSchema": "stdio.docx",
+      "packSchemaHash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+      "factoryId": "stdio.native.docx.v1",
+      "extension": "docx"
+    },
+    {
+      "artifactKind": "stdio.dwg",
+      "artifactSchema": "stdio.dwg",
+      "packSchemaHash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+      "factoryId": "stdio.native.dwg.v1",
+      "extension": "dwg"
+    },
+    {
+      "artifactKind": "stdio.dxf",
+      "artifactSchema": "stdio.dxf",
+      "packSchemaHash": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99",
+      "factoryId": "stdio.native.dxf.v1",
+      "extension": "dxf"
+    },
+    {
+      "artifactKind": "stdio.jpg",
+      "artifactSchema": "stdio.jpg",
+      "packSchemaHash": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",
+      "factoryId": "stdio.native.jpg.v1",
+      "extension": "jpg"
+    },
+    {
+      "artifactKind": "stdio.json",
+      "artifactSchema": "stdio.json",
+      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "factoryId": "stdio.native.json.v1",
+      "extension": "json"
+    },
+    {
+      "artifactKind": "stdio.las",
+      "artifactSchema": "stdio.las",
+      "packSchemaHash": "1017f34238855d14c9d3a101bc57759bf369905c897d91db23e44bb1cc7ef199",
+      "factoryId": "stdio.native.las.v1",
+      "extension": "las"
+    },
+    {
+      "artifactKind": "stdio.md",
+      "artifactSchema": "stdio.md",
+      "packSchemaHash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
+      "factoryId": "stdio.native.md.v1",
+      "extension": "md"
+    },
+    {
+      "artifactKind": "stdio.mp3",
+      "artifactSchema": "stdio.mp3",
+      "packSchemaHash": "3dc49d96a507fc2454bbb70e1d9958f08009bc3eb7db12da33c405ba148e7d6e",
+      "factoryId": "stdio.native.mp3.v1",
+      "extension": "mp3"
+    },
+    {
+      "artifactKind": "stdio.mp4",
+      "artifactSchema": "stdio.mp4",
+      "packSchemaHash": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915",
+      "factoryId": "stdio.native.mp4.v1",
+      "extension": "semio"
+    },
+    {
+      "artifactKind": "stdio.obj",
+      "artifactSchema": "stdio.obj",
+      "packSchemaHash": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787",
+      "factoryId": "stdio.native.obj.v1",
+      "extension": "obj"
+    },
+    {
+      "artifactKind": "stdio.pdf",
+      "artifactSchema": "stdio.pdf",
+      "packSchemaHash": "9f6de52d8be98fb427b4e2328b827b98a223494714c61b0bb5d44c2fa41fa7ce",
+      "factoryId": "stdio.native.pdf.v1",
+      "extension": "pdf"
+    },
+    {
+      "artifactKind": "stdio.ply",
+      "artifactSchema": "stdio.ply",
+      "packSchemaHash": "42ed85cd84beceab5a85f3d9784d66af517c0e85c843058411b52cb0b03cb40a",
+      "factoryId": "stdio.native.ply.v1",
+      "extension": "ply"
+    },
+    {
+      "artifactKind": "stdio.png",
+      "artifactSchema": "stdio.png",
+      "packSchemaHash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+      "factoryId": "stdio.native.png.v1",
+      "extension": "png"
+    },
+    {
+      "artifactKind": "stdio.pptx",
+      "artifactSchema": "stdio.pptx",
+      "packSchemaHash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+      "factoryId": "stdio.native.pptx.v1",
+      "extension": "pptx"
+    },
+    {
+      "artifactKind": "stdio.step",
+      "artifactSchema": "stdio.step",
+      "packSchemaHash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+      "factoryId": "stdio.native.step.v1",
+      "extension": "step"
+    },
+    {
+      "artifactKind": "stdio.stl",
+      "artifactSchema": "stdio.stl",
+      "packSchemaHash": "9c38a62ba3264c36c89a1e9aef6c3d993ce4419a13bbbdd15583d3e78e395440",
+      "factoryId": "stdio.native.stl.v1",
+      "extension": "stl"
+    },
+    {
+      "artifactKind": "stdio.svg",
+      "artifactSchema": "stdio.svg",
+      "packSchemaHash": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+      "factoryId": "stdio.native.svg.v1",
+      "extension": "svg"
+    },
+    {
+      "artifactKind": "stdio.tiff",
+      "artifactSchema": "stdio.tiff",
+      "packSchemaHash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+      "factoryId": "stdio.native.tiff.v1",
+      "extension": "tiff"
+    },
+    {
+      "artifactKind": "stdio.xlsx",
+      "artifactSchema": "stdio.xlsx",
+      "packSchemaHash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+      "factoryId": "stdio.native.xlsx.v1",
+      "extension": "xlsx"
+    },
+    {
+      "artifactKind": "stdio.xml",
+      "artifactSchema": "stdio.xml",
+      "packSchemaHash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+      "factoryId": "stdio.native.xml.v1",
+      "extension": "xml"
+    },
+    {
+      "artifactKind": "stdio.zip",
+      "artifactSchema": "stdio.zip",
+      "packSchemaHash": "dd8e607c9ce0dc46608d4fe57c72166e47013684ff0cd86407414332fc2391d2",
+      "factoryId": "stdio.native.zip.v1",
+      "extension": "zip"
+    }
+  ],
+  "openTargets": [
+    {
+      "artifactKind": "stdio.json",
+      "artifactSchema": "stdio.json",
+      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "factoryId": "stdio.native.json.v1",
+      "extension": "json",
+      "role": "editor",
+      "surfaceId": "stdio.json.editor"
+    }
+  ],
+  "publication": "committed",
+  "hubBundle": "withheld",
+  "componentAdmission": {
+    "status": "exceeds-limit",
+    "limitBytes": 67108864,
+    "byteLength": 376957060,
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🗄️stdio/semio_s_plugin_stdio_component.core.wasm"
+  }
+}

@@ -103,12 +103,12 @@ fn build_pcurve(surface: &Surface, curve3: &Curve3, tol: f64) -> (Curve2, bool) 
         (Surface::Plane { frame }, Curve3::Circle { frame: cf, radius }) => {
             let center = frame.to_local(cf.origin);
             let x_local = frame.to_local_vector(cf.x);
-            (Curve2::Ellipse { center: Pnt2::new(center.x, center.y), x_axis: Vec2::new(x_local.x, x_local.y), major_radius: *radius, minor_radius: *radius }, true)
+            (Curve2::Ellipse { center: Pnt2::new(center.x, center.y), x_axis: Vec2::new(x_local.x, x_local.y), major_radius: *radius, minor_radius: planar_pcurve_sense(frame, cf) * *radius }, true)
         }
         (Surface::Plane { frame }, Curve3::Ellipse { frame: cf, major_radius, minor_radius }) => {
             let center = frame.to_local(cf.origin);
             let x_local = frame.to_local_vector(cf.x);
-            (Curve2::Ellipse { center: Pnt2::new(center.x, center.y), x_axis: Vec2::new(x_local.x, x_local.y), major_radius: *major_radius, minor_radius: *minor_radius }, true)
+            (Curve2::Ellipse { center: Pnt2::new(center.x, center.y), x_axis: Vec2::new(x_local.x, x_local.y), major_radius: *major_radius, minor_radius: planar_pcurve_sense(frame, cf) * *minor_radius }, true)
         }
         (Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }, Curve3::Line { origin, dir }) => {
             if let (Some((_, axis_dir)), Some(unit)) = (super::shared::axis_of(surface), dir.normalized()) {
@@ -134,6 +134,28 @@ fn build_pcurve(surface: &Surface, curve3: &Curve3, tol: f64) -> (Curve2, bool) 
             sample_and_fit_pcurve(surface, curve3, tol)
         }
         _ => sample_and_fit_pcurve(surface, curve3, tol),
+    }
+}
+
+/// 🏄 `+1` or `−1`: whether a conic's own `(x, y)` frame maps onto the plane's local frame with
+/// the same handedness [`Curve2::Ellipse::eval`] assumes.
+///
+/// That evaluator derives its second axis as `x_axis.perp()` — a FIXED right-handed quarter turn in
+/// the plane's own local frame. When the conic's normal runs ANTI-parallel to the plane's (a
+/// cylinder's intersection circle against a box's bottom face, whose outward normal points the
+/// other way), the true second axis is the other one, and the p-curve traverses the conic backwards:
+/// every parameter maps to the ANTIPODE, `2r` away, which `validate_body`'s same-parameter check
+/// duly reported on every box-through-cylinder boolean. Negating `minor_radius` flips exactly that
+/// term — exact for either handedness, no fit — the same signed-radius convention
+/// `diff::offset::exact_pcurve_for_circle_on_plane` already documents.
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn planar_pcurve_sense(plane: &Frame3, conic: &Frame3) -> f64 {
+    let x = plane.to_local_vector(conic.x);
+    let y = plane.to_local_vector(conic.y);
+    if x.x * y.y - x.y * y.x >= 0.0 {
+        1.0
+    } else {
+        -1.0
     }
 }
 

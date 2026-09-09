@@ -1873,6 +1873,52 @@ export function gisMapInferencePortRoleV1(phase: GisMapInferencePortPhaseV1): "s
   return gisMapInferencePortTerminalV1(phase) ? "alert" : "status";
 }
 
+/** 🗺️ Equirectangular host overlay of one offered preview ring. Inspection only; never document state. */
+export type GisMapInferencePreviewOverlayV1 = {
+  readonly regionId: string;
+  readonly viewBox: "0 0 100 100";
+  readonly path: string;
+};
+
+export type GisMapInferencePortAffordancesV1 = {
+  readonly request: boolean;
+  readonly cancel: boolean;
+  readonly reject: boolean;
+  readonly approve: boolean;
+  readonly overlay: boolean;
+};
+
+function gisMapInferenceOverlayCoordV1(value: number): string {
+  return Number.isInteger(value) ? String(value) : String(value);
+}
+
+/** 🗺️ Projects the server ring onto a closed SVG path in a 100×100 viewBox. */
+export function projectGisMapInferencePreviewOverlayV1(preview: GisMapInferencePreviewV1): GisMapInferencePreviewOverlayV1 {
+  const lons = preview.ring.map((point) => point[0]);
+  const lats = preview.ring.map((point) => point[1]);
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const lonSpan = maxLon - minLon || 1;
+  const latSpan = maxLat - minLat || 1;
+  const points = preview.ring.map(([lon, lat]) => `${gisMapInferenceOverlayCoordV1(((lon - minLon) / lonSpan) * 100)} ${gisMapInferenceOverlayCoordV1(((maxLat - lat) / latSpan) * 100)}`);
+  return { regionId: preview.regionId, viewBox: "0 0 100 100", path: `M ${points.join(" L ")} Z` };
+}
+
+/** 🎛️ Closed host chrome for one port status. Reject and approve share the offered preview gate. */
+export function gisMapInferencePortAffordancesV1(status: GisMapInferencePortStatusV1): GisMapInferencePortAffordancesV1 {
+  const terminal = gisMapInferencePortTerminalV1(status.phase);
+  const previewOk = status.preview !== undefined && status.preview.proposalHash === status.proposalHash && status.preview.jobId === status.jobId;
+  return {
+    request: status.phase === "idle",
+    cancel: !terminal && status.phase !== "idle" && status.phase !== "offered" && !status.cancelRequested,
+    reject: status.phase === "offered" && previewOk && !status.cancelRequested,
+    approve: status.phase === "offered" && status.proposalHash !== null && previewOk && !status.cancelRequested,
+    overlay: (status.phase === "offered" || status.phase === "approving") && previewOk,
+  };
+}
+
 /** 🗺️ Projects one exact server page onto a rendered phase. `stale` outranks everything (the base
  * the job was accepted against is gone), then the job's own terminal states, then the proposal's. */
 function gisMapInferenceServerPhaseV1(page: GisMapInferenceEventPageV1): GisMapInferencePortPhaseV1 {
@@ -1983,15 +2029,18 @@ export const GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1: Readonly<Record<GisMapInferenc
 });
 
 /** 🌐️ Complete localized control and region labels, EN and DE both explicit. */
-export const GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1: Readonly<Record<"heading" | "cancel" | "approve" | "close" | "progress" | "region" | "longitude" | "latitude", Readonly<Record<"en" | "de", string>>>> = Object.freeze({
+export const GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1: Readonly<Record<"heading" | "request" | "cancel" | "reject" | "approve" | "close" | "progress" | "region" | "longitude" | "latitude" | "overlay", Readonly<Record<"en" | "de", string>>>> = Object.freeze({
   heading: Object.freeze({ en: "Bounds proposal", de: "Begrenzungsvorschlag" }),
+  request: Object.freeze({ en: "Request bounds proposal", de: "Begrenzungsvorschlag anfordern" }),
   cancel: Object.freeze({ en: "Cancel proposal", de: "Vorschlag abbrechen" }),
+  reject: Object.freeze({ en: "Reject proposal", de: "Vorschlag ablehnen" }),
   approve: Object.freeze({ en: "Approve proposal", de: "Vorschlag freigeben" }),
   close: Object.freeze({ en: "Close proposal", de: "Vorschlag schließen" }),
   progress: Object.freeze({ en: "Proposal progress", de: "Fortschritt des Vorschlags" }),
   region: Object.freeze({ en: "Region", de: "Gebiet" }),
   longitude: Object.freeze({ en: "Longitude extent", de: "Längengradbereich" }),
   latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" }),
+  overlay: Object.freeze({ en: "Proposed bounds on the map", de: "Vorgeschlagene Grenzen auf der Karte" }),
 });
 
 function gisMapInferenceHex(value: unknown, length: number): string {

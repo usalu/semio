@@ -5460,6 +5460,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-ui",
  "semio-framework-ui-backend-webgpu",
+ "semio-framework-ui-contract",
  "semio-framework-ui-styling",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-semio",

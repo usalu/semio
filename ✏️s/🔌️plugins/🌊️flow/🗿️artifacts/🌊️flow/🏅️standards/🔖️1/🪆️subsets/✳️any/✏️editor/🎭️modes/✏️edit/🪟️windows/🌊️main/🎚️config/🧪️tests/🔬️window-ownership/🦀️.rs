@@ -132,7 +132,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     for pack in config_packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                     let reopened_left = scene(&mut reopened, &left).await?.viewport.ok_or("reopened left Flow viewport missing")?;
                     let reopened_right = scene(&mut reopened, &right).await?.viewport.ok_or("reopened right Flow viewport missing")?;
-                    testkit::close_registered_fixture_app(&mut reopened);
+                    testkit::close_registered_fixture_app(&mut *reopened);
                     if reopened_left != left_viewport || reopened_right != right_viewport { return Err("Flow persisted window config changed during restore".into()); }
                     let stale = ViewModel { window_id: Some("lost-flow-window".into()), window_instances: view.window_instances.clone(), ..Default::default() };
                     if addressed(&stale, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted stale window identity".into()); }
@@ -141,7 +141,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     Ok(())
                 }.await;
                 if let Err(error) = &outcome { eprintln!("[DEBUG] Flow exact-window runtime failure before close: {error}"); }
-                testkit::close_registered_fixture_app(&mut app);
+                testkit::close_registered_fixture_app(&mut *app);
                 outcome.expect("Flow exact-window ownership runtime law");
                 eprintln!("[DEBUG] Flow runtime isolated two same-kind cameras/settings, restored config, preserved document bytes, cleared transient on reload, and rejected stale/wrong windows");
             })

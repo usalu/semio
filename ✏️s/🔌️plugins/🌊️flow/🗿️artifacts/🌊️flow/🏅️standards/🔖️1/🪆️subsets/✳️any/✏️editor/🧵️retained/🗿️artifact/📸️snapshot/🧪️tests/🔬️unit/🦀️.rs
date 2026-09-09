@@ -46,7 +46,7 @@ mod tests {
                         let content = crate::flow_content_child_handle_and_cache(vec![semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text }], vec![], Default::default());
                         close_lane!(FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), content }, App::build_document_store_owners(), App::build_document_store_disposer());
                     }
-                    "config" => continue
+                    "config" => continue,
                     "draft" => {
                         assert_eq!(size_of::<semio_framework_plugin::NoDraft>(), 0);
                         assert_eq!(size_of::<semio_framework_plugin::NoDraftMutation>(), 0);

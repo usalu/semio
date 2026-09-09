@@ -124,10 +124,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
 ) -> Result<T, semio_framework::Fault> {
     let started_us = semio_framework_job::default_now_us();
-    let turn_seq = TURN_TRACE.with(|seq| { let next = seq.get() + 1; seq.set(next); next });
-    if turn_seq.is_multiple_of(256) {
-        eprintln!("[DEBUG] turn {turn_seq} begin events={} page={}", events.len(), command_page.is_some());
-    }
+    let _turn_seq = TURN_TRACE.with(|seq| { let next = seq.get() + 1; seq.set(next); next });
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
     let mut focus = None;
@@ -177,12 +174,17 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     let _ = step_reactor_close()?;
     let _ = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one());
     PATCHES.with(|patches| {
-        patches.close_step();
+        for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+            if patches.close_step() {
+                break;
+            }
+        }
     });
     let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)?;
     let _ = ui_contract::close_ui_document_page_one();
     let _ = ui_contract::close_ui_patch_owner_one();
     let _ = ui_contract::close_ui_value_page_one();
+    let _ = ui_contract::close_built_node_page_one();
     let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
     let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
     let _ = crate::app::close_table_rows_view_one();
@@ -785,7 +787,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         .with(|patches| -> Result<bool, &'static str> {
             let opportunities = reconcile_step_opportunities(budget.fuel);
             let deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
-            let mut more = patches.has_work();
+            let mut more = patches.has_publishable_work();
             for opportunity in 0..opportunities {
                 if !more {
                     break;
@@ -793,7 +795,8 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
                     break;
                 }
-                more = patches.drive_one();
+                patches.drive_one();
+                more = patches.has_publishable_work();
                 let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
                 if can_publish {
                     if let Some((key, generation)) = patches.ready_patch_key()? {
@@ -812,7 +815,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                     }
                 }
             }
-            Ok(more || patches.has_work() || with_pending_patches(|pending| pending.borrow().has_unpublished()))
+            Ok(more || patches.has_publishable_work() || with_pending_patches(|pending| pending.borrow().has_unpublished()))
         })
         .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-reconcile-authority"), reason))?;
     if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
@@ -843,13 +846,15 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     MORE_WORK_TRACE.with(|trace| {
         let mut trace = trace.borrow_mut();
         let (streak, seen) = if more_work { (trace.0 + 1, trace.1 + 1) } else { (0, trace.1) };
-        if more_work && (streak.is_power_of_two() || streak % 4096 == 0) {
+        if more_work && streak >= 2048 && (streak.is_power_of_two() || streak % 4096 == 0) {
             eprintln!(
-                "[DEBUG] reactor more-work streak={streak} seen={seen} executor_deadline={} close_cleanup={close_cleanup_work} typed_operation={typed_operation_work} reconcile={reconcile_work} resumes={resumes_remain} executor_pending={executor_pending} command_ingress={command_ingress_pending} lifecycle={lifecycle_work} effects={}",
+                "[DEBUG] reactor more-work streak={streak} seen={seen} executor_deadline={} close_cleanup={close_cleanup_work} typed_operation={typed_operation_work} reconcile={reconcile_work} resumes={resumes_remain} executor_pending={executor_pending} command_ingress={command_ingress_pending} lifecycle={lifecycle_work} effects={} patches=[{}] pending=[{}]",
                 more_work && !(close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work),
-                effects.len()
+                effects.len(),
+                PATCHES.with(patches::PatchTracker::debug_state),
+                with_pending_patches(|pending| pending.borrow().debug_state())
             );
-        } else if !more_work && trace.0 >= 64 {
+        } else if !more_work && trace.0 >= 2048 {
             eprintln!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0);
         }
         *trace = (streak, seen);
@@ -877,9 +882,6 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         hub.expire(now_ms);
         hub.flush()
     });
-    if turn_seq.is_multiple_of(256) {
-        eprintln!("[DEBUG] turn {turn_seq} end more_work={more_work}");
-    }
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
     let mut result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
@@ -930,23 +932,21 @@ fn pump_process_worker_pool() -> bool {
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
         let mut pumps = 0;
-        let before = pool.try_cooperative_snapshot();
         while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
             let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
             pool.pump(now_ms);
             pumps += 1;
         }
-        let remaining = pool.has_pending_work();
-        if remaining && pumps == PROCESS_POOL_PUMPS_PER_TURN {
-            eprintln!("[DEBUG] pool pumps={pumps} remaining={remaining} before={before:?} after={:?}", pool.try_cooperative_snapshot());
-        }
-        remaining
+        pool.has_pending_work()
     }
     #[cfg(not(target_arch = "wasm32"))]
     false
 }
 
 /// 🏃️ Upper bound on process-pool pumps per reactor turn on wasm.
+/// 🧹️ Retained terminal retirement units per reactor turn — background cleanup that never holds the
+/// actor in `more-work`, bounded so one turn stays inside its interactive ceiling.
+const PATCH_CLOSE_UNITS_PER_TURN: usize = 8;
 #[cfg(target_arch = "wasm32")]
 const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
 /// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.

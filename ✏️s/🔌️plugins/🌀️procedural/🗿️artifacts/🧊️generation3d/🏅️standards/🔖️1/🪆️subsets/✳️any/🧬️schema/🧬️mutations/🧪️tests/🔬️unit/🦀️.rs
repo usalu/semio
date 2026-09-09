@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot;
+use crate::standards::v1::subsets::any::schema::default_generation3d_snapshot;
 use change_generation_value::ChangeGenerationValue;
 use change_schema::ChangeSchema;
 use connect_synapse::ConnectSynapse;
@@ -19,13 +19,14 @@ use update_camera::UpdateCamera;
 use update_synapse::UpdateSynapse;
 use update_widget::UpdateWidget;
 
-fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> Generation3dSnapshot {
-    let forward = vcs::apply_mutation(projection, operation).expect("valid mutation").0;
-    let mut restored = forward.clone();
+fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead {
+    let mut forward = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection.clone());
+    apply_generation3d_mutation(&mut forward, operation).expect("valid mutation");
+    let mut restored = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*forward).clone());
     for back in operation.inverse(projection) {
-        restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
+        apply_generation3d_mutation(&mut restored, &back).expect("valid inverse mutation");
     }
-    assert_eq!(&restored, projection, "inverse(base) must restore the pre-operation document");
+    assert_eq!(restored, *projection, "inverse(base) must restore the pre-operation document");
     forward
 }
 
@@ -61,21 +62,22 @@ fn every_variant_registers_an_approved_semantic_descriptor() {
 
 #[semio_framework_async_macros::async_test]
 async fn store_applies_widget_create() {
-    let mut store = ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d", empty_generation3d_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::store_fixture::document_store(default_generation3d_snapshot()).await;
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
     assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
+    crate::store_fixture::close(store);
 }
 
 #[test]
 fn create_widget_round_trips() {
-    let before = empty_generation3d_snapshot();
+    let before = default_generation3d_snapshot();
     let after = round_trip(&before, &Generation3dMutation::CreateWidget(CreateWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }));
     assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
 }
 
 #[test]
 fn generation_op_round_trips() {
-    let before = empty_generation3d_snapshot();
+    let before = default_generation3d_snapshot();
     let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
     let after = round_trip(&before, &Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
     assert_eq!(after.generation.generations.len(), 1);
@@ -129,11 +131,13 @@ fn generation3d_fixture_operations_detects_widget_synapse_layout_schema_changes(
     assert!(operations.contains(&Generation3dMutation::MoveWidget(MoveWidget { id: "l-keep".into(), layout: WidgetLayout { x: 2.0, y: 2.0 } })));
     assert!(operations.contains(&Generation3dMutation::MoveWidget(MoveWidget { id: "l-new".into(), layout: WidgetLayout { x: 3.0, y: 3.0 } })));
     assert!(operations.contains(&Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "new-schema".into() })));
+    before.retire_cold();
+    after.retire_cold();
 }
 
 #[test]
 fn update_widget_round_trip_replaces_existing_widget_by_id() {
-    let mut before = empty_generation3d_snapshot();
+    let mut before = default_generation3d_snapshot();
     before.fixture.widgets.clear();
     before.fixture.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
     let after = round_trip(&before, &Generation3dMutation::UpdateWidget(UpdateWidget { widget: Widget::InputNote { id: "note-9".into(), text: "new".into() } }));
@@ -143,13 +147,13 @@ fn update_widget_round_trip_replaces_existing_widget_by_id() {
 
 #[test]
 fn inverse_delete_widget_when_missing_returns_empty() {
-    let projection = empty_generation3d_snapshot();
+    let projection = default_generation3d_snapshot();
     assert!(Generation3dMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }).inverse(&projection).is_empty());
 }
 
 #[test]
 fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
-    let mut before = empty_generation3d_snapshot();
+    let mut before = default_generation3d_snapshot();
     before.fixture.synapses.clear();
     before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
     let after = round_trip(&before, &Generation3dMutation::UpdateSynapse(UpdateSynapse { synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } }));
@@ -159,43 +163,66 @@ fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
 
 #[test]
 fn inverse_disconnect_synapse_when_missing_returns_empty() {
-    let projection = empty_generation3d_snapshot();
+    let projection = default_generation3d_snapshot();
     assert!(Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ghost".into() }).inverse(&projection).is_empty());
+}
+
+/// 📍️ `move-widget` addresses a widget that must already exist — the position map is an override
+/// on a live widget, never a free-standing entry — so the base has to carry `extrude` itself
+/// (`📍️move-widget/🔺️diff/🦀️.rs`'s `mutation.target-missing` branch).
+fn snapshot_with_extrude_widget() -> Generation3dSnapshot {
+    let mut base = default_generation3d_snapshot();
+    base.fixture.widgets.push(Widget::InputNote { id: "extrude".into(), text: String::new() });
+    base
 }
 
 #[test]
 fn move_widget_round_trip_inserts_when_absent() {
-    let before = empty_generation3d_snapshot();
+    let before = snapshot_with_extrude_widget();
     let after = round_trip(&before, &Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }));
     assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    before.retire_cold();
 }
 
 #[test]
 fn move_widget_round_trip_replaces_when_present() {
-    let mut before = empty_generation3d_snapshot();
+    let mut before = snapshot_with_extrude_widget();
     before.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
     let after = round_trip(&before, &Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 5.0, y: 6.0 } }));
     assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
+    before.retire_cold();
+}
+
+/// 🚫️ A `move-widget` whose target widget does not exist is REJECTED, and the projection is left
+/// byte-identical — `apply_generation3d_mutation` must never return the unchanged base as implicit
+/// success (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`'s `MutationDiff` contract).
+#[test]
+fn move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouched() {
+    let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(default_generation3d_snapshot());
+    let error = apply_generation3d_mutation(&mut projection, &Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })).expect_err("a missing move target must be rejected");
+    assert_eq!(error.code, "mutation.target-missing");
+    assert_eq!(*projection, default_generation3d_snapshot());
 }
 
 #[test]
 fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_empty() {
-    let mut projection = empty_generation3d_snapshot();
+    let mut projection = default_generation3d_snapshot();
     projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
     assert_eq!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }).inverse(&projection), vec![Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })]);
     assert!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }).inverse(&projection).is_empty());
+    projection.retire_cold();
 }
 
 #[test]
 fn update_camera_round_trip_updates_camera() {
-    let before = empty_generation3d_snapshot();
+    let before = default_generation3d_snapshot();
     let after = round_trip(&before, &Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));
     assert_eq!(after.fixture.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
 }
 
 #[test]
 fn change_schema_round_trip_updates_schema() {
-    let before = empty_generation3d_snapshot();
+    let before = default_generation3d_snapshot();
     let after = round_trip(&before, &Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }));
     assert_eq!(after.fixture.schema, "flow.fixture.v2");
 }
@@ -208,7 +235,7 @@ fn change_schema_round_trip_updates_schema() {
 /// (`update-camera`).
 #[semio_framework_async_macros::async_test]
 async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
-    let base = empty_generation3d_snapshot();
+    let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
     semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -218,7 +245,10 @@ async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
-    let base = empty_generation3d_snapshot();
+    let mut base = default_generation3d_snapshot();
+    base.fixture.widgets.push(Widget::InputNote { id: "a".into(), text: String::new() });
+    base.fixture.widgets.push(Widget::InputNote { id: "b".into(), text: String::new() });
+    let base = base;
     let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
     semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -228,7 +258,7 @@ async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
 
 #[semio_framework_async_macros::async_test]
 async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
-    let base = empty_generation3d_snapshot();
+    let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
     semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -255,3 +285,4 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+

@@ -13,6 +13,7 @@
 //! roughly the eleventh object.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
+use std::collections::HashMap;
 use crate::editor::puzzle3d::{
     puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE,
     PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
@@ -190,13 +191,15 @@ fn attraction_row(attraction: &Puzzle3dAttraction) -> UiAssemblyResult<BuiltNode
 //#endregion 🔖️Rows
 
 //#region 🔖️Paging
-/// 🧮️ Interactive rows this render may materialise across every section together: the panel-page ceiling
-/// the UI contract declares, clamped by what the process-wide argument arena still admits. The clamp is
-/// what makes the builder total — a document an order of magnitude past the page, or a process whose other
-/// panels already hold their own pages, yields a shorter page with continuation rows instead of a
-/// `ui.fixed-capacity` refusal in the middle of one row's argument map.
+// 🧾️ The virtualised-panel paging law itself lives in the SDK
+// (`semio_framework_plugin::{panel_page_rows, PanelRowBudget, panel_continuation_row, paged_panel_section}`)
+// so every panel that outgrows one `UI_VALUE_PAGE_ROWS` page — this document tree, the procedural
+// operator catalogue — pages identically. This module keeps only the puzzle3d-specific quota and the
+// names its own laws already read.
+
+/// 🧮️ See `semio_framework_plugin::panel_page_rows`.
 pub fn page_rows() -> usize {
-    ui::UI_VALUE_PAGE_ROWS.min(ui::ui_value_headroom().rows())
+    semio_framework_plugin::panel_page_rows()
 }
 
 /// 🔒️ One page at a time under test. Every law that materialises a whole panel page draws on the
@@ -206,66 +209,48 @@ pub fn page_rows() -> usize {
 #[cfg(test)]
 pub(crate) static PANEL_PAGE_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-/// 🧮️ The row allowance one render spends, in the order its sections and their nested rows are assembled.
-pub struct RowBudget(usize);
+/// 🧮️ See `semio_framework_plugin::PanelRowBudget`.
+pub type RowBudget = semio_framework_plugin::PanelRowBudget;
 
-impl RowBudget {
-    /// 🧮️ Opens a budget of `rows` interactive rows.
-    pub fn new(rows: usize) -> Self {
-        Self(rows)
-    }
-
-    /// 🪙️ Claims one row, or refuses when the page is spent.
-    pub fn spend(&mut self) -> bool {
-        match self.0.checked_sub(1) {
-            Some(remaining) => {
-                self.0 = remaining;
-                true
-            }
-            None => false,
-        }
-    }
-
-    /// 🧮️ Runs a nested build against an allowance that cannot reach the `reserved` rows its siblings still
-    /// need, then settles what the nesting actually spent. Used at both levels — a section reserves the
-    /// sections after it, a row reserves its section's remaining rows. Without it one wide parent (an object
-    /// kind declaring dozens of vortex templates) consumes the whole page and its own section shows four rows.
-    pub fn nested<R>(&mut self, reserved: usize, build: impl FnOnce(&mut Self) -> R) -> R {
-        let allowance = self.0.saturating_sub(reserved);
-        let mut lent = Self(allowance);
-        let built = build(&mut lent);
-        self.0 -= allowance - lent.0;
-        built
-    }
-}
-
-/// ➕️ The row standing in for what a truncated section left out. Its label is the omitted count alone:
-/// a digit string carries the same meaning on every locale×terminology axis this app authors, so paging
-/// stays visible in the tree without inventing an eleventh label the terminology gate would have to pin.
+/// ➕️ See `semio_framework_plugin::panel_continuation_row`.
 pub fn continuation_row(section_id: &str, omitted: usize) -> UiAssemblyResult<BuiltNode> {
-    ui::tree_item(ui_label(format!("+{omitted}"))?)
-        .try_id(format!("{section_id}.more"))
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation id admission failed"))?
-        .icon(UiText::try_from_str("ellipsis").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation icon admission failed"))?)
-        .try_build()
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document continuation row admission failed"))
+    continuation_row_from(section_id, omitted, None)
 }
 
-/// 🗂️ One section's page: rows materialised while both [`SECTION_ROWS`] and the shared [`RowBudget`]
-/// last, followed by a continuation row whenever entries were left out. `row` spends further budget on its
-/// own nested rows — an object's vortices, an object kind's vortex templates — through
-/// [`RowBudget::nested`], so the slots this section's later rows still need are never consumed by an
-/// earlier row's children.
-///
-/// 🛟️ A refused admission ends the section instead of the render. [`page_rows`] reads the arena once, but
-/// the arena is process-global and another panel, plugin or worker may take credit mid-build, so the
-/// clamp alone cannot make this total — the section stops where the credit stopped and says so with its
-/// continuation row. Only a non-capacity fault (a malformed action argument) still propagates.
-pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget, mut row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn page_action(section_id: &str, page: u32) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)> {
+    action("setPanelPage", Some(ui_value_map([("page", ui_value_number(f64::from(page))), ("section", ui_value_text(section_id)?)])?))
+}
+
+/// 📄 Continuation that names the omitted count and, when a next page exists, advances `setPanelPage`.
+pub fn continuation_row_from(section_id: &str, omitted: usize, next_page: Option<u32>) -> UiAssemblyResult<BuiltNode> {
+    match next_page {
+        Some(page) => selectable_item(format!("{section_id}.more"), format!("+{omitted}"), "ellipsis", page_action(section_id, page))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d continuation row admission failed")),
+        None => semio_framework_plugin::panel_continuation_row(section_id, omitted),
+    }
+}
+
+fn section_page(pages: &HashMap<String, u32>, section_id: &str, len: usize) -> usize {
+    if len == 0 {
+        return 0;
+    }
+    let max_page = (len - 1) / SECTION_ROWS;
+    (pages.get(section_id).copied().unwrap_or(0) as usize).min(max_page)
+}
+
+/// 🗂️ See `semio_framework_plugin::paged_panel_section` — bound to this panel's own [`SECTION_ROWS`] quota.
+pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget, row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    paged_section_from(section_id, entries, &HashMap::new(), budget, row)
+}
+
+/// 📄 One section page starting at the cursor in `pages`, with an Activate continuation that advances it.
+pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &HashMap<String, u32>, budget: &mut RowBudget, mut row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let page = section_page(pages, section_id, entries.len());
+    let offset = page.saturating_mul(SECTION_ROWS).min(entries.len());
+    let slice = &entries[offset..];
     let mut items = UiFixedList::<BuiltNode>::default();
-    let quota = entries.len().min(SECTION_ROWS);
+    let quota = slice.len().min(SECTION_ROWS);
     let mut placed = 0;
-    for entry in entries {
+    for entry in slice {
         if placed == SECTION_ROWS || !budget.spend() {
             break;
         }
@@ -283,8 +268,8 @@ pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget,
             break;
         }
     }
-    if placed < entries.len() {
-        if let Ok(more) = continuation_row(section_id, entries.len() - placed) {
+    if placed < slice.len() {
+        if let Ok(more) = continuation_row_from(section_id, slice.len() - placed, Some(page as u32 + 1)) {
             let _ = items.try_push(more);
         }
     }
@@ -296,11 +281,16 @@ pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget,
 /// 🌳️ The four document sections as one bounded page, memoized by the app against the fixture's geometry
 /// fingerprint and the resolved label set.
 pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
+    render_from(fixture, labels, &HashMap::new())
+}
+
+/// 📄 Same tree as [`render`], starting each section at its `setPanelPage` cursor.
+pub fn render_from(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> UiAssemblyResult<BuiltNode> {
     let budget = &mut RowBudget::new(page_rows());
-    let objects = budget.nested(SECTIONS - 1, |share| paged_section(&format!("{ROOT}.objects"), &fixture.objects, share, |object, share| object_row(object, labels, share)))?;
-    let references = budget.nested(SECTIONS - 2, |share| paged_section(&format!("{ROOT}.references"), &fixture.references, share, |reference, _| reference_row(reference, labels)))?;
-    let target_volumes = budget.nested(SECTIONS - 3, |share| paged_section(&format!("{ROOT}.target-volumes"), &fixture.target_volumes, share, |volume, _| target_volume_row(volume, labels)))?;
-    let attractions = budget.nested(SECTIONS - 4, |share| paged_section(&format!("{ROOT}.attractions"), &fixture.attractions, share, |attraction, _| attraction_row(attraction)))?;
+    let objects = budget.nested(SECTIONS - 1, |share| paged_section_from(&format!("{ROOT}.objects"), &fixture.objects, pages, share, |object, share| object_row(object, labels, share)))?;
+    let references = budget.nested(SECTIONS - 2, |share| paged_section_from(&format!("{ROOT}.references"), &fixture.references, pages, share, |reference, _| reference_row(reference, labels)))?;
+    let target_volumes = budget.nested(SECTIONS - 3, |share| paged_section_from(&format!("{ROOT}.target-volumes"), &fixture.target_volumes, pages, share, |volume, _| target_volume_row(volume, labels)))?;
+    let attractions = budget.nested(SECTIONS - 4, |share| paged_section_from(&format!("{ROOT}.attractions"), &fixture.attractions, pages, share, |attraction, _| attraction_row(attraction)))?;
     PanelTreeBuilder::new(ROOT)?
         .section(format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, objects)?
         .section(format!("{ROOT}.references"), Some(ui_label(labels.references.as_str())?), false, references)?

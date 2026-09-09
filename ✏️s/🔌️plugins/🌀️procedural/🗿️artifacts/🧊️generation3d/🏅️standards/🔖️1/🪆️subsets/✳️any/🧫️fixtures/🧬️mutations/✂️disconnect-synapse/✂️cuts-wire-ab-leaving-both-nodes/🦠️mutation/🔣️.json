@@ -1,5 +1,4 @@
 {
-  "DisconnectSynapse": {
-    "id": "wire-ab"
-  }
+  "mutation": "disconnectSynapse",
+  "id": "wire-ab"
 }

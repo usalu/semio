@@ -79,4 +79,9 @@ semio-framework-value-derive = { path = "../../../../../../../🧰️framework/�
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🚪️ Test-only `entrypoint`: `one_framework_reserved_route_fits_a_bounded_thread_stack` drives one
+# `interactionSelect` on a deliberately small OS thread, and only `block_on` can pump a future from
+# inside a `std::thread` the test spawned itself (the `#[async_test]` executor is bound to libtest's
+# own thread). Dev-only, so no interactive-reachable build ever sees the gate open.
+semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async", features = ["entrypoint"] }
 wasmtime = { version = "47.0.3", features = ["cranelift"] }

@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
@@ -37,8 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
-    let host = host_from_fixture(fixture);
-    let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+    let (nodes, edges) = with_host(fixture, |host| fixture_to_workflow(&host.dag.fixture));
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     // 🕹️ `render` carries no `InteractionView` and `NodeGraphScene` has no `interaction_domain` field
@@ -51,8 +50,6 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
         &NodeGraphScene {
             editable: Some(true),
-            operators: flow_extras.operators,
-            catalogue_json: flow_extras.catalogue_json,
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json,

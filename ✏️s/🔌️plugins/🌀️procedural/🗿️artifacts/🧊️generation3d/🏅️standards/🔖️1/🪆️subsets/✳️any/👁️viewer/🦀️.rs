@@ -74,6 +74,10 @@ const GENERATION3D_VIEW_RAW_BYTES: usize = 8_192;
 /// 🎒️ One config edit plus the ephemeral presence/transient completion — the evaluation itself is
 /// chunked across `step()` calls, not across work items.
 const GENERATION3D_VIEW_WORK_ITEMS: usize = 8;
+/// 🎛️ Admission envelope for ONE encoded viewer config mutation on the config publication lane —
+/// the largest is `setCamera`'s two coordinate triples plus a fov, so 8 KiB is the same real
+/// ceiling `GENERATION3D_VIEW_RAW_BYTES` places on the wire payload it is decoded from.
+const GENERATION3D_VIEW_CONFIG_STORE_MAXIMUM_BYTES: usize = GENERATION3D_VIEW_RAW_BYTES;
 
 fn generation3d_view_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_RAW_BYTES, 32, 32, 16_384, 7_500)
@@ -127,6 +131,9 @@ struct Generation3dViewCommandWork {
     emit: Option<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>>,
     presence: Vec<Generation3dViewPresenceMutation>,
     host: Option<FlowHost>,
+    /// 🧹️ The host's explicit retirement ladder — a bare `Option<FlowHost>::take()`-and-drop panics
+    /// on the cloned fixture's `OrderedMap<WidgetLayout>` root, so it is drained under the grant.
+    host_retirement: Option<semio_framework_os_flow::FlowHostRetirement>,
     session: Option<FlowEvalSession>,
     started: bool,
     complete: bool,
@@ -135,7 +142,7 @@ struct Generation3dViewCommandWork {
 
 impl Generation3dViewCommandWork {
     fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, emit: None, presence: Vec::new(), host: None, session: None, started: false, complete: false, closing: false }
+        Self { tool_id, emit: None, presence: Vec::new(), host: None, host_retirement: None, session: None, started: false, complete: false, closing: false }
     }
 
     fn finish(&mut self, eval_text: Option<String>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
@@ -177,7 +184,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
                 Generation3dViewPresenceMutation::from(crate::viewer::generation3d::presence::SetShowMode { value: next.show_mode.clone() }),
             ];
             self.emit = Some(emit);
-            let host = FlowHost::from_fixture(input.snapshot.fixture.clone());
+            let mut host = FlowHost::from_fixture(input.snapshot.fixture.clone());
+            host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
             let mut session = FlowEvalSession::new();
             session.sync(&host);
             self.host = Some(host);
@@ -220,14 +228,28 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
                 step => return step,
             }
         }
-        if self.host.take().is_some() || self.emit.take().is_some() {
+        if let Some(host) = self.host.take() {
+            self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(retirement) = self.host_retirement.as_mut() {
+            return match retirement.close_page(maximum_items, maximum_bytes) {
+                Ok(false) => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                Ok(true) => {
+                    self.host_retirement = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                Err(_) => InteractiveJobCloseStep::Blocked,
+            };
+        }
+        if self.emit.take().is_some() {
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.emit.is_none() && self.host.is_none() && self.session.is_none()
+        self.closing && self.emit.is_none() && self.host.is_none() && self.host_retirement.is_none() && self.session.is_none()
     }
 }
 
@@ -302,8 +324,7 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewBoundedCommandJobFactory {
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> std::collections::BTreeMap<String, Vec<String>> {
-    let host = crate::standards::v1::subsets::any::schema::host_from_fixture(fixture);
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::fixture_to_workflow(&host.dag.fixture);
+    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(fixture, |host| crate::standards::v1::subsets::any::schema::fixture_to_workflow(&host.dag.fixture));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -330,6 +351,14 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners())
     }
 
+    /// 🗃️ The viewer holds a real document store (read-only, but owned), so it owes the same bounded
+    /// disposer the editor does — without it `PluginApp::close_step` fails closed with
+    /// `interactive-job.close-owned-disposer-missing` and NO viewer fixture can ever reach its
+    /// terminal-empty witness (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
@@ -350,6 +379,13 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
         Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    /// 🎛️ The viewer's `setCamera`/`setShowMode`/`setLodMode`/sun tools all publish onto the CONFIG
+    /// lane; without this authority every one of them fails closed with
+    /// `interactive-job.publication-authority-missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("generation3d-view-config-retained", GENERATION3D_VIEW_CONFIG_STORE_MAXIMUM_BYTES))
     }
 
     fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
@@ -425,6 +461,13 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             "setSunElevation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setSunIntensity" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
+    }
+
+    /// 🏷️ The declared tool id of the command, NOT the trait's generic `"typed-command"` default:
+    /// `qualified_tool_proof` looks the bounded first-step proof up by this verb, so leaving the
+    /// default in place makes EVERY viewer action fail closed with `interactive-job.missing-factory`.
+    fn command_id(command: &Generation3dViewCommand) -> &'static str {
+        command.command_id()
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {

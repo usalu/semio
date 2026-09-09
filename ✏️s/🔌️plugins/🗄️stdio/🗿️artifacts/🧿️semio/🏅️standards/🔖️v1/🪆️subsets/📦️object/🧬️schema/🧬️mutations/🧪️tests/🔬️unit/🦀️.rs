@@ -77,7 +77,7 @@ async fn create_brep_rejects_an_occupied_slot_without_displacing_its_child() {
     assert!(base.brep.is_some(), "fixture must start with an owned brep");
     let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brand-new".into(), target: ref_of("brep", "brand-new") });
     let outcome = create.diff(&base);
-    assert_eq!(outcome.messages()[0].code.to_string(), "mutation.duplicate-id");
+    assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.duplicate-id");
     assert!(create.inverse(&base).is_empty(), "rejected duplicate creation has no inverse effect");
     assert_eq!(outcome.diff().apply(&base).expect("rejected create has no diff"), base);
 }

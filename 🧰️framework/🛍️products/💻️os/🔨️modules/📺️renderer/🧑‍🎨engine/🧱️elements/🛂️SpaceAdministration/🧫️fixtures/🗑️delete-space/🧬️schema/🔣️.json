@@ -4,23 +4,54 @@
   "title": "Space Administration Delete Space Fixture",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "spaceId", "acceptedOutcomes", "refusedPhases", "locales"],
+  "required": [
+    "schema",
+    "spaceId",
+    "acceptedOutcomes",
+    "refusedPhases",
+    "locales",
+    "missingPageStatus",
+    "confirmation",
+    "hostiles"
+  ],
   "properties": {
-    "schema": { "const": "semio.shell.space-administration-delete-space-fixture.v1" },
-    "spaceId": { "type": "string", "minLength": 1 },
+    "schema": {
+      "const": "semio.shell.space-administration-delete-space-fixture.v1"
+    },
+    "spaceId": {
+      "type": "string",
+      "minLength": 1
+    },
     "acceptedOutcomes": {
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
       "uniqueItems": true,
-      "items": { "enum": ["accepted", "previously-accepted"] }
+      "items": {
+        "enum": [
+          "accepted",
+          "previously-accepted"
+        ]
+      }
     },
     "refusedPhases": {
       "type": "array",
       "minItems": 9,
       "maxItems": 9,
       "uniqueItems": true,
-      "items": { "enum": ["loading", "submitting", "receipt", "refreshing", "cancelled", "denied", "stale", "failed", "deleted"] }
+      "items": {
+        "enum": [
+          "loading",
+          "submitting",
+          "receipt",
+          "refreshing",
+          "cancelled",
+          "denied",
+          "stale",
+          "failed",
+          "deleted"
+        ]
+      }
     },
     "locales": {
       "type": "array",
@@ -30,15 +61,62 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["locale", "delete", "warning", "confirm", "cancel", "deleted"],
+        "required": [
+          "locale",
+          "delete",
+          "warning",
+          "confirm",
+          "cancel",
+          "deleted"
+        ],
         "properties": {
-          "locale": { "enum": ["en", "de"] },
-          "delete": { "type": "string", "minLength": 1 },
-          "warning": { "type": "string", "minLength": 1 },
-          "confirm": { "type": "string", "minLength": 1 },
-          "cancel": { "type": "string", "minLength": 1 },
-          "deleted": { "type": "string", "minLength": 1 }
+          "locale": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "delete": {
+            "type": "string",
+            "minLength": 1
+          },
+          "warning": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confirm": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cancel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "deleted": {
+            "type": "string",
+            "minLength": 1
+          }
         }
+      }
+    },
+    "missingPageStatus": {
+      "const": 404
+    },
+    "confirmation": {
+      "const": "get-after-accepted-receipt"
+    },
+    "hostiles": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "refresh-success-after-delete",
+          "foreign-space-page",
+          "non-accepted-receipt",
+          "extra-fields"
+        ]
       }
     }
   }

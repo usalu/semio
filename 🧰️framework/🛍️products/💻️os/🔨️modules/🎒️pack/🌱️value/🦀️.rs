@@ -1195,6 +1195,15 @@ impl RetainedValueCursor {
         crate::os_pack::format::RetainedPackCloseStep::Complete
     }
 
+    /// 🚦️ Whether [`Self::admit_byte`] would accept another byte right now. One admitted byte can
+    /// take SEVERAL [`Self::grant`] turns to be consumed — every control frame on the expectation
+    /// stack (`Expect::Record`, `Expect::Map`, `Expect::End`, …) is popped without touching the
+    /// pending slot — so a producer that admits on a fixed cadence rather than on this predicate
+    /// hands back a byte the cursor is still holding.
+    pub fn ingress_ready(&self) -> bool {
+        !self.closed && !self.sealed && !self.stack.is_empty() && self.pending.is_none()
+    }
+
     pub fn terminal_is_empty(&self) -> bool {
         self.closed && self.stack.is_empty() && self.pending.is_none()
     }
@@ -1392,6 +1401,17 @@ impl RetainedRecordBodyCursor {
         }
         self.phase = RetainedRecordBodyPhase::Closed;
         crate::os_pack::format::RetainedPackCloseStep::Complete
+    }
+
+    /// 🚦️ Whether [`Self::admit_byte`] would accept another byte AND be able to forward it on the
+    /// next [`Self::grant`]. Once the value producer is live every admitted byte is handed straight
+    /// to it, so this cursor's own empty ingress slot is not sufficient: a producer still chewing on
+    /// the previous byte rejects the handoff as `retained-record-body/value producer handback`.
+    pub fn ingress_ready(&self) -> bool {
+        !self.sealed
+            && self.pending.is_none()
+            && !matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed)
+            && self.value.as_ref().is_none_or(RetainedValueCursor::ingress_ready)
     }
 
     pub fn terminal_is_empty(&self) -> bool {

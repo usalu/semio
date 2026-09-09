@@ -1,11 +1,10 @@
 {
-  "CreateGeneration": {
-    "generation": {
-      "id": "gen-2",
-      "name": "Taller",
-      "values": {
-        "storeys": 5
-      }
+  "mutation": "createGeneration",
+  "generation": {
+    "id": "gen-2",
+    "name": "Taller",
+    "values": {
+      "storeys": 5
     }
   }
 }

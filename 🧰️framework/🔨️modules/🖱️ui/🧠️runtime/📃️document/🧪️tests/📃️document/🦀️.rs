@@ -34,6 +34,7 @@ fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64
 
 #[test]
 fn surface_canonical_document_nine_live_reconcilers_share_the_original_root_with_readers() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = document_fixture();
     let mut owners = Vec::new();
     let mut readers = Vec::new();
@@ -62,6 +63,7 @@ fn surface_canonical_document_nine_live_reconcilers_share_the_original_root_with
 
 #[test]
 fn surface_canonical_document_old_reader_keeps_original_credit_during_replacement() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for grant in document_fixture()["readerReleaseGrants"].as_array().unwrap() {
         let grant = grant.as_u64().unwrap() as usize;
         let current = complete_document_job(SurfaceReconciler::new("canonical-reader-pressure"), "before", 920_000 + grant as u64);
@@ -82,6 +84,7 @@ fn surface_canonical_document_old_reader_keeps_original_credit_during_replacemen
 
 #[test]
 fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = document_fixture();
     assert!(fixture["completionTransferUsesSeparateGrant"].as_bool().unwrap());
     let component = |last| {
@@ -166,6 +169,7 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
 
 #[test]
 fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwind() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for phase in document_fixture()["unwindPhases"].as_array().unwrap() {
         let phase = phase.as_str().unwrap();
         let component = |value| serde_json::from_value::<ui_contract::Component>(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":vec![value;32768]},"bindings":[]})).unwrap();
@@ -205,6 +209,7 @@ fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwi
 
 #[test]
 fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separate_turn() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut outcomes = Vec::new();
     for field in document_fixture()["freshCompletionFields"].as_array().unwrap() {
         let field = field.as_str().unwrap();

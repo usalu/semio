@@ -42,6 +42,7 @@ fn icon_node(icon: bool) -> crate::TreeNode {
 //#region 🧪️Laws
 #[test]
 fn surface_ownership_existing_component_refuses_before_cloning_unadmitted_payload() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let component: ui_contract::Component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":vec![17u8;32768]},"bindings":[]})).unwrap();
     let expected = serde_json::to_value(&component).unwrap();
     let node = crate::TreeNode::try_new("surface", component).unwrap();
@@ -68,6 +69,7 @@ fn surface_ownership_existing_component_refuses_before_cloning_unadmitted_payloa
 
 #[test]
 fn surface_ownership_existing_component_retains_comparison_and_copy_between_turns() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let data = fixture()["existingComponent"].clone();
     let component = |last: u8| -> ui_contract::Component {
         let mut bytes = vec![17u8; data["payloadBytes"].as_u64().unwrap() as usize];
@@ -109,6 +111,7 @@ fn surface_ownership_existing_component_retains_comparison_and_copy_between_turn
 
 #[test]
 fn surface_ownership_component_copy_charges_actual_surface_backing_before_publication() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = fixture();
     let data = &fixture["componentCopy"];
     let bytes = vec![17u8; data["payloadBytes"].as_u64().unwrap() as usize];
@@ -147,6 +150,7 @@ fn surface_ownership_component_copy_charges_actual_surface_backing_before_public
 
 #[test]
 fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let data = fixture();
     let data = &data["bindingClone"];
     let mut node = leaf("root");
@@ -200,6 +204,7 @@ fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
 
 #[test]
 fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let data = fixture()["componentCopy"].clone();
     for frontier in data["cancelFrontiers"].as_array().unwrap() {
         let component: ui_contract::Component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":vec![17u8;32768]},"bindings":[]})).unwrap();
@@ -259,6 +264,7 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
 
 #[test]
 fn surface_ownership_patch_backing_is_admitted_in_separate_turns() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut current = SurfaceReconciler::new("allocation-fixture");
     let mut cursor = SurfaceReconcileCursor::new(tree(leaf("root")), &current);
     cursor.stage = SurfaceReconcileStage::Finalize;
@@ -302,6 +308,7 @@ fn surface_ownership_patch_backing_is_admitted_in_separate_turns() {
 
 #[test]
 fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for frontier in fixture()["bindingClone"]["cancelFrontiers"].as_array().unwrap() {
         let frontier = frontier.as_u64().unwrap();
         let mut node = leaf("root");
@@ -343,6 +350,7 @@ fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings
 
 #[test]
 fn surface_ownership_binding_copy_unwind_keeps_owners_outside_callback() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for frontier in 1..=8 {
         let mut node = leaf("root");
         for index in 0..32 {
@@ -372,6 +380,7 @@ fn surface_ownership_binding_copy_unwind_keeps_owners_outside_callback() {
 
 #[test]
 fn surface_ownership_transfer_preserves_backing_without_allocating_replacement() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = fixture();
     let case = &fixture["transfer"];
     let mut source = SurfaceFixedVec::<u64, 4>::default();
@@ -406,6 +415,7 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
 
 #[test]
 fn surface_ownership_patch_refusal_and_cancel_keep_exact_unallocated_owner() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for turns in 1..=4 {
         let mut current = SurfaceReconciler::new("allocation-fixture");
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("root")), &current);
@@ -439,6 +449,7 @@ fn surface_ownership_patch_refusal_and_cancel_keep_exact_unallocated_owner() {
 
 #[test]
 fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut current = SurfaceReconciler::new("allocation-fixture");
     let mut cursor = SurfaceReconcileCursor::new(tree(leaf("root")), &current);
     let mut records = None;
@@ -496,6 +507,7 @@ fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
 
 #[test]
 fn surface_ownership_inline_fields_do_not_allocate_a_second_owner() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture = fixture();
     let mut differences = Vec::new();
     let mut expected = Vec::new();
@@ -520,6 +532,7 @@ fn surface_ownership_inline_fields_do_not_allocate_a_second_owner() {
 
 #[test]
 fn surface_ownership_native_backing_inventory_preserves_capacity() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for case in fixture()["backingCases"].as_array().unwrap() {
         let capacity = case["capacity"].as_u64().unwrap() as usize;
         let element_bytes = case["elementBytes"].as_u64().unwrap() as usize;
@@ -559,6 +572,7 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
 }
 #[test]
 fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let data: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️contract/🎟️resident/🧫️fixtures/🔣️.json")).unwrap();
     assert!(register_surface_reconcile_backing(32768).unwrap());
     let before = ui_contract::UiResidentPermit::snapshot().unwrap();
@@ -575,7 +589,9 @@ fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
 }
 
 #[test]
+#[ignore = "re-entrant resident observe plus handback drain deadlocks in-suite; run via runExactCargoLaws"]
 fn surface_ownership_resident_return_maintenance_preserves_contended_credit() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     assert!(register_surface_reconcile_backing(32768).unwrap());
     let before = ui_contract::UiResidentPermit::snapshot().unwrap();
     let credit = reserve_surface_reconcile(SurfaceReconcileLimits { max_bytes: 65536, ..Default::default() }).unwrap();

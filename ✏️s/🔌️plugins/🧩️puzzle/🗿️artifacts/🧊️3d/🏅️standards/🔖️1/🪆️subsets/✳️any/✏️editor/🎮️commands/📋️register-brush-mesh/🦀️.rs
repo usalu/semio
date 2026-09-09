@@ -9,7 +9,9 @@ use semio_framework::kernel::Effect;
 ///
 /// - `{url, digest?}` alone — the geometry is derived from the process-wide content-addressed mesh
 ///   store, so a mesh any document already uploaded costs nothing on the wire ever again. A supplied
-///   `digest` is verified against the resident geometry, so a stale id never adopts foreign bytes.
+///   `digest` is verified against the resident geometry, so a stale id never adopts foreign bytes. An
+///   identity this guest instantiation cannot serve is not an error the client can only be told about:
+///   it is recorded as a re-upload request and published on the world body — see [`request_reupload`].
 /// - `{url, digest, page, pageCount, positionsB64?, indicesB64?}` — one page of a first upload. A whole
 ///   document-scale mesh never fitted the shared retained command's 8 192 raw bytes (the Nakagin
 ///   capsule `🧊️placeholder.glb` is 73 728 values, 64 KB as a JSON number array), so the client pages it:
@@ -22,6 +24,12 @@ use semio_framework::kernel::Effect;
 /// (`✏️editor/⏳️precompute/🦀️.rs`), keyed by `(engine id, url, geometry)`, so one identity decodes once
 /// per process and every open document reads the identical derived page.
 pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+    // 🖌️ A `HostOnly`-lane upload publishes to no store and paints nothing — `registerBrushMesh` is
+    // declared `Puzzle3dScopeClass::Quiet` in the ONE scope table (`✏️editor/🦀️.rs`), so every accepting
+    // exit of this arm, the shared-mesh fast path included, leaves the UI clean. A refused PAGE stays
+    // visible through `Effect::Notify`, which the host applies before it ever consults the scope; a
+    // refused IDENTITY widens the scope instead, so the world body republishes the re-upload request —
+    // see `request_reupload`.
     let Some(url) = args.and_then(|value| value.get("url")).and_then(Value::as_str) else {
         return;
     };
@@ -31,7 +39,7 @@ pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>
     let digest = args.and_then(|value| value.get("digest")).and_then(Value::as_str);
     let (Some(page), Some(page_count)) = (unsigned(args, "page"), unsigned(args, "pageCount")) else {
         if !ctx.app.precompute.borrow_mut().adopt_shared_mesh(url, digest) {
-            fault(ctx, url, Puzzle3dMeshUploadFault::Digest);
+            request_reupload(ctx, url);
         }
         return;
     };
@@ -60,6 +68,24 @@ fn page_values(args: Option<&Value>, key: &str, budget: usize) -> Option<Vec<[u8
 /// against nothing.
 fn fault(ctx: &mut Puzzle3dActionCtx<'_>, url: &str, rejection: Puzzle3dMeshUploadFault) {
     ctx.effects.push(Effect::Notify { message: format!("{}: {url}", rejection.code()) });
+}
+
+/// 🚚️ A refused *identity-only* announcement is a different animal from a refused page: it means the
+/// client's own bookkeeping outlived the guest instantiation that justified it — the classic case is a
+/// restored actor, whose `brush_mesh_store` is empty while the tab's module singleton still says
+/// "uploaded". A notice would be a dead end (nothing on the host reads a notification's text, so the
+/// brush utility would simply stay without a collision body until a full page reload). Recording the
+/// identity instead turns the refusal into a request the world body publishes as
+/// `interactionJson.meshReuploadUrls`, which the client answers with the page run.
+///
+/// The scope is widened from the action's declared [`Puzzle3dScopeClass::Quiet`] to the viewport scope
+/// for exactly this exit: the request is worthless until the world body carrying it is republished,
+/// and a refusal is rare by construction — every one of them ends in the bytes arriving.
+///
+/// [`Puzzle3dScopeClass::Quiet`]: crate::editor::puzzle3d::Puzzle3dScopeClass::Quiet
+fn request_reupload(ctx: &mut Puzzle3dActionCtx<'_>, url: &str) {
+    ctx.app.precompute.borrow_mut().request_mesh_reupload(url);
+    *ctx.ui_scope = crate::editor::puzzle3d::puzzle3d_viewport_scope();
 }
 
 const MAX_LEAF_BYTES: usize = 4 * 1024;

@@ -106,7 +106,7 @@ impl Generation2dDiff {
             }
             let mut next = artifact.clone();
             if let Some(fixture) = &self.fixture {
-                next.fixture = fixture.clone();
+                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -124,7 +124,7 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
             }
             let mut next = snapshot.clone();
             if let Some(fixture) = &self.fixture {
-                next.fixture = fixture.clone();
+                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -132,20 +132,25 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
             next
         })
     }
+    /// ➕️ Sequential coalesce. Every side this overwrites is RETIRED, never dropped: an inhabited
+    /// `fixture`/`generation` owns an `OrderedMap` root and a generation ladder that reject a bare
+    /// drop (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`).
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
-            *self = other;
+            std::mem::replace(self, other).retire_cold();
             return;
         }
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
+        let Self { artifact: _, fixture, generation } = other;
+        if let Some(fixture) = fixture {
+            if let Some(displaced) = self.fixture.replace(fixture) {
+                displaced.retire_cold();
+            }
         }
-        take!(fixture);
-        take!(generation);
+        if let Some(generation) = generation {
+            if let Some(displaced) = self.generation.replace(generation) {
+                displaced.retire_cold();
+            }
+        }
     }
 }
 //#endregion 🔖️Apply

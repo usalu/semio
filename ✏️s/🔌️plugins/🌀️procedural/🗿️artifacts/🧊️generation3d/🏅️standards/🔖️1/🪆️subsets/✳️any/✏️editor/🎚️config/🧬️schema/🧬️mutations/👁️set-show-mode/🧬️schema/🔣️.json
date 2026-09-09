@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/procedural/3d/config/mutation/set-show-mode/schema.json",
+  "title": "SetShowMode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["value"],
+  "properties": { "value": { "type": "string" } }
+}

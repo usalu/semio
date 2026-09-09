@@ -12,6 +12,9 @@ use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let ids = ctx.selected_object_ids();
+    if ctx.refuse_without_selection(&ids) {
+        return;
+    }
     let clones: Vec<Puzzle3dObject> = ctx
         .scene
         .fixture

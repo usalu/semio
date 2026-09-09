@@ -33,10 +33,9 @@ use crate::standards::v1::subsets::any::schema::{
 };
 use crate::Puzzle3dError;
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
+use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -46,7 +45,7 @@ const FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024;
 const FILL_ENVELOPE_MAX_PAGES: usize = 256;
 pub(crate) const FILL_ENVELOPE_MAX_BYTES: usize = FILL_ENVELOPE_PAGE_BYTES * FILL_ENVELOPE_MAX_PAGES;
 pub(crate) const FILL_ENVELOPE_MAX_ITEMS: usize = 65_536;
-const FILL_ENVELOPE_MAX_OPERATIONS: usize = 4;
+pub(crate) const FILL_ENVELOPE_MAX_OPERATIONS: usize = 4;
 const FILL_ENVELOPE_PROCESS_BYTES: usize = FILL_ENVELOPE_MAX_BYTES * FILL_ENVELOPE_MAX_OPERATIONS;
 const FILL_ENVELOPE_TOKEN_BYTES: usize = 56;
 const FILL_ENVELOPE_AUTHORITY_ITEMS: usize = 2;
@@ -204,6 +203,13 @@ impl InteractiveJob for SharedFillWorkerJob {
     }
 }
 
+/// 📦️ Heap home of the mounted fill worker. [`MountedFillWorker`] is a fixed-capacity carrier —
+/// one whole `BatchJobSession` with its inline payload pages — and a `Puzzle3dCollision` that holds
+/// it BY VALUE is 30 KiB, which every `Puzzle3dPlayApp::default()` (one per dispatch, one per
+/// render) and every `FillEnvelopeAuthority` then materialise on the stack. Boxed, the engine is
+/// under a kilobyte and the same call chains fit the 2 MiB a worker thread actually has.
+type OwnedFillWorker = Box<MountedFillWorker>;
+
 /// 🧵️ The fill planner is driven ON THE CALLER, never handed to a worker pool: one
 /// `FillBuilder::step` is a single bounded cursor unit, and a pooled submission costs a thread
 /// round-trip per unit that no interactive step (nor the single-threaded wasm guest, which has no
@@ -212,7 +218,12 @@ impl InteractiveJob for SharedFillWorkerJob {
 type MountedFillWorker = semio_framework_job::BatchJobSession<SharedFillWorkerJob>;
 type RejectedFillWorker = semio_framework_job::WorkerJobSessionAdmissionRejected<SharedFillWorkerJob>;
 
-fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: CancelToken) -> Result<MountedFillWorker, RejectedFillWorker> {
+/// 📦️ Heap home of one retained worker verdict. [`StepOutcome`] carries a whole inline
+/// `JOB_PAYLOAD_PAGE_BYTES` page (8 KiB), so an owner that keeps one by value pays it in every frame
+/// that moves the owner — the same reason [`OwnedFillWorker`] is boxed.
+type OwnedFillOutcome = Box<StepOutcome>;
+
+fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: CancelToken) -> Result<OwnedFillWorker, RejectedFillWorker> {
     semio_framework_job::BatchJobSession::try_new(
         SharedFillWorkerJob::new(fill),
         semio_framework_job::BatchJobParams {
@@ -223,6 +234,7 @@ fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: Canc
             now_us: default_now_us,
         },
     )
+    .map(Box::new)
 }
 
 /// 📏️ Exactly the turns a rejected fill-worker admission needs to reach terminal emptiness:
@@ -341,8 +353,8 @@ enum FillEnvelopePhase {
 struct FillEnvelopeAuthority {
     request: FillJobRequest,
     fill: Option<SharedFillBuilder>,
-    worker: Option<MountedFillWorker>,
-    worker_outcome: Option<StepOutcome>,
+    worker: Option<OwnedFillWorker>,
+    worker_outcome: Option<OwnedFillOutcome>,
     worker_terminal: bool,
     fill_retirement: Option<FillBuilderRetirementCursor>,
     cancel: Option<CancelToken>,
@@ -360,14 +372,14 @@ struct FillEnvelopeAuthority {
 
 struct FillEnvelopeMeasurementOwners {
     fill: SharedFillBuilder,
-    worker: MountedFillWorker,
+    worker: OwnedFillWorker,
 }
 
 struct FillEnvelopeMeasurementRequest {
     job: u64,
     operation: Operation,
     fill: SharedFillBuilder,
-    worker: MountedFillWorker,
+    worker: OwnedFillWorker,
     cancel: CancelToken,
     steps_remaining: usize,
     preview_sequence: u64,
@@ -390,6 +402,29 @@ impl Default for FillEnvelopeRegistry {
 fn fill_envelope_registry() -> &'static Mutex<FillEnvelopeRegistry> {
     static REGISTRY: OnceLock<Mutex<FillEnvelopeRegistry>> = OnceLock::new();
     REGISTRY.get_or_init(|| Mutex::new(FillEnvelopeRegistry::default()))
+}
+
+/// 🔒️ Serializes every law that admits into [`fill_envelope_registry`]. The registry is ONE
+/// process-wide authority with [`FILL_ENVELOPE_MAX_OPERATIONS`] slots, so two laws running on two
+/// test threads share it; without this guard the second one measures the first one's admissions.
+/// Owned here rather than in either tests module, because both the session laws and the whole-app
+/// tick laws have to take the SAME mutex for it to serialize anything.
+#[cfg(test)]
+pub(crate) fn fill_envelope_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
+    GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// 🧮️ How many of [`FILL_ENVELOPE_MAX_OPERATIONS`] envelope slots are occupied right now, and how
+/// many admissions the registry has ever handed out. Occupancy is the direct, allocator-independent
+/// statement of "the tick loop retains a bounded number of fill envelopes"; the admission count is
+/// how a law states that the loop is not re-admitting a fresh envelope on every tick.
+#[cfg(test)]
+pub(crate) fn fill_envelope_occupancy() -> (usize, u64) {
+    let Ok(registry) = fill_envelope_registry().try_lock() else {
+        return (usize::MAX, u64::MAX);
+    };
+    (registry.slots.iter().filter(|slot| slot.is_some()).count(), registry.generations.iter().sum())
 }
 
 fn fill_envelope_token(request: &FillJobRequest) -> [u8; FILL_ENVELOPE_TOKEN_BYTES] {
@@ -692,7 +727,7 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
                     }
                     StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
                 }
-                authority.worker_outcome = Some(outcome);
+                authority.worker_outcome = Some(Box::new(outcome));
             }
             Err(_) => {
                 authority.worker_terminal = true;
@@ -967,6 +1002,26 @@ fn brush_mesh_store() -> &'static Mutex<Puzzle3dBrushMeshStore> {
     })
 }
 
+/// 🔢️ Mesh identities THIS guest instantiation derived into the process-wide store, counted since the
+/// module was instantiated. Lives beside [`brush_mesh_store`] rather than inside it so reading it can
+/// never fail or block: a lock-contended read that answered `0` would be indistinguishable from a fresh
+/// instantiation, which is precisely the distinction this number exists to carry.
+static BRUSH_MESH_INSTALLS: AtomicU64 = AtomicU64::new(0);
+
+/// 🔢️ Monotone-within-one-instantiation residency counter, zero in a fresh guest — see
+/// [`BRUSH_MESH_INSTALLS`]. A client that watched the number climb learns its "already uploaded"
+/// bookkeeping is void the moment it reads a lower one, without asking one question per mesh id and
+/// without the guest needing a clock, a random source or an instance id it has no way to mint. The
+/// store is deliberately NOT part of any checkpoint, so a restored actor reports zero — exactly the
+/// fact the client must act on.
+///
+/// Published on the world-3d surface as `interactionJson.meshResidency`
+/// (`✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs`), read by `Puzzle3dBrushMeshRegistry`
+/// (`🧰️framework/…/🛠️ShellHelpers/🟦️.tsx`).
+pub fn shared_brush_mesh_installs() -> u64 {
+    BRUSH_MESH_INSTALLS.load(Ordering::Relaxed)
+}
+
 /// 🧮️ Derives one uploaded mesh into the process-wide store and hands back the validated geometry —
 /// a second document registering the same identity hits the cache instead of decoding again.
 pub(crate) fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Option<(Vec<f32>, Vec<u32>)> {
@@ -975,6 +1030,7 @@ pub(crate) fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -
     let handle = store.engines.derive(<Puzzle3dMeshDecodeEngine as store::Engine>::ENGINE_ID, &request).ok()?;
     let geometry = store.engines.read(&handle).ok()?;
     store.handles.insert(url.to_string(), handle);
+    BRUSH_MESH_INSTALLS.fetch_add(1, Ordering::Relaxed);
     decode_brush_mesh_geometry(&geometry)
 }
 
@@ -999,8 +1055,10 @@ pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 pub const PUZZLE3D_MESH_PAGE_VALUES: usize = 1_024;
 
 /// 🔤️ Base64 characters one page's payload string may hold — [`PUZZLE3D_MESH_PAGE_VALUES`] values as
-/// four bytes each, padded to the codec's four-character group.
-pub const PUZZLE3D_MESH_PAGE_BASE64_CHARS: usize = (PUZZLE3D_MESH_PAGE_VALUES * 4).div_ceil(3).div_ceil(4) * 4;
+/// four bytes each, three bytes per four-character group, the last group padded. 1 024 values are
+/// 4 096 bytes and 5 464 characters, which the shared retained command's 8 192 raw bytes carry with
+/// the JSON envelope still inside the limit.
+pub const PUZZLE3D_MESH_PAGE_BASE64_CHARS: usize = (PUZZLE3D_MESH_PAGE_VALUES * 4).div_ceil(3) * 4;
 
 /// 📦️ Partial uploads the process stages at once. A sequence is opened and closed by one mesh
 /// identity's own page run, so four covers every world window a desktop layout opens at once, and a
@@ -1020,7 +1078,8 @@ pub enum Puzzle3dMeshUploadFault {
     Envelope,
     /// 🔤️ A payload string is not base64, or carries a value count above [`PUZZLE3D_MESH_PAGE_VALUES`].
     Payload,
-    /// 🕳️ The page does not continue the staged run for this identity.
+    /// 🕳️ The page does not continue the staged run for this identity. The broken run is dropped, so the
+    /// client re-opens at page 0 instead of resuming into bytes nobody can account for.
     Gap,
     /// 📦️ The run would exceed [`FILL_WORKER_MAX_MESH_VALUES`] in one of its two arrays.
     Capacity,
@@ -1117,7 +1176,10 @@ pub fn stage_brush_mesh_page(url: &str, digest: &str, page: u32, page_count: u32
     let held = uploads.slots.iter().position(|slot| slot.url == url && slot.digest == digest);
     let index = match held {
         Some(index) if uploads.slots[index].next_page == page && uploads.slots[index].page_count == page_count => index,
-        Some(_) if page != 0 => return Err(Puzzle3dMeshUploadFault::Gap),
+        Some(index) if page != 0 => {
+            uploads.slots.swap_remove(index);
+            return Err(Puzzle3dMeshUploadFault::Gap);
+        }
         Some(index) => {
             uploads.slots[index] = Puzzle3dMeshUploadSlot { url: url.to_string(), digest: digest.to_string(), page_count, next_page: 0, positions: Vec::new(), indices: Vec::new(), touched: sequence };
             index
@@ -1213,6 +1275,12 @@ pub(crate) struct Puzzle3dCollision {
     meshes: Arc<HashMap<String, CollisionBody>>,
     mesh_is_fallback: HashMap<String, bool>,
     mesh_sources: HashMap<String, FillWorkerMesh>,
+    /// 🚚️ Mesh ids this session was announced by id alone and could NOT serve — neither from its own
+    /// installed geometry nor from the process-wide store. Sorted, deduplicated, bounded by
+    /// [`FILL_WORKER_MAX_MESHES`], and published as `interactionJson.meshReuploadUrls` so the client
+    /// pages the bytes again. An entry retires the instant that identity's geometry installs, so the
+    /// set is empty in every steady state and a refusal can never become a standing request.
+    mesh_reupload_requests: Vec<String>,
     pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
     pub(crate) brush_queue: VecDeque<String>,
     brush_prepare_object_cursor: usize,
@@ -1230,9 +1298,9 @@ pub(crate) struct Puzzle3dCollision {
     brush_placed: HashMap<String, PlacedCollisionEntry>,
     fill_steps_remaining: usize,
     pub(crate) fill: Option<SharedFillBuilder>,
-    fill_worker: Option<MountedFillWorker>,
+    fill_worker: Option<OwnedFillWorker>,
     fill_rejected_worker: Option<RejectedFillWorker>,
-    fill_worker_outcome: Option<StepOutcome>,
+    fill_worker_outcome: Option<OwnedFillOutcome>,
     fill_worker_terminal: bool,
     fill_cancel: CancelToken,
     fill_revision: u64,
@@ -1260,6 +1328,7 @@ impl Puzzle3dCollision {
             meshes: Arc::new(HashMap::new()),
             mesh_is_fallback: HashMap::new(),
             mesh_sources: HashMap::new(),
+            mesh_reupload_requests: Vec::new(),
             brush_cache: HashMap::new(),
             brush_queue: VecDeque::new(),
             brush_prepare_object_cursor: 0,
@@ -1430,10 +1499,24 @@ impl Puzzle3dCollision {
         Some((RevisionId(revision), Generation(generation)))
     }
 
+    /// 🧊️ Everything derived from the scene is stale: the brush lane's queue and its cached
+    /// collision-free candidates go, and the fill preparation restarts. ONLY a real scene change may
+    /// call this — see [`Self::start_fill_preparation`] for why re-establishing the fill alone must
+    /// not touch the brush lane.
     fn rebuild_queue(&mut self) {
+        self.brush_queue.clear();
+        self.brush_cache.clear();
+        self.re_enqueue_brush_targets();
         self.start_fill_preparation(true);
     }
 
+    /// 🪣️ Restarts the FILL preparation only. It deliberately leaves the brush lane alone: the fill
+    /// plan is not an input to `brush_cache`, and a session hand-off carries the brush cache but not
+    /// the fill builder, so every no-op scene sync (each `render`) used to come through here and
+    /// discard candidates the suggestion popup had already resolved — the popup then rendered
+    /// `candidates: []`, `pending: true` no matter how long the lane had been warmed
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave D3). Scene-invalidated resets belong to
+    /// [`Self::rebuild_queue`].
     fn start_fill_preparation(&mut self, advance_revision: bool) {
         let Some((revision, generation)) = self.allocate_fill_identity(advance_revision) else {
             return;
@@ -1441,9 +1524,6 @@ impl Puzzle3dCollision {
         self.fill_cancel.cancel_now();
         self.fill_cancel = root_cancel_token();
         self.fill_preview_sequence = 0;
-        self.brush_queue.clear();
-        self.brush_cache.clear();
-        self.re_enqueue_brush_targets();
         self.fill_steps_remaining = 0;
         if let Some(scene) = self.scene.clone() {
             self.fill_steps_remaining = FILL_COUNT_MAX;
@@ -1516,7 +1596,7 @@ impl Puzzle3dCollision {
     /// 🪣️ True when `fixture` is the fill plan's base plus zero-or-more applied fill objects — i.e. the
     /// live document after `setFillCount`, which must NOT rebuild the precompute session or the slider
     /// loses its ability to remove/replan those objects.
-    fn is_fill_applied_projection(fixture: &Fixture, fill: &FillBuilder) -> bool {
+    pub(crate) fn is_fill_applied_projection(fixture: &Fixture, fill: &FillBuilder) -> bool {
         let plan_objects: std::collections::HashSet<&str> = fill.appended_objects.iter().map(|object| object.id.as_str()).collect();
         let plan_attractions: std::collections::HashSet<&str> = fill.appended_attractions.iter().map(|attraction| attraction.id.as_str()).collect();
         let base_objects: std::collections::HashSet<&str> = fill.base.objects.iter().map(|object| object.id.as_str()).collect();
@@ -1528,7 +1608,7 @@ impl Puzzle3dCollision {
         incoming_objects == base_objects && incoming_attractions == base_attractions && incoming_volumes == base_volumes
     }
 
-    fn strip_fill_plan_from_fixture(fixture: &mut Fixture, fill: &FillBuilder) {
+    pub(crate) fn strip_fill_plan_from_fixture(fixture: &mut Fixture, fill: &FillBuilder) {
         let plan_objects: std::collections::HashSet<&str> = fill.appended_objects.iter().map(|object| object.id.as_str()).collect();
         let plan_attractions: std::collections::HashSet<&str> = fill.appended_attractions.iter().map(|attraction| attraction.id.as_str()).collect();
         fixture.objects.retain(|object| !plan_objects.contains(object.id.as_str()));
@@ -1568,6 +1648,27 @@ impl Puzzle3dCollision {
         if self.scene_synced.as_deref() == Some(&scene) {
             return;
         }
+        self.replace_scene(scene);
+    }
+
+    fn scene_is_synced(&self, scene: &SceneConfig) -> bool {
+        self.scene_synced.as_deref() == Some(scene)
+    }
+
+    fn adopt_fill_projection_scene(&mut self, scene: SceneConfig) {
+        if let Some(current) = &mut self.scene {
+            let current = Arc::make_mut(current);
+            current.overlap_budget = scene.overlap_budget;
+            current.seed = scene.seed;
+            current.weights = scene.weights.clone();
+            current.kind_catalogs = scene.kind_catalogs.clone();
+            current.kind_compatibility = scene.kind_compatibility.clone();
+            current.host_rules = scene.host_rules.clone();
+        }
+        self.scene_synced = Some(Arc::new(scene));
+    }
+
+    fn replace_scene(&mut self, scene: SceneConfig) {
         let scene = Arc::new(scene);
         self.scene = Some(Arc::clone(&scene));
         self.scene_synced = Some(scene);
@@ -1589,6 +1690,26 @@ impl Puzzle3dCollision {
         true
     }
 
+    /// 🚚️ Records that one mesh id was announced by identity alone and could not be served, so the
+    /// world body's next projection asks the client for the bytes. Bounded and idempotent: a client
+    /// that re-announces the same dead id on every window activation never grows the set.
+    pub(crate) fn request_mesh_reupload(&mut self, url: &str) {
+        if url.len() > FILL_WORKER_MAX_URL_BYTES || self.mesh_reupload_requests.iter().any(|pending| pending == url) {
+            return;
+        }
+        if self.mesh_reupload_requests.len() >= FILL_WORKER_MAX_MESHES {
+            return;
+        }
+        self.mesh_reupload_requests.push(url.to_string());
+        self.mesh_reupload_requests.sort_unstable();
+    }
+
+    /// 🚚️ The open re-upload requests, in a stable order so an unchanged set hashes to an unchanged
+    /// world-body lane — see [`Puzzle3dCollision::request_mesh_reupload`].
+    pub(crate) fn mesh_reupload_requests(&self) -> &[String] {
+        &self.mesh_reupload_requests
+    }
+
     fn place_collision_mesh(&mut self, url: String, positions: &[f32], indices: &[u32], is_fallback: bool) -> bool {
         if url.len() > FILL_WORKER_MAX_URL_BYTES || positions.len() > FILL_WORKER_MAX_MESH_VALUES || indices.len() > FILL_WORKER_MAX_MESH_VALUES {
             return false;
@@ -1604,6 +1725,9 @@ impl Puzzle3dCollision {
         }
         Arc::make_mut(&mut self.meshes).insert(url.clone(), body);
         self.mesh_is_fallback.insert(url.clone(), is_fallback);
+        if !is_fallback {
+            self.mesh_reupload_requests.retain(|pending| *pending != url);
+        }
         self.mesh_sources.insert(url.clone(), FillWorkerMesh { url, positions: positions.to_vec(), indices: indices.to_vec(), fallback: is_fallback });
         true
     }
@@ -1612,6 +1736,7 @@ impl Puzzle3dCollision {
         if !self.place_collision_mesh(url, positions, indices, is_fallback) {
             return;
         }
+        self.brush_queue.clear();
         self.brush_cache.clear();
         if self.fill.is_none() {
             self.rebuild_queue();
@@ -1737,35 +1862,27 @@ impl Puzzle3dCollision {
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
         if !self.brush_index_ready {
-            eprintln!("[DEBUG] free_until {target_full_id} index_not_ready candidates={}", candidates.len());
             return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: resume_from };
         }
         let mut unknown_pending = false;
-        let mut no_preview = 0usize;
-        let mut no_mesh = 0usize;
-        let mut collided = 0usize;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
             if default_now_us().is_none_or(|now| now >= deadline_us) {
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
             let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
-                no_preview += 1;
                 continue;
             };
             if !self.meshes.contains_key(&preview.mesh_url) {
-                eprintln!("[DEBUG] free_until {target_full_id} missing mesh {}", preview.mesh_url);
-                no_mesh += 1;
                 unknown_pending = true;
                 continue;
             }
             match self.preview_collides_indexed(&preview, &host_id, overlap_budget, 1024, deadline_us) {
                 None => unknown_pending = true,
-                Some(true) => collided += 1,
+                Some(true) => {}
                 Some(false) => free.push(candidate.clone()),
             }
         }
-        eprintln!("[DEBUG] free_until {target_full_id} candidates={} free={} no_preview={no_preview} no_mesh={no_mesh} collided={collided} pending={unknown_pending}", candidates.len(), free.len());
         BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
     }
 
@@ -1923,7 +2040,7 @@ impl Puzzle3dCollision {
                                     StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => self.fill_worker_terminal = true,
                                     StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
                                 }
-                                self.fill_worker_outcome = Some(outcome);
+                                self.fill_worker_outcome = Some(Box::new(outcome));
                             }
                             Err(_) => self.fill_steps_remaining = 0,
                         }
@@ -1941,7 +2058,6 @@ impl Puzzle3dCollision {
     }
 
     fn compute_brush_cache_entry_partial(&mut self, target_full_id: &str, resume_from: usize, prior_free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
-        eprintln!("[DEBUG] partial {target_full_id} scene_none={} meshes={} objects={}", self.scene.is_none(), self.meshes.len(), self.scene.as_ref().map_or(0, |s| s.fixture.objects.len()));
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
@@ -1965,7 +2081,6 @@ impl Puzzle3dCollision {
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
-        eprintln!("[DEBUG] partial {target_full_id} compatible={}", compatible.len());
         self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_us)
     }
 
@@ -2057,6 +2172,7 @@ impl Puzzle3dCollision {
             meshes: std::mem::replace(&mut self.meshes, Arc::new(HashMap::new())),
             mesh_is_fallback: std::mem::take(&mut self.mesh_is_fallback),
             mesh_sources: std::mem::take(&mut self.mesh_sources),
+            mesh_reupload_requests: std::mem::take(&mut self.mesh_reupload_requests),
             brush_cache: std::mem::take(&mut self.brush_cache),
             brush_queue: std::mem::take(&mut self.brush_queue),
             brush_prepare_object_cursor: self.brush_prepare_object_cursor,
@@ -2076,6 +2192,7 @@ impl Puzzle3dCollision {
         self.meshes = session.meshes;
         self.mesh_is_fallback = session.mesh_is_fallback;
         self.mesh_sources = session.mesh_sources;
+        self.mesh_reupload_requests = session.mesh_reupload_requests;
         self.brush_cache = session.brush_cache;
         self.brush_queue = session.brush_queue;
         self.brush_prepare_object_cursor = session.brush_prepare_object_cursor;
@@ -2099,6 +2216,7 @@ pub(crate) struct Puzzle3dCollisionSession {
     meshes: Arc<HashMap<String, CollisionBody>>,
     mesh_is_fallback: HashMap<String, bool>,
     mesh_sources: HashMap<String, FillWorkerMesh>,
+    mesh_reupload_requests: Vec<String>,
     brush_cache: HashMap<String, BrushCollisionFreeResult>,
     brush_queue: VecDeque<String>,
     brush_prepare_object_cursor: usize,
@@ -2134,8 +2252,70 @@ pub struct Puzzle3dPrecomputeSession {
     fill_terminal: Option<FillEnvelopeTerminalHandle>,
     fill_observation: FillObservation,
     fill_applied_count: u32,
+    /// 🧯️ Latched by the first fill envelope that reached a FAULT terminal, cleared only by a
+    /// [`Puzzle3dPrecomputeSession::supersede_admitted_fill`] (every edit that invalidates the plan).
+    /// Without it a faulted run is re-admitted by the very next 120 ms `fillBuildTick`, so a single
+    /// broken job kind becomes an unbounded measure→admit→spawn→fault→close cycle that allocates one
+    /// fresh `FillBuilder` preparation per turn and exhausts the guest heap — see
+    /// `📓️2026-09-09-wave-J-bounded-fill-job.md`.
+    fill_faulted: bool,
+    /// 🧯️ One pending user-visible notice, taken by `fillBuildTick`. A faulted plan must SAY so; it
+    /// used to retry in silence with the planned count frozen at zero.
+    fill_fault_notice: bool,
     last_emitted_fill_checkpoint: RefCell<Vec<u8>>,
 }
+
+/// 🎟 The fill-lane cursor one document instance carries across `with_puzzle3d_app_for`.
+/// The `FillBuilder` itself stays in [`fill_envelope_registry`]; this is only the identity,
+/// observation, fault latch and in-flight admission/close handles. Without it every dispatch
+/// builds a fresh session, `Drop` closes the just-admitted envelope, and the next tick
+/// allocates another ~2.8 MiB preparation — the guest OOM of ticket 26/09/02 wave F.
+pub(crate) struct Puzzle3dFillSession {
+    fill_job: Option<FillJobRequest>,
+    fill_admission: Option<FillEnvelopeAdmissionCursor>,
+    fill_terminal: Option<FillEnvelopeTerminalHandle>,
+    fill_observation: FillObservation,
+    fill_applied_count: u32,
+    fill_faulted: bool,
+    fill_fault_notice: bool,
+    last_emitted_fill_checkpoint: Vec<u8>,
+}
+
+impl Default for Puzzle3dFillSession {
+    fn default() -> Self {
+        Self {
+            fill_job: None,
+            fill_admission: None,
+            fill_terminal: None,
+            fill_observation: FillObservation::default(),
+            fill_applied_count: 0,
+            fill_faulted: false,
+            fill_fault_notice: false,
+            last_emitted_fill_checkpoint: Vec::new(),
+        }
+    }
+}
+
+impl Puzzle3dFillSession {
+    fn involved(&self) -> bool {
+        self.fill_job.is_some() || self.fill_admission.is_some() || self.fill_terminal.is_some()
+    }
+
+    pub(crate) fn bytes(&self) -> usize {
+        self.last_emitted_fill_checkpoint.len().saturating_add(size_of::<FillJobRequest>()).saturating_add(size_of::<FillObservation>())
+    }
+}
+
+impl Drop for Puzzle3dFillSession {
+    fn drop(&mut self) {
+        if !self.involved() {
+            return;
+        }
+        let mut session = Puzzle3dPrecomputeSession::new();
+        session.install_fill_session(std::mem::take(self));
+    }
+}
+
 
 /// 🪣️ One fixed semantic prefix transition for resumable fill materialization.
 pub(crate) struct FillApplyChunk {
@@ -2153,7 +2333,7 @@ impl Default for Puzzle3dPrecomputeSession {
 
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
-        Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
+        Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
     }
 
     fn read_fill<R>(&self, read: impl FnOnce(&FillBuilder) -> R) -> Option<R> {
@@ -2179,6 +2359,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     fn supersede_admitted_fill(&mut self) {
+        self.fill_faulted = false;
         let Some(request) = &self.fill_job else { return };
         self.engine.fill_cancel.cancel_now();
         request_fill_envelope_terminal(request, FillEnvelopeTerminalReason::Closed);
@@ -2186,27 +2367,35 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        self.install_scene(|engine| engine.set_scene(json))
+        self.set_scene_config(dsl::os_pack::json::from_json_str(json)?)
     }
 
-    /// 🧊️ Typed sync — see [`Puzzle3dCollision::set_scene_config`].
-    pub(crate) fn set_scene_config(&mut self, scene: SceneConfig) -> Result<(), Puzzle3dError> {
-        self.install_scene(|engine| {
-            engine.set_scene_config(scene);
-            Ok(())
-        })
-    }
-
-    fn install_scene(&mut self, install: impl FnOnce(&mut Puzzle3dCollision) -> Result<(), Puzzle3dError>) -> Result<(), Puzzle3dError> {
-        self.supersede_admitted_fill();
-        let result = install(&mut self.engine);
-        if result.is_ok() {
-            if self.engine.fill.is_none() {
-                self.engine.rebuild_queue();
+    /// 🧊️ Typed sync — see [`Puzzle3dCollision::set_scene_config`]. A no-op or applied-projection
+    /// resync must not `supersede_admitted_fill` or allocate a fresh `FillBuilder`: that was the
+    /// per-tick guest leak. Applied-projection is decided from [`Self::read_fill`] so an admitted
+    /// envelope (engine.fill already taken) still recognizes the live document.
+    pub(crate) fn set_scene_config(&mut self, mut scene: SceneConfig) -> Result<(), Puzzle3dError> {
+        let applied = self.read_fill(|fill| Puzzle3dCollision::is_fill_applied_projection(&scene.fixture, fill)).unwrap_or(false);
+        if applied {
+            if let Some(fixture) = self.read_fill(|fill| {
+                let mut fixture = scene.fixture.clone();
+                Puzzle3dCollision::strip_fill_plan_from_fixture(&mut fixture, fill);
+                fixture
+            }) {
+                scene.fixture = fixture;
             }
-            self.last_emitted_fill_checkpoint.borrow_mut().clear();
+            self.engine.adopt_fill_projection_scene(scene);
+            return Ok(());
         }
-        result
+        if self.engine.scene_is_synced(&scene) {
+            if self.engine.fill.is_none() && self.fill_job.is_none() && !self.fill_faulted {
+                self.engine.start_fill_preparation(true);
+            }
+            return Ok(());
+        }
+        self.supersede_admitted_fill();
+        self.engine.replace_scene(scene);
+        Ok(())
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
@@ -2245,11 +2434,51 @@ impl Puzzle3dPrecomputeSession {
         self.engine.install_session(session);
     }
 
+    /// 🎟 Hands the fill cursor to the app session slot so `Drop` of the per-call PlayApp does not
+    /// terminalize a live envelope. The builder stays in [`fill_envelope_registry`].
+    pub(crate) fn take_fill_session(&mut self) -> Puzzle3dFillSession {
+        Puzzle3dFillSession {
+            fill_job: self.fill_job.take(),
+            fill_admission: self.fill_admission.take(),
+            fill_terminal: self.fill_terminal.take(),
+            fill_observation: self.fill_observation,
+            fill_applied_count: self.fill_applied_count,
+            fill_faulted: self.fill_faulted,
+            fill_fault_notice: self.fill_fault_notice,
+            last_emitted_fill_checkpoint: std::mem::take(&mut *self.last_emitted_fill_checkpoint.borrow_mut()),
+        }
+    }
+
+    /// 🎟 Adopts a fill cursor a previous call left in the session slot.
+    pub(crate) fn install_fill_session(&mut self, session: Puzzle3dFillSession) {
+        self.fill_job = session.fill_job;
+        self.fill_admission = session.fill_admission;
+        self.fill_terminal = session.fill_terminal;
+        self.fill_observation = session.fill_observation;
+        self.fill_applied_count = session.fill_applied_count;
+        self.fill_faulted = session.fill_faulted;
+        self.fill_fault_notice = session.fill_fault_notice;
+        *self.last_emitted_fill_checkpoint.borrow_mut() = session.last_emitted_fill_checkpoint;
+    }
+
     /// 🥽️ Installs real geometry for one mesh identity out of the process-wide derived-mesh store —
     /// the id-only wire path, so a mesh uploaded once serves every document instance.
     pub fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
         self.supersede_admitted_fill();
         self.engine.adopt_shared_mesh(url, digest)
+    }
+
+    /// 🚚️ Turns a refused id-only announcement into a standing request for the bytes — see
+    /// [`Puzzle3dCollision::request_mesh_reupload`]. Never `supersede_admitted_fill`: recording that a
+    /// mesh is missing changes no geometry, so an admitted fill plan must survive it.
+    pub fn request_mesh_reupload(&mut self, url: &str) {
+        self.engine.request_mesh_reupload(url);
+    }
+
+    /// 🚚️ The mesh ids this session is waiting on bytes for, stable-ordered — see
+    /// [`Puzzle3dCollision::mesh_reupload_requests`].
+    pub fn mesh_reupload_requests(&self) -> &[String] {
+        self.engine.mesh_reupload_requests()
     }
 
     pub fn has_mesh(&self, url: &str) -> bool {
@@ -2404,7 +2633,22 @@ impl Puzzle3dPrecomputeSession {
     }
 
     //#region 💼️FillJobBridge
+    /// 🧯️ Takes the one pending fill-fault notice, if any — `fillBuildTick`'s hook for telling the
+    /// user a background plan died instead of leaving the planned count frozen at zero.
+    pub fn take_fill_fault_notice(&mut self) -> bool {
+        std::mem::take(&mut self.fill_fault_notice)
+    }
+
+    /// 🧯️ Whether this session has latched a faulted fill envelope and will refuse further
+    /// admissions until an edit supersedes the plan.
+    pub fn fill_is_faulted(&self) -> bool {
+        self.fill_faulted
+    }
+
     pub fn enqueue_fill_job(&mut self) -> Option<(u64, Vec<u8>)> {
+        if self.fill_faulted {
+            return None;
+        }
         if self.fill_admission.is_none() {
             if let Some(request) = &self.fill_job {
                 let Ok(registry) = fill_envelope_registry().try_lock() else {
@@ -2510,9 +2754,21 @@ impl Puzzle3dPrecomputeSession {
         changed
     }
 
+    /// 🧯️ Latches the notice the moment a terminal is CHECKED OUT — `FillEnvelopeTerminalHandle::
+    /// reason` reads the authority, and the authority is gone by the time `close_step` reports
+    /// `Complete`.
+    fn observe_fill_terminal_reason(&mut self, terminal: &FillEnvelopeTerminalHandle) {
+        if terminal.reason() != Some("fault") {
+            return;
+        }
+        self.fill_faulted = true;
+        self.fill_fault_notice = true;
+    }
+
     fn pump_fill_terminal_step(&mut self) -> bool {
         if self.fill_terminal.is_none() {
             if let Some(terminal) = self.take_terminal_fill_job() {
+                self.observe_fill_terminal_reason(&terminal);
                 self.fill_terminal = Some(terminal);
                 return true;
             }
@@ -2522,6 +2778,8 @@ impl Puzzle3dPrecomputeSession {
             let Some(terminal) = registry.take_closed() else {
                 return false;
             };
+            drop(registry);
+            self.observe_fill_terminal_reason(&terminal);
             self.fill_terminal = Some(terminal);
             return true;
         }
@@ -2684,6 +2942,10 @@ impl Drop for Puzzle3dPrecomputeSession {
     /// drains until the registry is quiet rather than only until this session's own slot is back.
     fn drop(&mut self) {
         self.engine.fill_cancel.cancel_now();
+        let involved = self.fill_job.is_some() || self.fill_admission.is_some() || self.fill_terminal.is_some();
+        if !involved {
+            return;
+        }
         if let Some(request) = &self.fill_job {
             terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed);
         }
@@ -2696,63 +2958,111 @@ impl Drop for Puzzle3dPrecomputeSession {
 }
 
 //#region 💼️SharedPluginJob
-pub fn fill_job(context: semio_framework_plugin::reactor::jobs::JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move {
-        let context_job = context.id().await;
-        let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input);
-        let admitted_request = loop {
-            context.tick().await;
-            match admitted_cursor.step() {
-                Ok(Some(request)) => break request,
-                Ok(None) => {}
-                Err(error) => return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.decode"), error)),
-            }
-        };
-        if let Err(error) = admitted_cursor.bind(&admitted_request) {
-            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.identity"), error));
-        }
-        let mut terminal_guard = admitted_cursor.into_guard();
-        let request = if let Some(checkpoint) = restored {
-            let mut restored_cursor = FillEnvelopeTokenCursor::new(checkpoint);
-            loop {
-                context.tick().await;
-                match restored_cursor.step() {
-                    Ok(Some(request)) => break request,
-                    Ok(None) => {}
-                    Err(error) => return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.restore"), error)),
-                }
-            }
-        } else {
-            admitted_request.clone()
-        };
-        if request != admitted_request {
-            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.stale"), "restored fill worker operation does not match admitted operation"));
-        }
-        loop {
-            context.tick().await;
-            match drive_fill_envelope(&request) {
-                FillEnvelopeDrive::Blocked => continue,
-                FillEnvelopeDrive::Stale => {
-                    return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.stale"), "fill job no longer matches the live operation"));
-                }
+/// 🧯️ Terminal fault payloads of [`FILL_JOB_KIND`]. Fixed byte strings, never a formatted or
+/// `dsl`-encoded fault: a bounded job's terminal path runs inside the guest's own allocator on the
+/// slice that just ran out of room, so the code that reports the failure must not itself allocate a
+/// growable page. Same convention as `🏗️fem`'s `fem3d.visual-*` and `🔋️energy`'s `energy.session.*`
+/// bounded owners.
+const FILL_JOB_FAULT_DECODE: &[u8] = b"puzzle3d.fill-job.decode";
+const FILL_JOB_FAULT_IDENTITY: &[u8] = b"puzzle3d.fill-job.identity";
+const FILL_JOB_FAULT_STALE: &[u8] = b"puzzle3d.fill-job.stale";
+const FILL_JOB_FAULT_OWNER: &[u8] = b"puzzle3d.fill-job.owner";
+const FILL_JOB_FAULT_TERMINAL: &[u8] = b"puzzle3d.fill-job.terminal";
+
+/// 🪣️ The two live stages of one admitted fill run, plus its terminal. `Admitting` spends one
+/// `step` per [`FillEnvelopeTokenCursor`] field — the identical per-slice granularity the deleted
+/// async body got from `JobCtx::tick()`; `Driving` spends one `step` per [`drive_fill_envelope`]
+/// call and owns the fault guard that terminalizes the envelope if this job dies without reaching
+/// `slice.done`.
+enum FillJobStage {
+    Admitting(FillEnvelopeJobEntryCursor),
+    Driving { request: FillJobRequest, guard: FillEnvelopeWorkerFaultGuard },
+    Terminal,
+}
+
+/// 🧩️ The registered [`BoundedJob`] owner behind [`FILL_JOB_KIND`]. Registering a plain `JobFn`
+/// instead (which this used to do) makes `spawn_job` file the kind as
+/// `JobBody::ExplicitStateMachineRequired` on every non-`cfg(test)` build — the production wasm
+/// guest included — so every `step-job` answered `job.explicit-state-machine-required` and the plan
+/// never advanced past zero. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-J.
+pub(crate) struct Puzzle3dFillBoundedJob {
+    stage: FillJobStage,
+}
+
+impl Puzzle3dFillBoundedJob {
+    fn advance(stage: FillJobStage) -> (FillJobStage, JobStep) {
+        match stage {
+            FillJobStage::Admitting(mut cursor) => match cursor.step() {
+                Ok(None) => (FillJobStage::Admitting(cursor), JobStep::Running(None)),
+                Ok(Some(request)) => match cursor.bind(&request) {
+                    Ok(()) => (FillJobStage::Driving { request, guard: cursor.into_guard() }, JobStep::Running(None)),
+                    Err(_) => (FillJobStage::Terminal, JobStep::Failed(FILL_JOB_FAULT_IDENTITY.to_vec())),
+                },
+                Err(_) => (FillJobStage::Terminal, JobStep::Failed(FILL_JOB_FAULT_DECODE.to_vec())),
+            },
+            FillJobStage::Driving { request, mut guard } => match drive_fill_envelope(&request) {
+                FillEnvelopeDrive::Blocked => (FillJobStage::Driving { request, guard }, JobStep::Running(None)),
+                FillEnvelopeDrive::Stale => (FillJobStage::Terminal, JobStep::Failed(FILL_JOB_FAULT_STALE.to_vec())),
                 FillEnvelopeDrive::Advanced(slice) => {
-                    let token = fill_envelope_registry()
-                        .try_lock()
-                        .ok()
-                        .and_then(|registry| registry.token(&request))
-                        .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.owner"), "fill job terminal owner is unavailable"))?;
-                    if slice.progress.is_some() {
-                        context.progress(token.clone()).await;
-                    }
+                    let Some(token) = fill_envelope_registry().try_lock().ok().and_then(|registry| registry.token(&request)) else {
+                        return (FillJobStage::Terminal, JobStep::Failed(FILL_JOB_FAULT_OWNER.to_vec()));
+                    };
                     if slice.done {
-                        terminal_guard.disarm();
-                        return Ok(token);
+                        guard.disarm();
+                        return (FillJobStage::Terminal, JobStep::Done(token));
                     }
-                    context.checkpoint(token).await;
+                    let progress = slice.progress.is_some().then_some(token);
+                    (FillJobStage::Driving { request, guard }, JobStep::Running(progress))
                 }
-            }
+            },
+            FillJobStage::Terminal => (FillJobStage::Terminal, JobStep::Failed(FILL_JOB_FAULT_TERMINAL.to_vec())),
         }
-    })
+    }
+}
+
+impl BoundedJob for Puzzle3dFillBoundedJob {
+    fn step(&mut self, _budget: JobBudget) -> JobStep {
+        let stage = std::mem::replace(&mut self.stage, FillJobStage::Terminal);
+        let (next, outcome) = Self::advance(stage);
+        self.stage = next;
+        outcome
+    }
+
+    fn cancel(&mut self) {
+        let FillJobStage::Driving { request, .. } = &self.stage else { return };
+        let Ok(mut registry) = fill_envelope_registry().try_lock() else { return };
+        let Some(authority) = registry.authority_mut(request) else { return };
+        let Some(cancel) = &authority.cancel else { return };
+        cancel.cancel_now();
+    }
+
+    /// 📸️ The envelope token IS the checkpoint, byte-for-byte the same page `enqueue_fill_job`
+    /// handed `Effect::SpawnJob` as `input`. That equality is what keeps the restore contract intact
+    /// across [`BoundedJobFactory`], which — unlike `JobFn` — receives only `(job, input)` and never
+    /// the `restored` bytes `restore_job` packed (`⚛️reactor/💼️jobs/🦀️.rs::spawn_job`); it is pinned
+    /// by `fill_job_checkpoint_equals_its_spawn_input`.
+    fn checkpoint(&self) -> Option<Vec<u8>> {
+        let FillJobStage::Driving { request, .. } = &self.stage else { return None };
+        fill_envelope_registry().try_lock().ok()?.token(request)
+    }
+
+    fn terminal_drop_is_shallow(&self) -> bool {
+        true
+    }
+}
+
+/// 🏭️ Never rejects: the fault guard has to be armed from the RAW input before the token is even
+/// validated, so that a malformed token still terminalizes whichever envelope it names instead of
+/// stranding a slot. The decode verdict is the first `step`'s, exactly as the deleted async body
+/// took it on its first `tick`.
+fn fill_job_factory(job: u64, input: &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+    Ok(Box::new(Puzzle3dFillBoundedJob { stage: FillJobStage::Admitting(FillEnvelopeJobEntryCursor::new(job, input.to_vec())) }) as Box<dyn BoundedJob>)
+}
+
+/// 📤️ Installs [`FILL_JOB_KIND`]'s bounded owner into the reactor's job runtime. Called from the
+/// puzzle plugin root before `Plugin::builder`, the same place `🏗️fem` and `🔋️energy` call theirs.
+pub fn initialize() {
+    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FILL_JOB_KIND, fill_job_factory as BoundedJobFactory);
 }
 //#endregion 💼️SharedPluginJob
 

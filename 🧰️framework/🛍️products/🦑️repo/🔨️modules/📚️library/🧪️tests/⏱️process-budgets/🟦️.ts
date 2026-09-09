@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, defaultBudgetMs, orchestratorBudgetMs } from "../../🏃️process/🟦️.ts";
+import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, defaultBudgetMs, orchestratorBudgetMs, workspaceScriptExists } from "../../🏃️process/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
@@ -126,4 +126,13 @@ test("process budgets enforce an explicitly selected build deadline", async () =
   const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_BUILD_BUDGET_MS: "100" }, timeout: 5000, reject: false });
   expect(result.code).not.toBe(0);
   expect(result.stderr).toContain("exceeded 100ms");
+});
+
+test("process runner reaches workspace scripts before same-named bins", async () => {
+  expect(workspaceScriptExists("nx")).toBe(true);
+  expect(workspaceScriptExists("no-such-workspace-script")).toBe(false);
+  const code = `const { runCmd } = await import(${JSON.stringify(libraryPath)}); runCmd("bun", ["nx", "--version"]);`;
+  const result = await execa(process.execPath, ["-e", code], { env: cleanEnv(), timeout: 120_000, reject: false });
+  expect(result.code).toBe(0);
+  expect(`${result.stdout}\n${result.stderr}`).toContain("bootstrap");
 });

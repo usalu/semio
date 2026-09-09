@@ -54,7 +54,7 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     assert!(!expected.fixture.widgets.is_empty());
     assert!(!expected.fixture.synapses.is_empty());
     assert!(!expected.fixture.layout.is_empty());
-    let bytes = encode(&expected);
+    let bytes = encode_mounted(&expected);
     assert_eq!(&bytes[..4], &GENERATION3D_MOUNTED_PREFIX);
     let expected_ledger = bytes[4..].iter().fold(0xcbf2_9ce4_8422_2325u64, |ledger, byte| (ledger ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3));
     let mut session = Generation3dMountedPackSession::new(bytes.len(), 8_192).expect("P3 retained snapshot preflight");
@@ -78,6 +78,8 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     assert_eq!(actual.fixture.layout, expected.fixture.layout, "typed layout owner must retain the semantically attached widget positions");
     assert_eq!(actual, expected, "all typed snapshot owners must round-trip exactly");
     close(&mut session);
+    actual.retire_cold();
+    expected.retire_cold();
 }
 
 #[test]

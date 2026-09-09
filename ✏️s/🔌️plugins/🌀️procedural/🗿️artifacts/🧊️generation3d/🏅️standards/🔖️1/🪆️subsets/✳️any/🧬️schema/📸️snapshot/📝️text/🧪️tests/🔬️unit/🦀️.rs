@@ -5,8 +5,8 @@ use store::ArtifactDsl;
 
 #[test]
 fn dsl_round_trip_empty_projection() {
-    test_support::assert_dsl_round_trip(&Generation3dSnapshot::default());
-    test_support::assert_dsl_pack_equivalence(&Generation3dSnapshot::default());
+    test_support::assert_dsl_round_trip_cold(&Generation3dSnapshot::default(), Generation3dSnapshot::retire_cold);
+    test_support::assert_dsl_pack_equivalence_cold(&Generation3dSnapshot::default(), Generation3dSnapshot::retire_cold);
 }
 
 #[test]
@@ -21,9 +21,9 @@ fn dsl_round_trip_every_bundled_example() {
         GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT,
         GENERATION3D_EXAMPLE_BOX_SHELL_TEXT,
     ] {
-        let projection = Generation3dSnapshot::parse_dsl(text).expect("parse bundled example");
-        test_support::assert_dsl_round_trip(&projection);
-        test_support::assert_dsl_pack_equivalence(&projection);
+        let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(Generation3dSnapshot::parse_dsl(text).expect("parse bundled example"));
+        test_support::assert_dsl_round_trip_cold(&*projection, Generation3dSnapshot::retire_cold);
+        test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
     }
 }
 
@@ -33,9 +33,10 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-    let mut store: ArtifactStore<Generation3dSnapshot, Generation3dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::store_fixture::document_store(Generation3dSnapshot::default()).await;
     use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
     let edit: &Edit<Generation3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    crate::store_fixture::close(store);
 }

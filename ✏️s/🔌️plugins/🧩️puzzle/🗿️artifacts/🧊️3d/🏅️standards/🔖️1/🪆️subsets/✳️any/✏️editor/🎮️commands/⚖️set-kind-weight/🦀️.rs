@@ -1,7 +1,6 @@
 //! 🪣️ `set-kind-weight` command.
 
 use crate::editor::puzzle3d::puzzle3d_ensure_catalog_kind_weights;
-use crate::editor::puzzle3d::puzzle3d_fill_options_scope;
 use crate::editor::puzzle3d::puzzle3d_kind_ids;
 use crate::editor::puzzle3d::puzzle3d_normalize_kind_weight_group;
 use crate::editor::puzzle3d::sync_precompute_weights;
@@ -31,5 +30,4 @@ pub fn set_kind_weight(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Opti
         ctx.scene.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&ctx.scene.runtime.vortex_kind_weights, &vortex_ids, kind_id, value);
     }
     sync_precompute_weights(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
-    *ctx.ui_scope = puzzle3d_fill_options_scope();
 }

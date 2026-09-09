@@ -45,6 +45,7 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
             status_json: None,
             domain_id: None,
             domain_granularity_id: None,
+            lanes: Vec::new(),
         },
     );
     let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");

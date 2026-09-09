@@ -56,6 +56,16 @@ const RIBBON_PARENT_CATEGORIES = [
   "methods", "mode", "targets", "export", "tools", "utilities", "sync",
 ] as const;
 
+/** 🗂️ Id prefix every category group row carries. A group row travels with `label: undefined` on
+ * purpose — the shell that renders the menu owns the chrome vocabulary and resolves the label from
+ * the category behind this prefix (React: `contextMenuGroupLabel`; wgpu: `ribbon_parent_label`). */
+export const CONTEXT_MENU_GROUP_ID_PREFIX = "menu.group.";
+
+/** 🗂️ The one group category `organizeContextMenu` synthesizes rather than reads off the taxonomy:
+ * the overflow bucket surplus groups fold into once the row budget is exceeded. It is deliberately
+ * NOT a `RIBBON_PARENT_CATEGORIES` id, so it resolves through its own chrome label instead. */
+export const CONTEXT_MENU_OVERFLOW_CATEGORY = "more";
+
 const CONTEXT_MENU_ROW_BUDGET = 9;
 const CONTEXT_MENU_PRIMARY_BUDGET = 5;
 
@@ -69,11 +79,11 @@ function contextMenuIsHeader(item: ContextMenuItemSpec): boolean {
 }
 
 function contextMenuIsGroupRow(item: ContextMenuItemSpec): boolean {
-  return item.id.startsWith("menu.group.");
+  return item.id.startsWith(CONTEXT_MENU_GROUP_ID_PREFIX);
 }
 
 function contextMenuGroupCategory(item: ContextMenuItemSpec): string {
-  return item.id.startsWith("menu.group.") ? item.id.slice("menu.group.".length) : item.id;
+  return item.id.startsWith(CONTEXT_MENU_GROUP_ID_PREFIX) ? item.id.slice(CONTEXT_MENU_GROUP_ID_PREFIX.length) : item.id;
 }
 
 function contextMenuTaxonomyRank(category: string): number {
@@ -197,7 +207,7 @@ function contextMenuEmitOverBudget(
     }
     if (currentHeaderKey !== undefined) {
       const slug = currentHeaderKey.toLowerCase().split(/\s+/).join("-");
-      const index = bucketMut(bucketedGroups, `menu.group.${slug}`);
+      const index = bucketMut(bucketedGroups, `${CONTEXT_MENU_GROUP_ID_PREFIX}${slug}`);
       bucketedGroups[index] = { ...bucketedGroups[index]!, children: [...(bucketedGroups[index]!.children ?? []), item] };
       continue;
     }
@@ -206,7 +216,7 @@ function contextMenuEmitOverBudget(
       continue;
     }
     const category = categoryOf(item.action ?? item.id) ?? "actions";
-    const index = bucketMut(bucketedGroups, `menu.group.${category}`);
+    const index = bucketMut(bucketedGroups, `${CONTEXT_MENU_GROUP_ID_PREFIX}${category}`);
     bucketedGroups[index] = { ...bucketedGroups[index]!, children: [...(bucketedGroups[index]!.children ?? []), item] };
   }
 
@@ -222,7 +232,7 @@ function contextMenuEmitOverBudget(
     for (const group of overflowingGroups) {
       foldedChildren.push(...(group.children ?? []));
     }
-    out.push({ id: "menu.group.more", label: undefined, children: foldedChildren });
+    out.push({ id: `${CONTEXT_MENU_GROUP_ID_PREFIX}${CONTEXT_MENU_OVERFLOW_CATEGORY}`, label: undefined, children: foldedChildren });
   }
   if (destructiveLeaves.length > 0) {
     out.push(contextMenuSeparatorRow(out.length));
@@ -288,7 +298,88 @@ export type World3dScene = {
   readonly domainId?: string;
   /** 🎯️ `domainId`'s bound domain granularity id for a plain (non-component) instance pick/hover hit. */
   readonly domainGranularityId?: string;
+  /** 🚚️ On a scene SPINE (what arrives inside `SurfaceProps.doc`) this names every payload lane that
+   * rides OUTSIDE it, with the byte length and content hash of each — see {@link WORLD3D_SCENE_LANES}
+   * and the Rust `World3dScene::lanes` doc. Absent on an assembled scene built by hand. */
+  readonly lanes?: readonly World3dSceneLaneRef[];
 };
+
+//#region 🚚️World3dSceneLanes
+/** 🚚️ One entry of {@link World3dScene.lanes}. `bytes` is what tells a fully arrived lane from one
+ * still spread across reconcile pages; `hash` (FNV-1a/64, lowercase hex, computed by the producer)
+ * is what makes the spine itself differ exactly when a lane's content differs. */
+export type World3dSceneLaneRef = {
+  readonly lane: string;
+  readonly bytes: number;
+  readonly hash: string;
+};
+
+/** 🚚️ One world-3d payload lane: which {@link World3dScene} field it carries and which reserved node
+ * key its retained text carrier is rooted at. */
+export type World3dSceneLane = {
+  readonly lane: string;
+  readonly field: keyof World3dScene;
+  readonly bodyKey: string;
+  readonly optional: boolean;
+};
+
+/** 🚚️ Reserved carrier-key namespace — dotted and `framework.`-prefixed so a lane root can never
+ * collide with an app-authored node id. */
+export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
+
+/** 🚚️ The eighteen world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+ * its own retained, individually paged text carrier. `SurfaceDoc.bytes` is a hard 32 KiB
+ * `UiFixedBytes` ceiling that cannot page, so a world whose payload scales with its document (a
+ * measured 57 281-byte Nakagin Capsule Tower) can only publish with the payload split out; keeping the
+ * lanes SEPARATE is what lets an unchanged lane cost nothing on a partial refresh.
+ *
+ * Mirrors the Rust `World3dSceneLane` / `WORLD3D_SCENE_LANE_*` in
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🎬️scenes.rs`. Both sides are pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`. */
+export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
+  { lane: "meshes", field: "meshesJson", bodyKey: "framework.scene.world3d.meshes", optional: false },
+  { lane: "instances", field: "instancesJson", bodyKey: "framework.scene.world3d.instances", optional: false },
+  { lane: "selection", field: "selectionJson", bodyKey: "framework.scene.world3d.selection", optional: false },
+  { lane: "vortices", field: "vorticesJson", bodyKey: "framework.scene.world3d.vortices", optional: true },
+  { lane: "attractions", field: "attractionsJson", bodyKey: "framework.scene.world3d.attractions", optional: true },
+  { lane: "targetVolumes", field: "targetVolumesJson", bodyKey: "framework.scene.world3d.targetVolumes", optional: true },
+  { lane: "references", field: "referencesJson", bodyKey: "framework.scene.world3d.references", optional: true },
+  { lane: "brushPreview", field: "brushPreviewJson", bodyKey: "framework.scene.world3d.brushPreview", optional: true },
+  { lane: "interaction", field: "interactionJson", bodyKey: "framework.scene.world3d.interaction", optional: true },
+  { lane: "engagementPreview", field: "engagementPreviewJson", bodyKey: "framework.scene.world3d.engagementPreview", optional: true },
+  { lane: "lod", field: "lodJson", bodyKey: "framework.scene.world3d.lod", optional: true },
+  { lane: "chunking", field: "chunkingJson", bodyKey: "framework.scene.world3d.chunking", optional: true },
+  { lane: "environment", field: "environmentJson", bodyKey: "framework.scene.world3d.environment", optional: true },
+  { lane: "frame", field: "frameJson", bodyKey: "framework.scene.world3d.frame", optional: true },
+  { lane: "fit", field: "fitJson", bodyKey: "framework.scene.world3d.fit", optional: true },
+  { lane: "terrain", field: "terrainJson", bodyKey: "framework.scene.world3d.terrain", optional: true },
+  { lane: "points", field: "pointsJson", bodyKey: "framework.scene.world3d.points", optional: true },
+  { lane: "status", field: "statusJson", bodyKey: "framework.scene.world3d.status", optional: true },
+];
+
+/** 🚚️ Resolves a retained node key back to the lane it carries, `undefined` for every other key. */
+export function world3dSceneLaneForBodyKey(bodyKey: string): World3dSceneLane | undefined {
+  return WORLD3D_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
+}
+
+/** 🚚️ Reassembles a decoded scene spine and its lane carrier texts back into the `World3dScene` every
+ * render host already knows how to read — the exact inverse of the Rust `SceneDoc::split_lanes`.
+ *
+ * `laneTexts` is keyed by reserved carrier key ({@link World3dSceneLane.bodyKey}). A lane the spine
+ * declares but `laneTexts` does not carry is left at its spine value (an empty string for a required
+ * lane, absent for an optional one) rather than guessed: a caller that wants last-known-good content
+ * across a partially arrived refresh supplies it in `laneTexts` itself, which is exactly what the
+ * Interpreter's per-lane cache does. Never throws. */
+export function world3dSceneFromLanes(spine: World3dScene, laneTexts: ReadonlyMap<string, string>): World3dScene {
+  if (laneTexts.size === 0) return spine;
+  const assembled: Record<string, unknown> = { ...spine };
+  for (const lane of WORLD3D_SCENE_LANES) {
+    const text = laneTexts.get(lane.bodyKey);
+    if (text !== undefined) assembled[lane.field] = text;
+  }
+  return assembled as World3dScene;
+}
+//#endregion 🚚️World3dSceneLanes
 
 /** 🔌️ One port on a node-graph node: identity + display label (direction is implied by whether the
  * record lives in the owning node's `inputs` or `outputs` array). `code`/`abbreviation`/`fullName`/
@@ -386,12 +477,52 @@ export type NodeGraphOperatorRecord = {
   readonly group?: readonly string[];
 };
 
+/** 🛍️ One drag-and-drop palette entry — mirrors the Rust `CatalogueItem`. */
+export type AppCatalogueItem = {
+  readonly kind: string;
+  readonly neuronKind?: string;
+  readonly action?: string;
+  readonly format?: string;
+  readonly name: string;
+  readonly abbreviation: string;
+  readonly icon: string;
+  readonly summary: string;
+};
+
+/** 🛍️ One palette section — mirrors the Rust `CatalogueSection`/`CatalogueGroup` pair. */
+export type AppCatalogueSection = {
+  readonly id: string;
+  readonly title: string;
+  readonly items?: readonly AppCatalogueItem[];
+  readonly groups?: readonly AppCatalogueSection[];
+};
+
+/**
+ * 🛍️ The APP-STATIC catalogue an app publishes ONCE per instance on the reserved
+ * `framework.section.catalogue` retained surface — mirrors the Rust `FlowAppCatalogue`
+ * (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗂️catalogue/🦀️.rs`).
+ *
+ * 🚨️ It is deliberately NOT part of {@link NodeGraphScene}. With the real `brep`/`math` operator sets
+ * installed it is ~100 KB, and a surface payload is admitted against the fixed 32 KiB
+ * `UI_FIXED_BYTES` capacity, so embedding it per scene made every node-graph window fail admission at
+ * 111 031 B and render nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). A scene now references
+ * an operator by KIND ID only, and the renderer caches this payload for the app's whole lifetime.
+ */
+export type AppCatalogue = {
+  readonly operators?: readonly NodeGraphOperatorRecord[];
+  readonly sections?: readonly AppCatalogueSection[];
+};
+
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
 export type NodeGraphScene = {
   readonly nodes: readonly NodeGraphNodeRecord[];
   readonly edges: readonly NodeGraphEdgeRecord[];
   readonly viewport?: NodeGraphViewport;
   readonly editable?: boolean;
+  /** 🔌️ DOCUMENT-DERIVED operator records only — one per node this graph holds (the OS workflow window
+   * derives one per workflow node so the canvas can lay its ports out). The app's REGISTERED operator
+   * catalogue rides {@link AppCatalogue} on the reserved `framework.section.catalogue` surface instead;
+   * a flow-backed scene leaves this empty. */
   readonly operators?: readonly NodeGraphOperatorRecord[];
   readonly findItems?: readonly NodeGraphFindItem[];
   readonly selection?: readonly string[];
@@ -401,7 +532,6 @@ export type NodeGraphScene = {
   readonly highlighted?: readonly string[];
   readonly previewOffJson?: string;
   readonly lodJson?: string;
-  readonly catalogueJson?: string;
   readonly controlsJson?: string;
   readonly clustersJson?: string;
   readonly computingJson?: string;
@@ -644,7 +774,14 @@ export type UiComponentSceneNode = {
 /** 🧷️ Shared prop shape for the host components under `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements`. */
 export type ComponentSceneHostProps = {
   readonly node: UiComponentSceneNode;
-  readonly onAction: (action: ActionDescriptor) => void;
+  /** 🏁️ Returns a promise that settles when the dispatched action's guest work is FINISHED — its typed
+   * operation completed and the host applied that completion — not merely when the admitting round trip
+   * returned. A background tick loop (`createInFlightSkippingInterval`) can only gate itself on the
+   * previous tick if this promise means "settled": with a `void` contract the loop's own in-flight flag
+   * cleared immediately and 120 ms ticks queued into the serialized guest until the per-actor turn queue
+   * overflowed (measured 2026-09-09: 252 `fillBuildTick`s in 35 s, 38 rejected with `queue is full`).
+   * A host with nothing to await may still return `void`. */
+  readonly onAction: (action: ActionDescriptor) => void | Promise<void>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion ComponentSceneProtocol

@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation2d.inference")]
 pub struct Generation2dInference {
@@ -23,6 +23,17 @@ pub struct Generation2dInference {
 impl protocol::Inference<Generation2dSnapshot> for Generation2dInference {
     fn infer(snapshot: &Generation2dSnapshot) -> Self {
         Self { topology: compute_generation2d_topology(snapshot) }
+    }
+}
+
+/// 🌱 Hand-fixed to agree with `infer(&Generation2dSnapshot::default())` rather than a naive
+/// `#[derive(Default)]` — the snapshot's `fixture` is `semio_framework_artifact_flow_flow::FlowFixture::default()`,
+/// which ships a non-empty three-widget starter graph, so a structural default would name a
+/// topology no document ever has. Same trick as `FlowInference`'s hand-written `Default`
+/// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/💡️inferences/🦀️.rs`).
+impl Default for Generation2dInference {
+    fn default() -> Self {
+        <Self as protocol::Inference<Generation2dSnapshot>>::infer(&Generation2dSnapshot::default())
     }
 }
 

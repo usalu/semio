@@ -17,8 +17,12 @@ pub fn evaluate(doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'
     let more = session.tick(&mut host);
     let effects = if more { vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(103), action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
     let eval_json = session.eval_json().to_string();
+    let pending_extension_eval = host.take_pending_extension_eval();
+    // 🧹️ The host's cloned fixture owns retirement-tracked ordered maps and is dead from here on —
+    // close it before the invocation build, never leave it to drop glue.
+    host.retire_cold();
     let mut extension_invocations = Vec::new();
-    if let Some(pending) = host.take_pending_extension_eval() {
+    if let Some(pending) = pending_extension_eval {
         let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
             ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
             ("inputJson".to_string(), dsl::DslValue::String(pending.input_json.clone())),

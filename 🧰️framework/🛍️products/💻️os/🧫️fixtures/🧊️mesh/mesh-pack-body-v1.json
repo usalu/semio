@@ -1,0 +1,14 @@
+{
+  "_comment": "🧊️ Cross-language golden wire vector for the brep preview mesh `pack` record body. Rust encodes and decodes these exact bytes in semio-framework-os-flow's brep_geometry unit tests; TypeScript decodes the same bytes in 🧪️mesh-pack-decode via decodeMeshPackBody.",
+  "mesh": {
+    "positions": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    "normals": [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+    "indices": [0, 1, 2],
+    "faceIds": [7],
+    "edgePositions": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+    "edgeIds": [11]
+  },
+  "packBodyBase64": "AAYBCCQAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAACCCQAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8DCAwAAAAAAQAAAAIAAAAGCAQHAAAACAgYAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAACQgECwAAAA==",
+  "packBodyBytes": 136,
+  "jsonBytes": 200
+}

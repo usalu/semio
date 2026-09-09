@@ -183,11 +183,36 @@ pub(super) struct Prism {
     pub laterals: Vec<FaceId>,
 }
 
-/// 🧮 Builds one prism segment: `bottom` is flipped in place to face outward (recorded modified),
-/// a fresh `top = transform_face(bottom, map)`, and one lateral face per profile edge (every loop,
-/// so holes get their own tube faces). The bottom/top boundary orientation follows the derivation
-/// in `📓️w2c-sweeps.md` §orientation: bottom coedge `!f_i`, top coedge `f_i` (its own, unchanged,
-/// copied value), rails shared bottom→top with `true`/`false` per adjacent lateral face.
+/// 🧮 Builds one prism segment: `bottom` is flipped in place to face away from the travel
+/// (recorded modified), a fresh `top = transform_face(bottom, map)` whose `flipped` is toggled so
+/// the two caps face opposite ways, and one lateral face per profile edge of every loop (so holes
+/// get their own tube faces).
+///
+/// # Lateral orientation
+///
+/// Two independent invariants fix every lateral face, and both are derived — never patched per
+/// face or per surface kind (`📓️w2c-sweeps.md` §orientation, `📓️sweep-kernel-2026-09-09.md`):
+///
+/// * **Its loop is written in its own surface's natural `(u, v)` sense.** Every lateral surface
+///   this file builds has `u` increasing along the profile edge's own curve direction and `v`
+///   increasing along the travel, so the counter-clockwise circuit is unconditionally
+///   `[(profile edge, forward), (rail at the edge's END vertex, forward), (top edge, reversed),
+///   (rail at the edge's START vertex, reversed)]` — independent of how the CAP happens to
+///   traverse that edge. Keying the circuit off the cap's `forward` instead (the previous
+///   `[(b_edge, !f_i), …]` form) wound the loop CLOCKWISE in `(u, v)` for every profile edge the
+///   cap traverses forward, which is the region's complement.
+/// * **Its `flipped` states whether `du × dv` is the outward normal**, and follows from the
+///   profile's winding and the sweep direction alone: the profile loop is counter-clockwise about
+///   its own surface frame `Z_b`, so the material-outward in-plane direction at a profile edge is
+///   `d × Z_b` for the cap's traversal direction `d = ±dir`, while `du × dv = dir × travel` and
+///   `Z_b = ±travel` by the cap correction above. Both signs collapse to
+///   `flipped = f_i != bottom.flipped`. It reproduces `🧱️primitives::make_box`'s hand-verified
+///   side-face convention exactly, and it is what keeps `forward XOR flipped` opposite on every
+///   shared cap edge and rail, so `validate_body` sees a coherent shell.
+///
+/// Compensating a mass-property sign with `flipped` (the previous `flipped = matches!(Plane)`)
+/// inverted every extruded side wall's shading normal and tessellated winding instead, which is
+/// what made a watertight prism measure `−V/3` as a triangle soup.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement, rec: &mut OpRecorder) -> Result<Prism, KernelError> {
     let map = placement.affine();
@@ -213,24 +238,8 @@ pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement
         f.flipped = !f.flipped;
         rec.record_modified(bottom_label);
     }
+    let bottom_flipped = body.faces.get(bottom).unwrap().flipped;
     let top = transform_face(body, bottom, &map, rec)?;
-    // 🧮 `transform_face` (`copy_face`) correctly preserves `flipped` verbatim under any
-    // NON-reflecting map (`determinant > 0`, true for every rigid `Translate`/`General` placement
-    // here) — that is the right general contract for a plain copy. But a prism's `top` cap is not
-    // just a copy: it caps the SOLID on the opposite side from `bottom`, so its OUTWARD direction
-    // must be the opposite of `bottom`'s (already `want_flip_bottom`-corrected) outward direction,
-    // even though `top`'s surface shares `bottom`'s exact local frame/normal-generating convention
-    // (translated or rigidly rotated, never mirrored). Toggling here is what `want_flip_bottom`
-    // above already does for `bottom` itself, applied to the other cap. Previously this was never
-    // done, so `top` silently inherited `bottom`'s sign — invisible whenever every face happened
-    // to share the same (accidentally globally inverted) convention, since `solid_volume` takes
-    // `.abs()` — but a real, provable bug once a cap's own quadrature is orientation-SENSITIVE
-    // per-face (any curved-boundary `Plane` cap routed through the general `loop_uv_polygon` path
-    // instead of the straight-edge `signed_tetra_sum` fast path): confirmed via
-    // `sweep_circle_along_line_is_a_cylinder`, whose circular caps landed at `+5.17` instead of
-    // `π·r²·h ≈ 15.71` — exactly `(lateral's correct +10.47) + (top cap's WRONG-signed −5.24)`
-    // instead of `+15.71 = (lateral +10.47) + (top +5.24, bottom always ≈0 for either sign since
-    // its own centroid lies in its own plane)`.
     {
         let t = body.faces.get_mut(top).unwrap();
         t.flipped = !t.flipped;
@@ -254,13 +263,14 @@ pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement
             let t_edge = body.coedges.get(tce[k]).unwrap().edge;
             let (s_bot, e_bot) = body.coedge_endpoints(bce[k]).unwrap();
             let (s_top, e_top) = body.coedge_endpoints(tce[k]).unwrap();
-            let left_rail = *rail_cache.entry(s_bot).or_insert_with(|| {
-                let (a, b) = (body.vertices.get(s_bot).unwrap().position, body.vertices.get(s_top).unwrap().position);
-                line_edge(body, a, b, s_bot, s_top, Tol::DEFAULT, rec)
+            let (start_bot, start_top, end_bot, end_top) = if f_i { (s_bot, s_top, e_bot, e_top) } else { (e_bot, e_top, s_bot, s_top) };
+            let start_rail = *rail_cache.entry(start_bot).or_insert_with(|| {
+                let (a, b) = (body.vertices.get(start_bot).unwrap().position, body.vertices.get(start_top).unwrap().position);
+                line_edge(body, a, b, start_bot, start_top, Tol::DEFAULT, rec)
             });
-            let right_rail = *rail_cache.entry(e_bot).or_insert_with(|| {
-                let (a, b) = (body.vertices.get(e_bot).unwrap().position, body.vertices.get(e_top).unwrap().position);
-                line_edge(body, a, b, e_bot, e_top, Tol::DEFAULT, rec)
+            let end_rail = *rail_cache.entry(end_bot).or_insert_with(|| {
+                let (a, b) = (body.vertices.get(end_bot).unwrap().position, body.vertices.get(end_top).unwrap().position);
+                line_edge(body, a, b, end_bot, end_top, Tol::DEFAULT, rec)
             });
             let curve = body.curves3.get(body.edges.get(b_edge).unwrap().curve).unwrap().clone();
             let range = body.edges.get(b_edge).unwrap().range;
@@ -268,50 +278,19 @@ pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement
                 Placement::Translate { offset } => translate_lateral(&curve, range, *offset)?,
                 Placement::General { map } => general_lateral(&curve, range, map)?,
             };
-            let lateral_flipped = matches!(lat.surface, Surface::Plane { .. });
+            let lateral_flipped = f_i != bottom_flipped;
             let surf_id = body.surfaces.insert(lat.surface);
             let u0 = lat.u_domain.0;
             let u1 = lat.u_domain.1;
-            // 🧮 `bottom_pc`/`top_pc` must read `t` RAW (`prange` below is `range`, the edge's own
-            // curve domain — the file-wide "p = t" convention, see `📓️w1e-primitives.md`), so
-            // their slope is `u`'s actual per-unit-`t` rate, `(u1 - u0) / (range.1 - range.0)` —
-            // hardcoding `dir = (1, 0)` (as if `u == t` exactly) silently assumed `lat.u_domain ==
-            // range`, true only for the `Circle`/`Nurbs` cases (where it still is, recovering
-            // identical behavior below: `u1 - u0 == range.1 - range.0` there ⇒ `slope == 1`); for
-            // `Line` it is not, since `u_domain` is now the edge's true local-x span, not its raw
-            // `t` domain (see `translate_lateral`'s `Curve3::Line` branch docstring).
             let u_slope = (u1 - u0) / (range.1 - range.0);
             let u_origin = u0 - u_slope * range.0;
+            let v_slope = lat.v_top - lat.v_bottom;
             let bottom_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_bottom), dir: Vec2::new(u_slope, 0.0) });
             let top_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_top), dir: Vec2::new(u_slope, 0.0) });
-            let (u_s, u_e) = if f_i { (u0, u1) } else { (u1, u0) };
-            // 🧮 `left_pc`/`right_pc` trace a RAIL edge (`line_edge`'s own `(0, 1)` domain, `t = 0`
-            // at the bottom vertex, `t = 1` at the top — see `🧱️primitives::line_edge`), so their
-            // slope must be the surface's actual `v_top - v_bottom` span, not a hardcoded `1.0`
-            // (only correct when that span happened to equal `1`, true for `general_lateral`'s
-            // NURBS surfaces by explicit `v_knots` construction, but not for `Cylinder`'s `v =
-            // height` or a `Line` profile edge's now-real `v_top = offset · frame.y`).
-            let v_slope = lat.v_top - lat.v_bottom;
-            let left_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_s, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
-            let right_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_e, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
-            let members = vec![(b_edge, !f_i), (left_rail, true), (t_edge, f_i), (right_rail, false)];
-            let pcurves = vec![(bottom_pc, range), (left_pc, (0.0, 1.0)), (top_pc, range), (right_pc, (0.0, 1.0))];
-            // 🧮 A `Curve3::Line` lateral's `Surface::Plane` needs `flipped = true`: unlike every
-            // OTHER lateral surface kind (`Cylinder`/`Cone`/`Torus`/NURBS, all independently
-            // verified correct with `flipped = false` — their `du × dv` naturally points outward
-            // for the `[bottom(!f_i), left_rail(true), top(f_i), right_rail(false)]` coedge order
-            // this file derives), the STRAIGHT-edge case routes through mass-properties'
-            // `signed_tetra_sum` fast path instead of `du × dv`-based quadrature — a sign
-            // convention that depends on the LOOP's own vertex winding, not on `frame.z`/`du × dv`
-            // at all, and empirically comes out backward for this same coedge order. Confirmed via
-            // `extrude_rectangle_matches_box_topology_and_volume`: with `flipped = false` every one
-            // of the 4 side faces' independently-computed `frame.z` was the CORRECT physical
-            // outward direction (hand-verified against the box's own geometry), yet their combined
-            // `signed_tetra_sum` contribution was `-16` instead of `+16` — a uniform sign inversion
-            // across all 4, not a partial one, consistent with this being the SAME systematic fix
-            // needed everywhere a `Curve3::Line` lateral is built this way (also used by
-            // `Placement::General`'s NURBS path is unaffected: `general_lateral` never returns
-            // `Surface::Plane`).
+            let start_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
+            let end_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u1, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
+            let members = vec![(b_edge, true), (end_rail, true), (t_edge, false), (start_rail, false)];
+            let pcurves = vec![(bottom_pc, range), (end_pc, (0.0, 1.0)), (top_pc, range), (start_pc, (0.0, 1.0))];
             let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], lateral_flipped, Tol::DEFAULT, rec);
             laterals.push(face);
         }

@@ -5,13 +5,13 @@ use semio_framework_os_kernel::os_store::test_support;
 
 #[test]
 fn dsl_pack_equivalence_empty_projection() {
-    test_support::assert_dsl_pack_equivalence(&Generation2dSnapshot::default());
+    test_support::assert_dsl_pack_equivalence_cold(&Generation2dSnapshot::default(), Generation2dSnapshot::retire_cold);
 }
 
 #[test]
 fn dsl_pack_equivalence_example_fixture() {
-    let projection = generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture");
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture"));
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 
 #[test]
@@ -25,7 +25,8 @@ fn dsl_pack_equivalence_with_generation_state() {
     projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
     projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
     projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 
 #[test]
@@ -40,16 +41,19 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.fixture.synapses = vec![];
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
 
 #[test]
 fn pack_round_trips() {
-    let projection = generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse fixture");
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse fixture"));
     let bytes = encode(&projection);
-    assert!(bytes.starts_with(b"P2D2"));
-    assert_eq!(decode(&bytes).expect("decode"), projection);
+    assert!(bytes.starts_with(&GENERATION2D_MOUNTED_PREFIX), "a whole-document encode leads with this artifact's own mounted prefix");
+    assert!(bytes[GENERATION2D_MOUNTED_PREFIX.len()..].starts_with(&store::pack_rt::MAGIC), "the mounted prefix is followed by the `.spk` container it wraps");
+    let decoded = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(decode(&bytes).expect("decode"));
+    assert_eq!(*decoded, *projection, "pack round trip diverged");
     let mut wrong = bytes;
-    wrong[..4].copy_from_slice(b"P3D3");
-    assert!(decode(&wrong).is_err());
+    wrong[..GENERATION2D_MOUNTED_PREFIX.len()].copy_from_slice(&[0; GENERATION2D_MOUNTED_PREFIX.len()]);
+    assert!(decode(&wrong).is_err(), "a corrupted container magic must be rejected");
 }

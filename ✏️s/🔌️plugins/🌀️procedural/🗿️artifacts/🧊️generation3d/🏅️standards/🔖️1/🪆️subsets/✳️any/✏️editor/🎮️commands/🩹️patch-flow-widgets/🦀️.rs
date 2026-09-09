@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `patch-flow-widgets`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::host_from_fixture;
+use crate::standards::v1::subsets::any::schema::with_host;
 use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_fixture_operations, Generation3dMutation};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
@@ -19,17 +19,20 @@ pub struct PatchFlowWidgets {
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
-    let mut host = host_from_fixture(fixture);
-    let baseline = host.fixture.clone();
-    for widget in host.fixture.widgets.iter_mut() {
-        if !payload.widget_ids.contains(&crate::widget_id(widget).to_string()) {
-            continue;
-        }
-        if let (Widget::InputSlider { value: slider_value, .. }, Some(new_value)) = (widget, payload.value) {
-            if payload.field == "value" {
-                *slider_value = new_value;
+    Ok(Emit::mutations(with_host(fixture, |host| {
+        let baseline = host.fixture.clone();
+        for widget in host.fixture.widgets.iter_mut() {
+            if !payload.widget_ids.contains(&crate::widget_id(widget).to_string()) {
+                continue;
+            }
+            if let (Widget::InputSlider { value: slider_value, .. }, Some(new_value)) = (widget, payload.value) {
+                if payload.field == "value" {
+                    *slider_value = new_value;
+                }
             }
         }
-    }
-    Ok(Emit::mutations(generation3d_fixture_operations(&baseline, &host.fixture)))
+        let operations = generation3d_fixture_operations(&baseline, &host.fixture);
+        baseline.retire_cold();
+        operations
+    })))
 }

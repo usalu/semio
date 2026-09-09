@@ -296,13 +296,18 @@ fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
 
 /// 🖱️ Maps an on-demand plugin context-menu spec into the wgpu shell menu row — `menu.group.<category>`
 /// rows (D5's `organize_context_menu` folds, see `ui_wgpu::wgpu::ContextMenuOrganizer`) resolve their label via
-/// `ribbon_parent_label` (falling back to the spec's own label if the category is unrecognized) and get
+/// `context_menu_group_label` (falling back to the spec's own label if the category is unrecognized) and get
 /// a default folder icon when the spec left `icon` unset.
+///
+/// 🗂️ `context_menu_group_label`, not `ribbon_parent_label`: the overflow row `organize_context_menu`
+/// synthesizes (`menu.group.more`) is the one group id outside the closed 20-id ribbon-parent taxonomy,
+/// so resolving through the taxonomy alone rendered it with an EMPTY label. Its React twin resolves the
+/// same id through `ui.contextMenu.more` (`🛠️ShellHelpers/🟦️.tsx`'s `contextMenuGroupLabel`).
 fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
     let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, separator, checked, destructive, action, args, children, .. } = spec;
-    let category = id.strip_prefix("menu.group.");
-    let label = category.and_then(|category| ui_wgpu::wgpu::ribbon_parent_label(category, is_de)).map(str::to_string).or(label);
-    let icon = icon.or_else(|| category.map(|_| "folder".to_string()));
+    let is_group_row = id.starts_with(ui_wgpu::wgpu::CONTEXT_MENU_GROUP_ID_PREFIX);
+    let label = ui_wgpu::wgpu::context_menu_group_label(&id, is_de).map(str::to_string).or(label);
+    let icon = icon.or_else(|| is_group_row.then(|| "folder".to_string()));
     ContextMenuItem {
         id,
         label: label.unwrap_or_default(),

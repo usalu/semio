@@ -1139,7 +1139,9 @@ where
     Mutation: self::Mutation<P>,
 {
     let (diff, messages) = operation.diff(snapshot).into_parts();
-    Ok((diff.apply(snapshot)?, messages))
+    let applied = diff.apply(snapshot);
+    MutationDiff::retire_cold(diff);
+    Ok((applied?, messages))
 }
 
 //#endregion 🔖️Mutation

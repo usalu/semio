@@ -147,11 +147,23 @@ impl BuiltChildRetireAuthority {
     fn is_terminal_empty(&self) -> bool {
         self.slots.iter().all(|slot| !slot.reserved && slot.owner.is_none())
     }
+
+    fn is_close_queue_empty(&self) -> bool {
+        self.slots.iter().all(|slot| slot.owner.is_none())
+    }
 }
 
+/// 🧹️ Retires one queued built-child page and reports whether the close queue is now empty. Live
+/// reservations (trees still mounted) do not count: a closing owner waits only for the pages handed
+/// back for retirement, never for every other surface to unmount.
 pub fn close_built_node_page_one() -> bool {
     let node = with_built_child_retire_authority(BuiltChildRetireAuthority::take_close_page);
     drop(node);
+    with_built_child_retire_authority(|authority| authority.is_close_queue_empty())
+}
+
+/// 🏁️ True once no built-child page is reserved or queued anywhere — the shutdown witness.
+pub fn built_node_pages_are_terminal_empty() -> bool {
     with_built_child_retire_authority(|authority| authority.is_terminal_empty())
 }
 
@@ -1577,6 +1589,14 @@ impl HasBase for SurfaceBuilder {
         &mut self.base
     }
 }
+
+/// 👶️ A surface's children are NOT rendered chrome — a renderer draws `props` and nothing else. They
+/// are the surface's own out-of-doc payload carriers: `SurfaceDoc.bytes` is [`crate::UiFixedBytes`], a
+/// hard [`crate::UI_FIXED_BYTES`] ceiling that cannot page, so a scene whose payload scales with its
+/// document (a world of 10 000 instances, say) can only publish by leaving that payload OUTSIDE the
+/// doc, as retained text-leaf subtrees the reconciler pages and diffs per node like any other subtree.
+/// The layout stays [`crate::LayoutSpec::Leaf`] precisely because these children occupy no space.
+impl HasChildren for SurfaceBuilder {}
 
 impl From<SurfaceBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

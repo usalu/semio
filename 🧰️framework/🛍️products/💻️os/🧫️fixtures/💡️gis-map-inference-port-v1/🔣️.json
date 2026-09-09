@@ -41,11 +41,23 @@
       "session-rotation"
     ],
     "brokerReplacement": "queued-old-request-denied",
-    "authorityRetirement": ["invalid-response", "http-401", "non-200", "old-body-after-proof-replacement"],
+    "authorityRetirement": [
+      "invalid-response",
+      "http-401",
+      "non-200",
+      "old-body-after-proof-replacement"
+    ],
     "portReplacement": "old-body-cannot-bind-successor-port",
-    "directoryPageBinding": ["same-authority", "foreign-binding", "foreign-generation"],
+    "directoryPageBinding": [
+      "same-authority",
+      "foreign-binding",
+      "foreign-generation"
+    ],
     "authorityFence": {
-      "cases": ["absent-authority-refused", "sealed-request-proof-replacement"],
+      "cases": [
+        "absent-authority-refused",
+        "sealed-request-proof-replacement"
+      ],
       "openingCode": "inference.denied",
       "blockedOpeningCode": "inference.capacity",
       "successorRoutes": [],
@@ -1208,5 +1220,284 @@
     "no-external-model-provider",
     "no-two-user-process-journey",
     "nothing-persisted-into-the-map-artifact"
-  ]
+  ],
+  "rejectLifecycle": [
+    {
+      "name": "operator-requests-a-proposal",
+      "event": {
+        "kind": "start"
+      },
+      "expected": {
+        "phase": "submitting",
+        "jobId": null,
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": false,
+        "code": null
+      }
+    },
+    {
+      "name": "server-accepts-and-mints-the-job",
+      "event": {
+        "kind": "receipt",
+        "receipt": {
+          "schema": "semio.hub.inference-job-receipt/v1",
+          "jobId": "11111111111111111111111111111111",
+          "state": "accepted",
+          "proposalState": "none",
+          "cursor": 0,
+          "expiresAtMs": 1700000060000,
+          "proposalHash": null
+        }
+      },
+      "expected": {
+        "phase": "running",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 0,
+        "completed": 0,
+        "total": 0,
+        "proposalHash": null,
+        "cancelRequested": false,
+        "code": null
+      }
+    },
+    {
+      "name": "server-offers-the-proposal",
+      "event": {
+        "kind": "page",
+        "page": {
+          "schema": "semio.hub.inference-job-events/v1",
+          "jobId": "11111111111111111111111111111111",
+          "state": "succeeded",
+          "proposalState": "offered",
+          "cancelRequested": false,
+          "stale": false,
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "preview": {
+            "schema": "semio.hub.gis-map-inference-preview/v1",
+            "jobId": "11111111111111111111111111111111",
+            "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+            "regionId": "inference-11111111111111111111111111111111",
+            "ring": [
+              [
+                7,
+                46
+              ],
+              [
+                9,
+                46
+              ],
+              [
+                9,
+                48
+              ],
+              [
+                7,
+                48
+              ],
+              [
+                7,
+                46
+              ]
+            ]
+          },
+          "events": [],
+          "progress": [
+            {
+              "cursor": 3,
+              "runEpoch": 1,
+              "completed": 4,
+              "total": 4,
+              "atMs": 1700000003000
+            }
+          ],
+          "nextCursor": 3
+        }
+      },
+      "expected": {
+        "phase": "offered",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 3,
+        "completed": 4,
+        "total": 4,
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "preview": {
+          "schema": "semio.hub.gis-map-inference-preview/v1",
+          "jobId": "11111111111111111111111111111111",
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "regionId": "inference-11111111111111111111111111111111",
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
+        },
+        "cancelRequested": false,
+        "code": null
+      }
+    },
+    {
+      "name": "operator-rejects-the-offered-proposal",
+      "event": {
+        "kind": "cancel"
+      },
+      "expected": {
+        "phase": "offered",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 3,
+        "completed": 4,
+        "total": 4,
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "preview": {
+          "schema": "semio.hub.gis-map-inference-preview/v1",
+          "jobId": "11111111111111111111111111111111",
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "regionId": "inference-11111111111111111111111111111111",
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
+        },
+        "cancelRequested": true,
+        "code": null
+      }
+    },
+    {
+      "name": "server-confirms-rejected-proposal",
+      "event": {
+        "kind": "page",
+        "page": {
+          "schema": "semio.hub.inference-job-events/v1",
+          "jobId": "11111111111111111111111111111111",
+          "state": "cancelled",
+          "proposalState": "cancelled",
+          "cancelRequested": true,
+          "stale": false,
+          "events": [],
+          "progress": [
+            {
+              "cursor": 4,
+              "runEpoch": 1,
+              "completed": 4,
+              "total": 4,
+              "atMs": 1700000004000
+            }
+          ],
+          "nextCursor": 4,
+          "proposalHash": null
+        }
+      },
+      "expected": {
+        "phase": "cancelled",
+        "jobId": "11111111111111111111111111111111",
+        "cursor": 4,
+        "completed": 4,
+        "total": 4,
+        "proposalHash": null,
+        "cancelRequested": true,
+        "code": null
+      }
+    }
+  ],
+  "mapOverlay": {
+    "regionId": "inference-11111111111111111111111111111111",
+    "viewBox": "0 0 100 100",
+    "path": "M 0 100 L 100 100 L 100 0 L 0 0 L 0 100 Z"
+  },
+  "controls": {
+    "request": {
+      "en": "Request bounds proposal",
+      "de": "Begrenzungsvorschlag anfordern"
+    },
+    "reject": {
+      "en": "Reject proposal",
+      "de": "Vorschlag ablehnen"
+    },
+    "approve": {
+      "en": "Approve proposal",
+      "de": "Vorschlag freigeben"
+    },
+    "cancel": {
+      "en": "Cancel proposal",
+      "de": "Vorschlag abbrechen"
+    },
+    "overlay": {
+      "en": "Proposed bounds on the map",
+      "de": "Vorgeschlagene Grenzen auf der Karte"
+    }
+  },
+  "uiAffordances": {
+    "idle": {
+      "request": true,
+      "cancel": false,
+      "reject": false,
+      "approve": false,
+      "overlay": false
+    },
+    "submitting": {
+      "request": false,
+      "cancel": true,
+      "reject": false,
+      "approve": false,
+      "overlay": false
+    },
+    "running": {
+      "request": false,
+      "cancel": true,
+      "reject": false,
+      "approve": false,
+      "overlay": false
+    },
+    "offered": {
+      "request": false,
+      "cancel": false,
+      "reject": true,
+      "approve": true,
+      "overlay": true
+    },
+    "approving": {
+      "request": false,
+      "cancel": false,
+      "reject": false,
+      "approve": false,
+      "overlay": true
+    }
+  }
 }

@@ -47,6 +47,14 @@
         "forwardAllArgs": true
       }
     },
+    "trusted-catalog-publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts trusted-catalog-publish",
+        "forwardAllArgs": true
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {

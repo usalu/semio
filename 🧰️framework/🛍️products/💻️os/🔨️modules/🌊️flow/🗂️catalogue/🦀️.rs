@@ -166,6 +166,41 @@ pub fn flow_operator_catalogue_json() -> String {
     crate::os_pack::json::to_json_string(&flow_catalogue_sections())
 }
 
+/// 🛍️ The APP-STATIC catalogue payload: every registered operator's wire record plus the palette
+/// sections built over them. It is published once per app instance on the reserved
+/// `framework.section.catalogue` retained surface (`semio_framework::UiRefreshSection::Catalogue`),
+/// hash-conditional like every other reserved section, and the renderer caches it for the app's whole
+/// lifetime — a node-graph scene then references an operator by KIND ID only.
+///
+/// 🚨️ Why it is not a scene field any more: with the real `brep`/`math` operator sets installed this
+/// payload is ~100 KB, and `ui_scene::encode` admits a whole surface against
+/// `ui_contract::UI_FIXED_BYTES` (32 KiB, a preallocated per-surface capacity). Embedding it in
+/// `NodeGraphScene` made the node-graph window of every flow-backed app fail admission at 111 031 B and
+/// render nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct FlowAppCatalogue {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub operators: Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub sections: Vec<CatalogueSection>,
+}
+
+/// 🛍️ Builds [`FlowAppCatalogue`] from the live extension registry — the whole registered operator set
+/// plus the drag-and-drop palette sections (extension sections merged with the static widget ones, the
+/// same list the side palette and the canvas spotlight read).
+pub fn flow_app_catalogue() -> FlowAppCatalogue {
+    FlowAppCatalogue { operators: flow_operator_catalogue_records(), sections: flow_palette_catalogue_sections() }
+}
+
+/// 🛍️ [`flow_app_catalogue`] as the canonical JSON an `ArtifactApp::app_catalogue_json` override returns.
+pub fn flow_app_catalogue_json() -> String {
+    crate::os_pack::json::to_json_string(&flow_app_catalogue())
+}
+
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
 pub fn flow_neuron_kind_infos_json() -> String {
     let registry = flow_extension_registry();
@@ -177,10 +212,12 @@ pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 /// 🌊️ Flow-backed NodeGraphScene fields required for wgpu FlowHost sync.
 #[derive(Clone, Debug)]
+///
+/// 🛍️ Deliberately carries NEITHER the operator records NOR the catalogue sections: both are
+/// app-static and ride [`FlowAppCatalogue`] on the reserved catalogue surface exactly once per app
+/// instance. See that type for the byte measurement that forced the split.
 pub struct FlowBackedNodeGraphExtras {
     pub fixture_json: Option<String>,
-    pub operators: Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord>,
-    pub catalogue_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub lod_json: Option<String>,
     pub eval_json: Option<String>,
@@ -270,14 +307,17 @@ pub(crate) fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::wgpu
 /// `eval_json`/`status_json` from the in-process [`FlowEvalSession`] (never persisted in config).
 pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
+    // 🧹️ `flow_host_with_session` CLONES `fixture` into the host, and `FlowFixture.layout` is an
+    // `OrderedMap` root that rejects a bare drop — close the host, never let drop glue take it
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let status_json = session.map(|session| {
         let host = flow_host_with_session(fixture, session);
-        session.status_json_for_host(&host)
+        let status = session.status_json_for_host(&host);
+        host.retire_cold();
+        status
     });
     FlowBackedNodeGraphExtras {
         fixture_json: Some(crate::os_pack::json::to_json_string(fixture)),
-        operators: flow_operator_catalogue_records(),
-        catalogue_json: Some(crate::os_pack::json::to_json_string(&flow_catalogue_sections())),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
         lod_json: Some(crate::os_pack::json::to_string(&crate::os_pack::json::object([
             ("automatic".to_string(), crate::os_pack::json::Value::Bool(automatic)),

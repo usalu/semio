@@ -104,6 +104,7 @@ fn reconcile_resumable(current: &SurfaceReconciler, component_tree: crate::Compo
 //#region ⏭️ResumableCursor
 #[test]
 fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
     let mut reservation = SurfaceReconcileReservation::try_new(8_971).expect("real published owner reservation");
     let metadata =
@@ -145,6 +146,7 @@ fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal
 
 #[test]
 fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     eprintln!("[DEBUG] canonical-owner-layout reconciler={} cursor={} retained={}", size_of::<SurfaceReconciler>(), size_of::<SurfaceReconcileCursor>(), size_of::<SurfaceReconcileRetained>());
     assert!(size_of::<SurfaceReconciler>() <= 1_024);
     assert!(size_of::<SurfaceReconcileCursor>() <= 48 * 1_024);
@@ -155,6 +157,7 @@ fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
 
 #[test]
 fn resumable_cursor_matches_the_existing_keyed_diff_and_revision_semantics() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let component_tree = tree(container("root", vec![text("a", "hello"), container("b", vec![leaf("x"), leaf("y")])]));
     let mut direct = SurfaceReconciler::new("s");
     let expected_patch = direct.reconcile(&component_tree).expect("initial direct patch");
@@ -177,6 +180,7 @@ fn resumable_cursor_matches_the_existing_keyed_diff_and_revision_semantics() {
 
 #[test]
 fn abandoned_large_tree_cursor_leaves_the_retained_shadow_and_revision_unchanged() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut current = SurfaceReconciler::new("s");
     current.reconcile(&tree(container("root", vec![leaf("baseline")]))).expect("baseline");
     let before = current.snapshot();
@@ -191,6 +195,7 @@ fn abandoned_large_tree_cursor_leaves_the_retained_shadow_and_revision_unchanged
 
 #[test]
 fn every_large_tree_cursor_slice_stays_below_eight_milliseconds() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     use std::time::{Duration, Instant};
 
     let children = (0..30).map(|index| leaf(&format!("item-{index}"))).collect();
@@ -233,6 +238,7 @@ fn every_large_tree_cursor_slice_stays_below_eight_milliseconds() {
 
 #[test]
 fn identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let surface = "s".repeat(SurfaceReconcileLimits::default().max_identifier_bytes + 1);
     let tree = tree(leaf("exact"));
     let mut rejected = match SurfaceReconcileJob::try_new(SurfaceReconciler::new(surface), tree, 71) {
@@ -247,6 +253,7 @@ fn identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation()
 
 #[test]
 fn semantic_aggregate_quota_faults_before_key_or_record_clone() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut data_attributes = ui_contract::UiFixedMap::default();
     data_attributes.try_push(ui_text("semantic"), ui_text("payload")).expect("bounded fixture attribute");
     let node = crate::TreeNode::try_new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_text("value")), emphasize: None, data_attributes: Some(data_attributes) })).expect("bounded fixture node");
@@ -271,6 +278,7 @@ fn semantic_aggregate_quota_faults_before_key_or_record_clone() {
 
 #[test]
 fn opaque_surface_document_uses_aggregate_credits_instead_of_scalar_page() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let payload = vec![7; ui_contract::UI_FIXED_BYTES];
     let props = ui_contract::SurfaceProps {
         kind: ui_contract::SurfaceKind::NodeGraph,
@@ -295,6 +303,7 @@ fn opaque_surface_document_uses_aggregate_credits_instead_of_scalar_page() {
 
 #[test]
 fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_unchanged() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     fn expired_now() -> Option<u64> {
         Some(10)
     }
@@ -331,6 +340,7 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
 
 #[test]
 fn semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let wide = (0..128).map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text"))).collect::<Vec<_>>();
     let node = crate::TreeNode::try_new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: ui_text("fixture"), props: ui_contract::UiValue::List(ui_list(wide)) })).expect("bounded fixture node");
     let current = SurfaceReconciler::new("s");
@@ -359,6 +369,7 @@ fn semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_witho
 
 #[test]
 fn retained_map_page_advances_each_key_once_without_rewalking_prior_entries() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let value = ui_contract::UiValue::Map(ui_map([("a".to_owned(), ui_contract::UiValue::Null), ("b".to_owned(), ui_contract::UiValue::Null), ("c".to_owned(), ui_contract::UiValue::Null)]));
     let mut cursor = SurfaceSemanticCensusCursor::default();
     cursor.push_value(&value).expect("fixed value depth");
@@ -373,6 +384,7 @@ fn retained_map_page_advances_each_key_once_without_rewalking_prior_entries() {
 
 #[test]
 fn allocate_inspect_admit_retains_exact_vector_backing_on_cap_plus_one_without_partial_item_mutation() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut owner = Vec::<u64>::new();
     let mut usage = SurfaceReconcileUsage::default();
     let limits = SurfaceReconcileLimits { max_nodes: 0, max_items: 0, max_bytes: 0, max_identifier_bytes: 0 };
@@ -392,6 +404,7 @@ fn allocate_inspect_admit_retains_exact_vector_backing_on_cap_plus_one_without_p
 
 #[test]
 fn persistent_credit_transfers_through_ready_and_returns_only_after_incremental_retirement() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let generation = 7_003;
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("credit")), generation).expect("admitted");
     let mut sequence = 0;
@@ -428,6 +441,7 @@ fn persistent_credit_transfers_through_ready_and_returns_only_after_incremental_
 
 #[test]
 fn public_drop_handback_is_lossless_at_terminal_cap_and_plus_one() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let first = 80_000;
     let mut keys = Vec::with_capacity(SURFACE_RECONCILE_HANDBACK_SLOTS);
     for offset in 0..SURFACE_RECONCILE_HANDBACK_SLOTS {
@@ -451,6 +465,7 @@ fn public_drop_handback_is_lossless_at_terminal_cap_and_plus_one() {
 
 #[test]
 fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let generation = 8_001;
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("exact")), generation).expect("admitted");
     let mut sequence = 0;
@@ -496,6 +511,7 @@ fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
 //#region 🔖️FirstReconcileAndIdempotence
 #[test]
 fn first_reconcile_emits_set_root_and_one_upsert_per_node_then_is_idempotent() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     let component_tree = tree(container("root", vec![leaf("a"), leaf("b")]));
 
@@ -512,6 +528,7 @@ fn first_reconcile_emits_set_root_and_one_upsert_per_node_then_is_idempotent() {
 //#region 🔖️TargetedOps
 #[test]
 fn changing_one_leaf_text_emits_exactly_one_op_naming_exactly_that_node() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![text("a", "hello"), leaf("b")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -529,6 +546,7 @@ fn changing_one_leaf_text_emits_exactly_one_op_naming_exactly_that_node() {
 
 #[test]
 fn reordering_siblings_preserves_every_id_and_emits_only_set_children() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a"), leaf("b"), leaf("c")]))).unwrap();
     let before = reconciler.snapshot();
@@ -549,6 +567,7 @@ fn reordering_siblings_preserves_every_id_and_emits_only_set_children() {
 
 #[test]
 fn inserting_a_middle_sibling_preserves_the_others_ids() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a"), leaf("c")]))).unwrap();
     let before = reconciler.snapshot();
@@ -564,6 +583,7 @@ fn inserting_a_middle_sibling_preserves_the_others_ids() {
 
 #[test]
 fn changed_component_with_unchanged_layout_emits_set_component_not_upsert() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
 
@@ -576,6 +596,7 @@ fn changed_component_with_unchanged_layout_emits_set_component_not_upsert() {
 /// unchanged must emit exactly one `SetStyle`, never a whole-node `Upsert`.
 #[test]
 fn changing_only_style_emits_exactly_one_set_style_not_upsert() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -593,6 +614,7 @@ fn changing_only_style_emits_exactly_one_set_style_not_upsert() {
 
 #[test]
 fn changing_only_accessibility_emits_exactly_one_set_accessibility_not_upsert() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -610,6 +632,7 @@ fn changing_only_accessibility_emits_exactly_one_set_accessibility_not_upsert() 
 
 #[test]
 fn changing_only_bindings_emits_exactly_one_set_bindings_not_upsert() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -627,6 +650,7 @@ fn changing_only_bindings_emits_exactly_one_set_bindings_not_upsert() {
 
 #[test]
 fn changing_only_menu_emits_exactly_one_set_menu_not_upsert() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -648,6 +672,7 @@ fn changing_only_menu_emits_exactly_one_set_menu_not_upsert() {
 /// overhead alone outweighs one full-record `Upsert`, and `Upsert` wins.
 #[test]
 fn changing_several_groups_at_once_prefers_a_single_upsert_over_many_targeted_ops() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let target_id = id_of(&reconciler.snapshot(), "a");
@@ -672,6 +697,7 @@ fn changing_several_groups_at_once_prefers_a_single_upsert_over_many_targeted_op
 //#region 🔖️Removal
 #[test]
 fn removing_a_subtree_emits_one_remove_and_leaves_no_orphan_in_retained() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![container("mid", vec![leaf("x"), leaf("y")]), leaf("z")]))).unwrap();
     let mid_id = id_of(&reconciler.snapshot(), "mid");
@@ -688,6 +714,7 @@ fn removing_a_subtree_emits_one_remove_and_leaves_no_orphan_in_retained() {
 
 #[test]
 fn ids_are_never_reused_after_removal() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
     let removed_id = id_of(&reconciler.snapshot(), "a");
@@ -703,6 +730,7 @@ fn ids_are_never_reused_after_removal() {
 //#region 🔖️Rejection
 #[test]
 fn mark_rejected_then_reconcile_emits_a_full_resend() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     let component_tree = tree(container("root", vec![leaf("a"), leaf("b")]));
     reconciler.reconcile(&component_tree).unwrap();
@@ -719,6 +747,7 @@ fn mark_rejected_then_reconcile_emits_a_full_resend() {
 //#region 🔖️DuplicateKeys
 #[test]
 fn duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     let mut children = ui_contract::BuiltChildren::default();
     children.try_push(leaf("a")).expect("bounded fixture child");
@@ -741,6 +770,7 @@ fn duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed(
 /// them — including the four field-targeted ops this packet adds.
 #[test]
 fn round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_snapshot() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::new("s");
     let mut receiver_state = ui_contract::UiSnapshotState::new(ui_contract::SurfaceId::try_from("s").expect("bounded fixture surface"));
     let limits = ui_contract::UiDocumentLimits::default();

@@ -11,13 +11,13 @@
     "channel": "solid",
     "kind": "solid"
   },
-  "tessellationTolerance": 0.01,
+  "tessellationTolerance": 0.0025,
   "expect": {
     "minTriangles": 24,
     "closed": true,
-    "volume": 7.245424930456,
+    "volume": 9.70845078963702,
     "volumeTolerance": 0.02,
-    "volumeSource": "numeric oracle (scipy.integrate.quad): V(ball r=1.2) + V(cube 1.5) - V(ball cap-clipped cube)",
+    "volumeSource": "analytic: brep.prim3d.box spans [0, 1.5]^3 from its own corner, so the ball r=1.2 centred on that corner has its whole positive octant inside the cube — V(ball) + 1.5^3 - V(ball)/8; re-derived by quadrature over the corner-clipped octant",
     "edgePerimeter": null,
     "edgePerimeterTolerance": 0.0,
     "boundingBoxMin": [
@@ -32,7 +32,8 @@
     ],
     "boundingBoxTolerance": 0.005,
     "kernelVolumeNode": null,
-    "kernelVolumeChannel": null
+    "kernelVolumeChannel": null,
+    "kernelVolumeTolerance": null
   },
-  "kernelStatus": "blocked-on-boolean-kernel"
+  "kernelStatus": "green"
 }

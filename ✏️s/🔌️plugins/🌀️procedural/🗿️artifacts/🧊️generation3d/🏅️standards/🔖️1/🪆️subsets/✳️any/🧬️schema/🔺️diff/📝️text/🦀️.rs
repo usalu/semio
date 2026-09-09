@@ -105,10 +105,10 @@ impl Generation3dDiff {
             }
             let mut next = artifact.clone();
             if let Some(fixture) = &self.fixture {
-                next.fixture = fixture.clone();
+                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
-                next.generation = generation.clone();
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
             }
             next
         })
@@ -123,28 +123,45 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
             }
             let mut next = snapshot.clone();
             if let Some(fixture) = &self.fixture {
-                next.fixture = fixture.clone();
+                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
-                next.generation = generation.clone();
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
             }
             next
         })
     }
+    /// ➕️ Sequential coalesce. Every side this overwrites is RETIRED, never dropped: an inhabited
+    /// `fixture`/`generation` owns an `OrderedMap` root and a generation ladder that reject a bare
+    /// drop (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`).
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
-            *self = other;
+            std::mem::replace(self, other).retire_cold();
             return;
         }
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
+        let Self { artifact: _, fixture, generation } = other;
+        if let Some(fixture) = fixture {
+            if let Some(displaced) = self.fixture.replace(fixture) {
+                displaced.retire_cold();
+            }
         }
-        take!(fixture);
-        take!(generation);
+        if let Some(generation) = generation {
+            if let Some(displaced) = self.generation.replace(generation) {
+                displaced.retire_cold();
+            }
+        }
+    }
+
+    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
+    /// delta and throw it away; an inhabited `fixture` owns an `OrderedMap` root that aborts the
+    /// process on a bare drop, so the contract routes here.
+    fn retire_cold(self) {
+        Generation3dDiff::retire_cold(self);
+    }
+
+    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
+    fn retire_projection(projection: Generation3dSnapshot) {
+        projection.retire_cold();
     }
 }
 //#endregion 🔖️Apply

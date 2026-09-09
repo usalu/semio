@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://plugin-catalog/trusted-stdio-catalog/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "expectedCodecCount", "expectedOpenTargetKind", "expectedPublication", "expectedHubBundle", "hostile"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "expectedCodecCount": { "const": 26 },
+    "expectedOpenTargetKind": { "const": "stdio.json" },
+    "expectedPublication": { "const": "committed" },
+    "expectedHubBundle": { "const": "withheld" },
+    "hostile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emptyReceipts", "digestMismatch", "missingProtocol"],
+      "properties": {
+        "emptyReceipts": { "type": "string", "minLength": 1 },
+        "digestMismatch": { "type": "string", "minLength": 1 },
+        "missingProtocol": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+    "codec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "factoryId", "extension"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "packSchemaHash": { "$ref": "#/$defs/digest" },
+        "factoryId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "extension": { "type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[a-z0-9]+$" }
+      }
+    },
+    "openTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "role", "surfaceId", "factoryId", "extension"],
+      "properties": {
+        "artifactKind": { "const": "stdio.json" },
+        "artifactSchema": { "const": "stdio.json" },
+        "packSchemaHash": { "$ref": "#/$defs/digest" },
+        "role": { "const": "editor" },
+        "surfaceId": { "const": "stdio.json.editor" },
+        "factoryId": { "const": "stdio.native.json.v1" },
+        "extension": { "const": "json" }
+      }
+    },
+    "componentAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "limitBytes"],
+      "properties": {
+        "status": { "enum": ["admitted", "exceeds-limit", "absent"] },
+        "limitBytes": { "type": "integer", "minimum": 1 },
+        "byteLength": { "type": "integer", "minimum": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "TrustedStdioCatalogV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "pluginId", "packageId", "version", "nativeCodecs", "openTargets", "publication", "hubBundle", "componentAdmission"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "pluginId": { "const": "stdio" },
+        "packageId": { "const": "semio:stdio" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "nativeCodecs": {
+          "type": "array",
+          "minItems": 26,
+          "maxItems": 26,
+          "items": { "$ref": "#/$defs/codec" }
+        },
+        "openTargets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/$defs/openTarget" }
+        },
+        "publication": { "enum": ["committed", "withheld", "failed"] },
+        "hubBundle": { "const": "withheld" },
+        "componentAdmission": { "$ref": "#/$defs/componentAdmission" }
+      }
+    }
+  }
+}

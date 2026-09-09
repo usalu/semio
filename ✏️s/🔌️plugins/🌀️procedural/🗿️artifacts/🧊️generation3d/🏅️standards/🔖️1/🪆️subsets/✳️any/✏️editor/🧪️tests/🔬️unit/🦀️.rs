@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::testkit::{app, app_with_registry, drain_flow_eval_ticks, drain_flow_eval_ticks_with_view, preview_views};
+use crate::editor::generation3d::testkit::{self, app, app_with_registry, drain_flow_eval_ticks, drain_flow_eval_ticks_with_view, preview_views};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
 
@@ -24,7 +24,7 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     for view in [&left, &right] {
         assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
     }
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut **app);
     eprintln!("[DEBUG] Generation3d registered runtime isolated two preview evaluations, preserved app config bytes, reset both ephemeral windows on document reload, and closed terminal-empty");
 }
 fn production_initial_snapshot(label: &str) -> Generation3dSnapshot {
@@ -134,6 +134,13 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
         "conflicts": []
     }))
     .expect("schema-first P3 production fixture envelope");
+    // 🧹️ A `create-widget`/`update-widget` row owns a whole `Widget`, and the seed projection owns
+    // an `OrderedMap` layout root — both fail-close on a bare drop, so this fixture retires what it
+    // authored instead of letting the scope drop it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    for mutation in mutations {
+        mutation.retire_cold();
+    }
+    snapshot.retire_cold();
     (wire, expected, expected_digest)
 }
 
@@ -170,19 +177,25 @@ fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    let mut accepted = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation3dPlayApp>>::new(EditorApp::default()).await;
+    // 🧹️ Registry-backed, never `VcsArtifactApp::new` — this app publishes
+    // `bounded_first_step_tool_proofs!`, so a registryless instance faults at construction with
+    // `interactive-job.catalog-authority` and its unwind aborts the binary.
+    let _serial = crate::publication_authority::lock();
+    let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
     let handle = admit_production_envelope(&mut accepted, &wire);
     assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
-    let snapshot = accepted.snapshot().expect("accepted P3 production snapshot");
+    let snapshot = testkit::snapshot(&accepted);
     assert_eq!(&snapshot, &expected, "real maintenance must publish all P3 snapshot and all-14 replay fields");
     assert_eq!(production_semantic_digest(&snapshot), expected_digest);
     assert!(snapshot.fixture.layout.contains_key("move-target"));
     assert!(!snapshot.fixture.layout.contains_key("clear-target"), "3D-only delete-widget-position must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P3 terminal ACK"));
     assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_publication_authority(handle.operation, handle.generation));
+    drop(snapshot);
+    expected.retire_cold();
 
     use crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
@@ -192,8 +205,8 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         (WrongBase, "generation3d-publication.wrong-base"),
         (WrongParent, "generation3d-publication.wrong-parent"),
     ] {
-        let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation3dPlayApp>>::new(EditorApp::default()).await;
-        let last_valid = app.snapshot().expect("last-valid P3 snapshot");
+        let mut app = app_with_registry().await;
+        let last_valid = testkit::snapshot(&app);
         let last_valid_digest = production_semantic_digest(&last_valid);
         let base_generation = app.artifact_generation_now();
         let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
@@ -202,11 +215,13 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
-        let retained = app.snapshot().expect("last-valid P3 snapshot after rejected candidate");
+        let retained = testkit::snapshot(&app);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);
         assert_eq!(retained, last_valid);
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P3 terminal ACK after candidate retirement"));
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_publication_authority(handle.operation, handle.generation));
+        drop(retained);
+        drop(last_valid);
     }
 }
 
@@ -220,10 +235,10 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 29, "every Generation3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), GENERATION3D_RETAINED_TOOL_IDS.len(), "every Generation3dCommand row must be covered by every_command()");
 }
 
-/// ⚖️ LAW: every one of the 29 declared `Generation3dCommand` rows is retained-owned by
+/// ⚖️ LAW: every one of the 28 declared `Generation3dCommand` rows is retained-owned by
 /// `Generation3dBoundedCommandJobFactory`, with an exact, nonempty publication-lane contract —
 /// the shape `ArtifactToolFactoryRegistry::register` itself enforces
 /// (`🧰️framework/…/🔌️plugin/🦀️.rs:12736-12748`), asserted here so a future command addition that
@@ -235,9 +250,9 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = test_support::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 29);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 29);
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 29);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 28);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 28);
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 28);
     assert_eq!(generation3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|tool_id| Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
@@ -283,7 +298,7 @@ async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactAp
 async fn generation_preview_is_one_app_transient_shared_by_two_generation_windows() {
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
-        let before_document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let before_document = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
         let before_generation = app.ephemeral_snapshot().await.transient_generation;
         app.dispatch_typed(Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::testkit::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
         if drive_preview_operation(&mut app).await? != (1, 1, 1) {
@@ -292,7 +307,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         if app.ephemeral_snapshot().await.transient_generation != before_generation + 1 {
             return Err("preview app transient generation did not advance exactly once".into());
         }
-        if app.snapshot().map_err(|error| format!("{error:?}"))?.generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
+        if crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?).generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
             return Err("addGeneration did not preserve its document behavior".into());
         }
         let view = semio_framework_plugin::ViewModel {
@@ -317,7 +332,7 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         Ok(())
     }
     .await;
-    semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
     result.expect("Generation3d preview ownership runtime");
 }
 
@@ -352,8 +367,6 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "rename-generation",
         "update-generation-values",
         "viewport",
-        "world-pointer-down",
-        "graph-pointer-down",
         "lod-mode",
         "show-mode",
         "toggle-sun",
@@ -365,6 +378,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "flow-eval-tick",
         "flow-eval-resolve",
         "flow-tessellate-resolve",
+        "cancel-preview-eval",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -393,8 +407,6 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
         Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
         Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: semio_framework_artifact_flow_flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
-        Generation3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
-        Generation3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
         Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
         Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
         Generation3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
@@ -406,6 +418,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
         Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 7, output_json: "{}".into() }),
         Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { node_hash: 9, output_json: "{}".into() }),
+        Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval {}),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -419,7 +432,9 @@ async fn declared_actions_bridge_to_commands() {
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_editor_installs_every_declared_bounded_command_proof() {
     let _serial = test_support::lock();
-    let _app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
+    // 🧹️ Through the self-closing fixture, never a bare `new_app_with_registry` — a plainly-dropped
+    // `VcsArtifactApp` fails its own store's terminal-empty witness and aborts the binary.
+    let _app = app_with_registry().await;
 }
 
 #[test]
@@ -459,8 +474,8 @@ async fn each_example_loads_distinct_fixture_and_preview_geometry() {
     let mut signatures = std::collections::BTreeSet::new();
     for example_id in examples {
         let mut app = app().await;
-        app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
-        let signature = format!("{:?}", app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect::<std::collections::BTreeSet<_>>());
+        testkit::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() })).await;
+        let signature = format!("{:?}", testkit::snapshot(&app).fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect::<std::collections::BTreeSet<_>>());
         assert!(signatures.insert(signature.clone()), "duplicate fixture signature for {example_id}: {signature}");
     }
 }
@@ -469,9 +484,7 @@ async fn each_example_loads_distinct_fixture_and_preview_geometry() {
 async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
     let _serial = test_support::lock();
     let mut app = app().await;
-    app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
-        .await
-        .expect("set example");
+    testkit::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let effects = app.pending_effects().await;
     assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")));
     drain_flow_eval_ticks(&mut app).await;
@@ -481,11 +494,11 @@ async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
 async fn undo_redo_round_trips_flow_graph_edits() {
     let _serial = test_support::lock();
     let mut app = app().await;
-    let before = app.snapshot().expect("snapshot").fixture.widgets.len();
+    let before = testkit::snapshot(&app).fixture.widgets.len();
     semio_framework_plugin::testkit::assert_undo_redo_round_trip(
         &mut app,
         Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }),
-        |app| app.snapshot().expect("snapshot").fixture.widgets.len(),
+        |app| testkit::snapshot(&app).fixture.widgets.len(),
         before,
         before + 1,
     )
@@ -495,15 +508,22 @@ async fn undo_redo_round_trips_flow_graph_edits() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_widget_moves() {
     let _serial = test_support::lock();
-    let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let widgets: Vec<String> = {
+        let fixture = app().await;
+        testkit::snapshot(&fixture).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect()
+    };
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-    semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>)>(
+    // 🧹️ The REGISTERED pair, never `assert_two_instances_converge` — this app publishes
+    // `bounded_first_step_tool_proofs!`, so a registryless instance faults with
+    // `interactive-job.catalog-authority` and its unwind aborts the binary.
+    semio_framework_plugin::testkit::assert_two_registered_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation3d-convergence",
+        || async { testkit::generation3d_app_manifest_for_testkit() },
         Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
         Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
-            let layout = &app.snapshot().expect("snapshot").fixture.layout;
+            let layout = &testkit::snapshot(&app).fixture.layout;
             (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
         },
     )
@@ -526,34 +546,99 @@ async fn generation3d_labels_translate_catalogue_and_inspector_in_german() {
 async fn generation3d_interaction_selection_owns_its_persisted_history() {
     let _serial = test_support::lock();
     let mut app = app_with_registry().await;
-    let node_id = app.snapshot().expect("snapshot").fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
+    let node_id = testkit::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
     let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
     let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
     app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interaction selection persists");
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }
 
-/// 🕹️ `context_menu` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM,
-/// same discovered gap as `render`), so `has_selection` is always false now and the destructive
-/// `delete-selection` row (conditioned on a real selection) never appears; this test now only pins
-/// the disclosure budget.
+/// 🗂️ With nothing selected the selection-conditioned rows stay folded away and the disclosure
+/// budget holds.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_grouped_disclosure_stays_within_budget() {
     let _serial = test_support::lock();
     let mut app = app_with_registry().await;
-    let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let widgets: Vec<String> = testkit::snapshot(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
     let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+}
+
+/// 🕹️ The runtime funnels every right-click through `context_menu_with_request_context`, so a node
+/// selected through the framework-owned `graph` domain — never through `request.surface`, which is
+/// `None` here exactly as it is for a menu opened off a scene surface the app did not paint — must
+/// unfold the transform trio, the removal group and the destructive delete row.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_reads_the_framework_owned_graph_selection() {
+    let _serial = test_support::lock();
+    let mut app = app_with_registry().await;
+    // 🧊️ A literal default-fixture widget id, not `app.snapshot()`: that accessor hands back an OWNED
+    // `Generation3dSnapshot`, whose `FlowFixture.layout: OrderedMap` aborts the process on drop
+    // (`🌱️value/🗂️ordered/🦀️.rs:81`) unless explicitly retired.
+    let node_id = "extrude".to_string();
+    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
+        menu.iter().flat_map(|item| std::iter::once(item.id.clone()).chain(item.children.iter().flatten().map(|child| child.id.clone()))).collect()
+    };
+    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    assert!(!unselected.iter().any(|id| id == "translateSelection"), "an empty selection must not offer a transform: {unselected:?}");
+    assert!(!unselected.iter().any(|id| id == "removeWidget"), "an empty selection must not offer a removal target: {unselected:?}");
+    let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
+    let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
+    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local")).await.expect("interaction selection persists");
+    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    for id in ["translateSelection", "rotateSelection", "scaleSelection", "removeWidget", "removeGeneration"] {
+        assert!(selected.iter().any(|candidate| candidate == id), "a live graph selection must offer {id}: {selected:?}");
+    }
+    assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
+    eprintln!("[DEBUG] generation3d context menu unfolded {} rows for one framework-owned graph selection", selected.len());
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+}
+
+/// 🕸️ A preview instance id (`{widget}@{channel}#{index}`) and a synapse id land in the node and edge
+/// domains respectively — the projection `context_menu_body` hands `selection_domains_from_surface`.
+#[test]
+fn graph_selection_splits_into_node_and_edge_domains() {
+    let mut fixture = semio_framework_artifact_flow_flow::FlowFixture::default();
+    fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "n".into() });
+    fixture.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "note".into(), to: "note".into(), from_port: String::new(), to_port: String::new() });
+    let marks = PreviewInteractionMarks { hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
+    assert_eq!(marks.graph_selection_domains(&fixture), (vec!["note".to_string()], vec!["wire".to_string()]));
+}
+
+/// 🕹️ `worldPointerDown`/`graphPointerDown` are gone: the world host reports a pick through the
+/// framework-injected `interactionSelect` on the declared `graph` domain (`World3dHost/🟦️.tsx:4447`),
+/// and nothing in the repo dispatches a graph pointer-down at all. A route no surface can reach is
+/// dead API, not an observation hook.
+#[test]
+fn no_pointer_down_route_survives_the_framework_owned_selection_domain() {
+    let definition = create_generation3d_app();
+    let json = serde_json::to_string(&definition).expect("app definition json");
+    assert!(!json.contains("PointerDown"), "pointer-down routes are framework-owned now");
+    assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|id| !id.ends_with("PointerDown")), "a retained tool id outlived its action");
+    assert!(definition.interactions.iter().any(|interaction| interaction.id == "graph"), "the graph domain is what replaced them");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn sun_measures_are_exposed_on_preview_windows() {
     let _serial = test_support::lock();
     let mut app = app().await;
-    let measures = app.window_measures(&semio_framework_plugin::ViewModel::default()).await;
+    // 🪟️ `PluginApp::window_measures` projects per ATTACHED window instance
+    // (`🔌️plugin/🦀️.rs`'s `for window in view_state.window_instances`), so an empty `ViewModel`
+    // can only ever answer an empty map — the roster is what makes this assertion mean anything.
+    let view = semio_framework_plugin::ViewModel {
+        window_instances: vec![
+            semio_framework_plugin::ViewWindowInstance { id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), window_kind_id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
+            semio_framework_plugin::ViewWindowInstance { id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+        ],
+        ..Default::default()
+    };
+    let measures = app.window_measures(&view).await;
     assert!(measures.contains_key(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW));
     assert!(measures.contains_key(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW));
 }
@@ -599,9 +684,7 @@ fn aabb_of_positions(positions: &[f32]) -> ([f32; 3], [f32; 3]) {
 }
 
 fn preview_payload_from_evaluated_fixture(fixture: &semio_framework_artifact_flow_flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
-    let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
-    let eval_json = host.evaluate().unwrap_or_default();
+    let eval_json = crate::standards::v1::subsets::any::schema::with_host(fixture, |host| host.evaluate().unwrap_or_default());
     preview_payload_from_eval(&eval_json, fixture, cfg)
 }
 
@@ -659,30 +742,33 @@ fn document_from_mesh_returns_valid_default_snapshot() {
     let document = generation3d_document_from_mesh(&mesh).expect("dwg mesh import document");
     let projection: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).expect("parseable projection");
     assert_eq!(projection.fixture.schema, "flow.fixture");
+    projection.retire_cold();
 }
 
 #[test]
 fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
     let _serial = test_serial();
     use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-    let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&crate::standards::v1::subsets::any::schema::default_snapshot())).expect("projection json");
+    let default_projection = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&default_projection)).expect("projection json");
+    default_projection.retire_cold();
     let mesh = generation3d_mesh_from_document(&dsl::DslValue::from(&document_json)).expect("mesh from document");
     assert!(!mesh.positions.is_empty());
 
     let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
     let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
     let obj_document = generation3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-    let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&obj_document)).expect("parseable obj projection");
+    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&obj_document)).expect("parseable obj projection").retire_cold();
 
     let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
     let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
     let glb_document = generation3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-    let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&glb_document)).expect("parseable glb projection");
+    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&glb_document)).expect("parseable glb projection").retire_cold();
 
     let stl_bytes = StlExporter.export(&mesh).expect("stl export");
     let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
     let stl_document = generation3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-    let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&stl_document)).expect("parseable stl projection");
+    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&stl_document)).expect("parseable stl projection").retire_cold();
 }
 
 #[test]
@@ -697,6 +783,7 @@ fn rectangle_wire_preview_emits_edge_only_mesh() {
     assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
     assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
     assert!(!instances_json.is_empty());
+    projection.retire_cold();
 }
 
 #[test]
@@ -720,6 +807,7 @@ fn all_bundled_examples_emit_preview_meshes() {
         assert_ne!(instances_json, "[]", "{label}: instances empty");
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).unwrap_or_else(|err| panic!("{label}: meshes json: {err}"));
         assert!(!meshes.is_empty(), "{label}: no mesh entries");
+        projection.retire_cold();
     }
 }
 
@@ -741,6 +829,7 @@ fn wireframe_show_mode_strips_shaded_triangles() {
     let data = mesh_data_from_json(&meshes[0].get("data").cloned().unwrap_or_default());
     assert!(data.indices.is_empty());
     assert!(!data.edge_positions.is_empty());
+    projection.retire_cold();
 }
 
 #[test]
@@ -923,6 +1012,7 @@ fn interaction_topology_ports_match_the_node_graph_port_ids() {
             assert_eq!(PreviewInteractionMarks::widget_of(port), node_id.as_str());
         }
     }
+    projection.retire_cold();
 }
 /// 👁️ Which widget kinds contribute preview geometry: a neuron only when its author-set toggle
 /// is on, an output preview always, a cluster always (it has no toggle of its own, and its
@@ -966,3 +1056,91 @@ fn examples_match_set_active_example_select_options() {
     assert_eq!(example_ids, select_ids);
 }
 //#endregion 🔖️ExamplesTests
+
+//#region 📏️SurfaceBudgetTests
+/// 🪟️ Every authored body key of this app: five window bodies then the three panel bodies, in the
+/// order `generation3d_render_body` matches them.
+const GENERATION3D_BODY_KEYS: [&str; 8] = [
+    flow_window::GENERATION_3D_PLAY_BODY_MAIN,
+    edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW,
+    generations::GENERATION_3D_PLAY_BODY_GENERATIONS,
+    form::GENERATION_3D_PLAY_BODY_GENERATE_FORM,
+    generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW,
+    document_panel::GENERATION_3D_PLAY_BODY_DOCUMENT,
+    catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE,
+    inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION,
+];
+
+/// 📏️ Every window and panel surface of every bundled example must fit the framework's ONE resident
+/// surface capacity (`ui_contract::UI_RESIDENT_SURFACE_BYTES`, which `ui_runtime`'s
+/// `SURFACE_RECONCILE_SURFACE_BYTES` is defined as). Renders each example's own projection through
+/// the SAME `generation3d_render_body` every live window goes through, so the measurement is per
+/// example rather than per app state. Prints the table the boot report reads: no surface may be
+/// silently oversized behind the mount-time admission fault
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, defect 2).
+#[test]
+fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
+    let _serial = test_support::lock();
+    let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
+    let config = Generation3dConfig::default();
+    let view_state = semio_framework_plugin::ViewModel::default();
+    for example_id in examples().into_iter().map(|source| source.id().to_string()) {
+        let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
+        for body_key in GENERATION3D_BODY_KEYS {
+            let session = FlowEvalSession::new();
+            let tree = generation3d_render_body(body_key, &snapshot, &config, None, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
+            testkit::retire_flow_eval_session(session);
+            let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("render json");
+            println!("[STATS] surface example={example_id} body={body_key} bytes={} bound={bound}", rendered.len());
+            assert!(!rendered.is_empty(), "{example_id}/{body_key} rendered empty");
+            assert!(rendered.len() <= bound, "{example_id}/{body_key} is {} B, over the {bound} B resident surface bound", rendered.len());
+        }
+        snapshot.retire_cold();
+    }
+}
+//#endregion 📏️SurfaceBudgetTests
+
+//#region 🧹️RetirementTests
+/// 🧹️ The live first-turn sequence in ONE process: `pending_effects` (which built an unretired
+/// scratch `FlowHost` and trapped the plugin actor with `ordered-map root must be explicitly retired
+/// before drop`), a render of every body, an example switch that replaces the whole fixture, and the
+/// retained `FlowEvalSession` owner's own close. Nothing here may abort
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, defect 1).
+#[semio_framework_async_macros::async_test]
+async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
+    use semio_framework_plugin::{ArtifactView, ConfigView};
+    let _serial = test_support::lock();
+    let mut app = app_with_registry().await;
+
+    let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let config = Generation3dConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let effects = <Generation3dPlayApp as ArtifactEditor>::pending_effects(&doc, &cfg);
+    println!("[STATS] pending_effects effects={}", effects.len());
+    snapshot.retire_cold();
+
+    for body_key in GENERATION3D_BODY_KEYS {
+        let rendered = testkit::render(&mut app, body_key).await;
+        assert!(!rendered.is_empty(), "{body_key} rendered empty");
+    }
+
+    for example_id in [crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET, crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN] {
+        testkit::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() })).await;
+        let rendered = testkit::render(&mut app, GENERATION3D_BODY_KEYS[0]).await;
+        assert!(!rendered.is_empty(), "{example_id} main body rendered empty after the switch");
+    }
+
+    let mut owner = Generation3dInstanceOperationOwner::new();
+    let mut closed = false;
+    for _ in 0..1_000_000 {
+        if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
+            closed = true;
+            break;
+        }
+    }
+    assert!(closed, "the retained evaluation-session owner never reached its terminal close");
+    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
+}
+//#endregion 🧹️RetirementTests

@@ -10,8 +10,7 @@ async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
     let document = crate::schema::default_document();
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let node = render(&document, &cfg).expect("bounded grid");
-    let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("grid must build a World3d surface") };
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("decode world3d scene");
+    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assemble world3d scene");
     let filtered = filtered_stock(&document, &cfg.filters);
     assert!(!filtered.is_empty(), "the slabs module must contribute stock");
     for kind in &filtered {

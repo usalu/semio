@@ -1128,18 +1128,23 @@ export type PluginUiRefreshRequest = {
   readonly measures?: { readonly hash?: string };
   /** 🛠️ Mode-level tool measures, keyed by tool id — see `DocumentApp::tool_measures`. */
   readonly tools?: { readonly hash?: string };
+  /** 🛍️ App-static operator/palette catalogue — see `ArtifactApp::app_catalogue`. Fetched once per app
+   * instance; every later refresh sends the cached hash and gets no payload back. */
+  readonly catalogue?: { readonly hash?: string };
   readonly labels?: { readonly hash?: string };
 };
 
-/** @emoji 🧩️ The three refresh sections that are NOT authored window/panel bodies. Each is its own
+/** @emoji 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own
  * retained surface whose reserved body key names the plugin accessor the runtime calls in place of
- * `render` (`window_engagements`/`window_measures`/`tool_measures`), so they publish, re-publish and
- * page through exactly the same `surface-visible` → mount → reconcile → patch law as a window body.
+ * `render` (`window_engagements`/`window_measures`/`tool_measures`/`app_catalogue`), so they publish,
+ * re-publish and page through exactly the same `surface-visible` → mount → reconcile → patch law as a
+ * window body. `catalogue` is app-STATIC and carries the whole registered operator catalogue once per
+ * app instance, instead of riding on every node-graph scene payload.
  *
  * Mirrors the Rust `UiRefreshSection` / `UI_REFRESH_SECTION_KEYS` / `UI_REFRESH_SECTION_BODY_KEYS` in
  * `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`. Both sides are pinned against the one language-neutral
  * declaration in `🛂️manifest/🧪️tests/🔬️ui-refresh-section/🔣️.json`, so neither can drift. */
-export type UiRefreshSectionKey = "engagements" | "measures" | "tools";
+export type UiRefreshSectionKey = "engagements" | "measures" | "tools" | "catalogue";
 
 export type UiRefreshSection = { readonly key: UiRefreshSectionKey; readonly bodyKey: string };
 
@@ -1147,6 +1152,7 @@ export const UI_REFRESH_SECTIONS: readonly UiRefreshSection[] = [
   { key: "engagements", bodyKey: "framework.section.engagements" },
   { key: "measures", bodyKey: "framework.section.measures" },
   { key: "tools", bodyKey: "framework.section.tools" },
+  { key: "catalogue", bodyKey: "framework.section.catalogue" },
 ];
 
 /** @emoji 🎯️ Projects host-owned context for a section surface — the FULL view state, unnarrowed:
@@ -1165,6 +1171,7 @@ export type PluginUiRefreshResponse = {
   readonly engagements?: PluginUiRefreshSectionResponse;
   readonly measures?: PluginUiRefreshSectionResponse;
   readonly tools?: PluginUiRefreshSectionResponse;
+  readonly catalogue?: PluginUiRefreshSectionResponse;
   readonly labels?: PluginUiRefreshSectionResponse;
   /** ⏱️ See `DocumentApp::pending_effects` — background work (e.g. a `flowEvalTick` chain) the host
    * should dispatch right after this refresh, fed through the same `applyHostEffects` pass as an

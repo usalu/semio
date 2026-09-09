@@ -14,7 +14,7 @@ pub struct SetLodMode {
 }
 
 pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetLodMode { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetLodMode(crate::editor::generation3d::config::SetLodMode { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests

@@ -8888,6 +8888,34 @@
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "🧪️test⏱️brep🧊️tessellation-jobs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-artifact-stdio-semio --features conversion-brep --test brep_tessellation_jobs -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test📦️brep🧊️extrude-orientation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-artifact-stdio-semio --test brep_extrude_orientation -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🎨️brep🧊️analytic-blend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-artifact-stdio-semio --test brep_analytic_blend -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🎒️flow🧊️mesh-pack-wire",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-framework-os-flow --test flow_mesh_pack_wire -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "🏛️bestest🔋️energy🧪️laws",
       "type": "node-terminal",
       "request": "launch",
@@ -9334,6 +9362,17 @@
       "presentation": {
         "group": "4_build",
         "order": 206.066
+      }
+    },
+    {
+      "name": "📦️trusted-catalog-publish🤖️plugin-registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:trusted-catalog-publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.0665
       }
     },
     {

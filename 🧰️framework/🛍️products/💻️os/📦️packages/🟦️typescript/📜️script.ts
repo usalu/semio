@@ -52,6 +52,10 @@ type OracleCorpus = {
   initial: OracleStatus;
   successLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
   cancelLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
+  rejectLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
+  mapOverlay: { regionId: string; viewBox: string; path: string };
+  controls: Readonly<Record<string, Readonly<Record<"en" | "de", string>>>>;
+  uiAffordances: Readonly<Record<string, { request: boolean; cancel: boolean; reject: boolean; approve: boolean; overlay: boolean }>>;
   uncertainLifecycle: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
   cancelBeforeReceipt: { expectedBeforeReceipt: Pick<OracleStatus, "phase" | "jobId" | "cancelRequested">; expectedAfterReceipt: Pick<OracleStatus, "phase" | "jobId" | "cancelRequested"> };
   leaseRefusal: readonly { name: string; event: OracleEvent; expected: OracleStatus }[];
@@ -78,6 +82,34 @@ function oracleServerPhase(page: { state: string; proposalState: string; stale: 
 }
 
 /** 🧮️ The independent transition relation the corpus is checked against. */
+/** 🗺️ Hand-written overlay projection. Imports no production module. */
+function oracleProjectOverlay(preview: OraclePreview): { regionId: string; viewBox: "0 0 100 100"; path: string } {
+  const lons = preview.ring.map((point) => point[0]);
+  const lats = preview.ring.map((point) => point[1]);
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const lonSpan = maxLon - minLon || 1;
+  const latSpan = maxLat - minLat || 1;
+  const format = (value: number): string => (Number.isInteger(value) ? String(value) : String(value));
+  const points = preview.ring.map(([lon, lat]) => `${format(((lon - minLon) / lonSpan) * 100)} ${format(((maxLat - lat) / latSpan) * 100)}`);
+  return { regionId: preview.regionId, viewBox: "0 0 100 100", path: `M ${points.join(" L ")} Z` };
+}
+
+/** 🎛️ Hand-written chrome law. Reject uses the existing cancel intent; it never invents a route. */
+function oracleAffordances(status: OracleStatus): { request: boolean; cancel: boolean; reject: boolean; approve: boolean; overlay: boolean } {
+  const terminal = ORACLE_TERMINALS.has(status.phase);
+  const previewOk = status.preview !== undefined && status.preview.proposalHash === status.proposalHash && status.preview.jobId === status.jobId;
+  return {
+    request: status.phase === "idle",
+    cancel: !terminal && status.phase !== "idle" && status.phase !== "offered" && !status.cancelRequested,
+    reject: status.phase === "offered" && previewOk && !status.cancelRequested,
+    approve: status.phase === "offered" && status.proposalHash !== null && previewOk && !status.cancelRequested,
+    overlay: (status.phase === "offered" || status.phase === "approving") && previewOk,
+  };
+}
+
 function oracleReduce(current: OracleStatus, event: OracleEvent): OracleStatus {
   const idle: OracleStatus = { phase: "idle", jobId: null, cursor: 0, completed: 0, total: 0, proposalHash: null, cancelRequested: false, code: null };
   if (event.kind === "clear") return idle;
@@ -288,6 +320,7 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
   };
   walk(fixture.successLifecycle);
   walk(fixture.cancelLifecycle);
+  walk(fixture.rejectLifecycle);
   walk(fixture.uncertainLifecycle);
   let pendingOracle = oracleReduce(oracleReduce(fixture.initial, { kind: "start" }), { kind: "cancel" });
   let pendingProduction = production.reduceGisMapInferencePortV1(production.reduceGisMapInferencePortV1(production.idleGisMapInferencePortStatusV1(), { kind: "start" }), { kind: "cancel" });
@@ -323,6 +356,20 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
     if (Object.keys(row).sort().join(",") !== "de,en" || row.en === row.de) throw new Error(`control ${control} has no explicit EN/DE text`);
     strings += 2;
   }
+  for (const [control, row] of Object.entries(fixture.controls)) {
+    const productionRow = production.GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1[control as keyof typeof production.GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1];
+    if (productionRow === undefined || productionRow.en !== row.en || productionRow.de !== row.de) throw new Error(`control ${control} drifted from the corpus`);
+  }
+  const oracleOverlay = oracleProjectOverlay(fixture.preview);
+  if (JSON.stringify(oracleOverlay) !== JSON.stringify(fixture.mapOverlay)) throw new Error(`independent overlay disagrees with the corpus: ${JSON.stringify(oracleOverlay)}`);
+  if (JSON.stringify(production.projectGisMapInferencePreviewOverlayV1(fixture.preview)) !== JSON.stringify(fixture.mapOverlay)) throw new Error("production overlay disagrees with the corpus");
+  const offeredStatus = { ...fixture.initial, phase: "offered", jobId: fixture.sampleJobId, proposalHash: fixture.proposalHash, preview: fixture.preview };
+  const runningStatus = { ...fixture.initial, phase: "running", jobId: fixture.sampleJobId };
+  if (JSON.stringify(oracleAffordances(offeredStatus)) !== JSON.stringify(fixture.uiAffordances.offered)) throw new Error("independent offered affordances disagree");
+  if (JSON.stringify(production.gisMapInferencePortAffordancesV1(offeredStatus as never)) !== JSON.stringify(fixture.uiAffordances.offered)) throw new Error("production offered affordances disagree");
+  if (JSON.stringify(oracleAffordances(runningStatus)) !== JSON.stringify(fixture.uiAffordances.running)) throw new Error("independent running affordances disagree");
+  if (JSON.stringify(production.gisMapInferencePortAffordancesV1(runningStatus as never)) !== JSON.stringify(fixture.uiAffordances.running)) throw new Error("production running affordances disagree");
+  if (JSON.stringify(oracleAffordances(fixture.initial)) !== JSON.stringify(fixture.uiAffordances.idle)) throw new Error("independent idle affordances disagree");
   if (
     production.GIS_MAP_INFERENCE_REQUEST_MAX_BYTES !== fixture.limits.requestMaxBytes ||
     production.GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES !== fixture.limits.responseMaxBytes ||

@@ -4,7 +4,7 @@ use protocol::{DomainSelection, InteractionState, LocalInteractionIdentity, Sele
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{
     ArtifactCanonicalJson, ArtifactCanonicalJsonArray as JsonArray, ArtifactCanonicalJsonNode as JsonNode, ArtifactCanonicalJsonObject as JsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue as JsonValue, ArtifactStoreOneItemGrant,
-    ErasedSnapshotRetirement, SnapshotRead, SnapshotReadReturn, SnapshotRetirementFactory, SnapshotRetirementStep,
+    ErasedSnapshotRetirement, SnapshotRead, SnapshotRetirementFactory, SnapshotRetirementStep,
 };
 
 //#region 🔒️CapturedRoot
@@ -100,16 +100,18 @@ struct CapturedRootRetirement {
 }
 struct CapturedRootRetirementState {
     root: Option<Arc<CapturedRoot>>,
-    returned: Option<SnapshotReadReturn>,
 }
 
 impl SnapshotRetirementFactory<CapturedRoot> for CapturedRootRetirementFactory {
     fn retire(&self, root: Arc<CapturedRoot>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root), returned: None }) })
+        Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) })
     }
 }
 
 impl ErasedSnapshotRetirement for CapturedRootRetirement {
+    /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the
+    /// witness; reclaiming the accepted slot into an owned-value retirement belongs to the Store's
+    /// own one-slot-per-step cursor, which this owner must never wait on.
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
@@ -119,25 +121,17 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
         }
         if let Some(root) = self.owned.root.take() {
             if let Some(mut root) = Arc::into_inner(root) {
-                self.owned.returned = root.read.take().and_then(SnapshotRead::return_to_registry_witness);
-                if self.owned.returned.is_none() {
+                if !root.read.take().is_some_and(SnapshotRead::return_to_registry) {
                     return Err("local-interaction.capture-read-return".into());
                 }
             }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(returned) = self.owned.returned.as_ref() {
-            if !returned.terminal_is_empty() {
-                return Ok(SnapshotRetirementStep::Blocked);
-            }
-            self.owned.returned = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(SnapshotRetirementStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.owned.root.is_none() && self.owned.returned.is_none()
+        self.owned.root.is_none()
     }
 }
 

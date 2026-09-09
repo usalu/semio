@@ -25,6 +25,7 @@ semio_framework_plugin::app_labels! {
         fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
         fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
         fill_planned: native_en "planned", native_de "geplant", reuse_en "planned", reuse_de "geplant";
+        fill_failed: native_en "Fill planning stopped — the background job failed", native_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen", reuse_en "Fill planning stopped — the background job failed", reuse_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
@@ -38,6 +39,7 @@ semio_framework_plugin::app_labels! {
         placement_rejected: native_en "Placement rejected — it collides or exceeds the overlap budget", native_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget", reuse_en "Placement rejected — it collides or exceeds the overlap budget", reuse_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget";
         placement_unavailable: native_en "No placement available here", native_de "Hier ist keine Platzierung möglich", reuse_en "No placement available here", reuse_de "Hier ist keine Platzierung möglich";
         placement_occupied: native_en "That connection point is already taken", native_de "Dieser Verbindungspunkt ist bereits belegt", reuse_en "That connection point is already taken", reuse_de "Dieser Verbindungspunkt ist bereits belegt";
+        nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";

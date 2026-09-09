@@ -90,7 +90,6 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
     let scene = NodeGraphScene {
         editable: Some(false),
-        operators: flow_extras.operators,
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
         fixture_json: flow_extras.fixture_json.or(fixture_json),

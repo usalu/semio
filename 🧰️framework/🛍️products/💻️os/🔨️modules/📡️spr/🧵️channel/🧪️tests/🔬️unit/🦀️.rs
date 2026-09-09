@@ -385,6 +385,19 @@ async fn app_frame_ui_patch_round_trips_with_and_without_in_reply_to() {
 async fn app_frame_ui_snapshot_end_round_trips() {
     assert_frame_round_trips(&AppFrame::UiSnapshotEnd { revision: 7 }).await;
 }
+
+#[semio_framework_async_macros::async_test]
+async fn app_frame_operation_completed_round_trips() {
+    assert_frame_round_trips(&AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] }).await;
+    assert_frame_round_trips(&AppFrame::OperationCompleted { operation: u64::MAX, revision: 0, ui_scope: Vec::new(), history_patch: Vec::new() }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn app_frame_operation_completed_matches_shared_cross_language_json_vector() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🏁️app-frame-operation-completed.json")).expect("operation completion fixture parses");
+    let frame = AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] };
+    assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["OperationCompleted"].as_str().expect("frame fixture hex"));
+}
 //#endregion 🔖️UiPatch
 //#endregion 🔖️AppFrame
 
@@ -664,6 +677,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("Conflicts", AppFrame::Conflicts { in_reply_to: None, conflicts: vec![2] }),
         ("UiPatch", AppFrame::UiPatch { in_reply_to: Some(1), surface: "1:body".to_string(), kind: "window".to_string(), revision: 2, base_revision: 1, ops: vec![3] }),
         ("UiSnapshotEnd", AppFrame::UiSnapshotEnd { revision: 4 }),
+        ("OperationCompleted", AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] }),
     ]
 }
 
@@ -738,6 +752,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "Conflicts" => "14000102",
         "UiPatch" => "15010106313a626f64790677696e646f7702010103",
         "UiSnapshotEnd" => "1604",
+        "OperationCompleted" => "19070501010102",
         other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
     }
 }

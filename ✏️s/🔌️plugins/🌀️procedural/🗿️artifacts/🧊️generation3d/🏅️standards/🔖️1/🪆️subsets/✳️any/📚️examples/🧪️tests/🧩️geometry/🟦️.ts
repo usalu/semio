@@ -15,6 +15,15 @@ import { expect } from "bun:test";
 
 export const EXAMPLE_GEOMETRY_FIXTURE_SCHEMA = "s.procedural.generation3d.example-geometry/v1";
 
+/**
+ * 🚧️ The machine-readable kernel standings a fixture may declare, mirroring `🦀️.rs`'s
+ * `KERNEL_STATUSES` exactly. Every `blocked-*` value names one SPECIFIC located kernel defect the
+ * Rust lane's run reproduced — never a relaxed expectation: the committed numbers stay what the
+ * geometry must be, and the Rust run keeps failing until the named defect is fixed. A fixed defect
+ * takes its value out of this list with it.
+ */
+export const EXAMPLE_GEOMETRY_KERNEL_STATUSES = ["green", "blocked-on-fillet-kernel"];
+
 /** 📐️ One example's committed expected-geometry statement. */
 export type ExampleGeometryFixture = {
   schema: string;
@@ -35,6 +44,7 @@ export type ExampleGeometryFixture = {
     boundingBoxTolerance: number;
     kernelVolumeNode: string | null;
     kernelVolumeChannel: string | null;
+    kernelVolumeTolerance: number | null;
   };
   kernelStatus: string;
 };
@@ -58,7 +68,9 @@ export function assertFixtureContract(fixture: ExampleGeometryFixture, exampleId
   expect(fixture.expect.boundingBoxMax.length).toBe(3);
   for (let axis = 0; axis < 3; axis += 1) expect(fixture.expect.boundingBoxMax[axis]).toBeGreaterThanOrEqual(fixture.expect.boundingBoxMin[axis]);
   expect(fixture.expect.volume === null || fixture.expect.volumeTolerance > 0).toBe(true);
-  expect(["green", "blocked-on-boolean-kernel"]).toContain(fixture.kernelStatus);
+  expect(fixture.expect.kernelVolumeTolerance === null).toBe(fixture.expect.kernelVolumeNode === null);
+  expect(fixture.expect.kernelVolumeTolerance === null || (fixture.expect.kernelVolumeTolerance as number) > 0).toBe(true);
+  expect(EXAMPLE_GEOMETRY_KERNEL_STATUSES).toContain(fixture.kernelStatus);
 }
 
 /** 🔗️ The op chain the fixture claims is exactly what the example's DSL wires, node by node. */

@@ -379,6 +379,9 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         // (not `None` unconditionally) so a future caller that DOES send them gets the real answer.
         AppFrame::MergeReport { in_reply_to, .. } => *in_reply_to,
         AppFrame::Conflicts { in_reply_to, .. } => *in_reply_to,
+        // 🏁️ A terminal typed operation's completion correlates by its own operation id — the command
+        // that started it resolved on an earlier turn, so there is no `AppCommand::seq` awaiting it.
+        AppFrame::OperationCompleted { .. } => None,
     }
 }
 

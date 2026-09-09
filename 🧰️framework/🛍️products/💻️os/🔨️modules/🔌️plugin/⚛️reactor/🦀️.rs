@@ -714,6 +714,14 @@ pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app:
     registry.request_continuation(invocation.response_action.clone(), invocation.request_json.clone(), move |req| Effect::invoke_extension(req, extension_id, capability, request_json))
 }
 
+/// 📤️ Drains this actor's queued outbound effects — exactly what `poll` folds into
+/// `turn-result.effects` once per turn. A fixture that drives a `PluginApp` without a live
+/// `PluginRuntime` has no `poll`, so this is its only way to observe a minted
+/// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `testkit::settle_extension_invocations`).
+pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
+    REGISTRY.with(|registry| registry.for_instance(instance).drain())
+}
+
 /// 🔁️ The arguments `response_action` is dispatched with: the ORIGINAL request object's own fields
 /// (whatever correlation the app put there — a `nodeHash`, a handle, an operator id) merged with
 /// this invocation's outcome. Domain-neutral by construction: the SDK never invents a key the app

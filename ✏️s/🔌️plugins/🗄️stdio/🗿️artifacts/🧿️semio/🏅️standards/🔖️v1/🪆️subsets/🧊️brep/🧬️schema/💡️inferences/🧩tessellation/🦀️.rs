@@ -19,7 +19,7 @@
 /// 🪡 Loop positions, surface parameters, and boundary flags.
 pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::standards::v1::subsets::brep::schema::diff::primitives::Wire;
 use crate::standards::v1::subsets::brep::schema::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind};
@@ -80,41 +80,18 @@ pub fn tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<
     tessellate_solid_with_report(body, solid, deflection).map(|(mesh, _)| mesh)
 }
 
-/// 🧩 [`tessellate_solid`] plus the [`TessellationReport`] error certificate.
+/// 🧩 [`tessellate_solid`] plus the [`TessellationReport`] error certificate. Drives the resumable
+/// [`TessellationJob`] to completion in one unbudgeted call — the incremental path is the ONLY
+/// algorithm, so a one-shot result is byte-identical to the same job stepped in small budgets.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn tessellate_solid_with_report(body: &Body, solid: SolidId, deflection: f64) -> Result<(MeshTransfer, TessellationReport), KernelError> {
-    if body.solids.get(solid).is_none() {
-        return Err(KernelError::MissingEntity(solid.to_string()));
-    }
-    let deflection = deflection.max(1e-9);
-    let faces = body.solid_faces(solid);
-    if faces.is_empty() {
-        return Err(KernelError::InvalidInput(format!("solid {solid} has no faces")));
-    }
-    let edge_cache = sample_solid_edge_cache(body, solid, deflection)?;
-    let mut transfer = MeshTransfer::default();
-    let mut report = TessellationReport::default();
-    for face in &faces {
-        append_face_mesh(&mut transfer, &mut report, body, *face, deflection, &edge_cache)?;
-    }
-    let (edges, edge_groups, edge_infos) = pack_edge_segments_with_info(body, solid, &edge_cache);
-    transfer.edges = edges;
-    transfer.edge_groups = edge_groups;
-    transfer.edge_infos = edge_infos;
-    Ok((transfer, report))
+    TessellationJob::for_solid(body, solid, deflection)?.run_to_completion(body)
 }
 
 /// 🧵 Tessellates a wire into edge polylines only (no shaded triangles).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn tessellate_wire(body: &Body, wire: &Wire, deflection: f64) -> Result<MeshTransfer, KernelError> {
-    let deflection = deflection.max(1e-9);
-    let mut edges = Vec::new();
-    for (edge_id, _forward) in &wire.members {
-        let points = sample_edge_points(body, *edge_id, deflection)?;
-        let pts: Vec<Pnt3> = points.into_iter().map(|(_, p)| p).collect();
-        push_polyline_segments(&mut edges, &pts);
-    }
-    Ok(MeshTransfer { edges, ..MeshTransfer::default() })
+    TessellationJob::for_wire(wire, deflection).run_to_completion(body).map(|(mesh, _)| mesh)
 }
 
 /// 🧩 Tessellates a single face into a [`MeshTransfer`] with one [`FaceGroup`]. Thin wrapper over
@@ -128,33 +105,7 @@ pub fn tessellate_face(body: &Body, face: FaceId, deflection: f64) -> Result<Mes
 /// 🧩 [`tessellate_face`] plus the [`TessellationReport`] error certificate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn tessellate_face_with_report(body: &Body, face: FaceId, deflection: f64) -> Result<(MeshTransfer, TessellationReport), KernelError> {
-    if body.faces.get(face).is_none() {
-        return Err(KernelError::MissingEntity(face.to_string()));
-    }
-    let deflection = deflection.max(1e-9);
-    let mut edge_cache: HashMap<EdgeId, Vec<(f64, Pnt3)>> = HashMap::new();
-    for coedge_id in body.face_coedges(face) {
-        let edge = body.coedges.get(coedge_id).map(|c| c.edge).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
-        if let std::collections::hash_map::Entry::Vacant(slot) = edge_cache.entry(edge) {
-            slot.insert(sample_edge_points(body, edge, deflection)?);
-        }
-    }
-    let mut transfer = MeshTransfer::default();
-    let mut report = TessellationReport::default();
-    append_face_mesh(&mut transfer, &mut report, body, face, deflection, &edge_cache)?;
-    for (&edge_id, points) in &edge_cache {
-        let start = (transfer.edges.len() / 6) as u32;
-        let pts: Vec<Pnt3> = points.iter().map(|&(_, p)| p).collect();
-        push_polyline_segments(&mut transfer.edges, &pts);
-        let count = pts.len().saturating_sub(1) as u32;
-        let edge = body.edges.get(edge_id);
-        let label = edge.map(|e| e.label.0.to_string()).unwrap_or_default();
-        let curve_kind = edge.and_then(|e| body.curves3.get(e.curve)).map_or(CurveKind::Line, curve_kind_of);
-        let length = polyline_length(points);
-        transfer.edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
-        transfer.edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
-    }
-    Ok((transfer, report))
+    TessellationJob::for_face(body, face, deflection)?.run_to_completion(body)
 }
 
 /// 🧩 Samples `edge` to a deflection-bounded polyline and returns packed xyz `f32` positions.
@@ -168,24 +119,293 @@ pub fn sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f
 
 // #endregion 🔖️Api
 
-// #region 🧮EdgeSample
+// #region ⏱️ResumableJob
 
-/// 📐 Every point carries its curve parameter `t` (in the edge's own domain) alongside the world
-/// position — needed to reparametrize into a coedge's p-curve, which shares the edge's parameter
-/// range via `Coedge::prange`.
+/// ⏱️ What a [`TessellationJob`] is currently doing. Phases run in declaration order; `Complete`
+/// and `Cancelled` are terminal.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TessellationPhase {
+    /// 🖇️ Discretizing every distinct edge exactly once (one unit per edge).
+    #[default]
+    SamplingEdges,
+    /// 🔺 Triangulating one face per unit against the shared edge samples.
+    MeshingFaces,
+    /// 🗃️ Emitting one edge's polyline segments and `EdgeGroup`/`EdgeInfo` metadata per unit.
+    PackingEdges,
+    Complete,
+    Cancelled,
+}
+
+impl TessellationPhase {
+    /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::SamplingEdges => "samplingEdges",
+            Self::MeshingFaces => "meshingFaces",
+            Self::PackingEdges => "packingEdges",
+            Self::Complete => "complete",
+            Self::Cancelled => "cancelled",
+        }
+    }
+}
+
+/// 📈 Monotone progress of one resumable tessellation: `units_done` never decreases and never
+/// exceeds `units_total`, which is fixed at construction (edges + faces + edges).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TessellationProgress {
+    pub units_done: usize,
+    pub units_total: usize,
+    pub faces_done: usize,
+    pub faces_total: usize,
+    pub phase: TessellationPhase,
+}
+
+/// ⏱️ Outcome of one budgeted [`TessellationJob::step`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TessellationStep {
+    /// 🔁 Budget spent, work remains — call `step` again.
+    Working(TessellationProgress),
+    /// ✅ Terminal: the mesh is ready, take it with [`TessellationJob::into_mesh`].
+    Done(TessellationProgress),
+    /// 🛑 Terminal: [`TessellationJob::cancel`] retired the job; no mesh is produced.
+    Cancelled(TessellationProgress),
+}
+
+/// 🎯 What one [`TessellationJob`] covers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TessellationTarget {
+    Solid,
+    Face,
+    Wire,
+}
+
+/// ⏱️ A tessellation split into budgetable units so a host can run it inside an interactive step
+/// ceiling across many turns, report progress, and cancel it cleanly.
+///
+/// One unit is one edge discretization or one face triangulation — the smallest granularity the
+/// crack-free, edge-first algorithm admits without recomputing shared boundary samples. A face is
+/// therefore the coarsest unit; a pathological single face still costs one whole unit, which is
+/// why callers pick a budget rather than a wall-clock deadline.
+pub struct TessellationJob {
+    target: TessellationTarget,
+    deflection: f64,
+    edge_order: Vec<EdgeId>,
+    edge_cache: HashMap<EdgeId, Vec<(f64, Pnt3)>>,
+    faces: Vec<FaceId>,
+    edge_cursor: usize,
+    face_cursor: usize,
+    pack_cursor: usize,
+    transfer: MeshTransfer,
+    report: TessellationReport,
+    phase: TessellationPhase,
+}
+
+impl TessellationJob {
+    /// 🧩 A resumable tessellation of every face of `solid`.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn for_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<Self, KernelError> {
+        if body.solids.get(solid).is_none() {
+            return Err(KernelError::MissingEntity(solid.to_string()));
+        }
+        let faces = body.solid_faces(solid);
+        if faces.is_empty() {
+            return Err(KernelError::InvalidInput(format!("solid {solid} has no faces")));
+        }
+        let edge_order = distinct_face_edges(body, &faces)?;
+        Ok(Self::seeded(TessellationTarget::Solid, deflection, edge_order, faces))
+    }
+
+    /// 🧩 A resumable tessellation of one face.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn for_face(body: &Body, face: FaceId, deflection: f64) -> Result<Self, KernelError> {
+        if body.faces.get(face).is_none() {
+            return Err(KernelError::MissingEntity(face.to_string()));
+        }
+        let faces = vec![face];
+        let edge_order = distinct_face_edges(body, &faces)?;
+        Ok(Self::seeded(TessellationTarget::Face, deflection, edge_order, faces))
+    }
+
+    /// 🧵 A resumable discretization of a wire into edge polylines only.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn for_wire(wire: &Wire, deflection: f64) -> Self {
+        let mut edge_order = Vec::with_capacity(wire.members.len());
+        for (edge_id, _forward) in &wire.members {
+            edge_order.push(*edge_id);
+        }
+        Self::seeded(TessellationTarget::Wire, deflection, edge_order, Vec::new())
+    }
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn seeded(target: TessellationTarget, deflection: f64, edge_order: Vec<EdgeId>, faces: Vec<FaceId>) -> Self {
+        Self {
+            target,
+            deflection: deflection.max(1e-9),
+            edge_cache: HashMap::with_capacity(edge_order.len()),
+            edge_order,
+            faces,
+            edge_cursor: 0,
+            face_cursor: 0,
+            pack_cursor: 0,
+            transfer: MeshTransfer::default(),
+            report: TessellationReport::default(),
+            phase: TessellationPhase::SamplingEdges,
+        }
+    }
+
+    /// 📈 This job's progress right now — safe to read between steps and after termination.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn progress(&self) -> TessellationProgress {
+        TessellationProgress {
+            units_done: self.edge_cursor + self.face_cursor + self.pack_cursor,
+            units_total: self.units_total(),
+            faces_done: self.face_cursor,
+            faces_total: self.faces.len(),
+            phase: self.phase,
+        }
+    }
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn units_total(&self) -> usize {
+        self.edge_order.len() + self.faces.len() + self.edge_order.len()
+    }
+
+    /// 🛑 Retires this job at the next observable boundary — the current phase becomes `Cancelled`
+    /// immediately, every partial buffer is dropped, and further steps are no-ops.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn cancel(&mut self) {
+        if matches!(self.phase, TessellationPhase::Complete) {
+            return;
+        }
+        self.phase = TessellationPhase::Cancelled;
+        self.edge_cache.clear();
+        self.transfer = MeshTransfer::default();
+    }
+
+    /// ✅ True once the job reached a terminal phase.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn is_terminal(&self) -> bool {
+        matches!(self.phase, TessellationPhase::Complete | TessellationPhase::Cancelled)
+    }
+
+    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
+    /// performs no work.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn step(&mut self, body: &Body, budget: usize) -> Result<TessellationStep, KernelError> {
+        match self.phase {
+            TessellationPhase::Complete => return Ok(TessellationStep::Done(self.progress())),
+            TessellationPhase::Cancelled => return Ok(TessellationStep::Cancelled(self.progress())),
+            _ => {}
+        }
+        let mut spent = 0;
+        while spent < budget {
+            match self.phase {
+                TessellationPhase::SamplingEdges => {
+                    if self.edge_cursor >= self.edge_order.len() {
+                        self.phase = if self.faces.is_empty() { TessellationPhase::PackingEdges } else { TessellationPhase::MeshingFaces };
+                        continue;
+                    }
+                    let edge = self.edge_order[self.edge_cursor];
+                    if let std::collections::hash_map::Entry::Vacant(slot) = self.edge_cache.entry(edge) {
+                        slot.insert(sample_edge_points(body, edge, self.deflection)?);
+                    }
+                    self.edge_cursor += 1;
+                }
+                TessellationPhase::MeshingFaces => {
+                    if self.face_cursor >= self.faces.len() {
+                        self.phase = TessellationPhase::PackingEdges;
+                        continue;
+                    }
+                    let face = self.faces[self.face_cursor];
+                    append_face_mesh(&mut self.transfer, &mut self.report, body, face, self.deflection, &self.edge_cache)?;
+                    self.face_cursor += 1;
+                }
+                TessellationPhase::PackingEdges => {
+                    if self.pack_cursor >= self.edge_order.len() {
+                        self.phase = TessellationPhase::Complete;
+                        self.edge_cache.clear();
+                        return Ok(TessellationStep::Done(self.progress()));
+                    }
+                    let edge = self.edge_order[self.pack_cursor];
+                    self.pack_edge(body, edge);
+                    self.pack_cursor += 1;
+                }
+                TessellationPhase::Complete => return Ok(TessellationStep::Done(self.progress())),
+                TessellationPhase::Cancelled => return Ok(TessellationStep::Cancelled(self.progress())),
+            }
+            spent += 1;
+        }
+        if self.edge_cursor >= self.edge_order.len() && self.face_cursor >= self.faces.len() && self.pack_cursor >= self.edge_order.len() {
+            self.phase = TessellationPhase::Complete;
+            self.edge_cache.clear();
+            return Ok(TessellationStep::Done(self.progress()));
+        }
+        Ok(TessellationStep::Working(self.progress()))
+    }
+
+    /// 🗃️ One edge's polyline segments plus its `EdgeGroup`/`EdgeInfo` row. A wire target emits
+    /// segments only — it carries no face topology to scope metadata to.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn pack_edge(&mut self, body: &Body, edge_id: EdgeId) {
+        let Some(points) = self.edge_cache.get(&edge_id) else { return };
+        let start = (self.transfer.edges.len() / 6) as u32;
+        let pts: Vec<Pnt3> = points.iter().map(|&(_, p)| p).collect();
+        let length = polyline_length(points);
+        push_polyline_segments(&mut self.transfer.edges, &pts);
+        if matches!(self.target, TessellationTarget::Wire) {
+            return;
+        }
+        let Some(edge) = body.edges.get(edge_id) else { return };
+        let count = pts.len().saturating_sub(1) as u32;
+        let label = edge.label.0.to_string();
+        let curve_kind = body.curves3.get(edge.curve).map_or(CurveKind::Line, curve_kind_of);
+        self.transfer.edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
+        self.transfer.edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
+    }
+
+    /// 📤 Takes the finished mesh — `None` unless the job reached `Complete`.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn into_mesh(self) -> Option<(MeshTransfer, TessellationReport)> {
+        matches!(self.phase, TessellationPhase::Complete).then_some((self.transfer, self.report))
+    }
+
+    /// 🏁 Drives every remaining unit in one unbudgeted call — the one-shot façade every legacy-free
+    /// caller of [`tessellate_solid`]/[`tessellate_face`]/[`tessellate_wire`] goes through.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn run_to_completion(mut self, body: &Body) -> Result<(MeshTransfer, TessellationReport), KernelError> {
+        loop {
+            match self.step(body, usize::MAX)? {
+                TessellationStep::Done(_) => break,
+                TessellationStep::Cancelled(_) => return Err(KernelError::InvalidInput("tessellation cancelled".to_string())),
+                TessellationStep::Working(_) => continue,
+            }
+        }
+        self.into_mesh().map(|(mesh, report)| (mesh, report)).ok_or_else(|| KernelError::InvalidInput("tessellation produced no mesh".to_string()))
+    }
+}
+
+/// 🖇️ Every distinct edge reachable from `faces`, in deterministic face→coedge order — the single
+/// ordering both the sampling and the packing phase walk, so a stepped job emits byte-identical
+/// `edges`/`edge_groups`/`edge_infos` to an unbudgeted one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn sample_solid_edge_cache(body: &Body, solid: SolidId, deflection: f64) -> Result<HashMap<EdgeId, Vec<(f64, Pnt3)>>, KernelError> {
-    let mut cache = HashMap::new();
-    for face in body.solid_faces(solid) {
-        for coedge_id in body.face_coedges(face) {
+fn distinct_face_edges(body: &Body, faces: &[FaceId]) -> Result<Vec<EdgeId>, KernelError> {
+    let mut seen: HashSet<EdgeId> = HashSet::new();
+    let mut order = Vec::new();
+    for face in faces {
+        for coedge_id in body.face_coedges(*face) {
             let edge = body.coedges.get(coedge_id).map(|c| c.edge).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
-            if let std::collections::hash_map::Entry::Vacant(slot) = cache.entry(edge) {
-                slot.insert(sample_edge_points(body, edge, deflection)?);
+            if seen.insert(edge) {
+                order.push(edge);
             }
         }
     }
-    Ok(cache)
+    Ok(order)
 }
+
+// #endregion ⏱️ResumableJob
+
+// #region 🧮EdgeSample
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sample_edge_points(body: &Body, edge_id: EdgeId, deflection: f64) -> Result<Vec<(f64, Pnt3)>, KernelError> {
@@ -277,35 +497,6 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, an
         return ((arc_range / 1e-9).ceil() as usize).clamp(1, 200_000);
     }
     ((arc_range / theta_step).ceil() as usize).max(1)
-}
-
-/// 🗃️ Every edge's shared polyline, packed once, plus its [`EdgeGroup`]/[`EdgeInfo`] metadata.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pack_edge_segments_with_info(body: &Body, solid: SolidId, cache: &HashMap<EdgeId, Vec<(f64, Pnt3)>>) -> (Vec<f32>, Vec<EdgeGroup>, Vec<EdgeInfo>) {
-    let mut edges = Vec::new();
-    let mut edge_groups = Vec::new();
-    let mut edge_infos = Vec::new();
-    let mut seen: HashMap<EdgeId, ()> = HashMap::new();
-    for face in body.solid_faces(solid) {
-        for coedge_id in body.face_coedges(face) {
-            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
-            if seen.insert(coedge.edge, ()).is_some() {
-                continue;
-            }
-            let Some(points) = cache.get(&coedge.edge) else { continue };
-            let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            let start = (edges.len() / 6) as u32;
-            let pts: Vec<Pnt3> = points.iter().map(|&(_, p)| p).collect();
-            push_polyline_segments(&mut edges, &pts);
-            let count = pts.len().saturating_sub(1) as u32;
-            let label = edge.label.0.to_string();
-            let curve_kind = body.curves3.get(edge.curve).map_or(CurveKind::Line, curve_kind_of);
-            let length = polyline_length(points);
-            edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
-            edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
-        }
-    }
-    (edges, edge_groups, edge_infos)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -481,7 +672,7 @@ fn coedge_point_uv(body: &Body, surface: &Surface, coedge: &Coedge, edge: &Edge,
             (closest.u, closest.v)
         }
     };
-    let is_pole = surface.normal(uv.0, uv.1).is_none();
+    let is_pole = surface.is_degenerate_uv(uv.0, uv.1);
     (uv, is_pole)
 }
 
@@ -999,7 +1190,7 @@ fn refine_adaptive(surface: &Surface, positions: &mut Vec<Pnt3>, uvs: &mut Vec<(
             let idx = positions.len();
             positions.push(p3);
             uvs.push(uv);
-            poles.push(surface.normal(uv.0, uv.1).is_none());
+            poles.push(surface.is_degenerate_uv(uv.0, uv.1));
             insert_point_into(uvs, tris, idx);
             inserted_any = true;
         }

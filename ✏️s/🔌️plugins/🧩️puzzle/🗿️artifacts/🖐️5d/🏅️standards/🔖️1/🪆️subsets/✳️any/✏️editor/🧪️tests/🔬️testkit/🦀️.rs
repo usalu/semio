@@ -140,7 +140,7 @@ pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
                     serde_json::to_value(semio_framework_ui_scene::decode::<semio_framework_ui_scene::Board2dScene>(surface).expect("decode board scene"))
                 }
                 schema if schema == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA => {
-                    serde_json::to_value(semio_framework_ui_scene::decode::<semio_framework_ui_scene::World3dScene>(surface).expect("decode world scene"))
+                    serde_json::to_value(semio_framework_plugin::testkit::built_surface_scene::<semio_framework_ui_scene::World3dScene>(node).expect("assemble world scene"))
                 }
                 _ => continue,
             }

@@ -46,20 +46,31 @@ fn pump(stores: &mut [TestStore; 3], owners: &mut [Option<Box<dyn ErasedSnapshot
     }
 }
 
-fn finish_close(stores: &mut [TestStore; 3], query: &mut Query, bytes: usize) -> LocalInteractionQueryReply {
+/// 🧹️ Drains the Store-side reclamation of the leases a finished query already handed back. Each
+/// registry hands back one returned slot per probe, so this is the caller's own cooperative
+/// maintenance and deliberately runs AFTER the query's terminal reply, never before it.
+fn reclaim_returned_leases(stores: &mut [TestStore; 3], bytes: usize) {
     let mut owners = [None, None, None];
+    for _ in 0..1_000_000 {
+        pump(stores, &mut owners, bytes);
+        if owners.iter().all(Option::is_none) && stores.iter().all(TestStore::snapshot_read_leases_terminal_is_empty) {
+            return;
+        }
+    }
+    panic!("the capture Stores never reclaimed their exact returned read leases");
+}
+
+fn finish_close(stores: &mut [TestStore; 3], query: &mut Query, bytes: usize) -> LocalInteractionQueryReply {
     for _ in 0..1_000_000 {
         let step = query.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap();
         if step == LocalInteractionLiveStep::Complete {
             assert!(query.owners_are_empty());
         }
-        pump(stores, &mut owners, bytes);
         assert!(query.take_reply_admitted(|_| false).is_none());
         assert!(!query.terminal_is_empty());
         if let Some(reply) = query.take_reply() {
             assert!(query.terminal_is_empty());
-            assert!(stores.iter().all(TestStore::snapshot_read_leases_terminal_is_empty));
-            assert!(owners.iter().all(Option::is_none));
+            reclaim_returned_leases(stores, bytes);
             return reply;
         }
     }
@@ -145,6 +156,118 @@ async fn local_interaction_live_partial_admission_retains_successful_roots() {
     assert_eq!(query.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }).unwrap(), LocalInteractionLiveStep::Blocked);
     assert!(matches!(finish_close(&mut stores, &mut query, 1), LocalInteractionQueryReply::Rejected { code: LocalInteractionQueryRejection::SourceFailed, .. }));
     close_stores(&mut stores, 4096);
+}
+
+//#region 🎛️CoordinatorRoundRobin
+/// 🚧️ Runaway guard for the modelled host loop, far above the host's own 4096-continuation budget
+/// so a failure here is the state machine's, never the guard's.
+const COORDINATOR_TURNS: usize = 1_000_000;
+
+/// 🎯️ Runnable turns the terminal acknowledgement may still cost before `Closed` is published.
+/// Deliberately tiny and independent of both the byte grant and the Store registry's fixed
+/// capacity: closing hands three captured roots back and nothing else. The host's own settle drain
+/// gives up after 4096 more-work continuations, which is what a capacity-bounded reclamation
+/// cursor inside this path spent on an unchanging closing state during the browser boot.
+const CLOSE_TURN_BUDGET: usize = 32;
+
+/// 🩺️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave I: the whole read, driven exactly as the
+/// coordinator drives it and with NO Store reclamation whatsoever, because the Store's own
+/// one-slot-per-step cleanup cursor is bounded by the registry's fixed capacity and no host
+/// continuation budget can contain it. Every page acknowledgement is delivered ONLY at the
+/// quiescence point the host's settle loop can actually reach — `has_pending_work() == false` —
+/// since a query that stays runnable while the sole remaining step belongs to the host never sees
+/// its own ACK. This is the browser boot's stall, which spent 4096 continuations reporting
+/// more-work over an unchanging closing state.
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_live_terminates_without_any_store_reclamation() {
+    for bytes in [1, 64, 4096] {
+        let mut stores = stores().await;
+        let mut query = query(&stores, 41);
+        let mut awaiting_ack: Option<(LocalInteractionQueryToken, bool)> = None;
+        let (mut capture, mut closed, mut close_turns, mut closing) = (Vec::new(), false, 0_usize, false);
+        for _ in 0..COORDINATOR_TURNS {
+            if !query.has_pending_work() {
+                let Some((token, terminal)) = awaiting_ack.take() else { break };
+                assert!(query.acknowledge(&token), "the page this query itself published accepts its own exact token");
+                closing |= terminal;
+                continue;
+            }
+            close_turns += usize::from(closing);
+            match query.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap() {
+                LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items } => assert!(emitted_bytes + retired_bytes <= bytes && released_items <= 1),
+                LocalInteractionLiveStep::Complete => assert!(query.owners_are_empty()),
+                LocalInteractionLiveStep::Blocked => {}
+            }
+            if !query.reply_ready() {
+                continue;
+            }
+            match query.take_reply() {
+                Some(LocalInteractionQueryReply::Started { .. }) | None => {}
+                Some(LocalInteractionQueryReply::Page { page }) => {
+                    assert!(awaiting_ack.is_none(), "a second page was published while the first still awaited its acknowledgement");
+                    capture.extend_from_slice(&page.bytes);
+                    awaiting_ack = Some((LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal }, page.terminal));
+                }
+                Some(LocalInteractionQueryReply::Closed { cancelled, .. }) => {
+                    assert!(!cancelled);
+                    closed = true;
+                    break;
+                }
+                Some(other) => panic!("unexpected local interaction reply: {other:?}"),
+            }
+        }
+        assert!(closed, "the read never reached Closed without Store reclamation at bytes={bytes}");
+        assert!(query.terminal_is_empty(), "a published Closed leaves the slot terminal-empty at bytes={bytes}");
+        assert!(close_turns <= CLOSE_TURN_BUDGET, "closing spent {close_turns} runnable turns at bytes={bytes}, over the {CLOSE_TURN_BUDGET}-turn budget its three exact root handbacks cost");
+        let decoded: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).unwrap()).unwrap();
+        assert!(!decoded.state.selection.is_empty(), "this fixture's capture carries a live selection");
+        reclaim_returned_leases(&mut stores, bytes);
+        close_stores(&mut stores, bytes);
+    }
+}
+//#endregion 🎛️CoordinatorRoundRobin
+
+/// 🫙️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave I: a capture with nothing to say still completes
+/// the whole protocol — Started, one terminal page of length 0, its exact ACK, retirement and
+/// `Closed` — and never leaves the shell draining an actor that reports more-work forever.
+#[test]
+fn local_interaction_live_empty_capture_reaches_its_terminal_closed_reply() {
+    let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, None);
+    let mut query = LocalInteractionLiveQuery {
+        owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(crate::local_interaction::query::tests::empty_capture_for_live_law(), 3, 8)), inputs, error_bytes: None }),
+        request_id: 3,
+        started: false,
+        page_sent: false,
+        closing: false,
+        cancelled: false,
+        failed: false,
+        terminal_sent: false,
+    };
+    let LocalInteractionQueryReply::Started { .. } = query.take_reply().expect("an empty capture still starts") else { panic!("start") };
+    let mut awaiting_ack = None;
+    let mut closed = false;
+    for _ in 0..64 {
+        if !query.has_pending_work() {
+            let Some(token) = awaiting_ack.take() else { break };
+            assert!(query.acknowledge(&token));
+            continue;
+        }
+        query.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }).unwrap();
+        match query.take_reply() {
+            Some(LocalInteractionQueryReply::Page { page }) => {
+                assert!(page.terminal && page.bytes.is_empty(), "an empty capture publishes exactly one empty terminal page");
+                awaiting_ack = Some(LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity, ordinal: page.ordinal });
+            }
+            Some(LocalInteractionQueryReply::Closed { cancelled: false, .. }) => {
+                closed = true;
+                break;
+            }
+            Some(other) => panic!("unexpected empty-capture reply: {other:?}"),
+            None => {}
+        }
+    }
+    assert!(closed, "an empty capture reaches its terminal Closed reply");
+    assert!(query.terminal_is_empty());
 }
 
 #[test]

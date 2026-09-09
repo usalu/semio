@@ -177,3 +177,16 @@ fn arena_initialization_is_a_fixed_control_and_page_taxonomy() {
         started.elapsed().as_millis()
     );
 }
+
+#[test]
+fn ui_text_clipped_keeps_short_values_and_marks_long_ones_on_a_char_boundary() {
+    assert_eq!(UiText::clipped("set-count value=1").as_str(), "set-count value=1");
+    let exact = "x".repeat(UI_TEXT_MAX_BYTES);
+    assert_eq!(UiText::clipped(&exact).as_str(), exact);
+    let long = "é".repeat(UI_TEXT_MAX_BYTES);
+    let clipped = UiText::clipped(&long);
+    assert!(clipped.len() <= UI_TEXT_MAX_BYTES);
+    assert!(clipped.as_str().ends_with(UI_TEXT_CLIP_MARK));
+    assert_eq!(clipped.len(), UI_TEXT_MAX_BYTES - UI_TEXT_CLIP_MARK.len() - 1 + UI_TEXT_CLIP_MARK.len());
+    assert!(clipped.as_str().trim_end_matches(UI_TEXT_CLIP_MARK).chars().all(|c| c == 'é'));
+}

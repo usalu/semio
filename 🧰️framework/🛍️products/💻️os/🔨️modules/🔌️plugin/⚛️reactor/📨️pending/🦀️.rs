@@ -347,6 +347,17 @@ impl PendingPatchAuthority {
         Ok(false)
     }
 
+    /// 🐞️ Temporary trace summary of the publication slots, read by the reactor's more-work streak trace.
+    pub(super) fn debug_state(&self) -> String {
+        let slots: Vec<String> = self
+            .slots
+            .iter()
+            .flatten()
+            .map(|slot| format!("{}:{}{}{}{}{}", slot.sequence, if slot.emitted { "e" } else { "-" }, if slot.acknowledged { "a" } else { "-" }, match &slot.issued { Some(issued) if issued.committed => "c", Some(_) => "i", None => "-" }, if slot.rejection_requested { "r" } else { "-" }, if slot.published.is_some() { "p" } else { "-" }))
+            .collect();
+        format!("slots=[{}] handback_empty={} handback_sequence={:?} exhausted={} closing={}", slots.join(","), self.turn_handback.terminal_is_empty(), self.turn_handback_sequence, self.exhausted, self.closing_instances.iter().flatten().count())
+    }
+
     pub(super) fn has_unpublished(&self) -> bool {
         !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| !slot.emitted || slot.acknowledged || slot.rejection_requested) || self.closing_instances.iter().any(Option::is_some)
     }

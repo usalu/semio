@@ -2722,6 +2722,7 @@ export const uiChromeTranslationBundles = {
           newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
         },
         contextMenu: {
+          more: { label: { normal: "Mehr", beginner: "Mehr" } },
           select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
           deselect: { label: { normal: "Abwählen", beginner: "Abwählen" } },
           selectAll: { label: { normal: "Alles auswählen", beginner: "Alles auswählen" } },
@@ -3548,6 +3549,7 @@ export const uiChromeTranslationBundles = {
           newWindow: { label: { normal: "New Window", beginner: "New Window" } },
         },
         contextMenu: {
+          more: { label: { normal: "More", beginner: "More" } },
           select: { label: { normal: "Select", beginner: "Select" } },
           deselect: { label: { normal: "Deselect", beginner: "Deselect" } },
           selectAll: { label: { normal: "Select all", beginner: "Select all" } },

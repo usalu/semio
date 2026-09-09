@@ -1,13 +1,22 @@
 use super::*;
 use semio_framework_plugin::WindowTransientOwner;
 
-fn retire(mut cursor: Box<dyn store::retirement::RetirementCursor>, maximum_turns: usize) {
-    cursor.begin_close();
+/// ♻️ Walks a `RetirementCursor` tree under the smallest positive grant there is (one byte per
+/// turn), pushing each `Child` cursor the owner hands back — the exact shape
+/// `store::retirement::RetirementStep` declares, so a nested owner is retired explicitly instead of
+/// being dropped recursively.
+fn retire(cursor: Box<dyn store::retirement::RetirementCursor>, maximum_turns: usize) {
+    let mut stack = vec![cursor];
     for _ in 0..maximum_turns {
-        match cursor.close_step(1, 1).expect("bounded Generation3d preview retirement") {
-            store::SnapshotRetirementStep::Complete => { assert!(cursor.terminal_is_empty()); return; }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
-            store::SnapshotRetirementStep::Blocked => panic!("positive tiny retirement grant blocked"),
+        let Some(top) = stack.last_mut() else { return };
+        match top.close_step(1) {
+            store::retirement::RetirementStep::Child(child) => stack.push(child),
+            store::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= 1),
+            store::retirement::RetirementStep::Complete => {
+                assert!(top.terminal_is_empty());
+                stack.pop();
+            }
+            store::retirement::RetirementStep::BudgetExhausted => panic!("positive tiny retirement grant was reported exhausted"),
         }
     }
     panic!("Generation3d preview retirement exceeded its bounded turns");
@@ -46,7 +55,7 @@ fn preview_eval_oversized_reserved_capacity_rejects_returns_and_retires_the_exac
 
 #[test]
 fn preview_eval_transient_codec_matches_the_independent_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️unit/🔣️.json")).expect("neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️unit/🔣️.json")).expect("neutral fixture");
     for expected in fixture["accepted"].as_array().expect("accepted cases") {
         let typed: Generation3dPreviewWindowTransient = serde_json::from_value(expected.clone()).expect("serde_json oracle accepts");
         assert_eq!(serde_json::to_value(&typed).expect("typed JSON"), *expected);

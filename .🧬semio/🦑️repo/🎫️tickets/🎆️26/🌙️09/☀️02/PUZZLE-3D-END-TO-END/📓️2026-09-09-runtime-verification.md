@@ -148,3 +148,298 @@ continuations, and the reactor trace (worker `eprintln`, read via the console bu
   (`Invocation { in_reply_to: 0, ui_scope }`) is dropped by the channel client (no waiter with seq 0)
   → W-A (`📓️2026-09-09-wave-A-async-completion-refresh.md`). History rows render as
   `framework.history.entry.[object Object]` (pack integer carrier) — same wave.
+
+## 18:35 — History panel description overflow (`ui.fixed-capacity … history-panel.command-description`)
+
+- Symptom (after Fill activation, rebuild #12): `refreshUi` and `setActiveTool` failed with
+  `ui.fixed-capacity: fixed UI admission failed at history-panel.command-description`; every later
+  shell refresh was rejected, so the tool switch looked dead from the user's side.
+- Root cause: `ui_history_panel` joined all `CommandView::op_lines` (each `OpText::print_op`, the full
+  DSL/JSON line of the edit's forward operations) into one `UiText` description. A fill/mesh edit
+  prints far more than the 512-byte `UI_TEXT_MAX_BYTES`, so admission failed for the whole panel.
+- Fix: `UiText::clipped(&str)` in the ui-contract crate (`🎬️action.rs`) — whole value when it fits,
+  otherwise the longest char-boundary prefix plus `UI_TEXT_CLIP_MARK` (`…`); the history panel
+  description now uses it. Full op lines stay in the history view (and the React shell's own join).
+- Tests: contract unit test `ui_text_clipped_keeps_short_values_and_marks_long_ones_on_a_char_boundary`
+  passes (run); plugin-host test `ui_history_panel_clips_an_oversized_operation_description` is
+  written but the native test target is currently blocked by a peer's `🧪️tests/🧩️composition` file
+  (`ArtifactStoreInitializationAuthority` etc. missing in `super`); `cargo check -p
+  semio-framework-plugin` (lib) is clean. Runtime proof pending rebuild #13.
+- Slider probe: focusing the `puzzle3d-fill-count` slider span and pressing ArrowRight ×20 produced
+  no action calls (value stayed 0) — needs a pointer drag or the slider's own keyboard handling; retest
+  after rebuild.
+
+## 18:50 — Fill count slider stuck at 0: consequence of the history-panel fault, not a slider bug
+
+- Live measure props read from the React tree: `{"id":"puzzle3d-fill-count","value":0,"min":0,
+  "max":1000,"ready":0,"loading":true,"reveal":"puzzle3d-fill","onChange":{"action":"setFillCount"}}`.
+  The slider is a reveal slider (`clampToReady`), so with `ready = 0` every pointer/keyboard value is
+  clamped back to 0 and nothing dispatches — by design.
+- `ready` is the planned fill count. Planning is driven by the shell's 120 ms `fillBuildTick` loop
+  (`World3dHost`), which only runs while the main body's interaction JSON reports
+  `activeUtility === "fill"` and `fillBuild.done === false`. That JSON is refreshed by the same
+  `refreshUi` that failed on `history-panel.command-description`, so the world body never learned the
+  fill tool was active, no tick was ever dispatched (no `fillBuildTick` in the call hook for >40 s),
+  and the plan stayed at 0.
+- Expected after rebuild #13 (history description clipped): refresh succeeds → interaction
+  `activeUtility: "fill"` → ticks → `ready` grows → slider drag commits `setFillCount` on release.
+- Rebuild #13 attempt 1: `semio-s-artifact-puzzle-2d`/`-5d` rustc processes died with SIGTERM
+  (no compile error; a concurrent cargo in the same private target, see the lane-qualified target
+  memory) — the retry loop continues.
+
+## 19:15 — Rebuilds #12/#13 never reached the browser (stale materialized component since 17:07)
+
+- Served module dir `🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle` was
+  last written 17:07:19; its `…core.wasm` still contains `history-panel.command-description`, while the
+  freshly built `target-p3d/wasm32-wasip2/wasm-release/semio_s_plugin_puzzle.wasm` (18:51) does not.
+- Cause: `nx run @semio-tech/puzzle-plugin:component-release` only runs cargo; the jco transpile +
+  wasm-opt into the module dir is the dev script's `plugin <variant>` command (`buildPlugins` →
+  `materializePlugin`). The serve chain's `materialize release` step does not exist ("unknown command")
+  and `activate` reported `(unchanged)` on both #12 (18:17) and #13 (18:51).
+- Consequence: every browser observation after 17:07 ran a wasm without the history clip, W-A's
+  completion frame, W-M2's paged upload fixes and W-D3/D4's Rust fixes. The 18:5x re-test therefore
+  reproduced the `ui.fixed-capacity … history-panel.command-description` fault unchanged (expected for
+  the stale build) and the fill slider stayed at `ready: 0`.
+- Fix: `🔨️materialize-and-serve.sh` (ticket + scratchpad) runs
+  `SEMIO_BUILD_MODE=ship … 📜️script.ts plugin puzzle3d` with the private `CARGO_TARGET_DIR`, then
+  restarts the release server; `🔨️rebuild-until-ok.sh` now chains that step after `component-release`.
+- Correction (19:25): the dev script's `plugin puzzle3d` is the wrong tool (recompiles with other rustc
+  flags, writes `🧑‍💻dev/🔌️plugin-modules`, which the react release serve does not read). The real
+  cause was the recreated `🔨️serve-release-direct.sh` pointing `PLUGIN_SCRIPT` at the puzzle-js
+  `📜️script.ts` (only `test`), so `support release` and `materialize release` both printed
+  `unknown command` on every serve since the 17:56 restart. Fixed to
+  `🔌️plugin/📦️packages/🟦️typescript/📜️script.ts`; `🔨️rebuild-until-ok.sh` restored to
+  `component-release` → serve chain. Materialize of the 18:51 artifact launched 19:24.
+
+## 19:40 — First run on a fresh wasm (materialized 19:26): history fault gone, fill plan never grows, guest OOM
+
+- Boot (fresh profile hook): `readLocalInteraction` still exhausts 4096 continuations (W-I),
+  `refreshUi` ok, boot actions now 1.5–2.4 s (were 22 s on the stale wasm). W-A's
+  `OperationCompleted` arrives (`operation 35, uiScope full`) and the shell applies it.
+- Peer breakage fixed on the way: `🔌️plugin/📇️registry/🟦️.ts` (19:03) imported `node:fs` for a
+  new `readTrustedStdioCatalog`; the browser shell imports that module, so every boot died with
+  `Module "node:fs" has been externalized`. Moved the reader to
+  `📇️registry/✅️trusted-stdio-catalog/🟦️.ts` (no callers yet).
+- Fill: Command tab → Fill tab dispatches `setActiveTool` (scope full) → `refreshUi` succeeds
+  (no `history-panel.command-description` fault any more) → measures render
+  (`puzzle3d-fill-count 0/1000`, distribution group) → the shell's 120 ms `fillBuildTick` loop
+  runs (125 ticks/60 s, each tick a typed operation with a completion, `uiScope none`).
+- BUT `ready` stays 0 / `loading: true` for the whole run, and after ~115 ticks the guest traps:
+  `memory allocation of 98880 bytes failed` → `RuntimeError: unreachable` in `poll` →
+  `PluginRuntime: actor puzzle#1 trapped`; every later action fails with `unreachable` (the tick
+  loop keeps firing against the dead actor). So the fill planner never publishes a piece and the
+  guest leaks/grows memory per tick until OOM — same family as the native `settle` stall W-S is on.
+- Lead: `⚛️reactor/💼️jobs/🦀️.rs::spawn_job` only runs a kind registered in
+  `BOUNDED_KIND_REGISTRY`; an async `KIND_REGISTRY` kind is `ExplicitStateMachineRequired` outside
+  `cfg(test)`. `fill_build_tick` spawns `FILL_JOB_KIND` (`JobPlacement::Isolated`) — check which
+  registry puzzle 3d uses and whether the React host steps isolated jobs at all.
+
+## 20:05 — Nakagin switch: completion arrives but its full refresh was dropped (owner check)
+
+- Fresh wasm + live TS: selecting "Nakagin Capsule Tower" dispatches `setActiveExample` (scope
+  none, ~0.7 s) and W-A's `OperationCompleted` arrives (`operation 52, uiScope full`), but scene,
+  outliner and history stayed on Concrete Forest and no `refreshUi` followed.
+- Trace (`[DEBUG] completion apply`): `ownerCurrent: false, sessionCurrent: true`. The subscription
+  built its owner with `captureEffectOwner(target, null)`; `isCurrentEffectOwner` requires
+  `isCurrentDialogOrigin(owner.presentation)`, which is false for `null`, so `applyHostEffects`
+  returned before its refresh. Every other owner site passes `captureDialogOrigin(session)`.
+  Fixed in `🏛️ShellHost/🟦️.tsx` (completion subscription now captures the session's own origin).
+- Also seen: the completion carries no `historyPatch` for the example switch
+  (`history_dirty_sequences` empty at drain time) — history panel stays empty; to check after the
+  owner fix. `readLocalInteraction`/`readHistory` still exhaust 4096 continuations on this wasm
+  (W-I's fix needs rebuild #14).
+- Peer breakage on the way: `💻️os/🟦️.ts:2393` imports `🧪️tests/🧊️mesh-pack-decode/🟦️.ts`
+  (mesh pack codec, 19:49) which did not exist — Vite refused every boot and nx's project graph
+  failed repo-wide. Wrote that module with five decoder laws (hand-encoded varint/tag bodies,
+  symbol/inline texture, error paths, base64 chunk reassembly).
+
+## 20:20 — Owner fix verified; hidden-pane timer throttling; Nakagin refresh now blocked only by the W-I starvation
+
+- With `captureEffectOwner(target, captureDialogOrigin(target))` the boot completion (`operation 35,
+  full`) and the Nakagin completion (`operation 227, full`) both reach `applyHostEffects refresh
+  {"scope":{"kind":"full"}}` → `refreshUi` (trace `ownerCurrent: true`).
+- That `refreshUi` (and the following `readHistory`) still fail with `did not publish its requested
+  UI surfaces within 4096 continuations (required=[], published=[])` — the local-interaction /
+  returned-read starvation W-I fixed in `🔌️plugin/🦀️.rs` (not in the 19:26 wasm). Rebuild #14
+  launched 20:18 with W-I's Rust.
+- Verification trap: the Browser pane is hidden (`document.hidden === true`), so Chrome throttles
+  main-thread timers to ~1 Hz (measured 7 ticks in 3.6 s for a 10 ms interval; 887 ms lag) and
+  intensive throttling after 5 min. That is why the example dropdown would not open and why the fill
+  tick loop ran at ~2 Hz. For this session's verification a dedicated-worker timer shim is installed
+  after each reload (`window.setTimeout/setInterval` routed through a Worker; 74 ticks/s afterwards);
+  it is debugging-only and not part of the app.
+
+## 20:35 — Rebuild #14 (W-I + W-S Rust): boot clean, Nakagin switch now blocked by an endless `reconcile`
+
+- Boot: `readLocalInteraction` ok (27 s, serialized behind the boot actions), `refreshUi` ok,
+  completion `operation 35` → full refresh applied, no faults; outliner shows Objects / References /
+  Target volumes / Attractions.
+- Nakagin: `setActiveExample` ok → completion `operation 227, full` → `refreshUi` and `readHistory`
+  fail after 4096 continuations, `status=more-work`. Worker trace at the failure:
+  `reactor more-work streak=8192 … typed_operation=false reconcile=true resumes=false
+  executor_pending=false command_ingress=false lifecycle=false effects=0` — the retained-surface
+  reconcile is the only pending source and never completes after the document switch (W-S's suite
+  saw `ui.fixed-capacity: scene-surface.encode … 33527 bytes` on the same document; W-K owns the
+  payload cap, but a reconcile that cannot publish must fault, not spin).
+- Per-turn `[DEBUG] turn N begin/end` worker traces are still compiled in (two eprintln per turn);
+  remove with the next rebuild.
+
+## 20:55 — Rebuild #15 (W-J): fill job starts, then the guest traps again; tick loop over-queues
+
+- Boot clean on #15 (no faults, `readLocalInteraction` 12 s). Fill activation: measures render, the
+  bounded fill job now really starts in the browser (transient notice `Fill progress
+  prepare-fixture 0/10000`), but within ~30 s the guest trapped again (`RuntimeError: unreachable` on
+  `fillBuildTick`, actor dead); the panic text was already pushed out of the 500-line console buffer
+  by the per-turn traces (removed in #16), so the cause is being re-captured.
+- Tick loop defect (host): with unthrottled timers the 120 ms `fillBuildTick` interval enqueued
+  252 actions + 90 `readHistory` in 35 s and overflowed the per-actor queue (`serializePerActor:
+  … queue is full (>256 pending turns)`, 38 rejected). `createInFlightSkippingInterval` only skips
+  while its own `run()` promise is pending, and `dispatch("fillBuildTick")` resolves before the
+  guest turn completes, so ticks queue faster than turns finish. The tick must be gated on the
+  previous tick's guest completion (or dispatched from the completion itself), and a tick must not
+  trigger a `readHistory`.
+
+## 21:05 — Pick works on #15
+- Left click on the slab in the Perspective view: three `handleAction`s (one `full`), `refreshUi`
+  ok, `readHistory` ok, `readLocalInteraction` ok in 0.3 s (was 4096-continuation failure before
+  W-I); the slab highlights in both Top and Perspective views and the window focus moves.
+- Boot cost note: the seven `registerBrushMesh` page uploads each trigger a `refreshUi` +
+  `readHistory` pair (14 extra round trips, ~3 s each while the boot queue is busy).
+- Context menu on the selected slab opens with real rows (Set Active Example, Add Object…,
+  Duplicate Selection ⌘D, Translate Selection, Rotate Selection, Delete Selection ⌫). Defects:
+  (a) the submenu group labels render as raw keys `menu.group.history` / `menu.group.hand` /
+  `menu.group.selection` / `menu.group.more` (missing EN/DE labels for context-menu groups);
+  (b) `Delete Attraction` and `Delete Target Volume` are offered for a plain object selection.
+- Inspection panel shows no field group for the selected object (panel body empty) — to verify
+  whether the panel is folded or the inspector body is not published.
+- Duplicate Selection (context menu) on the selected slab: `handleAction` ok (scope none), completion
+  `operation 355` with a partial scope (`windowBodies: [puzzle3d…]`), `refreshUi`/`readHistory` ok —
+  but the outliner still lists one object and the history snapshot (`upserts`) contains only
+  `interactionSelect` rows (cursor 7, `canUndo: true`): the duplicate produced no document edit and
+  no command-log row. To reproduce natively: `duplicate_selection_reselects_the_created_clones`
+  passes (W-D4), so the browser path differs (selection carried by the local-interaction lane?).
+- Context-menu group labels: the wgpu target resolves `menu.group.<category>` through
+  `ribbon_parent_label` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:303`); the React shell has no such
+  resolution and shows the raw ids.
+- History panel: after expanding the History tab the rows render with numeric ids (`framework.history.entry.1…9`: Resize Window, `delete-object id=seed-left-001` (boot edit, clipped op line), Activate Window, Select ×4, Toggle Panel, Switch Panel Tab) — the `[object Object]` carrier defect is gone; no Duplicate row confirms the no-op above.
+
+## 21:40 — Rebuild #16: reconcile spin after Nakagin now has a tracker trace
+
+- Nakagin switch on #16: completion `227, full` → `refreshUi` fails again after 4096 continuations,
+  `published=["1:framework.panel.catalogue", …]` (some surfaces did publish), status stays
+  `more-work`. Worker trace at streak 8192: `reconcile=true`, `patches: slots=11 producers=0 jobs=0
+  terminals=2 producer_terminals=1 deferred=1 ready=1 output_fault=none`, `pending: slots=[]
+  handback_empty=true exhausted=false`. So the publication queue is empty and idle while the tracker
+  still holds two terminals, one producer terminal, one deferred surface and one ready output that
+  `next_ready_index` never selects (it requires `published && !closing`); `close_step` steps only
+  `close=true` terminals one slot per turn and returns early on any closing ready output.
+- Fill on #16: the bounded job starts (`Fill progress prepare-fixture 0/10000` notice) but the tick
+  loop floods the actor queue (>256 pending turns) so job slices starve (W-L owns the tick gating).
+- Rebuild #17 (per-slot tracker trace: surface/generation/producer/job/reconciler/ack vs revision,
+  ready published/closing/reservation/empty, terminal close/fault/empty, producer-terminal flags,
+  deferred surfaces) launched 21:40; streak trace threshold raised to 2048 to stop the console flood.
+- Browser-pane trap: the page had scrolled by 12 px (`scrollY=12`), so every ref/coordinate click on
+  the navbar example trigger missed; `window.scrollTo(0,0)` before clicking fixes it.
+
+## 22:00 — Reconcile spin root cause (rebuild #17 per-slot trace)
+
+- Nakagin switch on #17, streak 8192, `reconcile=true`, pending queue empty. Tracker:
+  `1:framework.panel.artifact#g103:---:ack1/rev0:outSome(3)`, `ready=[g103:--r-]` (not published,
+  not closing, reservation held, pages present), `terminals=[g103:c--]`,
+  `producer_terminals=[1:framework.section.measures:cARV]`, `deferred=[1:framework.section.tools]`,
+  `close_cursor=48`.
+- Cause: `drive_job_one`'s abandon branch (`slot.reconciler.is_some() && !job.is_ready()`) moved the
+  artifact panel's reconcile job into a terminal and dropped the slot's `output_index` WITHOUT closing
+  the ready output it had reserved. `next_ready_index` only selects `published && !closing` outputs
+  and `close_step` only steps `closing` ones, so the output stayed forever, `has_work()` stayed true,
+  and every later drain hit the 4096-continuation budget. Fix in `⚛️reactor/🩹️patches/🦀️.rs`:
+  `close_output(state, index)` before retiring the abandoned job (rebuild #18).
+- Why the reconciler was present while the job ran: `mark_rejected` (a host rejection of the stale
+  patch during the document switch) installs a fresh `SurfaceReconciler` on the slot, which the
+  abandon branch then treats as "newer work exists".
+
+## 22:35 — Rebuild #19 abandon trace: the branch is the normal job retirement
+
+- Boot on #19 (original abandon behaviour + trace): clean, no missing surfaces. The abandon branch
+  fires for every surface at boot with `ready=(gen, published=false, closing=true, reservation=false,
+  pages present)` — i.e. after an `Empty` transfer (tree equal to the acknowledged root) the job is
+  retired through that branch, and after a `Published` transfer the output stays `published=true`
+  for the host to take. Closing unconditionally (#18) therefore killed the published outputs of the
+  four boot surfaces.
+- Refined fix (rebuild #20): close the output in the abandon branch only when it is *stranded* —
+  `!published` (a transfer that can never run because the slot already holds a reconciler; the
+  Nakagin case `g103: published=false, closing=false, reservation=true`).
+- #19 Nakagin (original behaviour, trace): same shape — `framework.panel.artifact#g26:---` with
+  `ready=[g26:--r-]` (unpublished, reservation held), `terminals=[g27:c-e, g26:c--]`,
+  `producer_terminals=[section.measures:cARV]`, `deferred=[section.tools]`; and `close_cursor=32` did
+  NOT advance between streak 2048 and 4096 — `PatchTracker::close_step` is not reaching its cursor
+  loop during the continuation turns (to check: early return before the cursor, or the call site).
+
+## 23:00 — Rebuild #20: boot clean, Nakagin still spins; the strand is not created by the abandon branch
+
+- #20 boot clean (no missing surfaces). Nakagin: same tracker shape — `artifact#g26:---:outSome(3)`
+  with `ready=[g26:--r-]` — but the slot still holds `output_index`, so the abandon branch (which
+  clears it) never ran for g26; the job reached its terminal (`g26:c--`) through another path (the
+  closing-instance branch of `close_step` retires a slot's job into a terminal without touching an
+  unpublished output whose close key differs). Rebuild #21 adds `close_stranded_outputs` to
+  `close_step`: any unpublished, not-closing output whose slot has no producer/job is closed and
+  its `output_index` cleared — the invariant "an output without a live publisher cannot stay open".
+
+## 23:50 — Rebuilds #21/#22: the spin narrows to two job terminals drained too slowly
+
+- #21 (stranded-output sweep): `ready=[]` after the switch, remaining `terminals=[g26:c--]`,
+  `producer_terminals=[section.measures:cARV]`, `deferred=[section.tools]`.
+- Cause of the producer terminal: `ComponentTreeProducer::close_step` completed only when the GLOBAL
+  built-child retire pool was terminal-empty (no live reservations), impossible while surfaces are
+  mounted, and no one else drained the pool. Fixed (`🖱️ui/🧠️runtime/…/🎭️present.rs`,
+  `🧬️contract/…/🏗️builder.rs`): completion means "close queue empty" (live reservations excluded);
+  the reactor turn drains one page per turn. ui-runtime laws green in isolation (whole-suite runs
+  fail on shared-registry contention regardless of this change).
+- #22: `producer_terminals=[] deferred=[]`, remaining `terminals=[g33:c--, g26:c--]` (tools and
+  artifact job terminals, `close=true`, never empty). `PatchTracker::close_step` advanced its cursor
+  one slot per turn over 64 slots, so a terminal received one retirement unit every 64 turns; a
+  Nakagin-sized tree needs hundreds of units → tens of thousands of turns. Fixed: the cursor jumps to
+  the first live closing terminal each turn (rebuild #23/#24).
+- ui-runtime lib suite (`--test-threads=1`) shows the same 8+ failures with the close-page semantics reverted to HEAD (A/B run), so they are pre-existing order-dependent failures of that crate, not this change; every touched law passes in isolation.
+
+## 00:20 — Rebuild #23: terminals drain, but the artifact terminal outlasts the 4096-turn budget
+
+- Trace at streak 2048: `terminals=[g33:c--, g26:c--]`; at 4096: `terminals=[g26:c--]` — the tools
+  terminal retired, the artifact panel's (hundreds of retire units) did not, and `has_work()` kept
+  the actor in `more-work` for background retirement the host will never observe.
+- Fix (rebuild #25): `reconcile_work` now uses `PatchTracker::has_publishable_work` (producers, jobs,
+  published outputs, deferred/unadmitted surfaces, closing instances, output fault) — terminal and
+  producer-terminal retirement is maintenance driven by `close_step`, which the turn now calls up to
+  `PATCH_CLOSE_UNITS_PER_TURN = 8` times.
+
+## 00:55 — Rebuild #25: the reconcile spin is gone; the real Nakagin fault surfaces
+
+- Boot clean. Nakagin: `setActiveExample` ok (0.56 s) → completion → `refreshUi` returns in 0.37 s
+  with `ui.fixed-capacity: fixed UI admission failed at scene-surface.encode: surface payload exceeds
+  fixed capacity with 57281 bytes` — no 4096-continuation drain any more (terminal retirement is no
+  longer "more work"; publishable work is). The world body cannot carry Nakagin in one 32 KiB
+  payload → wave W-P (paged scene lanes).
+- Fixes that closed the spin, in order: stranded-output sweep (#21), producer close semantics +
+  reactor built-node drain (#22/#23), close cursor jumping to live terminals (#24), publishable-work
+  classification + 8 close units per turn (#25).
+
+## 23:20 → 00:10 — Fill activation, fill OOM, shell quirks (build #25 + HMR TS)
+
+- **Fill activation fault fixed (TS).** `setActiveTool failed unknown action window instance puzzle3d-main` reproduced on a fresh boot. Cause: the `SET_ACTIVE_TOOL_ACTION_ID` branch of `🏛️ShellHost/🟦️.tsx` forwarded the bare session view state (`{ activeModeId }` only), so the plugin host's `addressed_action_view` → `ViewModel::for_window_instance` had no `windowInstances` to project onto. The utility/context-menu/generic-dispatch paths all build the base view state with `sessionWindowInstances` + `buildActiveUtilityByWindowId` and project with `windowViewContext`/`panelViewContext`; the tool branch now does the same (and `dispatchSpaceExtensionOp` too). Verified: `setActiveTool:68 ok`, `actionPane.activeToolId === "fill"`, the fill measures pane (Count slider, Hexagonal Cut group) renders, the `fillBuildTick` loop runs one tick per completed turn (~140–250 ms, in-flight gating holds). React target typecheck: 820 pre-existing errors in peer test files, none in ShellHost/ShellHelpers.
+- **Fill guest OOM captured.** After 173 / 181 ticks (~25–30 s, two runs) the guest traps with `memory allocation of 16384 bytes failed` → `unreachable`; the plugin wasm is linked with `--max-memory=536870912`, so ~2.8 MB is retained per tick. The slider measure stays `ready: 0, loading: true` throughout — no plan slot ever becomes available. After the trap every later `handleAction` fails (`shard 0 worker fault … unreachable`); the tick loop keeps dispatching against the dead guest until reload. Capturing the message required freezing the tick loop from the in-page hook at the first `unreachable` (the console buffer floods in ~4 s). → wave W-F (Opus) launched with a native-law-first brief.
+- **Native fill tests.** `cargo test … fill`: `fill_build_tick_every_step_stays_below_the_interactive_ceiling_for_nakagin` ok (771 turns, worst 1.0 ms); `fill_and_brush_params_are_tagged_utility_options_not_engagement_controls` overflows the 2 MiB test-thread stack (passes with `RUST_MIN_STACK=4194304`, fails at 2 MiB) — a > 2 MiB stack frame on the `fill_tool::measures` / `window_measures` path. → folded into W-F.
+- **Shell quirks.** (1) First click on the ribbon tab `tool.fill` dispatches `setActiveTool { toolId: "" }` although no tool is active (tab renders pressed); the second click activates. (2) The Tool category needs two clicks before its items render; the second click fires eight sequential `handleAction`s of rising latency (181 → 2579 ms) — identified later as seven `registerBrushMesh` page uploads (650–2850 ms each, every one answering with a `notify` effect) plus `setCamera`, triggered when the Perspective window becomes active. → wave W-G (Opus) for (1)/(2); the brush-mesh upload cost and its notify refusals need a look once W-P lands.
+- **Pick blocked by peer HMR state.** On the next boot the shell showed `plugin-ui.section-root-mismatch:#0`, no windows and an empty catalogue: the served wasm is build #25 while peers (W-N inspection/partial scopes, W-P paged scene lanes, W-G) are landing TS halves through vite HMR. Browser verification of pick/gumball/undo/duplicate resumes after rebuild #26 with the wave outputs.
+
+## 00:05 → 00:40 (2026-09-10) — Build #26 served; intake stall on the Perspective surface
+
+- **#26 boots** (`Activated puzzle3d react release: 1 completed components (changed)`; the served core carries `framework.section.catalogue`, the pool-pump trace is gone). Both windows render, the introduction tour shows (skipped via its Skip control). Boot turn timings are still serialized: `readLocalInteraction` 28.4 s / `refreshUi` 26.3 s / `setActiveExample` 27.9 s overlap.
+- **Every refresh after window activation fails** with `plugin-ui.intake-budget-exhausted:1:puzzle3d-main-perspective:36864` (`🔌️PluginRuntime/🟦️.tsx` `acceptUiPatches`: budget = 4096 + max(bytes, ops×4096)×8 → the patch is one small op, and 36 864 intake steps pass in 127 ms, i.e. `OwnedUiPatchIntake.advance` never progresses — it waits for something the host loop never lets the guest deliver, which matches the paged scene lanes W-P is landing (Rust half in #26, TS half in flight). Consequence on the guest: the surface slot sits at `ack1/rev2` forever, the `surface-visible` re-admission lands in the `deferred` family, and the drain spins (`reconcile=true`, `deferred=[1:puzzle3d-main-perspective]`) until `did not publish … within 4096 continuations`. No `interactionSelect` is ever dispatched from a click (only `setCamera`), so pick/inspection/context-menu checks are blocked on this.
+- **Guest-side half fixed now:** `PatchTracker::has_publishable_work` counts a deferred surface only when `deferred_surface_ready` holds (no slot, or no producer/job and ack ≥ rev) — a surface waiting on the host's acknowledgement is host-blocked and must not hold `more-work` (the ack arrives as its own lifecycle turn). Law `a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work` in `🩹️patches/🧪️tests/🔬️unit/🦀️.rs`; passes, as do the two earlier laws (`abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle`, `a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit`) now that the plugin-host lib test target compiles again.
+- **Plugin-host tracker suite is order-dependent:** `patches::tests` = 19 passed / 15 failed with 2 threads, and the same 15 fail single-threaded even with my three laws skipped (`mounted_output_admission_* … called Result::unwrap() on an Err value: SurfaceId("75:direct")` — the process-wide mounted-output pool is left full by an earlier test in the run: `effects_publish_in_admission_order…`/`generation_max…`/`issued_obsolete…`); every one of them passes alone. `issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner` also overflows the default 2 MiB test stack (needs `RUST_MIN_STACK=64 MiB`). Not caused by this ticket's tracker edits (they pass with the edits when run alone); recorded for the gates note.
+- W-N landed (puzzle3d suite 613/9, gumball verbs refuse without selection at the cause, one scope table); W-F, W-G, W-H, W-P running. Next rebuild (#27) after W-P.
+
+## 00:20 → 00:40 — The user-facing entry `bun dev:puzzle:3d`
+
+- `bun dev:puzzle:3d` → `workspace:dev -- 3d` → root `📜️script.ts` `runFrameworkOsPlaygroundDev` → `runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", "puzzle3d"])`. **Failed before any build**: `NX Failed to load 1 Nx plugin(s): …📚️library/🟨️.mjs: require() async module … is unsupported` from `buildProjectGraphAndSourceMapsWithoutDaemon`. Cause: `runCmdInternal` (`📚️library/🏃️process/🟦️.ts`) resolved `nx` to `node_modules/.bin/nx`, bypassing the workspace's `package.json` `nx` script (the caching bootstrap that owns the daemon-served project graph the async ES-module inference plugin needs). Fix: `workspaceScriptExists(name)` — a name declared as a workspace script is never resolved to a same-named bin; law `process runner reaches workspace scripts before same-named bins` in `🧪️tests/⏱️process-budgets/🟦️.ts` (passes; asserts `bun nx --version` reaches the bootstrap).
+- Second run: the bootstrap now runs `nx watch` for the dev target and fails with `NX Daemon is not running. The watch command is not supported without the Nx Daemon` → `Nx source watcher exited before readiness`. `bun nx daemon` confirmed no daemon; `bun nx daemon --start` brought it up (pid 22281). Third run in progress with the daemon up — if it boots, the remaining gap is that the bootstrap must start the daemon itself before watching (a user's first `bun dev:puzzle:3d` on a fresh machine must not depend on a manual `nx daemon --start`).

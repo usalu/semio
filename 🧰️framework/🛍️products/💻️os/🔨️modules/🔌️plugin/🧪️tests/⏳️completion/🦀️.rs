@@ -37,14 +37,14 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let bytes = law["closeBytes"].as_u64().unwrap() as usize;
     let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await).await;
-    let outcome: Result<(u64, u64, u64, u64, i32), Fault> = async {
+    let outcome: Result<(u64, u64, u64, u64, u64, i32), Fault> = async {
         app.bind_instance_id(meta.instance_id).await;
         let contracts = app.tool_public_contracts().await;
         let exact = contracts.iter().filter(|contract| contract.tool_id == TEST_RESTART_TOOL && contract.owner == ToolOwnerWitness::of::<TestApp<true>>() && contract.controller_id == TestApp::<true>::APP_ID && contract.schema_id == TEST_RESTART_SCHEMA).count();
         if exact as u64 != law["retainedProofs"].as_u64().unwrap() { return Err(Fault::from("restart app lost its exact registered tool contract")); }
         let admitted = app.dispatch_typed(command, meta).await?;
         if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication")); }
-        let (mut artifact, mut ui, mut scopes, mut terminal) = (0, 0, 0, 0);
+        let (mut artifact, mut ui, mut scopes, mut terminal, mut completions) = (0, 0, 0, 0, 0);
         for _ in 0..100_000 {
             if let PluginCloseStep::Pending { released_items, released_bytes } = app.maintenance_step(items, bytes)? {
                 if released_items > items || released_bytes > bytes { return Err(Fault::from("restart maintenance exceeded the exact grant")); }
@@ -65,7 +65,13 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
                 if !matches!(scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its declared full UI scope")); }
                 scopes += 1;
             }
-            if !app.has_pending_typed_operations() { return Ok((artifact, ui, scopes, terminal, app.snapshot()?.count)); }
+            if let Some(completion) = app.take_typed_operation_completion().await? {
+                if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope")); }
+                if completion.operation == 0 { return Err(Fault::from("restart completion lost its exact operation id")); }
+                eprintln!("[DEBUG] restart typed-operation completion operation={} revision={} history={}", completion.operation, completion.revision, completion.history_patch.is_some());
+                completions += 1;
+            }
+            if !app.has_pending_typed_operations() { return Ok((artifact, ui, scopes, terminal, completions, app.snapshot()?.count)); }
             std::thread::yield_now();
         }
         Err(Fault::from("restart publication did not retire within the existing fixture turn bound"))
@@ -88,11 +94,12 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
     assert!(closed, "original restart app must retire before the collected publication result is asserted");
     drop(app);
     assert!(close_fault.is_none(), "{close_fault:?}");
-    let (artifact, ui, scopes, terminal, count) = outcome.expect("actual registered restart publication");
+    let (artifact, ui, scopes, terminal, completions, count) = outcome.expect("actual registered restart publication");
     assert_eq!(artifact, law["artifactPublications"].as_u64().unwrap());
     assert_eq!(ui, law["uiPublications"].as_u64().unwrap());
     assert_eq!(scopes, law["uiScopes"].as_u64().unwrap());
     assert_eq!(terminal, law["terminalReceipts"].as_u64().unwrap());
+    assert_eq!(completions, law["operationCompletions"].as_u64().unwrap(), "one terminal typed operation publishes exactly one AppFrame::OperationCompleted witness");
     assert_eq!(i64::from(count), fixture["checkpoint"]["restartValue"].as_i64().unwrap());
 }
 

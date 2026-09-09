@@ -205,9 +205,16 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
     for (shell_id, shell) in body.shells.iter() {
         let mut edge_uses: std::collections::HashMap<EdgeId, Vec<bool>> = std::collections::HashMap::new();
         for &face in &shell.faces {
+            // A coedge's own `forward` is stated in its SURFACE's natural sense; the face's
+            // outward normal is that sense only when `flipped` is false. Two faces of a coherently
+            // oriented shell traverse their shared edge oppositely as SEEN FROM OUTSIDE, so the
+            // flag to compare is `forward XOR flipped` — comparing the raw flags reported every
+            // boolean `Cut` as `orientation-inconsistent`, since a cut flips the tool's faces to
+            // face into the cavity and their rings quite correctly stay put.
+            let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
             for coedge_id in body.face_coedges(face) {
                 if let Some(co) = body.coedges.get(coedge_id) {
-                    edge_uses.entry(co.edge).or_default().push(co.forward);
+                    edge_uses.entry(co.edge).or_default().push(co.forward != flipped);
                 }
             }
         }
@@ -229,6 +236,36 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
                     code: "orientation-inconsistent",
                     message: "both faces sharing this edge traverse it in the same direction — adjacent face orientations disagree".to_string(),
                 });
+            }
+        }
+    }
+}
+
+/// 🩺️ Every face's OUTER loop must be counter-clockwise in that face's own `(u, v)`, and every
+/// hole loop clockwise — the sense that decides which side of the boundary the trimmed region is
+/// on, independently of `flipped` (which only decides the normal). A face written with the
+/// backwards circuit is still a closed ring, still passes `check_shell_closure_and_orientation`
+/// whenever its `flipped` happens to compensate, and still integrates to the right MAGNITUDE, so
+/// this is the only check that sees it: it is exactly what `➡️sweep`'s prism builder produced for
+/// every profile edge its cap traversed forward (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`,
+/// `📓️sweep-kernel-2026-09-09.md`), and what let a watertight extrusion tessellate inside out.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_face_loop_winding(body: &Body, issues: &mut Vec<ValidationIssue>) {
+    const PROBE_TOL: f64 = 1e-3;
+    for (face_id, face) in body.faces.iter() {
+        let Some(surface) = body.surfaces.get(face.surface) else { continue };
+        if let Some(outer) = face.outer {
+            if let Ok(area) = mass_properties::loop_uv_signed_area(body, outer, surface, PROBE_TOL) {
+                if area < 0.0 {
+                    issues.push(ValidationIssue { entity: format!("face-{}", face_id.raw_index()), code: "outer-loop-winding-inverted", message: format!("outer loop's (u, v) signed area is negative ({area}) — the loop is clockwise in its own surface, so the face trims to the COMPLEMENT of its region") });
+                }
+            }
+        }
+        for &inner in &face.inners {
+            if let Ok(area) = mass_properties::loop_uv_signed_area(body, inner, surface, PROBE_TOL) {
+                if area > 0.0 {
+                    issues.push(ValidationIssue { entity: format!("face-{}-loop-{}", face_id.raw_index(), inner.raw_index()), code: "hole-loop-winding-inverted", message: format!("hole loop's (u, v) signed area is positive ({area}) — a hole must run counter to its outer loop") });
+                }
             }
         }
     }
@@ -350,6 +387,7 @@ pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
     check_missing_pcurves(body, &mut issues);
     check_same_parameter(body, &mut issues);
     check_shell_closure_and_orientation(body, &mut issues);
+    check_face_loop_winding(body, &mut issues);
     check_solid_orientation(body, &mut issues);
     check_degenerate_geometry(body, &mut issues);
     check_self_intersection_probe(body, &mut issues);

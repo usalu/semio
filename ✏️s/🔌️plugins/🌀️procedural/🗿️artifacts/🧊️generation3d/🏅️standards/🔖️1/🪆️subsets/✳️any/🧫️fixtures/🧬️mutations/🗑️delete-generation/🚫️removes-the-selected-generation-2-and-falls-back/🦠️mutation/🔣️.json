@@ -1,5 +1,4 @@
 {
-  "DeleteGeneration": {
-    "id": "gen-2"
-  }
+  "mutation": "deleteGeneration",
+  "id": "gen-2"
 }

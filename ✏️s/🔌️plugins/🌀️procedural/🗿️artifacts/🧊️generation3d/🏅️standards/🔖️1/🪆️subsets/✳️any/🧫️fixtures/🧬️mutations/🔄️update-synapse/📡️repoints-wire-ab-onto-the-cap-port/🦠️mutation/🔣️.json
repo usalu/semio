@@ -1,11 +1,10 @@
 {
-  "UpdateSynapse": {
-    "synapse": {
-      "id": "wire-ab",
-      "from": "node-a",
-      "to": "node-b",
-      "fromPort": "solid",
-      "toPort": "cap"
-    }
+  "mutation": "updateSynapse",
+  "synapse": {
+    "id": "wire-ab",
+    "from": "node-a",
+    "to": "node-b",
+    "fromPort": "solid",
+    "toPort": "cap"
   }
 }

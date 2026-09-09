@@ -220,6 +220,32 @@ fn mesh_from_kind_maps_known_kinds_and_falls_back_to_box() {
     assert_eq!(mesh_from_kind("totally-unknown-kind").triangle_count(), mesh_box(1.0, 1.0, 1.0).triangle_count());
 }
 
+/// 📏️ Every built-in scene mesh kind occupies exactly the local-space box the language-neutral
+/// fixture declares. A world-3d scene payload ships these kinds as `{ id, kind }` REFERENCES (see
+/// `world3d_mesh_kind_entry` in the plugin host), so this box — not the triangle list — is what the
+/// Rust generator and the renderer's own generator must agree on; the TypeScript twin of this law is
+/// `every built-in scene mesh kind resolves to the fixture's local bounding box` in the R3F engine
+/// contract suite.
+#[test]
+fn every_built_in_scene_mesh_kind_matches_the_language_neutral_bounding_box_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json")).expect("scene mesh kind fixture parses");
+    let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance") as f32;
+    let kinds = fixture["kinds"].as_array().expect("fixture kinds");
+    assert!(!kinds.is_empty());
+    for entry in kinds {
+        let kind = entry["kind"].as_str().expect("fixture kind name");
+        let (min, max) = mesh_from_kind(kind).aabb();
+        for axis in 0..3 {
+            let expected_min = entry["min"][axis].as_f64().expect("fixture min") as f32;
+            let expected_max = entry["max"][axis].as_f64().expect("fixture max") as f32;
+            assert!((min[axis] - expected_min).abs() <= tolerance, "{kind} min[{axis}] is {} not {expected_min}", min[axis]);
+            assert!((max[axis] - expected_max).abs() <= tolerance, "{kind} max[{axis}] is {} not {expected_max}", max[axis]);
+        }
+    }
+    let fallback = fixture["fallbackKind"].as_str().expect("fixture fallback kind");
+    assert_eq!(mesh_from_kind("totally-unknown-kind").aabb(), mesh_from_kind(fallback).aabb());
+}
+
 #[test]
 fn mesh_data_aabb_and_merge() {
     let mut mesh = mesh_box(2.0, 4.0, 6.0);

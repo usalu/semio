@@ -3,7 +3,8 @@
   "sections": [
     { "key": "engagements", "bodyKey": "framework.section.engagements", "accessor": "window_engagements" },
     { "key": "measures", "bodyKey": "framework.section.measures", "accessor": "window_measures" },
-    { "key": "tools", "bodyKey": "framework.section.tools", "accessor": "tool_measures" }
+    { "key": "tools", "bodyKey": "framework.section.tools", "accessor": "tool_measures" },
+    { "key": "catalogue", "bodyKey": "framework.section.catalogue", "accessor": "app_catalogue" }
   ],
   "authoredBodyKeys": ["main", "properties", "framework.section", "framework.section.labels"]
 }

@@ -229,10 +229,6 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         self.closing && self.owned.error_bytes.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
     }
 
-    pub(crate) fn is_closing(&self) -> bool {
-        self.closing
-    }
-
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.owners_are_empty() && self.terminal_sent
     }

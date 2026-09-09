@@ -56,12 +56,12 @@ use crate::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, hel
 use crate::standards::v1::subsets::brep::schema::diff::transform::{copy_solid, transform_face, transform_solid, transform_wire};
 use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
-use crate::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
+use crate::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire, TessellationJob};
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::{KernelError, ValidationIssue};
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv as surface_closest_uv_fn;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
@@ -1498,6 +1498,47 @@ impl Brep {
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }
+    /// ⏱️ A resumable, budgetable tessellation of `shape` — the interactive twin of
+    /// [`Brep::tessellate_sync`]. The caller drives it with `TessellationJob::step(body, budget)`
+    /// (see [`Brep::tessellation_body`]) so no single call outruns an interactive step ceiling,
+    /// reads `progress()` between steps, and `cancel()`s it when a newer request supersedes it.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tessellate_job_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<TessellationJob, BrepError> {
+        match self.entity(shape)? {
+            Entity::Solid(id) => TessellationJob::for_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Face(id) => TessellationJob::for_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Wire(wire, _) => Ok(TessellationJob::for_wire(wire, deflection)),
+            other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
+        }
+    }
+
+    /// 🧬 The topology a [`TessellationJob`] steps against — the job borrows nothing, so a host can
+    /// retain it across turns and re-present the body on every step.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tessellation_body(&self) -> &Body {
+        &self.body
+    }
+
+    /// 🩺️ The structured validation gate every preview tessellation runs first: `Ok(())` when the
+    /// shape carries no ERROR-class issue, `Err(issues)` otherwise. Advisory `warning-` codes never
+    /// block. Unlike [`Brep::validate_sync`] this returns the typed issues instead of a JSON string,
+    /// so a host can route them into a typed diagnostic rather than re-parsing prose.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate_gate_sync(&self, shape: &GeometryHandle) -> Result<(), Vec<ValidationIssue>> {
+        let Ok(entity) = self.entity(shape) else {
+            return Err(vec![ValidationIssue { entity: shape.as_str().to_string(), code: "unknown-handle", message: format!("handle {} is not live in this kernel", shape.as_str()) }]);
+        };
+        if !matches!(entity, Entity::Solid(_) | Entity::Shell(_) | Entity::Compound(_, _)) {
+            return Ok(());
+        }
+        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-")).collect();
+        if blocking.is_empty() {
+            Ok(())
+        } else {
+            Err(blocking)
+        }
+    }
+
     /// ♻️ Reclaims the handle and, if no other live handle still reaches the underlying entity,
     /// runs the arena GC (see [`Brep::compact_unreachable`]) — dispose is not merely a registry
     /// removal, it is the operation that actually frees the topology.

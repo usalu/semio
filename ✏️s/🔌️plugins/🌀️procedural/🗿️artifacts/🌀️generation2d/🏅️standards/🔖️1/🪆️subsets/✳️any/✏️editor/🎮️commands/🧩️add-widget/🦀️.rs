@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Generation2d play app commands command — `add-widget`.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::host_from_fixture;
+use crate::standards::v1::subsets::any::schema::with_host;
 use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_fixture_operations, Generation2dMutation};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -28,12 +28,13 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>,
         "inputSlider" => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("inputSlider".to_string())), ("label".to_string(), dsl::DslValue::String(String::new()))])),
         other => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(other.to_string()))])),
     };
-    let mut host = host_from_fixture(fixture);
-    let baseline = host.fixture.clone();
-    if host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok() {
-        return Ok(Emit { artifact_mutations: generation2d_fixture_operations(&baseline, &host.fixture), ..Default::default() });
-    }
-    Ok(Emit::default())
+    with_host(fixture, |host| {
+        let baseline = host.fixture.clone();
+        let added = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok();
+        let emit = if added { Emit { artifact_mutations: generation2d_fixture_operations(&baseline, &host.fixture), ..Default::default() } } else { Emit::default() };
+        baseline.retire_cold();
+        Ok(emit)
+    })
 }
 
 //#region 🧪️Tests

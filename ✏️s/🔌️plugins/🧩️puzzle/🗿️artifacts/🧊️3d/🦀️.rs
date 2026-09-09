@@ -1807,6 +1807,8 @@ pub mod editor {
             pub mod set_kind_weight;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✋️set-manual/🦀️.rs"]
             pub mod set_manual;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄set-panel-page/🦀️.rs"]
+            pub mod set_panel_page;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📽️set-projection/🦀️.rs"]
             pub mod set_projection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️set-proximity-radius/🦀️.rs"]

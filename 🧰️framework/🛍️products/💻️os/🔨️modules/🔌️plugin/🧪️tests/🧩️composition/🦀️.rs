@@ -136,7 +136,7 @@ struct ReadyComposedParentInitialization {
     closing: bool,
 }
 
-impl super::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, NoConfigMutation> for ReadyComposedParentInitialization {
+impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, NoConfigMutation> for ReadyComposedParentInitialization {
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if self.closing || cx.is_cancelled() {
             semio_framework_job::StepOutcome::Cancelled
@@ -183,21 +183,21 @@ async fn retained_composed_replacement_fixture(
     operation: u64,
     parent_id: &str,
     child_count: i32,
-) -> (super::ArtifactEnvelopeDecodeOperationHandle, super::OwnedDocumentMemberIngress) {
+) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
     let generation = semio_framework_job::Generation(app.store.generation_now());
     let child_dialect = test_child_dialect().await;
-    let parent_dialect: ArtifactDialect = ComposedParentApp::DIALECT.into();
+    let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect.clone() };
     let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new("child-1".into(), child_reference.clone())) };
-    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, NoConfigMutation>(ComposedParentApp::DOCUMENT_SCHEMA, parent_id, snapshot, None);
+    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, NoConfigMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
     envelope.dialect = Some(parent_dialect.clone());
     let mut candidate = store::ArtifactStore::new(envelope).await.expect("candidate parent store");
-    candidate.install_member_store_owners_exact(ComposedParentApp::build_document_store_owners().expect("candidate parent owners"));
-    let job = super::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization { candidate: Some(candidate), closing: false }));
+    candidate.install_member_store_owners_exact(ComposedParentApp::<true>::build_document_store_owners().expect("candidate parent owners"));
+    let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization { candidate: Some(candidate), closing: false }));
     let operation = semio_framework_job::OperationId(operation);
     app.store_replacement_jobs.insert_admitted(
         operation.0,
-        super::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
+        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
     );
 
     let owner = store::OwnerRef {
@@ -216,14 +216,14 @@ async fn retained_composed_replacement_fixture(
     }
     pages.seal().expect("candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, child_reference.clone(), Some(owner.clone()), pages).admit(1).unwrap_or_else(|_| panic!("candidate member request"));
-    let ingress = super::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
-    (super::ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
+    let ingress = crate::app::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
+    (crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
 }
 
 async fn drive_composed_replacement_to(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
-    handle: super::ArtifactEnvelopeDecodeOperationHandle,
-    target: super::ActiveArtifactStoreReplacementState,
+    handle: crate::app::ArtifactEnvelopeDecodeOperationHandle,
+    target: crate::app::ActiveArtifactStoreReplacementState,
 ) {
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == target) {
@@ -252,7 +252,7 @@ async fn retained_composed_replacement_publishes_parent_members_view_graph_windo
     app.pending_child_pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect }, checkpoint_id: "old-checkpoint".into() });
     let old_window_generation = app.window_transient_store.document_generation();
     let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 701, "replacement-parent", 23).await;
-    drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("member ingress registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("exact candidate member admission"));
     app.seal_owned_document_members(handle).expect("complete candidate member set");
@@ -270,14 +270,14 @@ async fn retained_composed_replacement_publishes_parent_members_view_graph_windo
             assert_eq!(app.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("old content view").count, 0);
             assert_eq!(app.window_transient_store.document_generation(), old_window_generation);
         }
-        if app.poll_artifact_store_replacement(handle) == super::ArtifactEnvelopeDecodeOperationPoll::Ready {
+        if app.poll_artifact_store_replacement(handle) == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
         app.maintenance_stage = 14;
         let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("atomic composed replacement drive");
         semio_framework_async::yield_once().await;
     }
-    assert_eq!(app.poll_artifact_store_replacement(handle), super::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("terminal replacement acknowledgement"));
     close_member_admission_app(&mut app);
     eprintln!("[DEBUG] recursive replacement published parent/member/content/coordinator/window together and incrementally retired old roots, members, pins, and store");
@@ -286,15 +286,15 @@ async fn retained_composed_replacement_publishes_parent_members_view_graph_windo
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_cancellation_during_open_closure_and_view_preparation_preserves_the_live_bundle() {
     for (case, target) in [
-        ("member-open", super::ActiveArtifactStoreReplacementState::OpeningMembers),
-        ("closure", super::ActiveArtifactStoreReplacementState::ValidatingClosure),
-        ("views", super::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
+        ("member-open", crate::app::ActiveArtifactStoreReplacementState::OpeningMembers),
+        ("closure", crate::app::ActiveArtifactStoreReplacementState::ValidatingClosure),
+        ("views", crate::app::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
     ] {
         let mut app = live_composed_replacement_app().await;
         let old_parent_id = app.store.envelope().id.clone();
         let old_window_generation = app.window_transient_store.document_generation();
         let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 710 + case.len() as u64, &format!("cancel-{case}"), 31).await;
-        drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
         assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("cancel member registry"));
         app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("cancel candidate ingress"));
         app.seal_owned_document_members(handle).expect("cancel candidate seal");
@@ -305,8 +305,8 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
             assert!(app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
         }
         app.cancel_artifact_store_replacement(handle).expect("cancel retained composed replacement");
-        drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::Complete).await;
-        assert_eq!(app.poll_artifact_store_replacement(handle), super::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
+        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+        assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
         assert_eq!(app.store.envelope().id, old_parent_id, "{case}");
         assert_eq!(app.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0, "{case}");
         assert_eq!(app.window_transient_store.document_generation(), old_window_generation, "{case}");
@@ -322,15 +322,15 @@ async fn retained_composed_replacement_rejects_a_real_live_child_generation_chan
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 729, "stale-parent", 47).await;
-    drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("stale member registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("stale candidate ingress"));
     app.seal_owned_document_members(handle).expect("stale candidate seal");
-    drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::CandidateReady).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady).await;
     let generation = app.admit_child_content_publication().expect("real live child publication authority");
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("real live child generation change");
-    drive_composed_replacement_to(&mut app, handle, super::ActiveArtifactStoreReplacementState::Complete).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), super::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.store.envelope().id, old_parent_id);
     assert_eq!(app.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0);
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation);

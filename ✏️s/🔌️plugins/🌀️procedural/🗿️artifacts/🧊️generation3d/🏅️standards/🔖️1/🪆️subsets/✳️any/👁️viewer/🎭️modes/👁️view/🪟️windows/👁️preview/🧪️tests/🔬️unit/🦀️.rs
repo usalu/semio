@@ -22,6 +22,7 @@ fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
     let payload = preview_payload(&eval, &document.fixture, &config, &Generation3dViewMarks::default());
     assert_ne!(payload.meshes_json, "[]", "the default fixture must evaluate and tessellate at least one preview mesh");
     assert_ne!(payload.instances_json, "[]");
+    document.retire_cold();
 }
 
 /// 🕹️ Every instance must carry the channel-qualified `interactionId` the framework's declared
@@ -42,6 +43,7 @@ fn every_instance_carries_a_channel_qualified_interaction_id() {
         assert_eq!(instance.get("selected").and_then(Value::as_bool), Some(false));
         assert_eq!(instance.get("hovered").and_then(Value::as_bool), Some(false));
     }
+    document.retire_cold();
 }
 
 /// 🕹️ The three-level match: naming the bare widget id marks every one of its channels' instances.
@@ -65,6 +67,7 @@ fn marks_paint_hover_and_selection_from_a_bare_widget_id() {
     assert!(any_marked, "a bare widget id must mark every instance of that widget");
     assert!(!marked.selected_ids.is_empty(), "a marked instance must reach the selection payload");
     assert!(marked.hovered_id.is_some(), "a marked instance must reach the hover payload");
+    document.retire_cold();
 }
 
 /// 👁️ The show mode really changes the payload, not just a flag: wireframe drops the triangle
@@ -81,6 +84,7 @@ fn show_mode_changes_the_emitted_mesh_channels_and_edge_flag() {
     assert_ne!(shaded_payload.meshes_json, wireframe_payload.meshes_json, "wireframe must drop the shaded triangle channels");
     assert!(preview_selection_json(&shaded, &shaded_payload).contains("\"showEdges\":false") || !preview_selection_json(&shaded, &shaded_payload).contains("\"showEdges\":true"));
     assert!(preview_selection_json(&wireframe, &wireframe_payload).contains("\"showEdges\":true"));
+    document.retire_cold();
 }
 
 /// 🔒️ A viewer never mounts a gumball: a transform handle is a mutation affordance.
@@ -101,6 +105,7 @@ fn render_uses_the_configured_preview_camera() {
     let node = render(&document, &config, None, &Generation3dViewMarks::default()).expect("render");
     let rendered = format!("{node:?}");
     assert!(rendered.contains("33"), "the configured fov must reach the rendered scene");
+    document.retire_cold();
 }
 
 /// 🎚️ The window chrome must bind to this viewer's own actions, or the controls are decoration.
@@ -125,4 +130,5 @@ fn a_supplied_evaluation_is_used_instead_of_re_evaluating() {
     let empty_eval = "{}";
     let payload = preview_payload(empty_eval, &document.fixture, &config, &Generation3dViewMarks::default());
     assert_eq!(payload.meshes_json, "[]", "an empty supplied evaluation must yield an empty payload, proving it was not recomputed");
+    document.retire_cold();
 }

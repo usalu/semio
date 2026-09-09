@@ -4,49 +4,141 @@ use super::*;
 /// cannot carry it into the tests. Imported from its owner instead of relying on a re-export.
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
 
+//#region 🕹️LocalInteractionRead
+/// 🚧️ Runaway guard for the host's own continuation drain. Far above the host's real 4096-turn
+/// budget so a law that fails here fails on the state machine, never on the guard.
+const LOCAL_INTERACTION_READ_TURNS: usize = 65_536;
+
+/// 📤️ The exact frame admission `advance_typed_operation_output` hands
+/// `publish_local_interaction_query_reply` every continuation turn.
+const LOCAL_INTERACTION_READ_FRAMES: usize = 4;
+
+/// 🕹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave I: plays the HOST half of one local-interaction
+/// read exactly as `plugin_continue_typed_operations` → `advance_typed_operation_output` does —
+/// one `advance_typed_operation_publication` unit, then `publish_local_interaction_query_reply`
+/// into the same fixed frame admission — and stops draining the moment
+/// `has_runnable_typed_operations` reports quiescence. That quiescence point is the ONLY place a
+/// page acknowledgement can arrive: the shell's `settlePluginTurn(drainOperations=true)` owns the
+/// call until the actor stops reporting more-work, so a query that stays runnable while it waits
+/// on the host never sees its own ACK. Returns the exact capture bytes the shell assembles.
+async fn read_local_interaction(app: &mut Puzzle3dApp, request_id: u64) -> Vec<u8> {
+    read_local_interaction_while_rendering(app, request_id, false).await
+}
+
+/// 🖼️ The same host loop with the shell's own render pressure optionally interleaved, because a boot
+/// shell renders on every turn while it waits for its surfaces — so a read must terminate while the
+/// app is also doing its ordinary per-turn work, not only on an otherwise idle instance.
+async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_id: u64, render: bool) -> Vec<u8> {
+    use semio_framework_plugin::PluginApp;
+    assert!(app.begin_local_interaction_query(request_id, request_id).is_none(), "a live instance must admit local interaction read {request_id}");
+    let (mut capture, mut started, mut closed) = (Vec::new(), false, false);
+    let mut awaiting_ack: Option<protocol::LocalInteractionQueryToken> = None;
+    let mut turns = 0_usize;
+    for _ in 0..LOCAL_INTERACTION_READ_TURNS {
+        turns += 1;
+        if !app.has_runnable_typed_operations() {
+            let Some(token) = awaiting_ack.take() else { break };
+            assert!(app.acknowledge_local_interaction_query(&token), "the page the app itself published must accept its own exact token");
+            continue;
+        }
+        if render {
+            drop(render_composite(app).await);
+        }
+        app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup clock keeps ticking during a read");
+        app.advance_typed_operation_publication().await.expect("advance one local interaction publication unit");
+        let mut frames = Vec::new();
+        app.publish_local_interaction_query_reply(&mut frames, LOCAL_INTERACTION_READ_FRAMES);
+        for frame in &frames {
+            let protocol::AppFrame::LocalInteractionQuery { reply } = protocol::decode_app_frame(frame).await.expect("a published local interaction frame decodes") else {
+                panic!("local interaction publication emitted a foreign app frame");
+            };
+            match reply {
+                protocol::LocalInteractionQueryReply::Started { .. } => started = true,
+                protocol::LocalInteractionQueryReply::Page { page } => {
+                    assert!(awaiting_ack.is_none(), "a second page was published while the first still awaited its acknowledgement");
+                    capture.extend_from_slice(&page.bytes);
+                    awaiting_ack = Some(protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal });
+                }
+                protocol::LocalInteractionQueryReply::Closed { cancelled, .. } => {
+                    assert!(!cancelled, "an acknowledged read closes uncancelled");
+                    closed = true;
+                }
+                other => panic!("unexpected local interaction reply: {other:?}"),
+            }
+        }
+        if closed {
+            break;
+        }
+    }
+    eprintln!("[DEBUG] local interaction read {request_id} turns={turns} bytes={}", capture.len());
+    assert!(started, "local interaction read {request_id} never published its Started reply");
+    assert!(closed, "local interaction read {request_id} never terminated: the actor stayed runnable without ever publishing Closed, or quiesced with nothing left for the host to answer");
+    capture
+}
+
+/// 🩺️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave I: reproduces the browser boot stall — the shell's
+/// very first `readLocalInteraction` over a document with NO selection, driven through the exact
+/// host continuation loop. The actor must reach `Closed` and hand its three captured roots back,
+/// and it must never stay runnable while the only thing it waits for is a host acknowledgement the
+/// drain cannot deliver.
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_read_of_an_unselected_document_terminates() {
+    let mut app = app().await;
+    let capture = read_local_interaction(&mut app, 1).await;
+    let capture: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON")).expect("a terminated read yields a whole capture");
+    assert!(capture.state.selection.values().all(|selection| selection.ids.is_empty()), "this law's document carries no selection: {:?}", capture.state.selection);
+}
+
+/// 🩺️ The boot shape: the shell renders while it waits for its UI surfaces, so the read runs against
+/// a busy instance rather than an idle one. A terminal reply withheld while unrelated app-owned
+/// maintenance is in flight — while the query keeps reporting runnable — is the livelock the boot
+/// hit, and it cannot be seen on an instance that does nothing else.
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_read_terminates_under_concurrent_render_pressure() {
+    let mut app = app().await;
+    read_local_interaction_while_rendering(&mut app, 4, true).await;
+}
+
+/// 🩺️ The shell re-reads the local interaction on every refresh, so the SECOND and third reads of
+/// one live instance must terminate exactly like the first — a store lease registry that still
+/// reports a reclaimed slot, or a live slot that outlives its own terminal reply, strands them.
+#[semio_framework_async_macros::async_test]
+async fn repeated_local_interaction_reads_of_one_instance_terminate() {
+    let mut app = app().await;
+    for request_id in 1..=3 {
+        read_local_interaction(&mut app, request_id).await;
+    }
+}
+
+/// 🩺️ The same read over a LIVE selection: a non-empty capture spans many more fixed pages, so it
+/// exercises every intermediate page's acknowledgement round trip as well as the terminal one.
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_read_of_a_selected_document_terminates() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
+    let capture = read_local_interaction(&mut app, 2).await;
+    let capture: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON")).expect("a terminated read yields a whole capture");
+    assert!(
+        capture.state.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_some_and(|selection| selection.ids.iter().any(|id| id == &object_id)),
+        "the capture carries the live selection: {:?}",
+        capture.state.selection
+    );
+}
+
 /// 🩺️ ticket 26/09/02/PUZZLE-3D-END-TO-END: reproduces `runtime live cleanup faulted for
 /// instance 1` — the vortex-picking local interaction query is the only path by which the
 /// puzzle3d document store's `snapshot_read()` lease is ever taken and returned, so it is
-/// driven to completion here (Started → terminal Page → acknowledge → Closed) exactly as the
+/// driven to completion here (Started → pages → acknowledge → Closed) exactly as the
 /// host does every actor turn, then one plain `maintenance_step` must not fault.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step() {
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
-    assert!(app.begin_local_interaction_query(1, 1).is_none(), "a fresh instance must admit its first local interaction query");
-    let mut started = false;
-    let mut terminal_token: Option<protocol::LocalInteractionQueryToken> = None;
-    for _ in 0..2000 {
-        if let Some(reply) = app.take_local_interaction_query_reply() {
-            match reply {
-                protocol::LocalInteractionQueryReply::Started { .. } => started = true,
-                protocol::LocalInteractionQueryReply::Page { page } => {
-                    if page.terminal {
-                        terminal_token = Some(protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal });
-                    }
-                }
-                other => panic!("unexpected local interaction reply before its terminal page: {other:?}"),
-            }
-        }
-        if terminal_token.is_some() {
-            break;
-        }
-        app.advance_typed_operation_publication().await.expect("advance local interaction query toward its terminal page");
-    }
-    assert!(started, "local interaction query never reached Started");
-    let token = terminal_token.expect("local interaction query never produced a terminal page");
-    assert!(app.acknowledge_local_interaction_query(&token), "terminal page token must be accepted");
-    let mut closed = false;
-    for _ in 0..2000 {
-        if matches!(app.take_local_interaction_query_reply(), Some(protocol::LocalInteractionQueryReply::Closed { .. })) {
-            closed = true;
-            break;
-        }
-        app.advance_typed_operation_publication().await.expect("advance local interaction query toward its returned snapshot leases");
-    }
-    assert!(closed, "local interaction query never closed and returned its captured snapshot leases");
+    read_local_interaction(&mut app, 1).await;
     app.maintenance_step(1, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
 }
+//#endregion 🕹️LocalInteractionRead
 
 /// 📏️ Budget the TYPICAL cooperative-maintenance unit of one stage must respect. A quarter of
 /// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8 000us): this runs at opt-level 0 where
@@ -116,6 +208,7 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
     }
     drop(app.take_typed_operation_effect());
     drop(app.take_typed_operation_event());
+    drop(app.take_typed_operation_completion().await.expect("take one typed operation completion witness"));
     drop(app.take_typed_operation_ui_scope());
     while let Some(reply) = app.take_local_interaction_query_reply() {
         if let protocol::LocalInteractionQueryReply::Page { page } = reply {
@@ -175,7 +268,7 @@ fn suggestion_and_precompute_routes_are_cursorized(source: &str) -> bool {
         "Puzzle3dPrecomputeCommandStage::CatalogVortices",
         "Puzzle3dPrecomputeCommandStage::Positions",
         "Puzzle3dPrecomputeCommandStage::Indices",
-        "Puzzle3dPrecomputeCommandStage::CheckpointBytes",
+        "PUZZLE3D_MESH_PAGE_SCAN_CHARS",
         "Puzzle3dPrecomputeCommandStage::Publish",
     ]
     .into_iter()
@@ -213,7 +306,7 @@ fn suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_m
         "Puzzle3dPrecomputeCommandStage::CatalogVortices",
         "Puzzle3dPrecomputeCommandStage::Positions",
         "Puzzle3dPrecomputeCommandStage::Indices",
-        "Puzzle3dPrecomputeCommandStage::CheckpointBytes",
+        "PUZZLE3D_MESH_PAGE_SCAN_CHARS",
         "Puzzle3dPrecomputeCommandStage::Publish",
     ] {
         assert!(!suggestion_and_precompute_routes_are_cursorized(&source.replace(marker, "cursor-removed")), "missing retained boundary was falsely accepted: {marker}");
@@ -1146,12 +1239,22 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     let dialog = def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog");
     assert_eq!(dialog.title.resolve(terminology, locale), "Baukomponente hinzufügen");
     assert_eq!(dialog.submit_label.resolve(terminology, locale), "Hinzufügen");
+    // 🗂️ The select's own label is the terminology-aware half; its OPTIONS are the declared examples'
+    // catalog rows (`puzzle3d_object_kind_options`), carried as `LocalizedLabel::data` — document data,
+    // never authored UI text, so a row reads identically on every axis. The literal `"Object"` option
+    // this law used to assert on was the hardcoded placeholder that catalog derivation replaced.
     let arg = dialog.args.iter().find(|entry| entry.id == "objectKind").expect("objectKind arg");
-    let option = match arg.control() {
-        semio_framework_plugin::ActionArgControl::Select { options } => options.iter().find(|entry| entry.value == "Object").cloned().expect("Object option"),
+    assert_eq!(arg.label.resolve(terminology, locale), "Art");
+    match arg.control() {
+        semio_framework_plugin::ActionArgControl::Select { options } => {
+            assert!(!options.is_empty() && options.len() <= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX, "the objectKind select offers the declared examples' bounded catalog rows; observed {}", options.len());
+            for option in options {
+                assert!(!option.value.is_empty(), "every offered object kind names a catalog row");
+                assert_eq!(option.label.resolve(terminology, locale), option.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "catalog row {} is document data and must not be re-authored per axis", option.value);
+            }
+        }
         _ => panic!("objectKind arg is not a select"),
-    };
-    assert_eq!(option.label.resolve(terminology, locale), "Baukomponente");
+    }
     assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Baukomponente hinzufügen");
     assert_eq!(action("openVortexSuggestions").label.resolve(terminology, locale), "Verbindungspunkt-Vorschläge öffnen");
     assert_eq!(action("createAttraction").label.resolve(terminology, locale), "Verbindung erstellen");
@@ -1192,6 +1295,9 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
 #[semio_framework_async_macros::async_test]
 async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     let mut app = app().await;
+    // 🗣️ Panels resolve their label set from the host's own axes and fail closed on an unauthored one
+    // (`puzzle3d_labels`), so the German reuse text this law is about only exists once the axes name it.
+    app.set_label_axes(semio_framework_plugin::Locale::De, semio_framework_plugin::Terminology::Reuse);
     let document_json = render_body(&mut app, document::BODY_KEY).await.to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).await.to_string();
     let view = app.window_view(main::WINDOW_KIND_ID);
@@ -1412,6 +1518,135 @@ async fn accept_suggestion_closes_menu_even_when_placement_fails() {
     assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()), "failed accept must still dismiss the suggestion menu");
 }
 
+/// 📏️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave K: a world scene names its built-in meshes by
+/// REFERENCE and never carries their tessellation, so mesh geometry cannot spend the fixed
+/// `UiFixedBytes` surface payload. Before this wave `world3d_mesh_kind_entry` inlined
+/// `mesh_from_kind`'s buffers, and `vortex-marker` alone (an 80-triangle ico sphere printed as JSON
+/// floats) took ~26 KiB of the 32 KiB payload — so a window that also carried a resolved suggestion
+/// popup failed `scene-surface.encode` outright. Measured on the live popup-open scene AND on the
+/// Nakagin catalog, whose 180 objects are the widest mesh set this editor can name.
+#[semio_framework_async_macros::async_test]
+async fn the_world_scene_names_built_in_meshes_by_reference_and_fits_its_fixed_capacity() {
+    let mut app = app().await;
+    let vortex = first_vortex_full_id(&app);
+    hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("interactionHover");
+    dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 10.0, "y": 20.0, "windowId": main::WINDOW_INSTANCE_TOP })), None).await.expect("openVortexSuggestions");
+    let node = render_composite(&mut app).await;
+    assert_eq!(interaction_of(&node).pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true), "the law only measures the popup-open scene");
+    let live_meshes = scene_meshes_of(&node);
+    let (payload, capacity) = world_surface_payload_bytes(&mut app, main::BODY_KEY).await;
+    assert!(payload <= capacity, "the popup-open world scene packs to {payload} bytes, over the fixed surface capacity {capacity}");
+    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_fixture())).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
+        assert!(!meshes.is_empty(), "a world scene always declares its meshes");
+        assert!(to_json_string(&meshes).len() <= PUZZLE3D_SCENE_MESH_REFERENCE_BUDGET, "mesh references must stay a rounding error against the {capacity}-byte surface payload; observed {}", to_json_string(&meshes).len());
+        for mesh in &meshes {
+            assert!(mesh.get("id").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "every scene mesh is identified: {mesh}");
+            assert!(mesh.get("data").is_none(), "a scene mesh must never carry inline geometry: {mesh}");
+            assert!(mesh.get("kind").and_then(Value::as_str).is_some() || mesh.get("url").and_then(Value::as_str).is_some(), "every scene mesh resolves by kind or by url: {mesh}");
+        }
+        assert!(meshes.iter().any(|mesh| mesh.get("kind").and_then(Value::as_str) == Some("vortex-marker")), "the vortex marker is the kind that used to blow the payload and must still be declared");
+    }
+}
+
+//#region 🚚️PagedSceneCarrier
+/// 🚚️ The one language-neutral declaration of the world-3d lane carrier — the SAME file the scene
+/// crate's Rust lane table and `🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`'s `WORLD3D_SCENE_LANES` are
+/// pinned against, read here so the real Nakagin publication is measured against the same bounds the
+/// TypeScript assembler enforces.
+const PUZZLE3D_WORLD3D_LANE_CONTRACT: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
+
+/// 🗼️ Loads the Nakagin Capsule Tower example through the REAL typed `setActiveExample` command and
+/// drives it to quiescence, exactly as the navbar picker does.
+async fn nakagin_app() -> Puzzle3dApp {
+    let mut app = app().await;
+    let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample is a declared puzzle3d command");
+    app.dispatch_typed(command, &meta("local")).await.expect("setActiveExample mints its retained whole-document operation");
+    settle(&mut app).await;
+    app
+}
+
+/// 🚚️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave P — LAW (a). The Nakagin Capsule Tower with its
+/// vortex suggestion popup open is the document that made `scene-surface.encode` refuse the whole
+/// refresh (`surface payload exceeds fixed capacity with 57281 bytes`, browser rebuild #25). It now
+/// publishes as a small spine inside the fixed-capacity doc plus one individually paged carrier per
+/// payload lane, and every one of those carriers must obey the SAME bounds the TypeScript assembler
+/// enforces on the other side of the wire — leaf bytes, children per node, and a byte/hash manifest
+/// that lets a partially arrived lane be told from a settled one.
+#[semio_framework_async_macros::async_test]
+async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_the_popup_open() {
+    let contract: Value = parse(PUZZLE3D_WORLD3D_LANE_CONTRACT).expect("world-3d lane contract is json");
+    let leaf_bytes = contract.pointer("/carrier/leafBytes").and_then(Value::as_u64).expect("leafBytes") as usize;
+    let children_max = contract.pointer("/carrier/childrenMax").and_then(Value::as_u64).expect("childrenMax") as usize;
+    let doc_bytes_max = contract.pointer("/carrier/docBytesMax").and_then(Value::as_u64).expect("docBytesMax") as usize;
+
+    let mut app = nakagin_app().await;
+    let vortex = first_vortex_full_id(&app);
+    hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("interactionHover");
+    dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 10.0, "y": 20.0, "windowId": main::WINDOW_INSTANCE_TOP })), None).await.expect("openVortexSuggestions");
+
+    let census = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
+    assert_eq!(census.capacity, doc_bytes_max, "the doc ceiling this law measures against is the contract's own");
+    assert!(census.doc_bytes <= census.capacity, "the Nakagin spine packs to {} bytes, over the fixed surface capacity {}", census.doc_bytes, census.capacity);
+    assert!(!census.lanes.is_empty(), "a published world scene always carries its payload lanes");
+
+    let declared: Vec<&str> = contract["lanes"].as_array().expect("lanes").iter().map(|lane| lane["bodyKey"].as_str().expect("bodyKey")).collect();
+    for lane in &census.lanes {
+        assert!(declared.contains(&lane.key.as_str()), "lane carrier {} is not a declared world-3d lane", lane.key);
+        assert!(lane.widest_leaf <= leaf_bytes, "lane {} has a {}-byte text leaf, over the {leaf_bytes}-byte cap", lane.key, lane.widest_leaf);
+        assert!(lane.widest_children <= children_max, "lane {} has a node with {} children, over the {children_max} cap", lane.key, lane.widest_children);
+        assert_eq!(lane.bytes, lane.declared_bytes as usize, "lane {} carrier text disagrees with the byte count its spine declared", lane.key);
+        assert_eq!(lane.declared_hash.len(), 16, "lane {} must declare a 16-hex-digit content hash", lane.key);
+        assert!(lane.leaves >= 1, "lane {} publishes at least one leaf", lane.key);
+        assert_eq!(lane.leaves > children_max, lane.leaf_depth > 1, "lane {} with {} leaves must page into a nested carrier exactly when it outgrows one level of {children_max} children (observed leaf depth {})", lane.key, lane.leaves, lane.leaf_depth);
+    }
+
+    let interaction = parse(census.assembled.interaction_json.as_deref().expect("the interaction lane reassembles")).expect("interaction lane is json");
+    assert_eq!(interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true), "the law only measures the popup-open scene");
+    let instances = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
+    assert!(parse(&census.assembled.instances_json).expect("instances lane is json").as_array().is_some_and(|array| array.len() > 100), "Nakagin publishes its whole catalog of objects through the instances lane");
+    eprintln!(
+        "[DEBUG] nakagin popup-open world scene: spine={}B of {}B, {} lanes carrying {}B total ({}), widest lane={}B in {} leaves",
+        census.doc_bytes,
+        census.capacity,
+        census.lanes.len(),
+        census.payload_bytes(),
+        census.report(),
+        instances.bytes,
+        instances.leaves
+    );
+    eprintln!("[DEBUG] nakagin lane paging: {}", census.lanes.iter().map(|lane| format!("{}={}leaves@depth{}", lane.key.trim_start_matches(semio_framework_plugin::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.leaves, lane.leaf_depth)).collect::<Vec<_>>().join(" "));
+    assert!(census.payload_bytes() > census.capacity, "this law is only meaningful while the Nakagin payload is past what one fixed doc could ever hold");
+}
+
+/// 🚚️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave P — LAW (b). A partial refresh that changes only the
+/// camera must leave every lane carrier byte-identical, so the reconciler emits no op for any of
+/// them; `instances`, `interaction` and `lod` have very different change rates and the whole point of
+/// splitting them is that an unchanged lane costs nothing.
+#[semio_framework_async_macros::async_test]
+async fn a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refresh() {
+    let mut app = nakagin_app().await;
+    let before = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
+    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [80.0, 80.0, 80.0], "target": [0.0, 0.0, 0.0], "zoom": 1.5 } })), Some(main::WINDOW_KIND_ID)).await.expect("setCamera");
+    let moved = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
+    let republished: Vec<&str> = moved.lanes.iter().filter(|lane| before.lane(&lane.key).is_none_or(|previous| previous.declared_hash != lane.declared_hash)).map(|lane| lane.key.as_str()).collect();
+    assert!(republished.is_empty(), "a camera move republished {republished:?}");
+    assert_ne!(moved.assembled.camera_json, before.assembled.camera_json, "the camera itself must have moved for this law to mean anything");
+
+    let vortex = first_vortex_full_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("interactionSelect");
+    let picked = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
+    let changed: Vec<&str> = picked.lanes.iter().filter(|lane| before.lane(&lane.key).is_none_or(|previous| previous.declared_hash != lane.declared_hash)).map(|lane| lane.key.as_str()).collect();
+    assert!(!changed.contains(&semio_framework_plugin::World3dSceneLane::Instances.body_key()), "a selection change must not republish the instances lane");
+    assert_eq!(picked.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()), before.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()));
+    eprintln!("[DEBUG] nakagin partial refresh: camera move republished 0 of {} lanes; a selection republished {changed:?}", before.lanes.len());
+}
+//#endregion 🚚️PagedSceneCarrier
+
+/// 📏️ A whole scene's mesh declarations, as references, against the 32 KiB fixed surface payload:
+/// generous enough for the widest catalog the editor can name, tight enough that a single inlined
+/// primitive (26 KiB) fails it.
+const PUZZLE3D_SCENE_MESH_REFERENCE_BUDGET: usize = 4 * 1024;
+
 #[semio_framework_async_macros::async_test]
 async fn close_vortex_suggestions_clears_sticky_hover() {
     let mut app = app().await;
@@ -1527,10 +1762,47 @@ async fn window_transient_is_exact_instance_local_and_resets_on_reload() {
     assert!(reset.get::<window_ownership::Puzzle3dWindowTransientOwner>().is_some_and(|value| value.suggestion_menu.is_none()));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(3));
     assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
+    // 🧷️ Every `window_transient_snapshot` above is a live READ of the partition store, and close is
+    // blocked — by design — while one is outstanding. The reads have to be surrendered before the
+    // close witness, exactly as a host surrenders a rendered body before retiring its app.
+    drop((transient_a, transient_b, closed));
+    drop(reset);
     assert!(close_witness(reopened).expect("reopened app close"));
     assert!(close_witness(app).expect("source app close"));
     eprintln!("[DEBUG] Puzzle 3D transient suggestions stayed exact-window isolated, close cleared their owner, reload reset ephemeral state, and both registered apps reached terminal-empty close");
 }
+
+/// 🧹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S. A mounted worker job session is admitted out of a
+/// FIXED process-wide array of `semio_framework_job::WORKER_JOB_SESSION_SLOTS` retirement slots, and an
+/// app dropped while an operation is still mounted parks its node there instead of freeing it. ONLY a
+/// live app's cooperative-maintenance round robin hands that slot back. Without that pump the array
+/// filled up for the life of the process: from then on EVERY typed operation had its worker session
+/// refused, and a refused session never runs the job, so the operation reached publication with no
+/// completion value and the host's continuation loop spun on it forever — which is exactly how one
+/// abandoned command turned a whole test binary into `pending typed operations outlived the settle
+/// budget` for every later command, including plain view actions.
+#[semio_framework_async_macros::async_test]
+async fn an_abandoned_app_hands_its_worker_session_admission_back_to_the_next_app() {
+    let mut abandoned = app().await;
+    dispatch_unsettled(&mut abandoned, "setCamera", Some(&json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0] })), None).await.expect("setCamera mounts one typed operation");
+    drop(abandoned);
+    let mut live = app().await;
+    for _ in 0..RETIREMENT_RECLAIM_TURNS {
+        if !semio_framework_job::worker_job_retirements_are_parked() {
+            break;
+        }
+        live.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("one cooperative maintenance unit");
+    }
+    assert!(
+        !semio_framework_job::worker_job_retirements_are_parked(),
+        "a live app's maintenance round robin must reclaim every parked worker-job retirement slot, or the process runs out of session admissions"
+    );
+    dispatch(&mut live, "setCamera", Some(&json!({ "position": [4.0, 5.0, 6.0], "target": [0.0, 0.0, 0.0] })), None).await.expect("the next app still quiesces on a plain view action");
+}
+
+/// 🔁️ Maintenance units the reclaim law grants: every stage of the round robin, many times over, so the
+/// law fails on a missing pump rather than on a tight budget.
+const RETIREMENT_RECLAIM_TURNS: usize = semio_framework_plugin::MAINTENANCE_STAGES as usize * 64;
 
 /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection` moved off the document —
 /// they are View-kind and must never emit VCS operations, no matter what they mutate.
@@ -1679,6 +1951,7 @@ async fn fill_build_tick_is_ignored_when_fill_tool_is_inactive() {
     for _ in 0..64 {
         let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
         assert!(!matches!(result.ui_scope, UiDirtyScope::Full), "an inactive fill tick must never force a full app refresh");
+        assert!(result.history_patch.is_none(), "a View-kind verb never dirties the history panel — `finish_recorded` skips the patch by declared kind");
     }
     let after = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
     assert_eq!(after, before, "stale or queued fill ticks must not advance planning after the Fill tool is deactivated");
@@ -1699,6 +1972,91 @@ async fn fill_build_tick_only_polls_and_enqueues_one_isolated_worker_job() {
     let second = dispatch(&mut app, "fillBuildTick", None, None).await.expect("poll fill");
     assert!(!second.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { .. })), "a live fill request must not be enqueued twice");
 }
+
+/// 🔁️ How many host `fillBuildTick` cycles the growth law drives. The production loop runs one tick
+/// per completed turn — 140–250 ms — and the guest died after 173 of them, so a law that means to
+/// state the retention bound has to outlast that.
+const FILL_TICK_GROWTH_CYCLES: usize = 320;
+
+/// 🧾️ How many fill envelopes the whole run may admit. A fill plan is admitted ONCE and then driven
+/// by its own bounded job; a completed plan may legitimately be superseded and re-admitted a handful
+/// of times as the document changes underneath it. What this number rules out is the failure this
+/// law exists for: one fresh admission per tick, each carrying a whole `FillBuilder` (its cloned
+/// mesh roots included) and a mounted worker session into the process-wide registry.
+const FILL_TICK_ADMISSION_CEILING: u64 = 8;
+
+/// 🪣️ Activating Fill and letting the host tick must converge on ONE admitted plan that the bounded
+/// job actually advances — not on an envelope per tick.
+///
+/// 🧮️ Retention is stated as registry OCCUPANCY plus the total admission count rather than as an
+/// allocator reading: an admitted envelope is exactly the thing that holds the megabyte-scale owners
+/// (`FillBuilder` + `MountedFillWorker`), the registry is the one authority over them, and both
+/// numbers are exact under a parallel suite where a process-wide byte counter is not. The guest heap
+/// is a fixed 512 MiB wasm linear memory (`.cargo/config.toml`'s `--max-memory=536870912`), so
+/// "one more envelope per tick" is a hard `memory allocation of 16384 bytes failed` trap in
+/// production and merely churn in a native suite — [`retained_heap_bytes`] rides along in the
+/// failure message so a regression reports how much heap the churn actually moved.
+///
+/// 🚚️ The jobs are driven through the REAL `reactor::jobs` runtime — `start_job` on the effect the
+/// tick requested, then bounded `step_job` slices — never through
+/// `drive_enqueued_fill_job_for_test`. That bypass reaches into the registry directly and therefore
+/// reports a healthy plan even when no job is ever spawned at all, which is exactly the state the
+/// shipped guest was in.
+#[semio_framework_async_macros::async_test]
+async fn fill_build_tick_converges_on_one_admitted_plan_the_bounded_job_advances() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
+    let baseline_heap = retained_heap_bytes();
+    let (_, baseline_admissions) = crate::editor::puzzle3d::precompute::fill_envelope_occupancy();
+    let mut live: Vec<u64> = Vec::new();
+    let mut spawned = 0_usize;
+    let mut completed = 0_usize;
+    let mut faults: Vec<String> = Vec::new();
+    for _ in 0..FILL_TICK_GROWTH_CYCLES {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        for effect in &result.requested_effects {
+            let Effect::SpawnJob { job, kind, input, .. } = effect else { continue };
+            if kind != crate::editor::puzzle3d::precompute::FILL_JOB_KIND {
+                continue;
+            }
+            spawned += 1;
+            semio_framework_plugin::reactor::jobs::start_job(*job, kind, input).await;
+            live.push(*job);
+        }
+        let mut still = Vec::new();
+        for job in live.drain(..) {
+            match semio_framework_plugin::reactor::jobs::step_job(job, FILL_TICK_JOB_BUDGET).await {
+                semio_framework_plugin::reactor::jobs::JobStep::Running(_) => still.push(job),
+                semio_framework_plugin::reactor::jobs::JobStep::Done(_) => completed += 1,
+                semio_framework_plugin::reactor::jobs::JobStep::Failed(bytes) => faults.push(String::from_utf8_lossy(&bytes).to_string()),
+            }
+        }
+        live = still;
+    }
+    let (occupied, admissions) = crate::editor::puzzle3d::precompute::fill_envelope_occupancy();
+    let admitted = admissions.saturating_sub(baseline_admissions);
+    let census = format!(
+        "{FILL_TICK_GROWTH_CYCLES} ticks admitted {admitted} envelopes ({occupied} still live), spawned {spawned} jobs, completed {completed}, faulted {} ({}), moved {} heap bytes",
+        faults.len(),
+        faults.first().map_or("none", String::as_str),
+        retained_heap_bytes() - baseline_heap
+    );
+    assert!(spawned > 0, "the fill tick loop never requested a single background plan job: {census}");
+    assert!(
+        admitted <= FILL_TICK_ADMISSION_CEILING,
+        "every tick admitted its own fill envelope instead of advancing the one already admitted — this is the retained megabyte per tick that traps the 512 MiB guest heap: {census}"
+    );
+    assert!(occupied <= crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_OPERATIONS, "the fill registry may never hold more envelopes than it has slots: {census}");
+    let ready = fill_ready(&mut app).await;
+    assert!(ready > 0.0, "the fill-count slider never left `ready: 0` — background planning produced nothing a user could commit: {census}");
+}
+
+/// ⛽️ One bounded slice per tick, exactly as the host's isolated worker grants it: the point of the
+/// law is that the plan advances under the SAME per-turn budget production gives it, not that a test
+/// can grind the solver to completion inside one tick.
+const FILL_TICK_JOB_BUDGET: semio_framework_plugin::reactor::jobs::JobBudget = semio_framework_plugin::reactor::jobs::JobBudget { fuel: 1, deadline_ms: 1 };
 
 #[semio_framework_async_macros::async_test]
 async fn fill_build_tick_only_plans_available_slider_range() {
@@ -2083,6 +2441,90 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
 //#endregion 🔖️Distribution
 
 //#region 🔖️UiScope
+/// @emoji 🐢️ THE scope law: every declared MUTATING command's `UiDirtyScope` names the panels its
+/// mutation changes. A document edit moves the artifact outliner (the object roster), the field
+/// inspector (the selected entity's own fields) and the framework history panel (one command row per
+/// dispatch) — so a mutation whose scope is `Partial` and omits any of those three leaves that panel
+/// showing pre-edit content until some unrelated later action happens to repaint it.
+///
+/// 🧯️ Why this is a law and not a review note: before wave N every hand-written `Partial` in this app
+/// carried `panel_bodies: Vec::new()` (`📓️2026-09-09-wave-L-…md` §5.3) and the shared dispatcher's
+/// default was `Full`, so the only two states a command could be in were "repaint the whole shell" and
+/// "silently stale panels". `puzzle3d_command_scope_class` is now the one place that decides, and this
+/// law is what stops a narrower class from being handed to a verb that edits the document.
+///
+/// 🈳️ `Chrome` (i.e. `Full`) always satisfies this law — it is the widest, always-correct answer, and a
+/// newly declared command that nobody has classified yet is slow rather than wrong.
+#[semio_framework_async_macros::async_test]
+async fn command_scope_classes_name_the_panels_they_change() {
+    use crate::editor::puzzle3d::{puzzle3d_command_scope_class, puzzle3d_scope, Puzzle3dScopeClass};
+    let definition = create_puzzle3d_app();
+    let mut mutating = 0_usize;
+    let mut narrowed = 0_usize;
+    for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+        let class = puzzle3d_command_scope_class(&action.id);
+        let scope = puzzle3d_scope(class);
+        // 🧾️ The declared `ActionKind` is a HISTORY/undo classification, not a paint one. Both
+        // `relocateTargetVolume` and `worldRelocate` are Mutations (they emit artifact edits), so this
+        // law requires them to name inspector, outliner and history. A `View` verb that happens to carry
+        // the document class is over-painting at worst, never stale.
+        if action.kind != ActionKind::Mutation {
+            continue;
+        }
+        mutating += 1;
+        match scope {
+            UiDirtyScope::Full => {}
+            UiDirtyScope::None => panic!("{} is a declared Mutation, so it cannot paint nothing", action.id),
+            UiDirtyScope::Partial { ref panel_bodies, ref window_bodies, .. } => {
+                narrowed += 1;
+                assert_eq!(window_bodies, &vec![main::BODY_KEY.to_string()], "{} edits the document, so the world body is dirty", action.id);
+                for body in [inspection::BODY_KEY, document::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+                    assert!(panel_bodies.iter().any(|named| named == body), "{} is a declared Mutation with a narrowed scope, so it must name the {body} panel body: {panel_bodies:?}", action.id);
+                }
+            }
+        }
+    }
+    assert!(mutating > 0, "the app declares mutating commands");
+    assert!(narrowed >= 10, "the scope table must actually narrow the mutating verbs, not fall back to Full for all of them: {narrowed}/{mutating}");
+}
+
+/// 🕹️ A pure SELECTION change repaints the field inspector — the panel that renders the selected
+/// entity's own fields — and the outliner that marks the selected rows, but never the catalogue, which
+/// lists object KINDS and cannot move when only the selection moves.
+#[semio_framework_async_macros::async_test]
+async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
+    use crate::editor::puzzle3d::{puzzle3d_scope, Puzzle3dScopeClass};
+    let UiDirtyScope::Partial { panel_bodies, measures, utilities, engagements, labels, .. } = puzzle3d_scope(Puzzle3dScopeClass::Selection) else {
+        panic!("the selection class is a narrowed scope");
+    };
+    assert!(panel_bodies.iter().any(|body| body == inspection::BODY_KEY), "{panel_bodies:?}");
+    assert!(panel_bodies.iter().any(|body| body == document::BODY_KEY), "{panel_bodies:?}");
+    assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "{panel_bodies:?}");
+    assert!(!panel_bodies.iter().any(|body| body == catalogue::BODY_KEY), "a selection cannot change the kind roster: {panel_bodies:?}");
+    assert!(measures, "selection-dependent window measures are re-read");
+    assert!(!utilities);
+    assert!(!engagements);
+    assert!(!labels);
+}
+
+/// 🈳️ The four narrow non-document classes deliberately name NO panel body — a camera move, a fill
+/// planning tick, a distribution slider and a suggestion tick each touch the world body (and at most
+/// the tool/window measures) and nothing else. Pins the claim their doc comments make, so widening one
+/// of them has to widen this law too.
+#[semio_framework_async_macros::async_test]
+async fn viewport_and_tick_scope_classes_name_no_panel_body() {
+    use crate::editor::puzzle3d::{puzzle3d_scope, Puzzle3dScopeClass};
+    for class in [Puzzle3dScopeClass::Viewport, Puzzle3dScopeClass::FillBuild, Puzzle3dScopeClass::FillOptions, Puzzle3dScopeClass::SuggestionsTick] {
+        let UiDirtyScope::Partial { panel_bodies, window_bodies, .. } = puzzle3d_scope(class) else {
+            panic!("{class:?} is a narrowed scope");
+        };
+        assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()], "{class:?}");
+        assert!(panel_bodies.is_empty(), "{class:?} claims to paint no panel: {panel_bodies:?}");
+    }
+    assert!(matches!(puzzle3d_scope(Puzzle3dScopeClass::Quiet), UiDirtyScope::None));
+    assert!(matches!(puzzle3d_scope(Puzzle3dScopeClass::Chrome), UiDirtyScope::Full));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn fill_build_tick_is_a_view_action_with_narrow_ui_scope() {
     let definition = create_puzzle3d_app();
@@ -2105,17 +2547,23 @@ async fn fill_build_tick_is_a_view_action_with_narrow_ui_scope() {
     }
 }
 
+/// 🪣️ `setFillCount` APPLIES planned placements, so it is a document edit that also moves the
+/// fill-count slider range: narrow (no utilities, no engagements, no labels) but panel-naming. It used
+/// to declare the pure fill-planning scope, which named no panel at all — so committing a fill left the
+/// outliner, the inspector, the catalogue and the history panel showing the pre-fill document.
 #[semio_framework_async_macros::async_test]
-async fn set_fill_count_declares_narrow_ui_scope() {
+async fn set_fill_count_declares_a_narrow_document_ui_scope() {
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
     let result = dispatch(&mut app, "setFillCount", Some(&json!({ "value": 1 })), None).await.expect("setFillCount");
     match result.ui_scope {
         UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
             assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]);
-            assert!(panel_bodies.is_empty());
-            assert!(tools);
-            assert!(!measures);
+            for body in [inspection::BODY_KEY, document::BODY_KEY, catalogue::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+                assert!(panel_bodies.iter().any(|named| named == body), "a committed fill changes the {body} panel: {panel_bodies:?}");
+            }
+            assert!(tools, "the fill-count slider range lives in the fill tool's measures");
+            assert!(measures);
             assert!(!engagements);
             assert!(!utilities);
             assert!(!labels);
@@ -2216,6 +2664,13 @@ async fn transform_engagement_does_not_block_background_deselect() {
 /// picker exists only for a live brush target — an explicitly selected vortex, else the hovered one.
 /// It reaches `window_measures` through `window_measures_with_request_context`, so this drives the
 /// real app chrome rather than calling `main::window_measures` with a fabricated snapshot.
+///
+/// ⏰️ Host ticks the brush lane needs before the picker has rows: each `suggestionsTick` spends ONE
+/// bounded `PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US` slice, so on an opt-level-0 build a target costs a
+/// couple of them. Fixed, never "until it resolves" — an unbounded loop here would turn the assertion
+/// into a machine-load reading.
+const PUZZLE3D_BRUSH_PICKER_TICKS: usize = 8;
+
 #[semio_framework_async_macros::async_test]
 async fn brush_placement_picker_appears_only_for_a_live_brush_target() {
     let mut app = app().await;
@@ -2226,6 +2681,14 @@ async fn brush_placement_picker_appears_only_for_a_live_brush_target() {
     assert_eq!(find_measure_select(idle, "puzzle3d-brush-placement"), None, "no brush target means no placement picker");
     let vortex = first_vortex_full_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("select vortex");
+    // ⏰️ The brush lane is warmed by the host's own 120 ms `suggestionsTick`, never by the render or
+    // the measures call: `setActiveTool`/`setActiveUtility` are answered by the framework with an empty
+    // `Emit` and reach no app reducer at all, so nothing in this app runs at the moment a utility is
+    // activated (ticket 26/09/02/PUZZLE-3D-END-TO-END wave D3). Playing that clock here is what a
+    // running host does between the click and the next frame.
+    for _ in 0..PUZZLE3D_BRUSH_PICKER_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("suggestionsTick");
+    }
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures = app.window_measures(&view).await;
     let targeted = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
@@ -2470,6 +2933,68 @@ async fn select_same_kind_with_no_selection_leaves_the_selection_untouched() {
     assert!(app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "widening from nothing must not invent a selection");
 }
 
+/// 🎯️ A selection-scoped command dispatched with NOTHING selected must refuse VISIBLY: exactly one
+/// `Effect::Notify`, no document edit, and no history row. This is the browser defect measured
+/// 2026-09-09 21:05 — "Duplicate Selection" from the context menu completed with no clone, no command
+/// row and no notice of any kind, which is indistinguishable from a dead menu entry. Every arm that
+/// reads the framework-owned selection is covered here, so the refusal cannot be reintroduced one
+/// command at a time.
+///
+/// 🧾️ A command-log ROW is deliberately not asserted absent: `dispatch_emit` records one row per
+/// dispatch by design, mutation-kind actions that produced zero operations included (see its own doc
+/// in `🔌️plugin/🦀️.rs`), so a refused `Mutation` still shows up in history with no edit id. What must
+/// never happen is a silent nothing — that is what the notice below pins.
+#[semio_framework_async_macros::async_test]
+async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_notice() {
+    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+        result
+            .requested_effects
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::Notify { message } => Some(message.clone()),
+                _ => None,
+            })
+            .collect()
+    };
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let objects_before = projection_of(&app).get("objects").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
+    for action in ["duplicateSelection", "deleteSelection", "selectSameKindSelection"] {
+        let result = dispatch(&mut app, action, None, None).await.unwrap_or_else(|error| panic!("{action} must complete, not fault: {error:?}"));
+        let raised = notices(&result);
+        assert_eq!(raised.len(), 1, "{action} with nothing selected must raise exactly one notice: {:?}", result.requested_effects);
+        assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED, "the test host declares an authored axis, so {action}'s refusal must be real prose");
+        assert!(result.mutations.is_empty(), "{action} refused, so it must emit no document mutation: {:?}", result.mutations);
+        assert!(!matches!(result.ui_scope, UiDirtyScope::Full), "{action} painted nothing, so it must not force a full refresh");
+    }
+    // 🧲️ The three gumball verbs carry a `coalesce_key`, so they enter the latest-wins channel whose
+    // accepted invocation answers BEFORE the command runs — their whole outcome (notice, scope) lives on
+    // the completion lane, which `testkit::settle` now drains into `InvocationResult` instead of
+    // dropping. They also never reach `refuse_without_selection`: `build_tool_job` routes them to
+    // `Puzzle3dScaleWork`, not through `dispatch_step`, which is why they used to complete with an empty
+    // edit, a coalesce key and `UiDirtyScope::Full` — measured 2026-09-09 in-process as
+    // `completion scope=Full, effects=[]` while `duplicateSelection` on the same fixture refused.
+    for (action, args) in [
+        ("translateSelection", json!({ "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
+        ("rotateSelection", json!({ "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 1.0 })),
+        ("scaleSelection", json!({ "sx": 2.0, "sy": 2.0, "sz": 2.0 })),
+    ] {
+        let result = dispatch(&mut app, action, Some(&args), None).await.unwrap_or_else(|error| panic!("{action} must complete, not fault: {error:?}"));
+        let raised = notices(&result);
+        assert_eq!(raised.len(), 1, "{action} with nothing selected must raise exactly one notice on its completion lane: {:?}", result.requested_effects);
+        assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED, "the test host declares an authored axis, so {action}'s refusal must be real prose");
+        assert!(result.mutations.is_empty(), "{action} refused, so it must emit no document mutation: {:?}", result.mutations);
+        assert!(matches!(result.ui_scope, UiDirtyScope::None), "{action} painted nothing, so its completion must carry UiDirtyScope::None, got {:?}", result.ui_scope);
+    }
+    let objects_after = projection_of(&app).get("objects").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
+    assert_eq!(objects_after, objects_before, "a refused selection command must leave the document untouched");
+    assert!(
+        app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()),
+        "a refused selection command must not invent a selection either"
+    );
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `duplicateSelection` re-selects the
 /// clones it created — the interaction write is applied AFTER the document mutations land, so the new
 /// ids are already in `interaction_topology` and survive `validate_state`'s pruning.
@@ -2597,6 +3122,54 @@ async fn gumball_translate_drag_coalesces_into_one_edit() {
     assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
     dispatch(&mut app, "undo", None, None).await.expect("undo");
     assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole coalesced gumball drag");
+}
+
+fn object_orientation(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
+    projection_of(app)
+        .get("objects")
+        .and_then(Value::as_array)
+        .and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id)).cloned())
+        .and_then(|object| object.get("orientation").and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()))
+        .unwrap_or_default()
+}
+
+fn object_scale(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
+    projection_of(app)
+        .get("objects")
+        .and_then(Value::as_array)
+        .and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id)).cloned())
+        .and_then(|object| object.get("scale").and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()))
+        .unwrap_or_default()
+}
+
+#[semio_framework_async_macros::async_test]
+async fn gumball_rotate_drag_coalesces_into_one_edit() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let object_id = first_object_id(&app);
+    let start = object_orientation(&app, &object_id);
+    for angle in [0.25, 0.50, 0.75] {
+        dispatch(&mut app, "rotateSelection", Some(&json!({ "ids": [object_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": angle })), None).await.expect("rotate tick");
+    }
+    assert_ne!(object_orientation(&app, &object_id), start, "three rotate ticks must move the pose");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_orientation(&app, &object_id), start, "one undo restores the whole coalesced rotate drag");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn gumball_scale_drag_coalesces_into_one_edit() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let object_id = first_object_id(&app);
+    let start = object_scale(&app, &object_id);
+    for sx in [1.1, 1.2, 1.3] {
+        dispatch(&mut app, "scaleSelection", Some(&json!({ "ids": [object_id.as_str()], "sx": sx, "sy": 1.0, "sz": 1.0 })), None).await.expect("scale tick");
+    }
+    assert_ne!(object_scale(&app, &object_id), start, "three scale ticks must change the scale");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_scale(&app, &object_id), start, "one undo restores the whole coalesced scale drag");
 }
 
 /// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the real gumball gesture — `transformBegin`, ONE
@@ -3301,4 +3874,121 @@ async fn inspection_flag_rows_toggle_back_off() {
         assert_eq!(hidden_of(&app, &object_id), expected, "the inspector's hidden row must reach {expected}");
     }
 }
+
+
+fn first_target_volume_id(app: &Puzzle3dApp) -> String {
+    projection_of(app)
+        .get("targetVolumes")
+        .or_else(|| projection_of(app).get("target_volumes"))
+        .and_then(Value::as_array)
+        .and_then(|volumes| volumes.first())
+        .and_then(|volume| volume.get("id").and_then(Value::as_str))
+        .expect("a target volume is present")
+        .to_string()
+}
+
+fn volume_origin(app: &Puzzle3dApp, volume_id: &str) -> Vec<f64> {
+    let volumes = projection_of(app).get("targetVolumes").cloned().or_else(|| projection_of(app).get("target_volumes").cloned()).and_then(|value| value.as_array().cloned()).unwrap_or_default();
+    volumes
+        .iter()
+        .find(|volume| volume.get("id").and_then(Value::as_str) == Some(volume_id))
+        .and_then(|volume| volume.get("origin").or_else(|| volume.get("position")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()))
+        .unwrap_or_default()
+}
+
+#[semio_framework_async_macros::async_test]
+async fn relocate_target_volume_undoes_and_redoes_as_one_mutation() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).await.expect("addTargetVolume");
+    let volume_id = first_target_volume_id(&app);
+    let start = volume_origin(&app, &volume_id);
+    dispatch(&mut app, "relocateTargetVolume", Some(&json!({ "volumeId": volume_id, "after": { "position": [4.0, 5.0, 6.0] } })), None).await.expect("relocate");
+    let moved = volume_origin(&app, &volume_id);
+    assert!((moved[0] - 4.0).abs() < 1e-9 && (moved[1] - 5.0).abs() < 1e-9 && (moved[2] - 6.0).abs() < 1e-9, "relocateTargetVolume must write the after pose, got {moved:?} from {start:?}");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(volume_origin(&app, &volume_id), start, "undo restores the volume pose");
+    dispatch(&mut app, "redo", None, None).await.expect("redo");
+    assert_eq!(volume_origin(&app, &volume_id), moved, "redo reapplies the volume pose");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn world_relocate_undoes_and_redoes_as_one_mutation() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let object_id = first_object_id(&app);
+    let start = object_origin(&app, &object_id);
+    dispatch(&mut app, "worldRelocate", Some(&json!({ "objectId": object_id, "position": [9.0, 8.0, 7.0] })), None).await.expect("worldRelocate");
+    let moved = object_origin(&app, &object_id);
+    assert!((moved[0] - 9.0).abs() < 1e-9 && (moved[1] - 8.0).abs() < 1e-9 && (moved[2] - 7.0).abs() < 1e-9, "worldRelocate must write the world position, got {moved:?} from {start:?}");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_origin(&app, &object_id), start, "undo restores the object origin");
+    dispatch(&mut app, "redo", None, None).await.expect("redo");
+    assert_eq!(object_origin(&app, &object_id), moved, "redo reapplies the object origin");
+}
+
 //#endregion 🩹️CheckedDefects
+
+/// 📏️ Wave W-M2: one whole `registerBrushMesh` page validates inside one command's own work budget.
+/// The page scan is cursorized at [`PUZZLE3D_MESH_PAGE_SCAN_CHARS`] characters per step over both
+/// payload streams, and the largest page the plugin admits is
+/// `PUZZLE3D_MESH_PAGE_BASE64_CHARS` characters per stream — so the extent a page claims can never
+/// approach `PUZZLE_COMMAND_WORK_ITEMS`, which is what keeps every per-page unit under the 8 ms law.
+#[test]
+fn one_brush_mesh_page_validates_inside_one_command_work_budget() {
+    let page = crate::editor::puzzle3d::precompute::PUZZLE3D_MESH_PAGE_BASE64_CHARS;
+    let steps = page.div_ceil(PUZZLE3D_MESH_PAGE_SCAN_CHARS).saturating_mul(2).saturating_add(1);
+    assert!(steps <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "a whole page validates in {steps} bounded steps, inside {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    assert!(page + 8 < crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "a page's two payload streams — one page's values, split at most once and padded per stream — leave the JSON envelope room inside the raw wire");
+}
+
+/// 🚚️ Wave W-H: a client whose "already uploaded" bookkeeping outlived the guest that justified it
+/// announces identities this instantiation holds nothing for. The arm may not answer that with a notice
+/// — nothing on the host reads a notification's text, so the brush utility would silently keep no
+/// collision body until a full page reload. It publishes the identity on the world body instead, and
+/// widens its own otherwise-`Quiet` scope to the viewport so that body is actually republished. The
+/// client answers with the page run, and the request retires.
+#[semio_framework_async_macros::async_test]
+async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
+    let mut app = app().await;
+    let (positions, indices) = crate::standards::v1::subsets::any::schema::testkit::unit_cube_mesh_buffers();
+    let digest = crate::editor::puzzle3d::precompute::brush_mesh_digest(&positions, &indices);
+    let url = "/test/restarted-guest-reannounce.glb";
+    let announcement = json!({ "surfaceId": "world-3d", "url": url, "digest": digest });
+    let refused = dispatch(&mut app, "registerBrushMesh", Some(&announcement), None).await.expect("id-only announcement");
+    assert!(!refused.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "a refusal the client cannot act on is not an answer");
+    assert!(
+        matches!(&refused.ui_scope, UiDirtyScope::Partial { window_bodies, .. } if window_bodies.iter().any(|body| body == main::BODY_KEY)),
+        "the request is worthless until the world body carrying it repaints; got {:?}",
+        refused.ui_scope
+    );
+    let requested = interaction_of(&render_composite(&mut app).await);
+    assert_eq!(requested.pointer("/meshReuploadUrls").and_then(Value::as_array).cloned().unwrap_or_default(), vec![json!(url)], "the refused identity is published as a request for its bytes");
+    let residency = requested.pointer("/meshResidency").and_then(Value::as_u64).expect("the world body publishes the guest's mesh residency");
+
+    let position_bytes: Vec<u8> = positions.iter().flat_map(|value| value.to_le_bytes()).collect();
+    let index_bytes: Vec<u8> = indices.iter().flat_map(|value| value.to_le_bytes()).collect();
+    let page = json!({
+        "surfaceId": "world-3d",
+        "url": url,
+        "digest": digest,
+        "page": 0,
+        "pageCount": 1,
+        "positionsB64": semio_framework_io_base64::base64_standard_encode(&position_bytes),
+        "indicesB64": semio_framework_io_base64::base64_standard_encode(&index_bytes),
+    });
+    let accepted = dispatch(&mut app, "registerBrushMesh", Some(&page), None).await.expect("the client answers with the page run");
+    assert!(!accepted.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "an accepted page run is silent");
+    let settled = interaction_of(&render_composite(&mut app).await);
+    assert_eq!(settled.pointer("/meshReuploadUrls").and_then(Value::as_array).map(Vec::len), Some(0), "an answered request retires, so a steady state carries no standing request");
+    assert!(settled.pointer("/meshResidency").and_then(Value::as_u64).expect("residency") > residency, "the client's proof that this guest holds the geometry is the counter climbing");
+
+    let readopted = dispatch(&mut app, "registerBrushMesh", Some(&announcement), None).await.expect("the identity is now resident");
+    assert!(readopted.requested_effects.is_empty(), "an identity this guest holds is adopted by id alone, at no cost on the wire");
+    assert!(matches!(readopted.ui_scope, UiDirtyScope::None), "the adopting fast path stays the quiet command it is declared to be");
+    assert!(
+        !puzzle3d_action_uses_precompute("registerBrushMesh"),
+        "registerBrushMesh only WRITES geometry into the precompute session, so it may not owe the sync prologue: that prologue seeds a fallback body for every id the session has no geometry for — precisely the ids this command supplies — clearing the brush cache and rebuilding the queue each time, which the arm's own install then discards, and which is where the 0.65 s → 2.85 s per announcement measured on 2026-09-09 came from"
+    );
+}

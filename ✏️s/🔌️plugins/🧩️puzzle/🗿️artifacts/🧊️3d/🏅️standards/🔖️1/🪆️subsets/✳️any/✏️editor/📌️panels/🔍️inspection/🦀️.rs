@@ -10,6 +10,7 @@
 //! command's own selection fallback.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
+use std::collections::HashMap;
 use crate::editor::puzzle3d::{
     object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, ui_node_list, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
     Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_PLAY_CONTROLLER_ID,
@@ -22,6 +23,8 @@ use semio_framework_plugin::{
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.inspector";
 const ROOT: &str = "puzzle3d-play-inspector";
+pub const IDS_SECTION: &str = "puzzle3d-play-inspector.ids";
+pub const IDS_ROWS: usize = 16;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -64,10 +67,36 @@ fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
 
 fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
     let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action list admission failed"))?;
-    for id in ids {
+    for id in ids.iter().take(IDS_ROWS) {
         builder.push(text_value(id)?).map_err(|_| error("puzzle3d inspector action list entry admission failed"))?;
     }
     Ok(UiValue::List(builder.finish()))
+}
+
+fn ids_page<'a>(ids: &'a [String], pages: &HashMap<String, u32>) -> &'a [String] {
+    if ids.is_empty() {
+        return ids;
+    }
+    let max_page = (ids.len() - 1) / IDS_ROWS;
+    let page = (pages.get(IDS_SECTION).copied().unwrap_or(0) as usize).min(max_page);
+    &ids[(page * IDS_ROWS).min(ids.len())..]
+}
+
+fn push_ids(fields: &mut UiFixedList<BuiltNode>, ids: &[String], pages: &HashMap<String, u32>) -> UiAssemblyResult<()> {
+    let rest = ids_page(ids, pages);
+    let page = if ids.is_empty() { 0 } else { (pages.get(IDS_SECTION).copied().unwrap_or(0) as usize).min((ids.len() - 1) / IDS_ROWS) };
+    for (index, id) in rest.iter().take(IDS_ROWS).enumerate() {
+        read_only(fields, &format!("ids.{index}"), "id", id)?;
+    }
+    if rest.len() > IDS_ROWS {
+        let omitted = rest.len() - IDS_ROWS;
+        let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector page map admission failed"))?;
+        builder.push("page".to_owned(), UiValue::Number(f64::from(page as u32 + 1))).map_err(|_| error("puzzle3d inspector page map entry admission failed"))?;
+        builder.push("section".to_owned(), text_value(IDS_SECTION)?).map_err(|_| error("puzzle3d inspector page map entry admission failed"))?;
+        let action = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("setPanelPage", Some(UiValue::Map(builder.finish())))?;
+        push(fields, tree_item_with_action(format!("{ROOT}.ids.more"), ui_label(&format!("+{omitted}"))?, None, action))?;
+    }
+    Ok(())
 }
 
 /// 🩹️ One `patchInspector` toggle row — flips a boolean `field` (`hidden`/`locked`) on every id in
@@ -86,8 +115,9 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: 
 //#endregion 🔖️Rows
 
 //#region 🔖️Sections
-fn object_fields(object: &Puzzle3dObject, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn object_fields(object: &Puzzle3dObject, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
+    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "object.id", labels.id.as_str(), &object.id)?;
     read_only(&mut fields, "object.label", labels.label.as_str(), object.label.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "object.kind", labels.kind.as_str(), object.object_kind.as_deref().unwrap_or_default())?;
@@ -96,8 +126,8 @@ fn object_fields(object: &Puzzle3dObject, ids: &[String], labels: &Puzzle3dLabel
     read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
     read_only(&mut fields, "object.mesh-url", labels.mesh_url.as_str(), object.mesh_url.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "object.vortices", labels.vortices.as_str(), object.vortices.len())?;
-    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "hidden", object.hidden)?;
-    flag_row(&mut fields, "object.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "locked", object.locked)?;
+    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids_page(ids, pages), "hidden", object.hidden)?;
+    flag_row(&mut fields, "object.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids_page(ids, pages), "locked", object.locked)?;
     Ok(fields)
 }
 
@@ -126,26 +156,28 @@ fn attraction_fields(attraction: &Puzzle3dAttraction, labels: &Puzzle3dLabels) -
     Ok(fields)
 }
 
-fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
+    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "target-volume.id", labels.id.as_str(), &volume.id)?;
     read_only(&mut fields, "target-volume.origin", labels.origin.as_str(), vec3(volume.origin))?;
     read_only(&mut fields, "target-volume.orientation", labels.orientation.as_str(), vec4(volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
     read_only(&mut fields, "target-volume.scale", labels.scale.as_str(), vec3(target_volume_scale_json(volume)))?;
-    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "hidden", volume.hidden)?;
-    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "locked", volume.locked)?;
+    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids_page(ids, pages), "hidden", volume.hidden)?;
+    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids_page(ids, pages), "locked", volume.locked)?;
     Ok(fields)
 }
 
-fn reference_fields(reference: &Puzzle3dReference, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn reference_fields(reference: &Puzzle3dReference, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
+    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "reference.id", labels.id.as_str(), &reference.id)?;
     read_only(&mut fields, "reference.source-url", labels.source_url.as_str(), &reference.source.url)?;
     read_only(&mut fields, "reference.media-kind", labels.media_kind.as_str(), reference.source.media_kind.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "reference.origin", labels.origin.as_str(), vec3(reference.origin))?;
     read_only(&mut fields, "reference.width-world", labels.width.as_str(), reference.width_world)?;
-    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "hidden", reference.hidden)?;
-    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "locked", reference.locked)?;
+    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids_page(ids, pages), "hidden", reference.hidden)?;
+    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids_page(ids, pages), "locked", reference.locked)?;
     Ok(fields)
 }
 
@@ -161,13 +193,13 @@ fn summary(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResu
 
 /// 🔍️ The selected entity's own field group, or `None` when the selection resolves to nothing in this
 /// document (a just-deleted id, or a granularity with no inspectable body such as `kind`).
-fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
     let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> { PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build() };
     match interaction.granularity.as_str() {
         PUZZLE3D_GRANULARITY_OBJECT => {
             let ids = interaction.selected_object_ids();
             let object = fixture.objects.iter().find(|object| Some(&object.id) == ids.first())?;
-            Some(section(labels.object.as_str(), "object", object_fields(object, ids, labels)))
+            Some(section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
         }
         PUZZLE3D_GRANULARITY_VORTEX => {
             let full_id = interaction.selected_vortex_ids().first()?;
@@ -182,12 +214,12 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
         PUZZLE3D_GRANULARITY_TARGET_VOLUME => {
             let ids = interaction.selected_target_volume_ids();
             let volume = fixture.target_volumes.iter().find(|volume| Some(&volume.id) == ids.first())?;
-            Some(section(labels.target_volume.as_str(), "target-volume", target_volume_fields(volume, ids, labels)))
+            Some(section(labels.target_volume.as_str(), "target-volume", target_volume_fields(volume, ids, pages, labels)))
         }
         PUZZLE3D_GRANULARITY_REFERENCE => {
             let ids = interaction.selected_reference_ids();
             let reference = fixture.references.iter().find(|reference| Some(&reference.id) == ids.first())?;
-            Some(section(labels.reference.as_str(), "reference", reference_fields(reference, ids, labels)))
+            Some(section(labels.reference.as_str(), "reference", reference_fields(reference, ids, pages, labels)))
         }
         _ => None,
     }
@@ -196,9 +228,99 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
 
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot, term_labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    match selected_section(&envelope.fixture, interaction, term_labels) {
+    match selected_section(&envelope.fixture, interaction, &envelope.runtime.panel_pages, term_labels) {
         Some(section) => section,
         None => summary(&envelope.fixture, term_labels),
     }
 }
 //#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::editor::puzzle3d::terminology::puzzle3d_labels;
+    use crate::editor::puzzle3d::config::Puzzle3dRuntime;
+    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dObject, Puzzle3dScene, PUZZLE3D_GRANULARITY_OBJECT};
+
+    fn labels() -> &'static Puzzle3dLabels {
+        puzzle3d_labels(&semio_framework_plugin::ViewModel { terminology: semio_framework_plugin::Terminology::Native, ..Default::default() }).expect("admitted host axis")
+    }
+
+    fn drain() {
+        for _ in 0..4096 {
+            if semio_framework_ui_contract::close_built_node_page_one() {
+                break;
+            }
+        }
+        for _ in 0..4096 {
+            if semio_framework_ui_contract::close_ui_value_page_one() {
+                break;
+            }
+        }
+    }
+
+    fn keys(node: &BuiltNode, out: &mut Vec<String>) {
+        out.push(node.key.as_str().to_string());
+        for child in node.children.iter() {
+            keys(child, out);
+        }
+    }
+
+    fn scene(ids: &[String], page: u32) -> (Puzzle3dScene, Puzzle3dInteractionSnapshot) {
+        let mut fixture = empty_fixture();
+        fixture.objects = ids
+            .iter()
+            .map(|id| Puzzle3dObject {
+                id: id.clone(),
+                label: None,
+                object_kind: Some("Object".into()),
+                origin: [0.0, 0.0, 0.0],
+                orientation: None,
+                scale: None,
+                mesh_url: None,
+                vortices: Vec::new(),
+                hidden: false,
+                locked: false,
+                reveal_index: None,
+            })
+            .collect();
+        let mut runtime = Puzzle3dRuntime::default();
+        if page > 0 {
+            runtime.panel_pages.insert(IDS_SECTION.to_string(), page);
+        }
+        let scene = Puzzle3dScene { fixture, runtime, active_utility: String::new() };
+        let interaction = Puzzle3dInteractionSnapshot { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), selected: ids.to_vec(), hovered: Vec::new() };
+        (scene, interaction)
+    }
+
+    #[test]
+    fn inspection_ids_page_is_bounded_and_the_continuation_advances() {
+        let ids: Vec<String> = (0..IDS_ROWS * 2 + 3).map(|index| format!("object-{index}")).collect();
+        drain();
+        let (first_scene, first_interaction) = scene(&ids, 0);
+        let first = render(&first_scene, &first_interaction, labels()).expect("page 0");
+        let mut rows = Vec::new();
+        keys(&first, &mut rows);
+        let id_rows = rows.iter().filter(|key| key.contains(".ids.") && !key.ends_with(".more")).count();
+        assert!(id_rows <= IDS_ROWS, "the inspector must page ids, got {id_rows} id rows: {rows:?}");
+        assert!(rows.iter().any(|key| key.ends_with(".ids.more")), "page 0 must offer +N: {rows:?}");
+        drop(first);
+        drain();
+        let (next_scene, next_interaction) = scene(&ids, 1);
+        let next = render(&next_scene, &next_interaction, labels()).expect("page 1");
+        rows.clear();
+        keys(&next, &mut rows);
+        assert!(rows.iter().any(|key| key.ends_with(".ids.more")), "page 1 still has a further page: {rows:?}");
+        drop(next);
+        drain();
+        let last = ((ids.len() - 1) / IDS_ROWS) as u32;
+        let (tail_scene, tail_interaction) = scene(&ids, last);
+        let tail = render(&tail_scene, &tail_interaction, labels()).expect("last page");
+        rows.clear();
+        keys(&tail, &mut rows);
+        assert!(!rows.iter().any(|key| key.ends_with(".ids.more")), "the last ids page must drop +N: {rows:?}");
+        drop(tail);
+        drain();
+    }
+}

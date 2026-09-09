@@ -4356,12 +4356,70 @@ impl ViewModel {
 #[path = "🧪️tests/🔬️window-view-context/🦀️.rs"]
 mod window_view_context_tests;
 
+//#region 📏️ViewContextCapacity
+/// 📏️ The surface view context's capacities, mirrored from the ONE language-neutral declaration
+/// `🪟️view-context/🧬️schema/🔣️.json` — the same file `parseResolvedPluginViewState`
+/// (`🛂️manifest/🟦️.ts`) and its Ajv oracle validate against. Pinned from Rust by
+/// `🧪️tests/🔬️view-context-capacity/🦀️.rs`, so neither side can drift from the schema.
+pub const VIEW_CONTEXT_IDENTIFIER_CHARS: usize = 256;
+/// 📏️ `panelJson`/`contributionsJson` capacity, in Unicode characters (schema `maxLength`).
+pub const VIEW_CONTEXT_LONG_STRING_CHARS: usize = 65_536;
+/// 📏️ `activeUtilityByWindowId` capacity (schema `maxProperties`).
+pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
+/// 📏️ `windowInstances` capacity (schema `maxItems`).
+pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
+/// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
+/// `activeToolId`, `windowId`.
+pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 5;
+/// 🔢️ Long-string fields: `panelJson`, `contributionsJson`.
+pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 2;
+/// 📐️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire
+/// carries bytes.
+const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;
+/// 📐️ Per-encoded-value framing allowance (tag, length prefix, key) of the pack wire the shell
+/// encodes a view context with.
+const VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE: usize = 64;
+/// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, both
+/// collections and each of their entries' fields.
+const VIEW_CONTEXT_ENCODED_VALUES: usize =
+    VIEW_CONTEXT_IDENTIFIER_FIELDS + VIEW_CONTEXT_LONG_STRING_FIELDS + 2 + 1 + VIEW_CONTEXT_UTILITY_ENTRIES * 2 + 1 + VIEW_CONTEXT_WINDOW_INSTANCES * 2;
+
+/// 📏️ Largest wire-encoded surface view context the contract can produce — the admission bound
+/// `plugin_mount_surface` holds `Event::SurfaceVisible`'s `view_state` to.
+///
+/// Derived from the schema above rather than borrowed: this used to reuse
+/// `MAX_PUBLIC_ACTION_BODY_BYTES` (256 KiB), the DFF *public action* admission cap, which is
+/// unrelated to a view context and smaller than the two 64 Ki-character long strings the schema
+/// alone permits — so a schema-valid context was rejected as
+/// `plugin.internal: surface context exceeds its wire bound` and every window body of the affected
+/// app was replaced by that fault card (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const MAX_SURFACE_VIEW_CONTEXT_BYTES: usize = (VIEW_CONTEXT_IDENTIFIER_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
+    + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
+    + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
+    + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS)
+    * VIEW_CONTEXT_BYTES_PER_CHAR
+    + VIEW_CONTEXT_ENCODED_VALUES * VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE;
+
+/// 📏️ Largest surface body key the same contract admits — a body key is a window-kind id, a
+/// panel-tab leaf id or a reserved `UiRefreshSection` key, all `Identifier`-shaped.
+pub const MAX_SURFACE_BODY_KEY_BYTES: usize = VIEW_CONTEXT_IDENTIFIER_CHARS * VIEW_CONTEXT_BYTES_PER_CHAR;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️view-context-capacity/🦀️.rs"]
+mod view_context_capacity_tests;
+//#endregion 📏️ViewContextCapacity
+
 //#region 🔖️UiRefreshSection
-/// 🧩️ The three refresh sections that are NOT authored window/panel bodies. Each is its own retained
+/// 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own retained
 /// surface whose reserved body key names the object-safe accessor the plugin runtime calls in place of
-/// `PluginApp::render` (`window_engagements`/`window_measures`/`tool_measures`), so measures, tool
-/// measures and engagements publish, re-publish and page through exactly the same
-/// `Event::SurfaceVisible` → mount → reconcile → `UiPatch` law as a window body.
+/// `PluginApp::render` (`window_engagements`/`window_measures`/`tool_measures`/`app_catalogue`), so
+/// measures, tool measures, engagements and the app-static catalogue publish, re-publish and page
+/// through exactly the same `Event::SurfaceVisible` → mount → reconcile → `UiPatch` law as a window body.
+///
+/// 🛍️ `Catalogue` is app-STATIC: it carries the whole registered operator/palette catalogue exactly
+/// once per app instance (hash-conditional, so an unchanged catalogue costs one hash compare), instead
+/// of riding on every node-graph scene payload where it blew the fixed `UI_FIXED_BYTES` surface
+/// admission as soon as real operator sets were installed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 ///
 /// Mirrored in TypeScript by `UI_REFRESH_SECTIONS` in `🧰️framework/🔨️modules/🛂️manifest/🟦️.ts`.
 /// Both sides are pinned against the one language-neutral declaration in
@@ -4371,18 +4429,19 @@ pub enum UiRefreshSection {
     Engagements,
     Measures,
     Tools,
+    Catalogue,
 }
 
 /// 🔑️ Response field / host refresh-cache key of each [`UiRefreshSection`], in `UiRefreshSection::ALL` order.
-pub const UI_REFRESH_SECTION_KEYS: [&str; 3] = ["engagements", "measures", "tools"];
+pub const UI_REFRESH_SECTION_KEYS: [&str; 4] = ["engagements", "measures", "tools", "catalogue"];
 
 /// 🪧️ Reserved body key — and retained surface key — of each [`UiRefreshSection`], in
 /// `UiRefreshSection::ALL` order. Dotted and `framework.`-prefixed so it can never collide with an
 /// app-authored window instance id or panel tab id, which are plain identifiers.
-pub const UI_REFRESH_SECTION_BODY_KEYS: [&str; 3] = ["framework.section.engagements", "framework.section.measures", "framework.section.tools"];
+pub const UI_REFRESH_SECTION_BODY_KEYS: [&str; 4] = ["framework.section.engagements", "framework.section.measures", "framework.section.tools", "framework.section.catalogue"];
 
 impl UiRefreshSection {
-    pub const ALL: [Self; 3] = [Self::Engagements, Self::Measures, Self::Tools];
+    pub const ALL: [Self; 4] = [Self::Engagements, Self::Measures, Self::Tools, Self::Catalogue];
 
     /// 🔑️ See [`UI_REFRESH_SECTION_KEYS`].
     // 🚫️async: E1 pure table lookup — see R9.

@@ -12,6 +12,7 @@
 //! the kernel-scope `🧪️body` split is mounted (the real crate root does the same re-export, so
 //! `inferences::validation_report::validate_body` resolves identically in both trees).
 
+extern crate self as semio_s_artifact_stdio_semio;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -84,5 +85,92 @@ pub mod standards {
                 }
             }
         }
+    }
+}
+
+/// 🧲 The crate's own `[[test]] brep_procedural_example_booleans` target, mounted here as a
+/// unit-test module so the two example configurations run in the harness's ~30 s cycle instead of
+/// the real crate's. `extern crate self as semio_s_artifact_stdio_semio` above makes the file's
+/// own absolute `use` paths resolve unchanged.
+#[cfg(test)]
+#[path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs"]
+mod procedural_example_booleans;
+
+/// 🔎 Temporary [DEBUG] probes for this ticket's offset investigation — face-by-face area and
+/// volume-moment breakdown of the constructions whose totals came out wrong.
+#[cfg(test)]
+mod ticket_probe {
+    use crate::standards::v1::subsets::brep::schema::diff::offset::{shell_solid_with_open_faces, thicken_face};
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points};
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{face_area, solid_signed_volume};
+    use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
+
+    fn dump(body: &Body, solid: crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId) {
+        for f in body.solid_faces(solid) {
+            let fd = body.faces.get(f).unwrap().clone();
+            let surf = body.surfaces.get(fd.surface).unwrap().clone();
+            let kind = match &surf {
+                Surface::Plane { frame } => format!("plane n={:?} o={:?}", (frame.z.x, frame.z.y, frame.z.z), (frame.origin.x, frame.origin.y, frame.origin.z)),
+                Surface::Nurbs { .. } => "nurbs".into(),
+                other => format!("{other:?}"),
+            };
+            eprintln!("[DEBUG] face {f} flipped={} area={:?} {kind}", fd.flipped, face_area(body, f, 1e-6));
+            for cid in body.face_coedges(f) {
+                let co = body.coedges.get(cid).unwrap().clone();
+                let uv = co.pcurve.and_then(|id| body.curves2.get(id)).map(|pc| (pc.eval(co.prange.0), pc.eval(co.prange.1)));
+                eprintln!("[DEBUG]   coedge edge={} fwd={} prange={:?} uv={:?}", co.edge, co.forward, co.prange, uv.map(|(a, b)| ((a.x, a.y), (b.x, b.y))));
+            }
+        }
+        eprintln!("[DEBUG] signed volume = {:?}", solid_signed_volume(body, solid, 1e-6));
+    }
+
+    #[test]
+    fn probe_thicken() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
+        let solid = thicken_face(&mut body, face, 0.5, &mut rec).unwrap();
+        dump(&body, solid);
+    }
+
+    #[test]
+    fn probe_shell_open() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let (a, b, c, t) = (2.0, 2.0, 2.0, 0.2);
+        let solid = make_box(&mut body, a, b, c, &mut rec).unwrap();
+        let top = *body.solid_faces(solid).iter().find(|&&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface).unwrap(), Surface::Plane { frame } if (frame.origin.z - c).abs() < 1e-9)).unwrap();
+        let shelled = shell_solid_with_open_faces(&mut body, solid, t, &[top], &mut rec).unwrap();
+        dump(&body, shelled);
+    }
+
+    #[test]
+    fn probe_draft() {
+        use crate::standards::v1::subsets::brep::schema::diff::offset::draft_angle;
+        use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface as S;
+        use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let right = *body.solid_faces(solid).iter().find(|&&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface).unwrap(), S::Plane { frame } if (frame.origin.x - 1.0).abs() < 1e-9)).unwrap();
+        let drafted = draft_angle(&mut body, solid, &[right], Vec3::Z, (Pnt3::new(0.0, 0.0, 0.0), Vec3::Z), 0.2, &mut rec).unwrap();
+        let mut seen = std::collections::BTreeSet::new();
+        for f in body.solid_faces(drafted) {
+            for cid in body.face_coedges(f) {
+                let co = body.coedges.get(cid).unwrap();
+                let e = body.edges.get(co.edge).unwrap();
+                for v in [e.v0, e.v1] {
+                    let p = body.vertices.get(v).unwrap().position;
+                    seen.insert((format!("{:.5}", p.x), format!("{:.5}", p.y), format!("{:.5}", p.z)));
+                }
+            }
+        }
+        for v in &seen {
+            eprintln!("[DEBUG] drafted vertex {v:?}");
+        }
+        dump(&body, drafted);
     }
 }

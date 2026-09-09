@@ -5,13 +5,13 @@ use semio_framework_os_kernel::os_store::test_support;
 
 #[test]
 fn dsl_pack_equivalence_empty_projection() {
-    test_support::assert_dsl_pack_equivalence(&Generation3dSnapshot::default());
+    test_support::assert_dsl_pack_equivalence_cold(&Generation3dSnapshot::default(), Generation3dSnapshot::retire_cold);
 }
 
 #[test]
 fn dsl_pack_equivalence_example_fixture() {
-    let projection = generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀️default.generation3d fixture");
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀️default.generation3d fixture"));
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
 #[test]
@@ -28,7 +28,8 @@ fn dsl_pack_equivalence_with_generation_state() {
         preview_text: Some("42".into()),
     }
     .into();
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
 #[test]
@@ -43,16 +44,18 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.fixture.synapses = vec![];
-    test_support::assert_dsl_pack_equivalence(&projection);
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
 #[test]
 fn pack_round_trips() {
-    let projection = generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture");
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture"));
     let bytes = encode(&projection);
-    assert!(bytes.starts_with(b"P3D3"));
-    assert_eq!(decode(&bytes).expect("decode"), projection);
+    assert!(bytes.starts_with(&semio_framework_os_kernel::os_semio::BINARY_MAGIC), "a whole-document `ArtifactPack` encode carries the semio binary container magic, not the mounted streaming prefix");
+    let decoded = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(decode(&bytes).expect("decode"));
+    assert_eq!(*decoded, *projection, "pack round trip diverged");
     let mut wrong = bytes;
-    wrong[..4].copy_from_slice(b"P2D2");
-    assert!(decode(&wrong).is_err());
+    wrong[..semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()].copy_from_slice(&[0; semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()]);
+    assert!(decode(&wrong).is_err(), "a corrupted container magic must be rejected");
 }

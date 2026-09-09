@@ -241,8 +241,22 @@ pub fn default_snapshot() -> Generation3dSnapshot {
     Generation3dSnapshot::parse_dsl(GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
 }
 
-pub fn empty_generation3d_snapshot() -> Generation3dSnapshot {
+/// 📄️ The artifact's `Default` projection. NOT empty: `FlowFixture::default()`
+/// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs`) is the three-widget
+/// `slider → add → preview` demo graph, so this is the DEFAULT document, not the empty one — the
+/// name it carried until ticket 26/09/09/PROCEDURAL-3D-END-TO-END said otherwise and made every
+/// "empty document" law read against a populated graph.
+pub fn default_generation3d_snapshot() -> Generation3dSnapshot {
     Generation3dSnapshot::default()
+}
+
+/// 🕳️ The genuinely EMPTY projection: no widgets, no synapses, no positions, no generations — the
+/// identity element every totality law is written against.
+pub fn empty_generation3d_snapshot() -> Generation3dSnapshot {
+    let mut snapshot = Generation3dSnapshot::default();
+    snapshot.fixture.widgets.clear();
+    snapshot.fixture.synapses.clear();
+    snapshot
 }
 
 /// 🧾️ Whether `example_id` names a bundled procedural-3d example fixture.
@@ -279,7 +293,10 @@ pub fn example_snapshot(example_id: &str) -> Option<Generation3dSnapshot> {
 
 /// 🧾️ Serializes an example's bare projection for registration via `App::example`.
 pub fn example_document_json(example_id: &str) -> String {
-    dsl::json::to_json_string(&example_snapshot(example_id).unwrap_or_default())
+    let snapshot = example_snapshot(example_id).unwrap_or_default();
+    let json = dsl::json::to_json_string(&snapshot);
+    snapshot.retire_cold();
+    json
 }
 
 /// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
@@ -329,24 +346,38 @@ pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlay
     patched
 }
 
+/// 🏠️ Runs `body` against a catalogue-seeded host built from `fixture`, then retires that host.
+///
+/// A `FlowHost` owns a cloned `FlowFixture`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
+/// drop (`ordered-map root must be explicitly retired before drop`,
+/// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
+/// [`FlowHost::retire_cold`], never dropped. This scope is the ONLY way generation3d builds one —
+/// there is no `host_from_fixture(…) -> FlowHost` to leak.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
-    let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
-    host
+pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    FlowHost::with_fixture(fixture, |host| {
+        host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
+        body(host)
+    })
 }
 
+/// 🏠️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
+/// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
+/// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
+/// not provide while the scope itself holds the session borrow.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
-    flow_host_with_session(fixture, session)
+pub fn with_host_session<R>(fixture: &FlowFixture, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
+    let mut host = flow_host_with_session(fixture, session);
+    let result = body(&mut host, session);
+    host.retire_cold();
+    result
 }
 
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
 #[cfg(feature = "component-app-assembly")]
 pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
-    let baseline = host_from_fixture(before).fixture;
-    crate::standards::v1::subsets::any::schema::mutations::text::generation3d_fixture_operations(&baseline, target)
+    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::text::generation3d_fixture_operations(&host.fixture, target))
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -397,7 +428,9 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framewo
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
     host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
-    host.evaluate().unwrap_or_default()
+    let evaluated = host.evaluate().unwrap_or_default();
+    host.retire_cold();
+    evaluated
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -255,6 +255,26 @@ impl Drop for SurfaceReconcileOutputs {
 }
 //#endregion 📤️Outputs
 
+
+//#region 🧪Isolation
+pub(super) fn output_registry_has_pending_returns() -> bool {
+    ENTRY_RETURNS.iter().any(|flag| flag.load(Ordering::Acquire)) || QUEUE_RETURNS.iter().any(|flag| flag.load(Ordering::Acquire))
+}
+
+#[allow(dead_code)]
+pub(super) fn output_registry_occupied_count() -> usize {
+    match registry() {
+        Ok(Some(reg)) => reg.entries.iter().filter(|entry| entry.queue.is_some()).count() + reg.queues.iter().filter(|queue| queue.occupied).count(),
+        Ok(None) => usize::MAX,
+        Err(_) => usize::MAX,
+    }
+}
+
+pub(super) fn recover_output_registry_poison() {
+    drop(REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+}
+//#endregion 🧪Isolation
+
 //#region 🧪️ExactReturns
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

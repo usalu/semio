@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "expectedCodecCount": 26,
+  "expectedOpenTargetKind": "stdio.json",
+  "expectedPublication": "committed",
+  "expectedHubBundle": "withheld",
+  "hostile": {
+    "emptyReceipts": "empty native codec catalog",
+    "digestMismatch": "pack schema digest",
+    "missingProtocol": "protocol"
+  }
+}

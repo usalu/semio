@@ -34,7 +34,7 @@ pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, pro
     Some(Generation3dGenerationCommandResult {
         emit: Emit {
             artifact_mutations: operations.into_iter().map(generation_mutation_to_generation3d).collect(),
-            config_mutations: vec![Generation3dConfigMutation::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }],
+            config_mutations: vec![Generation3dConfigMutation::SetSelectedGeneration(crate::editor::generation3d::config::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() })],
             coalesce_key: (action == "updateGenerationValues").then(|| "generation-values".to_string()),
             ..Default::default()
         },

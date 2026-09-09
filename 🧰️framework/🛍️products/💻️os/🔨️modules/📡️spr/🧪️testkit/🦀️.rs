@@ -543,6 +543,31 @@ where
     assert_eq!(composed, sequential, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base))");
 }
 
+/// 🧊️ Cold twin of [`assert_mutation_diff_absorb_law`] for a projection whose owned form rejects a
+/// bare drop (an `OrderedMap` root, a retirement ladder) — `retire` CLOSES every intermediate
+/// projection this law materialises, and `retire_diff` closes every diff, so the law itself never
+/// leaks. Same shape as `store::test_support::assert_dsl_round_trip_cold`
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §2.6).
+pub async fn assert_mutation_diff_absorb_law_cold<P, D>(base: &P, d1: D, d2: D, retire: impl Fn(P), retire_diff: impl Fn(D))
+where
+    P: PartialEq + std::fmt::Debug,
+    D: crate::os_spr::MutationDiff<P> + Clone,
+{
+    let mid = d1.apply(base).expect("first valid diff must apply");
+    let sequential = d2.apply(&mid);
+    retire(mid);
+    let mut absorbed = d1;
+    absorbed.absorb(d2);
+    let composed = absorbed.apply(base);
+    retire_diff(absorbed);
+    let matches = composed == sequential;
+    let report = matches.then(String::new).unwrap_or_else(|| format!("composed={composed:?} sequential={sequential:?}"));
+    for projection in [composed, sequential].into_iter().flatten() {
+        retire(projection);
+    }
+    assert!(matches, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base)); {report}");
+}
+
 /// ✅️ LAW: applying `mutation`'s `Mutation::inverse(base)` (in reverse order, matching
 /// `ArtifactStore::replay_mutations`'s own `back.reverse()`) after `mutation` restores `base`. The
 /// per-`MutationKind` version of `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`'s
@@ -563,6 +588,37 @@ where
         state = undo.diff(&state).diff().apply(&state).expect("valid inverse diff must apply");
     }
     assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
+}
+
+/// 🧊️ Cold twin of [`assert_mutation_inverse_law`] for a projection whose owned form rejects a bare
+/// drop. Every intermediate `state` is CLOSED through `retire` and every raised
+/// `MutationOutcome` is routed through `into_parts()` into `retire_diff` — the outcome OWNS its
+/// diff (`📡️replication/🎮️mutation/🦀️.rs`), so dropping it leaks exactly like dropping the
+/// projection does (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §2.3).
+pub async fn assert_mutation_inverse_law_cold<P, Op>(base: &P, mutation: &Op, retire: impl Fn(P), retire_diff: impl Fn(Op::Diff))
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    Op: crate::os_spr::Mutation<P>,
+{
+    use crate::os_spr::MutationDiff;
+    let (forward, messages) = mutation.diff(base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    let applied = (!rejected).then(|| forward.apply(base));
+    retire_diff(forward);
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
+    let mut backward = mutation.inverse(base);
+    backward.reverse();
+    for undo in &backward {
+        let (delta, _) = undo.diff(&state).into_parts();
+        let next = delta.apply(&state).expect("valid inverse diff must apply");
+        retire_diff(delta);
+        retire(std::mem::replace(&mut state, next));
+    }
+    let matches = state == *base;
+    let report = matches.then(String::new).unwrap_or_else(|| format!("{state:?}"));
+    retire(state);
+    assert!(matches, "applying mutation.inverse(base) (reversed) after mutation must restore base; restored:\n{report}");
 }
 
 /// ✅️ LAW: `D::between(a, b).apply(a) == b`, and `D::between(a, a).is_empty()` —

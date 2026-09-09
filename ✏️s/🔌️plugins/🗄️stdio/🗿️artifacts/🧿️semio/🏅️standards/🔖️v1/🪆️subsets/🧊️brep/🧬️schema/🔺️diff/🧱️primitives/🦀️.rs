@@ -260,14 +260,21 @@ pub fn make_sphere(body: &mut Body, radius: f64, rec: &mut OpRecorder) -> Result
     let north_curve = body.curves3.insert(Curve3::Line { origin: north_pt, dir: Vec3::ZERO });
     let e_north = make_edge(body, north_curve, (0.0, TAU), v_north, v_north, tol, rec);
 
+    // Ring order matters beyond this one face: every surface here has `du × dv` pointing OUTWARD,
+    // so the outer ring must wind counter-clockwise in `(u, v)` — material on the left — exactly as
+    // `make_box`/`make_cylinder`/`make_cone` do. This face used to run the other way round; nothing
+    // caught it, because a solid whose faces are consistent WITH EACH OTHER validates whichever
+    // convention it picked, and a sphere has only one face. It surfaces the moment a boolean makes
+    // a sphere piece adjacent to a box piece: both then traverse their shared imprint edge the same
+    // way, which is `orientation-inconsistent`.
     let surface = body.surfaces.insert(Surface::Sphere { frame, radius });
-    let face = attach_face(body, surface, &[(e_seam, true), (e_north, true), (e_seam, false), (e_south, false)], false, tol, rec);
+    let face = attach_face(body, surface, &[(e_south, true), (e_seam, true), (e_north, false), (e_seam, false)], false, tol, rec);
 
     let p_seam_u0 = line2(body, (0.0, 0.0), (0.0, 1.0));
     let p_north = line2(body, (0.0, FRAC_PI_2), (1.0, 0.0));
     let p_seam_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
     let p_south = line2(body, (0.0, -FRAC_PI_2), (1.0, 0.0));
-    set_outer_pcurves(body, face, &[(p_seam_u0, (-FRAC_PI_2, FRAC_PI_2)), (p_north, (0.0, TAU)), (p_seam_u_tau, (-FRAC_PI_2, FRAC_PI_2)), (p_south, (0.0, TAU))]);
+    set_outer_pcurves(body, face, &[(p_south, (0.0, TAU)), (p_seam_u_tau, (-FRAC_PI_2, FRAC_PI_2)), (p_north, (0.0, TAU)), (p_seam_u0, (-FRAC_PI_2, FRAC_PI_2))]);
 
     Ok(finish_solid(body, vec![face], rec))
 }
@@ -344,12 +351,20 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder
     let e_circle = make_edge(body, base_circle, (0.0, TAU), v_base, v_base, tol, rec);
     let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
 
-    let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: Vec3::Y, z: -Vec3::Z };
+    // The cone's local +z runs apex→base, i.e. world −Z; pairing that with an unmirrored local
+    // (x, y) = (X, Y) makes the frame LEFT-handed, which negates `du × dv` and so builds the whole
+    // lateral face with an INWARD normal (a bare cone then validates as
+    // `shell-orientation-inward`, its signed volume exactly −πr²h/3). Mirroring y — the same
+    // right-handed reflection the base cap's own frame already uses — restores the outward normal;
+    // the price is that world azimuth runs BACKWARDS in `u` (`u = −t`), which the base circle's
+    // p-curve below states explicitly.
+    let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
     let cone_surf = body.surfaces.insert(Surface::Cone { frame: cone_frame, half_angle });
     let lateral = attach_face(body, cone_surf, &[(e_circle, true), (e_seam, true), (e_seam, false)], false, tol, rec);
-    let p_base_lat = line2(body, (0.0, height), (1.0, 0.0));
-    let p_seam = line2(body, (0.0, height), (0.0, -height));
-    set_outer_pcurves(body, lateral, &[(p_base_lat, (0.0, TAU)), (p_seam, (0.0, 1.0)), (p_seam, (0.0, 1.0))]);
+    let p_base_lat = line2(body, (TAU, height), (-1.0, 0.0));
+    let p_seam_u0 = line2(body, (0.0, height), (0.0, -height));
+    let p_seam_u_tau = line2(body, (TAU, height), (0.0, -height));
+    set_outer_pcurves(body, lateral, &[(p_base_lat, (0.0, TAU)), (p_seam_u0, (0.0, 1.0)), (p_seam_u_tau, (0.0, 1.0))]);
 
     let base_cap_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
     let s_base = body.surfaces.insert(Surface::Plane { frame: base_cap_frame });
@@ -387,8 +402,11 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, rec: &mut OpRecorder)
     let equatorial = body.curves3.insert(Curve3::Circle { frame: Frame3::WORLD, radius: major + minor });
     let e_equatorial = make_edge(body, equatorial, (0.0, TAU), v_shared, v_shared, tol, rec);
 
+    // Counter-clockwise in `(u, v)`, for the reason spelled out in [`make_sphere`] — `du × dv` is
+    // the outward tube normal here too, so the ring has to keep the material on its left if a
+    // toroidal face is ever to sit next to a face built by any other primitive.
     let surface = body.surfaces.insert(Surface::Torus { frame: Frame3::WORLD, major_radius: major, minor_radius: minor });
-    let face = attach_face(body, surface, &[(e_meridian, true), (e_equatorial, true), (e_meridian, false), (e_equatorial, false)], false, tol, rec);
+    let face = attach_face(body, surface, &[(e_equatorial, true), (e_meridian, true), (e_equatorial, false), (e_meridian, false)], false, tol, rec);
 
     // u=2π ≡ u=0 and v=2π ≡ v=0 exactly (trig periodicity), so BOTH occurrences of each seam use
     // the same direct `p = t` shape — only the constant offset along the other axis differs.
@@ -396,7 +414,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, rec: &mut OpRecorder)
     let p_equatorial_v_tau = line2(body, (0.0, TAU), (1.0, 0.0));
     let p_meridian_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
     let p_equatorial_v0 = line2(body, (0.0, 0.0), (1.0, 0.0));
-    set_outer_pcurves(body, face, &[(p_meridian_u0, (0.0, TAU)), (p_equatorial_v_tau, (0.0, TAU)), (p_meridian_u_tau, (0.0, TAU)), (p_equatorial_v0, (0.0, TAU))]);
+    set_outer_pcurves(body, face, &[(p_equatorial_v0, (0.0, TAU)), (p_meridian_u_tau, (0.0, TAU)), (p_equatorial_v_tau, (0.0, TAU)), (p_meridian_u0, (0.0, TAU))]);
 
     Ok(finish_solid(body, vec![face], rec))
 }

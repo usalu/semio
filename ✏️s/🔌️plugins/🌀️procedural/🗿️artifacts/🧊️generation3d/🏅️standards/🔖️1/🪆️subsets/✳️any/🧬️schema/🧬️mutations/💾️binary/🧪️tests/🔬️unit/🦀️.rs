@@ -61,8 +61,9 @@ fn op_text_parse_rejects_unknown_operation() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    let mut store = store::ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::store_fixture::document_store(Generation3dSnapshot::default()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
+    crate::store_fixture::close(store);
 }

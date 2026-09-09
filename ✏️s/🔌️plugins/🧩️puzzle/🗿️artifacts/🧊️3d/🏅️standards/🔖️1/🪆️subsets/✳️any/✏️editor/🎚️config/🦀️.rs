@@ -155,10 +155,13 @@ pub struct Puzzle3dRuntime {
     pub selectable_kinds: Puzzle3dSelectableKinds,
     #[value(default)]
     pub engagement_input: String,
-    /// 🖱️ How a viewport drag sweeps a selection: `PUZZLE3D_SELECTION_METHOD_PICK` (a click picks,
-    /// a drag sweeps an axis-aligned rectangle), `…_RECTANGLE` or `…_LASSO`. Ephemeral per-window
-    /// command-line state — the engagement bar's `rectangle`/`lasso` verbs set it, `engagementAbort`
-    /// resets it, and `world_selection_json` hands it to `World3dHost.selection.method`.
+    /// 🖱️ How a viewport drag sweeps a selection: `PUZZLE3D_SELECTION_METHOD_PICK` (the default — a
+    /// click picks, a drag sweeps an axis-aligned rectangle), `…_RECTANGLE` or `…_LASSO`, exactly the
+    /// three the app's own `SelectionSpec` declares. Projected from [`Puzzle3dWindowConfig`], not from
+    /// window transient scratch: the engagement bar's `pick`/`rectangle`/`lasso` verbs set it and it
+    /// then OUTLIVES the activation that set it — `engagementAbort` deliberately leaves it alone, so
+    /// pressing Escape never silently puts the marquee back to a shape the user did not ask for.
+    /// `world_selection_json` hands it to `World3dHost.selection.method`.
     #[value(default = "default_selection_method")]
     pub selection_method: String,
     #[value(default = "default_proximity_radius")]
@@ -192,6 +195,8 @@ pub struct Puzzle3dRuntime {
     /// below) so a freshly-loaded document still engages its one window.
     #[value(default = "default_window_ids")]
     pub window_ids: Vec<String>,
+    #[value(default)]
+    pub panel_pages: HashMap<String, u32>,
 }
 
 impl Default for Puzzle3dRuntime {
@@ -225,6 +230,7 @@ impl Default for Puzzle3dRuntime {
             camera: Puzzle3dCamera::default(),
             active_tool_id: None,
             window_ids: default_window_ids(),
+            panel_pages: HashMap::new(),
         }
     }
 }

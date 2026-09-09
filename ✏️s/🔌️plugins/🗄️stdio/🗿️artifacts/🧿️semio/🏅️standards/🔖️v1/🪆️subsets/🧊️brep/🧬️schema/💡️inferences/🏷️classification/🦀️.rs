@@ -56,6 +56,20 @@ pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result
     Ok(point_in_face_uv_status(body, face, uv, tol)? == UvStatus::Inside)
 }
 
+/// 🏷️ `true` when `uv` lies in the CLOSURE of the face trim — inside, or on the trim boundary
+/// itself. The difference from [`point_in_face_uv`] is not cosmetic for anything that clips a
+/// curve to a face: a sphere's POLE is on its own `v = ±π/2` boundary, a periodic surface's SEAM is
+/// the ring's own edge, and an intersection curve that runs exactly ALONG an operand's boundary is
+/// on it at every sample — under the open test all three read as outside, so a clip built on it
+/// stops one sample short of a pole, never reaches a seam, and fragments a coincident arc into
+/// borderline runs. Membership of the closure is what "this parameter is still on the face" means;
+/// deciding which SIDE of a shared boundary something belongs to is a different question, answered
+/// by the open test.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn point_in_face_uv_closure(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+    Ok(point_in_face_uv_status(body, face, uv, tol)? != UvStatus::Outside)
+}
+
 /// 🏷️ Trim status of `uv` against `face`'s outer-minus-inner loops — `OnBoundary` propagates from
 /// either the outer ring or any hole ring, since a point on a hole's rim is exactly as ambiguous
 /// as one on the outer rim.

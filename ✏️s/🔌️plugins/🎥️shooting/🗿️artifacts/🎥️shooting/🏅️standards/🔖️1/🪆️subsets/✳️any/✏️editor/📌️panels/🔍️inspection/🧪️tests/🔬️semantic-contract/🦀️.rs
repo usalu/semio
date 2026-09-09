@@ -35,8 +35,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
         }
     }
     for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("3D surface") };
-        let scene: semio_framework_plugin::World3dScene = semio_framework_ui_scene::decode(props).expect("packed scene");
+        let scene: semio_framework_plugin::World3dScene = semio_framework_plugin::testkit::built_surface_scene(&node).expect("assembled scene");
         let frame: serde_json::Value = serde_json::from_str(scene.frame_json.as_deref().expect("active frame")).expect("independent frame oracle");
         assert_eq!(frame, vectors["frame"]);
         project(node);

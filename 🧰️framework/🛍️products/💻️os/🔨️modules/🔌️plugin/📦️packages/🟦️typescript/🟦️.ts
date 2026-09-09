@@ -407,6 +407,10 @@ self.addEventListener("message", async (event) => {
       case "stepJob":
         reply(requestId, await actor.api.stepJob(msg.job, msg.budget));
         break;
+      case "cancelJob":
+        await actor.api.cancelJob(msg.job);
+        reply(requestId, undefined);
+        break;
       case "takeSegmentedDownloadChunk": {
         if (!Number.isSafeInteger(msg.instanceId) || msg.instanceId < 0 || typeof msg.operationId !== "bigint" || msg.operationId <= 0n || msg.operationId > ((1n << 64n) - 1n)) throw new Error("segmented-download-authority-invalid");
         const chunk = await actor.api.takeSegmentedDownloadChunk(msg.instanceId, msg.operationId);
@@ -542,6 +546,17 @@ function lifecycleEvent(kind, payload, activationGeneration) {
   return kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload });
 }
 
+// 🧩️ \`jobs::job-step\` reaches the worker as jco's raw \`{tag, val}\` variant; \`ShardJobStep\`
+// (\`📮️shard-client/🟦️.ts\`) is the \`{status, ...}\` shape every caller declares. Converting here — the
+// one place that owns the guest boundary — keeps that declaration honest instead of leaving the two
+// shapes silently different, which is what they were while nothing on this target ever stepped a job.
+function normalizeJobStep(step) {
+  if (step?.tag === "running") return { status: "running", progress: unwrapOption(step.val) };
+  if (step?.tag === "done") return { status: "done", value: step.val };
+  if (step?.tag === "failed") return { status: "failed", value: step.val };
+  throw new Error(\`unknown job-step shape: \${JSON.stringify(step)}\`);
+}
+
 function lifecycleReceipt(raw, activationGeneration) {
   const value = unwrapOption(raw);
   if (value === undefined || value === null) return undefined;
@@ -586,7 +601,7 @@ export async function createActorApi(actorId, activationGeneration) {
       return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
-    stepJob: async (job, budget) => jobs.stepJob(job, budget),
+    stepJob: async (job, budget) => normalizeJobStep(await jobs.stepJob(job, budget)),
     cancelJob: async (job) => jobs.cancelJob(job),
     takeSegmentedDownloadChunk: async (instanceId, operationId) => jobs.takeSegmentedDownloadChunk(instanceId, operationId),
     checkpoint: async () => checkpoint.checkpoint(),

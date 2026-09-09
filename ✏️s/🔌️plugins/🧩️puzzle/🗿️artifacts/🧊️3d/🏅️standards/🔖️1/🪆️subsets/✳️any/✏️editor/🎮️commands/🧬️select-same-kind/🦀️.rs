@@ -11,7 +11,11 @@ use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
 /// nothing to widen from (no selected object, or one with no kind), exactly as the pre-migration early
 /// `return` did.
 pub fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
-    let Some(first_id) = ctx.selected_object_ids().first().cloned() else {
+    let selected = ctx.selected_object_ids();
+    if ctx.refuse_without_selection(&selected) {
+        return;
+    }
+    let Some(first_id) = selected.first().cloned() else {
         ctx.abort = true;
         return;
     };

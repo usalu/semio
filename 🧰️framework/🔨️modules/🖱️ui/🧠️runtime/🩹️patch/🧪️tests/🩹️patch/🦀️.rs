@@ -33,6 +33,7 @@ fn close_published(owner: &mut SurfaceReconcilePublishedPatch, grant: usize) -> 
 
 #[test]
 fn retained_patch_handoff_keeps_exact_slots_until_preflight_and_acknowledgment() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let mut source = ready();
     let mut payload = ui_contract::UiPendingPatch::default();
     let mut published = None;
@@ -62,6 +63,7 @@ fn retained_patch_handoff_keeps_exact_slots_until_preflight_and_acknowledgment()
 
 #[test]
 fn retained_patch_handoff_close_respects_all_grants_and_contended_exact_credit() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for grant in fixture()["grants"].as_array().unwrap() { let mut owner = ready(); assert_eq!(close_ready(&mut owner, grant.as_u64().unwrap() as usize), 4); }
     let mut source = ready();
     let mut payload = ui_contract::UiPendingPatch::default();
@@ -88,6 +90,7 @@ fn retained_patch_handoff_close_respects_all_grants_and_contended_exact_credit()
 }
 #[test]
 fn retained_patch_handoff_unwind_preserves_structural_payload_and_exact_authority() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     for frontier in fixture()["unwindFrontiers"].as_array().unwrap() {
         let mut source = ready();
         let pointer = source.patch.get().unwrap().ops.get(0).unwrap() as *const _;

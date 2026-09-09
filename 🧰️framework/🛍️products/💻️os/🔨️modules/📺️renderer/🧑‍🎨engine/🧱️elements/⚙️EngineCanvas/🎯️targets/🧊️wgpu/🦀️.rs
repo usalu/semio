@@ -39,8 +39,6 @@ struct NodeGraphSyncCache {
     fixture_json: Option<String>,
     selection: Option<Vec<String>>,
     preview_off_json: Option<String>,
-    catalogue_json: Option<String>,
-    operators: Option<Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord>>,
     computing_json: Option<String>,
     status_json: Option<String>,
     eval_json: Option<String>,
@@ -433,8 +431,6 @@ impl EngineSurfaceRetirement {
             || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(|id| id.pop().is_some()))
             || cache.selection.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_string(&mut cache.preview_off_json)
-            || Self::close_string(&mut cache.catalogue_json)
-            || cache.operators.as_mut().is_some_and(|operators| operators.pop().is_some())
             || Self::close_string(&mut cache.computing_json)
             || Self::close_string(&mut cache.status_json)
             || Self::close_string(&mut cache.eval_json)
@@ -445,7 +441,6 @@ impl EngineSurfaceRetirement {
             return false;
         }
         cache.selection = None;
-        cache.operators = None;
         true
     }
 
@@ -1416,8 +1411,6 @@ fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
     cache.fixture_json.is_none()
         && cache.selection.is_none()
         && cache.preview_off_json.is_none()
-        && cache.catalogue_json.is_none()
-        && cache.operators.is_none()
         && cache.computing_json.is_none()
         && cache.status_json.is_none()
         && cache.eval_json.is_none()

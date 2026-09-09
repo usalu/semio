@@ -16,6 +16,8 @@ use std::mem::size_of;
 use std::sync::{LazyLock, Mutex};
 
 pub const UI_TEXT_MAX_BYTES: usize = 512;
+/// ✂️ Suffix [`UiText::clipped`] appends when a value exceeds [`UI_TEXT_MAX_BYTES`].
+pub const UI_TEXT_CLIP_MARK: &str = "…";
 pub const UI_FIXED_LIST_ITEMS: usize = 32;
 pub const UI_FIXED_BYTES: usize = 32 * 1_024;
 pub const UI_VALUE_PAGE_ITEMS: usize = 1;
@@ -126,6 +128,26 @@ impl UiText {
         let mut text = Self::default();
         text.write_fmt(arguments).ok()?;
         Some(text)
+    }
+
+    /// ✂️ Display copy that must never fail admission: the whole value when it fits, otherwise the
+    /// longest char-boundary prefix leaving room for [`UI_TEXT_CLIP_MARK`], which is appended so a
+    /// reader sees the text was clipped. Use it only for descriptions and summaries whose full text
+    /// stays reachable elsewhere (e.g. the history view), never for identifiers or values.
+    pub fn clipped(value: &str) -> Self {
+        if let Some(text) = Self::try_from_str(value) {
+            return text;
+        }
+        let budget = UI_TEXT_MAX_BYTES - UI_TEXT_CLIP_MARK.len();
+        let mut end = budget;
+        while !value.is_char_boundary(end) {
+            end -= 1;
+        }
+        let mut text = Self::default();
+        text.bytes[..end].copy_from_slice(&value.as_bytes()[..end]);
+        text.bytes[end..end + UI_TEXT_CLIP_MARK.len()].copy_from_slice(UI_TEXT_CLIP_MARK.as_bytes());
+        text.len = (end + UI_TEXT_CLIP_MARK.len()) as u16;
+        text
     }
 }
 

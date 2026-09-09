@@ -1,7 +1,10 @@
 //! 🧪️ Actual-grant session byte retirement, final cache ownership, and strict lifecycle guards.
 
 use super::*;
-use crate::dag::{DagCamera, DagHostRetirement, IoPortSpec};
+use crate::dag::DagHostRetirement;
+// 🧬️ `DagCamera`/`IoPortSpec` are the dag ARTIFACT crate's own records; `crate::dag` glob-imports them
+// privately, so they are named at their source rather than through that re-export.
+use semio_framework_artifact_infinite_dag::{DagCamera, IoPortSpec};
 
 //#region 🧪️SessionRetirement
 fn close(mut session: FlowEvalSession, maximum_bytes: usize) -> usize {
@@ -37,7 +40,7 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
         session.eval_json = String::with_capacity(fixture.get("text").and_then(|v| v.get("reservedCapacity")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
         session.eval_json.push_str(&text);
         assert!(session.eval_json.capacity() > session.eval_json.len());
-        session.preview_mesh_json_by_handle.insert("mesh".into(), preview.clone());
+        session.preview_mesh_pack_by_handle.insert("mesh".into(), preview.clone());
         session.pending_tessellate_by_hash.insert(1, "pending".into());
         session.live_geometry_handles.insert("geometry".into());
         session.previous_channels = Some(EvalChannels { outputs: BTreeMap::from([("output".into(), Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(preview))))]), inputs: BTreeMap::new() });

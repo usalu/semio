@@ -95,7 +95,6 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &F
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     let scene = NodeGraphScene {
         editable: Some(true),
-        operators: flow_extras.operators,
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
         fixture_json: flow_extras.fixture_json.or(fixture_json),

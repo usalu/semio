@@ -267,12 +267,39 @@ pub fn generation3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 pub type Generation3dEnvelope = ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>;
 pub type Generation3dStore = ArtifactStore<Generation3dSnapshot, Generation3dMutation>;
 
-//#region 🔖️Apply
-/// 🎬️ Fallible in-place `vcs::apply_mutation` boundary.
-pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+//#region 🧊️Retirement
+impl Generation3dMutation {
+    /// 🧊️ Explicit cold-only disposal of one owned mutation. `create-widget`/`update-widget` carry a
+    /// whole `Widget`, and a `Neuron`/`OutputPreview`/`Cluster` widget owns a `neural::Dictionary`
+    /// (and an `OrderedSet`/`Tree`) that FAIL-CLOSE on a bare drop
+    /// (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`), so a dropped mutation aborts the process. Every other
+    /// variant is strings, numbers and plain `DslValue`s, which drop freely
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn retire_cold(self) {
+        match self {
+            Self::CreateWidget(create_widget::CreateWidget { widget, .. }) | Self::UpdateWidget(update_widget::UpdateWidget { widget }) => widget.retire_cold(),
+            _ => {}
+        }
+    }
+}
+//#endregion 🧊️Retirement
 
-    *projection = next;
+//#region 🔖️Apply
+/// 🎬️ Fallible in-place `vcs::apply_mutation` boundary. A diff builder that REJECTED the mutation
+/// answers `MutationOutcome::{error,fatal}`, whose diff side is forced to `Default` (LAW 1,
+/// `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:1061-1069`) — applying that empty delta
+/// would return the unchanged base as implicit success, exactly what [`protocol::MutationDiff`]'s
+/// own contract forbids. The rejection is raised here instead, so a caller's `Ok` is a real witness
+/// that the mutation landed.
+pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> protocol::MutationApplyResult<()> {
+    let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+    if let Some(rejection) = messages.iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+        delta.retire_cold();
+        return Err(protocol::MutationApplyError { code: rejection.code.0.clone(), message: rejection.message.clone(), target: rejection.target.clone() });
+    }
+    let applied = protocol::MutationDiff::apply(&delta, &*projection);
+    delta.retire_cold();
+    std::mem::replace(projection, applied?).retire_cold();
     Ok(())
 }
 

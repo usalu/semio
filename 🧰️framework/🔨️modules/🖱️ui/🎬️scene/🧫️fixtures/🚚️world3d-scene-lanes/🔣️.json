@@ -1,0 +1,73 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the world-3d scene lane carrier. Rust pins World3dSceneLane / WORLD3D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🎬️scenes.rs) against it; TypeScript pins WORLD3D_SCENE_LANES / world3dSceneFromLanes (🧰️framework/🔨️modules/🔺️mesh/🟦️.ts) against it. Neither side may drift.",
+  "schema": "world-3d@1",
+  "laneKeyPrefix": "framework.scene.world3d.",
+  "spineFields": ["snapshot", "cameraJson", "domainId", "domainGranularityId", "lanes"],
+  "carrier": {
+    "leafBytes": 512,
+    "childrenMax": 32,
+    "docBytesMax": 32768,
+    "hash": "fnv1a64-hex",
+    "measuredFaultBytes": 57281,
+    "$comment": "measuredFaultBytes is the world-3d payload that refused admission at scene-surface.encode against the docBytesMax ceiling (Nakagin Capsule Tower, browser build #25, 2026-09-10). Both language halves size their Nakagin-scale law against THIS number so neither can drift below the fault it exists to reproduce."
+  },
+  "lanes": [
+    { "lane": "meshes", "field": "meshesJson", "bodyKey": "framework.scene.world3d.meshes", "optional": false },
+    { "lane": "instances", "field": "instancesJson", "bodyKey": "framework.scene.world3d.instances", "optional": false },
+    { "lane": "selection", "field": "selectionJson", "bodyKey": "framework.scene.world3d.selection", "optional": false },
+    { "lane": "vortices", "field": "vorticesJson", "bodyKey": "framework.scene.world3d.vortices", "optional": true },
+    { "lane": "attractions", "field": "attractionsJson", "bodyKey": "framework.scene.world3d.attractions", "optional": true },
+    { "lane": "targetVolumes", "field": "targetVolumesJson", "bodyKey": "framework.scene.world3d.targetVolumes", "optional": true },
+    { "lane": "references", "field": "referencesJson", "bodyKey": "framework.scene.world3d.references", "optional": true },
+    { "lane": "brushPreview", "field": "brushPreviewJson", "bodyKey": "framework.scene.world3d.brushPreview", "optional": true },
+    { "lane": "interaction", "field": "interactionJson", "bodyKey": "framework.scene.world3d.interaction", "optional": true },
+    { "lane": "engagementPreview", "field": "engagementPreviewJson", "bodyKey": "framework.scene.world3d.engagementPreview", "optional": true },
+    { "lane": "lod", "field": "lodJson", "bodyKey": "framework.scene.world3d.lod", "optional": true },
+    { "lane": "chunking", "field": "chunkingJson", "bodyKey": "framework.scene.world3d.chunking", "optional": true },
+    { "lane": "environment", "field": "environmentJson", "bodyKey": "framework.scene.world3d.environment", "optional": true },
+    { "lane": "frame", "field": "frameJson", "bodyKey": "framework.scene.world3d.frame", "optional": true },
+    { "lane": "fit", "field": "fitJson", "bodyKey": "framework.scene.world3d.fit", "optional": true },
+    { "lane": "terrain", "field": "terrainJson", "bodyKey": "framework.scene.world3d.terrain", "optional": true },
+    { "lane": "points", "field": "pointsJson", "bodyKey": "framework.scene.world3d.points", "optional": true },
+    { "lane": "status", "field": "statusJson", "bodyKey": "framework.scene.world3d.status", "optional": true }
+  ],
+  "roundTrip": {
+    "$comment": "An assembled scene, the lane payloads it splits into, and the spine that stays inside the surface doc. Rust asserts split(assembled) == (spine, laneTexts) and merge(spine, laneTexts) == assembled; TypeScript asserts world3dSceneFromLanes(spine, laneTexts) == assembled. An optional lane that is unset (vortices, interaction, ...) publishes no carrier at all and appears in neither laneTexts nor spine.lanes.",
+    "assembled": {
+      "cameraJson": "{\"position\":[4,4,4],\"target\":[0,0,0]}",
+      "meshesJson": "[{\"id\":\"box\",\"kind\":\"box\"}]",
+      "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}]",
+      "selectionJson": "{\"method\":\"rectangle\",\"mode\":\"replace\",\"ids\":[],\"hoveredId\":null}",
+      "lodJson": "{\"maxInstances\":8000}",
+      "domainId": "puzzle3d"
+    },
+    "laneTexts": {
+      "framework.scene.world3d.meshes": "[{\"id\":\"box\",\"kind\":\"box\"}]",
+      "framework.scene.world3d.instances": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0],\"rotation\":[0,0,0,1],\"scale\":[1,1,1]}]",
+      "framework.scene.world3d.selection": "{\"method\":\"rectangle\",\"mode\":\"replace\",\"ids\":[],\"hoveredId\":null}",
+      "framework.scene.world3d.lod": "{\"maxInstances\":8000}"
+    },
+    "spine": {
+      "cameraJson": "{\"position\":[4,4,4],\"target\":[0,0,0]}",
+      "meshesJson": "",
+      "instancesJson": "",
+      "selectionJson": "",
+      "domainId": "puzzle3d",
+      "lanes": [
+        { "lane": "meshes", "bytes": 27, "hash": "ad3bbe71837e640e" },
+        { "lane": "instances", "bytes": 83, "hash": "da3c0da2dcd4bc4d" },
+        { "lane": "selection", "bytes": 65, "hash": "91935f1ca2f12add" },
+        { "lane": "lod", "bytes": 21, "hash": "6f17a197d81f9c25" }
+      ]
+    }
+  },
+  "paging": {
+    "$comment": "Law (c): a single lane larger than leafBytes × childrenMax must PAGE rather than fault. Both sides build the payload as `unit` repeated `repeat` times and assert the carrier shape. leafDepth is measured from the lane root: 1 means leaves are direct children of the root, 2 means one page level in between.",
+    "lane": "instances",
+    "unit": "0123456789",
+    "repeat": 2600,
+    "payloadBytes": 26000,
+    "expectedLeaves": 51,
+    "expectedLeafDepth": 2
+  }
+}

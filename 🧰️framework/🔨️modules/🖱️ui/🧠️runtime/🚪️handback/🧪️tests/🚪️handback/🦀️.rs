@@ -35,6 +35,7 @@ fn holder() -> (mpsc::Sender<()>, Arc<AtomicBool>, std::thread::JoinHandle<()>) 
 
 #[test]
 fn retained_handback_maintenance_entry_does_not_wait_for_registry() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let key = queued();
     let (release, released, thread) = holder();
     let _ = close_surface_reconcile_handback_one();
@@ -48,6 +49,7 @@ fn retained_handback_maintenance_entry_does_not_wait_for_registry() {
 
 #[test]
 fn retained_handback_take_entry_does_not_wait_for_registry() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let key = queued();
     let (release, released, thread) = holder();
     let found = take_surface_reconcile_terminal(key);
@@ -62,6 +64,7 @@ fn retained_handback_take_entry_does_not_wait_for_registry() {
 
 #[test]
 fn retained_handback_poison_is_fault_without_mutating_queued_owner() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let key = queued();
     let poisoned = std::thread::spawn(|| { let _guard = SURFACE_RECONCILE_HANDBACKS.lock().unwrap(); panic!("fixture registry poison"); });
     assert!(poisoned.join().is_err());

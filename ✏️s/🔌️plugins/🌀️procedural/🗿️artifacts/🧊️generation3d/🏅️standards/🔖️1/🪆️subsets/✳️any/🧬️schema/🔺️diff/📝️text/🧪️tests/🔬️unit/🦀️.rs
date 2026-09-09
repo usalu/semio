@@ -1,10 +1,10 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot;
+use crate::standards::v1::subsets::any::schema::default_generation3d_snapshot;
 
 #[test]
 fn diff_absorb_prefers_incoming_fixture_and_preserves_generation() {
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧲️absorb/🔣️.json")).unwrap();
-    let base = empty_generation3d_snapshot();
+    let base = default_generation3d_snapshot();
     let mut first_fixture = base.fixture.clone();
     first_fixture.camera = pack::from_json_str(&oracle["firstCamera"].to_string()).unwrap();
     let mut incoming = base.fixture.clone();

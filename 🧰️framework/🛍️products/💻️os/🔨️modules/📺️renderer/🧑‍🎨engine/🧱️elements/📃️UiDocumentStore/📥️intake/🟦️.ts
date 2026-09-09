@@ -19,6 +19,8 @@ export class OwnedUiPatchIntake {
   #patch: OwnedUiInstancePatch | null = null;
   #phase: Phase = "lookup";
   #ordinal = 0;
+  #stall = 0;
+  #stallPhase: Phase | null = null;
   #closing = false;
   #closed = false;
   #failure: string | null = null;
@@ -39,6 +41,7 @@ export class OwnedUiPatchIntake {
   advance(grant: NumericIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "intake"); if (this.#closing || this.#failure) return step("rejected", "intake");
     try {
+      return this.#step((() => {
       switch (this.#phase) {
         case "lookup": {
           const source = this.#source!.value; this.#lookup = this.#owner!.beginSurfaceLookup(source.activation, source.lifetime, source.surface);
@@ -77,7 +80,17 @@ export class OwnedUiPatchIntake {
         }
         case "ready": return step("ready", "intake-ready");
       }
+      })());
     } catch (error) { this.#failure = error instanceof Error ? error.message : "Native intake failed"; return step("rejected", "intake", 4096); }
+  }
+
+  #step(result: RetainedUiWireStep): RetainedUiWireStep {
+    const progressed = result.kind !== "pending" || result.bytes > 0 || result.items > 0 || this.#phase !== this.#stallPhase;
+    if (progressed) { this.#stall = 0; this.#stallPhase = this.#phase; return result; }
+    this.#stall += 1;
+    if (this.#stall < 32) return result;
+    this.#failure = `Native intake made no progress in phase ${this.#phase}`;
+    return step("rejected", "intake-zero-progress");
   }
   //#endregion ▶️Advance
 
@@ -106,3 +119,48 @@ export class OwnedUiPatchIntake {
   //#endregion ♻️Retirement
 }
 //#endregion 📥️ExactPatchIntake
+
+//#region 📏️IntakeBudget
+/** 📏️ Walks a wire patch (and any nested lane tree hiding behind a one-op upsert) without a depth
+ * cap — a shallow ops walk measured Nakagin as one small op and exhausted 36 864 steps mid-decode. */
+export function measureRetainedUiPatchBytes(value: unknown): number {
+  let bytes = 0;
+  const seen = new Set<unknown>();
+  const walk = (item: unknown): void => {
+    if (item == null) return;
+    if (typeof item === "string") { bytes += item.length; return; }
+    if (typeof item === "number" || typeof item === "boolean" || typeof item === "bigint") { bytes += 8; return; }
+    if (item instanceof ArrayBuffer) { bytes += item.byteLength; return; }
+    if (ArrayBuffer.isView(item)) { bytes += item.byteLength; return; }
+    if (typeof item !== "object") return;
+    if (seen.has(item)) return;
+    seen.add(item);
+    if (Array.isArray(item)) { for (const child of item) walk(child); return; }
+    for (const child of Object.values(item as Record<string, unknown>)) walk(child);
+  };
+  walk(value);
+  return bytes;
+}
+
+/** 📏️ Steps the native intake may take for one surface patch. Nested lane carriers are invisible to a
+ * shallow ops walk, so the budget floors at 64 KiB of credited payload (× 8 phases) above the 4096
+ * continuation base — enough for a Nakagin-scale (57 KiB) world-3d tree even when `ops.length === 1`. */
+export function pluginUiIntakeBudget(patch: { readonly ops?: readonly unknown[] }): number {
+  const bytes = measureRetainedUiPatchBytes(patch.ops ?? []);
+  const ops = patch.ops?.length ?? 0;
+  return 4_096 + Math.max(bytes, ops * 4_096, 65_536) * 8;
+}
+//#endregion 📏️IntakeBudget
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("paged scene-lane intake budget", () => {
+    it("credits a one-op nested lane tree enough steps to finish a 57 KiB payload", () => {
+      const nested = { tag: "upsert", val: { node: { children: [{ text: "x".repeat(20_000) }, { text: "y".repeat(20_000) }, { text: "z".repeat(20_000) }] } } };
+      const shallow = { ops: [{ tag: "upsert", val: { node: { id: 1 } } }] };
+      expect(pluginUiIntakeBudget(shallow)).toBeGreaterThan(36_864);
+      expect(pluginUiIntakeBudget({ ops: [nested] })).toBeGreaterThan(57_281 * 8);
+      expect(measureRetainedUiPatchBytes([nested])).toBeGreaterThan(57_281);
+    });
+  });
+}

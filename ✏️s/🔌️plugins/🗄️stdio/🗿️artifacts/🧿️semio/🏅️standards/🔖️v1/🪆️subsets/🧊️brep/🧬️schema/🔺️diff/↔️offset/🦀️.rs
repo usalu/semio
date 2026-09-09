@@ -25,7 +25,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::surface::{IsoDirectio
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3, Mat3};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
@@ -256,12 +256,43 @@ pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRec
     if loops.is_empty() {
         return Err(KernelError::InvalidInput("face has no loops".into()));
     }
+    // The offset face's boundary has to live ON the offset surface, so every boundary vertex and
+    // edge is rebuilt through the point map that carries the original support onto the offset one
+    // ([`offset_point_map`]) rather than shared with the original face. Sharing them — what this
+    // used to do — produced a face whose surface had moved but whose rim had not: `thicken_face`
+    // then ruled each side between an edge and ITSELF, so all four sides were degenerate,
+    // zero-area, and the thickened box measured a volume of exactly 0.
+    let map = offset_point_map(&surface, &new_surface).ok_or_else(|| KernelError::Operation(format!("offset_face: no exact boundary map from {surface:?} to its offset")))?;
+    let mut moved_vertices: HashMap<VertexId, VertexId> = HashMap::new();
+    let mut moved_edges: HashMap<EdgeId, EdgeId> = HashMap::new();
+    for lp in &loops {
+        for cid in body.loop_coedges(*lp) {
+            let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?.clone();
+            if moved_edges.contains_key(&coedge.edge) {
+                continue;
+            }
+            let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?.clone();
+            let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?.clone();
+            let moved = curve.transformed(&map);
+            for vertex in [edge.v0, edge.v1] {
+                if !moved_vertices.contains_key(&vertex) {
+                    let position = map.apply_point(body.vertices.get(vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {vertex}")))?.position);
+                    let tol_v = body.vertices.get(vertex).unwrap().tol;
+                    let created = make_vertex(body, position, tol_v, rec);
+                    moved_vertices.insert(vertex, created);
+                }
+            }
+            let curve_id = body.curves3.insert(moved);
+            let created = make_edge_entry(body, curve_id, edge.range, moved_vertices[&edge.v0], moved_vertices[&edge.v1], edge.tol, rec);
+            moved_edges.insert(coedge.edge, created);
+        }
+    }
     let mut member_lists: Vec<Vec<(EdgeId, bool)>> = Vec::new();
     for lp in &loops {
         let mut members = Vec::new();
         for cid in body.loop_coedges(*lp) {
             let c = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-            members.push((c.edge, c.forward));
+            members.push((moved_edges[&c.edge], c.forward));
         }
         member_lists.push(members);
     }
@@ -273,19 +304,42 @@ pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRec
         body.faces.get_mut(new_face).unwrap().inners.push(lp);
     }
     let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-    for lp in &loops {
-        for cid in body.loop_coedges(*lp) {
-            let c = body.coedges.get(cid).unwrap();
-            if edge_geom.contains_key(&c.edge) {
-                continue;
-            }
-            let e = body.edges.get(c.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", c.edge)))?;
-            let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", e.curve)))?.clone();
-            edge_geom.insert(c.edge, (curve, e.range));
-        }
+    for &moved in moved_edges.values() {
+        let e = body.edges.get(moved).ok_or_else(|| KernelError::MissingEntity(format!("edge {moved:?}")))?;
+        let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", e.curve)))?.clone();
+        edge_geom.insert(moved, (curve, e.range));
     }
     set_face_pcurves(body, new_face, &new_surface, &edge_geom, OFFSET_TOL);
     Ok(new_face)
+}
+
+/// ↔️ The point map that carries a surface onto its own offset, when that map is a genuine affine
+/// one — which it is for every analytic support this kernel builds:
+///
+/// * `Plane` — a translation along the normal;
+/// * `Sphere` — a uniform scale about the centre (`(r + d) / r`);
+/// * `Cylinder` — a scale about the AXIS: `(r + d) / r` across it, identity along it, which is
+///   affine but not a similarity;
+/// * `Cone` — a translation of the apex along the axis (the half-angle is unchanged).
+///
+/// A `Torus`'s tube offset is not affine (the map depends on the meridian angle) and neither is a
+/// general `Nurbs` offset, so those return `None` and [`offset_face`] reports rather than guessing:
+/// the whole point of rebuilding the boundary is that it lands exactly on the offset surface.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn offset_point_map(old: &Surface, new: &Surface) -> Option<Affine3> {
+    let scale_about = |origin: Pnt3, linear: Mat3| Affine3 { linear, translation: origin.to_vec() - linear.transform(origin.to_vec()) };
+    match (old, new) {
+        (Surface::Plane { frame: a }, Surface::Plane { frame: b }) => Some(Affine3 { linear: Mat3::IDENTITY, translation: b.origin - a.origin }),
+        (Surface::Cone { frame: a, .. }, Surface::Cone { frame: b, .. }) => Some(Affine3 { linear: Mat3::IDENTITY, translation: b.origin - a.origin }),
+        (Surface::Sphere { frame: a, radius: ra }, Surface::Sphere { radius: rb, .. }) if ra.abs() > 1e-15 => Some(scale_about(a.origin, Mat3::IDENTITY.scaled(rb / ra))),
+        (Surface::Cylinder { frame: a, radius: ra }, Surface::Cylinder { radius: rb, .. }) if ra.abs() > 1e-15 => {
+            let k = rb / ra;
+            let rotation = Mat3::from_columns(a.x, a.y, a.z);
+            let linear = rotation.mul(&Mat3::from_diagonal(Vec3::new(k, k, 1.0))).mul(&rotation.transpose());
+            Some(scale_about(a.origin, linear))
+        }
+        _ => None,
+    }
 }
 
 /// ↔️ Sets `pcurve`/`prange` on every coedge of `face`'s loops from `edge_geom` (keyed by the
@@ -377,8 +431,68 @@ fn exact_pcurve_for_line_on_cylinder(surface: &Surface, curve: &Curve3) -> Optio
 /// see [`exact_pcurve_for_circle_on_plane`], [`exact_pcurve_for_circle_on_cylinder`] and
 /// [`exact_pcurve_for_line_on_cylinder`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn exact_pcurve(surface: &Surface, curve: &Curve3) -> Option<Curve2> {
-    exact_pcurve_for_circle_on_plane(surface, curve).or_else(|| exact_pcurve_for_circle_on_cylinder(surface, curve)).or_else(|| exact_pcurve_for_line_on_cylinder(surface, curve))
+pub(crate) fn exact_pcurve(surface: &Surface, curve: &Curve3, range: (f64, f64)) -> Option<Curve2> {
+    exact_pcurve_for_circle_on_plane(surface, curve)
+        .or_else(|| exact_pcurve_for_circle_on_cylinder(surface, curve))
+        .or_else(|| exact_pcurve_for_line_on_cylinder(surface, curve))
+        .or_else(|| exact_pcurve_on_ruled_boundary(surface, curve, range))
+}
+
+/// ↔️ The exact p-curve of a boundary that is an ISO-LINE of its own NURBS patch — which every
+/// boundary of a ruled/lofted/blend patch is, since those patches are built ALONG their boundaries.
+///
+/// The image is then a straight line in `(u, v)`: one coordinate constant, the other affine in the
+/// edge's own parameter. Without this, every such boundary went through `Surface::project_curve`'s
+/// general fit — which, on a NURBS support, inverts each of up to 1025 samples with a `1e-9`
+/// Bézier-subdivision `closest_uv` and re-interpolates the lot, once per doubling, per edge, per
+/// face: measured in MINUTES for a four-sided planar thicken whose whole answer is four straight
+/// lines. Every candidate is VERIFIED against the real curve before it is returned, so a boundary
+/// whose own parameter is NOT affine in the patch's (a circular rail, whose `to_nurbs` parameter is
+/// a Möbius map of angle rather than angle itself) correctly falls through to the fit.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn exact_pcurve_on_ruled_boundary(surface: &Surface, curve: &Curve3, range: (f64, f64)) -> Option<Curve2> {
+    let Surface::Nurbs { u_knots, v_knots, .. } = surface else { return None };
+    let ((u_lo, u_hi), (v_lo, v_hi)) = (u_knots.domain(), v_knots.domain());
+    let span = range.1 - range.0;
+    if !(span.abs() > 1e-15) {
+        return None;
+    }
+    let deviation = |candidate: &Curve2| {
+        (0..=12)
+            .map(|i| {
+                let t = range.0 + span * f64::from(i) / 12.0;
+                let uv = candidate.eval(t);
+                surface.eval(uv.x, uv.y).distance(curve.eval(t))
+            })
+            .fold(0.0f64, f64::max)
+    };
+    let along = |konst: f64, (lo, hi): (f64, f64), swept_is_u: bool| {
+        let rate = (hi - lo) / span;
+        let base = lo - rate * range.0;
+        if swept_is_u {
+            Curve2::Line { origin: Pnt2::new(base, konst), dir: Vec2::new(rate, 0.0) }
+        } else {
+            Curve2::Line { origin: Pnt2::new(konst, base), dir: Vec2::new(0.0, rate) }
+        }
+    };
+    let forward = (u_lo, u_hi);
+    let backward = (u_hi, u_lo);
+    let up = (v_lo, v_hi);
+    let down = (v_hi, v_lo);
+    [
+        Curve2::Line { origin: Pnt2::new(0.0, v_lo), dir: Vec2::new(1.0, 0.0) },
+        Curve2::Line { origin: Pnt2::new(0.0, v_hi), dir: Vec2::new(1.0, 0.0) },
+        along(v_lo, forward, true),
+        along(v_hi, forward, true),
+        along(v_lo, backward, true),
+        along(v_hi, backward, true),
+        along(u_lo, up, false),
+        along(u_hi, up, false),
+        along(u_lo, down, false),
+        along(u_hi, down, false),
+    ]
+    .into_iter()
+    .find(|candidate| deviation(candidate) <= 1e-9)
 }
 
 pub(crate) fn set_face_pcurves(body: &mut Body, face: FaceId, surface: &Surface, edge_geom: &HashMap<EdgeId, (Curve3, (f64, f64))>, tol: f64) {
@@ -392,7 +506,7 @@ pub(crate) fn set_face_pcurves(body: &mut Body, face: FaceId, surface: &Surface,
         for cid in body.loop_coedges(lp) {
             let edge = body.coedges.get(cid).unwrap().edge;
             let Some((curve, range)) = edge_geom.get(&edge) else { continue };
-            let pcurve = exact_pcurve(surface, curve).unwrap_or_else(|| surface.project_curve(curve, *range, tol));
+            let pcurve = exact_pcurve(surface, curve, *range).unwrap_or_else(|| surface.project_curve(curve, *range, tol));
             let pcurve_id = body.curves2.insert(pcurve);
             let c = body.coedges.get_mut(cid).unwrap();
             c.pcurve = Some(pcurve_id);
@@ -700,10 +814,16 @@ where
     let mut edge_new: HashMap<EdgeId, (EdgeId, Curve3, (f64, f64))> = HashMap::new();
     for &e in &edges {
         let faces_here = edge_unique_faces(body, &solid_faces, e);
-        if !faces_here.iter().any(|f| new_surface_map.contains_key(f)) {
+        let edge_ent = body.edges.get(e).ok_or_else(|| KernelError::MissingEntity("edge".into()))?.clone();
+        // An edge whose own two faces are both untouched still has to be rebuilt when one of its
+        // ENDS moved: the vertex it used to stop at no longer exists on this solid. Skipping those
+        // (what this used to do) left the far edges of a drafted box still ending at the ORIGINAL
+        // corner while the drafted face ended at the new one — ten vertices where a box has eight —
+        // so the result was neither the old shape nor the new one and its volume landed between the
+        // two (measured 0.9324 where the trapezoid is 0.8986).
+        if !faces_here.iter().any(|f| new_surface_map.contains_key(f)) && !(vertex_new.contains_key(&edge_ent.v0) || vertex_new.contains_key(&edge_ent.v1)) {
             continue;
         }
-        let edge_ent = body.edges.get(e).ok_or_else(|| KernelError::MissingEntity("edge".into()))?.clone();
         let orig_curve = body.curves3.get(edge_ent.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?.clone();
         let is_degenerate = edge_ent.v0 == edge_ent.v1 && matches!(&orig_curve, Curve3::Line { dir, .. } if dir.norm() < 1e-12);
         let nv0 = vertex_new.get(&edge_ent.v0).copied().unwrap_or(edge_ent.v0);
@@ -741,8 +861,8 @@ where
             // `scale` verbatim (silently wrong the moment a cap moves, confirmed by a direct debug
             // run: a rebuilt offset cylinder's seam spanned its OLD z-range, not the new one).
             let iso = ns.isocurve(dir, konst);
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().ok_or_else(|| KernelError::Operation("offset/draft: vertex not repositioned".into()))?;
-            let v1_target = vertex_pos.get(&edge_ent.v1).copied().ok_or_else(|| KernelError::Operation("offset/draft: vertex not repositioned".into()))?;
+            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
+            let v1_target = vertex_pos.get(&edge_ent.v1).copied().unwrap_or(body.vertices.get(edge_ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
             let search_domain = if matches!(iso, Curve3::Line { .. }) { (-1.0e6, 1.0e6) } else { iso.domain() };
             let t0 = closest_parameter(&iso, search_domain, v0_target, tol).t;
             let t1 = closest_parameter(&iso, search_domain, v1_target, tol).t;
@@ -791,12 +911,12 @@ where
         // boundary polygon there, corrupting the sampled area/volume (confirmed directly: with
         // `t0 = domain.0` verbatim the rebuilt cylinder's lateral area came out ~15% too high).
         let (t0, t1) = if edge_ent.v0 == edge_ent.v1 {
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().ok_or_else(|| KernelError::Operation("offset/draft: vertex not repositioned".into()))?;
+            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
             let t0 = closest_parameter(&new_curve, domain, v0_target, tol).t;
             (t0, t0 + (domain.1 - domain.0))
         } else {
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().ok_or_else(|| KernelError::Operation("offset/draft: vertex not repositioned".into()))?;
-            let v1_target = vertex_pos.get(&edge_ent.v1).copied().ok_or_else(|| KernelError::Operation("offset/draft: vertex not repositioned".into()))?;
+            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
+            let v1_target = vertex_pos.get(&edge_ent.v1).copied().unwrap_or(body.vertices.get(edge_ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
             (closest_parameter(&new_curve, domain, v0_target, tol).t, closest_parameter(&new_curve, domain, v1_target, tol).t)
         };
         let cid = body.curves3.insert(new_curve.clone());
@@ -1015,7 +1135,11 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
         return Err(KernelError::InvalidInput("thicken distance must be non-zero".into()));
     }
     let cap1 = offset_face(body, face, distance, rec)?;
-    if let Some(fd) = body.faces.get_mut(cap1) {
+    // The solid grows along the ORIGINAL face's outward normal, so the offset cap already faces
+    // outward and it is the original that now faces INTO the new material. Reversing the far cap
+    // instead (what this used to do) left both caps pointing the same way: the two contributions
+    // then cancelled instead of adding, and a 2 × 1 × 0.5 thickened quad measured 1/3 of its volume.
+    if let Some(fd) = body.faces.get_mut(face) {
         fd.flipped = !fd.flipped;
     }
     let sides = build_ruled_sides(body, face, cap1, OFFSET_TOL, rec)?;
@@ -1081,17 +1205,26 @@ pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f
             return Err(KernelError::MissingEntity("open face is not on the solid".into()));
         }
     }
+    // An OPEN face is not a wall: the cavity runs right up to it, so its own surface stays put and
+    // only trims the inner faces that meet it. Offsetting it like every other face (what this used
+    // to do) pulled the cavity's roof `thickness` below the opening — a 2³ box shelled at 0.2 with
+    // its top open came out with a 1.6-tall cavity instead of 1.8, and a slanted ruled rim instead
+    // of the flat frame the opening actually is.
     let mut new_surface_map = HashMap::new();
     for &f in &solid_faces {
         let fd = body.faces.get(f).unwrap().clone();
         let s = body.surfaces.get(fd.surface).unwrap().clone();
         let signed = if fd.flipped { -distance } else { distance };
-        new_surface_map.insert(f, offset_surface(&s, signed, tol)?);
+        new_surface_map.insert(f, if open_set.contains(&f) { s } else { offset_surface(&s, signed, tol)? });
     }
     let materialize: HashSet<FaceId> = solid_faces.difference(&open_set).copied().collect();
+    // Each touched face contributes its OWN final plane — displaced by `distance` for a wall, not
+    // displaced at all for an opening — so a rim corner lands on the opening's own surface instead
+    // of being dragged inward along its normal with the rest.
     let vertex_target = |b: &Body, v: VertexId, touched: &[(FaceId, Vec3)]| -> Pnt3 {
-        let normals: Vec<Vec3> = touched.iter().map(|&(_, n)| n).collect();
-        b.vertices.get(v).unwrap().position + solve_vertex_displacement(&normals, distance)
+        let base = b.vertices.get(v).unwrap().position;
+        let planes: Vec<(Vec3, f64)> = touched.iter().map(|&(f, n)| (n, n.dot(base.to_vec()) + if open_set.contains(&f) { 0.0 } else { distance })).collect();
+        solve_plane_point(&planes).unwrap_or_else(|| base + solve_vertex_displacement(&touched.iter().map(|&(_, n)| n).collect::<Vec<_>>(), distance))
     };
     let edge_target = |b: &Body, e: EdgeId, n: Vec3| -> Pnt3 {
         let edge = b.edges.get(e).unwrap();

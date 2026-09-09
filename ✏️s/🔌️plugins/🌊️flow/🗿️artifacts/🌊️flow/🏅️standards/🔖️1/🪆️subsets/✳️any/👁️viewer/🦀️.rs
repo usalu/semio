@@ -37,6 +37,14 @@ impl protocol::OpBinary for FlowViewCommand {
 pub struct FlowViewer;
 
 impl ArtifactViewer for FlowViewer {
+    /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
+    /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
+    /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+    fn app_catalogue_json() -> String {
+        flow::flow_app_catalogue_json()
+    }
+
     type Snapshot = FlowSnapshot;
     type Mutation = FlowMutation;
     type Config = NoConfig;

@@ -1,5 +1,4 @@
 {
-  "ChangeSchema": {
-    "newSchema": "flow.fixture.solid"
-  }
+  "mutation": "changeSchema",
+  "newSchema": "flow.fixture.solid"
 }

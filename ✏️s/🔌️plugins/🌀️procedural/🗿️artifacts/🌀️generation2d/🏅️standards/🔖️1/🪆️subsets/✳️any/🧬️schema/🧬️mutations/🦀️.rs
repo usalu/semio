@@ -168,9 +168,10 @@ pub type Generation2dStore = ArtifactStore<Generation2dSnapshot, Generation2dMut
 /// 🧬️ Applies a mutation to a projection — generic over every variant, so it never needs edits
 /// when the semantic vocabulary grows.
 pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-
-    *projection = next;
+    let (delta, _messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+    let applied = protocol::MutationDiff::apply(&delta, &*projection);
+    delta.retire_cold();
+    std::mem::replace(projection, applied?).retire_cold();
     Ok(())
 }
 

@@ -58,9 +58,10 @@ import {
   type PluginContextMenuSurfaceTarget,
   type PresencePeer,
   type UiComponentSceneNode,
+  type AppCatalogue,
 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { openSurfaceContextMenu, parseSceneJsonField, useAppCatalogue, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask, type FlowWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -1840,20 +1841,38 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
   else if (scene.computingJson) observeFlowTask(session, "setComputingProgress", session.setComputingProgress(scene.computingJson));
 }
 
+/** 🔌️ The operator kind infos a flow session lays node ports out from: the app-static registered
+ * catalogue first, then whatever DOCUMENT-derived records this particular scene carries (the OS
+ * workflow window derives one per workflow node). `setNeuronKindInfosJson` replaces the session's whole
+ * table, so the two sources are always pushed together, never one after the other. */
+function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
+  const infos = [...(catalogue.operators ?? []), ...(scene.operators ?? [])];
+  if (infos.length === 0) return;
+  observeFlowTask(session, "setNeuronKindInfosJson", session.setNeuronKindInfosJson(JSON.stringify(infos)));
+}
+
+/** 🛍️ Installs the app-static catalogue on a flow session: the operator kind infos the canvas lays
+ * ports out from, and the palette sections its spotlight ranks. Its own pass, run once per app instance
+ * rather than per scene sync — see {@link AppCatalogueContext}. */
+function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
+  syncFlowOperatorInfos(session, catalogue, scene);
+  if (catalogue.sections) observeFlowTask(session, "setCatalogueJson", session.setCatalogueJson(JSON.stringify(catalogue.sections)));
+}
+
 function syncFlowSessionStructureFromScene(
   session: FlowWasmSession,
   scene: NodeGraphScene,
+  catalogue: AppCatalogue,
   applyCamera: boolean,
   skipFixture = false,
 ): void {
-  if (scene.operators) observeFlowTask(session, "setNeuronKindInfosJson", session.setNeuronKindInfosJson(JSON.stringify(scene.operators)));
+  if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
   if (!skipFixture && scene.fixtureJson) {
     observeFlowTask(session, "synchronizeDocumentJson", session.synchronizeDocumentJson(scene.fixtureJson));
   }
   if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
-  if (scene.catalogueJson != null) observeFlowTask(session, "setCatalogueJson", session.setCatalogueJson(scene.catalogueJson));
   if (scene.lodJson) {
     try {
       const lod = parseSceneJsonField<{ readonly automatic?: boolean; readonly forcedLabel?: string }>(scene.lodJson);
@@ -1868,8 +1887,8 @@ function syncFlowSessionStructureFromScene(
   observeFlowTask(session, "setCamera", session.setCamera(viewport.x, viewport.y, viewport.zoom));
 }
 
-function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
-  syncFlowSessionStructureFromScene(session, scene, applyCamera);
+function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, applyCamera: boolean): void {
+  syncFlowSessionStructureFromScene(session, scene, catalogue, applyCamera);
   // 🧵️ Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
   // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
   // immediately wiped by this call on the same sync pass.
@@ -1919,6 +1938,10 @@ export function FlowGraphCanvasHost({
   const overlayRequestRef = useRef(0);
   const [spotlight, setSpotlight] = useState<FlowSpotlightState | null>(null);
   const [spotlightSections, setSpotlightSections] = useState<readonly FlowCatalogueSection[]>([]);
+  const appCatalogue = useAppCatalogue();
+  // Always holds the latest app catalogue without forcing the scene-sync effects to depend on it.
+  const appCatalogueRef = useRef(appCatalogue);
+  appCatalogueRef.current = appCatalogue;
   const pickTargetsRef = useRef<readonly CanvasPickTarget[]>([]);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
   // Always holds the latest `scene` without forcing effects to depend on (and re-run per) it.
@@ -2030,7 +2053,7 @@ export function FlowGraphCanvasHost({
     schedulerRef.current?.invalidate();
     const session = sessionRef.current;
     if (session) {
-      syncFlowSessionStructureFromScene(session, sceneRef.current, false, true);
+      syncFlowSessionStructureFromScene(session, sceneRef.current, appCatalogueRef.current, false, true);
       renderFlow();
       paintOverlays();
     }
@@ -2099,7 +2122,7 @@ export function FlowGraphCanvasHost({
       .then(() => {
         if (cancelled) return;
         surfaceReadyRef.current = true;
-        syncFlowSessionFromScene(session, sceneRef.current, true);
+        syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current, true);
         syncFlowCanvasTheme(session);
         const resize = () => {
           const next = container.getBoundingClientRect();
@@ -2145,7 +2168,7 @@ export function FlowGraphCanvasHost({
     // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. Full resync waits for
     // `handleGesturePointerUp`.
     if (!isGestureActiveRef.current) {
-      syncFlowSessionFromScene(session, scene, false);
+      syncFlowSessionFromScene(session, scene, appCatalogueRef.current, false);
     }
     renderFlow();
     paintOverlays();
@@ -2373,6 +2396,15 @@ export function FlowGraphCanvasHost({
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
 
+  // 🛍️ The app-static catalogue is installed on its own pass, not with every scene sync: it changes
+  // only when the app instance (or the installed operator extensions) changes, while a scene resyncs on
+  // every fixture edit. See `AppCatalogueContext`.
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !sessionReady) return;
+    syncFlowSessionAppCatalogue(session, appCatalogue, sceneRef.current);
+  }, [appCatalogue, sessionReady]);
+
   useEffect(() => {
     if (!spotlight || !sessionReady) {
       setSpotlightSections([]);
@@ -2380,13 +2412,14 @@ export function FlowGraphCanvasHost({
     }
     const session = sessionRef.current;
     if (!session) {
-      setSpotlightSections(parseFlowCatalogueSections(scene.catalogueJson));
+      setSpotlightSections((appCatalogue.sections ?? []) as readonly FlowCatalogueSection[]);
       return;
     }
     return observeFlowTask(session, "catalogueJson:spotlight", session.catalogueJson(), (value) => {
-      setSpotlightSections(parseFlowCatalogueSections(flowJsonText(value)));
+      const sections = parseFlowCatalogueSections(flowJsonText(value));
+      setSpotlightSections(sections.length > 0 ? sections : ((appCatalogue.sections ?? []) as readonly FlowCatalogueSection[]));
     });
-  }, [scene.catalogueJson, sessionReady, spotlight]);
+  }, [appCatalogue, sessionReady, spotlight]);
 
   return (
     <div

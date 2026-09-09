@@ -1938,6 +1938,10 @@ mod extension_guest {
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
     const EXTENSION_ID: &str = "brep";
     const EXTENSION_LABEL: &str = "Brep";
+    /// ⏱️ Face/edge units one `tessellate` round trip spends before yielding. Sized so a single
+    /// step stays well inside the interactive `maintenance_step` ceiling (a step > 8 ms faults the
+    /// instance) while still converging the bundled toy examples in one or two round trips.
+    const TESSELLATE_STEP_BUDGET: usize = 24;
 
     fn bundle() -> ExtensionBundle {
         let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
@@ -1950,11 +1954,21 @@ mod extension_guest {
         let bundle = bundle.handler("evaluate", |req| {
             evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
         });
-        bundle.handler("tessellate", |req| {
+        let bundle = bundle.handler("tessellate", |req| {
             let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
             let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
             let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
-            Ok(flow_extension_sdk::brep_geometry::tessellate_geometry_json_for_wasm(handle, tolerance).into_bytes())
+            let budget = request.get("budget").and_then(pack::json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
+            let chunk = request.get("chunk").and_then(pack::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
+            Ok(flow_extension_sdk::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, chunk).into_bytes())
+        });
+        bundle.handler("tessellateCancel", |req| {
+            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
+            let retired = match (request.get("handle").and_then(pack::json::Value::as_str), request.get("tolerance").and_then(pack::json::Value::as_f64)) {
+                (Some(handle), Some(tolerance)) => usize::from(flow_extension_sdk::brep_geometry::cancel_tessellation(handle, tolerance)),
+                _ => flow_extension_sdk::brep_geometry::cancel_all_tessellations(),
+            };
+            Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
         })
     }
 

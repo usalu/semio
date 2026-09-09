@@ -592,7 +592,9 @@ export type {
   GisMapInferencePortEventV1,
   GisMapInferencePortPhaseV1,
   GisMapInferencePortStatusV1,
+  GisMapInferencePreviewOverlayV1,
   GisMapInferencePreviewV1,
+  GisMapInferencePortAffordancesV1,
   GisMapInferenceProgressV1,
   GisMapInferenceProposalStateV1,
 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
@@ -607,8 +609,10 @@ export {
   GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
   GIS_MAP_INFERENCE_SERVICE_ID,
   gisMapInferenceCodeFromStatusV1,
+  gisMapInferencePortAffordancesV1,
   gisMapInferencePortRoleV1,
   gisMapInferencePortTerminalV1,
+  projectGisMapInferencePreviewOverlayV1,
   idleGisMapInferencePortStatusV1,
   parseGisMapInferenceApprovalReceiptV1,
   parseGisMapApprovalUndoReceiptV1,
@@ -2238,6 +2242,159 @@ export function decodeScenePackValue(bytes: Uint8Array): unknown {
 }
 //#endregion 🔖️ScenePackCodec
 
+//#region 🔖️MeshPackCodec
+/**
+ * 🧊️ Field ids of the brep preview mesh `pack` record body — the exact ids
+ * `semio-framework-os-flow`'s `mesh_pack_spec` declares. Every array rides as one little-endian
+ * `Bytes64` blob, so decoding is a typed-array view over the payload rather than a JSON parse of a
+ * number-per-element array.
+ */
+const MESH_PACK_FIELD = {
+  positions: 1,
+  normals: 2,
+  indices: 3,
+  colors: 4,
+  uvs: 5,
+  faceIds: 6,
+  vertexIds: 7,
+  edgePositions: 8,
+  edgeIds: 9,
+  edgeUvs: 10,
+  edgeIsSeam: 11,
+  paintTextureBase64: 12,
+} as const;
+
+const MESH_PACK_TAG_ABSENT = 0x00;
+const MESH_PACK_TAG_STR = 0x06;
+const MESH_PACK_TAG_STR_INLINE = 0x07;
+const MESH_PACK_TAG_BYTES = 0x08;
+
+/** @emoji 🧊️ One decoded preview mesh — typed arrays, ready for a GPU buffer upload with no copy. */
+export type MeshPack = {
+  readonly positions: Float32Array;
+  readonly normals: Float32Array;
+  readonly colors: Float32Array;
+  readonly indices: Uint32Array;
+  readonly uvs: Float32Array;
+  readonly faceIds: Uint32Array;
+  readonly vertexIds: Uint32Array;
+  readonly edgePositions: Float32Array;
+  readonly edgeIds: Uint32Array;
+  readonly edgeUvs: Float32Array;
+  readonly edgeIsSeam: Uint8Array;
+  readonly paintTextureBase64?: string;
+};
+
+function readMeshPackVarint(bytes: Uint8Array, position: { value: number }): number {
+  let result = 0n;
+  for (let shift = 0n; shift < 70n; shift += 7n) {
+    const byte = bytes[position.value];
+    if (byte === undefined) throw new Error("decodeMeshPackBody: truncated varint");
+    position.value += 1;
+    result |= BigInt(byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) {
+      const value = Number(result);
+      if (!Number.isSafeInteger(value)) throw new Error("decodeMeshPackBody: varint exceeds JavaScript's safe integer range");
+      return value;
+    }
+  }
+  throw new Error("decodeMeshPackBody: varint exceeds u64");
+}
+
+function readMeshPackBytes(bytes: Uint8Array, position: { value: number }): Uint8Array {
+  const length = readMeshPackVarint(bytes, position);
+  if (length > bytes.length - position.value) throw new Error("decodeMeshPackBody: declared length exceeds remaining bytes");
+  const slice = bytes.slice(position.value, position.value + length);
+  position.value += length;
+  return slice;
+}
+
+function meshPackFloats(blob: Uint8Array | undefined): Float32Array {
+  if (blob === undefined) return new Float32Array(0);
+  if (blob.byteLength % 4 !== 0) throw new Error("decodeMeshPackBody: f32 blob length is not a multiple of 4");
+  const view = new DataView(blob.buffer, blob.byteOffset, blob.byteLength);
+  const out = new Float32Array(blob.byteLength / 4);
+  for (let index = 0; index < out.length; index += 1) out[index] = view.getFloat32(index * 4, true);
+  return out;
+}
+
+function meshPackUints(blob: Uint8Array | undefined): Uint32Array {
+  if (blob === undefined) return new Uint32Array(0);
+  if (blob.byteLength % 4 !== 0) throw new Error("decodeMeshPackBody: u32 blob length is not a multiple of 4");
+  const view = new DataView(blob.buffer, blob.byteOffset, blob.byteLength);
+  const out = new Uint32Array(blob.byteLength / 4);
+  for (let index = 0; index < out.length; index += 1) out[index] = view.getUint32(index * 4, true);
+  return out;
+}
+
+/**
+ * 🧊️ Decodes the container-less `pack` record body `encode_mesh_pack` emits (symbol table, field
+ * count, then `(field id, tag, payload)` triples). The TypeScript half of the cross-language mesh
+ * wire — the Rust encoder and this decoder are pinned to one another by the shared golden fixture
+ * `🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json`.
+ */
+export function decodeMeshPackBody(bytes: Uint8Array): MeshPack {
+  const position = { value: 0 };
+  const symbolCount = readMeshPackVarint(bytes, position);
+  const symbols: string[] = [];
+  for (let index = 0; index < symbolCount; index += 1) symbols.push(new TextDecoder("utf-8", { fatal: true }).decode(readMeshPackBytes(bytes, position)));
+  const fieldCount = readMeshPackVarint(bytes, position);
+  const blobs = new Map<number, Uint8Array>();
+  let paintTextureBase64: string | undefined;
+  for (let index = 0; index < fieldCount; index += 1) {
+    const fieldId = readMeshPackVarint(bytes, position);
+    const tag = bytes[position.value];
+    if (tag === undefined) throw new Error("decodeMeshPackBody: truncated field value");
+    position.value += 1;
+    if (tag === MESH_PACK_TAG_ABSENT) continue;
+    if (tag === MESH_PACK_TAG_BYTES) {
+      blobs.set(fieldId, readMeshPackBytes(bytes, position));
+      continue;
+    }
+    if (tag === MESH_PACK_TAG_STR) {
+      const symbol = symbols[readMeshPackVarint(bytes, position)];
+      if (symbol === undefined) throw new Error("decodeMeshPackBody: symref out of range");
+      if (fieldId === MESH_PACK_FIELD.paintTextureBase64) paintTextureBase64 = symbol;
+      continue;
+    }
+    if (tag === MESH_PACK_TAG_STR_INLINE) {
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(readMeshPackBytes(bytes, position));
+      if (fieldId === MESH_PACK_FIELD.paintTextureBase64) paintTextureBase64 = text;
+      continue;
+    }
+    throw new Error(`decodeMeshPackBody: unexpected tag 0x${tag.toString(16)} for field ${fieldId}`);
+  }
+  if (position.value !== bytes.length) throw new Error(`decodeMeshPackBody: ${bytes.length - position.value} trailing bytes`);
+  const mesh: MeshPack = {
+    positions: meshPackFloats(blobs.get(MESH_PACK_FIELD.positions)),
+    normals: meshPackFloats(blobs.get(MESH_PACK_FIELD.normals)),
+    colors: meshPackFloats(blobs.get(MESH_PACK_FIELD.colors)),
+    indices: meshPackUints(blobs.get(MESH_PACK_FIELD.indices)),
+    uvs: meshPackFloats(blobs.get(MESH_PACK_FIELD.uvs)),
+    faceIds: meshPackUints(blobs.get(MESH_PACK_FIELD.faceIds)),
+    vertexIds: meshPackUints(blobs.get(MESH_PACK_FIELD.vertexIds)),
+    edgePositions: meshPackFloats(blobs.get(MESH_PACK_FIELD.edgePositions)),
+    edgeIds: meshPackUints(blobs.get(MESH_PACK_FIELD.edgeIds)),
+    edgeUvs: meshPackFloats(blobs.get(MESH_PACK_FIELD.edgeUvs)),
+    edgeIsSeam: blobs.get(MESH_PACK_FIELD.edgeIsSeam) ?? new Uint8Array(0),
+  };
+  return paintTextureBase64 === undefined ? mesh : { ...mesh, paintTextureBase64 };
+}
+
+/** @emoji 🧱️ Reassembles the base64 chunks one tessellate round trip streams and decodes them. */
+export function decodeMeshPackChunks(chunks: readonly string[]): MeshPack {
+  const binary = atob(chunks.join(""));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return decodeMeshPackBody(bytes);
+}
+
+if (import.meta.vitest) {
+  const { registerTests5 } = await import("./🧪️tests/🧊️mesh-pack-decode/🟦️.ts");
+  await registerTests5(import.meta.vitest, { decodeMeshPackBody, decodeMeshPackChunks }, { directory: import.meta.dir, url: import.meta.url });
+}
+//#endregion 🔖️MeshPackCodec
+
 //#region 🔖️AppChannelCodec
 /**
  * 📡️ TS mirror of the `protocol_channel` crate's `AppCommand`/`AppFrame` binary frame protocol
@@ -2366,7 +2523,25 @@ export type AppFrameValue =
    * `semio_framework::kernel`, never redefined here). CHANNEL_VERSION 12 wire addition. */
   | { readonly UiPatch: { readonly in_reply_to: number | null; readonly surface: string; readonly kind: string; readonly revision: number; readonly base_revision: number; readonly ops: readonly number[] } }
   /** 🏁️ Marks the end of one surface's initial full-body snapshot burst. CHANNEL_VERSION 12 wire addition. */
-  | { readonly UiSnapshotEnd: { readonly revision: number } };
+  | { readonly UiSnapshotEnd: { readonly revision: number } }
+  /** 🏁️ One mounted typed operation reached its terminal result — unsolicited, correlated by
+   * `operation` (the host-allocated operation id) rather than by an `in_reply_to` sequence, because
+   * the command that started it returned its "started" `Invocation` long before the retained job
+   * finished. `ui_scope`/`history_patch` are `store::pack_rt::encode_wire_value`-encoded exactly like
+   * `Invocation`'s same-named fields. CHANNEL_VERSION 15 wire addition. */
+  | { readonly OperationCompleted: { readonly operation: number; readonly revision: number; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } };
+
+/** 🏁️ One typed operation's terminal completion, decoded from `AppFrame::OperationCompleted`.
+ * `uiScope` is the operation's final `kernel::UiDirtyScope` and `historyPatch` its command-log delta,
+ * both already projected onto exact JSON through {@link decodePackWire} (so `entry.seq` is a number,
+ * never a `{kind, value}` integer carrier); `undefined` when the host published neither. */
+export type OperationCompletionV1 = Readonly<{
+  instanceId: number;
+  operation: number;
+  revision: number;
+  uiScope: unknown;
+  historyPatch: unknown;
+}>;
 
 export const INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 4_096 * 64;
 //#endregion 🔖️Types
@@ -2442,7 +2617,7 @@ const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
-  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24,
+  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -2887,6 +3062,12 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   } else if ("UiSnapshotEnd" in frame) {
     out.push(APP_FRAME_TAGS.UiSnapshotEnd);
     writeVarintU64(out, frame.UiSnapshotEnd.revision);
+  } else if ("OperationCompleted" in frame) {
+    out.push(APP_FRAME_TAGS.OperationCompleted);
+    writeVarintU64(out, frame.OperationCompleted.operation);
+    writeVarintU64(out, frame.OperationCompleted.revision);
+    writeBytes(out, frame.OperationCompleted.ui_scope);
+    writeBytes(out, frame.OperationCompleted.history_patch);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -3013,6 +3194,13 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     }
     case APP_FRAME_TAGS.UiSnapshotEnd:
       return { UiSnapshotEnd: { revision: readVarintU64(bytes, pos) } };
+    case APP_FRAME_TAGS.OperationCompleted: {
+      const operation = readVarintU64(bytes, pos);
+      const revision = readVarintU64(bytes, pos);
+      const ui_scope = readBytes(bytes, pos);
+      const history_patch = readBytes(bytes, pos);
+      return { OperationCompleted: { operation, revision, ui_scope, history_patch } };
+    }
     case APP_FRAME_TAGS.LocalInteractionQuery: {
       const length = readVarintU64(bytes, pos);
       if (length > 4256 || pos[0] + length !== bytes.length) throw new Error("local-interaction.reply-envelope");
@@ -3197,6 +3385,7 @@ export class AppChannelRequestSequence {
  */
 export class AppChannelClient {
   private localQuery: LocalInteractionClientQuery | null = null;
+  private readonly completionListeners = new Set<(completion: OperationCompletionV1) => void>();
   private disposed = false;
   private readonly handle: AppChannelHandle;
   private readonly instanceId: number;
@@ -3259,6 +3448,7 @@ export class AppChannelClient {
       const ordinary: AppFrameValue[] = [];
       for (const frame of frames) {
         if ("LocalInteractionQuery" in frame) this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
+        else if ("OperationCompleted" in frame) this.publishOperationCompletion(frame.OperationCompleted);
         else ordinary.push(frame);
       }
       const correlated = new Set(ordinary.flatMap((frame) => { const sequence = appChannelReplySequence(frame); return sequence === null ? [] : [sequence]; }));
@@ -3274,11 +3464,38 @@ export class AppChannelClient {
     }
   }
 
+  /** 🏁️ Subscribes to this instance's unsolicited typed-operation completions. A mounted operation
+   * finishes turns after the command that started it already resolved, so its terminal
+   * `AppFrame::OperationCompleted` matches no pending waiter and would otherwise be dropped — this is
+   * the ONLY delivery path for it. Returns the unsubscribe. */
+  onOperationCompleted(listener: (completion: OperationCompletionV1) => void): () => void {
+    this.completionListeners.add(listener);
+    return () => this.completionListeners.delete(listener);
+  }
+
+  /** 🏁️ Decodes one completion frame's pack-encoded carriers and fans it out to every subscriber.
+   * A throwing subscriber never starves its siblings nor the outcome pump. */
+  private publishOperationCompletion(frame: Extract<AppFrameValue, { readonly OperationCompleted: unknown }>["OperationCompleted"]): void {
+    if (this.disposed || this.completionListeners.size === 0) return;
+    const completion: OperationCompletionV1 = {
+      instanceId: this.instanceId,
+      operation: frame.operation,
+      revision: frame.revision,
+      uiScope: frame.ui_scope.length ? decodePackWire(new Uint8Array(frame.ui_scope), "$.uiScope") : undefined,
+      historyPatch: frame.history_patch.length ? decodePackWire(new Uint8Array(frame.history_patch), "$.historyPatch") : undefined,
+    };
+    for (const listener of [...this.completionListeners]) {
+      try { listener(completion); }
+      catch (error) { console.error("[DEBUG] operation completion subscriber failed", error); }
+    }
+  }
+
   /** 🔌️ Ends this client's background {@link pumpOutcomes} subscription — call once from
    * `destroyApp` (`PluginRuntime/🟦️.tsx`) so a torn-down instance doesn't leak a live
    * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
   dispose(): void {
     this.disposed = true;
+    this.completionListeners.clear();
     this.cachedPack = null;
     this.cachedSpr = null;
     for (let index = this.pending.length - 1; index >= 0; index -= 1) {

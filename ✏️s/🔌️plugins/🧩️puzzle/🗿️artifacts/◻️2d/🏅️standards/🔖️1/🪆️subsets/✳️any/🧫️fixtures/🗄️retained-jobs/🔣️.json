@@ -64,7 +64,7 @@
     "outputBytes": 262144,
     "stepMicros": 7500,
     "semanticUnitsPerGrant": 1,
-    "checkpointBytes": 112
+    "checkpointBytes": 120
   },
   "semanticCursors": {
     "addNode": [
@@ -471,26 +471,26 @@
     },
     {
       "id": "checkpointMax",
-      "checkpointBytes": 112,
+      "checkpointBytes": 120,
       "control": "checkpointRestoreResumeAckClose",
       "expected": "sameSemanticDigestTerminalEmpty"
     },
     {
       "id": "checkpointMaxPlusOne",
-      "checkpointBytes": 113,
+      "checkpointBytes": 121,
       "control": "restoreCheckpoint",
       "expected": "rejectedExactHandback"
     },
     {
       "id": "checkpointCorrupt",
-      "checkpointBytes": 112,
+      "checkpointBytes": 120,
       "mutation": "magic",
       "control": "restoreCheckpoint",
       "expected": "rejectedExactHandback"
     },
     {
       "id": "checkpointInterruptedClose",
-      "checkpointBytes": 112,
+      "checkpointBytes": 120,
       "boundary": "workProgress",
       "closeGrant": {
         "items": 1,

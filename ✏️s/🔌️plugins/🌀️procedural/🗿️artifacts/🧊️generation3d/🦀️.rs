@@ -159,6 +159,22 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🔬️flow-operators/🦀️.rs"]
+pub(crate) mod flow_operators;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
+pub(crate) mod store_fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️brep-extension/🦀️.rs"]
+pub(crate) mod brep_extension;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
+pub(crate) mod publication_authority;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
@@ -686,10 +702,10 @@ pub mod editor {
             pub mod flow_eval_tick;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
             pub mod flow_tessellate_resolve;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-preview-eval/🦀️.rs"]
+            pub mod cancel_preview_eval;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs"]
             pub mod generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️graph-pointer-down/🦀️.rs"]
-            pub mod graph_pointer_down;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-media-node/🦀️.rs"]
             pub mod move_media_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"]
@@ -732,8 +748,6 @@ pub mod editor {
             pub mod translate_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs"]
             pub mod update_generation_values;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world-pointer-down/🦀️.rs"]
-            pub mod world_pointer_down;
         }
 
         #[path = "."]

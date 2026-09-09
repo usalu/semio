@@ -561,7 +561,7 @@ impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
 
 impl Drop for Generation3dReplayRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Generation3d replay displacement reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || (self.value.is_none()), "Generation3d replay displacement reached Drop before terminal-empty close");
     }
 }
 
@@ -715,7 +715,7 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
 impl Drop for Generation3dRetainedSnapshotRetirement {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d snapshot reached Drop before typed retirement");
+            assert!(std::thread::panicking() || (ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation3d snapshot reached Drop before typed retirement");
         }
     }
 }
@@ -757,7 +757,7 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetirement {
 impl Drop for Generation3dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d Arc snapshot reached Drop before retained close");
+            assert!(std::thread::panicking() || (ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation3d Arc snapshot reached Drop before retained close");
         }
     }
 }
@@ -792,7 +792,13 @@ impl ErasedSnapshotRetirement for Generation3dRetainedMutationRetirement {
         if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        drop(self.value.take());
+        // 🧹️ A `create-widget`/`update-widget` row owns a whole `Widget`, whose `Dictionary`/
+        // `OrderedSet` roots fail-close on a bare drop — the store's own edit-history retirement
+        // aborted the process on every neuron mutation until this routed through the mutation's
+        // declared cold disposal (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if let Some(mutation) = self.value.take() {
+            mutation.retire_cold();
+        }
         Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES })
     }
 
@@ -803,7 +809,7 @@ impl ErasedSnapshotRetirement for Generation3dRetainedMutationRetirement {
 
 impl Drop for Generation3dRetainedMutationRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "fresh Generation3d mutation retirement fail-closed with an impossible populated-history owner");
+        assert!(std::thread::panicking() || (self.value.is_none()), "fresh Generation3d mutation retirement fail-closed with an impossible populated-history owner");
     }
 }
 
@@ -1663,7 +1669,7 @@ impl Generation3dRetainedMutationOwner {
 
 impl Drop for Generation3dRetainedMutationOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d retained mutation owner reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation3d retained mutation owner reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -1838,8 +1844,11 @@ impl Generation3dMutationSession {
 }
 
 impl Drop for Generation3dMutationSession {
+    /// 🔒️ Fail-closed on a live drop, but never while the thread is already unwinding — a second
+    /// panic in a destructor during cleanup aborts the process instead of reporting the first
+    /// failure. Same guard `OrderedMap::drop` and the framework's retirement roots carry.
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d mutation session reached Drop before terminal-empty close");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "Generation3d mutation session reached Drop before terminal-empty close");
     }
 }
 
@@ -2044,7 +2053,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
 
 impl Drop for Generation3dPackSnapshotAuthority {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "Generation3d pack snapshot authority reached Drop before publication or bounded retirement");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Generation3d pack snapshot authority reached Drop before publication or bounded retirement");
     }
 }
 
@@ -2256,7 +2265,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
 
 impl Drop for Generation3dMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "Generation3d mutation authority reached Drop before publication or terminal-empty close");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Generation3d mutation authority reached Drop before publication or terminal-empty close");
     }
 }
 
@@ -2648,7 +2657,7 @@ impl Generation3dSnapshotCopyCursor {
 
 impl Drop for Generation3dSnapshotCopyCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Generation3d snapshot copy cursor reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation3d snapshot copy cursor reached Drop before handoff or terminal-empty close");
     }
 }
 
@@ -3389,7 +3398,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
 
 impl Drop for Generation3dStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "Generation3d initializer reached Drop before candidate handoff or terminal-empty close");
+        assert!(std::thread::panicking() || (self.terminal_is_empty_inner()), "Generation3d initializer reached Drop before candidate handoff or terminal-empty close");
     }
 }
 

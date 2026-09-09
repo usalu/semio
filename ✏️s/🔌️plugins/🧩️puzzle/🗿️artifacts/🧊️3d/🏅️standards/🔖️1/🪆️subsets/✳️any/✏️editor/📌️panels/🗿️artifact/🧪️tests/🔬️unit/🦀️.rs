@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, Puzzle3dLabels};
 use crate::editor::puzzle3d::{default_fixture, empty_fixture, with_puzzle3d_app, PUZZLE3D_DOCUMENT_TREE_BUILDS};
 
@@ -256,5 +257,100 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
         eprintln!("[DEBUG] outliner flag rows flagged={flagged} rows={rows:?}");
         drop(page);
     }
+    drain_retired_ui_owners();
+}
+
+/// 🔁️ The checklist's own QA, closed as a loop: hide an object through the outliner's inline row
+/// action, re-render, then UN-hide it through the SAME row — for `hidden` and for `locked`. The
+/// sibling law above pins one render's args; this one pins that feeding those args to the reducer the
+/// row names (`setSelectionFlag`'s explicit `{entity, ids}` path, i.e.
+/// [`apply_puzzle3d_selection_flag`]) and re-rendering yields the OPPOSITE request, so the second
+/// click undoes the first. With the old hardcoded `value: true` the row asked for `true` on both
+/// passes and the object could never come back.
+///
+/// [`apply_puzzle3d_selection_flag`]: crate::editor::puzzle3d::apply_puzzle3d_selection_flag
+#[test]
+fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
+    let _page = page_guard();
+    let native = labels_for(semio_framework_plugin::Terminology::Native);
+    let mut fixture = empty_fixture();
+    fixture.objects.push(crate::editor::puzzle3d::Puzzle3dObject {
+        id: "object-1".into(),
+        label: None,
+        object_kind: Some("Object".into()),
+        origin: [0.0, 0.0, 0.0],
+        orientation: None,
+        scale: None,
+        mesh_url: None,
+        vortices: Vec::new(),
+        hidden: false,
+        locked: false,
+        reveal_index: None,
+    });
+    let requested = |fixture: &crate::editor::puzzle3d::Puzzle3dFixture, flag: &str| {
+        drain_retired_ui_owners();
+        let page = super::render(fixture, native).expect("a one-row outliner page must be admitted");
+        let mut rows = Vec::new();
+        flag_bindings(&page, &mut rows);
+        let value = rows.iter().find(|(key, rendered, _)| key == "object-1" && rendered == flag).map(|(_, _, value)| *value).unwrap_or_else(|| panic!("the outliner row must offer a {flag} toggle: {rows:?}"));
+        drop(page);
+        value
+    };
+    let state = |fixture: &crate::editor::puzzle3d::Puzzle3dFixture, flag: &str| {
+        let object = fixture.objects.first().expect("the one object survives every flag write");
+        if flag == "locked" {
+            object.locked
+        } else {
+            object.hidden
+        }
+    };
+    for flag in ["hidden", "locked"] {
+        for expected in [true, false] {
+            let asked = requested(&fixture, flag);
+            assert_eq!(asked, expected, "the outliner's {flag} row must ask for {expected} while the object is {}", !expected);
+            crate::editor::puzzle3d::apply_puzzle3d_selection_flag(&mut fixture, "object", &["object-1".to_string()], flag, asked);
+            assert_eq!(state(&fixture, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
+            eprintln!("[DEBUG] outliner flag round trip flag={flag} asked={asked} state={}", state(&fixture, flag));
+        }
+    }
+    drain_retired_ui_owners();
+}
+
+/// 📄 Wave U: the objects-section `+N` row is a `setPanelPage` control. Page 1 starts at the next
+/// object; the last page drops the continuation.
+#[test]
+fn pressing_the_outliner_continuation_reveals_the_next_page() {
+    let _page = page_guard();
+    let native = labels_for(semio_framework_plugin::Terminology::Native);
+    let rows_per = super::SECTION_ROWS;
+    let objects = rows_per.saturating_mul(2).saturating_add(3);
+    let section = "puzzle3d-play-document.objects";
+    drain_retired_ui_owners();
+    let fixture = scaled_fixture(objects, 0);
+    let first = super::render_from(&fixture, native, &HashMap::new()).expect("page 0");
+    let mut rows = Vec::new();
+    walk(&first, &mut rows);
+    let more = rows.iter().find(|(key, _, bindings, _)| key.ends_with(".more") && key.contains("objects")).expect("page 0 must close the objects section with +N");
+    assert!(more.2 > 0, "the continuation row must carry setPanelPage, got bindings={}", more.2);
+    assert!(rows.iter().any(|(key, _, _, _)| key == "object-0"), "page 0 starts at object-0: {rows:?}");
+    assert!(!rows.iter().any(|(key, _, _, _)| key == format!("object-{rows_per}")), "page 0 must not already show the next-page head");
+    drop(first);
+    drain_retired_ui_owners();
+    let mut pages = HashMap::new();
+    pages.insert(section.to_string(), 1);
+    let second = super::render_from(&fixture, native, &pages).expect("page 1");
+    rows.clear();
+    walk(&second, &mut rows);
+    assert!(rows.iter().any(|(key, _, _, _)| key == format!("object-{rows_per}")), "page 1 must start at object-{rows_per}: {rows:?}");
+    assert!(!rows.iter().any(|(key, _, _, _)| key == "object-0"), "page 1 must not keep page 0's head");
+    drop(second);
+    drain_retired_ui_owners();
+    let last = (objects - 1) / rows_per;
+    pages.insert(section.to_string(), last as u32);
+    let tail = super::render_from(&fixture, native, &pages).expect("last page");
+    rows.clear();
+    walk(&tail, &mut rows);
+    assert_eq!(rows.iter().filter(|(key, _, _, _)| key.ends_with(".more") && key.contains("objects")).count(), 0, "the last objects page must drop +N: {rows:?}");
+    drop(tail);
     drain_retired_ui_owners();
 }

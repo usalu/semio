@@ -148,6 +148,23 @@ impl Surface {
         let d = self.derivatives(u, v);
         d.du.cross(d.dv).normalized()
     }
+    /// 🗺️ `true` where the parametrization COLLAPSES — a sphere's poles, a cone's apex — i.e. one
+    /// partial vanishes against the other and `(u, v)` no longer names a distinct point.
+    ///
+    /// Asking [`Self::normal`] instead (`is_none()`) answers a different question with an ABSOLUTE
+    /// threshold: `Vec3::normalized` rejects at `f64::EPSILON`, so a pole is detected on a unit
+    /// sphere (`|du × dv| ≈ 6e-17`) and MISSED on a radius-2.2 one (`≈ 3e-16`) — the same geometry,
+    /// decided by scale. Everything that has to know where a face's parametric boundary is
+    /// degenerate (UV boundary polygons, tessellation's pole fan) needs the scale-free test, since
+    /// a missed pole makes the two `u` branches meeting there collapse onto one and the face
+    /// measures zero area.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_degenerate_uv(&self, u: f64, v: f64) -> bool {
+        let d = self.derivatives(u, v);
+        let (du, dv) = (d.du.norm(), d.dv.norm());
+        let (lo, hi) = (du.min(dv), du.max(dv));
+        hi <= f64::EPSILON || lo <= 1e-9 * hi
+    }
     /// 🗺️ Gaussian curvature `K = (LN - M²) / (EG - F²)` and mean curvature `H = (EN - 2FM + GL) /
     /// (2(EG - F²))`, from the first fundamental form `(E, F, G)` and second `(L, M, N)`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

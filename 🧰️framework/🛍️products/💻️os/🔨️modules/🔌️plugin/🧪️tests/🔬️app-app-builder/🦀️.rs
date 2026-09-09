@@ -763,6 +763,36 @@ mod app_builder_tests {
         assert_eq!(definition.modes[0].commands[0].category, "mode");
     }
 
+    /// 📇️ Top-level `.action_with(...)` declarations — the shape every procedural/flow app authors its
+    /// whole action vocabulary in — MUST reach `AppActionRegistry::actions`, and MUST carry their
+    /// `InteractiveJobClassification` with them. `migrated_tool_ids` is the join key
+    /// `validate_tool_job_rows` uses, so an empty `actions` index makes every bounded first-step tool
+    /// proof fail closed with `interactive-job.catalog-authority` and `migrated={}` — the app then cannot
+    /// be constructed at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.3).
+    #[semio_framework_async_macros::async_test]
+    async fn app_action_registry_indexes_top_level_app_actions_and_their_migrated_disposition() {
+        use semio_framework::InteractiveJobClassification::Migrated;
+        let definition = minimal_app("registry-top-level-actions")
+            .await
+            .action_with(ActionDefinition::bounded_catalog("addWidget", LocalizedLabel::data("Add Widget"), ActionKind::Mutation))
+            .await
+            .view_action("setShowMode", LocalizedLabel::data("Set Show Mode"))
+            .await
+            .action_interactive_job("addWidget", Migrated)
+            .await
+            .action_interactive_job("setShowMode", Migrated)
+            .await
+            .try_build_definition()
+            .expect("a classified top-level inventory is releasable");
+        let registry = AppActionRegistry::from_definition(&definition);
+        assert!(registry.actions.contains_key("addWidget"), "top-level mutation missing from the app action index: {:?}", registry.actions.keys().collect::<Vec<_>>());
+        assert!(registry.actions.contains_key("setShowMode"), "top-level view action missing from the app action index");
+        assert_eq!(registry.actions["addWidget"].semantics.execution.interactive_job, Migrated);
+        let migrated = registry.migrated_tool_ids();
+        assert!(migrated.contains("addWidget") && migrated.contains("setShowMode"), "migrated tool ids must join the top-level declarations: {migrated:?}");
+        println!("[STATS] app action registry indexed {} actions, {} migrated", registry.actions.len(), migrated.len());
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_empty_mode_command_id() {
         use semio_framework::CommandDefinition;

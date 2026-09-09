@@ -235,8 +235,11 @@ impl SnapshotReadLeaseRegistry {
 impl Drop for SnapshotReadLeaseRegistry {
     fn drop(&mut self) {
         let state = self.state.get_mut().unwrap_or_else(|poisoned| poisoned.into_inner());
-        assert_eq!(state.free_len, SNAPSHOT_READ_LEASE_CAPACITY, "snapshot read lease registry reached Drop before every exact owner was returned and retired");
-        assert_eq!(self.returned.load(std::sync::atomic::Ordering::Acquire), 0, "snapshot read lease registry reached Drop with returned owners outside the bounded retirement pump");
+        assert!(std::thread::panicking() || state.free_len == SNAPSHOT_READ_LEASE_CAPACITY, "snapshot read lease registry reached Drop before every exact owner was returned and retired: {} of {SNAPSHOT_READ_LEASE_CAPACITY}", state.free_len);
+        assert!(
+            std::thread::panicking() || self.returned.load(std::sync::atomic::Ordering::Acquire) == 0,
+            "snapshot read lease registry reached Drop with returned owners outside the bounded retirement pump"
+        );
     }
 }
 
@@ -445,7 +448,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
 
 impl Drop for ArtifactStoreStringRetirement {
     fn drop(&mut self) {
-        assert!(self.bytes.is_none(), "artifact store string retirement reached Drop before its exact byte owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.bytes.is_none()), "artifact store string retirement reached Drop before its exact byte owner was terminal-empty");
     }
 }
 
@@ -494,7 +497,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
 
 impl Drop for ArtifactStoreStringVectorRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store string-vector retirement reached Drop before its exact terminal-empty witness");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store string-vector retirement reached Drop before its exact terminal-empty witness");
     }
 }
 
@@ -542,7 +545,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
 
 impl Drop for ArtifactStoreRevisionAccumulatorRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store revision retirement reached Drop before its exact terminal-empty witness");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store revision retirement reached Drop before its exact terminal-empty witness");
     }
 }
 
@@ -591,7 +594,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
 
 impl Drop for ArtifactStoreCursorRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact cursor retirement reached Drop before every exact nested string owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact cursor retirement reached Drop before every exact nested string owner was terminal-empty");
     }
 }
 
@@ -706,7 +709,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreEditRetirement {
 
 impl Drop for ArtifactStoreEditRetirement {
     fn drop(&mut self) {
-        assert!(self.state.is_none(), "artifact store edit retirement reached Drop before every exact nested owner was cursor-disposed");
+        assert!(std::thread::panicking() || (self.state.is_none()), "artifact store edit retirement reached Drop before every exact nested owner was cursor-disposed");
     }
 }
 
@@ -799,7 +802,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreHistoryMetadataRetirement {
 
 impl Drop for ArtifactStoreHistoryMetadataRetirement {
     fn drop(&mut self) {
-        assert!(self.state.is_none(), "artifact store history metadata retirement reached Drop before every nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.state.is_none()), "artifact store history metadata retirement reached Drop before every nested owner was terminal-empty");
     }
 }
 
@@ -866,7 +869,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreMessageLedgerRetirement {
 
 impl Drop for ArtifactStoreMessageLedgerRetirement {
     fn drop(&mut self) {
-        assert!(self.state.is_none(), "artifact store message-ledger retirement reached Drop before every nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.state.is_none()), "artifact store message-ledger retirement reached Drop before every nested owner was terminal-empty");
     }
 }
 
@@ -989,7 +992,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreConflictRetirement {
 
 impl Drop for ArtifactStoreConflictRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store conflict retirement reached Drop before every envelope, message, identity, and payload owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store conflict retirement reached Drop before every envelope, message, identity, and payload owner was terminal-empty");
     }
 }
 
@@ -1045,7 +1048,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
 
 impl Drop for ArtifactStoreMutationDagRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "mutation dag retirement reached Drop before every exact nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "mutation dag retirement reached Drop before every exact nested owner was terminal-empty");
     }
 }
 
@@ -1168,7 +1171,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
 
 impl<Mutation> Drop for ArtifactStoreDecodedEditRetirement<Mutation> {
     fn drop(&mut self) {
-        assert!(self.edit.is_none() && self.active.is_none(), "decoded edit retirement reached Drop before every nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.edit.is_none() && self.active.is_none()), "decoded edit retirement reached Drop before every nested owner was terminal-empty");
     }
 }
 
@@ -1276,7 +1279,7 @@ where
 
 impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.vcs.is_none() && self.active.is_none(), "VCS retirement reached Drop before every exact nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.vcs.is_none() && self.active.is_none()), "VCS retirement reached Drop before every exact nested owner was terminal-empty");
     }
 }
 
@@ -1503,7 +1506,7 @@ where
 
 impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.envelope.is_none() && self.active.is_none(), "displaced envelope retirement reached Drop before every exact nested owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.envelope.is_none() && self.active.is_none()), "displaced envelope retirement reached Drop before every exact nested owner was terminal-empty");
     }
 }
 
@@ -1569,7 +1572,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotRead
 
 impl<P: Send + Sync + 'static> Drop for ReturnedSnapshotReadRetirement<P> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "returned snapshot read retired before terminal-empty ownership");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "returned snapshot read retired before terminal-empty ownership");
     }
 }
 
@@ -1750,7 +1753,7 @@ impl ArtifactStoreDisplacedRetirements {
 
 impl Drop for ArtifactStoreDisplacedRetirements {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store displaced-owner authority reached Drop before bounded retirement completed");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store displaced-owner authority reached Drop before bounded retirement completed");
         let owners = unsafe { std::mem::ManuallyDrop::take(&mut self.owners) };
         drop(owners);
     }
@@ -2113,8 +2116,15 @@ where
 }
 
 impl<P, Mutation> Drop for ArtifactStoreCursorDisposer<P, Mutation> {
+    /// 🔒️ Fail-closed on a live drop, but NOT while the thread is already unwinding — a second
+    /// panic inside a destructor during cleanup is a non-unwinding abort, which turns any single
+    /// failing caller into a whole-process kill and hides every later diagnosis. Same guard the
+    /// other retirement roots carry (`OrderedMap::drop`, `FlowRetirement`, `RootRetirement`).
     fn drop(&mut self) {
-        assert!(self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none(), "artifact store cursor disposer reached Drop before terminal-empty ownership");
+        assert!(
+            std::thread::panicking() || (self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none()),
+            "artifact store cursor disposer reached Drop before terminal-empty ownership"
+        );
     }
 }
 
@@ -2384,7 +2394,7 @@ impl<'de> Deserialize<'de> for ArtifactCursor {
 
 impl Drop for ArtifactCursor {
     fn drop(&mut self) {
-        assert!(self.group.is_none(), "artifact cursor reached Drop before its exact staged root was adopted or returned for retirement");
+        assert!(std::thread::panicking() || (self.group.is_none()), "artifact cursor reached Drop before its exact staged root was adopted or returned for retirement");
         unsafe { std::mem::ManuallyDrop::drop(&mut self.owners) };
     }
 }
@@ -2615,7 +2625,7 @@ impl<P: PartialEq, Mutation: PartialEq> PartialEq for ArtifactEnvelope<P, Mutati
 
 impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.owners_detached, "artifact envelope terminal shell reached Drop before its app-owned bounded retirement authority detached every nested owner");
+        assert!(std::thread::panicking() || (self.owners_detached), "artifact envelope terminal shell reached Drop before its app-owned bounded retirement authority detached every nested owner");
     }
 }
 
@@ -3923,7 +3933,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
 
 impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "ephemeral one-item publication reached Drop without its terminal-empty witness");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "ephemeral one-item publication reached Drop without its terminal-empty witness");
     }
 }
 //#endregion 📬️EphemeralOneItemPublication
@@ -3972,7 +3982,7 @@ impl<P> Drop for PresencePeerEntry<P> {
     fn drop(&mut self) {
         let terminal = self.actor.is_empty() && self.presence.is_none();
         if !std::thread::panicking() {
-            assert!(terminal, "presence peer entry requires exact final-owner retirement");
+            assert!(std::thread::panicking() || (terminal), "presence peer entry requires exact final-owner retirement");
         }
         if terminal {
             unsafe {
@@ -4312,7 +4322,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
 impl<P> Drop for PresencePeersPublication<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none(), "incomplete presence peer publication reached Drop without bounded disposal");
+            assert!(std::thread::panicking() || (self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()), "incomplete presence peer publication reached Drop without bounded disposal");
         }
     }
 }
@@ -4409,7 +4419,7 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
 impl<P> Drop for PresencePeersRetirement<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none(), "incomplete presence-peer retirement reached Drop without bounded disposal");
+            assert!(std::thread::panicking() || (self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()), "incomplete presence-peer retirement reached Drop without bounded disposal");
         }
     }
 }
@@ -5112,7 +5122,7 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
 
 impl<P> Drop for TransientStoreRetirement<P> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "transient store retirement reached Drop before terminal-empty ownership");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "transient store retirement reached Drop before terminal-empty ownership");
         unsafe {
             std::mem::ManuallyDrop::drop(&mut self.root);
             std::mem::ManuallyDrop::drop(&mut self.reads);
@@ -6647,7 +6657,7 @@ impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactO
 
 impl<Mutation: Send> Drop for ArtifactOwnedSprMutationTarget<Mutation> {
     fn drop(&mut self) {
-        assert!(self.reservation.is_none() && self.value.is_none(), "SPR mutation target reached Drop with a live reservation or value owner");
+        assert!(std::thread::panicking() || (self.reservation.is_none() && self.value.is_none()), "SPR mutation target reached Drop with a live reservation or value owner");
     }
 }
 
@@ -6859,7 +6869,7 @@ impl<P, Mutation: Send> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
 
 impl<P, Mutation: Send> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "SPR mutation array reached Drop before every exact mutation owner was published or cursor-retired");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "SPR mutation array reached Drop before every exact mutation owner was published or cursor-retired");
     }
 }
 
@@ -7113,7 +7123,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAutho
 
 impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
     fn drop(&mut self) {
-        assert!(ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "SPR edit decode reached Drop before exact publication or bounded retirement");
+        assert!(std::thread::panicking() || (ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self)), "SPR edit decode reached Drop before exact publication or bounded retirement");
     }
 }
 
@@ -7249,7 +7259,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
 
 impl<T> Drop for ArtifactRepositoryHistoryEntryAuthority<T> {
     fn drop(&mut self) {
-        assert!(self.terminal && self.value.is_none() && self.retirement.is_none() && self.raw_len == 0, "repository history entry authority reached Drop before exact terminal ownership");
+        assert!(std::thread::panicking() || (self.terminal && self.value.is_none() && self.retirement.is_none() && self.raw_len == 0), "repository history entry authority reached Drop before exact terminal ownership");
     }
 }
 
@@ -7339,7 +7349,7 @@ struct ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation> {
 
 impl<P, Mutation> Drop for ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.slots.iter().all(|slot| slot.owner.is_none()), "artifact envelope field registry reached Drop before every exact decoder owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.slots.iter().all(|slot| slot.owner.is_none())), "artifact envelope field registry reached Drop before every exact decoder owner was terminal-empty");
     }
 }
 
@@ -7528,7 +7538,7 @@ where
 
 impl<P, Mutation> Drop for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.owner.is_none(), "returned artifact envelope field decoder reached Drop before its terminal-empty witness");
+        assert!(std::thread::panicking() || (self.owner.is_none()), "returned artifact envelope field decoder reached Drop before its terminal-empty witness");
     }
 }
 
@@ -8470,7 +8480,7 @@ where
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     fn drop(&mut self) {
         if matches!(self.state, ArtifactEnvelopeDecodeState::Transferred) {
-            assert!(self.record.is_none() && self.fields.is_none() && self.pending_field.is_none() && !self.field_returned, "transferred artifact envelope decode source retained an owner after exact rejection handoff");
+            assert!(std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.pending_field.is_none() && !self.field_returned), "transferred artifact envelope decode source retained an owner after exact rejection handoff");
             return;
         }
         let terminal = self.record.is_none()
@@ -8478,7 +8488,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeDecodeAuthority<P, Mutation> {
             && self.field_returned
             && self.field_registry.ticket_reclaimed(self.field_ticket)
             && matches!(self.state, ArtifactEnvelopeDecodeState::Complete | ArtifactEnvelopeDecodeState::Cancelled | ArtifactEnvelopeDecodeState::Fault(_));
-        assert!(terminal, "artifact envelope decode authority reached Drop before terminal publication or retained close");
+        assert!(std::thread::panicking() || (terminal), "artifact envelope decode authority reached Drop before terminal publication or retained close");
     }
 }
 
@@ -8546,7 +8556,7 @@ where
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeRejected<P, Mutation> {
     fn drop(&mut self) {
         let _ = self.diagnostic;
-        assert!(self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket), "artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired");
+        assert!(std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket)), "artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired");
     }
 }
 
@@ -8608,7 +8618,7 @@ where
 
 impl<P, Mutation> Drop for ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.terminal && self.record.is_none() && self.fields.is_none(), "unadmitted envelope decode rejection reached Drop before every exact owner was cursor-retired");
+        assert!(std::thread::panicking() || (self.terminal && self.record.is_none() && self.fields.is_none()), "unadmitted envelope decode rejection reached Drop before every exact owner was cursor-retired");
     }
 }
 
@@ -8712,7 +8722,7 @@ where
 
 impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordOwner<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.envelope.is_none() && self.retirement.is_none(), "completed envelope owner reached Drop before its exact record was taken or cursor-retired");
+        assert!(std::thread::panicking() || (self.envelope.is_none() && self.retirement.is_none()), "completed envelope owner reached Drop before its exact record was taken or cursor-retired");
     }
 }
 
@@ -8732,7 +8742,7 @@ struct ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation> {
 
 impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.live == 0 && self.occupied == 0 && self.closing == 0 && self.slots.iter().all(|slot| slot.owner.is_none()), "completed envelope registry reached Drop before every exact record owner was consumed or cursor-retired");
+        assert!(std::thread::panicking() || (self.live == 0 && self.occupied == 0 && self.closing == 0 && self.slots.iter().all(|slot| slot.owner.is_none())), "completed envelope registry reached Drop before every exact record owner was consumed or cursor-retired");
     }
 }
 
@@ -9290,7 +9300,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
 
 impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "fresh VCS authority reached Drop before every nested owner was published or cursor-retired");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "fresh VCS authority reached Drop before every nested owner was published or cursor-retired");
     }
 }
 
@@ -9626,7 +9636,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
 
 impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "fresh envelope field decoder reached Drop before its completed record or rejected owners reached terminal empty");
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "fresh envelope field decoder reached Drop before its completed record or rejected owners reached terminal empty");
     }
 }
 
@@ -10364,7 +10374,8 @@ where
     for edit_id in applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            snapshot = apply_mutation(&snapshot, operation)?.0;
+            let next = apply_mutation(&snapshot, operation)?.0;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
         }
     }
     Ok(snapshot)
@@ -11403,7 +11414,8 @@ where
             edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
         }
         for operation in &forwards {
-            snapshot = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            let next = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
         }
         edits.push(Edit {
             id: history_edit.id,
@@ -11475,7 +11487,8 @@ where
     for edit_id in &cursor.applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id).ok_or_else(|| TextError::new(format!("history cursor references unknown edit {edit_id}"), TextSpan::at(1, 1)))?;
         for operation in &edit.forwards {
-            snapshot = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            let next = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
         }
     }
     Ok(ParsedDocumentText { envelope, snapshot })
@@ -11691,7 +11704,8 @@ where
     for edit_id in &cursor.applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id).ok_or_else(|| TextError::new(format!("ops cursor references unknown edit {edit_id}"), TextSpan::at(1, 1)))?;
         for operation in &edit.forwards {
-            snapshot = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            let next = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
         }
     }
     Ok(ParsedDocumentText { envelope, snapshot })
@@ -12930,7 +12944,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
 
 impl<P> Drop for ArtifactStoreInitializationRuntime<P> {
     fn drop(&mut self) {
-        assert!(self.taken, "artifact store initialization runtime reached Drop before exact store construction or retained rejection cleanup");
+        assert!(std::thread::panicking() || (self.taken), "artifact store initialization runtime reached Drop before exact store construction or retained rejection cleanup");
     }
 }
 
@@ -13320,13 +13334,13 @@ impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {
 
 impl Drop for ArtifactEditMessageLedgerRejected {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "rejected artifact edit-message authority reached Drop before every exact payload owner was cursor-retired: {}", self.reason);
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "rejected artifact edit-message authority reached Drop before every exact payload owner was cursor-retired: {}", self.reason);
     }
 }
 
 impl Drop for ArtifactEditMessageLedger {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired");
     }
 }
 
@@ -13346,6 +13360,17 @@ pub const ARTIFACT_STORE_ONE_ITEM_ID_BYTES: usize = 256;
 
 /// 🧮 Exact capacity declaration checked before a retained one-item preparation receives
 /// the immutable base root or mutation owner.
+///
+/// `work_items` counts **staged edit ROWS**, never mutations: one durable item always contributes
+/// its single `forwards` row PLUS every row its `inverse` yields, and
+/// [`ArtifactStore::fold_batch_item`] / the `PreflightingCommit` gate both compare
+/// `forwards.len() + inverse.len()` against the gesture-wide merged declaration. A point-invertible
+/// mutation therefore costs **2**, not 1 — declaring 1 fail-closes EVERY single-mutation durable
+/// gesture with `batched item candidate failed its exact fixed fold contract` and every multi-item
+/// one with `batched prepared candidate failed its exact fixed commit contract`. Never write the
+/// number at a call site: declare through [`ArtifactStoreOneItemFootprint::for_one_invertible_item`]
+/// or [`ArtifactStoreOneItemFootprint::for_one_item`]
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemFootprint {
@@ -13353,9 +13378,25 @@ pub struct ArtifactStoreOneItemFootprint {
     pub retained_bytes: usize,
 }
 
+/// 🧾️ Staged edit rows ONE point-invertible durable item folds: its single forward row plus the
+/// single inverse row `Mutation::inverse` yields for it.
+pub const ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS: usize = 2;
+
 impl ArtifactStoreOneItemFootprint {
     pub fn is_admissible(self) -> bool {
         self.work_items != 0 && self.work_items <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS && self.retained_bytes <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES
+    }
+
+    /// 🧺️ The ONE declaration a durable lane whose mutations are point-invertible makes — one
+    /// forward row and one inverse row. The store's own batched fixtures declare exactly this.
+    pub fn for_one_invertible_item(retained_bytes: usize) -> Self {
+        Self { work_items: ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes }
+    }
+
+    /// 🧺️ The same declaration for a mutation whose `inverse` yields more than one row — the upper
+    /// bound the lane can prove from the mutation alone, since `preflight` never sees the base.
+    pub fn for_one_item(inverse_rows: usize, retained_bytes: usize) -> Self {
+        Self { work_items: inverse_rows.saturating_add(1), retained_bytes }
     }
 
     /// ➕️ Folds one more admitted item into the gesture-wide declaration a batched publication is
@@ -13804,7 +13845,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
 
 impl<P, Mutation> Drop for MemberStoreOneItemPublication<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none(), "member publication reached Drop before exact member, reservation, and candidate retirement");
+        assert!(std::thread::panicking() || (self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none()), "member publication reached Drop before exact member, reservation, and candidate retirement");
     }
 }
 //#endregion 🧩️MemberOneItemPublication
@@ -13964,6 +14005,7 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     close_started: bool,
     fault: Option<String>,
     phase: ArtifactStoreOneItemPublicationPhase,
+    coalesce_key: Option<String>,
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
@@ -13973,6 +14015,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
 
     pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
         self.phase
+    }
+
+    /// 🎥️ Latest-wins undo key for this batched gesture. When it matches the tail uncommitted
+    /// document edit, commit amends that edit (one undo step) instead of minting a ledger slot.
+    pub fn set_coalesce_key(&mut self, key: Option<String>) {
+        self.coalesce_key = key.filter(|value| !value.is_empty());
     }
 
     /// 🔢️ How many mutations this gesture admitted, and how many of them are already staged.
@@ -14090,6 +14138,9 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if self.coalesce_key.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if self.receipt.take().is_some() {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -14114,13 +14165,13 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none() && self.coalesce_key.is_none()
     }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "batched artifact-store publication reached Drop without its exact terminal-empty witness");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "batched artifact-store publication reached Drop without its exact terminal-empty witness");
     }
 }
 //#endregion 📬️OneItemPublication
@@ -14272,7 +14323,7 @@ impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
 
 impl Drop for ArtifactStorePendingReportRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store pending-report retirement reached Drop before its exact terminal-empty witness");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store pending-report retirement reached Drop before its exact terminal-empty witness");
     }
 }
 
@@ -14310,7 +14361,7 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn drop(&mut self) {
-        assert!(self.candidate.is_none(), "resolution candidate authority reached Drop before exact adoption or retained retirement handoff");
+        assert!(std::thread::panicking() || (self.candidate.is_none()), "resolution candidate authority reached Drop before exact adoption or retained retirement handoff");
     }
 }
 
@@ -14480,7 +14531,7 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn drop(&mut self) {
-        assert!(self.candidate.is_none() && self.active.is_none(), "resolution candidate retirement reached Drop before its exact store and child owners were terminal-empty");
+        assert!(std::thread::panicking() || (self.candidate.is_none() && self.active.is_none()), "resolution candidate retirement reached Drop before its exact store and child owners were terminal-empty");
     }
 }
 
@@ -16041,6 +16092,7 @@ where
             close_started: false,
             fault: None,
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+            coalesce_key: None,
         })
     }
 
@@ -16058,6 +16110,21 @@ where
         let owner = Arc::clone(root);
         let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("staged batch read lease registry is busy, saturated, or exhausted".into()))?;
         Ok(SnapshotRead::new(owner, lease))
+    }
+
+    /// 🎥️ Tail uncommitted document edit that a coalesced batch may absorb into, matching `amend_command`.
+    fn batch_amend_target(&self, key: Option<&str>) -> Option<String> {
+        let key = key.filter(|value| !value.is_empty())?;
+        let last = self.applied_edit_ids.last()?;
+        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *last)?;
+        if edit.coalesce_key.as_deref() != Some(key) {
+            return None;
+        }
+        let committed = self.envelope.vcs.changes.iter().any(|change| change.edit_ids.iter().any(|id| id == last));
+        if committed {
+            return None;
+        }
+        Some(last.clone())
     }
 
     /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
@@ -16171,9 +16238,11 @@ where
                 {
                     return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
                 }
-                if self.applied_edit_ids.len() == self.applied_edit_ids.capacity()
-                    || self.revision_accumulator.applied.len() == self.revision_accumulator.applied.capacity()
-                    || self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.applied_edit_ids.len() == cursor.applied_edit_ids.capacity())
+                let amending = self.batch_amend_target(publication.coalesce_key.as_deref()).is_some();
+                if !amending
+                    && (self.applied_edit_ids.len() == self.applied_edit_ids.capacity()
+                        || self.revision_accumulator.applied.len() == self.revision_accumulator.applied.capacity()
+                        || self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.applied_edit_ids.len() == cursor.applied_edit_ids.capacity()))
                 {
                     return Err(VcsError::ValidationFailed("batched publication requires preinstalled fixed applied and revision capacity".into()));
                 }
@@ -16189,6 +16258,34 @@ where
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
+                if let Some(edit_id) = self.batch_amend_target(publication.coalesce_key.as_deref()) {
+                    let stage = publication.stage.take().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
+                    let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, .. } = *stage;
+                    let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
+                    let generation_before = self.generation;
+                    if let Some(existing) = self.envelope.vcs.edits.iter_mut().find(|candidate| candidate.id == edit_id) {
+                        existing.forwards.extend(edit.forwards);
+                        existing.inverse.extend(edit.inverse);
+                        existing.mutation_meta.extend(edit.mutation_meta);
+                        existing.finished_at = edit.finished_at;
+                    } else {
+                        return Err(VcsError::ValidationFailed("batched amend lost its coalesced tail edit".into()));
+                    }
+                    self.replace_pending_report_retained(PendingCommandReport::default())?;
+                    self.replace_local_actor_retained(local_actor)?;
+                    self.replace_redo_edit_ids_retained(Vec::new())?;
+                    self.replace_current_retained(post)?;
+                    self.clock = next_clock;
+                    self.bump()?;
+                    self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+                    let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
+                    publication.expected_generation = self.generation;
+                    publication.expected_revision = self.content_revision;
+                    publication.receipt = Some(receipt);
+                    publication.published = true;
+                    publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
+                    return Ok(ArtifactStoreOneItemAdvance::Published(receipt));
+                }
                 let reservation = self.reserve_edit_history_slot()?;
                 let stage = publication.stage.take().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
                 let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, digest, .. } = *stage;
@@ -16295,6 +16392,7 @@ where
             stage.tail_edit_id = tail_edit_id;
             stage.edit.actor = edit.actor.take();
             stage.edit.description = edit.description.take();
+            stage.edit.coalesce_key = publication.coalesce_key.clone();
             stage.edit.started_at = std::mem::take(&mut edit.started_at);
             stage.local_actor = local_actor;
             stage.next_clock = next_clock;
@@ -16615,7 +16713,8 @@ where
             let mut folded = pre.as_ref().clone();
             for operation in &edit.forwards {
                 // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
-                folded = apply_mutation(&folded, operation)?.0;
+                let next = apply_mutation(&folded, operation)?.0;
+                retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut folded, next));
             }
             self.replace_tail_undo_cache_retained(Some((next.clone(), pre)))?;
             self.replace_current_retained(Arc::new(folded))?;
@@ -16844,7 +16943,10 @@ where
             let outcome = mutation.diff(&snapshot).stamp_op_index(op_index as u32);
             let (diff, op_messages) = outcome.into_parts();
             messages.extend(op_messages);
-            snapshot = diff.apply(&snapshot)?;
+            let applied = diff.apply(&snapshot);
+            MutationDiff::retire_cold(diff);
+            let next = applied?;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
             forwards.push(mutation);
         }
         if let Some(level) = crate::os_spr::worst_level(&messages) {
@@ -17753,6 +17855,18 @@ pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::
     })
 }
 
+/// 🧊️ Retires one SCRATCH projection a history fold displaced, through the technology's own diff
+/// vocabulary. Every replay seam below walks `base → mid₁ → … → head` and throws each intermediate
+/// away; an artifact whose projection owns a fail-closed root (an `OrderedMap`, a neural
+/// `Dictionary`) aborts the process on that bare drop, which is what made `undo`/`redo` and every
+/// `.pack`/`.spr` reload kill the app (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn retire_replayed_projection<P, Mutation>(projection: P)
+where
+    Mutation: self::Mutation<P>,
+{
+    <Mutation::Diff as MutationDiff<P>>::retire_projection(projection);
+}
+
 async fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
@@ -17767,7 +17881,8 @@ where
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
             // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
-            snapshot = apply_mutation(&snapshot, operation)?.0;
+            let next = apply_mutation(&snapshot, operation)?.0;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
         }
     }
     Ok(snapshot)
@@ -18417,7 +18532,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
 
 impl Drop for ArtifactStoreBackboneRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact store backbone retirement reached Drop before every exact URI, queue, message, channel, and byte owner was terminal-empty");
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "artifact store backbone retirement reached Drop before every exact URI, queue, message, channel, and byte owner was terminal-empty");
     }
 }
 
@@ -18917,7 +19032,7 @@ where
             for message in messages {
                 all_messages.push(message.at_op(index as u32));
             }
-            running = next;
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut running, next));
         }
         all_messages
     }
@@ -20812,6 +20927,22 @@ pub mod test_support {
         assert_eq!(&parsed, snapshot, "dsl round trip diverged;\nprinted:\n{printed}");
     }
 
+    /// @emoji 🧊️ Cold twin of [`assert_dsl_round_trip`] for a projection that REJECTS a bare drop —
+    /// one owning an `OrderedMap` root or a retirement ladder (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`).
+    /// The decoded value is handed to `retire` instead of being dropped, so the law can be asserted
+    /// without aborting the test binary in a destructor.
+    pub fn assert_dsl_round_trip_cold<P>(snapshot: &P, retire: impl FnOnce(P))
+    where
+        P: ArtifactDsl + PartialEq + std::fmt::Debug,
+    {
+        let printed = snapshot.print_dsl();
+        let parsed = P::parse_dsl(&printed).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        let matches = parsed == *snapshot;
+        let report = matches.then(String::new).unwrap_or_else(|| format!("{parsed:?}"));
+        retire(parsed);
+        assert!(matches, "dsl round trip diverged;\nprinted:\n{printed}\nparsed:\n{report}");
+    }
+
     /// @emoji 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` snapshots.
     pub fn assert_config_round_trip<C>(snapshot: &C)
     where
@@ -20881,6 +21012,36 @@ pub mod test_support {
         assert_eq!(&via_pack, snapshot, "pack round trip diverged from source snapshot");
         assert_eq!(&via_dsl, snapshot, "dsl round trip diverged from source snapshot");
         assert_eq!(via_pack, via_dsl, "pack and dsl round trips diverged from each other");
+    }
+
+    /// @emoji 🧊️ Cold twin of [`assert_dsl_pack_equivalence`] for a projection that REJECTS a bare
+    /// drop — both decoded values are handed to `retire` instead of being dropped.
+    pub fn assert_dsl_pack_equivalence_cold<P>(snapshot: &P, mut retire: impl FnMut(P))
+    where
+        P: ArtifactDsl + ArtifactPack + Clone + PartialEq + std::fmt::Debug,
+    {
+        let via_pack = P::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        let via_dsl = P::parse_dsl(&snapshot.print_dsl()).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        let pack_matches = via_pack == *snapshot;
+        let dsl_matches = via_dsl == *snapshot;
+        let agree = via_pack == via_dsl;
+        retire(via_pack);
+        retire(via_dsl);
+        assert!(pack_matches, "pack round trip diverged from source snapshot");
+        assert!(dsl_matches, "dsl round trip diverged from source snapshot");
+        assert!(agree, "pack and dsl round trips diverged from each other");
+    }
+
+    /// @emoji 🧊️ Cold twin of [`assert_pack_round_trip`] for a projection that REJECTS a bare drop.
+    pub fn assert_pack_round_trip_cold<P>(snapshot: &P, retire: impl FnOnce(P))
+    where
+        P: ArtifactPack + PartialEq + std::fmt::Debug,
+    {
+        let bytes = snapshot.encode_pack();
+        let decoded = P::decode_pack(&bytes).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        let matches = decoded == *snapshot;
+        retire(decoded);
+        assert!(matches, "pack round trip diverged");
     }
 
     /// @emoji ⚡️ Asserts an op-text round trip for a single operation: `print_op` contains no newline

@@ -1,13 +1,14 @@
 import type { HistoryPatch, PluginRegistryEntry, UiNodeRecord } from "@semio-tech/framework";
 import type { LocalInteractionCapture } from "@semio-tech/framework-replication";
 import type { AppChannelClient } from "@semio-tech/framework-os";
+import { encodeAppFrame } from "@semio-tech/framework-os";
 import type { ActivationRegistry, TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecycleLease, ShardJobStep, ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("shared context-menu ViewModel", () => {
     it("sends the same current locale and terminology to two mounted surfaces while preserving each window", async () => {
@@ -68,7 +69,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         windowInstances: [{ id: "first", windowKindId: "canvas" }, { id: "second", windowKindId: "canvas" }],
         activeUtilityByWindowId: { first: "inspect" },
       };
-      const request = { viewState, windows: [], panels: [], engagements: {}, measures: { hash: "abc" }, tools: {} };
+      const request = { viewState, windows: [], panels: [], engagements: {}, measures: { hash: "abc" }, tools: {}, catalogue: {} };
       expect(uiRefreshSectionTargets(request).map((section: { key: string; bodyKey: string }) => [section.key, section.bodyKey]))
         .toEqual(reserved.sections.map((section: { key: string; bodyKey: string }) => [section.key, section.bodyKey]));
       const events = uiRefreshSurfaceEvents(9, request);
@@ -165,7 +166,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
   
     describe("extension invocation completion publication", () => {
-      async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void } = {}): Promise<void> {
+      async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void; jobs?: { start?: (job: bigint, kind: string, input: Uint8Array) => void; step?: (job: bigint) => ShardJobStep; cancel?: (job: bigint) => void } } = {}): Promise<void> {
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const idle: WireTurnResult = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
@@ -181,6 +182,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actor: string) => hooks.activate?.(actor), touch: () => {}, cancel: dispose } as unknown as ActivationRegistry;
         testState.sharedShardClient = {
           turn: dispatch,
+          startJob: async (_actorId: string, job: bigint, kind: string, input: Uint8Array) => { hooks.jobs?.start?.(job, kind, input); },
+          stepJob: async (_actorId: string, job: bigint) => hooks.jobs?.step?.(job) ?? ({ status: "running" } as ShardJobStep),
+          cancelJob: async (_actorId: string, job: bigint) => { hooks.jobs?.cancel?.(job); },
           captureInstanceLifecycle: (actorId: string, instanceId: number) => {
             const activationGeneration = generation;
             const activation = { actorId, activationGeneration, assertActive: () => { if (generation !== activationGeneration) throw new Error("actor-activation.revoked"); } };
@@ -259,6 +263,48 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         });
       });
   
+      // 💼️ Ticket 26/09/02/PUZZLE-3D-END-TO-END W-J. `Effect::SpawnJob` used to reach
+      // `wireEffectToFriendly`'s `default:` arm and be dropped with a `[DEBUG]` warning, and nothing
+      // in this renderer ever called `ShardClient.startJob`/`stepJob` — so on this target EVERY
+      // plugin-authored isolated job was started zero times and stepped zero times, silently. That is
+      // what left puzzle 3d's fill planning frozen at zero in the browser.
+      it("starts an isolated job, steps it to its terminal and feeds job-completed back into the actor", async () => {
+        const { encodeAppFrame } = await import("@semio-tech/framework-os");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const bytes = (value: unknown) => Array.from(encodePackValue(value));
+        const started: Array<{ job: bigint; kind: string; input: readonly number[] }> = [];
+        const stepped: bigint[] = [];
+        const submitted: ShardEventEnvelope[][] = [];
+        let instance = 0;
+        await withRequester(async (_actor, events) => {
+          submitted.push([...events]);
+          if (submitted.length > 1) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+          return {
+            uiPatches: [],
+            effects: [
+              { tag: "spawn-job", val: { job: 7n, kind: "semio.puzzle3d.fill", input: new Uint8Array([4, 2]), placement: { tag: "isolated" } } },
+              { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [], mutations: [], inverse_group: [] } })) } },
+            ],
+            nextWake: null,
+            status: { tag: "idle" },
+          };
+        }, async (handle, opened) => {
+          instance = opened;
+          const response = await handle.captureExtensionCompletion!(instance, BigInt(fixture.requestIds[2]!)).complete({ ok: encodePackValue(fixture.response) });
+          expect(response.requestedEffects).toEqual([]);
+          for (let turn = 0; turn < 64 && !submitted.some(events => events.some(event => event.kind === "job-completed")); turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect(started).toEqual([{ job: 7n, kind: "semio.puzzle3d.fill", input: [4, 2] }]);
+          expect(stepped).toEqual([7n, 7n, 7n]);
+          const completion = submitted.flat().find(event => event.kind === "job-completed");
+          expect(completion?.payload).toEqual({ job: 7n, outcome: { tag: "ok", val: [1] } });
+        }, {
+          jobs: {
+            start: (job, kind, input) => { started.push({ job, kind, input: Array.from(input) }); },
+            step: (job) => { stepped.push(job); return stepped.length < 3 ? { status: "running" } : { status: "done", value: new Uint8Array([1]) }; },
+          },
+        });
+      });
+
       it("reconciles failed actual actor bindings without giving a successor stale control", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
         const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
@@ -671,6 +717,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         contextMenu: async () => [],
         readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
         readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
+        subscribeOperationCompletions: () => () => {},
         readWindowConfigPacks: async () => [],
         loadWindowConfigPack: async () => {},
         documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
@@ -973,6 +1020,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           contextMenu: async () => [],
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
+          subscribeOperationCompletions: () => () => {},
           readWindowConfigPacks: async () => [],
           loadWindowConfigPack: async () => {},
           documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
@@ -2167,4 +2215,70 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(result.loadFailures.some((failure) => failure.pluginId === "b")).toBe(true);
       });
     });
+
+  describe("typed-operation completion drain", () => {
+    const idle = { tag: "idle" } as const;
+    const moreWork = { tag: "moreWork" } as const;
+
+    it("stops at the first idle settle instead of polling forever", async () => {
+      const statuses: unknown[] = [moreWork, moreWork, idle, moreWork];
+      let polls = 0;
+      const outcome = await drainTypedOperationTurns(PLUGIN_OPERATION_DRAIN_BUDGET, () => true, async () => ({ status: statuses[polls++], nextWake: null }), async () => {});
+      expect(outcome).toEqual({ polls: 3, stopped: "idle", nextWake: null });
+      expect(polls).toBe(3);
+      console.info("[DEBUG] typed-operation drain stopped at the idle settle after 3 polls");
+    });
+
+    it("never exceeds its poll budget when the actor never goes idle", async () => {
+      let polls = 0;
+      const outcome = await drainTypedOperationTurns(8, () => true, async () => { polls += 1; return { status: moreWork, nextWake: null }; }, async () => {});
+      expect(outcome).toEqual({ polls: 8, stopped: "budget", nextWake: null });
+      expect(polls).toBe(8);
+    });
+
+    it("stops the moment its instance stops being live, without settling again", async () => {
+      let polls = 0;
+      const outcome = await drainTypedOperationTurns(16, () => polls < 2, async () => { polls += 1; return { status: moreWork, nextWake: null }; }, async () => {});
+      expect(outcome).toEqual({ polls: 2, stopped: "closed", nextWake: null });
+      expect(polls).toBe(2);
+    });
+
+    it("surfaces the last settle's next-wake so an idle actor can be re-armed", async () => {
+      const outcome = await drainTypedOperationTurns(4, () => true, async () => ({ status: idle, nextWake: 42 }), async () => {});
+      expect(outcome).toEqual({ polls: 1, stopped: "idle", nextWake: 42 });
+    });
+  });
+
+  describe("typed-operation completion delivery", () => {
+    it("hands one completion its own effects exactly once and never the invocation's", async () => {
+      const instanceId = 4242;
+      let push: ((outcome: TurnOutcome) => void) | null = null;
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      push = (outcome) => broadcast.push(outcome);
+      const handle = {
+        manifest: async () => encodePackValue({ id: "fixture", apps: [] }),
+        createApp: async () => instanceId,
+        destroyApp: async () => {},
+        takeSegmentedDownloadChunk: async () => undefined,
+        enqueue: () => {},
+        outcomes: broadcast.stream,
+        dispose: async () => {},
+      } as unknown as Parameters<typeof adaptPluginHandle>[1]["handle"];
+      const adapted = await adaptPluginHandle("fixture", { handle, release: async () => {} });
+      await adapted.createApp("app.demo");
+      const seen: unknown[] = [];
+      const unsubscribe = adapted.subscribeOperationCompletions(instanceId, (completion) => seen.push(completion));
+      pendingCompletionEffects.set(instanceId, [{ tag: "notify", val: { message: "done" } }]);
+      pendingTurnEffects.set(instanceId, [{ tag: "notify", val: { message: "invocation" } }]);
+      push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
+      for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
+      expect(seen).toHaveLength(1);
+      expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3, requestedEffects: [{ notify: { message: "done" } }] });
+      expect(pendingCompletionEffects.has(instanceId)).toBe(false);
+      expect(pendingTurnEffects.get(instanceId)).toEqual([{ tag: "notify", val: { message: "invocation" } }]);
+      unsubscribe();
+      pendingTurnEffects.delete(instanceId);
+      console.info("[DEBUG] one typed-operation completion reached its subscriber once with its own effects");
+    });
+  });
 }

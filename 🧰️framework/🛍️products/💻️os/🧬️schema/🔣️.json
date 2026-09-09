@@ -774,6 +774,61 @@
         }
       }
     },
+    "GisMapInferencePortOverlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regionId", "viewBox", "path"],
+      "properties": {
+        "regionId": { "type": "string", "pattern": "^inference-[0-9a-f]{32}$" },
+        "viewBox": { "const": "0 0 100 100" },
+        "path": { "type": "string", "pattern": "^M [0-9.]+ [0-9.]+(?: L [0-9.]+ [0-9.]+){4} Z$" }
+      }
+    },
+    "GisMapInferencePortLocaleText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    },
+    "GisMapInferencePortControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "reject", "approve", "cancel", "overlay"],
+      "properties": {
+        "request": { "$ref": "#/$defs/GisMapInferencePortLocaleText" },
+        "reject": { "$ref": "#/$defs/GisMapInferencePortLocaleText" },
+        "approve": { "$ref": "#/$defs/GisMapInferencePortLocaleText" },
+        "cancel": { "$ref": "#/$defs/GisMapInferencePortLocaleText" },
+        "overlay": { "$ref": "#/$defs/GisMapInferencePortLocaleText" }
+      }
+    },
+    "GisMapInferencePortUiRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "cancel", "reject", "approve", "overlay"],
+      "properties": {
+        "request": { "type": "boolean" },
+        "cancel": { "type": "boolean" },
+        "reject": { "type": "boolean" },
+        "approve": { "type": "boolean" },
+        "overlay": { "type": "boolean" }
+      }
+    },
+    "GisMapInferencePortUiAffordances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["idle", "submitting", "running", "offered", "approving"],
+      "properties": {
+        "idle": { "$ref": "#/$defs/GisMapInferencePortUiRow" },
+        "submitting": { "$ref": "#/$defs/GisMapInferencePortUiRow" },
+        "running": { "$ref": "#/$defs/GisMapInferencePortUiRow" },
+        "offered": { "$ref": "#/$defs/GisMapInferencePortUiRow" },
+        "approving": { "$ref": "#/$defs/GisMapInferencePortUiRow" }
+      }
+    },
     "GisMapInferencePortV1": {
       "type": "object",
       "additionalProperties": false,
@@ -803,7 +858,11 @@
         "leaseRefusal",
         "hostileTransitions",
         "crossFixture",
-        "nonclaims"
+        "nonclaims",
+        "rejectLifecycle",
+        "mapOverlay",
+        "controls",
+        "uiAffordances"
       ],
       "properties": {
         "schema": {
@@ -1192,6 +1251,23 @@
               "nothing-persisted-into-the-map-artifact"
             ]
           }
+        },
+        "rejectLifecycle": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/GisMapInferencePortStep"
+          }
+        },
+        "mapOverlay": {
+          "$ref": "#/$defs/GisMapInferencePortOverlay"
+        },
+        "controls": {
+          "$ref": "#/$defs/GisMapInferencePortControls"
+        },
+        "uiAffordances": {
+          "$ref": "#/$defs/GisMapInferencePortUiAffordances"
         }
       }
     },

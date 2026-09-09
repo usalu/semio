@@ -855,7 +855,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         command: &FlowCommand,
         snapshot: &FlowSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
         if command.command_id() != self.tool_id || !FLOW_DIRECT_STORE_TOOL_IDS.contains(&self.tool_id) {
             return None;
@@ -1443,7 +1443,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
         let (payload, _) = Self::admitted_child(command, snapshot, context).ok_or_else(|| Fault::from("flow-retained-add-widget-child-authority"))?;
         let context = context.ok_or_else(|| Fault::from("flow-retained-add-widget-context"))?;
-        let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(snapshot, history, (*context.children).clone()));
+        let view = ArtifactView::with_children(snapshot, history, (*context.children).clone());
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-add-widget-instance-owner"))?;
         let emit = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| add_widget::handle(payload, &view, &ConfigView { snapshot: config, window: None }, session))?)?;
         let exact_child = emit.child_emits.first().filter(|child| child.slot == "content" && child.child_id == snapshot.content.child_id && child.ops.len() == 1 && child.labels.len() == 1);
@@ -1623,12 +1623,12 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
         }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return Self::fault() };
-            let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone()));
+            let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
                     FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session)),
                     FlowCommand::FlowEvalTick(_) => Ok(flow_eval_tick::tick_result(&payload.snapshot, &payload.config, session)),
-                    FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig, window: None }, session),
+                    FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
                 })?
@@ -1882,6 +1882,14 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for FlowInstanceOper
 pub struct FlowPlayApp;
 
 impl ArtifactEditor for FlowPlayApp {
+    /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
+    /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
+    /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+    fn app_catalogue_json() -> String {
+        flow::flow_app_catalogue_json()
+    }
+
     type Snapshot = FlowSnapshot;
     type Mutation = FlowMutation;
     type Config = NoConfig;

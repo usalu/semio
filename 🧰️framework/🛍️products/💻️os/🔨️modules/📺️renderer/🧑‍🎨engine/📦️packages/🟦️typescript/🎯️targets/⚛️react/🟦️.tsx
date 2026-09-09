@@ -752,7 +752,8 @@ import {
   type Puzzle3dBrushMeshPage,
   puzzle3dBrushMeshDigest,
   puzzle3dBrushMeshPages,
-  registeredPuzzle3dBrushMeshes,
+  Puzzle3dBrushMeshRegistry,
+  puzzle3dBrushMeshRegistry,
   windowMeasureTreeContainsId,
   renderWindowMeasuresTree,
   renderStagedArgControl,
@@ -777,6 +778,9 @@ import {
   buildCommandCategoryTabs,
   buildToolTabs,
   toolIdFromPanelTabId,
+  reconcileToolTabSelection,
+  type ToolTabSelection,
+  type ToolTabSelectionEffect,
   preserveJsonIdentity,
   mergeRecordPreservingIdentity,
   type UiRefreshCache,
@@ -796,7 +800,7 @@ import {
   computeSyncPillState,
   syncPillText,
 } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
+export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, Puzzle3dBrushMeshRegistry, puzzle3dBrushMeshRegistry, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, reconcileToolTabSelection, type ToolTabSelection, type ToolTabSelectionEffect, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
 export { pluginShouldEstablishSession };
 export { pluginShouldReceiveContributions };
 //#endregion ShellHelpers
@@ -851,8 +855,8 @@ export {
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
-export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
+import { type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+export { type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 

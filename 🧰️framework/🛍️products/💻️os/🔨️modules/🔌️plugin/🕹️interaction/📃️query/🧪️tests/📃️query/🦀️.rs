@@ -152,6 +152,73 @@ async fn local_interaction_query_zero_grants_cancel_and_worker_transfer() {
     }
 }
 
+//#region 🫙️EmptyCapture
+/// 🫙️ A capture that completes without a single byte, so its FIRST page is terminal and empty.
+/// The fixed page authority must still publish it, accept its exact ACK, retire and reach terminal
+/// emptiness — an empty capture is a whole answer, not a missing one.
+pub(crate) struct EmptyCapture {
+    identity: LocalInteractionIdentity,
+    returned: bool,
+}
+
+pub(crate) fn empty_capture_for_live_law() -> impl LocalInteractionQueryCapture {
+    EmptyCapture { identity: LocalInteractionIdentity { app_instance_id: 5, generation: 2, revision: [4; 32], document_revision: [5; 32], topology_revision: [6; 32] }, returned: false }
+}
+
+impl LocalInteractionQueryCapture for EmptyCapture {
+    fn identity(&self) -> &LocalInteractionIdentity {
+        &self.identity
+    }
+    fn write_chunk(&mut self, _grant: ArtifactStoreOneItemGrant, _output: &mut [u8]) -> Result<usize, store::ArtifactCanonicalJsonEncodeError> {
+        Ok(0)
+    }
+    fn complete(&self) -> bool {
+        true
+    }
+    fn completed_bytes(&self) -> u64 {
+        0
+    }
+    fn cancel(&mut self) {}
+    fn begin_close(&mut self) {}
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        if self.returned {
+            return Ok(SnapshotRetirementStep::Complete);
+        }
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        self.returned = true;
+        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.returned
+    }
+}
+
+#[test]
+fn local_interaction_query_empty_capture_publishes_its_terminal_page_and_retires() {
+    for bytes in [1, 64, 4096] {
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes };
+        let mut query = LocalInteractionQuery::new(empty_capture_for_live_law(), 21, 34);
+        assert_eq!(query.advance(grant).unwrap(), LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes: 0 });
+        let page = query.page().expect("an empty capture still publishes its exact terminal page");
+        assert!(page.terminal, "the first page of an empty capture is terminal");
+        assert!(page.bytes.is_empty(), "an empty capture carries no bytes");
+        let token = page.token.clone();
+        assert_eq!(query.advance(grant).unwrap(), LocalInteractionQueryStep::PageReady);
+        assert!(query.acknowledge(&token));
+        assert!(!query.acknowledge(&token));
+        for _ in 0..64 {
+            if query.close_step(grant).unwrap() == SnapshotRetirementStep::Complete {
+                break;
+            }
+        }
+        assert!(query.terminal_is_empty(), "an acknowledged empty capture reaches terminal emptiness at bytes={bytes}");
+        assert_eq!(query.completed_bytes(), query.retired_bytes());
+    }
+}
+//#endregion 🫙️EmptyCapture
+
 //#region ⚠️PartialEncoderFailure
 struct HostileValue;
 struct HostileRoot {

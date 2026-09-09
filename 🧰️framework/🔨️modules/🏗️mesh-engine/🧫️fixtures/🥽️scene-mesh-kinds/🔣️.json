@@ -1,0 +1,24 @@
+{
+  "$schema": "semio.framework.scene-mesh-kinds.fixture.v1",
+  "note": "A built-in mesh kind rides in a world-3d scene payload as a REFERENCE ({ id, kind }) and never as tessellated geometry — the geometry is procedural and every renderer owns a generator for it. The two generators (Rust mesh_from_kind, TypeScript meshDataFromKind over the R3F engine's own primitives) tessellate differently, so the triangle list is deliberately NOT part of this contract: the local-space bounding box is.",
+  "sceneEntry": {
+    "requiredKeys": ["id", "kind"],
+    "forbiddenKeys": ["data"],
+    "example": { "id": "vortex-marker", "kind": "vortex-marker" }
+  },
+  "tolerance": 0.0001,
+  "fallbackKind": "box",
+  "kinds": [
+    { "kind": "box", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] },
+    { "kind": "plane", "min": [-0.5, 0.0, -0.5], "max": [0.5, 0.0, 0.5] },
+    { "kind": "sphere", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] },
+    { "kind": "uvSphere", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] },
+    { "kind": "icoSphere", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] },
+    { "kind": "cylinder", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] },
+    { "kind": "cone", "min": [-0.5, 0.0, -0.5], "max": [0.5, 1.0, 0.5] },
+    { "kind": "torus", "min": [-0.65, -0.15, -0.65], "max": [0.65, 0.15, 0.65] },
+    { "kind": "vortex-marker", "min": [-0.12, -0.12, -0.12], "max": [0.12, 0.12, 0.12] },
+    { "kind": "vertex-marker", "min": [-1.0, -1.0, -1.0], "max": [1.0, 1.0, 1.0] },
+    { "kind": "totally-unknown-kind", "min": [-0.5, -0.5, -0.5], "max": [0.5, 0.5, 0.5] }
+  ]
+}

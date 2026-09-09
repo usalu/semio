@@ -22,19 +22,24 @@ describe("sphere-box-fuse", () => {
 
   it("recomputes the committed union volume by its own quadrature", () => {
     const ball = knob.radius;
-    const half = knob.size / 2;
+    const side = knob.size;
+    // 🧲️ `brep.prim3d.box` spans `[0, side]³` from its own CORNER, and the ball is centred on that
+    // corner — so the overlap is the ball's POSITIVE OCTANT clipped to the box, not the concentric
+    // intersection the committed extent (`[-ball, side]`, which this same test asserts) never
+    // described. Each `z` slice contributes a quarter disc of radius `√(ball² − z²)` clipped to the
+    // square `[0, side]²`.
     const clipped = (z: number) => {
       const squared = ball * ball - z * z;
       if (squared <= 0) return 0;
-      const r = Math.sqrt(squared);
-      if (r <= half) return Math.PI * r * r;
-      if (r >= half * Math.SQRT2) return 4 * half * half;
-      const chord = Math.sqrt(r * r - half * half);
-      return 4 * (half * chord + r * r * (Math.PI / 4 - Math.atan(chord / half)));
+      const radius = Math.sqrt(squared);
+      if (radius <= side) return (Math.PI * squared) / 4;
+      if (radius >= side * Math.SQRT2) return side * side;
+      const chord = Math.sqrt(squared - side * side);
+      return side * chord + (squared / 2) * (Math.asin(side / radius) - Math.asin(chord / radius));
     };
-    const overlap = simpson(clipped, -Math.min(ball, half), Math.min(ball, half), 8000);
-    assertExpectedVolume(fixture, (4 / 3) * Math.PI * ball ** 3 + knob.size ** 3 - overlap);
-    assertExpectedBoundingBox(fixture, [-ball, -ball, -ball], [Math.max(ball, knob.size), Math.max(ball, knob.size), Math.max(ball, knob.size)]);
-    expect(fixture.kernelStatus).toBe("blocked-on-boolean-kernel");
+    const overlap = simpson(clipped, 0, Math.min(ball, side), 8000);
+    assertExpectedVolume(fixture, (4 / 3) * Math.PI * ball ** 3 + side ** 3 - overlap);
+    assertExpectedBoundingBox(fixture, [-ball, -ball, -ball], [Math.max(ball, side), Math.max(ball, side), Math.max(ball, side)]);
+    expect(fixture.kernelStatus).toBe("green");
   });
 });

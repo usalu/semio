@@ -196,16 +196,29 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// pure helpers over document types (`FlowFixture`/`DagFixture`/eval `Value`), not app-referencing.
+/// 🏠️ Runs `body` against a catalogue-seeded host built from `fixture`, then retires that host.
+///
+/// A `FlowHost` owns a cloned `FlowFixture`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
+/// drop (`ordered-map root must be explicitly retired before drop`,
+/// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
+/// [`FlowHost::retire_cold`], never dropped.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
-    let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-    host
+pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    FlowHost::with_fixture(fixture, |host| {
+        host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+        body(host)
+    })
 }
 
+/// 🏠️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
+/// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
+/// host because every real caller needs it mutably (`sync`/`tick`).
 #[cfg(feature = "component-app-assembly")]
-pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
-    flow_host_with_session(fixture, session)
+pub fn with_host_session<R>(fixture: &FlowFixture, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
+    let mut host = flow_host_with_session(fixture, session);
+    let result = body(&mut host, session);
+    host.retire_cold();
+    result
 }
 
 /// 🔀️ Runs a host mutation seeded from the projection fixture and diffs the result into operations.
@@ -214,10 +227,13 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
 #[cfg(feature = "component-app-assembly")]
 pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation> {
-    let mut host = host_from_fixture(fixture);
-    let baseline = host.fixture.clone();
-    mutate(&mut host);
-    crate::standards::v1::subsets::any::schema::mutations::text::generation2d_fixture_operations(&baseline, &host.fixture)
+    with_host(fixture, |host| {
+        let baseline = host.fixture.clone();
+        mutate(host);
+        let operations = crate::standards::v1::subsets::any::schema::mutations::text::generation2d_fixture_operations(&baseline, &host.fixture);
+        baseline.retire_cold();
+        operations
+    })
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -351,7 +367,9 @@ pub fn generation_preview_host(fixture: &FlowFixture, values: &semio_framework_a
 #[cfg(feature = "component-app-assembly")]
 pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let mut host = generation_preview_host(fixture, values);
-    host.evaluate().unwrap_or_default()
+    let evaluated = host.evaluate().unwrap_or_default();
+    host.retire_cold();
+    evaluated
 }
 
 #[cfg(feature = "component-app-assembly")]

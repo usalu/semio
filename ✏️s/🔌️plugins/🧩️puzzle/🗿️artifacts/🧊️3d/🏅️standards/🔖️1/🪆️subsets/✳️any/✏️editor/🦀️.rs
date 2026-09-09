@@ -16,7 +16,7 @@ use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
     scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_overlap_budget, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
-    set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, suggestions_tick,
+    set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_panel_page, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, suggestions_tick,
     translate_selection, world_relocate,
 };
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime};
@@ -40,7 +40,7 @@ use semio_framework_plugin::{
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError,
     MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
-    WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
+    WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
 };
 use store::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
@@ -1372,13 +1372,6 @@ pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope
     sync_precompute_scene(session, envelope);
 }
 
-fn restored_precompute_session(envelope: &Puzzle3dScene, checkpoint: &[u8]) -> Puzzle3dPrecomputeSession {
-    let mut session = Puzzle3dPrecomputeSession::new();
-    sync_precompute_session(&mut session, envelope);
-    session.restore_persisted_fill(checkpoint);
-    session
-}
-
 pub fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     let object_weights = envelope.runtime.object_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
     let vortex_weights = envelope.runtime.vortex_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
@@ -1977,6 +1970,96 @@ pub fn puzzle3d_suggestions_tick_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
+/// 🔍️ The panel bodies a SELECTION change invalidates: the field inspector (it renders the selected
+/// entity's own fields, `panels::inspection::render`), the artifact outliner (it marks the selected
+/// rows) and the framework history panel (the framework records one command row per
+/// `interactionSelect`). The catalogue lists object KINDS and the settings panel reads window options
+/// — neither can move when only the selection moves.
+pub fn puzzle3d_selection_panel_bodies() -> Vec<String> {
+    vec![inspection::BODY_KEY.to_string(), document::BODY_KEY.to_string(), FRAMEWORK_HISTORY_BODY_KEY.to_string()]
+}
+
+/// 📝️ The panel bodies a DOCUMENT edit invalidates: everything a selection change does, plus the
+/// catalogue (object/vortex kind rosters are document data).
+pub fn puzzle3d_document_panel_bodies() -> Vec<String> {
+    let mut bodies = puzzle3d_selection_panel_bodies();
+    bodies.push(catalogue::BODY_KEY.to_string());
+    bodies
+}
+
+/// @emoji 🐢️ What class of shell state one declared command invalidates — the ONE place this app
+/// decides a `UiDirtyScope`, next to the command catalogue whose ids it keys on.
+///
+/// 🧯️ Why this is a table and not a default: `dispatch_step` used to start every arm at
+/// [`UiDirtyScope::Full`] and let four viewport verbs opt out, so the only alternatives an author had
+/// were "repaint the entire shell" or "hand-write a Partial" — and every hand-written Partial in this
+/// app carried `panel_bodies: Vec::new()`, which is correct for a fill tick and silently wrong for
+/// anything that moves the selection or the document. The class says WHAT changed; the scope is
+/// derived from it exactly once, so a command can never name a window body and forget its panels.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Puzzle3dScopeClass {
+    /// 🈳️ Paints nothing (a host-only upload, an idle tick, a refused command).
+    Quiet,
+    /// 🎥️ Camera/projection only — the world body, no panels, no chrome.
+    Viewport,
+    /// 🪣️ Background fill planning: world body + fill-tool measures.
+    FillBuild,
+    /// ⚖️ Fill/distribution slider gestures: world body + fill-tool measures + window measures.
+    FillOptions,
+    /// ⏱️ Suggestion collision ticking: world body only.
+    SuggestionsTick,
+    /// 🪣️ Committing a planned fill: a DOCUMENT edit that also moves the fill-count slider range, so
+    /// it is [`Puzzle3dScopeClass::Document`] plus the fill tool's own measures.
+    FillApply,
+    /// 🕹️ Selection changed: world body + [`puzzle3d_selection_panel_bodies`] + window measures.
+    Selection,
+    /// 📝️ Document edited: world body + [`puzzle3d_document_panel_bodies`] + window measures.
+    Document,
+    /// 🏛️ Anything that can move the shell chrome itself — utilities, tools, engagements, labels, or
+    /// a whole-document switch. The honest answer for a command whose blast radius is not narrower.
+    Chrome,
+}
+
+/// 🐢️ The exact `UiDirtyScope` one [`Puzzle3dScopeClass`] stands for.
+pub fn puzzle3d_scope(class: Puzzle3dScopeClass) -> UiDirtyScope {
+    match class {
+        Puzzle3dScopeClass::Quiet => UiDirtyScope::None,
+        Puzzle3dScopeClass::Viewport => puzzle3d_viewport_scope(),
+        Puzzle3dScopeClass::FillBuild => puzzle3d_fill_build_scope(),
+        Puzzle3dScopeClass::FillOptions => puzzle3d_fill_options_scope(),
+        Puzzle3dScopeClass::SuggestionsTick => puzzle3d_suggestions_tick_scope(),
+        Puzzle3dScopeClass::Selection => {
+            UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_selection_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+        }
+        Puzzle3dScopeClass::Document => {
+            UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_document_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+        }
+        Puzzle3dScopeClass::FillApply => {
+            UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_document_panel_bodies(), utilities: false, tools: true, engagements: false, measures: true, labels: false }
+        }
+        Puzzle3dScopeClass::Chrome => UiDirtyScope::Full,
+    }
+}
+
+/// @emoji 🐢️ The scope table: one class per declared action id. An id absent from the table is
+/// [`Puzzle3dScopeClass::Chrome`] — the widest, always-correct answer — so a newly declared command
+/// is slow before it is wrong, and `command_scope_classes_name_the_panels_they_change` in
+/// `🧪️tests/🔬️unit/🦀️.rs` is what forces every MUTATING id to earn a narrower class.
+pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
+    match action {
+        "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => Puzzle3dScopeClass::Viewport,
+        "fillBuildTick" | "cancelFillBuild" => Puzzle3dScopeClass::FillBuild,
+        "setObjectKindWeight" | "setVortexKindWeight" => Puzzle3dScopeClass::FillOptions,
+        "suggestionsTick" => Puzzle3dScopeClass::SuggestionsTick,
+        "registerBrushMesh" => Puzzle3dScopeClass::Quiet,
+        "selectSameKindSelection" => Puzzle3dScopeClass::Selection,
+        "duplicateSelection" | "deleteSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "patchInspector" | "setSelectionFlag" | "setTargetVolumeFlag" | "deleteAttraction" | "deleteTargetVolume" | "createAttraction"
+        | "worldRelocate" | "relocateTargetVolume" | "addObjectKind" | "addTargetVolume" => Puzzle3dScopeClass::Document,
+        "setFillCount" => Puzzle3dScopeClass::FillApply,
+        _ => Puzzle3dScopeClass::Chrome,
+    }
+}
+
 //#endregion 🔖️UiScopes
 
 //#region 🔖️Puzzle3dCommand
@@ -2086,6 +2169,7 @@ puzzle3d_command_variants! {
     SetLodAutomatic = "setLodAutomatic",
     SetLodDepthVariable = "setLodDepthVariable",
     SetGridVisible = "setGridVisible",
+    SetPanelPage = "setPanelPage",
     SetLodManual = "setLodManual",
     SetGridSnapEnabled = "setGridSnapEnabled",
     SetGridSpacing = "setGridSpacing",
@@ -2154,6 +2238,7 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "setLodAutomatic",
         "setLodDepthVariable",
         "setGridVisible",
+        "setPanelPage",
         "setLodManual",
         "setGridSnapEnabled",
         "setGridSpacing",
@@ -2300,6 +2385,26 @@ impl<'a> Puzzle3dActionCtx<'a> {
     /// nothing, so the effect list stays fixed-width. An unauthored locale×terminology axis carries
     /// the app's own `ui.localization.unsupported` code rather than an English sentence — this UI has
     /// no default language, and a silent drop would restore exactly the defect being fixed.
+    /// 🎯️ Refuses a selection-scoped command that has nothing to act on: ONE localized notice, then the
+    /// same `abort` `select_same_kind` already uses, so no empty document edit and no empty interaction
+    /// write is emitted. Answers whether it refused, so an arm reads
+    /// `if ctx.refuse_without_selection(&ids) { return }`.
+    ///
+    /// 🕹️ Why this exists: every one of these arms used to run to completion over an EMPTY id list —
+    /// `duplicate_selection` cloned nothing and then called `replace_selection` with no targets,
+    /// `translate/rotate/scale_selection` moved nothing, `delete_selection` retained everything. The
+    /// emitted delta was empty, so the framework logged no command row and the outliner never changed:
+    /// in the browser "Duplicate Selection" was indistinguishable from a dead menu row (measured
+    /// 2026-09-09 21:05, no notice of any kind). A refusal must be visible.
+    pub fn refuse_without_selection(&mut self, ids: &[String]) -> bool {
+        if !ids.is_empty() {
+            return false;
+        }
+        self.notice(|labels| labels.nothing_selected.as_str());
+        self.abort = true;
+        true
+    }
+
     pub fn notice(&mut self, message: impl Fn(&Puzzle3dLabels) -> &'static str) {
         if self.effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })) {
             return;
@@ -2521,11 +2626,21 @@ impl Puzzle3dSessionState {
 struct Puzzle3dDocumentTreeKey {
     fingerprint: u64,
     label_set: usize,
+    pages: u64,
 }
 
 impl Puzzle3dDocumentTreeKey {
-    fn of(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Self {
-        Self { fingerprint: main::fixture_geometry_fingerprint(fixture), label_set: std::ptr::from_ref(labels).addr() }
+    fn of(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> Self {
+        let mut pages_digest = 0u64;
+        let mut keys: Vec<&String> = pages.keys().collect();
+        keys.sort();
+        for key in keys {
+            for byte in key.as_bytes() {
+                pages_digest = pages_digest.wrapping_mul(16777619) ^ u64::from(*byte);
+            }
+            pages_digest = pages_digest.wrapping_mul(16777619) ^ u64::from(pages[key]);
+        }
+        Self { fingerprint: main::fixture_geometry_fingerprint(fixture), label_set: std::ptr::from_ref(labels).addr(), pages: pages_digest }
     }
 }
 
@@ -2750,7 +2865,11 @@ impl Puzzle3dPlayApp {
     /// pool or the value arena is saturated) is never fatal: the memo is simply dropped and the caller
     /// gets the freshly built tree — the pre-memo baseline.
     pub(crate) fn document_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-        let key = Puzzle3dDocumentTreeKey::of(fixture, labels);
+        self.document_tree_cached_from(fixture, labels, &HashMap::new())
+    }
+
+    pub(crate) fn document_tree_cached_from(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+        let key = Puzzle3dDocumentTreeKey::of(fixture, labels, pages);
         let mut cache = self.document_tree_cache.lock().expect("document cache");
         if let Some(retained) = cache.as_ref().filter(|(cached, _)| *cached == key).and_then(|(_, node)| node.credited_clone()) {
             return Ok(retained);
@@ -2758,7 +2877,7 @@ impl Puzzle3dPlayApp {
         #[cfg(test)]
         PUZZLE3D_DOCUMENT_TREE_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
         cache.take();
-        let node = document::render(fixture, labels)?;
+        let node = document::render_from(fixture, labels, pages)?;
         *cache = node.credited_clone().map(|retained| (key, Box::new(retained)));
         Ok(node)
     }
@@ -2919,19 +3038,20 @@ impl Puzzle3dActionPrologue {
         let transient_before = window_ownership::transient(config, view_state);
         // 🪟️ This action targets the one exact window owner already composed into `config`.
         let wid = window_id.map_or_else(|| main::WINDOW_KIND_ID.into(), str::to_string);
-        let mut ui_scope = UiDirtyScope::Full;
+        let mut ui_scope = puzzle3d_scope(puzzle3d_command_scope_class(action));
         let mut effects = Vec::new();
         let mut interaction_writes = Vec::new();
         let mut ctx = Puzzle3dActionCtx { app, scene: &mut scene, window_id: &wid, config, view_state, interaction, ui_scope: &mut ui_scope, effects: &mut effects, interaction_writes: &mut interaction_writes, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
-            return (Emit::default(), EphemeralEmit::default());
+            // 🧯️ An aborted arm emits no document/config delta — but the refusal NOTICE it pushed is the
+            // user-visible half of that refusal and must survive, or "refused" and "silently did nothing"
+            // look identical (exactly how `duplicateSelection` presented in the browser). Effects travel
+            // on their own lane, so keeping them costs no mutation and no undo entry; the scope stays
+            // `None` because nothing was painted.
+            return (Emit { effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
         }
-        ui_scope = match action {
-            "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => puzzle3d_viewport_scope(),
-            _ => ui_scope,
-        };
         let next_active_utility = scene.active_utility.clone();
         let operations = if let Some(before) = before.as_ref() {
             puzzle3d_operations_from_fixture_change(before, &scene.fixture)
@@ -3037,6 +3157,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "setLodDepthVariable" => set_depth_variable::set_depth_variable(ctx, args),
         "setLodManual" => set_manual::set_manual(ctx, args),
         "setGridVisible" => set_visible::set_visible(ctx, args),
+        "setPanelPage" => set_panel_page::set_panel_page(ctx, args),
         "setGridSnapEnabled" => set_snap_enabled::set_snap_enabled(ctx, args),
         "setGridSpacing" => set_spacing::set_spacing(ctx, args),
         "setProximityRadius" => set_proximity_radius::set_proximity_radius(ctx, args),
@@ -3071,6 +3192,18 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
     }
 }
 
+/// 🧊️ Whether an action's arm READS the precompute session's synced view of the scene, and therefore
+/// owes [`Puzzle3dCommandPrologue::sync_step`]'s three stages — one owed mesh fallback per turn, the
+/// engine scene build, its push — before it runs.
+///
+/// 🥽️ `registerBrushMesh` is deliberately NOT one of them, even though it is the action that touches
+/// the session most directly: it only ever WRITES geometry into it. Syncing first was not merely dead
+/// work, it was work the same command then threw away — the sync seeds a scaled-box fallback for every
+/// mesh id the session holds no geometry for (exactly the ids a `registerBrushMesh` run is about to
+/// supply) and each seeding clears the brush cache and rebuilds the queue, then the arm's own install
+/// clears them again. Seven serialized announcements each paid a whole document scene build plus that
+/// rebuild, which is where the 0.65 s → 2.85 s per call measured on 2026-09-09 lived — the arm itself
+/// is two `HashMap` lookups. The next scene-reading action re-syncs, so nothing downstream is stale.
 fn puzzle3d_action_uses_precompute(action: &str) -> bool {
     matches!(
         action,
@@ -3081,7 +3214,6 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
             | "openVortexSuggestions"
             | "acceptSuggestion"
             | "suggestionsTick"
-            | "registerBrushMesh"
             | "setFillCount"
             | "fillBuildTick"
             | "cancelFillBuild"
@@ -3099,9 +3231,13 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
 /// host's declared locale×terminology axes; an axis this app never authored carries
 /// [`PUZZLE3D_LOCALIZATION_UNSUPPORTED`] rather than an English sentence, because this UI has no
 /// default language and a silent drop would restore the very defect being fixed.
+///
+/// 🐢️ The scope is [`UiDirtyScope::None`], not `Emit::effect`'s `Default` (which is `Full`): a work
+/// that refused published nothing, so there is nothing to repaint — the notice itself travels on the
+/// effect lane, which the host applies before it ever consults the scope.
 fn puzzle3d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, message: impl Fn(&Puzzle3dLabels) -> &'static str) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
     let text = view_state.and_then(puzzle3d_labels).map_or_else(|| PUZZLE3D_LOCALIZATION_UNSUPPORTED.to_string(), |labels| message(labels).to_string());
-    Emit::effect(Effect::Notify { message: text })
+    Emit { effects: vec![Effect::Notify { message: text }], ui_scope: UiDirtyScope::None, ..Default::default() }
 }
 
 pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
@@ -3149,6 +3285,7 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setGridSnapEnabled",
     "setGridSpacing",
     "setGridVisible",
+    "setPanelPage",
     "setLodAutomatic",
     "setLodDepthVariable",
     "setLodManual",
@@ -3211,7 +3348,7 @@ fn puzzle3d_retained_reduce(
         let scale = crate::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
         let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
         let volume = crate::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
-        return Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
+        return Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None)], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addTargetVolume")), ..Default::default() });
     }
     let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
     Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl(command, command.window_id(), snapshot, &runtime, view_state, &snapshot_interaction).0))
@@ -3591,7 +3728,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 } else {
                     Puzzle3dConfigMutation::SetVortexKindWeights { value: std::mem::take(&mut self.result) }
                 };
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations: vec![mutation], ui_scope: puzzle3d_fill_options_scope(), ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations: vec![mutation], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }))
             }
             Puzzle3dKindWeightStage::Complete => Err(Fault::from("puzzle3d-kind-weight-complete-repolled")),
             Puzzle3dKindWeightStage::Closing => Err(Fault::from("puzzle3d-kind-weight-closing")),
@@ -3830,7 +3967,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None));
                 self.stage = Puzzle3dAddObjectKindStage::Complete;
                 let artifact_mutations = self.catalog_mutation.take().into_iter().chain(self.mutation.take()).collect();
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addObjectKind")), ..Default::default() }))
             }
             Puzzle3dAddObjectKindStage::Complete => Err(Fault::from("puzzle3d-add-kind-complete-repolled")),
             Puzzle3dAddObjectKindStage::Closing => Err(Fault::from("puzzle3d-add-kind-closing")),
@@ -3875,6 +4012,10 @@ struct Puzzle3dScaleWork {
     objects: HashSet<String>,
     volumes: HashSet<String>,
     mutations: Vec<Puzzle3dMutation>,
+    /// 🗣️ The host's declared locale×terminology axes, bound by `build_tool_job` exactly like every
+    /// other retained work — this work resolves its own refusal notice and has no `Puzzle3dActionCtx`
+    /// to borrow one from.
+    view_state: Option<semio_framework_plugin::ViewModel>,
 }
 
 impl Default for Puzzle3dScaleWork {
@@ -3894,6 +4035,7 @@ impl Puzzle3dScaleWork {
             objects: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
             volumes: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
             mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            view_state: None,
         }
     }
     fn explicit_ids(command: &Puzzle3dCommand) -> Option<&Vec<Value>> {
@@ -3963,6 +4105,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         self.tool_id
     }
 
+    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
+        self.view_state = view_state;
+    }
+
     fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
         let object_selection = Self::explicit_ids(command).map_or_else(|| Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).map_or(0, |selection| selection.ids.len()), Vec::len);
         let volume_selection = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).map_or(0, |selection| selection.ids.len());
@@ -4007,6 +4153,17 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.selection_cursor += 1;
                     return Ok(Self::progress("puzzle3d-scale-volume-selection", "Reading selected volume", "Ausgewähltes Volumen wird gelesen"));
                 }
+                // 🧲️ Both selection cursors are exhausted, so this is the exact set the gesture will act
+                // on. Acting on NOTHING is a refusal, and a refusal is visible: one localized notice, no
+                // mutation, no coalesce key (a refusal must never join the gesture's latest-wins group)
+                // and nothing repainted. Measured 2026-09-09 21:05 in the browser as a dead "Translate
+                // Selection" row; the `refuse_without_selection` guard the `🎮️commands/*` arms carry
+                // never runs for these three verbs, because `build_tool_job` routes them here instead of
+                // through `dispatch_step`.
+                if self.objects.is_empty() && self.volumes.is_empty() {
+                    self.stage = Puzzle3dScaleStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.nothing_selected.as_str())));
+                }
                 self.stage = Puzzle3dScaleStage::Objects;
                 Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
             }
@@ -4025,7 +4182,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let Some(volume) = snapshot.typed().target_volumes.get(self.volume_cursor) else {
                     self.stage = Puzzle3dScaleStage::Complete;
                     let mutations = std::mem::take(&mut self.mutations);
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }));
                 };
                 self.volume_cursor += 1;
                 if self.volumes.contains(&volume.id) && !volume.locked {
@@ -4045,6 +4202,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.view_state.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if self.mutations.pop().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
@@ -4067,7 +4227,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dScaleStage::Closing && self.mutations.is_empty() && self.objects.is_empty() && self.volumes.is_empty()
+        self.stage == Puzzle3dScaleStage::Closing && self.view_state.is_none() && self.mutations.is_empty() && self.objects.is_empty() && self.volumes.is_empty()
     }
 }
 
@@ -4171,7 +4331,7 @@ impl Puzzle3dPatchInspectorWork {
 
     fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
         self.stage = Puzzle3dPatchInspectorStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("patchInspector")), ..Default::default() })
     }
 
     fn scale(value: Option<crate::Puzzle3dScale>) -> [f64; 3] {
@@ -4575,7 +4735,7 @@ impl Puzzle3dWorldRelocateWork {
 
     fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
         self.stage = Puzzle3dWorldRelocateStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("worldRelocate")), ..Default::default() })
     }
 }
 
@@ -4918,7 +5078,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.stage = Puzzle3dCreateAttractionStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::connect_vortices(id, attracting.vortex_id, attracted.vortex_id, gap, shift, rise, rotation, turn, tilt, 0.0, 0.0)],
-                    ui_scope: UiDirtyScope::Full,
+                    ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("createAttraction")),
                     ..Default::default()
                 }))
             }
@@ -4964,6 +5124,14 @@ enum Puzzle3dSetActiveExampleStage {
     Complete,
     Closing,
 }
+
+/// 🔢️ Steps `Puzzle3dSetActiveExampleWork` spends on stage TRANSITIONS rather than on document items:
+/// each of the five delete stages and each of the five create stages answers its own exhaustion with one
+/// `Progress`, `Domain` and `Catalogs` are one step each, and `Publish` is the final `Complete` call —
+/// 5 + 1 + 1 + 5 + 1 = 13. The extent is an upper bound on `step()` calls (the sibling `patchInspector`
+/// law asserts `iterations <= extent`), so it has to carry all of them; it declared `3`, which is short
+/// by ten and made a real example load overrun its own declared envelope.
+const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
 
 struct Puzzle3dSetActiveExampleWork {
     stage: Puzzle3dSetActiveExampleStage,
@@ -5029,7 +5197,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             .checked_add(target.target_volumes.len())?
             .checked_add(target.references.len())?
             .checked_add(Self::compatibility_rows(target).len())?
-            .checked_add(3)?;
+            .checked_add(PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -5165,7 +5333,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dSetActiveExampleStage::Publish => {
                 self.stage = Puzzle3dSetActiveExampleStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("setActiveExample")), ..Default::default() }))
             }
             Puzzle3dSetActiveExampleStage::Complete => Err(Fault::from("puzzle3d-set-active-example-complete-repolled")),
             Puzzle3dSetActiveExampleStage::Closing => Err(Fault::from("puzzle3d-set-active-example-closing")),
@@ -5431,7 +5599,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_id);
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(attraction_id, payload.target_vortex_id, attracted, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
                 self.stage = Puzzle3dAddBrushObjectStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addBrushObject")), ..Default::default() }))
             }
             Puzzle3dAddBrushObjectStage::Complete => Err(Fault::from("puzzle3d-brush-complete-repolled")),
             Puzzle3dAddBrushObjectStage::Closing => Err(Fault::from("puzzle3d-brush-closing")),
@@ -5587,7 +5755,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 next.camera.position = [self.center[0] + distance * 0.6, self.center[1] - distance * 0.6, self.center[2] + distance * 0.5];
                 next.camera.target = self.center;
                 let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-focus-window-context-required"))?;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { window_config_mutations: vec![window_ownership::addressed_config(view, next)?], ui_scope: puzzle3d_viewport_scope(), ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { window_config_mutations: vec![window_ownership::addressed_config(view, next)?], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("focusSelection")), ..Default::default() }))
             }
             Puzzle3dFocusSelectionStage::Complete => Err(Fault::from("puzzle3d-focus-selection-complete-repolled")),
             Puzzle3dFocusSelectionStage::Closing => Err(Fault::from("puzzle3d-focus-selection-closing")),
@@ -5643,7 +5811,7 @@ impl Default for Puzzle3dRelocateVolumeWork {
 impl Puzzle3dRelocateVolumeWork {
     fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
         self.stage = Puzzle3dRelocateVolumeStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("relocateTargetVolume")), ..Default::default() })
     }
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
@@ -5984,7 +6152,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAcceptSuggestionStage::PublishResult => {
                 self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("acceptSuggestion")), ..Default::default() }))
             }
             Puzzle3dAcceptSuggestionStage::Complete => Err(Fault::from("puzzle3d-accept-complete-repolled")),
             Puzzle3dAcceptSuggestionStage::Closing => Err(Fault::from("puzzle3d-accept-closing")),
@@ -6316,7 +6484,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                         artifact_mutations: std::mem::take(&mut self.fill_mutations),
                         config_mutations,
                         coalesce_key: Some("fill-count".into()),
-                        ui_scope: puzzle3d_fill_build_scope(),
+                        ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("setFillCount")),
                         ..Default::default()
                     }));
                 }
@@ -6477,6 +6645,7 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodAutomatic", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodDepthVariable", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodManual", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -6880,8 +7049,8 @@ impl Puzzle3dRetainedCommandProofs {
         tools: [
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
-            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
-            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "cancelFillBuild", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
+            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "cancelFillBuild", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setPanelPage", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
         ]
     }
 }
@@ -7040,6 +7209,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "setLodDepthVariable"
             | "setLodManual"
             | "setGridVisible"
+            | "setPanelPage"
             | "setGridSnapEnabled"
             | "setGridSpacing"
             | "setSelectableKind"
@@ -7304,7 +7474,16 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let wid = view_state.window_id.as_deref().unwrap_or(main::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = app.scene_for(&puzzle3d_projection_value(doc.snapshot.value()), &runtime, Some(view_state), wid);
-            let precompute = restored_precompute_session(&envelope, &[]);
+            // 🧠️ The app's OWN live precompute session, exactly as `render` reads it — never a session
+            // minted per call. Tool chrome reports what the lanes have actually resolved
+            // (fill readiness, brush candidates); a session minted here starts empty every call, so no
+            // amount of warming could ever reach the user's controls.
+            {
+                let mut precompute = app.precompute.borrow_mut();
+                sync_precompute_session(&mut precompute, &envelope);
+                precompute.set_fill_applied_count(runtime.fill_count);
+            }
+            let precompute = app.precompute.borrow();
             HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &precompute, labels))])
         })
     }
@@ -7377,7 +7556,7 @@ impl Puzzle3dPlayApp {
                     let (instances_json, meshes_json) = app.geometry_jsons(&envelope.fixture);
                     main::render(&envelope, &precompute, labels, instances_json, meshes_json, interaction)
                 }
-                document::BODY_KEY => app.document_tree_cached(&envelope.fixture, labels),
+                document::BODY_KEY => app.document_tree_cached_from(&envelope.fixture, labels, &envelope.runtime.panel_pages),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, interaction, labels),
                 settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
@@ -7395,7 +7574,15 @@ impl Puzzle3dPlayApp {
         with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &config, |app| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = app.scene_for(&puzzle3d_projection_value(doc.snapshot.value()), &config, Some(view_state), window_id);
-            let precompute = restored_precompute_session(&envelope, &[]);
+            // 🧠️ See `tool_measures`: window chrome reads the app's OWN live precompute session, the same
+            // one `render` reads, so the brush placement picker offers the candidates the brush lane has
+            // actually resolved for the live target instead of a cold session's empty list.
+            {
+                let mut precompute = app.precompute.borrow_mut();
+                sync_precompute_session(&mut precompute, &envelope);
+                precompute.set_fill_applied_count(config.fill_count);
+            }
+            let precompute = app.precompute.borrow();
             HashMap::from([(window_id.to_string(), main::window_measures(&envelope, &precompute, labels, interaction))])
         })
     }
@@ -7556,10 +7743,16 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
-            .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets"))
+            // 🎯️ Entity-scoped and therefore NOT palette/shell-menu vocabulary: `delete_attraction` acts
+            // on the `id` its own context-menu row carries, and the action declares no args, so a generic
+            // surface can only ever dispatch it empty. Offering it anyway put "Delete Attraction" /
+            // "Delete Target Volume" in the shell fallback menu of a plain OBJECT selection (measured
+            // 2026-09-09 21:05) where they name nothing and do nothing. The attraction's own row in
+            // `puzzle3d_context_menu_items` is unaffected — it supplies the id.
+            .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets").in_palette(false))
             .mutation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
-            .action_with(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets"))
-            .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets"))
+            .action_with(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets").in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets").in_palette(false))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
@@ -7580,6 +7773,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLodAutomatic", LocalizedLabel::native("Set Lod Automatic", "Detailstufe automatisch"))
             .view_action("setLodDepthVariable", LocalizedLabel::native("Set Lod Depth Variable", "Detailstufen-Tiefe festlegen"))
             .view_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster anzeigen"))
+            .view_action("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"))
             .view_action("setLodManual", LocalizedLabel::native("Set Lod Manual", "Detailstufe manuell"))
             .action_with(ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3"))
             .view_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"))
@@ -7593,7 +7787,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("transformBegin", LocalizedLabel::native("Transform Begin", "Transformieren beginnen"), ActionKind::View, "move"))
             .view_action("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"))
             .view_action("setVoxelDims", LocalizedLabel::native("Set Voxel Dims", "Voxel-Abmessungen festlegen"))
-            .view_action("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
+            .mutation("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
             .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
             .view_action("setObjectKindWeight", puzzle3d_localized_phrase(|l| l.object, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
             .view_action("setVortexKindWeight", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
@@ -7747,6 +7941,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPanelPage", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)

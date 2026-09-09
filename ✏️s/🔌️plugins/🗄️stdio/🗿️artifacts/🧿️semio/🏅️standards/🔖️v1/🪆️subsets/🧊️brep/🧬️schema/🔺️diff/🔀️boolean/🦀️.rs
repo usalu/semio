@@ -40,18 +40,20 @@ use crate::standards::v1::subsets::brep::schema::diff::transform::transform_soli
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
 use crate::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
 use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
-use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_face_uv;
+use crate::standards::v1::subsets::brep::schema::inferences::classification::{point_in_face_uv, point_in_face_uv_closure};
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError, ValidationIssue};
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Api
 
@@ -505,8 +507,8 @@ fn exact_imprint_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp,
                         (None, None) => build_imprint_edge(body, ic, (t0, t1), full_period, (tol, &mut weld), rec),
                     };
                     let prange = oriented_prange(body, edge_id, endpoints, (t0, t1));
-                    let pca = body.curves2.insert(ic.pcurve_a.clone());
-                    let pcb = body.curves2.insert(ic.pcurve_b.clone());
+                    let pca = body.curves2.insert(pcurve_for_clip(&sa, &ic.curve3, &ic.pcurve_a, (t0, t1), tol));
+                    let pcb = body.curves2.insert(pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (t0, t1), tol));
                     if along_a.is_none() {
                         pending_a.entry(fa).or_default().push(Pending { edge_id, pcurve_id: pca, prange, kind: kind_a });
                     }
@@ -658,16 +660,23 @@ fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: Fa
     }
     let periodic = ic.curve3.is_periodic() && ic.curve3.period().is_some_and(|p| (hi - lo - p).abs() < 1e-6 * p.max(1.0));
     const N: usize = 64;
+    // The trim's CLOSURE, not its interior: a clip that treats "on the boundary" as outside stops
+    // one sample short of a sphere's pole (which IS its `v = ±π/2` boundary), never reaches a
+    // periodic seam, and shreds an arc that runs exactly along an operand's own edge into
+    // borderline fragments — all three of the procedural examples' failure modes. See
+    // `classification::point_in_face_uv_closure`.
     let valid = |t: f64| -> bool {
         let ua = wrap_uv_for_surface(body, face_a, ic.pcurve_a.eval(t));
         let ub = wrap_uv_for_surface(body, face_b, ic.pcurve_b.eval(t));
-        point_in_face_uv_periodic(body, face_a, ua, tol) && point_in_face_uv_periodic(body, face_b, ub, tol)
+        point_in_face_uv_closure_periodic(body, face_a, ua, tol) && point_in_face_uv_closure_periodic(body, face_b, ub, tol)
     };
     let mut inside = [false; N + 1];
     for (i, slot) in inside.iter_mut().enumerate() {
         let t = lo + (hi - lo) * (i as f64 / N as f64);
         *slot = valid(t);
     }
+    let cell = (hi - lo) / N as f64;
+    let reach = (cell, curve3_extent(&ic.curve3, (lo, lo + cell)).max(1e-12) * 2.0);
     let mut runs: Vec<(f64, f64)> = Vec::new();
     let mut i = 0usize;
     while i <= N {
@@ -678,8 +687,8 @@ fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: Fa
             }
             let end = i - 1;
             let t_at = |k: usize| lo + (hi - lo) * (k as f64 / N as f64);
-            let t0 = if start > 0 { refine_boundary(&valid, t_at(start - 1), t_at(start)) } else { t_at(start) };
-            let t1 = if end < N { refine_boundary(&valid, t_at(end + 1), t_at(end)) } else { t_at(end) };
+            let t0 = if start > 0 { snap_clip_endpoint(body, ic, (face_a, face_b), refine_boundary(&valid, t_at(start - 1), t_at(start)), reach, tol) } else { t_at(start) };
+            let t1 = if end < N { snap_clip_endpoint(body, ic, (face_a, face_b), refine_boundary(&valid, t_at(end + 1), t_at(end)), reach, tol) } else { t_at(end) };
             if t1 > t0 {
                 runs.push((t0, t1));
             }
@@ -688,25 +697,15 @@ fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: Fa
         }
     }
     if periodic && !runs.is_empty() {
-        // A periodic curve can graze a face's own boundary at an ARBITRARY interior parameter,
-        // not just the domain's own `t=lo`/`t=hi` ends (e.g. a latitude circle touches a
-        // cylinder's/sphere's seam wherever its own phase happens to put `u=0`, not necessarily at
-        // the circle's own `t=0`) — that single physical touch reads as one narrow invalid gap in
-        // `inside[]` and splits what is genuinely a single closed loop into two adjacent open
-        // runs. Recognize this by TOTAL COVERAGE rather than assuming a fixed location: if the
-        // valid runs' combined measure accounts for nearly the whole period (i.e. the runs are
-        // separated only by narrow touch-sized gaps, not a genuine excursion outside the trim),
-        // treat the whole thing as one closed range. The gap's own midpoint (the actual touch
-        // parameter, wherever it really is) is returned alongside so the caller's per-face
-        // `Interior`/`SeamCrossing` decision samples the REAL touch point instead of assuming
-        // `t=lo` — `None` when there was no gap at all (genuinely interior on every support).
+        // A periodic curve whose valid runs account for (essentially) the whole period never
+        // leaves either trim: it is ONE closed loop, not the two adjacent open runs a seam touch
+        // used to read as. Under the closed trim test a seam touch leaves no gap at all, so the
+        // touch parameters can no longer be read off the gaps and are solved for directly
+        // ([`boundary_touch_parameters`]) — which is also strictly more accurate, since a gap's
+        // midpoint was only ever as good as the sampling that produced the gap.
         let covered: f64 = runs.iter().map(|&(t0, t1)| t1 - t0).sum();
         if (hi - lo - covered) < (hi - lo) * 1e-3 {
-            // A sphere/sphere (or other doubly-periodic) pair can graze EACH support's own seam
-            // at a DIFFERENT parameter — collect every gap's midpoint, not just the first, so the
-            // caller's per-face `SeamCrossing` check tests all of them.
-            let touches: Vec<f64> = runs.windows(2).map(|w| 0.5 * (w[0].1 + w[1].0)).collect();
-            return vec![(lo, hi, true, touches)];
+            return vec![(lo, hi, true, boundary_touch_parameters(body, ic, (face_a, face_b), (lo, hi), tol))];
         }
     }
     runs.into_iter().map(|(t0, t1)| (t0, t1, false, Vec::new())).collect()
@@ -829,6 +828,20 @@ fn wrap_uv_for_surface(body: &Body, face: FaceId, uv: Pnt2) -> Pnt2 {
 /// `point_in_face_uv` calls) and correct regardless of which offset either polygon settled on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn point_in_face_uv_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> bool {
+    uv_probe_over_period_shifts(body, face, uv, |candidate| point_in_face_uv(body, face, candidate, tol).unwrap_or(false))
+}
+
+/// 🔀 [`point_in_face_uv_periodic`] against the trim's CLOSURE — see
+/// [`crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_face_uv_closure`]
+/// for why a clip must use the closed test (poles, seams and coincident arcs all live exactly on
+/// the boundary and are invisible to the open one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_face_uv_closure_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> bool {
+    uv_probe_over_period_shifts(body, face, uv, |candidate| point_in_face_uv_closure(body, face, candidate, tol).unwrap_or(false))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn uv_probe_over_period_shifts(body: &Body, face: FaceId, uv: Pnt2, probe: impl Fn(Pnt2) -> bool) -> bool {
     let Some(face_data) = body.faces.get(face) else { return false };
     let Some(surface) = body.surfaces.get(face_data.surface) else { return false };
     let tau = std::f64::consts::TAU;
@@ -836,13 +849,237 @@ fn point_in_face_uv_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> b
     let v_shifts: &[f64] = if surface.is_v_periodic() { &[0.0, tau, -tau, 2.0 * tau, -2.0 * tau] } else { &[0.0] };
     for &du in u_shifts {
         for &dv in v_shifts {
-            let candidate = Pnt2::new(uv.x + du, uv.y + dv);
-            if point_in_face_uv(body, face, candidate, tol).unwrap_or(false) {
+            if probe(Pnt2::new(uv.x + du, uv.y + dv)) {
                 return true;
             }
         }
     }
     false
+}
+
+/// 🔀 Every boundary curve (3D curve + its edge's own range) of `face`'s outer ring — the exact
+/// geometry a clip endpoint has to land ON, and the geometry a closed imprint curve grazes when it
+/// crosses a seam.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, (f64, f64))> {
+    let mut out = Vec::new();
+    let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else { return out };
+    for coedge_id in body.loop_coedges(outer) {
+        let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+        let Some(edge) = body.edges.get(coedge.edge) else { continue };
+        let Some(curve) = body.curves3.get(edge.curve) else { continue };
+        out.push((curve.clone(), edge.range));
+    }
+    out
+}
+
+/// 🔀 Distance from `point` to the nearest of `curves`, and that curve's index — [`closest_parameter`]
+/// is analytic for `Line`/`Circle`/`Ellipse` (including a POINT edge, whose zero-direction line
+/// projects to its own origin) and Newton-refined for `Nurbs`, so this is the certified distance,
+/// not a sampled estimate.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn nearest_boundary_curve(curves: &[(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, (f64, f64))], point: Pnt3, tol: f64) -> Option<(usize, f64)> {
+    let mut best: Option<(usize, f64)> = None;
+    for (index, (curve, range)) in curves.iter().enumerate() {
+        let d = closest_parameter(curve, *range, point, tol).distance;
+        if best.is_none_or(|(_, bd)| d < bd) {
+            best = Some((index, d));
+        }
+    }
+    best
+}
+
+/// 🔀 Pulls a bisection-refined clip endpoint onto the trim boundary it approximates, EXACTLY.
+///
+/// [`refine_boundary`] can only ever locate the crossing to wherever the (tolerant) trim predicate
+/// flips, i.e. to within `tol` of the truth — and the two faces of a pair flip in different
+/// directions, so the SAME physical corner comes out of two different face pairs up to `2·tol`
+/// apart, which is outside the imprint weld radius and leaves two arcs that physically meet as an
+/// unconnected pair. Alternating projection fixes that at the source: project the endpoint onto the
+/// boundary curve it is closest to, re-solve the intersection curve's own parameter for that
+/// projected point, repeat. For the transversal crossings a clip produces this is a contraction
+/// and converges to the true curve/curve intersection in a handful of steps, so both face pairs
+/// land on the identical point and the weld — and therefore the chain — succeeds.
+///
+/// Returns `t_guess` unchanged when no boundary curve is near enough to be the crossing (the run
+/// ended at the sampled domain's own edge, not at a trim), so a genuinely unbounded run is left
+/// alone.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn snap_clip_endpoint(body: &Body, ic: &IntCurve, (face_a, face_b): (FaceId, FaceId), t_guess: f64, (param_reach, space_reach): (f64, f64), tol: f64) -> f64 {
+    let linear = tol.max(1e-12);
+    let mut curves = outer_boundary_curves(body, face_a);
+    curves.extend(outer_boundary_curves(body, face_b));
+    if curves.is_empty() {
+        return t_guess;
+    }
+    let mut point = ic.curve3.eval(t_guess);
+    let Some((index, distance)) = nearest_boundary_curve(&curves, point, linear) else { return t_guess };
+    if distance > space_reach {
+        return t_guess;
+    }
+    let (curve, range) = &curves[index];
+    let mut t = t_guess;
+    for _ in 0..8 {
+        let projected = closest_parameter(curve, *range, point, linear).point;
+        let solved = closest_parameter(&ic.curve3, (t_guess - param_reach, t_guess + param_reach), projected, linear);
+        if (solved.t - t).abs() <= 1e-15 {
+            return solved.t;
+        }
+        t = solved.t;
+        point = solved.point;
+    }
+    t
+}
+
+/// 🔀 Parameters at which a CLOSED imprint curve grazes either support face's own boundary ring —
+/// the seam touches that decide [`ImprintKind::SeamCrossing`] and anchor its imprint vertex.
+///
+/// Derived from the geometry directly rather than from gaps in the trim sampling: once the clip
+/// uses the trim's CLOSURE (as it must, so a curve reaching a pole or running along a seam is not
+/// truncated), a seam touch leaves NO gap to read it off. Scans the distance to the nearest
+/// boundary curve, keeps every local minimum that actually reaches within tolerance, and refines
+/// each by golden-section search so the anchor lands on the seam edge itself — which is exactly
+/// what `splice_boundary_vertex`'s point-on-edge test requires. A curve that is within tolerance of
+/// a boundary over a large fraction of its length is not grazing it but COINCIDENT with it
+/// ([`coincident_boundary_edge`]'s case), and yields no touches here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn boundary_touch_parameters(body: &Body, ic: &IntCurve, (face_a, face_b): (FaceId, FaceId), (lo, hi): (f64, f64), tol: f64) -> Vec<f64> {
+    const N: usize = 512;
+    let linear = tol.max(1e-9);
+    let mut curves = outer_boundary_curves(body, face_a);
+    curves.extend(outer_boundary_curves(body, face_b));
+    if curves.is_empty() || hi <= lo {
+        return Vec::new();
+    }
+    let step = (hi - lo) / N as f64;
+    let at = |i: usize| lo + step * i as f64;
+    let distance = |t: f64| nearest_boundary_curve(&curves, ic.curve3.eval(t), linear).map_or(f64::INFINITY, |(_, d)| d);
+    let samples: Vec<f64> = (0..N).map(|i| distance(at(i))).collect();
+    if samples.iter().filter(|&&d| d <= linear).count() * 4 > N {
+        return Vec::new();
+    }
+    let mut touches = Vec::new();
+    for i in 0..N {
+        let prev = samples[(i + N - 1) % N];
+        let next = samples[(i + 1) % N];
+        if !(samples[i] <= prev && samples[i] < next) {
+            continue;
+        }
+        let refined = golden_section_minimum(&distance, at(i) - step, at(i) + step);
+        if distance(refined) <= linear {
+            touches.push(refined);
+        }
+    }
+    touches
+}
+
+/// 🔀 The p-curve to imprint over the CLIPPED sub-range `(t0, t1)`, repaired if the one
+/// `intersect_surface_surface` supplied does not actually hold there.
+///
+/// An SSI p-curve is certified against the intersection curve's FULL natural domain, and where no
+/// closed form exists it is a global interpolation of 33 inversion samples. A boolean never uses
+/// the full domain — it imprints a clipped sub-range — and a global fit can be arbitrarily wrong on
+/// one: a great circle through a sphere's POLES has a `u` that jumps by π there, which no single
+/// interpolation can represent, so the fit oscillates (measured: 0.14 on a r=1.2 sphere) while
+/// still passing through every one of its own nodes, i.e. while still reporting a ~1e-16 error to
+/// the sampling that produced it. `validate_body`'s same-parameter check then rejects the finished
+/// boolean.
+///
+/// Measured on the range actually used, and rebuilt there when it misses: the sub-range's inversion
+/// samples (exact via [`closest_uv`], with a pole's undefined `u` carried from its neighbour and
+/// periodic directions unwrapped) are fitted AFFINELY, which is not a simplification but the exact
+/// answer for every sub-arc this stage produces — a latitude circle (`v` constant), a meridian
+/// branch (`u` constant, `v` affine), a ruling, or any arc of them. A sub-range that is genuinely
+/// not affine keeps the original p-curve rather than trading one wrong answer for another.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pcurve_for_clip(surface: &Surface, curve3: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, pcurve: &Curve2, (t0, t1): (f64, f64), tol: f64) -> Curve2 {
+    const K: usize = 33;
+    let at = |i: usize| t0 + (t1 - t0) * i as f64 / (K - 1) as f64;
+    let deviation = |candidate: &Curve2| (0..K).map(|i| { let uv = candidate.eval(at(i)); surface.eval(uv.x, uv.y).distance(curve3.eval(at(i))) }).fold(0.0f64, f64::max);
+    if deviation(pcurve) <= tol {
+        return pcurve.clone();
+    }
+    let domain = surface.domain();
+    let mut samples: Vec<Pnt2> = Vec::with_capacity(K);
+    let mut degenerate: Vec<bool> = Vec::with_capacity(K);
+    for i in 0..K {
+        let found = closest_uv(surface, domain, curve3.eval(at(i)), tol.max(1e-12));
+        samples.push(Pnt2::new(found.u, found.v));
+        degenerate.push(surface.is_degenerate_uv(found.u, found.v));
+    }
+    let Some(anchor) = (0..K).find(|&i| !degenerate[i]) else { return pcurve.clone() };
+    for i in (0..anchor).rev() {
+        samples[i].x = samples[i + 1].x;
+    }
+    for i in (anchor + 1)..K {
+        if degenerate[i] {
+            samples[i].x = samples[i - 1].x;
+        }
+    }
+    let mut previous = samples[anchor];
+    for i in 0..K {
+        if surface.is_u_periodic() {
+            samples[i].x = unwrap_to(previous.x, samples[i].x);
+        }
+        if surface.is_v_periodic() {
+            samples[i].y = unwrap_to(previous.y, samples[i].y);
+        }
+        previous = samples[i];
+    }
+    let fitted = affine_pcurve_through(&samples, (t0, t1));
+    if deviation(&fitted) <= tol {
+        fitted
+    } else {
+        pcurve.clone()
+    }
+}
+
+/// 🔀 Least-squares affine `Curve2::Line` through UV `samples` taken at evenly spaced parameters
+/// across `(t0, t1)`, in the SAME absolute parametrization the samples were taken in (so the
+/// result is a drop-in replacement for the p-curve it repairs).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn affine_pcurve_through(samples: &[Pnt2], (t0, t1): (f64, f64)) -> Curve2 {
+    let n = samples.len();
+    let at = |i: usize| t0 + (t1 - t0) * i as f64 / (n - 1) as f64;
+    let mean_t: f64 = (0..n).map(at).sum::<f64>() / n as f64;
+    let mean_u: f64 = samples.iter().map(|p| p.x).sum::<f64>() / n as f64;
+    let mean_v: f64 = samples.iter().map(|p| p.y).sum::<f64>() / n as f64;
+    let mut stt = 0.0;
+    let mut stu = 0.0;
+    let mut stv = 0.0;
+    for (i, sample) in samples.iter().enumerate() {
+        let dt = at(i) - mean_t;
+        stt += dt * dt;
+        stu += dt * (sample.x - mean_u);
+        stv += dt * (sample.y - mean_v);
+    }
+    let (du, dv) = if stt > 1e-30 { (stu / stt, stv / stt) } else { (0.0, 0.0) };
+    Curve2::Line { origin: Pnt2::new(mean_u - du * mean_t, mean_v - dv * mean_t), dir: Vec2::new(du, dv) }
+}
+
+/// 🔀 Parameter minimizing `f` on `[lo, hi]` by golden-section search — used to pin a seam touch
+/// (a smooth, strictly unimodal distance minimum within one sampling cell) to full precision.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn golden_section_minimum(f: &impl Fn(f64) -> f64, mut lo: f64, mut hi: f64) -> f64 {
+    const INV_PHI: f64 = 0.618_033_988_749_894_9;
+    let (mut c, mut d) = (hi - (hi - lo) * INV_PHI, lo + (hi - lo) * INV_PHI);
+    let (mut fc, mut fd) = (f(c), f(d));
+    for _ in 0..80 {
+        if fc < fd {
+            hi = d;
+            d = c;
+            fd = fc;
+            c = hi - (hi - lo) * INV_PHI;
+            fc = f(c);
+        } else {
+            lo = c;
+            c = d;
+            fc = fd;
+            d = lo + (hi - lo) * INV_PHI;
+            fd = f(d);
+        }
+    }
+    0.5 * (lo + hi)
 }
 
 // #endregion 🔖️Clip
@@ -1030,10 +1267,11 @@ fn oriented_prange(body: &Body, edge_id: EdgeId, (p0, p1): (Pnt3, Pnt3), (t0, t1
 fn apply_pending_imprints(body: &mut Body, original: FaceId, pending: Vec<Pending>, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
     let mut active = vec![original];
     let (open, closed): (Vec<Pending>, Vec<Pending>) = pending.into_iter().partition(|p| matches!(p.kind, ImprintKind::Open));
-    for p in closed {
+    for mut p in closed {
         let Some(idx) = locate_active_piece(body, &active, p.pcurve_id, p.prange, tol) else {
             return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("imprint segment midpoint not found inside any active piece of face {original}"))));
         };
+        p.pcurve_id = align_pcurve_branch(body, active[idx], &[(p.pcurve_id, p.prange)]).first().copied().unwrap_or(p.pcurve_id);
         let target = active[idx];
         let (fa, fb) = match p.kind {
             ImprintKind::Interior => split_face_by_interior_curve(body, target, p.edge_id, p.pcurve_id, p.prange, rec)?,
@@ -1057,6 +1295,58 @@ fn apply_pending_imprints(body: &mut Body, original: FaceId, pending: Vec<Pendin
         active.push(fb);
     }
     Ok(active)
+}
+
+/// 🔀 Re-expresses the imprint p-curves `carried` in the same periodic BRANCH as `face`'s own
+/// boundary ring, returning one (possibly new) curve id per input.
+///
+/// A p-curve on a periodic surface is only pinned down modulo whole periods, and nothing forces the
+/// branch a surface inversion returns to match the branch the face's ring was written in. Imprint
+/// one into the other unchanged and the resulting face's UV polygon has its pieces sitting `2π`
+/// apart — a shape with no interior at all, which `interior_point_of_face` then correctly (and
+/// unhelpfully) refuses to sample. Found live on `🍩️sphere-cut-with-torus`, whose second
+/// intersection circle arrived at `u ∈ [2π, 4π]`, `v = −1.271` against a ring written on
+/// `u ∈ [0, 2π]`, `v ∈ [0, 2π]`.
+///
+/// One shift for the whole group, chosen by putting the group's own UV centroid nearest the ring's,
+/// and only along directions the surface is actually periodic in. Applied to the CLOSED imprints
+/// (one whole curve, one branch); an open chain's members can legitimately have been born in
+/// different branches from each other, so those are aligned per traversal at split time instead
+/// (`euler::chain_endpoint_uv`) rather than dragged onto a common one here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn align_pcurve_branch(body: &mut Body, face: FaceId, carried: &[(Curve2Id, (f64, f64))]) -> Vec<Curve2Id> {
+    let existing: Vec<Curve2Id> = carried.iter().map(|&(id, _)| id).collect();
+    let Some(surface) = body.faces.get(face).and_then(|f| body.surfaces.get(f.surface)) else { return existing };
+    let (u_periodic, v_periodic) = (surface.is_u_periodic(), surface.is_v_periodic());
+    if !(u_periodic || v_periodic) {
+        return existing;
+    }
+    let sample = |body: &Body, id: Curve2Id, range: (f64, f64)| -> Vec<Pnt2> {
+        body.curves2.get(id).map_or_else(Vec::new, |pc| (0..=8).map(|i| pc.eval(range.0 + (range.1 - range.0) * f64::from(i) / 8.0)).collect())
+    };
+    let mut group: Vec<Pnt2> = Vec::new();
+    for &(id, range) in carried {
+        group.extend(sample(body, id, range));
+    }
+    let mut ring: Vec<Pnt2> = Vec::new();
+    for coedge_id in body.face_coedges(face) {
+        let Some(coedge) = body.coedges.get(coedge_id).cloned() else { continue };
+        let Some(pcurve) = coedge.pcurve else { continue };
+        ring.extend(sample(body, pcurve, coedge.prange));
+    }
+    if group.is_empty() || ring.is_empty() {
+        return existing;
+    }
+    let centroid = |points: &[Pnt2]| Pnt2::new(points.iter().map(|p| p.x).sum::<f64>() / points.len() as f64, points.iter().map(|p| p.y).sum::<f64>() / points.len() as f64);
+    let (group_center, ring_center) = (centroid(&group), centroid(&ring));
+    let tau = std::f64::consts::TAU;
+    let du = if u_periodic { ((ring_center.x - group_center.x) / tau).round() * tau } else { 0.0 };
+    let dv = if v_periodic { ((ring_center.y - group_center.y) / tau).round() * tau } else { 0.0 };
+    if du == 0.0 && dv == 0.0 {
+        return existing;
+    }
+    let delta = Vec2::new(du, dv);
+    existing.into_iter().map(|id| body.curves2.get(id).map(|pc| pc.translated(delta)).map_or(id, |shifted| body.curves2.insert(shifted))).collect()
 }
 
 // #endregion 🔖️Imprint

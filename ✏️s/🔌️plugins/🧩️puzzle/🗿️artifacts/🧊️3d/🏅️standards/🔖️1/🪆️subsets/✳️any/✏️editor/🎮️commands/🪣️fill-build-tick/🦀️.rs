@@ -21,12 +21,16 @@ pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     let mut precompute = ctx.app.precompute.borrow_mut();
     let changed = precompute.poll_fill_job();
     let spawn = precompute.enqueue_fill_job();
+    let faulted = precompute.take_fill_fault_notice();
     drop(precompute);
     let spawned = spawn.is_some();
     if let Some((job, input)) = spawn {
         ctx.effects.push(Effect::SpawnJob { job, kind: FILL_JOB_KIND.into(), input, placement: JobPlacement::Isolated });
     }
-    *ctx.ui_scope = if changed || spawned { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
+    if faulted {
+        ctx.notice(|labels| labels.fill_failed.as_str());
+    }
+    *ctx.ui_scope = if changed || spawned || faulted { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
 }
 
 /// 🛑 `cancelFillBuild` — stops the live background fill job, and only that one: the action carries the

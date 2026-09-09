@@ -3,6 +3,7 @@ use super::*;
 
 #[test]
 fn surface_output_pool_contended_drop_preserves_reserved_entry_until_exact_drain() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut queue = SurfaceReconcileOutputs::default();
     let reservation = queue.try_reserve(81, 32768).unwrap().unwrap();
@@ -33,6 +34,7 @@ fn surface_output_pool_contended_drop_preserves_reserved_entry_until_exact_drain
 
 #[test]
 fn surface_output_pool_defers_reuse_and_rejects_stale_epoch_after_final_return() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut queue = SurfaceReconcileOutputs::default();
     let mut reservations: Vec<_> = (1..=64).map(|generation| queue.try_reserve(generation, 32768).unwrap().unwrap()).collect();
@@ -62,6 +64,7 @@ fn surface_output_pool_defers_reuse_and_rejects_stale_epoch_after_final_return()
 
 #[test]
 fn surface_output_pool_zero_grant_and_busy_registry_leave_authority_unchanged() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut queue = SurfaceReconcileOutputs::default();
     assert!(!queue.close_step(0, 4096).unwrap().progressed);

@@ -96,3 +96,28 @@ path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schem
 [[test]]
 name = "brep_procedural_example_booleans"
 path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs"
+
+# 📦️ Extrude/sweep prism ORIENTATION laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Two profile
+# shapes × both windings × both sweep directions × both profile-coedge senses, each held to outward
+# face normals and a POSITIVE tessellated signed volume equal to the closed form, with `parry3d` as
+# the third-party integrator.
+[[test]]
+name = "brep_extrude_orientation"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs"
+
+# ⏱️ Resumable tessellator + validate-gate laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Declared
+# as its own `[[test]]` (rather than a `#[cfg(test)]` module) so the interactive-job contract stays
+# runnable from the crate's PUBLIC surface alone, independent of the lib's own test target.
+[[test]]
+name = "brep_tessellation_jobs"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs"
+
+# 🎨️ ANALYTIC blend laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Constant-radius rolling-ball
+# fillets as `Surface::Cylinder` edge patches and `Surface::Sphere` corner patches, chamfers as
+# planar cut faces, over the full 12-edge box and every partial selection, each held to χ = 2, a
+# silent `validate_body`, an outward shell, its Steiner closed-form volume, and `parry3d`'s own
+# integration of the tessellated result — plus the interactive wall-clock budget the NURBS patches
+# this rewrite replaced could not meet.
+[[test]]
+name = "brep_analytic_blend"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs"

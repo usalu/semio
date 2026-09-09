@@ -1,10 +1,10 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{change_schema, connect_synapse, create_generation, create_widget, delete_widget};
-use crate::{Generation2dSnapshot, GENERATION_2D_SCHEMA};
+use crate::Generation2dSnapshot;
 use protocol::OpText;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use semio_framework_os_kernel::os_store::test_support;
-use store::{create_document_envelope, ArtifactCommand};
+use store::ArtifactCommand;
 
 //#region 🔖️OpTextTests
 #[test]
@@ -57,8 +57,9 @@ fn op_binary_round_trips_via_wrapper_fns() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    let mut store = store::ArtifactStore::<Generation2dSnapshot, Generation2dMutation>::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
+    crate::store_fixture::close(store);
 }

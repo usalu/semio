@@ -369,6 +369,10 @@ export type UiTranslationSchema = {
       readonly newWindow: UiLabelValue;
     };
     readonly contextMenu: {
+      /** 🗂️ Label of the overflow submenu `organizeContextMenu`/`organize_context_menu` folds surplus
+       * category groups into (`menu.group.more`) — the one group row whose id is deliberately NOT a
+       * `UiRibbonParentCategory`, so it has no `ui.ribbon.parent.*` entry to resolve through. */
+      readonly more: UiLabelValue;
       readonly select: UiLabelValue;
       readonly deselect: UiLabelValue;
       readonly selectAll: UiLabelValue;

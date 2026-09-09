@@ -398,6 +398,123 @@ fn oriented_endpoints(body: &Body, member: ParametricEdge) -> Result<(VertexId, 
     Ok(if member.1 { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) })
 }
 
+/// 🖋️ The `(u, v)` a [`ParametricEdge`] traversal starts (`at_start`) or ends at, read from its own
+/// p-curve — which is stored in the EDGE's order, so the traversal's own start is `prange.1` when
+/// the member runs backwards.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn member_uv(body: &Body, member: ParametricEdge, at_start: bool) -> Option<Pnt2> {
+    let pcurve = body.curves2.get(member.2?)?;
+    let (t0, t1) = member.3;
+    Some(pcurve.eval(if at_start == member.1 { t0 } else { t1 }))
+}
+
+/// 🖋️ Ring position (index into [`loop_walk_pc`]'s walk) at which the boundary is at `uv`.
+///
+/// Matching by VERTEX id alone is not enough on a periodic face: the seam vertex of a sphere,
+/// cylinder, cone or torus legitimately appears TWICE on its own ring — once at `u = 0`, once at
+/// `u = 2π` — and a pole vertex likewise. Taking the first occurrence (what this used to do) picks
+/// one of those at random, and half the time partitions the face the wrong way round: the piece on
+/// the `u > 0` side gets handed the `u = 2π` boundary, so it comes out with the reversed traversal
+/// and every edge it shares with the other operand reads `orientation-inconsistent`. The p-curve
+/// says unambiguously which occurrence the chord actually meets.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ring_index_at_uv(body: &Body, (verts, members): (&[VertexId], &[ParametricEdge]), target: VertexId, uv: Option<Pnt2>) -> Option<usize> {
+    let candidates: Vec<usize> = (0..verts.len()).filter(|&i| verts[i] == target).collect();
+    match (candidates.len(), uv) {
+        (0, _) => None,
+        (1, _) | (_, None) => candidates.first().copied(),
+        (_, Some(uv)) => candidates.into_iter().min_by(|&left, &right| {
+            let d = |i: usize| member_uv(body, members[i], true).map_or(f64::INFINITY, |p| (p.x - uv.x).hypot(p.y - uv.y));
+            d(left).partial_cmp(&d(right)).unwrap_or(std::cmp::Ordering::Equal)
+        }),
+    }
+}
+
+/// 🖋️ Splits whichever ring coedge's p-curve passes through `uv` so the boundary has a vertex
+/// THERE, then defers to [`splice_boundary_vertex`] when no p-curve match is found.
+///
+/// The 3D-only splice cannot express a chord that ends on a DEGENERATE edge — a sphere's pole,
+/// where the whole `u` range collapses to one point. Every point of that edge is the same
+/// position, so `edge_param_at_point` has nothing to solve and `splice_boundary_vertex` reports the
+/// vertex "already on the ring" and stops, leaving the chord's end at whichever of the pole's two
+/// ring occurrences happens to come first — neither of which is where the chord actually arrives.
+/// In `(u, v)` the pole edge is an ordinary segment and the arrival point is an ordinary interior
+/// parameter on it, so splitting there is well defined and gives the chord its own ring position.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn splice_boundary_vertex_at_uv(body: &mut Body, loop_id: LoopId, target: VertexId, position: Pnt3, uv: Option<Pnt2>, tol: f64, rec: &mut OpRecorder) -> Result<(), KernelError> {
+    let Some(uv) = uv else { return splice_boundary_vertex(body, loop_id, target, position, tol, rec) };
+    const SAMPLES: usize = 256;
+    let mut best: Option<(CoedgeId, f64, f64)> = None;
+    for cid in body.loop_coedges(loop_id) {
+        let Some(coedge) = body.coedges.get(cid).cloned() else { continue };
+        let Some(pcurve) = coedge.pcurve.and_then(|id| body.curves2.get(id)).cloned() else { continue };
+        for i in 0..=SAMPLES {
+            let s = i as f64 / SAMPLES as f64;
+            let sample = pcurve.eval(coedge.prange.0 + (coedge.prange.1 - coedge.prange.0) * s);
+            let distance = (sample.x - uv.x).hypot(sample.y - uv.y);
+            if best.is_none_or(|(_, _, d)| distance < d) {
+                best = Some((cid, s, distance));
+            }
+        }
+    }
+    let Some((cid, s, distance)) = best else { return splice_boundary_vertex(body, loop_id, target, position, tol, rec) };
+    let Some(coedge) = body.coedges.get(cid).cloned() else { return splice_boundary_vertex(body, loop_id, target, position, tol, rec) };
+    let Some(edge) = body.edges.get(coedge.edge).cloned() else { return splice_boundary_vertex(body, loop_id, target, position, tol, rec) };
+    let span = edge.range.1 - edge.range.0;
+    let curve_t = edge.range.0 + span * s;
+    if distance > tol.max(1e-9) * 1e3 || !(curve_t > edge.range.0 + 1e-12 && curve_t < edge.range.1 - 1e-12) {
+        return splice_boundary_vertex(body, loop_id, target, position, tol, rec);
+    }
+    if (edge.v0 == target || edge.v1 == target) && !is_point_edge_geometry(body, &edge) {
+        return splice_boundary_vertex(body, loop_id, target, position, tol, rec);
+    }
+    split_edge_with_vertex(body, coedge.edge, curve_t, target, rec);
+    Ok(())
+}
+
+/// 🖋️ The chord chain's own two end `(u, v)`, shifted into the same periodic branch the face's own
+/// ring is expressed in.
+///
+/// A p-curve on a periodic surface is pinned down only modulo whole periods, and the branch a
+/// p-curve was born in (wherever the surface inversion behind it happened to land) need not be the
+/// branch the ring was written in — comparing the two unshifted picks the wrong ring occurrence and
+/// partitions the face the wrong way round. One shift for the chain, chosen by putting its own
+/// `u`/`v` centroid nearest the ring's, resolves that without ever having to guess an INDIVIDUAL
+/// endpoint's branch, which is the part that genuinely cannot be guessed: `u = 0` and `u = 2π` are
+/// the same point.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn chain_endpoint_uv(body: &Body, outer: LoopId, chain: &[ParametricEdge]) -> (Option<Pnt2>, Option<Pnt2>) {
+    let (Some(&first), Some(&last)) = (chain.first(), chain.last()) else { return (None, None) };
+    let (Some(start), Some(end)) = (member_uv(body, first, true), member_uv(body, last, false)) else { return (None, None) };
+    let surface = body.loops.get(outer).and_then(|l| body.faces.get(l.face)).and_then(|f| body.surfaces.get(f.surface));
+    let (u_periodic, v_periodic) = surface.map_or((false, false), |s| (s.is_u_periodic(), s.is_v_periodic()));
+    let Ok((_, members)) = loop_walk_pc(body, outer) else { return (Some(start), Some(end)) };
+    let gather = |group: &[ParametricEdge]| -> Vec<Pnt2> { group.iter().flat_map(|&m| [member_uv(body, m, true), member_uv(body, m, false)]).flatten().collect() };
+    let (chain_uv, ring_uv) = (gather(chain), gather(&members));
+    if chain_uv.is_empty() || ring_uv.is_empty() || !(u_periodic || v_periodic) {
+        return (Some(start), Some(end));
+    }
+    let centroid = |points: &[Pnt2]| Pnt2::new(points.iter().map(|p| p.x).sum::<f64>() / points.len() as f64, points.iter().map(|p| p.y).sum::<f64>() / points.len() as f64);
+    let (chain_center, ring_center) = (centroid(&chain_uv), centroid(&ring_uv));
+    let tau = std::f64::consts::TAU;
+    let du = if u_periodic { ((ring_center.x - chain_center.x) / tau).round() * tau } else { 0.0 };
+    let dv = if v_periodic { ((ring_center.y - chain_center.y) / tau).round() * tau } else { 0.0 };
+    (Some(Pnt2::new(start.x + du, start.y + dv)), Some(Pnt2::new(end.x + du, end.y + dv)))
+}
+
+/// 🖋️ `true` for an edge whose whole 3D range collapses to one point (a sphere's pole closer) —
+/// the only kind [`splice_boundary_vertex_at_uv`] may split at a parameter its own endpoints
+/// already carry the vertex for.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_point_edge_geometry(body: &Body, edge: &Edge) -> bool {
+    if edge.v0 != edge.v1 {
+        return false;
+    }
+    let Some(curve) = body.curves3.get(edge.curve) else { return false };
+    let anchor = curve.eval(edge.range.0);
+    (0..=8).all(|i| curve.eval(edge.range.0 + (edge.range.1 - edge.range.0) * f64::from(i) / 8.0).distance(anchor) <= edge.tol.value())
+}
+
 /// 🖋️ Generalizes [`split_planar_face_by_line`] to any surface/curve pair AND to a multi-segment
 /// chord: splices the chain's two END vertices into `face`'s outer boundary and rebuilds the face
 /// as two rings that share the whole chain, using 3D point-on-boundary matching (any curve kind,
@@ -435,12 +552,13 @@ pub fn split_face_by_chain(body: &mut Body, face: FaceId, chain: &[ParametricEdg
     }
     let pa = body.vertices.get(va).ok_or_else(|| KernelError::MissingEntity(format!("vertex {va}")))?.position;
     let pb = body.vertices.get(vb).ok_or_else(|| KernelError::MissingEntity(format!("vertex {vb}")))?.position;
-    splice_boundary_vertex(body, outer, va, pa, tol, rec)?;
-    splice_boundary_vertex(body, outer, vb, pb, tol, rec)?;
+    let (uv_a, uv_b) = chain_endpoint_uv(body, outer, chain);
+    splice_boundary_vertex_at_uv(body, outer, va, pa, uv_a, tol, rec)?;
+    splice_boundary_vertex_at_uv(body, outer, vb, pb, uv_b, tol, rec)?;
 
     let (verts, members) = loop_walk_pc(body, outer)?;
-    let ia = verts.iter().position(|&v| v == va).ok_or_else(|| KernelError::Operation("chord endpoint A missing from outer loop after splice".into()))?;
-    let ib = verts.iter().position(|&v| v == vb).ok_or_else(|| KernelError::Operation("chord endpoint B missing from outer loop after splice".into()))?;
+    let ia = ring_index_at_uv(body, (&verts, &members), va, uv_a).ok_or_else(|| KernelError::Operation("chord endpoint A missing from outer loop after splice".into()))?;
+    let ib = ring_index_at_uv(body, (&verts, &members), vb, uv_b).ok_or_else(|| KernelError::Operation("chord endpoint B missing from outer loop after splice".into()))?;
     let chain_ab = member_chain_pc(&members, ia, ib);
     let chain_ba = member_chain_pc(&members, ib, ia);
     if chain_ab.is_empty() || chain_ba.is_empty() {
@@ -599,10 +717,24 @@ pub fn split_face_by_seam_crossing(body: &mut Body, face: FaceId, edge_id: EdgeI
         return Err(KernelError::Operation("seam-crossing edge does not partition the outer loop into two non-empty chains".into()));
     }
 
+    // Which way round the closed imprint edge runs is NOT free: it has to continue from where the
+    // boundary chain it closes left off. Topology cannot say — a closed edge has `v0 == v1`, so
+    // both senses "connect" — but the p-curve can, and it must, because getting it wrong hands one
+    // of the two pieces a reversed ring, which then traverses every edge it shares with the other
+    // operand the same way that operand does (`orientation-inconsistent`) and leaves a UV boundary
+    // that runs backwards through itself. Fixing it to `false`/`true` was right half the time.
+    let junction = member_uv(body, members[ib], true);
+    let forward_a = match (junction, body.curves2.get(pcurve)) {
+        (Some(uv), Some(pc)) => {
+            let reach = |t: f64| { let p = pc.eval(t); (p.x - uv.x).hypot(p.y - uv.y) };
+            reach(prange.0) <= reach(prange.1)
+        }
+        _ => false,
+    };
     let mut members_a = chain_ab;
-    members_a.push((edge_id, false, Some(pcurve), prange));
+    members_a.push((edge_id, forward_a, Some(pcurve), prange));
     let mut members_b = chain_ba;
-    members_b.push((edge_id, true, Some(pcurve), prange));
+    members_b.push((edge_id, !forward_a, Some(pcurve), prange));
 
     for cid in body.loop_coedges(outer) {
         body.coedges.remove(cid);
@@ -748,7 +880,18 @@ fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) -> Resul
             if denom <= tol * tol {
                 return Err(KernelError::Operation("degenerate edge line".into()));
             }
-            Ok(dir.dot(point - *origin) / denom)
+            // 🐛 The projection parameter alone says only WHERE on the infinite line the point
+            // projects, never whether it is on that line at all — and `splice_boundary_vertex`
+            // splits the first ring edge whose parameter lands strictly inside. A sphere's north
+            // pole projects onto the box edge on the far side of the same face at an interior
+            // parameter, so the imprint vertex was spliced into a face it is nowhere near (found
+            // live in the sphere-box fuse: the pole landed on the `x = 1.5` face's own edge). The
+            // non-line branch below has always checked its distance; this one must too.
+            let t = dir.dot(point - *origin) / denom;
+            if (*origin + *dir * t).distance(point) > tol.max(1e-9) * 10.0 {
+                return Err(KernelError::Operation("imprint hit does not lie on this line edge".into()));
+            }
+            Ok(t)
         }
         _ => {
             let cp = closest_parameter(curve, edge.range, point, tol);

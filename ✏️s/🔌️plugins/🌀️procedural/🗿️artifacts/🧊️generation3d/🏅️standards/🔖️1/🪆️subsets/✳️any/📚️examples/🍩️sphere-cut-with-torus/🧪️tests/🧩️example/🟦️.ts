@@ -33,8 +33,15 @@ describe("sphere-cut-with-torus", () => {
     };
     const inside = simpson(shell, 0, 2 * Math.PI, 16000);
     assertExpectedVolume(fixture, (4 / 3) * Math.PI * ball ** 3 - inside);
-    assertExpectedBoundingBox(fixture, [-ball, -ball, -ball], [ball, ball, ball]);
+    // 📦️ The tube reaches radius `major + minor = 2.5 > ball`, so the torus grooves the ball's own
+    // equator away: the difference's widest surviving circle sits where the ball's surface is
+    // exactly `minor` from the tube's centre circle, `sin θ = (ball² + major² − minor²) / (2·major·ball)`,
+    // i.e. a cylindrical radius of `(ball² + major² − minor²) / (2·major)`. Only the poles still
+    // reach `±ball`.
+    const reachRadius = (ball * ball + major * major - minor * minor) / (2 * major);
+    assertExpectedBoundingBox(fixture, [-reachRadius, -reachRadius, -ball], [reachRadius, reachRadius, ball]);
     expect(fixture.expect.kernelVolumeNode).toBe("brep_measure_volume_2");
-    expect(fixture.kernelStatus).toBe("blocked-on-boolean-kernel");
+    expect(fixture.expect.kernelVolumeTolerance).toBeLessThanOrEqual(1e-5);
+    expect(fixture.kernelStatus).toBe("green");
   });
 });

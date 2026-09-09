@@ -42,6 +42,7 @@ import {
   type DockUiState,
   type Fault,
   type MergePolicy,
+  type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginDependency,
   type PluginViewState,
@@ -67,7 +68,7 @@ import { DEFAULT_PANEL_WIDTH_PX } from "../🛠️ShellHelpers/🟦️.tsx";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
 import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
-import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../🛠️ShellHelpers/🟦️.tsx";
+import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY, EMPTY_APP_CATALOGUE } from "../🛠️ShellHelpers/🟦️.tsx";
 import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -433,6 +434,10 @@ type WindowUiState = {
   readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>;
   readonly panelUiByKey: Readonly<Record<string, BuiltNode>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
+  /** 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once from the reserved
+   * `framework.section.catalogue` retained surface and handed to every scene host through
+   * `AppCatalogueContext`. Never carried on a scene payload — see that context's own docstring. */
+  readonly appCatalogue: AppCatalogue;
 };
 
 type SpawnedWindowState = {
@@ -654,6 +659,7 @@ export type ShellAction =
   | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
+  | { readonly type: "SET_APP_CATALOGUE"; readonly value: Updatable<AppCatalogue> }
   | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<BuiltNode | null>; readonly fault?: WindowFault | null }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
@@ -763,6 +769,8 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
       return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
     case "SET_APP_LABELS_OVERLAY":
       return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
+    case "SET_APP_CATALOGUE":
+      return { ...state, appCatalogue: resolveUpdatable(action.value, state.appCatalogue) };
     default:
       return state;
   }
@@ -1126,7 +1134,7 @@ export function initialShellState(_props: {
   });
   return {
     pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
-    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY, appCatalogue: EMPTY_APP_CATALOGUE },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },

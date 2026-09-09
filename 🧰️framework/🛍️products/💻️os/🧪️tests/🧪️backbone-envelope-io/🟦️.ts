@@ -1045,6 +1045,58 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
     }
 
+    /**
+     * 🏁️ The defect this frame exists for: a retained typed operation reaches its terminal result on a
+     * continuation turn no host call is awaiting. The old wire published that completion as an
+     * `Invocation` with `in_reply_to: 0`, which correlates with NO pending waiter, so the shell simply
+     * dropped it — the outliner, the inspection panel and the History list all kept showing the
+     * previous document after an example was selected.
+     */
+    it("delivers an unsolicited typed-operation completion to its subscriber exactly once, never to a pending command waiter", async () => {
+      const completions: unknown[] = [];
+      const handle = fakeHandle((_instanceId, commands) => [
+        {
+          OperationCompleted: {
+            operation: 9,
+            revision: 4,
+            ui_scope: Array.from(encodePackValue("full")),
+            history_patch: Array.from(encodePackValue({ cursor: packUInt(7n), upserts: [{ seq: packUInt(41n), label: "Set Active Example", count: packUInt(1n) }], canUndo: true, canRedo: false, commandFilter: "all" })),
+          },
+        },
+        { Invocation: { in_reply_to: Object.values(commands[0]!)[0]!.seq, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+      ]);
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const unsubscribe = client.onOperationCompleted((completion) => completions.push(completion));
+      const frames = await client.command(new Uint8Array([1]), {});
+      expect(frames).toHaveLength(1);
+      expect(frames.every((frame) => "Invocation" in frame)).toBe(true);
+      expect(completions).toHaveLength(1);
+      const completion = completions[0] as { readonly instanceId: number; readonly operation: number; readonly revision: number; readonly uiScope: unknown; readonly historyPatch: { readonly cursor: number; readonly upserts: readonly { readonly seq: number }[] } };
+      expect(completion.instanceId).toBe(1);
+      expect(completion.operation).toBe(9);
+      expect(completion.revision).toBe(4);
+      expect(completion.uiScope).toBe("full");
+      // 📌️ The `HistoryPatch` carrier bug: `seq`/`cursor` cross as pack integer carriers, and a row id
+      // built from an unprojected one renders `framework.history.entry.[object Object]`.
+      expect(completion.historyPatch.cursor).toBe(7);
+      expect(completion.historyPatch.upserts[0]!.seq).toBe(41);
+      expect(`framework.history.entry.${completion.historyPatch.upserts[0]!.seq}`).toBe("framework.history.entry.41");
+      unsubscribe();
+      await client.command(new Uint8Array([2]), {});
+      expect(completions).toHaveLength(1);
+    });
+
+    it("matches the shared cross-language typed-operation completion fixture vector, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🏁️app-frame-operation-completed.json"), "utf8")) as Record<string, string>;
+      const frame: AppFrameValue = { OperationCompleted: { operation: 7, revision: 5, ui_scope: [1], history_patch: [2] } };
+      const hex = Array.from(encodeAppFrame(frame), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      expect(hex).toBe(vectors.OperationCompleted);
+      expect(decodeAppFrame(new Uint8Array(Buffer.from(vectors.OperationCompleted!, "hex")))).toEqual(frame);
+    });
+
     it("command() allocates an incrementing seq and returns every frame the batch produced", async () => {
       const seqsSeen: number[] = [];
       const handle = fakeHandle((_instanceId, commands) => {

@@ -7,6 +7,9 @@ use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::PropertyBag;
 use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
 use semio_framework_artifact_infinite_dag::DagPreviewContent;
+// 🌿️ The flow ARTIFACT crate's own vcs surface — `crate::vcs` glob-imports it privately, so the
+// undo/redo law names it at its source.
+use semio_framework_artifact_flow_flow::{flow_fixture_operations, FlowEnvelope};
 use std::sync::{Mutex, OnceLock};
 
 const NUMBER_OPS: &[&str] = &["core.number"];
@@ -771,10 +774,66 @@ fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
     let host = host_with_test_bridge();
     let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
     assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
-    assert!(extras.operators.iter().any(|info| info.id == "math.add"));
     assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
-    assert!(extras.catalogue_json.as_ref().is_some_and(|json| json.contains("brep") || json.contains("math")));
     assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
+}
+
+/// 🛍️ The operator catalogue is APP-STATIC — it leaves the per-scene extras entirely and rides
+/// `FlowAppCatalogue` on the reserved `framework.section.catalogue` surface instead
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+#[test]
+fn app_catalogue_carries_every_operator_and_palette_section() {
+    install_first_party_light_flow_extensions_for_tests();
+    let catalogue = flow_app_catalogue();
+    assert!(catalogue.operators.iter().any(|info| info.id == "math.add"));
+    assert!(catalogue.sections.iter().any(|section| section.id == "math"));
+    assert!(catalogue.sections.iter().any(|section| section.id == "inputs"), "static widget sections must merge into the app catalogue");
+    let json = flow_app_catalogue_json();
+    assert!(json.contains("math.add"));
+    println!("[STATS] app catalogue operators={} sections={} json_bytes={}", catalogue.operators.len(), catalogue.sections.len(), json.len());
+}
+
+/// 🛡️ THE surface bound law. A node-graph surface is admitted against `ui_contract::UI_FIXED_BYTES`
+/// (32 KiB, a preallocated per-surface capacity), and before this ticket every flow-backed window
+/// embedded the whole registered operator catalogue in its scene: with the real `brep`/`math` sets
+/// installed that surface measured 111 031 B and the window could not render at all
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). The catalogue is app-static, so it moved to the
+/// reserved `framework.section.catalogue` retained surface — and the scene now names operators by kind
+/// id only. This law installs FIVE HUNDRED operators, an order of magnitude past the real sets, and
+/// asserts the surface is unmoved by them.
+#[test]
+fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operators() {
+    const OPERATORS: usize = 500;
+    let operators = (0..OPERATORS)
+        .map(|index| format!(r#"{{"id":"bulk.op{index}","extension":"bulk","name":"Bulk Operator {index}","abbreviation":"B{index}","icon":"box","summary":"Bulk catalogue operator {index} with a deliberately verbose summary line","inputs":[],"outputs":[]}}"#))
+        .collect::<Vec<_>>()
+        .join(",");
+    let manifest = format!(r#"{{"schema":"flow.extension","id":"bulk","name":"Bulk","version":"0.0.1","activationEvents":[],"contributes":{{"schemas":[],"operators":[{operators}],"widgets":[],"commands":[],"settings":[]}}}}"#);
+    install_flow_extension_manifest("bulk-plugin", &manifest).expect("bulk extension admission");
+
+    let catalogue_bytes = flow_app_catalogue_json().len();
+    let registered = flow_app_catalogue().operators.len();
+    assert!(registered >= OPERATORS, "the registry must actually hold the bulk operators, holds {registered}");
+
+    let fixture = FlowFixture::default();
+    let extras = flow_backed_node_graph_extras(&fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
+    let scene = ui_wgpu::wgpu::NodeGraphScene {
+        editable: Some(true),
+        capabilities_json: extras.capabilities_json,
+        lod_json: extras.lod_json,
+        fixture_json: extras.fixture_json,
+        eval_json: extras.eval_json,
+        status_json: extras.status_json,
+        ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), ui_wgpu::wgpu::NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 })
+    };
+    let props = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
+    let surface_bytes = props.doc.bytes.as_slice().len();
+    println!("[STATS] node-graph surface with {registered} registered operators: surface={surface_bytes} B of {} B, app catalogue={catalogue_bytes} B", ui_contract::UI_FIXED_BYTES);
+    assert!(surface_bytes < ui_contract::UI_FIXED_BYTES, "surface is {surface_bytes} B, over the {} B fixed admission", ui_contract::UI_FIXED_BYTES);
+    assert!(catalogue_bytes > ui_contract::UI_FIXED_BYTES, "the catalogue must be the thing that would not have fit: {catalogue_bytes} B");
+
+    fixture.retire_cold();
+    uninstall_flow_extension("bulk").expect("bulk extension uninstall admission");
 }
 
 #[test]

@@ -7,7 +7,7 @@ use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-use crate::standards::v1::subsets::any::schema::{commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_widget_number_param, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::{commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_widget_number_param, with_host};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
@@ -25,22 +25,23 @@ fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> 
 /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets. `None` when no
 /// transform actually changed anything (nothing to commit).
 fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Generation3dMutation>, Vec<String>)> {
-    let mut host = host_from_fixture(fixture);
-    let mut new_selection = Vec::new();
-    let mut changed = false;
-    for id in ids {
-        if let Ok(transform_id) = ensure_gumball_node(&mut host, id, operation) {
-            if apply(&mut host, &transform_id) {
-                new_selection.push(transform_id);
-                changed = true;
+    with_host(fixture, |host| {
+        let mut new_selection = Vec::new();
+        let mut changed = false;
+        for id in ids {
+            if let Ok(transform_id) = ensure_gumball_node(host, id, operation) {
+                if apply(host, &transform_id) {
+                    new_selection.push(transform_id);
+                    changed = true;
+                }
             }
         }
-    }
-    if changed {
-        Some((commit_fixture(fixture, &host.fixture), new_selection))
-    } else {
-        None
-    }
+        if changed {
+            Some((commit_fixture(fixture, &host.fixture), new_selection))
+        } else {
+            None
+        }
+    })
 }
 //#endregion 🔖️Shared
 

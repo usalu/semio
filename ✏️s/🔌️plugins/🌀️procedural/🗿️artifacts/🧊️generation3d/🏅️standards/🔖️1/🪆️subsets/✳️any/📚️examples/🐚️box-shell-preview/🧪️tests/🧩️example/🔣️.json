@@ -31,7 +31,8 @@
     ],
     "boundingBoxTolerance": 0.001,
     "kernelVolumeNode": null,
-    "kernelVolumeChannel": null
+    "kernelVolumeChannel": null,
+    "kernelVolumeTolerance": null
   },
   "kernelStatus": "green"
 }

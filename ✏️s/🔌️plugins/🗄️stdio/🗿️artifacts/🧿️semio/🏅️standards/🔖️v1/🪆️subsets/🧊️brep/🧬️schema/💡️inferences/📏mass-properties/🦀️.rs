@@ -995,7 +995,7 @@ fn loop_uv_polygon(body: &Body, loop_id: crate::standards::v1::subsets::brep::sc
         for i in 0..n {
             let s = i as f64 / (n - 1) as f64;
             let mut uv = coedge_uv_sample(body, co, surface, s)?;
-            let is_pole = surface.normal(uv.x, uv.y).is_none();
+            let is_pole = surface.is_degenerate_uv(uv.x, uv.y);
             // `s` must reach 1.0 (via `i/(n-1)`, not `i/n`) so each coedge's samples actually span
             // its own full [0,1]. The last-sample-skip below (mirroring classification.rs's own
             // `loop_uv_polygon_sampled` pattern, kept close per doctrine) avoids duplicating each
@@ -1100,6 +1100,28 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) ->
 /// of any non-planar loop) BACKWARDS relative to the rest of the ring, producing a self-crossing
 /// UV boundary polygon whose shoelace/ear-clip quadrature integrates the wrong region — this is
 /// what made the cylinder's general-path volume come out at ~24% of the closed-form value.
+/// 📐 Signed area of one loop's own `(u, v)` polygon — POSITIVE exactly when the loop is
+/// counter-clockwise in its surface's natural parametrisation. That sense is what decides which
+/// side of the loop the face's trimmed region is on, so an OUTER loop must be positive and a hole
+/// loop negative, whatever the face's `flipped` says about its normal. Exposed for
+/// `validate_body`'s own winding check, which is the only invariant that catches a face built with
+/// a backwards circuit — such a face can still be topologically coherent and can still integrate to
+/// the right magnitude, so nothing else notices it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn loop_uv_signed_area(body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<f64, KernelError> {
+    let polygon = loop_uv_polygon(body, loop_id, surface, chord_tol)?;
+    if polygon.len() < 3 {
+        return Ok(0.0);
+    }
+    let mut twice = 0.0;
+    for i in 0..polygon.len() {
+        let a = polygon[i];
+        let b = polygon[(i + 1) % polygon.len()];
+        twice += a.x * b.y - b.x * a.y;
+    }
+    Ok(0.5 * twice)
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn coedge_uv_sample(body: &Body, co: &crate::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
     if let Some(pcurve_id) = co.pcurve {

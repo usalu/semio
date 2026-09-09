@@ -258,7 +258,6 @@ pub struct NodeGraphScenePayload {
     pub viewport: Option<GraphViewport>,
     pub preview_off_json: Option<String>,
     pub lod_json: Option<String>,
-    pub catalogue_json: Option<String>,
     pub controls_json: Option<String>,
     pub clusters_json: Option<String>,
     pub computing_json: Option<String>,
@@ -272,9 +271,6 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
     if let Some(json) = payload.lod_json.as_mut() {
-        *json = store::pack_rt::scene_field_json_text(json)?;
-    }
-    if let Some(json) = payload.catalogue_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
     if let Some(json) = payload.controls_json.as_mut() {
@@ -306,7 +302,6 @@ impl NodeGraphScenePayload {
             viewport: value.get("viewport").cloned().and_then(|v| serde_json::from_value(v).ok()),
             preview_off_json: value.get("previewOffJson").and_then(|v| v.as_str()).map(str::to_string),
             lod_json: value.get("lodJson").and_then(|v| v.as_str()).map(str::to_string),
-            catalogue_json: value.get("catalogueJson").and_then(|v| v.as_str()).map(str::to_string),
             controls_json: value.get("controlsJson").and_then(|v| v.as_str()).map(str::to_string),
             clusters_json: value.get("clustersJson").and_then(|v| v.as_str()).map(str::to_string),
             computing_json: value.get("computingJson").and_then(|v| v.as_str()).map(str::to_string),
@@ -360,7 +355,10 @@ pub struct GraphHost {
     /// `FlowFixture` (see module docstring); this field is a render-session mirror of it, not a second
     /// authoritative copy.
     pub dag: DagHost,
-    /// 📇 (c) Preview/Effect — transient catalogue-panel UI state, never persisted.
+    /// 📇 (c) Preview/Effect — the app-static palette catalogue, pushed once per app instance through
+    /// [`GraphHost::set_catalogue_json`] from the reserved `framework.section.catalogue` surface. It is
+    /// NOT a scene field: with real operator sets installed it is ~100 KB against the 32 KiB fixed
+    /// per-surface admission (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). Never persisted.
     pub catalogue_json: String,
     /// 🎛️ (c) Preview/Effect — transient control-overlay UI state, never persisted.
     pub controls_json: String,
@@ -406,6 +404,14 @@ impl GraphHost {
         payload.computing_json.hash(&mut hasher);
         payload.status_json.hash(&mut hasher);
         hasher.finish()
+    }
+
+    /// 🛍️ Installs the app-static palette catalogue. Its own channel, not a scene field: the catalogue
+    /// is published once per app instance on the reserved `framework.section.catalogue` retained
+    /// surface, while [`Self::sync_from_payload`] runs on every scene change.
+    pub fn set_catalogue_json(&mut self, json: &str) {
+        self.catalogue_json.clear();
+        self.catalogue_json.push_str(json);
     }
 
     pub fn sync_from_payload(&mut self, payload: &NodeGraphScenePayload) -> Result<(), NodeGraphError> {
@@ -454,7 +460,6 @@ impl GraphHost {
                 self.dag.set_computing_progress(active.as_deref(), &stale);
             }
         }
-        self.catalogue_json = payload.catalogue_json.clone().unwrap_or_default();
         self.controls_json = payload.controls_json.clone().unwrap_or_default();
         self.capabilities_json = payload.capabilities_json.clone().unwrap_or_default();
         self.interaction_revision = self.interaction_revision.wrapping_add(1);

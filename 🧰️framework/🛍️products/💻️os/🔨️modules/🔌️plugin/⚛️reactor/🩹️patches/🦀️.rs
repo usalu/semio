@@ -356,16 +356,7 @@ impl PatchTracker {
 
     pub fn take_deferred_ready(&self) -> Option<ui_contract::SurfaceId> {
         let mut state = self.state.borrow_mut();
-        let index = state.deferred.iter().position(|entry| {
-            entry.as_ref().is_some_and(|surface| {
-                state
-                    .slots
-                    .iter()
-                    .flatten()
-                    .find(|slot| slot.surface == *surface)
-                    .is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
-            })
-        })?;
+        let index = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| deferred_surface_ready(&state, surface)))?;
         state.deferred[index].take()
     }
 
@@ -551,6 +542,64 @@ impl PatchTracker {
         }
         state.slots[index] = Some(slot);
         has_work(&state)
+    }
+
+    /// 🐞️ Temporary trace summary of every retained slot family, read by the reactor's more-work streak trace.
+    pub fn debug_state(&self) -> String {
+        let state = self.state.borrow();
+        let slots: Vec<String> = state
+            .slots
+            .iter()
+            .flatten()
+            .map(|slot| {
+                format!(
+                    "{}#g{}:{}{}{}:ack{}/rev{}:out{:?}",
+                    slot.surface.as_ref(),
+                    slot.generation,
+                    if slot.producer.is_some() { "P" } else { "-" },
+                    if slot.job.is_some() { "J" } else { "-" },
+                    if slot.reconciler.is_some() { "R" } else { "-" },
+                    slot.acknowledged_revision.0,
+                    slot.reconciler.as_ref().map_or(0, |reconciler| reconciler.revision().0),
+                    slot.output_index
+                )
+            })
+            .collect();
+        let ready: Vec<String> = state.ready.iter().flatten().map(|ready| format!("g{}:{}{}{}{}", ready.generation, if ready.published { "p" } else { "-" }, if ready.closing { "c" } else { "-" }, if ready.reservation.is_some() { "r" } else { "-" }, if ready.outputs.terminal_is_empty() { "e" } else { "-" })).collect();
+        let terminals: Vec<String> = state.terminals.iter().flatten().map(|terminal| format!("g{}:{}{}{}", terminal.authority.generation(), if terminal.close { "c" } else { "-" }, if terminal.authority.fault().is_some() { "F" } else { "-" }, if terminal.authority.terminal_is_empty() { "e" } else { "-" })).collect();
+        let producer_terminals: Vec<String> = state.producer_terminals.iter().flatten().map(|terminal| format!("{}:{}{}{}{}", terminal.surface.as_ref(), if terminal.close { "c" } else { "-" }, if terminal.authority.is_some() { "A" } else { "-" }, if terminal.reconciler.is_some() { "R" } else { "-" }, if terminal.reservation.is_some() { "V" } else { "-" })).collect();
+        let deferred: Vec<String> = state.deferred.iter().flatten().map(|surface| surface.as_ref().to_owned()).collect();
+        format!(
+            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} generation_exhausted={} close_cursor={}",
+            slots.join(","),
+            ready.join(","),
+            terminals.join(","),
+            producer_terminals.join(","),
+            deferred.join(","),
+            state.rejected.iter().flatten().count(),
+            state.unadmitted.iter().flatten().count(),
+            state.closing_instances.iter().flatten().count(),
+            state.output_fault.as_ref().map_or("none", |fault| fault.1),
+            state.generation_exhausted,
+            state.close_cursor
+        )
+    }
+
+    /// 📤️ Work that can still produce or publish a patch (producers, jobs, ready outputs, deferred
+    /// surfaces whose slot is ready to re-admit them, unadmitted surfaces, a pending output fault).
+    /// Terminal and producer-terminal retirement is background maintenance driven by `close_step`
+    /// every turn and must not hold the actor in `more-work`, otherwise a host drain waits for the
+    /// retirement of trees it will never see. A deferred surface whose slot still awaits the host's
+    /// acknowledgement of an earlier revision is host-blocked the same way: the acknowledgement
+    /// arrives as its own lifecycle turn, so counting it here only makes the drain spin on itself.
+    pub fn has_publishable_work(&self) -> bool {
+        let state = self.state.borrow();
+        state.output_fault.is_some()
+            || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some())
+            || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
+            || state.unadmitted.iter().any(Option::is_some)
+            || state.closing_instances.iter().any(Option::is_some)
+            || state.ready.iter().flatten().any(|ready| ready.published && !ready.closing)
     }
 
     pub fn has_work(&self) -> bool {
@@ -763,6 +812,7 @@ impl PatchTracker {
         if state.output_fault.is_some() {
             return false;
         }
+        close_stranded_outputs(&mut state);
         if let Some(index) = state.ready.iter().position(|output| output.as_ref().is_some_and(|output| output.closing)) {
             match state.ready[index].as_mut().expect("retained output close").close_step() {
                 Ok(true) => state.ready[index] = None,
@@ -875,8 +925,12 @@ impl PatchTracker {
             state.closing_instances[closing_index].as_mut().expect("exact retained close receipt").complete = true;
             return false;
         }
-        let index = state.close_cursor;
-        state.close_cursor = (state.close_cursor + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS).map(|offset| (state.close_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS).find(|index| {
+            state.producer_terminals[*index].as_ref().is_some_and(|slot| slot.close) || state.terminals[*index].as_ref().is_some_and(|slot| slot.close)
+        }) else {
+            return true;
+        };
+        state.close_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
         if let Some(terminal) = state.producer_terminals[index].as_mut().filter(|slot| slot.close) {
             if terminal.close_step() && terminal.terminal_is_empty() {
                 let Some(terminal) = state.producer_terminals[index].take() else { return false };
@@ -959,6 +1013,28 @@ fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
     Some(index)
 }
 
+/// 🧹️ An unpublished, not-yet-closing output whose surface slot holds no producer or job any more can
+/// never be published (its job was retired into a terminal by an instance close or a supersession), so
+/// it is closed here — otherwise `has_work` reports it forever and every drain spins on `reconcile`.
+fn close_stranded_outputs(state: &mut PatchTrackerState) {
+    for output_index in 0..state.ready.len() {
+        let Some(ready) = state.ready[output_index].as_ref() else { continue };
+        if ready.published || ready.closing {
+            continue;
+        }
+        let publisher_alive = state.slots.iter().flatten().any(|slot| slot.output_index == Some(output_index) && (slot.producer.is_some() || slot.job.is_some()));
+        if publisher_alive {
+            continue;
+        }
+        for slot in state.slots.iter_mut().flatten() {
+            if slot.output_index == Some(output_index) {
+                slot.output_index = None;
+            }
+        }
+        state.ready[output_index].as_mut().expect("stranded output").closing = true;
+    }
+}
+
 fn close_output(state: &mut PatchTrackerState, index: usize) {
     if let Some(output) = state.slots[index].as_mut().and_then(|slot| slot.output_index.take()).and_then(|output| state.ready[output].as_mut()) {
         output.closing = true;
@@ -970,6 +1046,10 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
     let Some(job) = slot.job.as_ref() else { return };
     if slot.reconciler.is_some() && !job.is_ready() {
         let Some(target) = state.terminals.iter().position(Option::is_none) else { return };
+        let stranded = slot.output_index.and_then(|output| state.ready[output].as_ref()).is_some_and(|ready| !ready.published);
+        if stranded {
+            close_output(state, index);
+        }
         let slot = state.slots[index].as_mut().expect("retained transferred job");
         state.terminals[target] = Some(TerminalSlot { key: slot.key, instance: surface_instance(slot.surface.as_ref()), authority: slot.job.take().expect("retained empty job shell").into_terminal(), close: true });
         slot.output_index = None;
@@ -1011,6 +1091,18 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
             *target = Some(TerminalSlot { key: slot.key, instance: surface_instance(slot.surface.as_ref()), authority: slot.job.take().expect("faulted job remains retained").into_terminal(), close: false });
         }
     }
+}
+
+/// 🎟️ Whether a deferred surface can be re-admitted now: no slot holds it, or its slot has no live
+/// producer/job and the host has acknowledged the slot's current revision (the predicate
+/// `take_deferred_ready` releases on).
+fn deferred_surface_ready(state: &PatchTrackerState, surface: &ui_contract::SurfaceId) -> bool {
+    state
+        .slots
+        .iter()
+        .flatten()
+        .find(|slot| slot.surface == *surface)
+        .is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
 }
 
 fn has_work(state: &PatchTrackerState) -> bool {

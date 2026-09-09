@@ -2218,6 +2218,17 @@ fn reserve_worker_job_retirement_slot() -> Option<usize> {
     WORKER_JOB_RETIREMENT_SLOTS.iter().enumerate().find_map(|(index, slot)| slot.compare_exchange(std::ptr::null_mut(), WORKER_JOB_RETIREMENT_RESERVED, Ordering::AcqRel, Ordering::Acquire).ok().map(|_| index))
 }
 
+/// 🧹️ Whether any dropped worker-job session still parks a node in the process-wide retirement array.
+/// A host reads this to decide that it is NOT idle: the parked node holds one of the
+/// [`WORKER_JOB_SESSION_SLOTS`] admissions every later session competes for, and only
+/// [`pump_worker_job_retirements`] gives it back.
+pub fn worker_job_retirements_are_parked() -> bool {
+    WORKER_JOB_RETIREMENT_SLOTS.iter().any(|slot| {
+        let pointer = slot.load(Ordering::Acquire);
+        !pointer.is_null() && pointer != WORKER_JOB_RETIREMENT_RESERVED
+    })
+}
+
 pub fn take_worker_job_retirement_wake() -> bool {
     WORKER_JOB_RETIREMENT_WAKE.swap(false, Ordering::AcqRel)
 }

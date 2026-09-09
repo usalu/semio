@@ -60,7 +60,7 @@ import {
 } from "@semio-tech/framework-replication";
 import { type BuiltNode, type Component, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, DEFAULT_UI_DOCUMENT_LIMITS, emptyUiDocumentState, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
-import { OwnedUiPatchIntake } from "../📃️UiDocumentStore/📥️intake/🟦️.ts";
+import { OwnedUiPatchIntake, pluginUiIntakeBudget } from "../📃️UiDocumentStore/📥️intake/🟦️.ts";
 import {
   ActivationRegistry,
   type ActivationReason,
@@ -84,6 +84,7 @@ import {
   type ShardEventEnvelope,
   type ShardInstanceLifecycleLease,
   type ShardInstanceOpenInput,
+  type ShardJobStep,
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { SHARD_WORKER_URL } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
@@ -204,6 +205,11 @@ export type PluginWasmHandle = {
   //#endregion 🔖️Merge
   /** 🏠️ Reads one exact retained local-interaction capture and ACKs every native-owned page. */
   readonly readLocalInteraction: (instanceId: number, signal?: AbortSignal) => Promise<LocalInteractionCapture>;
+  /** 🏁️ Subscribes to this instance's typed-operation completions (`AppFrame::OperationCompleted`).
+   * A retained operation reaches its terminal result on a continuation turn no host call is awaiting,
+   * so its final UI scope, history delta and host effects reach the shell HERE and nowhere else.
+   * Returns the unsubscribe. */
+  readonly subscribeOperationCompletions: (instanceId: number, listener: (completion: PluginOperationCompletion) => void) => () => void;
   readonly dispose: () => Promise<void>;
 };
 
@@ -837,6 +843,64 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
  * than the caller's own await. */
 const pendingTurnEffects = new Map<number, WireVariant[]>();
 
+/** 🏁️ One typed operation's terminal publication, delivered to every subscriber of
+ * {@link PluginWasmHandle.subscribeOperationCompletions}. A mounted operation finishes turns long
+ * after the command that started it resolved, so NOTHING in the invocation response describes its
+ * outcome — `uiScope`, `historyPatch` and `requestedEffects` are that outcome, and this is their only
+ * delivery path. */
+export type PluginOperationCompletion = Readonly<{
+  instanceId: number;
+  operation: number;
+  revision: number;
+  uiScope: InvocationResponse["uiScope"];
+  historyPatch: HistoryPatch | undefined;
+  requestedEffects: readonly Effect[];
+}>;
+
+/** 🎯️ Per-instance leftover effects produced by the CONTINUATION turns
+ * {@link drainTypedOperations} drives, kept separate from {@link pendingTurnEffects}: that map is
+ * owned by `performInvocation`, which drains it the microtask after its own command reply resolves.
+ * A completion frame can ride the very outcome that resolves a command, so a shared map would let the
+ * completion subscriber steal an in-flight invocation's own effects. Two owners, two carriers. */
+const pendingCompletionEffects = new Map<number, WireVariant[]>();
+
+/** 📏️ Fixed retained authority for {@link pendingCompletionEffects}: an operation publishes at most
+ * one host effect per continuation turn, so a completion that never arrives would otherwise
+ * accumulate without bound. Exceeding it fails closed rather than growing. */
+const PLUGIN_OPERATION_EFFECT_CAPACITY = 4_096;
+
+/** 📏️ Continuation turns {@link drainTypedOperations} submits before it gives up on one instance —
+ * the drain twin of {@link PLUGIN_UI_CONTINUATION_LIMIT}, which bounds ONE settle rather than the
+ * poll chain across settles. */
+const PLUGIN_OPERATION_DRAIN_BUDGET = 4_096;
+
+/** ⏱️ Upper bound on the re-poll delay a `TurnResult.next-wake` may request. `next-wake` has no
+ * settled host-side unit yet (nothing else in this file consumes it), so it is honoured only as
+ * "wake again, no later than this" — clamping keeps a stale or absolute value from parking a
+ * finished operation's publication for minutes. */
+const PLUGIN_OPERATION_WAKE_MAX_MS = 1_000;
+
+/** 🔁️ The bounded poll loop behind {@link PluginWasmHandle.subscribeOperationCompletions}: submit
+ * one continuation settle, stop the moment the actor reports anything other than `more-work`, and
+ * yield one macrotask between polls so a long drain never starves rendering. Injected `live`/`settle`
+ * (rather than a closure over one `loadPluginModule` scope) so the stop conditions this whole feature
+ * rests on — stops at idle, stops when the instance closes, never exceeds its budget — are assertable
+ * without a shard worker. */
+async function drainTypedOperationTurns(
+  budget: number,
+  live: () => boolean,
+  settle: () => Promise<{ readonly status: unknown; readonly nextWake: number | null }>,
+  yieldTurn: () => Promise<void> = yieldPluginUiContinuation,
+): Promise<{ readonly polls: number; readonly stopped: "idle" | "closed" | "budget"; readonly nextWake: number | null }> {
+  for (let poll = 0; poll < budget; poll += 1) {
+    if (!live()) return { polls: poll, stopped: "closed", nextWake: null };
+    const settled = await settle();
+    if (wireTurnStatusTag(settled.status) !== "more-work") return { polls: poll + 1, stopped: "idle", nextWake: settled.nextWake };
+    await yieldTurn();
+  }
+  return { polls: budget, stopped: "budget", nextWake: null };
+}
+
 /** 🪪️ H1-react — instance ids must be unique across EVERY plugin, not just within one
  * `loadPluginModule` call: `pendingTurnEffects` above is keyed by `instanceId` alone and is shared
  * module-wide (mirrors `🦀️.rs`'s native `KernelClient` — `next_instance_id` lives on the ONE
@@ -1129,16 +1193,8 @@ const PLUGIN_UI_CONTINUATION_BATCH_SIZE = 8;
  * phase per step (a LEB128 byte, a text body, an attach), so a fixed step ceiling was a hard cap of a few
  * kilobytes per surface; the budget therefore scales with the patch's wire bytes (≤ 8 phases per byte)
  * above the base continuation limit, which alone still bounds an empty or malformed patch. */
-function pluginUiIntakeBudget(patch: WireUiPatch): number {
-  let bytes = 0;
-  const measure = (value: unknown, depth: number): void => {
-    if (value instanceof Uint8Array || value instanceof ArrayBuffer) bytes += value.byteLength;
-    else if (typeof value === "string") bytes += value.length;
-    else if (Array.isArray(value)) { if (depth < 4) for (const item of value) measure(item, depth + 1); }
-    else if (value && typeof value === "object" && depth < 4) for (const item of Object.values(value)) measure(item, depth + 1);
-  };
-  measure(patch.ops ?? [], 0);
-  return PLUGIN_UI_CONTINUATION_LIMIT + Math.max(bytes, (patch.ops?.length ?? 0) * 4096) * 8;
+function retainedUiPatchIntakeBudget(patch: WireUiPatch): number {
+  return pluginUiIntakeBudget(patch);
 }
 type PluginPatchAcceptance = Readonly<{
   acknowledgements: readonly ShardEventEnvelope[];
@@ -1412,13 +1468,19 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
       intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
       let token: OwnedUiPatchAcknowledgement | null = null;
-      const intakeBudget = pluginUiIntakeBudget(patch);
+      const intakeBudget = retainedUiPatchIntakeBudget(patch);
+      let stallPhase = "";
+      let stallSteps = 0;
       for (let step = 1; token === null; step += 1) {
         if (step > intakeBudget) throw new Error(`plugin-ui.intake-budget-exhausted:${surfaceId}:${intakeBudget}`);
         const current = intake.advance(uiGrant);
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
+        if (current.kind === "pending" && current.phase === stallPhase) {
+          stallSteps += 1;
+          if (stallSteps > 4_096) throw new Error(`plugin-ui.intake-zero-progress:${surfaceId}:${current.phase}`);
+        } else { stallPhase = current.phase; stallSteps = 0; }
         await yieldUi(step);
       }
       const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-ack", source, token }, "Interactive");
@@ -1491,9 +1553,20 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const result: Array<{ readonly key: string; readonly hash: string; readonly value: BuiltNode }> = [];
       for (const target of targets ?? []) {
         const surface = surfaces.get(retainedSurfaceId(instanceId, target.key));
-        if (!surface) continue;
+        // 🧯️ A requested body that has no retained surface at all, or one the guest has not rooted yet,
+        // is omitted from the response — and the shell's own merge keeps whatever it had (its loading
+        // placeholder, on a first refresh). That is indistinguishable from a healthy refresh, so it is
+        // recorded: one console record per dropped body, permanent (not a `[DEBUG]` trace), the same
+        // way `AppRouter` records a plugin it excluded. A panel that renders forever empty in the
+        // browser (measured 2026-09-09 21:05 on `framework.panel.inspection`) is either named here or
+        // is a real guest render — no third possibility.
+        if (!surface) {
+          console.error(`refreshUi dropped requested body ${JSON.stringify(target.key)}: no retained surface on instance ${instanceId}`);
+          continue;
+        }
         const projected = await projectOwnedUiSurface(instanceId, actorId, lease, owner, surface);
         if (projected) result.push({ key: target.key, ...projected });
+        else console.error(`refreshUi dropped requested body ${JSON.stringify(target.key)}: retained surface has no root on instance ${instanceId}`);
       }
       return result;
     };
@@ -1584,6 +1657,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     uiIntakesByInstance.delete(instanceId);
     uiReadsByInstance.delete(instanceId);
     pendingTurnEffects.delete(instanceId);
+    pendingCompletionEffects.delete(instanceId);
     teardownPluginActor(actorId);
     closingInstances.delete(instanceId);
   };
@@ -1610,7 +1684,93 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (decodeBackboneMessage(bytes).kind === "snapshot") throw new Error("actor-document-port.snapshot-requires-cold-pair");
     return bytes;
   };
-  const routeDocumentEffects = (effects: readonly WireVariant[], port: ActorDocumentMessagePortV1 | undefined): WireVariant[] => effects.filter(effect => {
+  /** 💼️ In-flight `spawn-job` drives, keyed `actorId#job`. A guest re-emitting the same `job` id
+   * (a replayed turn, a checkpoint restore) must never open a second `start-job` for one owner. */
+  const drivingJobs = new Set<string>();
+
+  /** ⛽️ The budget one `step-job` is granted. `fuel` is a WIT `u64`, hence a `bigint` — the same
+   * reshaping `ShardLoop::pump` does natively (`🖥️host/🧵️shard/🦀️.rs:146-147`,
+   * `job_budget_from_grant`), so a job slice on this target costs what it costs on the native one. */
+  const jobStepBudget = { fuel: BigInt(DEFAULT_SHARD_BUDGET.fuel), deadlineMs: DEFAULT_SHARD_BUDGET.wallMs } as const;
+
+  /** 📏️ Steps one job may spend before this host gives up on it. A bounded job that has not reached
+   * a terminal by then is cancelled and reported as a fault rather than stepped forever — the guest
+   * is cooperative, but this loop is the only thing bounding it. */
+  const PLUGIN_JOB_STEP_LIMIT = 1 << 16;
+
+  /** 📏️ Steps driven back to back before yielding the main thread, so a long plan never blocks a
+   * frame. `yieldPluginUiContinuation` is deliberately not a `setTimeout` chain (its own doc: a
+   * hidden tab throttles those to one tick a second). */
+  const PLUGIN_JOB_STEPS_PER_YIELD = 32;
+
+  /** 🏁️ Feeds one job's terminal back into the guest as `events::job-completed` — the event
+   * `⚛️reactor/🔄️turn/🦀️.rs:327-344` resolves the guest's own parked `spawn_job` request with
+   * (`RequestId(job)` IS the job id). Without this the guest waits forever on a job the host already
+   * finished. `job-progress` is deliberately NOT delivered per slice: the guest ignores its payload
+   * (`⚛️reactor/🔄️turn/🦀️.rs:317` only marks the surface dirty) and one whole actor turn per slice
+   * would cost more than the repaint is worth. */
+  const deliverJobCompletion = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
+    if (outcome.status === "running") throw new Error("plugin.job-completion-not-terminal");
+    const val = Array.from(outcome.value);
+    const payload = { job, outcome: outcome.status === "done" ? { tag: "ok", val } : { tag: "fault", val } };
+    const activation = shardClient.captureActorActivation(actorId);
+    await withTypedOperationCall(actorId, `job-completion#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
+      activation.assertActive();
+      return settlePluginTurn(actorId, await submitTurn(actorId, [{ kind: "job-completed", payload }], { lane: "Background", activation }), "Background", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
+    }));
+  };
+
+  /** 💼️ The host half of `Effect::SpawnJob` on this target: `start-job` once, then one `step-job`
+   * per turn of this loop until the guest answers `done`/`failed`, then one `job-completed` event
+   * back into the actor. This is the browser counterpart of `ShardLoop::pump`'s `running_jobs` walk
+   * (`🔌️plugin/🖥️host/🧵️shard/🦀️.rs:359`, :1714-1765). Before ticket 26/09/02 W-J nothing on this
+   * target started or stepped an isolated job at all — the effect was dropped unmapped in
+   * `wireEffectToFriendly`, so every plugin-authored job silently never ran. */
+  const driveSpawnedJob = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
+    const key = `${actorId}#${job}`;
+    if (drivingJobs.has(key)) return;
+    drivingJobs.add(key);
+    const live = (): boolean => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId;
+    try {
+      await serializeCommandIngressForActor(actorId, () => shardClient.startJob(actorId, job, kind, input));
+      for (let step = 0; step < PLUGIN_JOB_STEP_LIMIT; step += 1) {
+        if (!live()) return;
+        const outcome = await serializeCommandIngressForActor(actorId, () => shardClient.stepJob(actorId, job, jobStepBudget));
+        if (outcome.status !== "running") {
+          if (live()) await deliverJobCompletion(instanceId, actorId, job, outcome);
+          return;
+        }
+        if (step % PLUGIN_JOB_STEPS_PER_YIELD === PLUGIN_JOB_STEPS_PER_YIELD - 1) await yieldPluginUiContinuation();
+      }
+      console.warn(`[DEBUG] plugin job ${kind}#${job} exceeded its ${PLUGIN_JOB_STEP_LIMIT}-step host budget — cancelling`);
+      await serializeCommandIngressForActor(actorId, () => shardClient.cancelJob(actorId, job));
+      if (live()) await deliverJobCompletion(instanceId, actorId, job, { status: "failed", value: new TextEncoder().encode("plugin.job-step-budget") });
+    } catch (error) {
+      turnOutcomes.push({ instanceId, error });
+    } finally {
+      drivingJobs.delete(key);
+    }
+  };
+
+  /** 🚦 The one choke point every consumer of a turn's `effects` passes through: backbone
+   * `send-message`s go to the document port, `spawn-job`/`cancel-job` go to {@link driveSpawnedJob}
+   * (they are host WORK, never a `requestedEffects` entry for `applyHostEffects` to branch on), and
+   * everything else is returned for the caller's own shell-frame/leftover split. */
+  const routeHostEffects = (instanceId: number, effects: readonly WireVariant[], port: ActorDocumentMessagePortV1 | undefined): WireVariant[] => effects.filter(effect => {
+    if (effect.tag === "spawn-job") {
+      const value = effect.val as { job?: unknown; kind?: unknown; input?: unknown } | undefined;
+      if (typeof value?.job !== "bigint" || typeof value.kind !== "string") throw new Error("plugin.spawn-job-authority-invalid");
+      void driveSpawnedJob(instanceId, requireActorId(instanceId), value.job, value.kind, coerceWireBytes(value.input));
+      return false;
+    }
+    if (effect.tag === "cancel-job") {
+      const value = effect.val as { job?: unknown } | undefined;
+      if (typeof value?.job !== "bigint") throw new Error("plugin.cancel-job-authority-invalid");
+      const job = value.job;
+      const actorId = requireActorId(instanceId);
+      void serializeCommandIngressForActor(actorId, () => shardClient.cancelJob(actorId, job)).catch(error => turnOutcomes.push({ instanceId, error }));
+      return false;
+    }
     const value = effect.val as { target?: WireVariant; payload?: unknown } | undefined;
     if (effect.tag !== "send-message" || value?.target?.tag !== "backbone") return true;
     if (!port) throw new Error("actor-document-port.unbound");
@@ -1675,15 +1835,65 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
-      for (const effect of routeDocumentEffects(result.effects, documentPort)) {
+      for (const effect of routeHostEffects(instanceId, result.effects, documentPort)) {
         const frame = shellFrameBytes(effect, instanceId);
         if (frame) outFrames.push(frame);
         else leftover.push(effect);
       }
       pendingTurnEffects.set(instanceId, leftover);
       turnOutcomes.push({ instanceId, frames: outFrames });
+      if (wireTurnStatusTag(result.status) === "more-work") void drainTypedOperations(instanceId);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
+    }
+  };
+
+  /** 🔁️ Keeps an instance's retained typed operations advancing once NO host call is left to drive
+   * them. A mounted operation returns its "started" `InvocationResult` on its very first turn and then
+   * needs hundreds more reactor turns to reach its terminal result — but every turn in this file is
+   * submitted by a host call, so the moment `runQueuedTurn` returns the actor simply stops, its
+   * operation frozen mid-flight and its completion never published. This is the poll that replaces
+   * that missing driver: one `UserVisible` continuation settle per macrotask (never a `setTimeout`
+   * chain — `yieldPluginUiContinuation`'s own doc: a hidden tab throttles those to one tick a second),
+   * stopping the instant the actor reports anything other than `more-work`, and re-armed by the next
+   * command turn that ends `more-work` again. It shares `serializeCommandIngressForActor` with every
+   * other caller, so a real command always wins the actor and this poll waits behind it. */
+  const drainingInstances = new Set<number>();
+  const drainTypedOperations = async (instanceId: number): Promise<void> => {
+    const live = (): boolean => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.has(instanceId);
+    if (drainingInstances.has(instanceId) || !live()) return;
+    drainingInstances.add(instanceId);
+    try {
+      const outcome = await drainTypedOperationTurns(PLUGIN_OPERATION_DRAIN_BUDGET, live, async () => {
+        const actorId = requireActorId(instanceId);
+        const activation = shardClient.captureActorActivation(actorId);
+        const documentPort = documentBindings.get(instanceId)?.port;
+        const settled = await withTypedOperationCall(actorId, `operation-drain#${instanceId}`, (call) =>
+          serializeCommandIngressForActor(actorId, async () => {
+            activation.assertActive();
+            return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
+          }),
+        );
+        const frames: Uint8Array[] = [];
+        const leftover = pendingCompletionEffects.get(instanceId) ?? [];
+        for (const effect of routeHostEffects(instanceId, settled.effects, documentPort)) {
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame) frames.push(frame);
+          else leftover.push(effect);
+        }
+        if (leftover.length > PLUGIN_OPERATION_EFFECT_CAPACITY) throw new Error(`typed-operation host effects for instance ${instanceId} exceeded their ${PLUGIN_OPERATION_EFFECT_CAPACITY}-entry authority`);
+        pendingCompletionEffects.set(instanceId, leftover);
+        if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
+        return { status: settled.status, nextWake: settled.nextWake };
+      });
+      if (outcome.stopped === "budget") console.warn(`[DEBUG] typed-operation drain for instance ${instanceId} exhausted its ${PLUGIN_OPERATION_DRAIN_BUDGET}-poll budget`);
+      if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
+        setTimeout(() => void drainTypedOperations(instanceId), Math.min(Math.max(outcome.nextWake, 0), PLUGIN_OPERATION_WAKE_MAX_MS));
+      }
+    } catch (error) {
+      turnOutcomes.push({ instanceId, error });
+    } finally {
+      drainingInstances.delete(instanceId);
     }
   };
 
@@ -1825,7 +2035,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }));
     requireActorId(instanceId);
     activation.assertActive();
-    return ownedUiRefreshResponse(instanceId, actorId, request, routeDocumentEffects(result.effects, documentPort));
+    return ownedUiRefreshResponse(instanceId, actorId, request, routeHostEffects(instanceId, result.effects, documentPort));
   };
 
   /** 🔁️ Retains one completion's exact activation across evaluation, queueing and publication. */
@@ -1855,7 +2065,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         assertActive();
         const frames: Uint8Array[] = [];
         const effects: WireVariant[] = [];
-        for (const effect of routeDocumentEffects(settled.effects, documentPort)) {
+        for (const effect of routeHostEffects(instanceId, settled.effects, documentPort)) {
           const frame = shellFrameBytes(effect, instanceId);
           if (frame) frames.push(frame);
           else effects.push(effect);
@@ -1901,7 +2111,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       deliver: async payload => {
         const result = await settle([{ kind: "message", payload: { source: { tag: "backbone", val: binding.port.uri }, payload: Array.from(hotBytes(payload)) } }]);
         if (!current()) return;
-        const frames = routeDocumentEffects(result.effects, binding.port).flatMap(effect => {
+        const frames = routeHostEffects(instanceId, result.effects, binding.port).flatMap(effect => {
           const bytes = shellFrameBytes(effect, instanceId);
           return bytes ? [bytes] : [];
         });
@@ -2019,7 +2229,7 @@ function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readon
       }
       if (frame.Invocation.ui_scope.length) uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
       if (frame.Invocation.history_patch.length) {
-        const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
+        const decodedHistoryPatch = decodePackWire(new Uint8Array(frame.Invocation.history_patch), "$.historyPatch");
         historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
       }
       ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame.Invocation));
@@ -2123,7 +2333,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const frames = await requireChannel(instanceId).readHistory();
       const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in candidate);
       if (!frame) throw new Error("[DEBUG] readHistory: missing HistorySnapshot frame");
-      return decodePackValue(new Uint8Array(frame.HistorySnapshot.history_patch)) as HistoryPatch;
+      return decodePackWire(new Uint8Array(frame.HistorySnapshot.history_patch), "$.historyPatch") as HistoryPatch;
     },
     applyMutations: async (instanceId, mutationsPack) => {
       const envelopes = decodeMutationEnvelopesPack(mutationsPack);
@@ -2238,6 +2448,22 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (!localInteractionIdentityEquals(capture.identity, identity)) throw new Error("local-interaction.capture-authority");
       return capture;
     },
+    subscribeOperationCompletions: (instanceId, listener) =>
+      requireChannel(instanceId).onOperationCompleted((completion) => {
+        const leftover = pendingCompletionEffects.get(instanceId) ?? [];
+        pendingCompletionEffects.delete(instanceId);
+        listener({
+          instanceId,
+          operation: completion.operation,
+          revision: completion.revision,
+          uiScope: completion.uiScope as InvocationResponse["uiScope"],
+          historyPatch: completion.historyPatch as HistoryPatch | undefined,
+          requestedEffects: leftover
+            .filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_PENDING_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN)
+            .map(wireEffectToFriendly)
+            .filter((effect): effect is Effect => effect !== null),
+        });
+      }),
     dispose: () => {
       if (disposal) return disposal;
       disposing = true;
@@ -2702,7 +2928,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, pluginUiIntakeBudget, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

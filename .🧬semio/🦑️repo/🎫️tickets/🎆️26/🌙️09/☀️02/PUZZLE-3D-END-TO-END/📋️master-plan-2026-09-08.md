@@ -372,3 +372,212 @@ Coordinator decisions:
 - 17:20 rebuild #11 verified (`📓️2026-09-09-runtime-verification.md` §17:10): boot actions succeed; the
   async completion gap (seq-0 completion frames dropped, no drain polling, history carrier bug) → W-A
   launched; W-M2 (paged mesh upload) launched at 17:12; rebuild #12 (trace retune) running.
+- 17:56 the Claude Code process restarted: the session scratchpad was wiped (seeded cargo targets,
+  scripts, build logs gone; the release server died) and waves W-Q/W-D3/W-M2/W-A/W-D4 were killed
+  mid-flight (W-Q report complete; W-D3 report §4/§5 empty; W-M2/W-A/W-D4 partial edits only).
+  Re-seeded `target-p3d` from the repo `target/` (debug 75 GB + wasm-release 1.2 GB), recreated the
+  serve/rebuild scripts, relaunched W-A, W-M2, W-D3, W-D4 as continuation waves (they wait for the
+  `.seeded` marker), queued the wasm rebuild loop behind the seed.
+
+## 18:55 close-out inventory — temporary traces owned by this ticket (remove before close)
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs` — 7 `[DEBUG]` line(s):
+    - 50:    /// 🐞️ `[DEBUG]` turn sequence for the phase trace — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    - 52:    /// 🐞️ `[DEBUG]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO
+    - 129:        eprintln!("[DEBUG] turn {turn_seq} begin events={} page={}", events.len(), command_page.is_some());
+    - 848:                "[DEBUG] reactor more-work streak={streak} seen={seen} executor_deadline={} close_cleanup={close_cleanup_work} typed_ope
+    - 853:            eprintln!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0);
+    - 881:        eprintln!("[DEBUG] turn {turn_seq} end more_work={more_work}");
+    - 941:            eprintln!("[DEBUG] pool pumps={pumps} remaining={remaining} before={before:?} after={:?}", pool.try_cooperative_snapshot());
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` — 12 `[DEBUG]` line(s):
+    - 16364:                "[DEBUG] registered keyed dispatch progress stage={:?} terminal_seen={} pending={} completion={} result={:?}",
+    - 16389:            eprintln!("[DEBUG] actual registered keyed dispatch {} preserved exact target supersession, rebased its worker, published 
+    - 16447:            eprintln!("[DEBUG] actual registered keyed dispatch {} preserved foreign reservation, retired seven UTF-8 bytes exactly, a
+    - 17993:                    eprintln!("[DEBUG] reserved job '{verb}' poll {reserved_polls}: {poll:?}");
+    - 22961:    /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    - 22963:    /// 🐞️ `[DEBUG]` typed-operation publication turn counter — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    - 24003:                    "[DEBUG] typed-operation publication turn={trace_turn} operations={operations:?} latest_wins_empty={} effects={} e
+    - 28300:            std::panic::set_hook(Box::new(|panic| eprintln!("[DEBUG] [semio-plugin panic] {panic}")));
+    - 28653:                    eprintln!("[DEBUG] maintenance stage={} elapsed_us={} outcome={:?}", crate::app::LAST_MAINTENANCE_STAGE.load(Order
+    - 28735:                eprintln!("[DEBUG] cooperative maintenance callback overran the interactive ceiling for instance {} (elapsed {elapsed_
+    - 29249:            eprintln!("[DEBUG] native close deadline instance={} generation={} candidate={status:?} elapsed_us={elapsed_us}", state.in
+    - 29415:                "[DEBUG] cooperative-maintenance instance={} turn={} generation={} status={}->{} entries={} phase={:?} clock={} pool={
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/🦀️.rs` — 1 `[DEBUG]` line(s):
+    - 214:    /// 🐞️ `[DEBUG]` state summary — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🦀️.rs` — 1 `[DEBUG]` line(s):
+    - 109:    /// 🐞️ `[DEBUG]` state summary — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+- `✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs` — 1 `[DEBUG]` line(s):
+    - 513:                        eprintln!("[DEBUG] puzzle command wire malformed: raw_len={} pages={} scan={} error={error:?} head={:?}", self.r
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx` — 39 `[DEBUG]` line(s):
+    - 267:  console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
+    - 291:    onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
+    - 760:    if (!record) throw new Error(`[DEBUG] retained UI surface ${surface.surface} references missing node ${id}`);
+    - 789: * here degrades to an honest `[DEBUG]`-logged drop rather than guessing an unverified shape. */
+    - 833:      console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion (this 
+    - 959:      console.warn("[DEBUG] thunk start", _actorId);
+    - 962:        console.warn("[DEBUG] thunk done", _actorId);
+    - 964:        console.warn("[DEBUG] thunk failed", _actorId, error instanceof Error ? error.message.slice(0, 160) : String(error));
+    - 980:    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PE
+    - 1070:    onTurnError: (actorId, error) => console.error(`[DEBUG] PluginRuntime: turn failed for actor ${actorId}`, error),
+    - 1127:        reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+    - 1133:    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected r
+    - 1252:    if ((continuation + 1) % 512 === 0) console.warn(`[DEBUG] settle ${actorId} continuation ${continuation + 1} status=${wireTurnStatu
+    - 1257:      `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continu
+    - 1265:    throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify
+    - 1636:    if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId}
+    - 1725:            if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(
+    - 1726:            if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized
+    - 1731:            if (continuation % 32 === 31) console.warn(`[DEBUG] command ingress continuation ${continuation + 1} status=${terminal ?? "
+    - 1733:          console.warn(`[DEBUG] command ingress settled status=${terminal ?? "missing"} observed=${[...observedStatuses].join(",")}`);
+    - 1734:          if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 102
+    - 1793:      if (outcome.stopped === "budget") console.warn(`[DEBUG] typed-operation drain for instance ${instanceId} exhausted its ${PLUGIN_O
+    - 2066:      console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — kee
+    - 2103:  throw new Error(`[DEBUG] coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
+    - 2206:    if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already 
+    - 2239:      if (!frame) throw new Error("[DEBUG] readHistory: missing HistorySnapshot frame");
+    - 2246:      if (errorFrame) throw new Error(`[DEBUG] applyMutations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`)
+    - 2257:      if (errorFrame) throw new Error(`[DEBUG] readAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValu
+    - 2264:      if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValu
+    - 2289:      if (!frame) throw new Error(`[DEBUG] program ${pluginId}: transactionPrepare(${instanceId}): missing transactionPrepared frame`);
+    - 2301:      throw new Error(`[DEBUG] program ${pluginId}: transactionCommit(${instanceId}): missing transactionCommitted/Error frame`);
+    - 2316:      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: setMergePolicy failed: ${faultDisplayMessage(errorFrame.Error.fault
+    - 2321:      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: resolveConflict failed: ${faultDisplayMessage(errorFrame.Error.faul
+    - 2332:      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: readConflicts failed: ${faultDisplayMessage(errorFrame.Error.fault,
+    - 2652:          console.warn(`[DEBUG] TransactionCoordinator rollback(${member.pluginId}#${member.instanceId}) failed`, error);
+    - 2666:          console.warn(`[DEBUG] TransactionCoordinator undo(${member.pluginId}#${member.instanceId}) failed`, error);
+    - 2693:          console.warn(`[DEBUG] TransactionCoordinator redo(${member.pluginId}#${member.instanceId}) failed`, error);
+    - 2805:      loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} ski
+    - 2811:        loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} s
+- `debug_state()` helpers (🐞️) on the live/query interaction types — delete with the trace that reads them.
+
+## 19:00 W-A landed
+
+- W-A complete: `AppFrame::OperationCompleted` (tag 25) + TS twin + fixture, Rust `typed_completion_outbox` drained at the Terminal page, `AppChannelClient` pre-correlation routing → `ShellHost` history patch + UI scope, history carrier fixed (`decodePackWire`, no more `[object Object]` rows), bounded drain poller. Report `📓️2026-09-09-wave-A-async-completion-refresh.md`. Not run in browser yet — covered by rebuild #13 attempt 2 (started 18:44, after the edits).
+
+## 19:50 W-J launched — bounded fill job kind
+
+- Browser on the fresh wasm: fill measures render, ticks run, `ready` stays 0, guest OOMs after ~115 ticks. Cause: `✏️s/🔌️plugins/🧩️puzzle/🦀️.rs:71` registers `FILL_JOB_KIND` as an async `JobFn`; `⚛️reactor/💼️jobs/🦀️.rs::spawn_job` only executes `register_bounded_job_kind` kinds outside `cfg(test)` (`job.explicit-state-machine-required`). fem 3d/2d and energy already converted. W-J (Opus) converts the fill job to a `BoundedJob`, verifies the React host steps `Isolated` jobs, bounds the tick spawn, adds laws. W-S (settle stall) and W-J share `⏳️precompute/🦀️.rs` — W-J told to keep to the job-kind boundary.
+- Serve chain fixed (`🔨️serve-release-direct.sh` PLUGIN_SCRIPT path) — `Activated … (changed)` at 19:26 is the first fresh wasm served since 17:07.
+- Peer breakage fixed: `node:fs` import in `🔌️plugin/📇️registry/🟦️.ts` moved to `📇️registry/✅️trusted-stdio-catalog/🟦️.ts`.
+
+## 20:00 W-I landed
+
+- Root cause: the local interaction query was stuck in *closing*, waiting for the Store one-slot-per-step reclaim cursor (1 probe / 8 continuations / 1024 slots) — 8×1024 continuations per lease vs the 4096 drain budget. Fix: query ownership ends at registry acceptance; returned-read pumps moved into `maintenance_step` (fill + drain over all three stores); terminal reply ungated. Read cost 127 → 27 turns, 5 puzzle laws green. Needs rebuild #14 (plugin host Rust). Report `📓️2026-09-09-wave-I-local-interaction-query-termination.md`.
+- Vite boot currently broken by a peer: `💻️os/🟦️.ts:2393` imports the not-yet-existing `🧪️tests/🧊️mesh-pack-decode/🟦️.ts` (mesh pack codec, 19:49). Waiting for the peer file before the next browser pass.
+
+## 20:05 settle stall — likely cause found by W-I, fix applied to the testkit
+
+- W-I §6: `dispatch(setActiveExample)` loops to the 1 048 576-turn guard with `operations=[] … ui=0` — the typed **completion** outbox (W-A, `typed_completion_outbox`, counted in `has_pending_typed_operations`) is never drained by the testkit `settle`, which only drains effect/event/ui. Coordinator added `take_typed_operation_completion().await` to `🧪️tests/🔬️testkit/🦀️.rs::settle` (completion `ui_scope` replaces the UI-lane scope). Reproduction run in the scratchpad (`settle-repro.txt`). W-S should treat this as the primary lead.
+
+## 20:10 completion refresh owner fix + mesh-pack test module
+
+- W-A gap: `subscribeOperationCompletions` in `🏛️ShellHost/🟦️.tsx` captured its effect owner with `presentation: null`, so `isCurrentEffectOwner` was always false and the completion full-scope refresh never ran (measured: Nakagin completion arrived, nothing refreshed). Fixed to `captureEffectOwner(target, captureDialogOrigin(target))`; `[DEBUG] completion apply` / `applyHostEffects refresh` traces added (remove at close).
+- Peer blocker: wrote `💻️os/🧪️tests/🧊️mesh-pack-decode/🟦️.ts` (five decoder laws) so `💻️os/🟦️.ts:2393` resolves; os TS suite running in the scratchpad (`os-ts-test.txt`).
+- W-I lead for W-A: `nakagin_example_loads_via_operations` spins at `608:Publishing:true:true` natively.
+
+## 20:22 status
+
+- os TS suite with the new mesh-pack laws: 5 files / **348 passed** (was 343).
+- Rebuild #14 launched 20:18 (W-I Rust + everything landed so far); W-S, W-J, W-D3 still running (W-J is fixing the shard-client job wire `u64` identities — the isolated job stepping path).
+
+## 20:30 W-D3 landed
+
+- Fixed: settle/measured_host_turn drain the completion witness; brush-lane reset moved out of `start_fill_preparation` into `rebuild_queue` (a no-op scene sync wiped the brush candidates on every render); `suggestionsTick` warms the looked-at target; `window_measures`/`tool_measures` read the live precompute session. `missing-owned-reducer` 0 occurrences; module 81/58 → 87/57. Report `📓️2026-09-09-wave-D3-fixture-viewmodel-and-candidates.md`.
+- Open, to assign after W-S/W-J land (same files): (a) scene surface hits the 32 KiB cap when the suggestion popup carries content (`meshes_json` 27 673 B of 33 289 B) — scene-payload budget; (b) `puzzle3d_view_session_key` is `None` for a bare `window_measures` call (chrome runs session-less/cold); (c) process-wide fill-worker session leak (W-S/W-J); (d) retained-jobs fixture still lists `setFillCountStep`.
+
+## 20:35 W-S landed — settle stall root cause was worker-session admission leakage
+
+- Not the precompute loop: `WorkerJobSession` admissions come from a process-wide 256-slot array; `Drop` parks a retirement node that only `pump_worker_job_retirements` returns, and no app runtime ever called it → after 256 leaked sessions every operation is refused, walks to `Publishing` with an empty completion slot, and `settle` spins. Fix: maintenance stage 23 pumps one retirement unit (`MAINTENANCE_STAGES` 24), refused admissions publish `interactive-job.admission-capacity` in one turn, reserved routes retry transient pool `Contended` rejections instead of hard-faulting (`interactionHover`/`interactionSelect` coin flip). Suite 516/85 → **581/30**; wasm check clean. Report `📓️2026-09-09-wave-S-settle-stall.md`.
+- Residual 30: 14 `fill_worker` cascade (first assertion poisons the group static), 16 fill-planning / render-capacity (`scene-surface.encode … 33527 bytes`) / localisation assertions.
+- Escalation: stage 23 is shared by every artifact app — run the other artifacts suites + repo check before close. Machine hit ENOSPC once (disk tight).
+
+## 20:45 W-J landed; rebuild #15
+
+- W-J: `Puzzle3dFillBoundedJob: BoundedJob` replaces the async `fill_job` (registered via `precompute::initialize()` from the plugin root); React host never started/stepped isolated jobs — `spawn-job` was dropped in `wireEffectToFriendly` and nothing called `ShardClient.startJob/stepJob`; fixed with a job driver in `🔌️PluginRuntime/🟦️.tsx` (`driveSpawnedJob`, `deliverJobCompletion`) + shard-client wire `u64` fixes + `cancelJob` route; `fill_faulted` latch stops the per-tick re-preparation growth, one `fill_failed` notice. Laws: 4 Rust + precompute 146/146, shard-client vitest 151, PluginRuntime 82. Open (§5): wgpu host still drops `spawn-job`; `Event::JobProgress` dead on both targets; bounded factories never receive `restore_job` checkpoints (fem/energy); editor testkit `drive_fill_until_ready` bypasses the job runtime. Report `📓️2026-09-09-wave-J-bounded-fill-job.md`.
+- Rebuild #15 launched 20:45 (W-J Rust, per-turn reactor traces removed). Browser on #14: Nakagin switch → completion → refresh spins in `reconcile` (see runtime note 20:35).
+
+## 21:15 W-L launched
+
+- Browser interaction defects from the 21:05 pass: duplicate-selection no-op, raw `menu.group.*` labels in React, delete rows unconditional, fill tick over-queue + view ticks dirtying history, brush-mesh uploads triggering 14 refresh/history round trips at boot, empty inspection body. Report `📓️2026-09-09-wave-L-browser-interaction-defects.md`.
+
+## 22:05 reconcile spin root cause found and fixed (coordinator)
+
+- Per-slot tracker trace (rebuild #17) showed the artifact panel reconcile job abandoned by `drive_job_one` (`reconciler.is_some() && !job.is_ready()`) leaving its reserved ready output neither published nor closing → `has_work()` true forever → every drain after a document switch spun to 4096 continuations. Fix: `close_output` before retiring the abandoned job (`⚛️reactor/🩹️patches/🦀️.rs`); law `abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle` added (plugin-host test target currently blocked by peer test files — run when it compiles). Rebuild #18 launched 21:22 (machine clock).
+- Traces added this round (remove at close): `PatchTracker::debug_state`, `PendingPatchAuthority::debug_state`, `patches=[…] pending=[…]` in the more-work streak trace (threshold 2048).
+
+## 22:20 W-K stalled → W-K2 relaunched; rebuild #18 reverted
+
+- Rebuild #18 (close the abandoned job output) broke boot: the first refresh ended `status=idle` with `missing=[inspection, settings, section.engagements, section.tools]`, i.e. the abandon branch also fires at boot for those four surfaces and closing their output loses their first publication. Reverted to the original abandon behaviour plus a `[DEBUG] reconcile abandon …` trace (surface, generation, ready state) — rebuild #19 — to see why a slot has a reconciler while its job is unfinished (the grant cancel/drop path restores `slot.reconciler`; `receive_job_into` returns `Pending` while `current.is_some()`, so a reconciler present during a transfer both blocks the transfer and triggers the abandon — the fix must live in that hand-over, not in closing).
+- W-K stalled (watchdog) with §1 written and edits in editor/main window/plugin host/World3dHost/ShellHelpers/testkit; W-K2 launched to attribute the hunks (W-L shares World3dHost/ShellHelpers), finish 1.1–1.3 and run the suite.
+
+## 23:05 reconcile strand — rebuilds #19/#20/#21
+
+- #19 (trace, original behaviour): the abandon branch is the normal post-`Empty`/`Published` job retirement (fires for every surface at boot), so closing there unconditionally (#18) broke boot. #20 (close only when unpublished): boot clean, Nakagin still strands `artifact#g26` with `output_index` intact → the strand comes from another job→terminal path (closing-instance branch), not from abandon. #21: `close_stranded_outputs` sweep in `PatchTracker::close_step` (unpublished + not closing + no live producer/job on its slot → close, clear `output_index`). Law `abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle` covers the outcome (plugin-host test target still blocked by peer test files).
+
+## 23:30 W-L + W-K2 landed; producer close semantics fixed
+
+- W-L: context-menu rows were the *shell fallback* (guest returned `[]` from seven silent branches; selection arms ran over empty ids; `dispatch_step` abort dropped effects); TS twin of `ribbon_parent_label` from the one `ui.ribbon.parent.*` table (+ `menu.group.more` key); tick in-flight gate now awaits the guest completion (`onAction` settles on `OperationCompleted`, 30 s watchdog — timing change for every scene host); `applyHostEffects` no longer mints a new session per dispatch (killed the 90 `readHistory`); `register_brush_mesh` now sets its `HostOnly` scope; inspection body drop instrumented only. Suite 590/23. Report `📓️2026-09-09-wave-L-browser-interaction-defects.md`.
+- W-K2: mesh kinds ride as `{id,kind}` (no tessellation in the scene payload), `live_render_operation` on every host lane, fixtures fixed (5d `toolIds` was missing 5 ids), a transient-read leak in a test. Suite **591/22** (22 = fill_worker/fill_build_tick family + 2). Report `📓️2026-09-09-wave-K-scene-payload-and-residuals.md`.
+- Coordinator: after the stranded-output sweep (#21) the Nakagin spin persisted on `producer_terminals=[section.measures:cARV]` + `terminals=[g26:c--]`: `ComponentTreeProducer::close_step` (`🖱️ui/🧠️runtime/…/🎭️present.rs`) only completed when the GLOBAL built-child retire pool was empty (impossible with live surfaces) and nothing else drained that pool. Fixed: producer close completes when its own owners are released; the reactor turn drains one built-node page per turn (`close_built_node_page_one`). Rebuild #22.
+
+## 23:55 terminal drain throughput
+
+- After the producer-close fix (#22) the Nakagin spin narrowed to two job terminals (`g26` artifact, `g33` tools) drained one unit per 64 turns by `PatchTracker::close_step`'s slot cursor. Fixed: the cursor jumps to the first live closing terminal each turn; law `a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit` added. Abandon trace removed. Rebuild #23 (launched before the cursor edit but before the host compiled — verify the string `stranded output` and behaviour; else #24).
+- ui-contract `close_built_node_page_one` now reports "close queue empty" (live reservations excluded) + `built_node_pages_are_terminal_empty` for shutdown witnesses.
+
+## 00:25 more-work classification
+
+- `reconcile_work` now derives from `PatchTracker::has_publishable_work` (terminal retirement excluded); the turn retires up to 8 terminal units (`PATCH_CLOSE_UNITS_PER_TURN`). Rebuild #24 (cursor fix) in flight; #25 will carry this.
+
+## 00:45 W-N launched
+
+- W-L §5 open items: inspection body empty after pick, partial scopes with empty `panel_bodies`, translate/rotate refusal notices unobservable, wgpu `menu.group.more` label. Report `📓️2026-09-09-wave-N-inspection-scopes-notices.md`.
+- Rebuild #24 (cursor fix) still spins on the artifact terminal (expected — classification fix is in #25, compiling).
+
+## 00:58 milestone + W-P
+
+- Reconcile spin after document switch is fixed (rebuild #25). The Nakagin refresh now fails fast on the real cap: `scene-surface.encode … 57281 bytes` → W-P launched (paged scene lanes, schema-first, TS assembler, laws). Report `📓️2026-09-09-wave-P-paged-scene-payload.md`.
+
+## 00:15 (2026-09-10) — Fill unblocked at the host, OOM found, rebuild #26
+
+- Fixed in TS (live via HMR): tool activation shipped a window-less view state → host `unknown action window instance` (see runtime note 23:20 section). Fill now activates; the tick loop runs.
+- Fill guest OOM (`memory allocation of 16384 bytes failed` after ~180 ticks, 512 MB cap) → **W-F** (Opus, running): native law with a counting allocator, fix the per-tick retention, also the 2 MiB stack overflow of `fill_and_brush_params…` natively.
+- Shell quirks (Fill tab pressed while inactive; Tool category needs two clicks) → **W-G** (Opus, running).
+- Read-only audits (Sonnet, running): `📓️2026-09-10-debug-trace-inventory.md` (close-out list of every `[DEBUG]` trace + helper added by this tree) and `📓️2026-09-10-brush-mesh-upload-audit.md` (seven 0.65–2.85 s `registerBrushMesh` uploads with `notify` refusals on window activation).
+- Peer landed a fourth refresh section (`catalogue`, `framework.section.catalogue`) in `🛂️manifest/🟦️.ts`; with wasm #25 the shell fails every refresh with `plugin-ui.section-root-mismatch` → browser verification paused until **rebuild #26** (launched 00:12, `rebuild-until-ok.sh`, carries the pool-trace removal + tidy and the peer's Rust half).
+- Still running from before: **W-N** (inspection body / partial scopes / refusal notices / wgpu label), **W-P** (paged scene payload lanes).
+- Next after #26 serves: re-run pick → inspection body, context menu, gumball, undo/redo, duplicate, copy/paste, marquee, suggestions popup, Nakagin (paged lanes), Fill (after W-F) with the hook + timer shim + `scrollTo(0,0)`.
+
+## W-G — Fill tab pressed state & Tool category reveal (done, 2026-09-10)
+
+Report: `📓️2026-09-09-wave-G-shell-tool-tab.md`. Both handed-over quirks are **one** root cause.
+
+- **RC-1**: tool activation hung off `ShellHost`'s press callback (`buildPanelSelectionProps.onActiveTabPathChange`)
+  only. A path arriving any other way — the `DockUiStateStore` arrangement restored on boot (it persists
+  per-anchor `visible` **and** `path`), the introduction's `SET_PANEL_PATH`, a program `setActiveTool` —
+  left the tab selected over an unarmed tool. `progressPanelTabSelection` then read the user's first press
+  as a re-press of the active segment and *collapsed* it, so only the second press armed the tool.
+- **RC-2**: `buildToolTree`'s inactive branch rendered `<Toggle id={"tool.<id>"}>` — a **duplicate DOM id**
+  with the leaf tab button (both answered to `#tool.fill`, which is also the tutorial's click target). That
+  toggle is what dispatched the reported `setActiveTool {toolId:""}`.
+- **RC-3** (= "Tool category needs two clicks"): the restored arrangement has bottom-middle already open on
+  the Tool category, so press #1 is an active-root re-press → fold (exactly one `handleAction`,
+  `shell.panelToggle`), press #2 reopens. On a cleared profile one press has always opened the category.
+  The "8 `handleAction`s of increasing latency" are `World3dHost`'s `fillBuildTick` firing in duplicated
+  pairs (~2/s) once Fill is armed — the known tick over-firing, not the press.
+- **Fix**: one state, one owner. New pure `reconcileToolTabSelection(previous, activeToolId, selectedToolId)`
+  in `ShellHelpers` (last-change-wins: tool moved → `select` the leaf; selection moved → `activate`;
+  self-healing, non-bouncing) driven by a single `🧭️DockAssembly` effect in `ShellHost` that covers every
+  route into the path (desktop anchor + mobile panel), skipped while the Tool category is not the active
+  root so an armed tool survives browsing another category. The in-tree activation toggle is deleted;
+  `buildToolTabs(tools, toolMeasuresByToolIdRef, onAction)` lost `controllerId`/`activeToolIdRef`.
+- **Laws** (engine-contract, 6 new + 1 rewritten): duplicate-id ban (proven failing against the old shape),
+  hydrate-arms, collapse-disarms/one-press-rearm, program→tab direction, refusal self-heal, and
+  "one press on the Tool category reveals its remembered leaf and arms that tool".
+- **Verification**: `typecheck` 821 errors, **0 in any touched file** (all pre-existing peer breakage);
+  `test` 1 passed/4 skipped; `test long --run engine-contract` **467/467**; `test long` **751/751** in 19
+  files. Browser (`:6013`, seeded profile): Fill now boots **armed with its measures** (`Count 0 ·
+  Hexagonal Cut · Concrete Forest · Left 100% · Distribution`) at zero presses, `#tool.fill` resolves to a
+  single element, fold/reopen is one press each and never disarms the tool.
+- Handed on: duplicated `fillBuildTick` pairs, `plugin-ui.intake-budget-exhausted` on arming,
+  `plugin-ui.section-root-mismatch` refresh errors — all other waves' territory.

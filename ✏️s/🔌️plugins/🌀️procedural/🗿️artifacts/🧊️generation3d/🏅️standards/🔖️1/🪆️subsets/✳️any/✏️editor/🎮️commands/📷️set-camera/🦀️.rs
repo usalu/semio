@@ -15,5 +15,5 @@ pub struct SetCamera {
 }
 
 pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetPreviewCamera { camera: payload.camera.clone() }]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetPreviewCamera(crate::editor::generation3d::config::SetPreviewCamera { camera: payload.camera.clone() })]))
 }

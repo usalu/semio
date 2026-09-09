@@ -120,7 +120,9 @@ describe("scope-safe Shell presence", () => {
     const onAction = vi.fn();
     const { container, rerender } = render(<InferencePortPanel status={offeredInferenceStatus(undefined)} locale="en" onAction={onAction} />);
     expect(Array.from(container.querySelectorAll("button"), (button) => button.textContent)).not.toContain("Approve proposal");
+    expect(Array.from(container.querySelectorAll("button"), (button) => button.textContent)).not.toContain("Reject proposal");
     expect(container.querySelector("[data-semio-inference-preview]")).toBeNull();
+    expect(container.querySelector("[data-semio-inference-overlay]")).toBeNull();
 
     rerender(<InferencePortPanel status={offeredInferenceStatus(inferencePreview)} locale="de" onAction={onAction} />);
     expect(screen.getByText("Gebiet")).toBeTruthy();
@@ -130,8 +132,35 @@ describe("scope-safe Shell presence", () => {
       "-73.99–-73.97",
       "40.71–40.73",
     ]);
+    expect(container.querySelector("[data-semio-inference-overlay]")?.getAttribute("aria-label")).toBe("Vorgeschlagene Grenzen auf der Karte");
+    expect(container.querySelector("[data-semio-inference-overlay] path")?.getAttribute("d")).toBe("M 0 100 L 100 100 L 100 0 L 0 0 L 0 100 Z");
+    fireEvent.click(screen.getByRole("button", { name: "Vorschlag ablehnen" }));
+    expect(onAction).toHaveBeenCalledWith({ kind: "cancel" });
     fireEvent.click(screen.getByRole("button", { name: "Vorschlag freigeben" }));
     expect(onAction).toHaveBeenCalledWith({ kind: "approve" });
+  });
+
+  it("lets a map document request inference and keeps cancel on the in-flight job", () => {
+    const onAction = vi.fn();
+    const { container, rerender } = render(
+      <InferencePortPanel
+        status={{ phase: "idle", jobId: null, cursor: 0, completed: 0, total: 0, proposalHash: null, cancelRequested: false, code: null }}
+        locale="en"
+        onAction={onAction}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Request bounds proposal" }));
+    expect(onAction).toHaveBeenCalledWith({ kind: "propose" });
+    rerender(
+      <InferencePortPanel
+        status={{ phase: "running", jobId: inferencePreview.jobId, cursor: 1, completed: 1, total: 4, proposalHash: null, cancelRequested: false, code: null }}
+        locale="de"
+        onAction={onAction}
+      />,
+    );
+    expect(container.querySelector("[data-semio-inference-overlay]")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Vorschlag abbrechen" }));
+    expect(onAction).toHaveBeenCalledWith({ kind: "cancel" });
   });
 
   it("accepts inference status only for the exact runtime owner and preserves the sibling scope on close", () => {
