@@ -6,7 +6,7 @@ import { join } from "node:path";
 /** 🌿️ Validates GitHub event identity and checkout selection independently with Ajv and lodash. */
 export async function testCiEnvironment(): Promise<void> {
   const require = createRequire(import.meta.url), lodash = require("lodash"), ajv = new (require("ajv"))();
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), valid = ajv.compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8")));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🌿️workflow-context/🔣️.json"), "utf8")), valid = ajv.compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8")));
   const { ciBaselineEnvironment } = await import("../../🟦️.ts");
   for (const row of fixture.cases) {
     const result = ciBaselineEnvironment({ ...fixture.environment, ...row.change }, fixture.event, fixture.head, false);

@@ -1,8 +1,118 @@
 
 use super::*;
-use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, PluginCloseStep, VcsArtifactApp, ViewModel, testkit};
+use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, MAINTENANCE_STAGES, PluginApp, PluginCloseStep, VcsArtifactApp, ViewModel, ViewWindowInstance, testkit};
 
 pub type Puzzle3dRawApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+
+/// 📏️ The byte grant the OS runtime's cooperative-maintenance clock hands one live-cleanup unit
+/// (`RuntimeLiveCleanupJob::step`'s `maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP)`), restated
+/// here so a step-budget law measures the exact unit the host drives rather than a wider one.
+pub const RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP: usize = 4_096;
+
+/// 📐️ Units retained per stage for the typical-cost statistic. Fixed, and taken from the FIRST
+/// units a stage runs — the busy ones, where a stage that has real work does it.
+const MAINTENANCE_UNIT_SAMPLES: usize = 64;
+
+/// ⏱️ Measured wall cost of the cooperative-maintenance units of one run, per fixed maintenance
+/// stage. Fixed capacity by construction: the round robin has exactly [`MAINTENANCE_STAGES`]
+/// stages, each keeping [`MAINTENANCE_UNIT_SAMPLES`] readings, and nothing grows.
+///
+/// Two statistics, because one cannot carry both halves of the framework's law. [`worst`] is the
+/// per-stage MEDIAN — a stage that overruns because of its OWN work overruns unit after unit, so a
+/// median catches a systemic regression while ignoring the machine (the runtime's ceiling verdict
+/// times `maintenance_step` on the wall clock of a contended thread: the same unit that costs 19us
+/// alone was seen costing 14571us inside a fully parallel suite run). [`worst_unit`] is the plain
+/// maximum, which is what the ceiling itself actually bounds, and is therefore budgeted against the
+/// ceiling rather than against the far tighter typical-unit budget. Median precedent:
+/// `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs`.
+pub struct MaintenanceStageBudget {
+    samples_us: [[u64; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize],
+    sampled: [usize; MAINTENANCE_STAGES as usize],
+    worst_us: [u64; MAINTENANCE_STAGES as usize],
+    units: [u32; MAINTENANCE_STAGES as usize],
+}
+
+impl Default for MaintenanceStageBudget {
+    fn default() -> Self {
+        Self { samples_us: [[0; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize], sampled: [0; MAINTENANCE_STAGES as usize], worst_us: [0; MAINTENANCE_STAGES as usize], units: [0; MAINTENANCE_STAGES as usize] }
+    }
+}
+
+impl MaintenanceStageBudget {
+    /// ⏱️ Typical cost of one unit of `stage`: the median of its retained readings.
+    pub fn median(&self, stage: usize) -> u64 {
+        let sampled = self.sampled[stage];
+        if sampled == 0 {
+            return 0;
+        }
+        let mut ordered = self.samples_us[stage];
+        ordered[..sampled].sort_unstable();
+        ordered[sampled / 2]
+    }
+
+    /// ⏱️ The stage whose typical unit is the most expensive, with that median in microseconds.
+    pub fn worst(&self) -> (u8, u64) {
+        let mut worst = (0_u8, 0_u64);
+        for stage in 0..MAINTENANCE_STAGES as usize {
+            let median = self.median(stage);
+            if median > worst.1 {
+                worst = (stage as u8, median);
+            }
+        }
+        worst
+    }
+
+    /// ⏱️ The stage that ran the single most expensive unit, with that maximum in microseconds.
+    pub fn worst_unit(&self) -> (u8, u64) {
+        let mut worst = (0_u8, 0_u64);
+        for stage in 0..MAINTENANCE_STAGES as usize {
+            if self.worst_us[stage] > worst.1 {
+                worst = (stage as u8, self.worst_us[stage]);
+            }
+        }
+        worst
+    }
+
+    /// 🎲️ Folds one more independent round of the same scenario in by keeping, per stage, the
+    /// SMALLEST median and the SMALLEST maximum any round observed. Real work costs the same in
+    /// every round; a run that happened to share the machine with a heavier neighbour is dropped.
+    pub fn keep_best_round(&mut self, round: &Self) {
+        for stage in 0..MAINTENANCE_STAGES as usize {
+            if round.units[stage] == 0 {
+                continue;
+            }
+            if self.sampled[stage] == 0 || round.median(stage) < self.median(stage) {
+                self.samples_us[stage] = round.samples_us[stage];
+                self.sampled[stage] = round.sampled[stage];
+            }
+            if self.units[stage] == 0 || round.worst_us[stage] < self.worst_us[stage] {
+                self.worst_us[stage] = round.worst_us[stage];
+            }
+            self.units[stage] = self.units[stage].max(round.units[stage]);
+        }
+    }
+
+    /// 📊️ Per-stage `stage=median/worst/units` breakdown of every unit measured so far.
+    pub fn report(&self) -> String {
+        let mut report = String::new();
+        for stage in 0..MAINTENANCE_STAGES as usize {
+            if self.units[stage] > 0 {
+                report.push_str(&format!("{stage}={}/{}us/{}u ", self.median(stage), self.worst_us[stage], self.units[stage]));
+            }
+        }
+        report
+    }
+
+    fn record(&mut self, stage: u8, elapsed_us: u64) {
+        let stage = stage as usize;
+        if self.sampled[stage] < MAINTENANCE_UNIT_SAMPLES {
+            self.samples_us[stage][self.sampled[stage]] = elapsed_us;
+            self.sampled[stage] += 1;
+        }
+        self.units[stage] += 1;
+        self.worst_us[stage] = self.worst_us[stage].max(elapsed_us);
+    }
+}
 
 /// 🧪️ The one puzzle3d fixture app. Wraps the raw wrapper so every fixture drains its stores on the
 /// way out: a registry-backed `VcsArtifactApp` installs framework-owned `ArtifactStoreCursorDisposer`
@@ -12,18 +122,38 @@ pub type Puzzle3dRawApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 /// and hides the assertion that actually failed. A drain that cannot reach the witness leaks the raw
 /// app instead ([`std::mem::forget`]) — leaking a fixture inside a test process costs nothing, and the
 /// close contract itself is stated exactly once, explicitly, by [`close_witness`].
-pub struct Puzzle3dApp(Option<Puzzle3dRawApp>);
+pub struct Puzzle3dApp {
+    raw: Option<Puzzle3dRawApp>,
+    /// ⏱️ Every cooperative-maintenance unit this fixture drove, attributed to its own fixed stage.
+    pub maintenance: MaintenanceStageBudget,
+}
 
 impl std::ops::Deref for Puzzle3dApp {
     type Target = Puzzle3dRawApp;
     fn deref(&self) -> &Self::Target {
-        self.0.as_ref().expect("fixture app was already consumed by close_witness")
+        self.raw.as_ref().expect("fixture app was already consumed by close_witness")
     }
 }
 
 impl std::ops::DerefMut for Puzzle3dApp {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0.as_mut().expect("fixture app was already consumed by close_witness")
+        self.raw.as_mut().expect("fixture app was already consumed by close_witness")
+    }
+}
+
+impl Puzzle3dApp {
+    /// ⏱️ One cooperative-maintenance unit shaped exactly like the OS runtime's live-cleanup clock
+    /// drives it, timed by the framework's own clock and attributed to the fixed stage that ran it.
+    /// The stage is read BEFORE the call: `maintenance_step`'s idle early return leaves the
+    /// round-robin cursor untouched, so reading it afterwards names a stale stage.
+    pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        let stage = self.next_maintenance_stage();
+        let started_us = semio_framework_job::default_now_us();
+        let step = PluginApp::maintenance_step(self.raw.as_mut().expect("fixture app was already consumed by close_witness"), maximum_items, maximum_bytes);
+        if let (Some(started_us), Some(finished_us)) = (started_us, semio_framework_job::default_now_us()) {
+            self.maintenance.record(stage, finished_us.saturating_sub(started_us));
+        }
+        step
     }
 }
 
@@ -47,7 +177,7 @@ fn drain_close(app: &mut Puzzle3dRawApp) -> Result<bool, Fault> {
 /// close contract is asserted by a test rather than by a destructor. `Err` carries the framework's own
 /// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
 pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
-    let mut raw = app.0.take().expect("fixture app was already consumed by close_witness");
+    let mut raw = app.raw.take().expect("fixture app was already consumed by close_witness");
     match drain_close(&mut raw) {
         Ok(true) => Ok(true),
         other => {
@@ -59,7 +189,7 @@ pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
 
 impl Drop for Puzzle3dApp {
     fn drop(&mut self) {
-        let Some(mut raw) = self.0.take() else {
+        let Some(mut raw) = self.raw.take() else {
             return;
         };
         if !matches!(drain_close(&mut raw), Ok(true)) {
@@ -89,7 +219,7 @@ pub fn puzzle3d_manifest_for_testkit() -> App {
 pub async fn app() -> Puzzle3dApp {
     let mut app = testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit).await;
     app.bind_instance_id(1).await;
-    Puzzle3dApp(Some(app))
+    Puzzle3dApp { raw: Some(app), maintenance: MaintenanceStageBudget::default() }
 }
 
 /// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
@@ -111,7 +241,7 @@ pub async fn settle(app: &mut Puzzle3dApp) -> (Vec<Effect>, Vec<semio_framework_
         if !app.has_pending_typed_operations() {
             return (effects, events, scope);
         }
-        app.maintenance_step(1, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+        app.measure_maintenance_step(1, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
         app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
         if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -156,11 +286,22 @@ async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fau
     })
 }
 
+/// 🪟️ Builds the production-shaped roster and exact active instance used by window owner capture.
+pub fn window_view(window_id: &str) -> ViewModel {
+    let mut window_instances = vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }];
+    if window_id != main::WINDOW_KIND_ID {
+        window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+    }
+    ViewModel { window_instances, ..Default::default() }.for_window_instance(window_id).expect("puzzle3d test window roster")
+}
+
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
 /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
 /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
 pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+    let action_meta = ActionMeta { view_state: Some(window_view(window_id)), ..meta("local") };
     // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
     // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
     // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
@@ -192,10 +333,10 @@ pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>,
             | "setInteractionGranularity"
     ) {
         let dsl_args = args.map(json::to_dsl_value);
-        let reserved = app.handle_action(action, dsl_args.as_ref(), &meta("local")).await;
+        let reserved = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
         return settle_into(app, reserved).await;
     }
-    let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local")).await;
+    let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta).await;
     settle_into(app, typed).await
 }
 

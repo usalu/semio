@@ -153,5 +153,5 @@ impl<V: FromValue> FromValue for MapDelta<V> {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🧪️shared-map-delta-native/🦀️.rs"]
 mod tests;

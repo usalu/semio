@@ -17,7 +17,9 @@
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true
     },
     "build": {
       "executor": "nx:run-commands",

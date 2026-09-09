@@ -69,7 +69,7 @@ impl ShootingArtifact {
             active_shot_id: snapshot.active_shot_id,
             active_asset_id: snapshot.active_asset_id,
             emblem: snapshot.emblem,
-            ..Self::default()
+
         }
     }
 

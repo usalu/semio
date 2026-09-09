@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 /** 🕸️ Compares the entire audited surface with native Nx's resolved multi-provider graph. */
 export async function testNativeInventory(workspace: string, inventory: (root: string) => any): Promise<any> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕸️coverage/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
   const validate = new (require("ajv"))().compile(schema);
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));

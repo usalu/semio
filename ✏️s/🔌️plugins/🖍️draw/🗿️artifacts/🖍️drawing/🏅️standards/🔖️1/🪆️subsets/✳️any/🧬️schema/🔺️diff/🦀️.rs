@@ -495,8 +495,8 @@ fn layer_base_patch(layer_id: &str, patch: DrawingLayerPatch) -> DrawingDiff {
 }
 
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
-pub fn diff_from_snapshot(snapshot: DrawingSnapshot) -> DrawingDiff {
-    diff_set_snapshot(&snapshot)
+pub fn diff_from_snapshot(snapshot: &DrawingSnapshot) -> DrawingDiff {
+    diff_set_snapshot(snapshot)
 }
 
 /// 🗂️ Assets delta helper.

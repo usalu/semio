@@ -90,7 +90,7 @@ impl NoteArtifact {
             eraser_radius: snapshot.eraser_radius,
             assets: snapshot.assets,
             linked_artifact: snapshot.linked_artifact,
-            ..Self::default_ui()
+
         }
     }
 

@@ -39,7 +39,7 @@ const UNOBSERVABLE: &[&str] = &[
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -57,11 +57,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-catalog-generation" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-s-home-1: no committed specification vector is registered for kind {other:?}"),
     }

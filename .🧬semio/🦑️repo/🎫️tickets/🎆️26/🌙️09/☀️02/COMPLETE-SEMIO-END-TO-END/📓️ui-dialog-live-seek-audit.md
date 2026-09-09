@@ -3247,6 +3247,209 @@ fixture, which exposes the integration failure rather than qualifying it.
 
 No commands were run for this audit.
 
+### Broker Initialization Must Leave Time for the First Bootstrap `/me`
+
+Current source has correctly separated the private port acknowledgement deadline from an active
+broker request: `BrowserBrokerPortClientV1` keeps an initializing request timer at `null`, starts
+the two-second request timer only in `dispatch` after a valid `initialized` receipt, and uses a
+separate initialization ceiling
+([`broker port:3-91`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts:3>)).
+That split is required.  Shell transfers the port immediately after constructing a module worker
+([`Shell host:2158-2164`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2158>)),
+but `backbone-worker` registers its handler only after its static module graph has evaluated
+([`worker:274-289`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:274>)).
+`rustHostPromise` is not awaited for that handler, so the cold risk is module fetch/evaluation,
+not native host readiness.  A two-second initialization ceiling would falsely reject a valid cold
+worker.
+
+The chosen initialization ceiling is currently exactly 120 seconds, which is also the one-use
+relay bootstrap-proof expiry.  That equality is unsound as a guarantee: an allowed acknowledgement
+at the final initialization instant leaves no budget for the Shell's up-to-two-second cached
+identity wait and the first active two-second `/me`; the relay can then reject the first request
+before it reaches the upstream.  Retain a long initialization phase, but require the invariant
+`initializationDeadline + cachedIdentityWait + firstRequestDeadline + schedulingMargin <
+bootstrapProofDeadline`.  A 90-second initialization ceiling is a simple bounded value under the
+present 120-second bootstrap and two-second active deadlines.  If the 120-second value is retained,
+bootstrap must be raised by at least those downstream budgets; merely naming the two periods
+differently is not enough.
+
+The existing MessageChannel law already checks that a queued request emits no `request` before the
+acknowledgement and that an acknowledgement dispatches it
+([`broker client law:60-113`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:60>)).
+Make its timing assertion explicit: advance beyond the two-second active timeout but below the
+initialization deadline, then acknowledge and prove exactly one request receives a *new* two-second
+deadline.  A separate row must cross the initialization deadline and prove all queued callers
+reject with no outbound request.  This avoids a green fixture that merely compares constants.
+
+No commands were run for this audit.
+
+### Five-Second `/me` Refresh Is Liveness Maintenance, Not a Recovery Handoff
+
+The new refresher is correctly single-flight and schedules its next turn only after a successful,
+canonical, unexpired exact-200 authority.  Any transport, 401, 428, non-200, malformed body, or
+expiry closes it with zero retry ([`session refresh:19-54`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts:19>)).
+That is the right fail-closed response for an invalid broker proof.
+
+It does **not** by itself establish durable browser-proof renewal.  The active proof is only 15
+seconds in both the worker ([`worker proof expiry:499-506,613-641`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:499>))
+and relay ([`relay active expiry:643-658`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:643>)).
+A foreground five-second timer normally advances it, but browser timer throttling/suspension,
+long process pauses, or a response lost after the relay advanced its digest can still reach 428.
+The refresh module then intentionally stops and the current Shell has no fresh-proof handoff
+([`Shell refresh unavailable:2766-2772`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2766>)).
+
+Therefore the proposed 120-second bootstrap phase qualifies only first-page startup; it must not
+be described as a background/resume recovery mechanism.  Recovery after active-proof invalidation
+needs a future, separately authenticated trusted launcher/host handoff and a new worker-port
+generation, or the UI must remain correctly unavailable.  It must never turn the Vite proxy into a
+proof issuer.  The immediate implementation should expose a localized unavailable state and retain
+sealed old jobs indeterminate; it must not call `takeBrowserBootstrapProof` again from browser
+code or retry `/me` after 428.
+
+A future recovery law should explicitly pause the page/worker past the active TTL, resume, prove
+that the refresh owner reports unavailable exactly once and no Hub call occurs under a fabricated
+successor proof, then exercise whatever distinct trusted handoff is eventually introduced.  No
+such recovery is currently qualified.
+
+No commands were run for this audit.
+
+### Browser Broker Bootstrap Must Be Armed After UI Readiness
+
+The two production launcher paths currently start the active 15-second browser-proof timer before
+their UI is ready.  `startGisMapShellPeerV1` creates the random proof and arms
+`startLocalBrowserRelay` before it spawns the Vite daemon, then waits for UI readiness before it
+navigates Chromium ([`Hub runner:11718-11780`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11718>)).
+`secure-suite` has the same ordering ([`Hub script:12556-12567`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12556>)).
+The relay begins `browserProofExpiresAtMs` immediately at construction
+([`relay:570-577`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:570>)), while it
+rejects any expired proof before the upstream request ([`relay:643-658`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:643>)).
+Consequently a cold Vite build can exhaust the proof before the first Shell `/me`; the Shell's
+five-second refresh cannot rescue a proof that was never admitted.
+
+Use a two-phase, private relay lifetime:
+
+1. `startLocalBrowserRelay` starts **unarmed**.  Its in-process return value alone exposes
+   `takeBrowserBootstrapProof(): Buffer`; there is no HTTP route, Vite environment value, log, or
+   browser-visible configuration that mints a proof.
+2. After `waitForUiReadiness`, each launcher invokes that one-shot method, converts the returned
+   bytes only to the top-level `#semio-broker=` fragment, and fills the `Buffer`.  The method
+   atomically installs only the SHA-256 digest in the relay.  It rejects after issue, after an
+   accepted broker request, or after stop.
+3. The first matching request consumes the **bootstrap** digest and installs its supplied next
+   digest under the existing active ratchet.  A bounded 120-second bootstrap expiry is appropriate
+   for cold page/module/React/worker startup; every subsequent proof retains the existing
+   15-second expiry.  This is not start-on-first-use: unarmed/expired/replayed bootstrap requests
+   return 401 without upstream work.
+
+A 120-second bootstrap phase matters even when issue moves after Vite readiness: the actual
+runner permits a 30-second navigation and 120-second Shell-ready wait after the fragment is
+created ([`Hub runner:11776-11782`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11776>)).
+Starting the regular 15-second active interval merely at Vite readiness therefore still cannot
+prove a zero-touch first `/me` on a cold machine.  The bootstrap proof remains bounded and
+one-use; the active proof is short-lived as soon as it is consumed.
+
+Do not add `/_semio/.../bootstrap` (or any equivalent proxy route).  The Vite proxy already adds
+the relay secret on behalf of every same-origin browser request.  A mint endpoint would thus let a
+same-origin hostile shard obtain a fresh proof, defeating the private port boundary demonstrated
+by the hostile-shard oracle ([`relay hostile probe:2217-2237`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:2217>)).
+
+The Shell currently sends `initialize` but discards the worker's `{kind:"initialized",ok}` receipt
+([`Shell broker setup:2200-2211`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2200>));
+the worker does emit that exact receipt ([`worker port:676-681`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:676>)).
+The broker wrapper must retain one bounded initialization waiter and make the first `/me` await
+`ok === true`; `false`, close, timeout, or a replacement port must reject it and leave identity
+offline.  FIFO delivery happens to make the current initial route likely work, but it is not a
+receipt fence for a fresh handoff.
+
+Required laws: hold Vite readiness longer than the active TTL while the relay is unarmed, then
+issue/bootstrap and prove the first `/me` reaches upstream; prove unarmed/expired/replayed
+bootstrap never reaches upstream; prove active proof expiry remains 15 seconds after the first
+accepted request; prove duplicate issue fails; and prove a hostile shard has neither a proof nor a
+mint route.  These are source-level requirements until the registered two-peer process runs.
+
+No commands were run for this audit.
+
+### Shell Must Capture Verified Authority Before Opening an Inference Port
+
+The new refresh owner correctly makes `/me` serial, canonical, exact-200, expiry-checked and
+terminal on refusal ([`session refresh:1-56`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts:1>)).
+Its Shell callback updates the verified authority state and correctly avoids persisted identity
+events overriding it ([`Shell identity route:2501-2512`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2501>),
+[`Shell refresh wiring:2738-2772`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2738>)).
+
+However `requestInferenceProposal` currently requires only a persisted `identityRef`, not an exact
+current `verifiedSessionAuthorityRef`; it creates the mailbox and sends `inference-open` before
+any session binding/generation is captured ([`Shell inference open:4298-4320`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4298>)).
+The present worker admits `inference-open` from a writable execution lease alone
+([`worker inference admission:5228-5244`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5228>)).
+Thus an identity snapshot can enable an inference-opening effect before `/me`; the Shell may show
+an opened port even though the planned broker-operation fence will later refuse all authenticated
+work.
+
+Require the Shell to capture `{sessionBindingSha256, authorizationGeneration}` from the exact
+verified authority before it creates the opening mailbox.  Recheck that tuple after the opening
+receipt and at every propose/cancel/approve/Undo dispatch.  On unavailable or replacement it must
+close the exact pending mailbox and clear the current presentation immediately, while the worker
+retains any already-sealed job as indeterminate.  The worker-side session-operation fence remains
+the authoritative no-successor defense; this Shell gate prevents an unauthorised pre-`/me` UI
+admission and stale control presentation.
+
+Add a Shell law with a persisted identity and no accepted `/me`: an inference effect emits no
+`inference-open`.  Add a second row that holds the opening receipt, rotates the verified binding,
+then releases it and proves no `OPEN_INFERENCE_PORT`/propose dispatch.  Keep an already-submitted
+old request in the worker's indeterminate capacity slot, rather than silently replacing it.
+
+No commands were run for this audit.
+
+### Uninstalled `/me` Authority Lets a Retained Inference Cross a Proof Replacement
+
+The port-detach repair is effective for a delayed `/me` body: it rotates the admission, consumes
+the proof, aborts all tracked controllers, and its new law holds the old stream through replacement
+([`backbone worker:660-710`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:660>),
+[`authority port law:2377-2406`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2377>)).
+The exact-200 restriction is also present before any authority parse
+([`backbone worker:556-575`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:556>)).
+
+There remains a distinct proof-to-operation boundary failure when the first `/me` has **not yet**
+succeeded.  `retireBrowserSessionAuthority` returns immediately when
+`browserSessionAuthority === null`; therefore proof invalidation/replacement does not increment
+`directorySessionEpoch`, close a port, or retire an Undo/artifact owner in that state
+([`backbone worker:536-554`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:536>)).
+But opening an inference requires only the live writable execution-target lease, not an installed
+`browserSessionAuthority`, and stores only that mutable directory epoch
+([`backbone worker:5119-5129,5215-5234`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5119>)).
+Its submit/reconcile/poll/cancel route consequently treats the operation as current whenever that
+epoch is unchanged ([`backbone worker:5135-5153`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5135>)).
+The existing inference suite itself demonstrates that inference mechanics can run with a verified
+lease without first installing a broker authority; ordinary rows open and submit directly through
+the worker harness ([`owner test:2073-2088`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2073>)).
+
+Interleaving: a leased document opens/submits an inference before `/me`; the broker proof is
+consumed for the submit, then transport/proof replacement makes it indeterminate; a fresh proof is
+installed.  Because there was no accepted authority, `clearLocalBrowserBrokerProof` does not
+advance the operation epoch.  The scheduled original reconciliation has
+`operation.sessionEpoch === directorySessionEpoch`, so it can call `browserBrokerFetch` with the
+fresh proof ([`backbone worker:5194-5207,5273-5319`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5194>)).
+That violates the stated no-old-uncertain-inference-under-successor-credential property.  The
+current authenticated-replacement law begins by successfully calling `/me`, so it cannot cover
+this initial-authority window ([`owner test:2277-2317`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:2277>)).
+
+The correct owner is a **broker-admission/session binding**, not merely `directorySessionEpoch`.
+Make every broker invalidation/replacement advance one session-operation fence even if `/me` is
+currently null, and capture that fence (then, once the planned authority handoff is connected, the
+exact `sessionBindingSha256` plus generation) in inference/Undo and every authenticated retained
+operation.  A mismatched fence must leave a sealed request indeterminate and block all
+submit/reconcile/cancel/approval calls; it must never merely sample the current proof.  Do not
+solve this by letting an operation silently adopt the new `browserSessionAuthority`.
+
+Add a worker law with no initial `/me`: establish a writable lease, submit a sealed request until
+its response is lost, rotate/install a fresh proof, and drive its old epoch.  Assert there is no
+second `/jobs`, no `/reconcile`, `/cancel`, or approval request under the successor proof, and that
+the original remains indeterminate/capacity-blocking.  A second row should establish `/me` first
+and prove the same result, preserving the existing covered path.
+
+No commands were run for this audit.
+
 ### Broker-Port Replacement Leaves an Old `/me` Turn Authorized
 
 The new worker-side authority install correctly gives every broker request an admission object,
@@ -3375,3 +3578,332 @@ mounts, so add this control identity/locale expectation there as part of the reg
 ([`two-author fixture`](</Users/ueli/Documents/semio/🌎️hub/🧪️fixtures/🤝️two-author-shell-v1/🔣️.json)).
 
 No commands were run for this audit.
+
+### Nx `css-color` Graph Failure Is a Cascaded Missing External-Node Set
+
+`Source project does not exist: npm:@asamuzakjp/css-color` is not evidence of a corrupt Bun
+installation or an absent lockfile package.  The current root lock contains the package at
+`3.2.0`, its installed package directory exists, and the installed Nx Bun parser independently
+produces both `npm:@asamuzakjp/css-color` and its versioned node from that lock.  No package,
+lockfile, `node_modules`, Nx cache, or daemon mutation is warranted.
+
+The graph configuration deliberately disables the built-in `@nx/js` lockfile producer
+([`nx configuration`](</Users/ueli/Documents/semio/nx.json)), so the custom
+`@repo/emoji-project-json` plugin is the sole source of Bun external nodes.  Its node producer
+adds the full Bun external-node result only after it has mapped *every* project/config input
+([`custom nodes:821-881`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs:821>)).
+If any project setup import throws first, this aggregate create-nodes operation returns none of
+those external nodes.  Nx nevertheless invokes `createDependencies` concurrently; the custom
+lock model then emits an ordinary external-to-external edge such as `css-color → css-calc`
+([`custom dependencies:885-962`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs:885>)).
+The Nx graph builder correctly rejects that edge because its source node was never installed.
+Thus `css-color` is the follower error; the earliest `AggregateCreateNodesError` stack is the
+actionable cause.
+
+The previously cached graph identifies that first error as the removed sibling fixture import
+`./🔣️.json` in the ownership field-parity test.  Current source instead points at the existing
+canonical `../../🧫️fixtures/🪪️field-parity/🔣️.json`
+([`field parity test`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts:6>)).
+The observed graph failure predates that repair; a new graph is necessary to establish whether it
+was the last create-nodes exception.  The minimal safe retry is exactly one `NX_DAEMON=false`
+owner with a fresh ticket-local `NX_WORKSPACE_DATA_DIRECTORY` and verbose producer capture.  The
+current repository bootstrap wrapper preserves a supplied workspace-data directory
+([`Nx bootstrap:50-53`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts:50>));
+there is no need to bypass the registered runner.  Keep intentional dependent commands serialized
+within that one directory, but do not share it with unrelated graph producers.
+
+No commands were run for this audit; the parser/lock checks were read-only Node inspections.
+
+### Native GIS Inference Hub DTO Ingress: Nullable Hash Coverage and Approval Contradiction
+
+The current receipt and event-page DTOs have the intended *structural* ingress fence.  Both
+native OS types use `#[value(rename_all = "camelCase", deny_unknown_fields)]`, and both make the
+otherwise-defaultable `Option<String>` hash explicitly present with `#[value(required)]`
+([`receipt/page definitions`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2033>)).  The shared `FromValue` derive emits an unknown-key
+loop and, independently, an error for a missing required field
+([`derive expansion`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:464>),
+[`required-field branch`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:515>)).
+Present `null` decodes to `Option::None`; any non-string/non-null `proposalHash` reaches the
+`Option<String>` decoder and fails.  Nested event/progress/preview and undo shapes are likewise
+closed, and the subsequent validators enforce exact current tags, the 8-event/16-progress
+bounds, coordinate equality, and preview ownership
+([`page validation`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2096>)).
+
+The actual native response ingress is not the pure reducer: every public `DirectoryClient` route
+byte-caps the body, decodes through `os_pack::json::from_json_str`, then validates *before it
+returns a DTO* to any caller.  This covers submit, events, cancel, and approval
+([`client ingress and public fences`](</Users/ueli/Documents/semio/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:1040>)).
+Thus a substituted receipt/page schema is not applied: it may structurally decode, but the
+public method returns `inference.invalid`.  Conversely, the Hub has no receipt/page/approval
+receipt **request** ingress: its real inbound JSON is the submit and approval request body, both
+direct `serde_json` closed request decoders with their own schema/version/hash checks
+([`submit request decode`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🦀️.rs:129>),
+[`approval request decode`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/✅️approval/🦀️.rs:7>)).
+The Hub only *emits* the three DTOs, with the exact current tags on every submit/read/cancel and
+approval construction path ([`runtime emission`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3244>),
+[`page/cancel emission`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3270>),
+[`approval emission`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3338>)).
+Neither nullable `proposal_hash` field has `skip_serializing_if`, so `None` serializes as the
+required JSON `null`; only the independently optional page `preview` is omitted.
+
+The queued native law correctly establishes a positive receipt/page round trip and missing-hash
+rejection, but it does not yet prove the whole actual ingress contract.  Its present scope is
+only receipt/page, and it tests substituted tags only by validating already-created values
+([`current law`](</Users/ueli/Documents/semio/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🧪️tests/🔬️unit/🦀️.rs:42>)).
+The existing public-client law proves a wrong receipt tag and a wrong page job id, but has no
+approval, wrong `proposalHash` type, missing page tag, or unknown-field row
+([`current client law`](</Users/ueli/Documents/semio/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🦀️.rs:571>)).
+
+Minimum native completion packet for the current neutral corpus:
+
+- Extend its `wire` section with one exact valid `approval` receipt (including the closed undo
+  handle), rather than relying on the Hub-only reconcile fixture.  Keep receipt/page
+  `proposalHash: null` as the positive nullable rows.
+- For receipt and page, execute the real `os_pack::json::from_json_str` path for: missing
+  `proposalHash`; `proposalHash: false`; `proposalHash: []`; an extra outer field; and the other
+  DTO's schema tag.  Require decode failure for the first four and decode-plus-`validate` failure
+  for the tag substitution.  Apply equivalent wrong-tag/type/unknown-field tests to the approval
+  receipt and its nested `undo` object.
+- Feed the same hostile bodies through the public `DirectoryClient` submit/read/cancel/approve
+  methods with `FakeTransport`, asserting `inference.invalid`; this establishes rejection before
+  the native application/reducer, not only a DTO round trip.  Retain the existing response byte
+  ceiling test separately.
+
+There is one concrete approval-contract defect to resolve before adding that positive approval
+row.  The published JSON schema intentionally permits `applied: false`, and the Hub's durable
+reconciliation deliberately returns it on an already-committed outbox after it verifies the
+retained undo witness ([`committed branch`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🪶️sqlite/🦀️.rs:934>)).
+That value propagates directly into a successful `200` approval receipt
+([`approval route result`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3337>)).
+But the OS native receipt validator unconditionally requires `self.applied`
+([`native approval validator`](</Users/ueli/Documents/semio/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2195>)),
+so `DirectoryClient::approve_gis_map_inference_job` converts that legitimate reconciled 200 into
+`inference.invalid`; the TypeScript reducer instead accepts the schema and maps `false` to its
+commit-unavailable terminal.  Pick one coherent contract before native acceptance:
+
+- if a 200 approval receipt is always durable success, normalize/relabel the Hub's committed
+  recovery result as successful (or express replay separately) and make `applied` a schema
+  constant true; or
+- if `applied:false` remains a valid 200 outcome, remove the native `self.applied` rejection and
+  specify the shared terminal/Undo semantics consistently across Rust and TypeScript.
+
+Do not silently loosen the tag, owner, mutation/hash, or undo-frontier checks in either choice.
+Add an exact committed-replay transport law that proves the chosen result instead of treating a
+locally constructed `applied:false` object as sufficient.
+
+A read-only literal search found **no** remaining OS/Hub occurrence of the obsolete
+`semio.hub.inference-receipt/v1` or `semio.hub.inference-events/v1` tags.  The current positive
+wire fixture carries both required nullable hashes
+([`neutral wire`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json:4>)).
+The current positive code/fixture users have the `inference-job-*` tags; the coverage gap is
+approval absence from that neutral `wire` vector, not a stale tag or omitted nullable field.
+
+One deliberately narrow residual: the OS response decoder's JSON `Object` overwrites duplicate
+known keys before `FromValue` sees them ([`last-value-wins object`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs:166>),
+[`generic bridge`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs:1440>)).
+`deny_unknown_fields` therefore rejects an extra *name* but cannot detect a duplicate allowed
+name.  This does not affect Hub-generated responses, and it is outside the currently declared
+JSON-schema contract, but a future claim of raw closed-response parsing requires a Pack-owned
+duplicate-key-rejecting parse option plus a client ingress test; schema-only hostiles cannot
+establish it.
+
+No builds or source edits were performed for this audit.
+
+### Ordinary GIS Creation Loses the Selected Catalog Generation Before Hub Admission
+
+The ordinary browser route has a real selected-current presentation fence, but its client intent
+does not carry the generation that fence selected.  The Space index receives a catalog containing
+`catalogGenerationId`; `spaceArtifactCreationRequestFromAction` compares the captured and live
+generation and membership, then returns only `{ requestId, spaceId, kindId, name }`
+([`Shell request projection`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1242>)).  The worker serializes that same four-field payload
+([`worker submission`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4201>)), and the shared TypeScript/Rust
+`SpaceArtifactCreateV1` deliberately admits precisely `schema`, `requestId`, `kindId`, and
+`name` ([`shared schema twin`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts:12>),
+[`native twin`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs:103>)).
+
+Consequently a trusted-current rotation between the browser's last local comparison and Hub
+`accept` changes what is created.  `ArtifactCreationServiceV1::accept` selects from the catalog
+that is current **when the POST arrives** and records that generation in the durable intent;
+there is no equality check against a client-selected generation
+([`admission selection`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs:49>)).
+The later `catalog_matches` checks correctly prevent a G1 accepted operation from materializing
+after a subsequent G2 rotation, but they cannot prevent a G1 dialog from being accepted as G2 in
+the first place ([`execution revalidation`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs:45>)).
+
+This is a real selected-trusted-GIS semantic mismatch, not an executable-authority injection:
+G2 can be valid and native-verified, but it is not the catalog row the author saw and chose.
+The durable Ready status likewise exposes only the resulting kind/schema/dialect, not the
+intent's generation ([`ready/status surface`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts:21>)).
+
+The two-author process candidate hides this interval rather than qualifying it: it deliberately
+keeps the publication pointer byte-identical through `assertGisMapCompositionCurrent`, then has
+A choose only the `kindId` from the ordinary dialog
+([`current assertion`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11947>),
+[`ordinary selection`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11840>)).  It is an
+unexecuted actual-process candidate in this audit; even a future positive completion would prove
+the stable-current case only, not this race.
+
+Minimum fail-closed packet:
+
+- Make `catalogGenerationId` a required 64-hex *expected selection* in `SpaceArtifactCreateV1`,
+  its canonical TS/Rust parsers, worker request codec, and command digest.  This is not a
+  client-supplied factory/descriptor/space authority: Hub must require exact equality with the
+  active verified catalog before minting an intent or document ID.  The existing neutral
+  `injected-generation` negative row must become a valid matching expected-generation row; add
+  stale, zero, malformed, and unknown-field rows rather than retaining a false claim that an
+  expected generation is forbidden ([`neutral corpus`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json:1>)).
+- Carry the accepted generation in every durable creation status (or at minimum every Ready
+  status) and require the retained Shell owner/worker operation to compare it to its captured
+  request before it schedules `openReadySpaceArtifactCreation`.  This makes the browser's
+  ordinary Ready-to-open handoff independently auditable instead of inferring provenance from a
+  later global mounted probe.
+- Add a native transaction pause immediately before selection/claim: fetch G1 catalog, submit a
+  G1 request after replacing active catalog with a different G2, and require conflict with no
+  accepted fact, no `DocumentAnnounced`/`DocumentIndexed`/`CheckpointPublished` triple, no CAS
+  reference, and no Directory artifact row.  Keep the existing post-accept catalog-change test:
+  it covers a distinct later failure mode.
+- Add a Shell/worker law where a G1 choice is captured, G2 arrives before dispatch, and the POST
+  body remains G1; the Hub refusal must yield no Ready/open attempt.  In the registered
+  `--two-author-shell` route, pause after A sees the catalog and rotate before its actual POST;
+  the negative must produce no artifact row/probe.  The existing positive must assert the same
+  generation in A's creation status, the B reopen plan, and both mounted probes.
+
+No commands, browser sessions, builds, or source edits were performed for this audit.
+
+### Catalog-Generation Creation Fix: Exact Propagation Inventory
+
+`catalogGenerationId` already has a single appropriate public shape: a canonical lower-case,
+non-zero SHA-256 identity (`^(?!0{64}$)[0-9a-f]{64}$`).  Reuse the `digest` check in the shared
+creation schema and the native creation `hash`/`ArtifactHash` check; do not reuse the generic
+worker `workerWireSha256V1`, which currently permits all-zero hashes.  This field is an expected
+catalog-selection precondition, not a client-selected package, executable, descriptor, scope, or
+document ID.
+
+The implementation boundary is below.  Fields named **request** must be extended in the same
+canonical order in TypeScript and Rust; `JSON.stringify` and the Rust canonical serializer use
+that declaration order, so every raw JSON literal and command digest must be deliberately
+regenerated rather than accepted under an alternate ordering.
+
+| Owner | Required change |
+| --- | --- |
+| Shared creation contract | Add required `catalogGenerationId` to `SpaceArtifactCreateV1`, `sealSpaceArtifactCreateV1`, and exact request fields in [`space-artifact-creation-v1/🟦️.ts:12-129`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️:12>) and its Rust `SpaceArtifactCreateV1::validate` twin ([`🦀️.rs:103-129`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️:103>)).  Add it to the generic `$defs/SpaceArtifactCreationRequest` required/properties list ([`directory schema:3457`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json:3457>)). |
+| Hub acceptance and durable key | In [`ArtifactCreationServiceV1::accept`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs:49>), compare request generation with `self.catalog.generation_id()` **before** entropy/mint/claim.  Keep the existing stored `intent.catalog_generation`, but ensure it is copied from the matched request/current value.  `artifact_creation_command_digest_v1` already hashes canonical request bytes ([`creation schema:207`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs:207>)); it changes automatically once the request wire is complete. |
+| Hub HTTP route | [`post_space_artifact_creation`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:4947>) needs no separate authority parameter: its canonical `SpaceArtifactCreateV1::parse_canonical_json` already reaches `service.accept`.  The route law must prove a G1 request after active G2 gets conflict *before* task activation. |
+| Durable status correlation | `ArtifactCreationOperationV1` already retains `intent.catalog_generation`, but its `status()` discards it ([`creation schema:290`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs:290>)).  Add required `catalogGenerationId` to shared `SpaceArtifactCreationStatusV1`, every canonical parser and generic status schema.  Update all three native status construction sites: `ArtifactCreationOperationV1::status`, the `intent.validate` synthetic Accepted status, and service's manual Indeterminate response ([`service:152`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs:152>)). |
+| OS worker wire | Extend `BackboneWorkerRequest` create arm, strict request key set/parser, and returned object in [`os/🟦️.ts:918-929,1121`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:918>).  Extend strict worker-visible creation status parsing/types ([`os/🟦️.ts:933-957`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:933>)).  In the worker, compare a received status generation to the retained operation request before posting it, and include it in duplicate-request equality ([`backbone worker:4145-4256`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4145>)). |
+| Shell selected-row owner | Keep the existing captured/live catalog membership comparison, but return `capturedCatalog.catalogGenerationId` in the request ([`ShellHost:1242-1261`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1242>)).  Store it on `SpaceArtifactCreationOwnerV1`; `spaceArtifactCreationOwnerAcceptsStatus` currently checks only request/space/kind and must require status generation equality before Ready can trigger open ([`ShellHost:1264-1295`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1264>). |
+
+There is already a later, independent document-open generation fence: a genuine open plan carries
+`catalog.generationId` ([`DocumentOpenPlanV1`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1186>)), and Hub resolves the descriptor against current
+catalog selection before minting it ([`open-plan selection`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2608>)).  It does **not** receive the creation owner’s expected generation, however.  Thus it can fail a later stale opening, but cannot repair the pre-accept G1→G2 substitution.  A status/owner equality check is still required; changing the generic document-open intent is not needed for this narrow repair.
+
+Handcrafted current four-field request sites:
+
+- The shared neutral corpus has 14 `requests` values and eight request `rawJson` literals that
+  must gain the canonical field while retaining the original hostile reason.  In particular,
+  retain exactly one new *missing-generation* negative; do not accidentally turn every existing
+  malformed-name/order/duplicate case into the same missing-field rejection
+  ([`fixture request rows`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json:5>),
+  [`raw literals`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json:488>)).
+- [`Hub script:1338`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:1338>) creates a real genesis through direct HTTP.  It must first read the selected creation catalog and seal its returned generation; retaining the current direct three-field helper would make the registered checkpoint/process fixtures invalid.
+- The two direct Rust constructors are the native HTTP route law at
+  [`Hub bin tests:191`](</Users/ueli/Documents/semio/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs:191>) and the persisted-genesis fixture helper at
+  [`Hub bin tests:764`](</Users/ueli/Documents/semio/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs:764>).  The latter already receives `catalog_generation`; set the request field to that exact value, so its static command digest is recomputed through the shared helper rather than hand-copied.
+- The durable operation fixture request needs the field, and its literal `commandSha256` must be
+  regenerated from the canonical completed request—not preserved from the four-field input
+  ([`operation fixture`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json:12>)).
+- Update the Shell engine expectation ([`engine contract:673`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts:673>)), the worker ownership cases ([`space creation owner:447`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:447>)), and the wire round trip ([`backbone envelope:2107`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts:2107>)).  The catalog values already present in these test fixtures provide valid non-zero values; do not invent a second generator.
+
+Required tests beyond parser/schema parity:
+
+1. Native route/service gate: G1 catalog fetch, pause before `accept` reads selection, replace with
+   a descriptor-distinct G2, submit G1.  Require 409, no durable accepted fact, no execution
+   reservation, no CAS ownership, no event triple, and no indexed row.
+2. Worker/Shell gate: encode/decode preserves non-zero G1; a G2 status for a retained G1 request
+   is dropped before UI/open; a same-G1 Ready reaches exactly one opening attempt.
+3. Registered two-author process negative: pause after the ordinary dialog's catalog response and
+   before its POST, rotate selected current, then require no new artifact row or mounted map.  The
+   existing positive should compare its A creation status generation, both open-plan/mounted probe
+   generations, and prepared current.  This remains source-only until the registered browser/native
+   command emits its completed receipt.
+
+No commands, builds, or source edits were performed for this inventory.
+
+### G1 Ready to G2 Open: Existing Fail-Closed Paths and the Missing Immutable Correlation
+
+After a legitimate G1 creation is Ready, the present open path does **not** retain G1 as an
+opening constraint.  `openReadySpaceArtifactCreation` derives only
+`artifactRef/documentId/spaceId/schema`, creates a private app, and calls `openDocument`; neither
+the opening arguments nor `DocumentOpeningReceiptV1` contain a creation generation
+([`Ready projection`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1285>),
+[`Ready open call`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:6356>),
+[`opening receipt`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts:13>)).
+
+Hub's generic document-open boundary is correctly current-selection based, not creation-selection
+based.  It resolves the persisted descriptor against **current** catalog G2 when it issues a plan
+([`open-plan selection`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2403>)); the plan does carry its
+own G2 `catalog.generationId` ([`DocumentOpenPlanV1`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1186>)).
+The worker verifies the plan/lease coherence, but has no G1 input to compare it with.
+
+This produces three distinct outcomes:
+
+- If G2 no longer provides an exact selection for the G1 descriptor owner/hash/schema, plan issue
+  is `component-unavailable` (503).  The Ready target is not published; the existing opening
+  runner releases the private app and leaves Ready retryable.
+- If G1 plan issuance succeeds and G2 replaces current before socket-grant exchange, Hub compares
+  the retained plan authority generation with current and returns `stale` (409)
+  ([`exchange revalidation`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2522>)).  If replacement instead occurs before
+  execution-target reads, the target route reselects current assets and the worker's plan/lease
+  equality fails.  These are already fail-closed.
+- If G2 is descriptor-compatible (for example a republished catalog generation retaining the same
+  exact GIS package/component/descriptor), plan issue and mount legitimately proceed under G2.
+  No current line compares that mounted G2 identity to the G1 creation intent, so a private app can
+  reach `commit` under G2.  This is the remaining immutable-generation mismatch.
+
+Do **not** solve this by adding a generation selector to generic `DocumentOpenIntentV1`: it would
+turn a server-resolved descriptor route into caller-selected catalog authority.  The smallest safe
+correlation is entirely inside the creation-specific Shell owner:
+
+1. Retain required `catalogGenerationId` on `SpaceArtifactCreationOwnerV1` and require the Ready
+   status to equal it, as in the preceding packet.
+2. Add a private `expectedCatalogGenerationId` only to the prepared target passed by
+   `openReadySpaceArtifactCreation` into its own `openDocument` attempt.  It is an assertion,
+   never serialized into the Hub plan request.
+3. Have the attempt wait for the exact acknowledged `browser-actor-ui-mounted` identity and
+   compare its `catalogGenerationId` with that private expected value **before**
+   `runDocumentOpeningAttemptV1.commit`.  On mismatch, throw through the existing no-commit path;
+   it closes/detaches the exact runtime, retires the port, destroys the unactivated app, and keeps
+   the durable creation at Ready with `open-failed`.
+
+The third point must not use `entry.ready` alone.  That promise has two successful writers:
+`bindDocumentBackbone` resolves it after a document-port bind
+([`port bind`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2023>)), while the
+actual mounted identity resolves it later from a validated `browser-actor-ui-mounted` message
+([`mounted handler`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2203>)).
+Use a second exact mounted-identity promise/value on `OpenDocumentSession`; reject it in the same
+close/fault paths that currently reject `entry.ready`.  Otherwise a port-first turn can commit
+before any catalog identity exists, defeating the proposed check.
+
+The new expected-generation POST mismatch has a simple current HTTP outcome.  A service
+`DirectoryError::Conflict` maps to a bare 409 ([`route mapping`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:4907>)); it is not a creation
+status body.  `driveSpaceArtifactCreation` maps every 4xx to a local `failed` status without
+attempting to parse a body ([`worker 4xx path`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4201>)).
+That safely prevents Ready/open, but it leaves the old G1 catalog presentation retained: catalog
+fetch is only opened on the Space mounting path, not after failed creation
+([`catalog open call sites`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4105>)).
+The creation-specific Shell status handler should therefore invalidate its exact G1 presentation
+and ask the worker to refetch the catalog for that exact retained Space-index client after this
+terminal failed result.  It must not resend the G1 request or auto-create under G2.  A subsequent
+human action uses the fresh G2 row.
+
+Bounded laws:
+
+- G1 Ready + compatible G2 mount: port becomes ready first, then G2 `browser-actor-ui-mounted`;
+  assert no commit/publish and exact close/detach/destroy once.  The G1 version commits once.
+- G1 plan → G2 before grant and G1 plan → G2 before asset read retain existing Hub 409/lease
+  mismatch refusal; add an explicit no mounted-identity/no Shell publication assertion.
+- Expected-G1 creation POST after G2: assert bare 409, no status decoder invocation, no durable
+  creation fact; then assert one catalog refetch and no automatic POST.  The refreshed G2 choice
+  requires a new user action.
+
+No commands, builds, or source edits were performed for this audit.

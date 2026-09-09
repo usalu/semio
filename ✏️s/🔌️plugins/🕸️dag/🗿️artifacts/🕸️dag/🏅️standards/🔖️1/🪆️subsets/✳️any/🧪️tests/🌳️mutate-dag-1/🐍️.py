@@ -36,7 +36,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 #: 🧫️ (triad directory, fixture name, wire tag, the field the outcome's `path` names).
 VECTORS = {
     "create-node": ("🌱create-node", "rejects-a-duplicate-node-id", "createNode", lambda p: p["node"]["id"]),

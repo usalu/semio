@@ -204,12 +204,36 @@ Result: session `86471` exited 0 after 107m02s including the shared target queue
 
 The earlier surface retry lost its observable controller during the execution-slot handoff and was replaced by a fresh attached route. That attached session reached Cargo after 66m42s, then exited 1 before compilation could finish because the shared disk filled while Cargo wrote the Norm integration-test fingerprint. It emitted no Rust diagnostic and ran no surface test. Durable environmental-failure log: `🗑️generated/norm-surface-render-test-3.txt`.
 
-The final warmed surface-render integration retry is attached with a fresh isolated Nx graph:
+The final warmed surface-render integration retry compiled and executed both cases, then exited with 0 passed and 2 failed. At the default test-thread stack the public-surface case overflowed its stack, while the retained-cohort case first reached the strict artifact-store `Drop` witness and then aborted during cursor disposal on unwind. Durable log: `🗑️generated/norm-surface-render-test-4.txt`. This result is a failure, not an active or accepted gate.
+
+The retained test binary was then executed directly with `RUST_MIN_STACK=67108864` to remove only the diagnostic obstruction. It reached the actual first public-surface error in four seconds: DIN 4108's report rendered sibling rows with duplicate default keys, and the projection rejected the tree with `duplicate-key`. The subsequent strict disposer panic was secondary unwind evidence. Durable first-cause log: `🗑️generated/norm-surface-retained-binary-stack-witness.txt`.
+
+`render_report` now assigns every check row the stable identity `norm-report-check-{index}`. The surface test drives every created app through the shared `close_registered_fixture_app` completion helper and defers any rendered-surface panic until after the app reaches its exact terminal-empty witness. The router supplies the measured 64 MiB test-thread stack for this target, leaving the production runtime unchanged. File-scoped rustfmt, TypeScript transpilation, and diff-check pass.
+
+The current ordinary Nx acceptance retry uses a fresh isolated graph and the shared ticket Cargo target:
 
 ```text
-NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-data/norm-surface-4 \
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-norm-surface-final \
 CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo \
-bun x nx run @semio-tech/norm-plugin:surface-render-test --output-style=stream
+bun x nx run @semio-tech/norm-plugin:surface-render-test
 ```
 
-Pending session: `98132`; durable log: `🗑️generated/norm-surface-render-test-4.txt`. No final surface pass is claimed while pending.
+Session `90355` exited 1 after 4m37s before Norm compiled. The current shared `semio-framework-os-kernel` snapshot produced seven `E0277` diagnostics because a concurrent GIS change awaited `u8` values. The GIS owner repaired that shared prerequisite after this receipt. No Norm result is inferred from this external compile failure. Durable log: `🗑️generated/norm-surface-render-test-final.txt`.
+
+The duplicate-row repair now has a direct regression in the app-surface unit suite. It constructs two value-identical checks, renders and exactly retires the report tree, parses the projection through `serde_json`, and asserts the stable sibling keys `norm-report-check-0` and `norm-report-check-1`. This closes the one-row coverage gap that allowed the original default-key collision.
+
+A fresh surface retry and the focused two-row unit law remain required against the repaired shared kernel.
+
+The current document-contract oracle was also queued through its ordinary Nx target after the canonical schema-import repairs. Session `51731` exited 1 during project-graph construction, before the oracle ran: root `📜️script.ts` imports the currently absent replication map test module `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🟦️.ts`, and the graph plugin separately reported the absent source project `npm:@asamuzakjp/css-color`. This is no Norm result. Durable log: `🗑️generated/norm-document-contract-current.txt`. A retry remains required after those external graph prerequisites settle.
+
+After the root graph imports were repaired, session `78611` proved graph construction succeeded but used the retired project name `abstraction-ownership-validation`; Nx correctly reported that the project does not exist, so no oracle result is inferred. Durable invocation-error log: `🗑️generated/norm-document-contract-final.txt`.
+
+The corrected ordinary route completed successfully:
+
+```text
+NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_NO_CLOUD=true \
+NX_WORKSPACE_DATA_DIRECTORY=<ticket>/🗑️generated/nx-workspace-norm-document-contract-final-2 \
+bun x nx run workspace:norm-document-contract --output-style=stream --skip-nx-cache
+```
+
+Result: session `79144` exited 0. The independent oracle matched EN 1990's 20 native snapshots and 6 committed diffs, DIN 18599's 26 native snapshots and 12 committed diffs, and both domains' independent owner/child rejection vectors. Nx completed the target in 7.3 seconds. Durable log: `🗑️generated/norm-document-contract-final-2.txt`.

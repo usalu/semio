@@ -19,7 +19,7 @@ subset! {
 
 #[semio_framework_async_macros::async_test]
 async fn subset_macro_derived_register_is_idempotent() {
-    let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
+    let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
     register_subset().await;
     register_subset().await;
     let registered = io::list_registered_subset_validator_dialects().await.expect("registry observation");

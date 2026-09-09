@@ -375,14 +375,14 @@ pub struct SequenceHost {
 
 impl Default for SequenceHost {
     fn default() -> Self {
-        Self::from_snapshot(default_snapshot())
+        Self::from_snapshot(&default_snapshot())
     }
 }
 
 impl SequenceHost {
     /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
     /// off the working-scene cache via `to_fixture()` (see `SequenceFixture`'s doc comment).
-    pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: &SequenceSnapshot) -> Self {
         Self::from_fixture(snapshot.to_fixture())
     }
 
@@ -793,7 +793,7 @@ impl SequenceHost {
 /// consumer across the taxonomy tree (commands, windows), so it lives here rather than in a single
 /// caller's file.
 pub fn host_from_snapshot(fixture: &SequenceSnapshot) -> SequenceHost {
-    SequenceHost::from_snapshot(fixture.clone())
+    SequenceHost::from_snapshot(fixture)
 }
 
 /// 🔀️ Runs a host mutation seeded from `fixture` and diffs the result into typed operations — a free

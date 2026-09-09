@@ -17,7 +17,7 @@ impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfig
         if base.camera == self.camera {
             return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Configuration field is unchanged.");
         }
-        protocol::MutationOutcome::new(EquationGraphWindowConfig { camera: self.camera.clone(), ..base.clone() })
+        protocol::MutationOutcome::new(EquationGraphWindowConfig { camera: self.camera.clone() })
     }
     fn inverse(&self, base: &EquationGraphWindowConfig) -> Vec<EquationGraphWindowConfigMutation> {
         if base.camera == self.camera {

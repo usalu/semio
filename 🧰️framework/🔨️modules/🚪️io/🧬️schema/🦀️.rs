@@ -228,7 +228,7 @@ pub enum Confidence {
 
 impl Confidence {
     /// 📏️ Ordered strength: High > Medium > Low > None.
-    pub async fn rank(self) -> u8 {
+    pub const fn rank(self) -> u8 {
         match self {
             Self::None => 0,
             Self::Low => 1,
@@ -253,7 +253,7 @@ pub enum IoFidelity {
 
 impl IoFidelity {
     /// 📏️ Ordered strength: Exact > Canonical > Semantic > Lossy — mirrors `IoFidelityClass::rank`.
-    pub async fn rank(self) -> u8 {
+    pub const fn rank(self) -> u8 {
         match self {
             Self::Exact => 3,
             Self::Canonical => 2,

@@ -36,7 +36,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for
 /// the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🧊️steel-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://📈️mutate-fem3d-1-analysis/🧊️steel-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -54,11 +54,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }
@@ -76,11 +76,11 @@ fn canonical(text: &str) -> Json {
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🎯️outcome/🔣️.json"),
         },
         other => panic!("📈️mutate-fem3d-1-analysis: no committed hall vector is registered for kind {other:?}"),
     }
@@ -95,18 +95,18 @@ const REJECT_VECTORS: &[&str] = &["same-settings-fdb832", "zero-modes-a27c74"];
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
         "same-settings-fdb832" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🎯️outcome/🔣️.json"),
         },
         "zero-modes-a27c74" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/🎯️outcome/🔣️.json"),
         },
         other => panic!("📈️mutate-fem3d-1-analysis: no committed rejection vector is registered for {other:?}"),
     }
@@ -201,7 +201,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://📈️mutate-fem3d-1-analysis/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

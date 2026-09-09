@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "n
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseGraphOutputCatalog, writeGraphArtifacts } from "../../📦️packages/🦀️rust/📜️script.ts";
-import fixture from "../🔣️outputs.json";
+import fixture from "../../🧫️fixtures/🔣️outputs.json";
 import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
 import current from "../../🛂️manifest/📇️outputs.json";
 

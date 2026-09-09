@@ -1,6 +1,6 @@
 #[test]
 fn cooperative_maintenance_retains_deficit_until_later_host_turn() {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.cases {
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, 2));
         let ran = Arc::new(AtomicU32::new(0));

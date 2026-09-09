@@ -9,7 +9,7 @@
 //! exact failure the platform exists to prevent — so it registers none.
 //!
 //! Every input this file reads comes from the PLAN: the real concrete-forest structure through
-//! `local://` and the tiny committed solid through `asset://`, the `prepare` list and the mutation
+//! `shared://🧊️mutate-semio-brep/` and the tiny committed solid through `asset://`, the `prepare` list and the mutation
 //! payload from the scenario's doc string, and the specification-vector paths from the step text. The feature is the single place any of
 //! them is written down, so neither implementation can hold a transcription that drifts from what
 //! the other one read.
@@ -39,21 +39,21 @@ const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delet
 /// `🐍️derive-brep-fixture.py` in the ticket folder. Every semio id carries the STEP entity number it
 /// came from.
 #[cfg(feature = "sut")]
-const FOREST_DSL: &str = "local://🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio";
+const FOREST_DSL: &str = "shared://🧊️mutate-semio-brep/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio";
 /// 🎒️ The same structure in its binary envelope, written by the PYTHON implementation — so this
 /// codec reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
-const FOREST_PACK: &str = "local://🎒️.pack.semio";
+const FOREST_PACK: &str = "shared://🧊️mutate-semio-brep/🎒️.pack.semio";
 /// 🧊️ The tiny committed solid — the one that carries a line, a circle, a rational NURBS curve and
 /// a NURBS surface at once. It is committed under `✉️base`'s example set, because `🧊️brep` commits no
 /// example of its own, and it is kept for the BYTE half of the identity law: its two files were
 /// written by THIS codec, so the Python side reproducing them is the other direction of the same
 /// cross-language agreement.
 #[cfg(feature = "sut")]
-const SOLID_DSL: &str = "asset://📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio";
+const SOLID_DSL: &str = "asset://🧊️solid/🗣️.dsl.semio";
 /// 🎒️ The same solid in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const SOLID_PACK: &str = "asset://📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio";
+const SOLID_PACK: &str = "asset://🧊️solid/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

@@ -15,7 +15,7 @@ type Vector = Readonly<{ schemaVersion: number; contractId: string; helper: stri
 type Observation = { value: string; nextCalls: number; iteratorCalls: number };
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
 const sourceBytes = readFileSync(sourcePath), source = ts.createSourceFile(sourcePath, sourceBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-const vectorBytes = readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"), vector: Vector = JSON.parse(vectorBytes);
+const vectorBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🔣️.json"), "utf8"), vector: Vector = JSON.parse(vectorBytes);
 const compilers = [{ id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) }, { id: "typescript", compile: (code: string): string => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText }];
 const realSegmenter = (): Intl.Segmenter => new Intl.Segmenter(vector.segmenter.locale, { granularity: vector.segmenter.granularity });
 
@@ -53,7 +53,7 @@ function scaling(row: ScalingCase): { input: string; expected: Split } {
 }
 
 test("leading-grapheme vectors have closed language-neutral authority and independent JSON parsing", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔤️taxonomy-leading-grapheme/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, extra: true }, { ...vector, helper: "cachedPrefix" }, { ...vector, semantics: { ...vector.semantics, iteratorAdvancesPerRequest: 2 } }, { ...vector, cases: vector.cases.map((row, index) => index ? row : { ...row, extra: true }) }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
@@ -151,8 +151,8 @@ test("independent compiled sessions create fresh segment observations without re
 });
 
 test("registers leading grapheme through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🛂️schema/🔣️.json"), "utf8")));
+  const directory = join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔤️taxonomy-leading-grapheme/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "../🔤️taxonomy-leading-grapheme/🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.208 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

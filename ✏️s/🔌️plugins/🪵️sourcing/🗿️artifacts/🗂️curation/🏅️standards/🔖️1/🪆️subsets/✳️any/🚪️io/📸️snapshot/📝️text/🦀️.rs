@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::CurationSnapshot;
 
 /// 📄️ The demo-stock example, handcrafted in the `.curation` DSL.
-pub const DEMO_STOCK_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const DEMO_STOCK_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📄️ The empty-curation example — empty stock and curated table. `catalog`'s handle is
 /// content-addressed from an empty stock (`catalog_child_handle(&[])`, same value

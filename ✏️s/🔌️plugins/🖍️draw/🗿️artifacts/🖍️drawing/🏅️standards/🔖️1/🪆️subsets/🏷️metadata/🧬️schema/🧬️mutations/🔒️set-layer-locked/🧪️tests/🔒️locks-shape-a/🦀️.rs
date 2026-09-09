@@ -9,11 +9,11 @@ use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, Drawing
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

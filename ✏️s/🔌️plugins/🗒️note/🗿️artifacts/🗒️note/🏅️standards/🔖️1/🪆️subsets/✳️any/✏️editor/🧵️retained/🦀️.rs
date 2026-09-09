@@ -8,7 +8,7 @@ use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES};
-use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
+use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 
 //#region 🔖️Contract
 pub const NOTE_RETAINED_PAYLOAD_SCHEMA: &str = "semio.note.retained-command.v1";
@@ -52,7 +52,7 @@ pub const NOTE_AUDITED_TOOL_IDS: &[&str] = &[
     "loadRequest",
 ];
 
-pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &["setGridVisible", "setGridSpacing", "setCamera", "setCameraZoom", "engagementInput", "navigatorEngagementInput", "loadRequest"];
+pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &["setGridVisible", "setGridSpacing", "setCamera", "setCameraZoom", "engagementInput", "engagementSubmit", "navigatorEngagementInput", "loadRequest"];
 
 pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -72,8 +72,8 @@ pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "patchBlocks", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "inkApplyEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "inkApplyEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "nudgeSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -83,9 +83,9 @@ pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -94,9 +94,10 @@ pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
 pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
@@ -187,6 +188,7 @@ struct NoteCommandWork {
     replay_target: Option<usize>,
     projection: Option<NoteSnapshot>,
     accumulated: Emit<crate::op::NoteMutation, NoteConfigMutation>,
+    ephemeral: EphemeralEmit<EditorApp<NotePlayApp>>,
     id_owner: Option<NoteIdOwner>,
     workspace_identity: u64,
     complete: bool,
@@ -201,7 +203,7 @@ impl NoteCommandWork {
         }
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
-        Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
+        Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
 
     fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, NoteConfigMutation>) -> Result<(), Fault> {
@@ -219,10 +221,12 @@ impl NoteCommandWork {
         }
         self.accumulated.artifact_mutations.append(&mut emit.artifact_mutations);
         self.accumulated.config_mutations.append(&mut emit.config_mutations);
+        self.accumulated.window_config_mutations.append(&mut emit.window_config_mutations);
         self.accumulated.draft_mutations.append(&mut emit.draft_mutations);
         self.accumulated.effects.append(&mut emit.effects);
         self.accumulated.events.append(&mut emit.events);
         self.accumulated.child_emits.append(&mut emit.child_emits);
+        self.accumulated.interaction_writes.append(&mut emit.interaction_writes);
         Ok(())
     }
 
@@ -232,10 +236,15 @@ impl NoteCommandWork {
         }
         if self.accumulated.artifact_mutations.pop().is_some()
             || self.accumulated.config_mutations.pop().is_some()
+            || self.accumulated.window_config_mutations.pop().is_some()
             || self.accumulated.draft_mutations.pop().is_some()
             || self.accumulated.effects.pop().is_some()
             || self.accumulated.events.pop().is_some()
             || self.accumulated.child_emits.pop().is_some()
+            || self.accumulated.interaction_writes.pop().is_some()
+            || self.ephemeral.presence.pop().is_some()
+            || self.ephemeral.transient.pop().is_some()
+            || self.ephemeral.window_transient.pop().is_some()
             || self.accumulated.description.take().is_some()
             || self.accumulated.coalesce_key.take().is_some()
         {
@@ -262,15 +271,31 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context: _context, operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
         }
         let unit = &self.units[self.cursor];
         let projection = self.projection.as_ref().unwrap_or(snapshot);
         let id_owner = self.id_owner.as_mut().ok_or_else(|| Fault::from("note-retained-id-owner-missing"))?;
-        let mut ctx = NoteDispatchCtx { selected_block_ids: unit.selected_block_ids.clone(), id_owner: id_owner.clone() };
-        let emit = unit.command.dispatch(&ArtifactView::with_operation(projection, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)?;
+        let window_owner = context.and_then(|context| context.window_transient.clone());
+        let window_before = crate::editor::note::window::transient_from_snapshot(window_owner.as_ref());
+        let mut ctx = NoteDispatchCtx {
+            selected_block_ids: unit.selected_block_ids.clone(),
+            id_owner: id_owner.clone(),
+            view_state: context.and_then(|context| context.view_state.clone()),
+            window_transient: window_before.clone(),
+            window_transient_owner: window_owner,
+        };
+        let emit = unit.command.dispatch(
+            &ArtifactView::with_operation(projection, history, operation.clone()),
+            &ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) },
+            &mut ctx,
+        )?;
+        if ctx.window_transient != window_before {
+            let owner = ctx.window_transient_owner.as_ref().ok_or_else(|| Fault::from("note-composite-window-transient-owner-required"))?;
+            self.ephemeral.window_transient.push(crate::editor::note::window::addressed_transient(owner, ctx.window_transient)?);
+        }
         *id_owner = ctx.id_owner;
         if self.cursor + 1 < self.units.len() {
             for mutation in &emit.artifact_mutations {
@@ -292,7 +317,12 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             return Ok(ArtifactCommandWorkStep::Progress { stage: "note-command-semantic-unit", preview: b"{\"en\":\"Applying Note command\",\"de\":\"Notizbefehl wird angewendet\"}" });
         }
         self.complete = true;
-        Ok(ArtifactCommandWorkStep::Complete(std::mem::take(&mut self.accumulated)))
+        let emit = std::mem::take(&mut self.accumulated);
+        if self.ephemeral.presence.is_empty() && self.ephemeral.transient.is_empty() && self.ephemeral.window_transient.is_empty() {
+            Ok(ArtifactCommandWorkStep::Complete(emit))
+        } else {
+            Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: std::mem::take(&mut self.ephemeral) })
+        }
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
@@ -322,6 +352,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.replay_target = (cursor != 0).then_some(cursor);
         self.complete = false;
         self.accumulated = Emit::default();
+        self.ephemeral = EphemeralEmit::default();
         Ok(())
     }
 
@@ -347,10 +378,15 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             && self.units.is_empty()
             && self.accumulated.artifact_mutations.is_empty()
             && self.accumulated.config_mutations.is_empty()
+            && self.accumulated.window_config_mutations.is_empty()
             && self.accumulated.draft_mutations.is_empty()
             && self.accumulated.effects.is_empty()
             && self.accumulated.events.is_empty()
             && self.accumulated.child_emits.is_empty()
+            && self.accumulated.interaction_writes.is_empty()
+            && self.ephemeral.presence.is_empty()
+            && self.ephemeral.transient.is_empty()
+            && self.ephemeral.window_transient.is_empty()
             && self.accumulated.description.is_none()
             && self.accumulated.coalesce_key.is_none()
             && self.projection.is_none()

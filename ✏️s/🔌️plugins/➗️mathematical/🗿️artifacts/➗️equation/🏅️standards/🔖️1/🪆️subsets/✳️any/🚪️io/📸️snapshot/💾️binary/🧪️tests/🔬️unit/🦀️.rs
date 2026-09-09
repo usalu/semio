@@ -11,7 +11,7 @@ async fn equation_snapshot_dsl_pack_equivalence_with_seed_and_empty_collections(
     let mut graph = EquationGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..EquationGraph::default() };
     graph.nodes.clear();
     graph.edges.clear();
-    let snapshot = crate::equation_snapshot_with_state(graph, EquationGeometry { points: Vec::new() });
+    let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry { points: Vec::new() });
     store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
 }
 

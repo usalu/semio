@@ -15,6 +15,7 @@ use protocol::Mutation;
 #[dsl(extension = "drawingcfg")]
 #[dsl(id = "drawing.config")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct DrawingConfig {
     /// 👁️ In-progress rename/engagement input text — was `DrawingInteractionState::engagement_input`.
     pub engagement_input: String,
@@ -74,11 +75,7 @@ impl store::ArtifactPack for DrawingConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-impl Default for DrawingConfig {
-    fn default() -> Self {
-        Self { engagement_input: String::new(), camera: DrawingCamera::default(), trace_pointer_generation: 0, trace_pointer_completed_work: 0, trace_pointer_pending_work: 0 }
-    }
-}
+
 
 store::impl_whole_record_config!(DrawingConfig);
 //#endregion 🔖️Config

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/blob.json",
+  "title": "BlobRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hash",
+    "size",
+    "mediaType"
+  ],
+  "properties": {
+    "hash": {
+      "type": "string"
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "mediaType": {
+      "type": "string"
+    }
+  }
+}

@@ -37,7 +37,7 @@ impl RasterArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: RasterSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, ..Self::default() }
+        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

@@ -2,7 +2,7 @@ import Ajv from "ajv";
 import { createMemoryStoragePort, createScopedStoragePort } from "@semio-tech/framework";
 import type { UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
-import fixture from "./🧫️fixtures/🔁️event-replay.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json" with { type: "json" };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Record<string, any>, _source: { readonly url: string }): Promise<void> {
   const { describe, expect, it } = vitest;

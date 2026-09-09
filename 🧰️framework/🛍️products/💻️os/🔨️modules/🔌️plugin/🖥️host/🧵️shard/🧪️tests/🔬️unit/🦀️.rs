@@ -72,7 +72,7 @@ async fn encode_event_envelope(to: ActorId, seq: u64, event: &Event) -> Vec<u8> 
 
 #[test]
 fn instance_close_event_matches_the_shared_first_party_fixture_and_serde_structure() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).expect("shared actor lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).expect("shared actor lifecycle fixture");
     let mut independent = fixture["vectors"].as_array().expect("lifecycle vectors").iter().find(|row| row["value"]["kind"] == "close").expect("close vector")["value"].clone();
     independent.as_object_mut().expect("close value object").remove("kind");
     let first_party: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&fixture_instance_close_request())).expect("first-party close JSON");

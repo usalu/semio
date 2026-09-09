@@ -5,22 +5,44 @@
   "sourceRoot": "",
   "metadata": {
     "semio": {
-      "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      "taxonomy": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udd23\ufe0ftaxonomy.json"
     }
   },
   "targets": {
+    "dag-demo-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify dag-demo-ownership" }
+    },
+    "note-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify note-document-contract native" }
+    },
+    "note-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts verify note-document-contract" }
+    },
+    "norm-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify norm-document-contract"
+      }
+    },
     "reset-document-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts verify reset-document-ownership"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify reset-document-ownership"
       }
     },
     "scale-fixture-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts scale-fixture check",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",
         "forwardAllArgs": true
       }
     },
@@ -28,7 +50,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup"
       },
       "outputs": [],
       "dependsOn": [
@@ -47,14 +69,14 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts start"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts start"
       }
     },
     "dev": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev",
         "forwardAllArgs": true
       }
     },
@@ -62,7 +84,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -73,7 +95,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook ui",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook ui",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -84,7 +106,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook puzzle",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -95,7 +117,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 2d",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook puzzle 2d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -106,7 +128,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook styling",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook styling",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -117,7 +139,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 3d",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook puzzle 3d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -128,7 +150,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 5d",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook puzzle 5d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -139,7 +161,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook framework",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -150,7 +172,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework hosts",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook framework hosts",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -161,7 +183,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework os",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook framework os",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -172,7 +194,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook infinite",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook infinite",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -183,7 +205,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook cad",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook cad",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -194,7 +216,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook coda",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook coda",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -205,7 +227,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook animate",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev storybook animate",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -216,7 +238,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev mcp",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev mcp",
         "forwardAllArgs": true
       }
     },
@@ -224,7 +246,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev mcp engine",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev mcp engine",
         "forwardAllArgs": true
       }
     },
@@ -232,41 +254,45 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev mcp repo",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts dev mcp repo",
         "forwardAllArgs": true
       }
     },
     "generate": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "generate-neo4j": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate neo4j",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate neo4j",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "generate-taxonomy-census": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate taxonomy census",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate taxonomy census",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "generate-taxonomy-duplicates": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate taxonomy duplicates",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate taxonomy duplicates",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "schema-generate": {
       "executor": "nx:run-commands",
@@ -274,12 +300,13 @@
         "schemaSources"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
+        "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udd23\ufe0fschema-catalog.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts schema generate",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema generate",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "schema-docs": {
       "executor": "nx:run-commands",
@@ -287,11 +314,12 @@
         "schemaSources"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md"
+        "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udcd3\ufe0fschema-catalog.md"
       ],
       "options": {
-        "command": "bun ./📜️script.ts schema docs"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema docs"
+      },
+      "cache": true
     },
     "schema-check": {
       "executor": "nx:run-commands",
@@ -300,9 +328,10 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts schema check",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema check",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "schema-verify": {
       "executor": "nx:run-commands",
@@ -311,48 +340,54 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts schema verify",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema verify",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "schema-audit": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema audit",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema audit",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "schema-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema oracle"
+      },
+      "outputs": []
     },
     "schema-compile": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema compile",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema compile",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "schema-entries": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema entries",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema entries",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "schema-test": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema test",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts schema test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "lint": {
       "executor": "nx:run-commands",
@@ -366,10 +401,11 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts lint",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts lint",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true,
+      "outputs": []
     },
     "lint-repo": {
       "executor": "nx:run-commands",
@@ -383,15 +419,16 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts lint repo"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts lint repo"
       },
-      "cache": false
+      "cache": true,
+      "outputs": []
     },
     "format": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts format"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts format"
       }
     },
     "test": {
@@ -408,27 +445,27 @@
         "@semio-tech/repo-test-domain:test-contract"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "test-discover": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test discover",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test discover",
         "forwardAllArgs": true
       }
     },
     "test-doctor": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test doctor",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test doctor",
         "forwardAllArgs": true
       }
     },
@@ -436,7 +473,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test contract",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test contract",
         "forwardAllArgs": true
       }
     },
@@ -444,7 +481,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test oracle",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test oracle",
         "forwardAllArgs": true
       }
     },
@@ -452,7 +489,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test subject",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test subject",
         "forwardAllArgs": true
       }
     },
@@ -460,33 +497,33 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test parity",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test parity",
         "forwardAllArgs": true
       }
     },
     "test-metrics": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test metrics",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test metrics",
         "forwardAllArgs": true
       }
     },
     "test-metrics-enforce": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test metrics --enforce"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test metrics --enforce"
       }
     },
     "test-report": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test report",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test report",
         "forwardAllArgs": true
       }
     },
@@ -495,7 +532,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean test",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean test",
         "forwardAllArgs": true
       }
     },
@@ -504,7 +541,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean coverage",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean coverage",
         "forwardAllArgs": true
       }
     },
@@ -513,7 +550,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy inventory",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean taxonomy inventory",
         "forwardAllArgs": true
       }
     },
@@ -522,7 +559,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy plan",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean taxonomy plan",
         "forwardAllArgs": true
       }
     },
@@ -531,7 +568,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy apply",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean taxonomy apply",
         "forwardAllArgs": true
       }
     },
@@ -540,7 +577,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy verify",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts clean taxonomy verify",
         "forwardAllArgs": true
       }
     },
@@ -549,25 +586,26 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts new mutation",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts new mutation",
         "forwardAllArgs": true
       }
     },
     "test-storybook": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test storybook",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
         }
-      }
+      },
+      "outputs": []
     },
     "test-quick": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         {
@@ -581,12 +619,12 @@
         "@semio-tech/repo-test-domain:test-contract"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test quick"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         {
@@ -601,12 +639,12 @@
         "test-storybook"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test long"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         {
@@ -621,7 +659,7 @@
         "test-storybook"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test exhaustive"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive"
       }
     },
     "bench-plugins": {
@@ -629,7 +667,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts bench plugins",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts bench plugins",
         "forwardAllArgs": true
       }
     },
@@ -637,7 +675,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts stdio quick"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio quick"
       }
     },
     "stdio-long": {
@@ -646,7 +684,7 @@
         "stdio-quick"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio long"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio long"
       }
     },
     "stdio-exhaustive": {
@@ -655,7 +693,7 @@
         "stdio-long"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio exhaustive"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio exhaustive"
       }
     },
     "stdio-schema-parity": {
@@ -664,7 +702,7 @@
         "stdio-quick"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio schema-parity"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio schema-parity"
       }
     },
     "stdio-standards-coverage": {
@@ -673,7 +711,7 @@
         "stdio-schema-parity"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio standards-coverage"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio standards-coverage"
       }
     },
     "stdio-codec": {
@@ -682,7 +720,7 @@
         "stdio-standards-coverage"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio codec"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio codec"
       }
     },
     "stdio-mutation-law": {
@@ -691,21 +729,21 @@
         "stdio-codec"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio mutation-law"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio mutation-law"
       }
     },
     "mutation-outcome-law": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify mutation-outcome-law"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify mutation-outcome-law"
       }
     },
     "semantic-vocabulary": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify semantic-vocabulary"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify semantic-vocabulary"
       }
     },
     "stdio-inference": {
@@ -714,7 +752,7 @@
         "stdio-mutation-law"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio inference"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio inference"
       }
     },
     "stdio-runtime": {
@@ -723,7 +761,7 @@
         "stdio-inference"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio runtime"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio runtime"
       }
     },
     "stdio-fuzz": {
@@ -732,7 +770,7 @@
         "stdio-runtime"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio fuzz"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio fuzz"
       }
     },
     "stdio-cross-platform": {
@@ -741,16 +779,18 @@
         "stdio-fuzz"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio cross-platform"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts stdio cross-platform"
       }
     },
     "verify": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": []
     },
     "verify-gate": {
       "executor": "nx:run-commands",
@@ -758,31 +798,33 @@
         "mutation-outcome-law"
       ],
       "options": {
-        "command": "bun ./📜️script.ts verify gate"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify gate"
       }
     },
     "verify-rust-warnings": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rust-warnings",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rust-warnings",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "verify-taxonomy-report": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy report",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify taxonomy report",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "verify-taxonomy-enforce": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy enforce",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify taxonomy enforce",
         "forwardAllArgs": true
       }
     },
@@ -790,7 +832,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify package-purity",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify package-purity",
         "forwardAllArgs": true
       }
     },
@@ -798,14 +840,14 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify interactivity"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify interactivity"
       }
     },
     "verify-dependencies-freeze": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify dependencies"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify dependencies"
       }
     },
     "verify-dependencies-freeze-write-baseline": {
@@ -813,57 +855,63 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts verify dependencies write-baseline"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify dependencies write-baseline"
       }
     },
     "verify-abstraction-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify abstraction-ownership",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify abstraction-ownership",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-resolved-host-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify resolved-host-context"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify resolved-host-context"
+      },
+      "outputs": []
     },
     "test-surface-view-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify surface-view-context"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify surface-view-context"
+      },
+      "outputs": []
     },
     "test-window-view-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-view-context"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify window-view-context"
+      },
+      "outputs": []
     },
     "test-window-view-context-native": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-view-context native"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify window-view-context native"
+      },
+      "outputs": []
     },
     "test-abstraction-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify abstraction-ownership test"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify abstraction-ownership test"
+      },
+      "outputs": []
     },
     "verify-layering": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify layering"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify layering"
       }
     },
     "verify-layering-write-baseline": {
@@ -871,7 +919,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts verify layering write-baseline"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify layering write-baseline"
       }
     },
     "build": {
@@ -887,17 +935,17 @@
         "build-storybook"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "build-storybook": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts build storybook",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -923,7 +971,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts cpp",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cpp",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -938,7 +986,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts cpp setup",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cpp setup",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -948,9 +996,9 @@
       "dependsOn": [
         "cpp-setup"
       ],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp configure",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cpp configure",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -963,9 +1011,9 @@
           "params": "forward"
         }
       ],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp build",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cpp build",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -978,9 +1026,9 @@
           "params": "forward"
         }
       ],
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp test",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts cpp test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -989,7 +1037,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup prepare"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup prepare"
       },
       "dependsOn": [
         "deps-browsers"
@@ -1000,7 +1048,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts publish",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts publish",
         "forwardAllArgs": true
       }
     },
@@ -1008,7 +1056,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts purge",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts purge",
         "forwardAllArgs": true
       }
     },
@@ -1017,7 +1065,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync"
+        "command": "bun \"\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udce6\ufe0fdependencies/\ud83d\udcdc\ufe0fscript.ts\" sync"
       }
     },
     "deps-python": {
@@ -1025,7 +1073,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps python"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps python"
       },
       "dependsOn": [
         "@semio-tech/ui-styling-py:deps",
@@ -1037,7 +1085,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps cargo"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps cargo"
       },
       "parallelism": false
     },
@@ -1046,7 +1094,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps go"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps go"
       }
     },
     "deps-dotnet": {
@@ -1054,7 +1102,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps dotnet"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps dotnet"
       },
       "dependsOn": [
         "@semio-tech/repo-test-dotnet:deps"
@@ -1065,7 +1113,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps cpp"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps cpp"
       },
       "dependsOn": [
         "cpp-setup"
@@ -1076,7 +1124,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps browsers"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps browsers"
       },
       "dependsOn": []
     },
@@ -1085,7 +1133,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps wasm"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps wasm"
       },
       "parallelism": false,
       "dependsOn": [
@@ -1097,7 +1145,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" prepare"
+        "command": "bun \"\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udee0\ufe0ftools/\ud83d\udd78\ufe0fwasm/\ud83d\udcdc\ufe0fscript.ts\" prepare"
       }
     },
     "deps-tools": {
@@ -1105,7 +1153,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps tools"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup deps tools"
       },
       "parallelism": false
     },
@@ -1121,7 +1169,7 @@
         "@semio-tech/plugin-registry:generate"
       ],
       "options": {
-        "command": "bun ./📜️script.ts setup prepare"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup prepare"
       }
     },
     "setup-git": {
@@ -1129,7 +1177,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup git"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup git"
       }
     },
     "setup-native": {
@@ -1137,12 +1185,12 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup native"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts setup native"
       }
     },
     "test-fundamental": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         {
@@ -1156,232 +1204,278 @@
         "@semio-tech/repo-test-domain:test-contract"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test fundamental"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test fundamental"
       }
     },
     "test-browser-actor-host-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify browser-actor-host-context"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify browser-actor-host-context"
+      },
+      "outputs": []
     },
     "test-browser-actor-host-context-worker": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify browser-actor-host-context worker"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify browser-actor-host-context worker"
+      },
+      "outputs": []
     },
     "test-context-menu-view-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify surface-view-context menu"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify surface-view-context menu"
+      },
+      "outputs": []
     },
     "test-jack-query-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-query-ownership oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify jack-query-ownership oracle"
+      },
+      "outputs": []
     },
     "test-jack-query-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-query-ownership"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify jack-query-ownership"
+      },
+      "outputs": []
+    },
+    "test-jack-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify jack-document-contract"
+      },
+      "outputs": []
+    },
+    "test-dag-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify dag-document-contract"
+      },
+      "outputs": []
     },
     "test-window-action-context": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-action-context"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify window-action-context"
+      },
+      "outputs": []
     },
     "test-window-action-context-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-action-context oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify window-action-context oracle"
+      },
+      "outputs": []
     },
     "verify-artifact-contract-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-contract-ownership"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-contract-ownership"
+      },
+      "outputs": []
     },
     "test-artifact-contract-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-contract-ownership test"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-contract-ownership test"
+      },
+      "outputs": []
     },
     "test-rewriting-window-config": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-window-config"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rewriting-window-config"
+      },
+      "outputs": []
     },
     "test-rewriting-window-config-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-window-config oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rewriting-window-config oracle"
+      },
+      "outputs": []
     },
     "test-retained-window-input": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify retained-window-input"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify retained-window-input"
+      },
+      "outputs": []
     },
     "test-retained-window-input-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify retained-window-input oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify retained-window-input oracle"
+      },
+      "outputs": []
     },
     "test-wires-window-transient": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-window-transient"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify wires-window-transient"
+      },
+      "outputs": []
     },
     "test-shared-artifact-addressing": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-artifact-addressing"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-artifact-addressing"
+      },
+      "outputs": []
     },
     "test-shared-artifact-addressing-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-artifact-addressing oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-artifact-addressing oracle"
+      },
+      "outputs": []
     },
     "test-wires-document-contract": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-document-contract"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify wires-document-contract"
+      },
+      "outputs": []
     },
     "test-wires-document-contract-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-document-contract oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify wires-document-contract oracle"
+      },
+      "outputs": []
     },
     "artifact-field-parity-test": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity test"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity test"
       }
     },
     "artifact-field-parity-report": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity report"
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity report"
       }
     },
     "artifact-field-parity-enforce": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity enforce"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity enforce"
+      },
+      "outputs": []
     },
     "rewriting-map-ownership": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-map-ownership"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rewriting-map-ownership"
+      },
+      "outputs": []
     },
     "rewriting-map-ownership-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-map-ownership oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rewriting-map-ownership oracle"
+      },
+      "outputs": []
     },
     "shared-dynamic-value": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-dynamic-value"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-dynamic-value"
+      },
+      "outputs": []
     },
     "rewriting-document-contract": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-document-contract"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify rewriting-document-contract"
+      },
+      "outputs": []
     },
     "forms-document-contract": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-document-contract"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify forms-document-contract"
+      },
+      "outputs": []
     },
     "playbook-document-contract": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify playbook-document-contract"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify playbook-document-contract"
+      },
+      "outputs": []
     },
     "shared-map-delta": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-map-delta"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-map-delta"
+      },
+      "outputs": []
     },
     "shared-map-delta-oracle": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-map-delta oracle"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-map-delta oracle"
+      },
+      "outputs": []
     },
     "shared-value-clone": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-value-clone"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-value-clone"
+      },
+      "outputs": []
     },
     "shared-value-canonical-json": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-value-canonical-json"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify shared-value-canonical-json"
+      },
+      "outputs": []
     },
     "wires-pointer-move": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-pointer-move"
-      }
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify wires-pointer-move"
+      },
+      "outputs": []
     }
   }
 }

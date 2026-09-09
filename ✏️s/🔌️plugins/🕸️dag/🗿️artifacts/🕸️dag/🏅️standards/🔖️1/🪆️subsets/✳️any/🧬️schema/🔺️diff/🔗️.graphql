@@ -1,22 +1,6 @@
-# 🔺️ DAG diff schema.
+# 🔺️ DAG sparse durable delta with whole child-handle replacement.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type DagDiff {
-  artifact: DagArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  nodes: DagNodesDelta @state(class: ARTIFACT)
-  edges: DagEdgesDelta @state(class: ARTIFACT)
-  setNodes: DagNodeSpecList @state(class: ARTIFACT)
-  setEdges: DagFixtureEdgeList @state(class: ARTIFACT)
+  content: ArtifactChild @state(class: ARTIFACT)
 }
-type DagStringList { values: [String!]! }
-type DagNodeSpecList { values: [DagNodeSpec!]! }
-type DagFixtureEdgeList { values: [DagFixtureEdge!]! }
-type DagNodesDelta { added: [DagNodeSpec!]! removed: [String!]! patched: [DagNodePatchEntry!]! reordered: [String!] }
-type DagEdgesDelta { added: [DagFixtureEdge!]! removed: [String!]! patched: [DagEdgePatchEntry!]! reordered: [String!] }
-type DagNodePatchEntry { id: String! patch: DagNodePatch! }
-type DagEdgePatchEntry { id: String! patch: DagEdgePatch! }
-type DagNodePatch { name: String x: Float y: Float }
-type DagEdgePatch { source: String target: String }
-type DagNodeSpec { id: String! }
-type DagFixtureEdge { id: String! source: String! target: String! }
-type DagCamera { x: Float! y: Float! zoom: Float! }
-type DagArtifact { schema: String! nodes: [DagNodeSpec!]! edges: [DagFixtureEdge!]! selectedNodeIds: [String!]! camera: DagCamera!}

@@ -92,7 +92,7 @@
         "command": "bun ./📜️script.ts check-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "generate-browser-boot": {
@@ -152,7 +152,7 @@
     },
     "lockfile-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "command": "bun \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo metadata --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml\"",
@@ -202,7 +202,9 @@
         "command": "bun ./📜️script.ts serve",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true
     },
     "dev": {
       "executor": "nx:run-commands",
@@ -214,7 +216,9 @@
         "command": "bun ./📜️script.ts dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true
     },
     "native": {
       "executor": "nx:run-commands",

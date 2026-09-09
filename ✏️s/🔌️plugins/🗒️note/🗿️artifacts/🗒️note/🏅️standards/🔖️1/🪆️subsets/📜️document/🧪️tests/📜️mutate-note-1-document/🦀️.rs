@@ -9,8 +9,8 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` module.
 //!
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector
-//! under each of this subset's `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves. Those files are read
-//! HERE through `asset://`, so the plan pins their digests and a silently edited vector changes the
+//! under each of this subset's `🧫️fixtures/🧬️mutations/<slug>/<fixture>/` leaves. Those files are read
+//! HERE through `shared://`, so the plan pins their digests and a silently edited vector changes the
 //! plan rather than the result. Nothing is transcribed into this file: the mapping from kind to
 //! vector is data in the feature's own `Examples` table, and the only literal this adapter carries is
 //! the kind list the production module's `kinds_match_the_enum_and_the_catalog` keeps honest.
@@ -33,8 +33,8 @@ const GUARD_VECTORS: &[&str] = &[
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
-/// case's owner — this subset itself, which is what `asset://` resolves against.
-const VECTORS: &str = "asset://🧬️schema/🧬️mutations";
+/// case's owner — this subset itself, which is what `shared://` resolves against.
+const VECTORS: &str = "shared://🧬️mutations";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject

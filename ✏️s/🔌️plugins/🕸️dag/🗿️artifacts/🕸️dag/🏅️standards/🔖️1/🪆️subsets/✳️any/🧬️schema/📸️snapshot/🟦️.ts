@@ -1,8 +1,13 @@
-/** 📸️ DAG snapshot schema — artifact-lane fields only. */
+/** 📸️ DAG persisted snapshot with one composed graph-content identity. */
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseDagArtifact } from "../🟦️.ts";
+
 export interface DagSnapshot {
   /** @state artifact */ schema: string;
-  /** @state artifact */ nodes: DagNodeSpec[];
-  /** @state artifact */ edges: DagFixtureEdge[];
+  /** @state artifact @child kind=s.stdio.semio.graph */ content: ArtifactChild;
 }
-export interface DagNodeSpec { id: string; [key: string]: unknown; }
-export interface DagFixtureEdge { id: string; source: string; target: string; }
+
+/** 🪪️ Parses the snapshot through the identical persisted artifact contract. */
+export function parseDagSnapshot(value: unknown, at = "$"): DagSnapshot {
+  return parseDagArtifact(value, at);
+}

@@ -82,7 +82,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("local://") || token.starts_with("asset://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("shared://🧮️solves-fem2d-1-benchmarks/") || token.starts_with("asset://") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

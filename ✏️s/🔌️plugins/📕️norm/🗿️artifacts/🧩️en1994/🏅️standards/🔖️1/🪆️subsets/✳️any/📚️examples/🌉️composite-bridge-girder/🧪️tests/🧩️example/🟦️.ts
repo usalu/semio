@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("composite-bridge-girder", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🌉️composite-bridge-girder/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

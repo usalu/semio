@@ -594,10 +594,8 @@ impl JsonValidationCursor {
         let bytes = text.as_bytes();
         let end = self.byte_cursor.saturating_add(JSON_INPUT_BYTES_PER_UNIT).min(bytes.len());
         while self.byte_cursor < end {
-            if !matches!(self.token, JsonToken::None) {
-                if self.advance_token(bytes)? {
-                    continue;
-                }
+            if !matches!(self.token, JsonToken::None) && self.advance_token(bytes)? {
+                continue;
             }
             let byte = bytes[self.byte_cursor];
             if byte.is_ascii_whitespace() {
@@ -719,10 +717,10 @@ enum RecordOwner {
 
 #[derive(Clone, Copy, Debug)]
 enum StringArraySource {
-    SpreadPageIds(usize),
-    PageLayerIds(usize),
-    ParentLayerIds(usize),
-    LayerObjectIds { owner: RecordOwner, layer: usize },
+    SpreadPage(usize),
+    PageLayer(usize),
+    ParentLayer(usize),
+    LayerObject { owner: RecordOwner, layer: usize },
 }
 
 #[derive(Clone, Debug)]
@@ -1031,10 +1029,10 @@ impl TypedJsonCursor {
             StringSource::PrintTarget => snapshot.print_target.as_deref().ok_or_else(missing)?,
             StringSource::DataFieldsJson => snapshot.data_fields_json.as_deref().ok_or_else(missing)?,
             StringSource::StringArrayElement { source, index } => match source {
-                StringArraySource::SpreadPageIds(owner) => snapshot.spreads.get(*owner).and_then(|value| value.page_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::PageLayerIds(owner) => snapshot.pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::ParentLayerIds(owner) => snapshot.parent_pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::LayerObjectIds { owner, layer } => Self::owner_page(snapshot, *owner)?.layers().get(*layer).and_then(|value| value.object_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
+                StringArraySource::SpreadPage(owner) => snapshot.spreads.get(*owner).and_then(|value| value.page_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
+                StringArraySource::PageLayer(owner) => snapshot.pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
+                StringArraySource::ParentLayer(owner) => snapshot.parent_pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
+                StringArraySource::LayerObject { owner, layer } => Self::owner_page(snapshot, *owner)?.layers().get(*layer).and_then(|value| value.object_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
             },
             StringSource::ParagraphId(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.id,
             StringSource::ParagraphName(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.name,
@@ -1111,7 +1109,7 @@ impl TypedJsonCursor {
         })
     }
 
-    fn escaped_string_step(value: &str, cursor: &mut JsonStringWriteCursor) -> Result<(Vec<u8>, bool), String> {
+    fn escaped_string_step(value: &str, cursor: &mut JsonStringWriteCursor) -> (Vec<u8>, bool) {
         let mut output = Vec::with_capacity(JSON_OUTPUT_BYTES_PER_UNIT);
         if !cursor.opened {
             output.push(b'"');
@@ -1147,7 +1145,7 @@ impl TypedJsonCursor {
             output.push(b'"');
             cursor.closed = true;
         }
-        Ok((output, cursor.closed))
+        (output, cursor.closed)
     }
 
     fn optional_string(present: bool, source: StringSource) -> TypedJsonNode {
@@ -1214,7 +1212,7 @@ impl TypedJsonCursor {
                 if value.len() > maximum {
                     return Err("layout-export-json-string-limit".into());
                 }
-                let (bytes, done) = Self::escaped_string_step(value, &mut cursor)?;
+                let (bytes, done) = Self::escaped_string_step(value, &mut cursor);
                 output = bytes;
                 if !done {
                     self.stack.push(TypedJsonNode::String { source, cursor });
@@ -1225,7 +1223,7 @@ impl TypedJsonCursor {
                 if value.len() > MAX_LAYOUT_EXPORT_STRING_BYTES {
                     return Err("layout-export-json-string-limit".into());
                 }
-                let (bytes, done) = Self::escaped_string_step(&value, &mut cursor)?;
+                let (bytes, done) = Self::escaped_string_step(&value, &mut cursor);
                 output = bytes;
                 if !done {
                     self.stack.push(TypedJsonNode::OwnedString { value, cursor });
@@ -1428,7 +1426,7 @@ impl TypedJsonCursor {
                     Self::static_node(b",\"height\":"),
                     Self::scalar(&value.height)?,
                     Self::static_node(b",\"layerIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::ParentLayerIds(index), index: 0, opened: false },
+                    TypedJsonNode::StringArray { source: StringArraySource::ParentLayer(index), index: 0, opened: false },
                     Self::static_node(b",\"layers\":"),
                     TypedJsonNode::Layers { owner: RecordOwner::Parent(index), index: 0, opened: false },
                     Self::static_node(b",\"frames\":"),
@@ -1442,7 +1440,7 @@ impl TypedJsonCursor {
                 Self::static_node(b",\"name\":"),
                 Self::string(StringSource::SpreadName(index)),
                 Self::static_node(b",\"pageIds\":"),
-                TypedJsonNode::StringArray { source: StringArraySource::SpreadPageIds(index), index: 0, opened: false },
+                TypedJsonNode::StringArray { source: StringArraySource::SpreadPage(index), index: 0, opened: false },
                 Self::static_node(b"}"),
             ]),
             TypedJsonNode::Page(index) => {
@@ -1467,7 +1465,7 @@ impl TypedJsonCursor {
                     Self::static_node(b",\"guides\":"),
                     TypedJsonNode::Guides { page: index, index: 0, opened: false },
                     Self::static_node(b",\"layerIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::PageLayerIds(index), index: 0, opened: false },
+                    TypedJsonNode::StringArray { source: StringArraySource::PageLayer(index), index: 0, opened: false },
                     Self::static_node(b",\"layers\":"),
                     TypedJsonNode::Layers { owner: RecordOwner::Page(index), index: 0, opened: false },
                     Self::static_node(b",\"frames\":"),
@@ -1479,10 +1477,10 @@ impl TypedJsonCursor {
             }
             TypedJsonNode::StringArray { source, index, opened } => {
                 let values = match source {
-                    StringArraySource::SpreadPageIds(owner) => &snapshot.spreads.get(owner).ok_or("layout-export-json-index")?.page_ids,
-                    StringArraySource::PageLayerIds(owner) => &snapshot.pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
-                    StringArraySource::ParentLayerIds(owner) => &snapshot.parent_pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
-                    StringArraySource::LayerObjectIds { owner, layer } => &Self::owner_page(snapshot, owner)?.layers().get(layer).ok_or("layout-export-json-index")?.object_ids,
+                    StringArraySource::SpreadPage(owner) => &snapshot.spreads.get(owner).ok_or("layout-export-json-index")?.page_ids,
+                    StringArraySource::PageLayer(owner) => &snapshot.pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
+                    StringArraySource::ParentLayer(owner) => &snapshot.parent_pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
+                    StringArraySource::LayerObject { owner, layer } => &Self::owner_page(snapshot, owner)?.layers().get(layer).ok_or("layout-export-json-index")?.object_ids,
                 };
                 if !opened {
                     self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::StringArray { source, index, opened: true }]);
@@ -1518,7 +1516,7 @@ impl TypedJsonCursor {
                     Self::static_node(b",\"locked\":"),
                     Self::scalar(&value.locked)?,
                     Self::static_node(b",\"objectIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::LayerObjectIds { owner, layer }, index: 0, opened: false },
+                    TypedJsonNode::StringArray { source: StringArraySource::LayerObject { owner, layer }, index: 0, opened: false },
                     Self::static_node(b"}"),
                 ]);
             }
@@ -2819,9 +2817,6 @@ impl LayoutExportJob {
         self
     }
 
-    fn close_pending(released_items: usize, released_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(PluginCloseStep::Pending { released_items, released_bytes })
-    }
 
     fn close_string(value: &mut String, maximum_bytes: usize) -> Option<usize> {
         if value.is_empty() {
@@ -2876,13 +2871,13 @@ impl LayoutExportJob {
     fn close_json_cursor(cursor: &mut Option<JsonValidationCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage) -> Result<PluginCloseStep, Fault> {
         if let Some(cursor) = cursor.as_mut() {
             if cursor.stack.pop().is_some() {
-                return Self::close_pending(1, 0);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             debug_assert!(cursor.stack.is_empty());
         }
         drop(cursor.take());
         *stage = next;
-        Self::close_pending(1, 0)
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
     fn close_typed_cursor(cursor: &mut Option<TypedJsonCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -2891,43 +2886,43 @@ impl LayoutExportJob {
                 let bytes = typed_json_node_owned_bytes(node);
                 if bytes > maximum_bytes {
                     let released = Self::close_typed_node_payload(cursor.stack.last_mut().expect("typed close node remains owned"), maximum_bytes);
-                    return Self::close_pending(usize::from(released != 0), released);
+                    return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
                 }
                 drop(cursor.stack.pop());
-                return Self::close_pending(1, bytes);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
             }
             debug_assert!(cursor.stack.is_empty());
         }
         drop(cursor.take());
         *stage = next;
-        Self::close_pending(1, 0)
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
     fn close_optional_string(value: &mut Option<String>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if let Some(value) = value.as_mut() {
             if let Some(released) = Self::close_string(value, maximum_bytes) {
-                return Self::close_pending(usize::from(released != 0), released);
+                return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
             }
             debug_assert!(value.is_empty());
         }
         drop(value.take());
         *stage = next;
-        Self::close_pending(1, 0)
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
     fn close_required_string(value: &mut String, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if let Some(released) = Self::close_string(value, maximum_bytes) {
-            return Self::close_pending(usize::from(released != 0), released);
+            return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
         }
         debug_assert!(value.is_empty());
         drop(std::mem::take(value));
         *stage = next;
-        Self::close_pending(1, 0)
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
     fn close_export_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if maximum_items == 0 {
-            return Self::close_pending(0, 0);
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         match self.close_stage {
             LayoutExportCloseStage::Publication => Err(Fault::from("layout-export-publication-close-not-dispatched")),
@@ -2936,73 +2931,73 @@ impl LayoutExportJob {
             LayoutExportCloseStage::PackageJson => Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Rects, &mut self.close_stage, maximum_bytes),
             LayoutExportCloseStage::Rects => {
                 if self.rects.pop().is_some() {
-                    return Self::close_pending(1, 0);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 debug_assert!(self.rects.is_empty());
                 drop(std::mem::take(&mut self.rects));
                 self.close_stage = LayoutExportCloseStage::Output;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::Output => match self.output.close_take_chunk(maximum_bytes) {
-                Some(Ok(bytes)) => Self::close_pending(1, bytes),
-                Some(Err(())) => Self::close_pending(0, 0),
+                Some(Ok(bytes)) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }),
+                Some(Err(())) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                 None => {
                     debug_assert!(self.output.chunks.is_empty());
                     drop(std::mem::take(&mut self.output.chunks));
                     self.close_stage = LayoutExportCloseStage::Encoded;
-                    Self::close_pending(1, 0)
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             LayoutExportCloseStage::Encoded => match self.encoded.close_take_chunk(maximum_bytes) {
-                Some(Ok(bytes)) => Self::close_pending(1, bytes),
-                Some(Err(())) => Self::close_pending(0, 0),
+                Some(Ok(bytes)) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }),
+                Some(Err(())) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                 None => {
                     debug_assert!(self.encoded.chunks.is_empty());
                     drop(std::mem::take(&mut self.encoded.chunks));
                     self.close_stage = LayoutExportCloseStage::Base64Tail;
-                    Self::close_pending(1, 0)
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             LayoutExportCloseStage::Base64Tail => {
                 if let Some(released) = Self::close_byte_buffer(&mut self.base64_tail, maximum_bytes) {
-                    return Self::close_pending(usize::from(released != 0), released);
+                    return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
                 }
                 debug_assert!(self.base64_tail.is_empty());
                 drop(std::mem::take(&mut self.base64_tail));
                 self.close_stage = LayoutExportCloseStage::PngRow;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::PngRow => {
                 if let Some(released) = Self::close_byte_buffer(&mut self.png_row, maximum_bytes) {
-                    return Self::close_pending(usize::from(released != 0), released);
+                    return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
                 }
                 debug_assert!(self.png_row.is_empty());
                 drop(std::mem::take(&mut self.png_row));
                 self.close_stage = LayoutExportCloseStage::PdfOffsets;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::PdfOffsets => {
                 if self.pdf_offsets.pop().is_some() {
-                    return Self::close_pending(1, 0);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 debug_assert!(self.pdf_offsets.is_empty());
                 drop(std::mem::take(&mut self.pdf_offsets));
                 self.close_stage = LayoutExportCloseStage::ZipEntries;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::ZipEntries => {
                 let bytes = self.zip.entries.last().map_or(0, |entry| entry.name.len());
                 if bytes > maximum_bytes {
                     let released = Self::close_string(&mut self.zip.entries.last_mut().expect("zip close entry remains owned").name, maximum_bytes).unwrap_or(0);
-                    return Self::close_pending(usize::from(released != 0), released);
+                    return Ok(PluginCloseStep::Pending { released_items: usize::from(released != 0), released_bytes: released });
                 }
                 if self.zip.entries.pop().is_some() {
-                    return Self::close_pending(1, bytes);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
                 }
                 debug_assert!(self.zip.entries.is_empty());
                 drop(std::mem::take(&mut self.zip.entries));
                 self.close_stage = LayoutExportCloseStage::ZipCurrentName;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::ZipCurrentName => Self::close_optional_string(&mut self.zip.current_name, LayoutExportCloseStage::PageAuthority, &mut self.close_stage, maximum_bytes),
             LayoutExportCloseStage::PageAuthority => Self::close_optional_string(&mut self.request.page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes),
@@ -3011,20 +3006,20 @@ impl LayoutExportJob {
             LayoutExportCloseStage::RevisionAuthority => Self::close_required_string(&mut self.request.canonical_base_revision_hex, LayoutExportCloseStage::OutputChunks, &mut self.close_stage, maximum_bytes),
             LayoutExportCloseStage::OutputChunks => {
                 if maximum_bytes < OUTPUT_CHUNK_BYTES {
-                    return Self::close_pending(0, 0);
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 match self.output_chunks.close_take_chunk()? {
-                    Some(chunk) => Self::close_pending(1, chunk.len()),
+                    Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
                     None => {
                         self.close_stage = LayoutExportCloseStage::MediaCredit;
-                        Self::close_pending(1, 0)
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                 }
             }
             LayoutExportCloseStage::MediaCredit => {
                 drop(self.media_output_credit.take());
                 self.close_stage = LayoutExportCloseStage::Snapshot;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::Snapshot => {
                 if let Some(lease) = self.snapshot_close.as_ref() {
@@ -3037,12 +3032,12 @@ impl LayoutExportJob {
                 let snapshot = std::mem::replace(&mut self.request.snapshot, self.snapshot_placeholder.take().expect("layout close owns pre-admitted snapshot placeholder"));
                 drop(snapshot);
                 self.close_stage = LayoutExportCloseStage::SnapshotOwner;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::SnapshotOwner => {
                 drop(self.snapshot_close.take());
                 self.close_stage = LayoutExportCloseStage::Complete;
-                Self::close_pending(1, 0)
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::Complete => Ok(PluginCloseStep::Complete),
         }

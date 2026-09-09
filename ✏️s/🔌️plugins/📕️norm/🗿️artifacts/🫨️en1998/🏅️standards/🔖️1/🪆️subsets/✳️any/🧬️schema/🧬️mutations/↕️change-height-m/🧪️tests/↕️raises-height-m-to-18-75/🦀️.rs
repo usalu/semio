@@ -11,11 +11,11 @@ use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
 use crate::En1998Snapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-height-m/↕️raises-height-m-to-18-75/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-height-m/↕️raises-height-m-to-18-75/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-height-m/↕️raises-height-m-to-18-75/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-height-m/↕️raises-height-m-to-18-75/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-height-m/↕️raises-height-m-to-18-75/🎯️outcome/🔣️.json");
 
 fn before() -> En1998Snapshot {
     serde_json::from_str(BEFORE).expect("change-height-m before-snapshot decodes")

@@ -1,9 +1,6 @@
-# 🧬️ DAG artifact schema.
+# 🧬️ DAG artifact with one composed graph-content identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type DagArtifact {
   schema: String! @state(class: ARTIFACT)
-  nodes: [DagNodeSpec!]! @state(class: ARTIFACT)
-  edges: [DagFixtureEdge!]! @state(class: ARTIFACT)
+  content: ArtifactChild! @state(class: ARTIFACT)
 }
-type DagNodeSpec { id: String! }
-type DagFixtureEdge { id: String! source: String! target: String! }
-type DagCamera { x: Float! y: Float! zoom: Float! }

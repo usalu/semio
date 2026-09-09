@@ -15,11 +15,11 @@
 use super::super::sign_in::{Identity, IdentitySetting};
 use super::super::IdentityConfigMutation;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/🎯️outcome/🔣️.json");
 
 fn before() -> IdentitySetting {
     serde_json::from_str(BEFORE).expect("before identity setting decodes")

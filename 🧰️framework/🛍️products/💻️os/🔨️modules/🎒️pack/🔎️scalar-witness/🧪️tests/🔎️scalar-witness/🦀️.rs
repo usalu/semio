@@ -56,7 +56,7 @@ impl Drop for Root {
     }
 }
 fn fixture() -> Fixture {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture.version, 1);
     assert!(fixture.terminal_empty);
     fixture

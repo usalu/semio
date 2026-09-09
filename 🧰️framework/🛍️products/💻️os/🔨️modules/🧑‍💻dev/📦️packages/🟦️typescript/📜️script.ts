@@ -5,7 +5,7 @@ import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt,
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/📦️packages/🦀️rust/📜️script.ts";
-import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧫️fixtures/⚖️scale/🟦️.ts";
+import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧪️testkit/⚖️scale/🟦️.ts";
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";

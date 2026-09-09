@@ -1,6 +1,28 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "dag-demo-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts dag-demo-ownership" }
+    },
+    "note-document-contract-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts note-document-contract native" }
+    },
+    "note-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts note-document-contract" }
+    },
+    "norm-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts norm-document-contract"
+      }
+    },
     "reset-document-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -167,6 +189,20 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts jack-query-ownership"
+      }
+    },
+    "jack-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-document-contract"
+      }
+    },
+    "dag-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts dag-document-contract"
       }
     },
     "host-ownership-native-test": {

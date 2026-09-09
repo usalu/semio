@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏜️delete-humidistat/✅️drops-the-control/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏜️delete-humidistat/✅️drops-the-control/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏜️delete-humidistat/✅️drops-the-control/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏜️delete-humidistat/✅️drops-the-control/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏜️delete-humidistat/✅️drops-the-control/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -34,7 +34,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "delete-humidistat", directory: "🏜️delete-humidistat/🧪️tests/✅️drops-the-control", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case { kind: "delete-humidistat", directory: "🏜️delete-humidistat/✅️drops-the-control", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,5 @@
+{
+  "artifact": "binary",
+  "identity": "s.stdio.binary",
+  "maximumInlineBytes": 128
+}

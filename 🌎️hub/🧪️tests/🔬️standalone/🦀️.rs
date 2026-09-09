@@ -73,7 +73,7 @@ async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketG
 
 #[test]
 fn document_scope_key_v1_is_length_prefixed_and_never_colon_ambiguous() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📦️packages/🦀️rust/🧪️fixtures/🚧️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
     let vectors = fixture["documentScopeKeyV1"].as_array().expect("scope key vectors");
     let mut encoded = std::collections::HashSet::new();
     for vector in vectors {

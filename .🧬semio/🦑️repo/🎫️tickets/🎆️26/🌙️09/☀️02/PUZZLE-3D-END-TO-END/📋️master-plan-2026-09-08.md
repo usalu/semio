@@ -260,3 +260,73 @@ Coordinator decisions:
   Remaining: every action fails `missing field locale` — the dispatch `ViewModel` lacked
   `locale`/`terminology` (refresh path injected them, dispatch path did not) → injected at the main
   dispatch site.
+
+## Runtime findings 07:40-08:00 (release guest built 07:20-07:27, React, `📓️2026-09-09-runtime-verification.md`)
+
+- Boot example is Concrete Forest; both windows render; catalogue/outliner/inspection panels fill.
+- **Every plugin action turn spins in `more-work`**: with the plugin handle hooked from t=1 s, the first
+  call `readLocalInteraction` (t=7.0 s) fails after 23 s with "did not publish its requested UI surfaces
+  within 4096 continuations (effects=0, status=more-work)", `refreshUi` (t=7.1 s) succeeds in 18 s,
+  `handleAction setActiveExample` fails the same way, and every later `handleAction` (window resize,
+  pick, example switch, setActiveTool) never resolves. Host-side toggles (utilities bar, tool tab,
+  brush pressed) only look alive because they are shell state. Instrumented the reactor turn
+  (`⚛️reactor/🔄️turn/🦀️.rs` `[DEBUG] reactor more-work streak=… typed_operation=… reconcile=…`) and
+  triggered a release rebuild (07:59, `heal-then-rebuild.sh`) to name the hot source.
+- **Sections never reach the React shell** (measures/tools/engagements) → wave W-M launched 07:48
+  (`📓️2026-09-09-wave-M-retained-sections.md`).
+- **TS typed-operation lane cap was stale**: `typedOperationResult` rejected `lane > 11` while the Rust
+  host emits Interaction 12 (W-S), WindowTransient 13 and WindowConfig 14 (ownership peer, uncommitted) →
+  `TYPED_OPERATION_RESULT_LANE_MAX = 14` in `🔌️PluginRuntime/🟦️.tsx`.
+- **Applied-edit ledger ceiling** (`ARTIFACT_HISTORY_LEDGER_CAPACITY = 64`, `push_applied` refuses at 64,
+  one edit per mutation): fill > 64 placements and a Nakagin load fault at edit 65. Audit
+  `📓️2026-09-09-applied-ledger-ceiling-audit.md` launched 07:48 (Sonnet) to choose between one Edit per
+  Emit, compaction, or capacity. Note the hostile static law
+  `set_active_example_hostile_static_law_rejects_whole_document_reset` forbids a single-step whole-document
+  reset in the work loop — the fix must keep the cursorized work and batch the *edit*, not the steps.
+- Peer breakage healed by me: `✏️editor/🦀️.rs:2975` kind-weight `step` parameter had been renamed
+  `_config` while the body reads `config` (4 × E0425 since 07:28) → renamed back.
+- 08:20 W-M done (`📓️2026-09-09-wave-M-retained-sections.md`): `engagements`/`measures`/`tools` are
+  retained surfaces `${instance}:framework.section.*` carrying canonical JSON in ≤512-byte text leaves;
+  measured 523 B / 10 462 B / 2 596 B for puzzle 3d. PluginRuntime vitest 74/74 after re-pinning the
+  typed-operation authority test to lane 15 and the yield test to the production `yieldPluginUiContinuation`
+  seam. Rebuild #3 (`heal-then-rebuild-2.txt`) queued behind the 3d crate compile (W-B edits the store).
+- Launched 08:05 W-B (`📓️2026-09-09-wave-B-batched-edit-publication.md`, one Edit per Emit) and W-P2
+  (`📓️2026-09-09-wave-P2-precompute-step-budget.md`, step slicing + the 30 red precompute tests).
+- 08:55 measured root cause of the more-work spin (`📓️2026-09-09-runtime-verification.md` §08:55): on wasm
+  the process pool executed 3 interactive job steps in 4096 reactor turns because it is pumped only by the
+  cooperative-maintenance cadence. Fix in `🔌️plugin/🦀️.rs` (`drive_typed_operation_worker`) and
+  `⚛️reactor/🔄️turn/🦀️.rs` (`pump_process_worker_pool`); rebuild #4 running (`heal-then-rebuild-3.txt`).
+- 09:03 W-P2 done (`📓️2026-09-09-wave-P2-precompute-step-budget.md`): precompute 104/28 → 132/0; the fill
+  planner had never run (worker-pool pump ≈4000 idle turns per step → caller-side `BatchJobSession`);
+  fill projection/replan/close-census fixes; scene sync 39.4 ms → 0.18 ms. Still over 8 ms:
+  `openVortexSuggestions` 10.2 ms, `fillBuildTick` publish turn 17.6 ms — four whole-document `Value`
+  conversions in `handle_action_impl`'s prologue → wave W-P3 after W-B lands (shared command spine).
+- 09:10 W-B done (`📓️2026-09-09-wave-B-batched-edit-publication.md`): one machine — `begin_apply_batch`
+  replaces the one-item lane everywhere; 200 mutations → 1 ledger slot / 1 undo step proven;
+  `nakagin_example_loads_via_operations` and the setActiveExample swap test green; norm apps' LIFO
+  `reverse()` compensation deleted (norm test to run). Deviation accepted: app factories keep the
+  per-item trait, the store chains N preparations (≈7 turns/mutation) — faster `Vec<Input>` shape is a
+  follow-up.
+- 09:05 rebuild #4 (worker pump): the 4096-continuation spin is gone (actions settle in ~1 s) but the
+  boot actions now end in `typed-operation cancelled before its next publication unit` (a real job fault
+  hidden by the lease cancellation) → fault-body retention added (`terminal_fault` on the mounted
+  operation, `ArtifactBoundedToolFault::from_payload`); the served wasm then carried W-B's half state
+  (`plugin.internal` traps). Rebuild #5 (`heal-then-rebuild-4.txt`) from the consistent tree.
+- 09:15 `cargo test -p semio-s-plugin-norm --lib`: 16/16 ok (the `set_snapshot_dispatches_through_the_tool_job_path`
+  name W-B cited does not exist in that lib — 0 matched; the norm artifact crates were not run).
+  Launched W-P3 (`📓️2026-09-09-wave-P3-command-prologue.md`, prologue split for the 8 ms law) and W-T
+  (`📓️2026-09-09-wave-T-typed-operation-fault-routing.md`, route lane-11 pages to the owning call).
+- 09:25 W-T done (`📓️2026-09-09-wave-T-typed-operation-fault-routing.md`): lane-11 pages are routed by
+  the wire's `sequence == 0` first reveal to the owning host call; foreign faults are parked (32) or
+  surfaced once as `interactive-job.unattributed-result-fault`; vitest 76/76.
+- 09:20 rebuild #5: actions settle in ~1 s; the boot actions then trap the actor with
+  `plugin.internal.interactive-ceiling` — the cooperative-maintenance clock measured one
+  `maintenance_step` at 10.2 ms (ceiling 8 ms) and killed instance 1. Added the per-stage
+  `[DEBUG] maintenance stage=… elapsed_us=…` trace; rebuild #6 (`heal-then-rebuild-5.txt`) running.
+- 09:40 rebuild #6: offender of the instance-fatal ceiling is `drive_store_replacement_jobs` (stage 14,
+  8.4 ms/unit on release wasm) → W-R2 launched (`📓️2026-09-09-wave-R2-store-replacement-step-budget.md`).
+- 09:50 W-P3 done (`📓️2026-09-09-wave-P3-command-prologue.md`): `Puzzle3dActionPrologue` (scene / sync /
+  dispatch halves), typed scene build, mesh index; `openVortexSuggestions` 17.5 → 1.07 ms/turn,
+  `fillBuildTick` 17.0 → 1.03 ms, `setActiveExample` 0.36 ms; precompute 132/132; component 89/44 (was
+  58 failed isolated). Open: `Puzzle3dPlaySnapshot::new` default-document on null meta (§6.3),
+  `worldRelocate` whole sync per dispatch (§6.6).

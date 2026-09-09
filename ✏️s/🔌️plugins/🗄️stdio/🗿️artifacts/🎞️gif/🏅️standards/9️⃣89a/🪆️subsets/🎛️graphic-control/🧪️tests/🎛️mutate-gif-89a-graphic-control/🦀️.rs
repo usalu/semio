@@ -41,7 +41,7 @@ const KINDS: [&str; 21] = [
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "asset://📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif";
+const INPUT: &str = "asset://💃️dancing/🧪️dancing/🖼️.gif";
 
 /// 🧫️ Copies the immutable real-world asset into the work directory and returns the mutable copy's
 /// bytes. The committed asset itself is never written to.

@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::RasterSnapshot;
 
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL.
-pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {

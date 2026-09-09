@@ -1,15 +1,10 @@
-# 🧬️ En1990 artifact schema — every field with its state class.
-
+# 🪪️ En1990Artifact uses the canonical Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type En1990Artifact {
   gK: Float! @state(class: ARTIFACT)
-  qK: [qKItem!]! @state(class: ARTIFACT)
+  qK: ArtifactChild! @state(class: ARTIFACT)
   resistanceKn: Float! @state(class: ARTIFACT)
   consequenceClass: Int! @state(class: ARTIFACT)
   annex: String! @state(class: ARTIFACT)
   seismicAEdKn: Float! @state(class: ARTIFACT)
-}
-
-type En1990QkEntry {
-  category: String!
-  value: Float!
 }

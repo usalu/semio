@@ -600,6 +600,7 @@ fn remodeling_retained_extent(command: &RemodelingCommand, snapshot: &Remodeling
     (items <= REMODELING_RETAINED_WORK_ITEMS).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn remodeling_retained_reduce(
     command: &RemodelingCommand,
     snapshot: &RemodelingSnapshot,

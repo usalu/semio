@@ -54,8 +54,8 @@ pub fn contribute(base: &JpgSnapshot, key: JpgHuffmanTableKey) -> JpgDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior-981c06/🦠️mutation/🔣️.json")).expect("committed remove-huffman-table payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🪓️remove-huffman-table/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-huffman-table payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior-981c06/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

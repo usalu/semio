@@ -18,8 +18,6 @@ pub struct WiresDiff {
     #[state(artifact)]
     pub content: Option<crate::WiresContentChild>,
     #[state(artifact)]
-    pub camera: Option<DslValue>,
-    #[state(artifact)]
     pub meta: Option<DslValue>,
 }
 //#endregion 🔖️Diff

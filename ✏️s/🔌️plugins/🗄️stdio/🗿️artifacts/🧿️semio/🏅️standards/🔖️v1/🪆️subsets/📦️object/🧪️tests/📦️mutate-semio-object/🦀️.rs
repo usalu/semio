@@ -38,10 +38,10 @@ const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create
 /// populated, the only committed document that exercises the `ArtifactChild` codec three slots at a
 /// time rather than one at a time.
 #[cfg(feature = "sut")]
-const CRATE_DSL: &str = "asset://📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio";
+const CRATE_DSL: &str = "asset://📦️crate/🗣️.dsl.semio";
 /// 🎒️ The same object in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const CRATE_PACK: &str = "asset://📚️examples/📦️crate/🖼️assets/🎒️.pack.semio";
+const CRATE_PACK: &str = "asset://📦️crate/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("high-strength-connection", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🔩️high-strength-connection/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

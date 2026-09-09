@@ -236,7 +236,7 @@ fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
         SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
         SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => format!("set-shape-frame slide-index={slide_index} shape-index={shape_index} frame={}", enc_frame(frame)),
         SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => {
-            format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block))
+            format!("set-text-box-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block))
         }
         SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => format!("insert-master master={}", enc_master(master)),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => format!("remove-master id={}", enc_str(id)),
@@ -261,7 +261,7 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
         "insert-shape" => Ok(SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? })),
         "remove-shape" => Ok(SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? })),
         "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? })),
-        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? })),
+        "set-text-box-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? })),
         "insert-master" => Ok(SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: dec_master(arg("master")?)? })),
         "remove-master" => Ok(SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: dec_str(arg("id")?)? })),
         "insert-layout" => Ok(SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: dec_layout(arg("layout")?)? })),
@@ -292,7 +292,7 @@ const OP_KEYWORDS: [&str; 14] = [
     "insert-shape",
     "remove-shape",
     "set-shape-frame",
-    "set-textbox-blocks",
+    "set-text-box-blocks",
     "insert-master",
     "remove-master",
     "insert-layout",
@@ -408,6 +408,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔬️t074/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs"]
 mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
 //#endregion 🧪️FixtureCases

@@ -12,8 +12,9 @@ pub struct SetCameraZoom {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    let mut camera = cfg.snapshot.camera.clone();
-    camera.zoom = payload.value;
-    Ok(Emit::config(vec![NoteConfigMutation::SetCamera(crate::editor::note::config::SetCamera { camera })]))
+pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    let view = ctx.view_state.as_ref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+    let mut config = crate::editor::note::window::config_from_view(cfg);
+    config.camera.zoom = payload.value;
+    Ok(Emit { window_config_mutations: vec![crate::editor::note::window::addressed_config(view, config)?], ..Default::default() })
 }

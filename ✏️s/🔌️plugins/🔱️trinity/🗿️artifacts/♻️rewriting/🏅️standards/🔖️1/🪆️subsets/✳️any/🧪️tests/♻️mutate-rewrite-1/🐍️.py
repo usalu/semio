@@ -205,7 +205,7 @@ def uri_in(ctx, needle):
     """🧫️ The one declared fixture URI of this scenario's steps containing `needle`."""
     for step in ctx.scenario["steps"]:
         for token in step["text"].split():
-            if token.startswith(("asset://", "local://", "shared://")) and needle in token:
+            if token.startswith(("asset://", "shared://♻️mutate-rewrite-1/", "shared://")) and needle in token:
                 return token
     raise AssertionError("scenario %s declares no fixture URI containing %r" % (ctx.scenario["id"], needle))
 
@@ -228,7 +228,7 @@ def mutate_handler(kind):
     """🎯️ Applies one kind to the real derived Nakagin ground-floor rule."""
 
     def handler(ctx):
-        document = document_of(json_fixture(ctx, "local://🔣️.snapshot.json"))
+        document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
         mutation = json.loads(doc_string(ctx))
         if kind_of(mutation) != kind:
             raise AssertionError("mutate-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
@@ -248,7 +248,7 @@ def inverse_handler(kind):
     """
 
     def handler(ctx):
-        document = document_of(json_fixture(ctx, "local://🔣️.snapshot.json"))
+        document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
         mutation = json.loads(doc_string(ctx))
         if kind_of(mutation) != kind:
             raise AssertionError("inverse-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
@@ -293,7 +293,7 @@ def identity_handler(ctx):
     small = json.loads(ground_floor["beforeFixtureJson"])
     if small.get("name") != "Nakagin Capsule Tower — Ground Floor" or len(small["nodes"]) != 2 or len(small["edges"]) != 1:
         raise AssertionError("identity-round-trip: the committed ground-floor rule rewrites a two-node graph, found %r" % small.get("name"))
-    document = document_of(json_fixture(ctx, "local://🔣️.snapshot.json"))
+    document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
     fixture = json.loads(document["beforeFixtureJson"])
     ports = sum(len(node["ports"]) for node in fixture["nodes"])
     if fixture.get("name") != "Nakagin Capsule Tower" or len(fixture["nodes"]) != 180 or ports != 364 or len(fixture["edges"]) != 179:

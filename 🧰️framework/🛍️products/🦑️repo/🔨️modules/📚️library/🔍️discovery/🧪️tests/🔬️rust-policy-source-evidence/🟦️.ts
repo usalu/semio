@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { interactivityProductionSource, policyMutateRustSourceEvidence, policyReadRustPolicySource, policyReadRustSourceEvidence } from "../../../../../../../../📜️script.ts";
-import vector from "./🔣️.json";
+import vector from "../../🧫️fixtures/🔬️rust-policy-source-evidence/🔣️.json";
 
 const root = mkdtempSync(join(tmpdir(), "semio-rust-policy-evidence-"));
 for (const [path, source] of [[vector.productionPath, vector.production], [vector.testPath, vector.test]] as const) {

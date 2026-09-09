@@ -31,7 +31,7 @@ Nothing here imports, links, wraps or transliterates the Rust subject. Every fun
 against the documents above; where the two implementations disagree the disagreement is a finding,
 not something to tune away.
 
-🧫️ **Provenance of the complex artifact.** `local://📝️nakagin-capsule-tower.dsl.semio` and its binary
+🧫️ **Provenance of the complex artifact.** `shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio` and its binary
 twin were derived ONCE, by `🐍️derive-flow-fixture.py` in this ticket's folder, from the real
 committed IFC 4 model `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️nakagin-capsule-tower.ifc`
 — Kisho Kurokawa's Nakagin Capsule Tower, 2.5 MB and 24 792 entities — read with **IfcOpenShell
@@ -550,10 +550,10 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 
 # region 🔖️Scenario input
-PIPELINE_DSL = "asset://📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio"
-PIPELINE_PACK = "asset://📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio"
-TOWER_DSL = "local://📝️nakagin-capsule-tower.dsl.semio"
-TOWER_PACK = "local://📦️nakagin-capsule-tower.pack.semio"
+PIPELINE_DSL = "asset://🌊️pipeline/🗣️.dsl.semio"
+PIPELINE_PACK = "asset://🌊️pipeline/🎒️.pack.semio"
+TOWER_DSL = "shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio"
+TOWER_PACK = "shared://🌊️mutate-semio-flow/📦️nakagin-capsule-tower.pack.semio"
 
 
 def doc_string(ctx: Context) -> str:

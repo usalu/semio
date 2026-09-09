@@ -499,7 +499,7 @@
       ],
       "properties": {
         "capacitySource": {
-          "const": "../../💾️resident/🪪️metadata/🧪️fixture/🔣️.json#/compositionCapacity"
+          "const": "../../💾️resident/🪪️metadata/🧫️fixtures/🔣️.json#/compositionCapacity"
         },
         "capacitySchema": {
           "const": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"

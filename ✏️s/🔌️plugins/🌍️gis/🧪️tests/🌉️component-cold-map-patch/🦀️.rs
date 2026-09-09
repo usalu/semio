@@ -24,7 +24,7 @@ const COMMAND_SEQUENCE: u64 = 11;
 const SURFACE: &str = "1:gis2d-main";
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("🔣️.json")).expect("schema-owned GIS component fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🌉️component-cold-map-patch/🔣️.json")).expect("schema-owned GIS component fixture")
 }
 
 fn budget() -> Budget {

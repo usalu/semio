@@ -31,17 +31,11 @@ async fn node_graph_viewport_writes_config_not_mutations() {
     let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("equation-graph-test".into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance {
-            id: "equation-graph-test".into(),
-            window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into(),
-        }],
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "equation-graph-test".into(), window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into() }],
         ..Default::default()
     };
     let result = app
-        .dispatch_typed(
-            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }),
-            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") },
-        )
+        .dispatch_typed(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") })
         .await
         .expect("viewport");
     assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");

@@ -11,6 +11,9 @@ import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialo
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { runArtifactCreationReadyOpeningV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { BrowserBrokerPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts";
+import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
   createContext,
@@ -135,7 +138,6 @@ import {
 import {
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
-  type BrowserBrokerPortRequestV1,
   type BrowserBrokerPortResponseV1,
   type BrowserActorUiMountedV1,
   artifactFrontierIsEditedForV1,
@@ -153,8 +155,7 @@ import {
   encodeMutationEnvelopesPack,
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
-  parseBrowserBrokerPortResponseV1,
-  parseDirectorySessionAuthorityJsonV1,
+  type DirectorySessionAuthorityV1,
   type PersistenceBinding,
   DirectoryHttpError,
   type DirectoryAdministrationPhaseV1,
@@ -195,54 +196,6 @@ let localBrowserBrokerProof = (() => {
   return match[1];
 })();
 
-class LocalBrowserBrokerPort {
-  private readonly pending = new Map<string, { resolve(value: { status: number; body: string }): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout>; signal?: AbortSignal; abort?: () => void }>();
-
-  constructor(private readonly port: MessagePort) {
-    port.onmessage = (event: MessageEvent<unknown>) => {
-      const message = parseBrowserBrokerPortResponseV1(event.data);
-      if (!message || message.kind !== "response") return;
-      const pending = this.pending.get(message.requestId);
-      if (!pending) return;
-      clearTimeout(pending.timer);
-      if (pending.signal && pending.abort) pending.signal.removeEventListener("abort", pending.abort);
-      this.pending.delete(message.requestId);
-      pending.resolve({ status: message.status, body: message.body });
-    };
-    port.start();
-  }
-
-  me(signal?: AbortSignal): Promise<{ status: number; body: string }> {
-    if (signal?.aborted) return Promise.reject(signal.reason ?? new Error("browser broker cancelled"));
-    if (this.pending.size >= 64) return Promise.reject(new Error("browser broker capacity exceeded"));
-    const requestId = crypto.randomUUID();
-    return new Promise((resolve, reject) => {
-      const abort = (): void => {
-        const message: BrowserBrokerPortRequestV1 = { kind: "cancel", requestId };
-        this.port.postMessage(message);
-        const pending = this.pending.get(requestId);
-        if (!pending) return;
-        clearTimeout(pending.timer);
-        this.pending.delete(requestId);
-        reject(new Error("browser broker cancelled"));
-      };
-      const timer = setTimeout(abort, 2_000);
-      this.pending.set(requestId, { resolve, reject, timer, signal, abort });
-      signal?.addEventListener("abort", abort, { once: true });
-      const message: BrowserBrokerPortRequestV1 = { kind: "request", requestId, operation: "me" };
-      this.port.postMessage(message);
-    });
-  }
-
-  close(): void {
-    for (const [requestId, pending] of this.pending) {
-      clearTimeout(pending.timer);
-      pending.reject(new Error("browser broker closed"));
-      this.pending.delete(requestId);
-    }
-    this.port.close();
-  }
-}
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
  * identity facet's documentId/schema + fold. `@semio-tech/framework-os` never had a live consumer of
  * its former `./backbone-worker` subpath export (the taxonomy-purity sweep removed the unused
@@ -1302,7 +1255,7 @@ export function spaceArtifactCreationRequestFromAction(
       || capturedCatalog.runtimeKey !== currentCatalog.runtimeKey || capturedCatalog.clientInstanceId !== currentCatalog.clientInstanceId
       || capturedCatalog.spaceId !== spaceId || currentCatalog.spaceId !== spaceId || capturedCatalog.catalogGenerationId !== currentCatalog.catalogGenerationId
       || !capturedCatalog.kindChoices.includes(encoded) || !currentCatalog.kindChoices.includes(encoded)) return null;
-    return { kind: "space-artifact-create", requestId, spaceId, kindId: choice.kindId, name: args.name };
+    return { kind: "space-artifact-create", requestId, spaceId, expectedCatalogGenerationId: capturedCatalog.catalogGenerationId, kindId: choice.kindId, name: args.name };
   } catch {
     return null;
   }
@@ -1318,7 +1271,7 @@ export function spaceArtifactCreationOwnerAcceptsStatus(
   owner: SpaceArtifactCreationOwnerV1,
   message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
 ): boolean {
-  if (owner.requestId !== message.requestId || owner.spaceId !== message.spaceId || (message.ready !== undefined && message.ready.kindId !== owner.kindId)) return false;
+  if (owner.requestId !== message.requestId || owner.spaceId !== message.spaceId || owner.expectedCatalogGenerationId !== message.catalogGenerationId || (message.ready !== undefined && message.ready.kindId !== owner.kindId)) return false;
   if (owner.ready === null) return true;
   const retained = owner.ready.ready;
   return message.phase === "ready" && retained !== undefined && message.ready !== undefined
@@ -1868,11 +1821,14 @@ function FrameworkOsShellInner({
   /** 🪪️ True once a hub env is configured but the hub could not be reached (§C3 "keep the last
    * persisted identity, show an offline chip... never blocks the UI thread"). */
   const [identityOffline, setIdentityOffline] = useState(false);
+  const [verifiedSessionAuthority, setVerifiedSessionAuthority] = useState<DirectorySessionAuthorityV1 | null>(null);
+  const verifiedSessionAuthorityRef = useRef<DirectorySessionAuthorityV1 | null>(null);
+  const sessionRefreshRef = useRef<DirectorySessionRefreshV1 | null>(null);
   /** 🪪️ REST-only client for the identity boot handshake (`me`/`mintSession`) — distinct from the
    * directory-lane's persistent `/directory/socket/v1` subscription, which the shell never opens itself (§C6:
    * `🧵️backbone-worker.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
    * hub base url or token actually changes. */
-  const localBrowserBrokerRef = useRef<LocalBrowserBrokerPort | null>(null);
+  const localBrowserBrokerRef = useRef<BrowserBrokerPortClientV1 | null>(null);
   const hubEnv = useMemo(() => {
     const hubBaseUrl = readViteSEnv("VITE_S_HUB_URL");
     const dataDir = readViteSEnv("VITE_S_DATA_DIR");
@@ -2019,8 +1975,10 @@ function FrameworkOsShellInner({
   const inferencePortEpochRef = useRef(0);
   /** 🗂️ Exact scope and runtime owner for the current inference epoch. */
   const inferencePortOwnerRef = useRef<InferencePortOwnerV1 | null>(null);
+  const inferencePortAuthorityRef = useRef<DirectorySessionAuthorityV1 | null>(null);
+  const retiredSessionDocumentOwnersRef = useRef(new WeakSet<object>());
   const inferencePortOpeningRef = useRef<{ readonly owner: InferencePortOwnerV1; readonly clientInstanceId: string; readonly sessionInstanceId: number; readonly mailbox: InferencePortOpeningMailboxV1 } | null>(null);
-  type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: GisMapApprovalHistoryStatusV1; order: number }>;
+  type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: GisMapApprovalHistoryStatusV1; order: number; authority: DirectorySessionAuthorityV1 }>;
   const [inferenceHistoryByRuntimeKey, setInferenceHistoryByRuntimeKey] = useState<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   const inferenceHistoryByRuntimeKeyRef = useRef<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   inferenceHistoryByRuntimeKeyRef.current = inferenceHistoryByRuntimeKey;
@@ -2029,6 +1987,7 @@ function FrameworkOsShellInner({
    * timeout that resolves it to `null` when no such file exists (never blocks the UI thread). */
   const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
   const identityClientInstanceIdRef = useRef<string | null>(null);
+  const identityBootstrapAbortRef = useRef<AbortController | null>(null);
   const presenceConnectedAtMsRef = useRef(Date.now());
   const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
   /** 🐚️ terra-web-shellhost (finding 5) — per-document `latestWins` triggers for the presence-beat
@@ -2203,12 +2162,8 @@ function FrameworkOsShellInner({
     const worker = new Worker(new URL("../../../../../🧵️backbone-worker.ts", import.meta.url), { type: "module" });
     const brokerChannel = new MessageChannel();
     worker.postMessage({ kind: "semio-browser-broker-port", port: brokerChannel.port2 }, [brokerChannel.port2]);
-    localBrowserBrokerRef.current = new LocalBrowserBrokerPort(brokerChannel.port1);
-    if (localBrowserBrokerProof) {
-      const message: BrowserBrokerPortRequestV1 = { kind: "initialize", proof: localBrowserBrokerProof };
-      brokerChannel.port1.postMessage(message);
-      localBrowserBrokerProof = undefined;
-    }
+    localBrowserBrokerRef.current = new BrowserBrokerPortClientV1(brokerChannel.port1, localBrowserBrokerProof);
+    localBrowserBrokerProof = undefined;
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind === "browser-actor-action-result") {
@@ -2283,10 +2238,12 @@ function FrameworkOsShellInner({
         const owner = inferencePortOwnerRef.current;
         if (owner === null || owner.operationEpoch !== message.operationEpoch || owner.scope.spaceId !== message.scope.spaceId || owner.scope.documentId !== message.scope.documentId) return;
         inferencePortOwnerRef.current = null;
+        inferencePortAuthorityRef.current = null;
         dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey: owner.runtimeKey });
         return;
       }
       if (message.kind === "inference-port-status") {
+        if (!directorySessionAuthorityIsCurrentV1(inferencePortAuthorityRef.current, verifiedSessionAuthorityRef.current)) return;
         const runtimeKey = inferencePortStatusRuntimeKeyV1(inferencePortOwnerRef.current, inferencePortEpochRef.current, message);
         if (runtimeKey === null) return;
         dispatch({ type: "SET_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey, status: message.status });
@@ -2295,12 +2252,14 @@ function FrameworkOsShellInner({
       if (message.kind === "inference-history-status") {
         const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
-        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId) return;
+        const authority = verifiedSessionAuthorityRef.current;
+        if (authority === null || !directorySessionAuthorityIsCurrentV1(authority, authority) || entry === undefined || retiredSessionDocumentOwnersRef.current.has(entry) || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId) return;
         setInferenceHistoryByRuntimeKey((current) => {
+          if (!directorySessionAuthorityIsCurrentV1(authority, verifiedSessionAuthorityRef.current) || retiredSessionDocumentOwnersRef.current.has(entry)) return current;
           const previous = current[runtimeKey];
           if (previous !== undefined && (message.historyEpoch < previous.historyEpoch || previous.clientInstanceId !== message.clientInstanceId)) return current;
           const order = previous?.historyEpoch === message.historyEpoch ? previous.order : ++historyOrderRef.current;
-          return { ...current, [runtimeKey]: { historyEpoch: message.historyEpoch, clientInstanceId: message.clientInstanceId, scope: message.scope, sessionInstanceId: entry.session.instanceId, status: message.status, order } };
+          return { ...current, [runtimeKey]: { historyEpoch: message.historyEpoch, clientInstanceId: message.clientInstanceId, scope: message.scope, sessionInstanceId: entry.session.instanceId, status: message.status, order, authority } };
         });
         return;
       }
@@ -2499,12 +2458,13 @@ function FrameworkOsShellInner({
         if (identityEvent.kind === "snapshotReplaced") {
           const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(identityEvent.pack)));
           if (decoded !== undefined) {
-            setIdentity(decoded);
+            if (verifiedSessionAuthorityRef.current === null) setIdentity(decoded);
             identitySnapshotResolverRef.current?.(decoded);
             identitySnapshotResolverRef.current = null;
           }
         } else if (identityEvent.kind === "remoteMutations") {
-          setIdentity((current) => foldIdentityEvent(current, identityEvent, decodeIdentityPayload));
+          if (verifiedSessionAuthorityRef.current === null) setIdentity((current) => foldIdentityEvent(current, identityEvent, decodeIdentityPayload));
+          void sessionRefreshRef.current?.refresh();
         }
         return;
       }
@@ -2644,7 +2604,7 @@ function FrameworkOsShellInner({
     if (worker) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-administration-close", operationEpoch }) });
     spaceAdministrationEpochRef.current = operationEpoch + 1;
     setSpaceAdministration(null);
-  }, [identity]);
+  }, [identity, verifiedSessionAuthority?.authorizationGeneration, verifiedSessionAuthority?.sessionBindingSha256]);
 
   /** 💡️ Relays one operator intent to the worker-owned port. Nothing is applied locally: `cancel`
    * and `approve` only ask, and the phase moves solely on the worker's own next status. `close`
@@ -2654,6 +2614,7 @@ function FrameworkOsShellInner({
     const operationEpoch = inferencePortEpochRef.current;
     const owner = inferencePortOwnerRef.current;
     if (!worker || owner === null || owner.runtimeKey !== runtimeKey || owner.operationEpoch !== operationEpoch) return;
+    if (action.kind !== "close" && !directorySessionAuthorityIsCurrentV1(inferencePortAuthorityRef.current, verifiedSessionAuthorityRef.current)) return;
     if (action.kind === "propose") {
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
       return;
@@ -2669,17 +2630,23 @@ function FrameworkOsShellInner({
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
   }, []);
 
-  /** 💡️ An identity change clears presentation while worker-private cleanup retains uncertain work. */
-  useEffect(() => () => {
+  /** 🧯️ Retires session-owned presentation immediately while the worker retains uncertain jobs. */
+  const retireAuthenticatedInferencePresentation = useCallback(() => {
     inferencePortOpeningRef.current?.mailbox.close("inference-opening: identity retired");
+    inferencePortOpeningRef.current = null;
     const worker = backboneWorkerRef.current;
     const operationEpoch = inferencePortEpochRef.current;
     if (worker) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
     const owner = inferencePortOwnerRef.current;
     inferencePortOwnerRef.current = null;
+    inferencePortAuthorityRef.current = null;
     inferencePortEpochRef.current = operationEpoch + 1;
     if (owner !== null) dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey: owner.runtimeKey });
-  }, [identity]);
+    for (const entry of openDocumentSessionsRef.current.values()) if (entry.scope !== undefined) retiredSessionDocumentOwnersRef.current.add(entry);
+    inferenceHistoryByRuntimeKeyRef.current = {};
+    setInferenceHistoryByRuntimeKey({});
+  }, []);
+  useEffect(() => retireAuthenticatedInferencePresentation, [retireAuthenticatedInferencePresentation]);
 
   // 🪪️ §C3 identity bootstrap — pre-identity default actor, set once at mount so `PluginRuntime`'s
   // `AppChannelClient`s created before sign-in resolves (or with no hub env at all) still carry the
@@ -2688,12 +2655,35 @@ function FrameworkOsShellInner({
     setPluginRuntimeActor(shellActorIdRef.current);
   }, []);
 
+  const cancelSessionAuthorityBootstrap = useCallback(() => {
+    const abort = identityBootstrapAbortRef.current;
+    if (!hubEnv || abort === null || abort.signal.aborted) return;
+    identityBootstrapAbortRef.current = null;
+    abort.abort("directory.session-authority.cancelled");
+    sessionRefreshRef.current?.close();
+    sessionRefreshRef.current = null;
+    localBrowserBrokerRef.current?.close();
+    localBrowserBrokerRef.current = null;
+    retireAuthenticatedInferencePresentation();
+    verifiedSessionAuthorityRef.current = null;
+    setVerifiedSessionAuthority(null);
+    setIdentityOffline(true);
+    shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
+    setPluginRuntimeActor(shellActorIdRef.current);
+    const clientInstanceId = identityClientInstanceIdRef.current;
+    if (clientInstanceId !== null) {
+      backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId }) });
+      if (identityClientInstanceIdRef.current === clientInstanceId) identityClientInstanceIdRef.current = null;
+    }
+  }, [hubEnv, retireAuthenticatedInferencePresentation]);
+
   useEffect(() => {
     // 📇️ §C3 "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly" — the
     // existing `🛠️dev🖥️s⚛️react` launcher (no `S_HUB_URL`) never reaches any code below this guard.
     if (!hubEnv) return;
     let cancelled = false;
     const identityWaitAbort = new AbortController();
+    identityBootstrapAbortRef.current = identityWaitAbort;
     (async () => {
       const worker = ensureBackboneWorker();
       const identityConfig = identityActorConfig(shellActorIdRef.current, hubEnv.dataDir);
@@ -2731,45 +2721,55 @@ function FrameworkOsShellInner({
         cachedIdentity = null;
       }
       if (cancelled || identityClientInstanceIdRef.current !== clientInstanceId) return;
-      let resolved: Identity | null = null;
-      try {
-        const broker = localBrowserBrokerRef.current;
-        if (!broker) throw new Error("local browser broker unavailable");
-        const response = await broker.me(identityWaitAbort.signal);
-        if (response.status === 200) {
-          const me = parseDirectorySessionAuthorityJsonV1(response.body);
-          resolved = { userId: me.userId, email: me.email, displayName: me.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.issuedAtMs ?? Date.now() };
-        } else {
-          throw new DirectoryHttpError(401, "local authorization required");
-        }
-      } catch (error) {
-        // 📇️ §C3 "Hub unreachable ⇒ keep the last persisted identity, show an offline state, never
-        // block the UI, never throw" — `cachedIdentity` (if any) was already applied via the
-        // `snapshotReplaced` handler above; nothing further to roll back.
-        console.error("[os-shell] identity bootstrap: hub unreachable, staying offline", error);
-        if (!cancelled) setIdentityOffline(true);
+      const broker = localBrowserBrokerRef.current;
+      if (!broker) {
+        setIdentityOffline(true);
         return;
       }
-      if (cancelled || !resolved || identityClientInstanceIdRef.current !== clientInstanceId) return;
-      setIdentityOffline(false);
-      shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
-      setPluginRuntimeActor(shellActorIdRef.current);
-      setIdentity(resolved);
-      const mutation = signIn(resolved);
-      const envelope = identityMutationEnvelope(shellActorIdRef.current, mutation, cachedIdentity);
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
-      worker.postMessage({
-        wire: encodeBackboneWorkerRequest({
-          kind: "send",
-          documentId: IDENTITY_CONFIG_SCHEMA,
-          clientInstanceId,
-          message: { kind: "localSnapshot", pack: Array.from(encodePackValue(resolved)), spr: [] },
-        }),
+      const ownerIsCurrent = (): boolean => !cancelled && identityClientInstanceIdRef.current === clientInstanceId;
+      sessionRefreshRef.current = startDirectorySessionRefreshV1({
+        signal: identityWaitAbort.signal,
+        read: (signal) => broker.me(signal),
+        onAuthority: (authority) => {
+          if (!ownerIsCurrent()) return;
+          const previous = verifiedSessionAuthorityRef.current;
+          const authorityChanged = previous === null || previous.sessionBindingSha256 !== authority.sessionBindingSha256 || previous.authorizationGeneration !== authority.authorizationGeneration;
+          if (authorityChanged) retireAuthenticatedInferencePresentation();
+          verifiedSessionAuthorityRef.current = authority;
+          if (authorityChanged) setVerifiedSessionAuthority(authority);
+          setIdentityOffline(false);
+          const resolved: Identity = { userId: authority.userId, email: authority.email, displayName: authority.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.userId === authority.userId ? cachedIdentity.issuedAtMs : Date.now() };
+          shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
+          setPluginRuntimeActor(shellActorIdRef.current);
+          const unchanged = cachedIdentity?.userId === resolved.userId && cachedIdentity.email === resolved.email && cachedIdentity.displayName === resolved.displayName && cachedIdentity.hubBaseUrl === resolved.hubBaseUrl;
+          if (unchanged && !authorityChanged) return;
+          setIdentity(resolved);
+          const envelope = identityMutationEnvelope(shellActorIdRef.current, signIn(resolved), cachedIdentity);
+          cachedIdentity = resolved;
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localSnapshot", pack: Array.from(encodePackValue(resolved)), spr: [] } }) });
+        },
+        onUnavailable: () => {
+          if (!ownerIsCurrent()) return;
+          retireAuthenticatedInferencePresentation();
+          verifiedSessionAuthorityRef.current = null;
+          setVerifiedSessionAuthority(null);
+          setIdentityOffline(true);
+          shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
+          setPluginRuntimeActor(shellActorIdRef.current);
+        },
       });
     })().catch((error) => console.error("[os-shell] identity bootstrap failed unexpectedly", error));
     return () => {
       cancelled = true;
       identityWaitAbort.abort();
+      if (identityBootstrapAbortRef.current === identityWaitAbort) identityBootstrapAbortRef.current = null;
+      sessionRefreshRef.current?.close();
+      sessionRefreshRef.current = null;
+      localBrowserBrokerRef.current?.close();
+      localBrowserBrokerRef.current = null;
+      verifiedSessionAuthorityRef.current = null;
+      setVerifiedSessionAuthority(null);
       const clientInstanceId = identityClientInstanceIdRef.current;
       if (clientInstanceId !== null) {
         backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId }) });
@@ -2779,7 +2779,7 @@ function FrameworkOsShellInner({
   }, [hubEnv]);
 
   useEffect(() => {
-    if (!identity || !hubEnv || !hostPlugin || !landingApp || !session || session.pluginId !== hostPlugin.handle.pluginId || session.app.id !== landingApp.id) return;
+    if (!identity || !verifiedSessionAuthority || verifiedSessionAuthority.userId !== identity.userId || !hubEnv || !hostPlugin || !landingApp || !session || session.pluginId !== hostPlugin.handle.pluginId || session.app.id !== landingApp.id) return;
     const worker = ensureBackboneWorker();
     const bootstrapEpoch = directoryBootstrapEpochRef.current + 1;
     directoryBootstrapEpochRef.current = bootstrapEpoch;
@@ -2824,7 +2824,7 @@ function FrameworkOsShellInner({
       directoryHomeOwnerRef.current = null;
       void retireDirectoryHomeOwner(owner, worker);
     };
-  }, [ensureBackboneWorker, hostPlugin?.handle, identity?.displayName, identity?.hubBaseUrl, identity?.userId, landingApp?.id, retireDirectoryHomeOwner, session?.app.id, session?.instanceId, session?.pluginId]);
+  }, [ensureBackboneWorker, hostPlugin?.handle, identity?.displayName, identity?.hubBaseUrl, identity?.userId, landingApp?.id, retireDirectoryHomeOwner, session?.app.id, session?.instanceId, session?.pluginId, verifiedSessionAuthority?.authorizationGeneration, verifiedSessionAuthority?.sessionBindingSha256]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -4292,7 +4292,8 @@ function FrameworkOsShellInner({
     const owner = owners.length === 1 ? owners[0] : undefined;
     const scope = owner?.[1].scope;
     if (!owner || !scope) throw new Error("inference-proposal: exact document owner required");
-    if (!identityRef.current) throw new Error("inference-proposal: authenticated identity required");
+    const authority = verifiedSessionAuthorityRef.current;
+    if (!directorySessionAuthorityIsCurrentV1(authority, authority) || authority?.userId !== identityRef.current?.userId || retiredSessionDocumentOwnersRef.current.has(owner[1])) throw new Error("inference-proposal: authenticated authority required");
     if (inferencePortEpochRef.current === Number.MAX_SAFE_INTEGER) throw new Error("inference-proposal: epoch exhausted");
     const worker = ensureBackboneWorker();
     const operationEpoch = ++inferencePortEpochRef.current;
@@ -4303,8 +4304,9 @@ function FrameworkOsShellInner({
     try {
       await mailbox.open({ kind: "inference-open", operationEpoch, scope });
       const entry = openDocumentSessionsRef.current.get(runtimeKey);
-      if (inferencePortOpeningRef.current !== opening || entry?.clientInstanceId !== opening.clientInstanceId || entry.session.instanceId !== opening.sessionInstanceId || !identityRef.current || !admit()) throw new Error("inference-opening: owner retired");
+      if (inferencePortOpeningRef.current !== opening || entry?.clientInstanceId !== opening.clientInstanceId || entry.session.instanceId !== opening.sessionInstanceId || retiredSessionDocumentOwnersRef.current.has(entry) || !directorySessionAuthorityIsCurrentV1(authority, verifiedSessionAuthorityRef.current) || !admit()) throw new Error("inference-opening: owner retired");
       inferencePortOwnerRef.current = opening.owner;
+      inferencePortAuthorityRef.current = authority;
       dispatch({ type: "OPEN_INFERENCE_PORT", runtimeKey, operationEpoch });
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
     } catch (error) {
@@ -4521,6 +4523,7 @@ function FrameworkOsShellInner({
                 const owner: SpaceArtifactCreationOwnerV1 = {
                   requestId,
                   spaceId: request.spaceId,
+                  expectedCatalogGenerationId: request.expectedCatalogGenerationId,
                   kindId: request.kindId,
                   name: request.name,
                   runtimeKey: origin[0],
@@ -4925,6 +4928,7 @@ function FrameworkOsShellInner({
     if (inferenceOwner !== null && retainedInferenceOwner === null) {
       backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch: inferenceOwner.operationEpoch }) });
       inferencePortOwnerRef.current = retainedInferenceOwner;
+      inferencePortAuthorityRef.current = null;
       inferencePortEpochRef.current = inferenceOwner.operationEpoch + 1;
       dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
     }
@@ -5263,6 +5267,7 @@ function FrameworkOsShellInner({
         if (route === "blocked") return;
         if (route === "remote") {
           const history = remote![1];
+          if (!directorySessionAuthorityIsCurrentV1(history.authority, verifiedSessionAuthorityRef.current)) return;
           ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-history-undo", historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope }) });
           return;
         }
@@ -9018,6 +9023,7 @@ function FrameworkOsShellInner({
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base" data-semio-os-ready={session && !error ? "" : undefined}>
+          {hubEnv && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {Object.entries(bootstrapUiByDocument).map(([runtimeKey, status]) => (

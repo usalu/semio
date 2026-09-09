@@ -8,7 +8,7 @@ fn scene(directed: bool) -> EquationWorkingScene {
 
 fn owned_snapshot(directed: bool) -> EquationSnapshot {
     let scene = scene(directed);
-    equation_snapshot_with_state(scene.graph, scene.geometry)
+    equation_snapshot_with_state(&scene.graph, &scene.geometry)
 }
 
 fn replace_scene_owner(snapshot: &mut EquationSnapshot, scene: Arc<EquationWorkingScene>) {

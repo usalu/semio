@@ -86,8 +86,8 @@ mod tests {
         /// GENUINE `print_dsl`/`encode_pack` output of `snapshot::demo_graph_snapshot()`.
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
-            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio");
+            const FIXTURE_DSL: &str = include_str!("../../../🖼️assets/🕸️wires/🗣️.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../🖼️assets/🕸️wires/🎒️.pack.semio");
 
             let demo = snapshot::demo_graph_snapshot();
 

@@ -214,7 +214,7 @@ async fn retained_storage(fixture: &serde_json::Value, segments: &[Vec<u8>], fir
 
 #[tokio::test]
 async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch() {
-    let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
+    let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
     let fixture = fixture();
     let durable = durable_fixture_record(&fixture);
     for case in chain["cases"].as_array().unwrap() {
@@ -237,7 +237,7 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
 
 #[tokio::test]
 async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof() {
-    let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
+    let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
     let fixture = fixture();
     let durable = durable_fixture_record(&fixture);
     let segments = chain_segments(&fixture, &chain["cases"][0], &durable).await;

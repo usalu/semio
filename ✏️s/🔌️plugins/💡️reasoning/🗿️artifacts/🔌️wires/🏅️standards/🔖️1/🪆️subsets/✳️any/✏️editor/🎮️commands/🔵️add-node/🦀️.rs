@@ -1,12 +1,12 @@
 //! 🔵️ 🔵️ Wires play app commands command — `add-node`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use crate::op::WiresMutation;
 use crate::schema::fixture_nodes;
 use crate::WiresSnapshot;
 use dsl::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -15,10 +15,8 @@ pub struct AddNode {
     pub kind: String,
 }
 
-/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-/// the newly created node is selected via a requested `interactionSelect` effect instead of a
-/// `WiresConfigMutation::SetSelection`.
-pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+/// 🕹️ Creates the node and selects it through the framework interaction effect.
+pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
     let id = format!("node-{}", fixture_nodes(&crate::wires_working_board(document)).len() + 1);

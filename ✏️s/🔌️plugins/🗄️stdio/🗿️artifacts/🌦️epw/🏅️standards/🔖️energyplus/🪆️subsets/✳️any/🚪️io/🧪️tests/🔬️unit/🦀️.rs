@@ -1,6 +1,6 @@
 use super::*;
 
-const REAL_FIXTURE: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw");
+const REAL_FIXTURE: &str = include_str!("../../../🖼️assets/🎬️demo/🧪️example/🌦️.epw");
 
 #[semio_framework_async_macros::async_test]
 async fn sniffs_and_parses_a_real_shaped_location_line() {

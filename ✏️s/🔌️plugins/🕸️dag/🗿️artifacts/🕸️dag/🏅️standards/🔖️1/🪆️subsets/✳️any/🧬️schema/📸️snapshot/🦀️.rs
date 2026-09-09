@@ -93,7 +93,7 @@ impl DagSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection — the comparison
 /// surface `🌳️mutate-dag-1`'s scenarios are measured through, and the shape the committed
-/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
+/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. It carries `content` as a HANDLE, never as a graph, which
 /// is exactly what makes it a usable observability surface here: the handle's `childId` is a digest
 /// of the child's content, so it moves if and only if the working scene moved.

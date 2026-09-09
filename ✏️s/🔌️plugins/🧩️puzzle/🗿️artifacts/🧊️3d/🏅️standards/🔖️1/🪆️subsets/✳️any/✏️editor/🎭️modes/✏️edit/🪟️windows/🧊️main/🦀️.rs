@@ -15,7 +15,7 @@ use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::editor::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dInteractionSnapshot, Puzzle3dObject,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dInteractionSnapshot, Puzzle3dKindMeshIndex, Puzzle3dObject,
     Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
@@ -126,11 +126,12 @@ pub fn camera_json(runtime: &Puzzle3dRuntime) -> String {
 /// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
 pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
+    let kind_meshes = Puzzle3dKindMeshIndex::of(&fixture.meta);
     let instances: Vec<Value> = fixture
         .objects
         .iter()
         .map(|object| {
-            let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
+            let mesh_id = kind_meshes.resolve(object).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), world3d_mesh_id_from_url);
             let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
             let mut instance = json!({
                 "id": object.id,
@@ -319,8 +320,7 @@ pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
 pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, interaction: &Puzzle3dInteractionSnapshot) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
-        let (pending, candidates) = (!menu.vortex_full_id.is_empty())
-            .then(|| {
+        let (pending, candidates) = if !menu.vortex_full_id.is_empty() {
                 let result = session.brush_candidates(&menu.vortex_full_id);
                 let candidates: Vec<Value> = result
                     .free
@@ -342,8 +342,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                     })
                     .collect();
                 (result.unknown_pending, candidates)
-            })
-            .unwrap_or((false, Vec::new()));
+            } else { (false, Vec::new()) };
         json!({
             "open": true,
             "x": menu.x,

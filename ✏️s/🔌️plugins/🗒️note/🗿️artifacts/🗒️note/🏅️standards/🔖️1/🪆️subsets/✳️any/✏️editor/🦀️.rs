@@ -93,6 +93,9 @@ pub const NOTE_INTERACTION_BLOCKS: &str = "blocks";
 pub struct NoteDispatchCtx {
     pub selected_block_ids: Vec<String>,
     pub id_owner: crate::schema::NoteIdOwner,
+    pub view_state: Option<semio_framework_plugin::ViewModel>,
+    pub window_transient: crate::editor::note::window::NoteCompositeWindowTransient,
+    pub window_transient_owner: Option<semio_framework_plugin::WindowTransientSnapshot>,
 }
 
 /// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
@@ -202,6 +205,7 @@ impl ArtifactEditor for NotePlayApp {
             "setCamera" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCameraZoom" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
         }
@@ -213,6 +217,14 @@ impl ArtifactEditor for NotePlayApp {
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         crate::editor::note::retained::build(request)
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        crate::editor::note::window::register_config(registry)
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        crate::editor::note::window::register_transient(registry)
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -243,12 +255,18 @@ impl ArtifactEditor for NotePlayApp {
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoteConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
-        let mut ctx = NoteDispatchCtx { selected_block_ids, id_owner: crate::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()) };
+        let mut ctx = NoteDispatchCtx {
+            selected_block_ids,
+            id_owner: crate::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()),
+            view_state: view_state.cloned(),
+            window_transient: Default::default(),
+            window_transient_owner: None,
+        };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -262,12 +280,12 @@ impl ArtifactEditor for NotePlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
-        let config = cfg.snapshot;
+        let window = crate::editor::note::window::config_from_view(cfg);
         let labels = note_play_labels(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
         match body_key {
-            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility),
-            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility),
+            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
+            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
             NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
@@ -277,15 +295,45 @@ impl ArtifactEditor for NotePlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
-        let config = cfg.snapshot;
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
+        let config = crate::editor::note::window::config_from_view(cfg);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
-        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(active_utility))])
+        match kind {
+            Some(NOTE_PLAY_WINDOW_COMPOSITE) => HashMap::from([(window_id.to_string(), composite::engagement(doc.snapshot, &config.camera, ""))]),
+            Some(NOTE_PLAY_WINDOW_NAVIGATOR) => HashMap::from([(window_id.to_string(), navigator::engagement(active_utility))]),
+            _ => HashMap::new(),
+        }
+    }
+
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, NoteSnapshot>,
+        cfg: &ConfigView<'_, NoteConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+    ) -> HashMap<String, WindowEngagement> {
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
+        let config = crate::editor::note::window::config_from_view(cfg);
+        let transient = crate::editor::note::window::transient_from_view(transient);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
+        match kind {
+            Some(NOTE_PLAY_WINDOW_COMPOSITE) => HashMap::from([(window_id.to_string(), composite::engagement(doc.snapshot, &config.camera, &transient.engagement_input))]),
+            Some(NOTE_PLAY_WINDOW_NAVIGATOR) => HashMap::from([(window_id.to_string(), navigator::engagement(active_utility))]),
+            _ => HashMap::new(),
+        }
     }
 
     fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = cfg.snapshot;
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
+        let config = crate::editor::note::window::config_from_view(cfg);
         let labels = note_play_labels(view_state);
-        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
+        match kind {
+            Some(NOTE_PLAY_WINDOW_COMPOSITE) => HashMap::from([(window_id.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels))]),
+            Some(NOTE_PLAY_WINDOW_NAVIGATOR) => HashMap::from([(window_id.to_string(), navigator::window_measures(doc.snapshot, &crate::NoteCamera::default(), labels))]),
+            _ => HashMap::new(),
+        }
     }
 }
 //#endregion 🔖️NotePlayApp

@@ -1061,34 +1061,7 @@ export function rustWarningTargetScope(root: string, target: string | undefined)
   return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"] } };
 }
 
-/** 🧪️ Validates language-neutral target vectors and independently compares shipping coverage with Cargo metadata. */
-export function rustWarningScopeChecks(root: string): number {
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🦀️rust-warnings/🔣️.json"), "utf8")) as {
-    cases: { target: string; requiredPackages: string[]; scopeArgs: string[]; targetArgs: string[]; rendererFeatures: string[] }[];
-    rejectedTargets: string[];
-  };
-  for (const row of fixture.cases) {
-    const scope = rustWarningTargetScope(root, row.target);
-    for (const pkg of row.requiredPackages) if (!scope.packages.includes(pkg)) throw new Error(`[verify rust-warnings] ${row.target} misses ${pkg}.`);
-    for (const [actual, expected] of [[scope.scopeArgs, row.scopeArgs], [scope.targetArgs, row.targetArgs], [scope.packageArgs["semio-framework-os-renderer-wgpu"] ?? [], row.rendererFeatures]]) {
-      if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`[verify rust-warnings] target arguments differ for ${row.target}.`);
-    }
-    if (new Set(scope.packages).size !== scope.packages.length) throw new Error(`[verify rust-warnings] duplicate package in ${row.target}.`);
-  }
-  for (const target of fixture.rejectedTargets) {
-    let rejected = false;
-    try { rustWarningTargetScope(root, target); } catch { rejected = true; }
-    if (!rejected) throw new Error(`[verify rust-warnings] unsupported target ${target} was accepted.`);
-  }
-  const cargo = Bun.spawnSync(["cargo", "metadata", "--no-deps", "--format-version=1"], { cwd: root });
-  if (cargo.exitCode !== 0) throw new Error(`[verify rust-warnings] Cargo metadata failed: ${cargo.stderr.toString()}`);
-  const metadata = JSON.parse(cargo.stdout.toString()) as { packages: { name: string; metadata?: { semio?: { role?: string } } | null }[] };
-  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "") || (pkg.name.startsWith("semio-s-artifact-") || pkg.name.startsWith("semio-framework-artifact-"))).map((pkg) => pkg.name).sort();
-  const components = rustWarningTargetScope(root, "wasm32-wasip2").packages;
-  if (JSON.stringify(components) !== JSON.stringify(oracle)) throw new Error(`[verify rust-warnings] repository discovery differs from Cargo's shipping package catalog.`);
-  console.log(`[verify rust-warnings] ${fixture.cases.length} target vectors, ${fixture.rejectedTargets.length} rejection vectors, ${oracle.length} Cargo-verified component crates.`);
-  return fixture.cases.length + fixture.rejectedTargets.length + 1;
-}
+
 
 //#region 🎯️ToolJobCoverage
 type ToolJobCoverageReport = {
@@ -2049,13 +2022,14 @@ function toolJobFullOperationBounded(source: string): boolean {
     source.includes("self.tool_operations.insert_admitted(operation_id, mounted)") &&
     !!publisher &&
     !source.includes("async fn publish_mounted_typed_operation_unit") &&
-    ["artifact_mutations", "config_mutations", "draft_mutations", "presence", "transient"].every((lane) => publisher.body.includes(`${lane}.pop()`)) &&
+    ["presence", "transient"].every((lane) => publisher.body.includes(`${lane}.pop()`)) &&
+    ["artifact_mutations", "config_mutations", "draft_mutations"].every((lane) => publisher.body.includes(`std::mem::take(&mut emit.${lane})`)) &&
     !publisher.body.includes(".last().cloned()") &&
     !publisher.body.includes(".await") &&
     publisher.body.includes("pending_artifact_publication") &&
-    publisher.body.includes("begin_apply_one") &&
+    publisher.body.includes("begin_apply_batch") &&
     publisher.body.includes("begin_publish_one") &&
-    publisher.body.includes("advance_apply_one") &&
+    publisher.body.includes("advance_apply_batch") &&
     publisher.body.includes("advance_publish_one") &&
     !publisher.body.includes(".apply_one(") &&
     publisher.body.includes(".pop()") &&
@@ -2090,9 +2064,9 @@ function toolJobPublicationFreshnessBeforeEveryTurn(source: string): boolean {
   const freshness = directFreshness >= 0 ? directFreshness : helperExact ? helperFreshness : -1;
   const pendingPublication = publisher.body.indexOf("if let Some(pending) = mounted.pending_artifact_publication.as_mut()");
   const beginTurns = [
-    "self.store.begin_apply_one",
-    "self.config_store.begin_apply_one",
-    "self.draft_store.begin_apply_one",
+    "self.store.begin_apply_batch",
+    "self.config_store.begin_apply_batch",
+    "self.draft_store.begin_apply_batch",
     "self.presence_store.begin_publish_one",
     "self.transient_store.begin_publish_one",
   ]
@@ -2108,41 +2082,47 @@ function toolJobPublicationFreshnessBeforeEveryTurn(source: string): boolean {
   );
 }
 
-/** 🧵️ Rejects the last generic typed-command false green: a one-item publisher that
- * enters whole mutation replay, history construction, or outbound serialization in one turn. */
-function toolJobStoreOneItemPublicationBounded(storeSource: string, pluginSource: string): boolean {
+/** 🧵️ Rejects the last generic typed-command false green: a batched publisher that
+ * enters whole mutation replay, history construction, or outbound serialization in one turn.
+ * ONE gesture stages N mutations into ONE `Edit` and ONE ledger slot, one fold per turn. */
+function toolJobStoreBatchPublicationBounded(storeSource: string, pluginSource: string): boolean {
   const blockOf = (source: string, needle: string, fromEnd = false) => {
     const start = fromEnd ? source.lastIndexOf(needle) : source.indexOf(needle);
     const open = start < 0 ? -1 : source.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(source, open);
   };
-  const begin = blockOf(storeSource, "fn begin_apply_one");
-  const ownedBegin = blockOf(storeSource, "fn begin_apply_one_owned");
-  const preparation = begin?.body.includes("self.begin_apply_one_owned(") && ownedBegin?.body.includes("self.snapshot_read()") && ownedBegin.body.includes("begin(request)") ? ownedBegin : begin;
-  const advance = blockOf(storeSource, "fn advance_apply_one");
-  const cancel = blockOf(storeSource, "fn cancel_apply_one");
-  const publicationState = blockOf(storeSource, "pub struct ArtifactStoreOneItemPublication<P, Mutation>");
-  const publication = blockOf(storeSource, "impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation>");
+  const begin = blockOf(storeSource, "fn begin_apply_batch");
+  const ownedBegin = blockOf(storeSource, "fn begin_apply_batch_owned");
+  const preparation = begin?.body.includes("self.begin_apply_batch_owned(") && ownedBegin?.body.includes("source.footprint(lane)") ? ownedBegin : begin;
+  const advance = blockOf(storeSource, "fn advance_apply_batch");
+  const cancel = blockOf(storeSource, "fn cancel_apply_batch");
+  const fold = blockOf(storeSource, "fn fold_batch_item");
+  const base = blockOf(storeSource, "fn batch_item_base");
+  const publicationState = blockOf(storeSource, "pub struct ArtifactStoreBatchPublication<P, Mutation>");
+  const publication = blockOf(storeSource, "impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation>");
   const close = publication ? blockOf(publication.body, "fn close_step") : undefined;
   const terminal = publication ? blockOf(publication.body, "fn terminal_is_empty") : undefined;
   const publisher = blockOf(pluginSource, "fn publish_mounted_typed_operation_unit", true);
   const monolithic = ["replay_mutations(", "apply_command(", "flush_outbound(", "mutation.diff(", "diff.apply(", "try_reserve", "with_capacity(", ".collect::<Vec", ".to_vec("];
   return (
-    storeSource.includes("pub struct ArtifactStoreOneItemPublication") &&
+    storeSource.includes("pub struct ArtifactStoreBatchPublication") &&
     storeSource.includes("pub enum ArtifactStoreOneItemPublicationPhase") &&
     storeSource.includes("pub trait ArtifactStoreOneItemPreparationFactory") &&
     storeSource.includes("pub trait ArtifactStoreOneItemPreparation") &&
     storeSource.includes("pub struct ArtifactStoreOneItemPrepared") &&
+    storeSource.includes("trait ArtifactStoreBatchSource") &&
     !!begin &&
     !!advance &&
     !!cancel &&
+    !!fold &&
+    !!base &&
     !!publicationState &&
     !!publication &&
     !!close &&
     !!terminal &&
-    !!preparation && preparation.body.includes("ArtifactStoreOneItemPublication") &&
-    storeSource.includes("fn advance_apply_one") &&
-    storeSource.includes("fn cancel_apply_one") &&
+    !!preparation && preparation.body.includes("ArtifactStoreBatchPublication") &&
+    storeSource.includes("fn advance_apply_batch") &&
+    storeSource.includes("fn cancel_apply_batch") &&
     publication.body.includes("fn begin_close") &&
     close.body.includes("min(1)") &&
     close.body.includes("maximum_bytes") &&
@@ -2152,19 +2132,26 @@ function toolJobStoreOneItemPublicationBounded(storeSource: string, pluginSource
     publication.body.includes("maximum_items") &&
     publication.body.includes("maximum_bytes") &&
     /\b(?:expected_)?generation\b/.test(publicationState.body) &&
-    storeSource.includes("impl<P, Mutation> Drop for ArtifactStoreOneItemPublication") &&
+    storeSource.includes("impl<P, Mutation> Drop for ArtifactStoreBatchPublication") &&
     monolithic.every((needle) => !begin.body.includes(needle) && !preparation.body.includes(needle) && !advance.body.includes(needle)) &&
+    fold.body.includes("authority.validate_prepared(candidate)") &&
+    fold.body.includes("inverse.reverse();") &&
+    !fold.body.includes("replay_mutations(") &&
+    !fold.body.includes("apply_command(") &&
+    !advance.body.includes("while ") &&
+    !fold.body.includes("while ") &&
     pluginSource.includes("pending_artifact_publication") &&
     pluginSource.includes("artifact_one_item_factory: Option<") &&
     pluginSource.includes("config_one_item_factory: Option<") &&
     pluginSource.includes("draft_one_item_factory: Option<") &&
     pluginSource.includes("unsupported_publication_contracts") &&
     !!publisher &&
-    publisher.body.includes("begin_apply_one") &&
-    publisher.body.includes("advance_apply_one") &&
-    publisher.body.includes("self.artifact_one_item_factory.as_deref()") &&
-    publisher.body.includes("self.config_one_item_factory.as_deref()") &&
-    publisher.body.includes("self.draft_one_item_factory.as_deref()") &&
+    publisher.body.includes("begin_apply_batch") &&
+    publisher.body.includes("advance_apply_batch") &&
+    ["artifact_mutations", "config_mutations", "draft_mutations"].every((lane) => publisher.body.includes(`std::mem::take(&mut emit.${lane})`) && !publisher.body.includes(`${lane}.last().cloned()`)) &&
+    publisher.body.includes("self.artifact_one_item_factory.as_ref()") &&
+    publisher.body.includes("self.config_one_item_factory.as_ref()") &&
+    publisher.body.includes("self.draft_one_item_factory.as_ref()") &&
     !publisher.body.includes("A::build_artifact_store_one_item_preparation_factory") &&
     !publisher.body.includes("A::build_config_store_one_item_preparation_factory") &&
     !publisher.body.includes("A::build_draft_store_one_item_preparation_factory") &&
@@ -5885,7 +5872,7 @@ function compileScopeExport(root: string, modulePath: string, exportId: string):
 }
 
 function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOutput {
-  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📇️fixed-operation-registry-law.json";
+  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json";
   const fixture = JSON.parse(policyReadFileSafe(root, fixturePath)) as FixedOperationFixture;
   const validate = compileScopeExport(root, "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json", "FixedOperationRegistryFixture");
   if (!validate(fixture))
@@ -6020,7 +6007,7 @@ type SharedFrameworkActionRouteFixture = {
 };
 
 function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
   if (!compileScopeExport(root, "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json", "SharedFrameworkActionRoutesFixture")(fixture))
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] fixture does not satisfy framework.job#/$defs/SharedFrameworkActionRoutesFixture.");
   if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
@@ -6093,7 +6080,7 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
 
 function toolJobFixedOperationRustFixtureSource(root: string): string {
   toolJobFixedOperationFixtureRun(root);
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📇️fixed-operation-registry-law.json")) as FixedOperationFixture;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json")) as FixedOperationFixture;
   const lines = [
     "// 🧪️ Generated from 📇️fixed-operation-registry-law.json by the root verifier.",
     "#[test]",
@@ -6944,7 +6931,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d, plugin);
   const importPreparationBounded = toolJobImportPreparationBounded(plugin);
   const fullToolOperationJobBounded = toolJobFullOperationBounded(plugin);
-  const storeOneItemPublicationBounded = toolJobStoreOneItemPublicationBounded(store, plugin);
+  const storeOneItemPublicationBounded = toolJobStoreBatchPublicationBounded(store, plugin);
   const ephemeralOneItemPublicationBounded = toolJobEphemeralOneItemPublicationBounded(store, plugin);
   const fullToolOperationBounded = fullToolOperationJobBounded && storeOneItemPublicationBounded && ephemeralOneItemPublicationBounded;
   if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
@@ -7120,7 +7107,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "rust-warnings") {
-      this.runRustWarnings(segments.slice(1));
+      await this.runRustWarnings(segments.slice(1));
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
@@ -7229,6 +7216,32 @@ export class VerifyScript extends Script {
       testPlaybookDocumentContractOracle();
       return;
     }
+    if (segments[0] === "dag-demo-ownership") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-infinite-dag", "--lib", "--", "--nocapture"], this.root);
+      return;
+    }
+    if (segments[0] === "note-document-contract") {
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "--", "--nocapture"], this.root);
+        return;
+      }
+      const { testNoteDocumentContractOracle } = await import("./✏️s/🔌️plugins/🗒️note/🧪️tests/🪪️document-contract/🟦️.ts");
+      await testNoteDocumentContractOracle();
+      const noteRoot = join(this.root, "✏️s/🔌️plugins/🗒️note");
+      const files = ["", "📸️snapshot", "🔺️diff"].map((facet) => join(noteRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts"));
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(noteRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: this.root });
+      return;
+    }
+    if (segments[0] === "norm-document-contract") {
+      const { testNormDocumentContractOracle } = await import("./✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts");
+      await testNormDocumentContractOracle();
+      const normRoot = join(this.root, "✏️s/🔌️plugins/📕️norm");
+      const files = ["⚖️en1990", "⚡️din18599"].flatMap((artifact) => ["", "📸️snapshot", "🔺️diff"].map((facet) => join(normRoot, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts")));
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(normRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: this.root });
+      return;
+    }
     if (segments[0] === "forms-document-contract") {
       const { testFormsDocumentContractOracle } = await import("./✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testFormsDocumentContractOracle();
@@ -7260,7 +7273,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "shared-map-delta") {
-      const { testSharedMapDeltaOracle } = await import("./🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🟦️.ts");
+      const { testSharedMapDeltaOracle } = await import("./🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts");
       testSharedMapDeltaOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
@@ -7287,7 +7300,7 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "artifact-contract-ownership") {
       abstractionOwnershipChecks(this.root);
-      const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
+      const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
       const packages = [...new Set(fixture.artifactSchemas.map((path) => {
         const manifest = Bun.TOML.parse(readFileSync(join(this.root, path.split("/🏅️standards/")[0], "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
         return manifest.package.name;
@@ -7301,6 +7314,16 @@ export class VerifyScript extends Script {
       }
       await runCargo(["check", "--manifest-path", "Cargo.toml", "--tests", ...packageArgs], this.root);
       console.log(`[verify artifact-contract-ownership] ${packages.length} artifact crates and their tests compile.`);
+      return;
+    }
+    if (segments[0] === "jack-document-contract") {
+      const { testJackDocumentContract } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testJackDocumentContract();
+      return;
+    }
+    if (segments[0] === "dag-document-contract") {
+      const { testDagDocumentContractOracle } = await import("./✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+      testDagDocumentContractOracle();
       return;
     }
     if (segments[0] === "jack-query-ownership") {
@@ -7427,8 +7450,9 @@ export class VerifyScript extends Script {
    * the wasm32 `getrandom_backend` cfg, mold) and would break every wasm build — the same reason
    * [[runCargoLint]] documents for the identical choice.
    */
-  private runRustWarnings(args: string[]): void {
-    rustWarningScopeChecks(this.root);
+  private async runRustWarnings(args: string[]): Promise<void> {
+    const { rustWarningScopeChecks } = await import("./🧪️tests/🦀️rust-warnings/🟦️.ts");
+    rustWarningScopeChecks(this.root, rustWarningTargetScope);
     if (args.includes("--scope-only")) return;
     const targetIndex = args.indexOf("--target");
     const target = targetIndex >= 0 ? args[targetIndex + 1] : undefined;
@@ -8000,7 +8024,7 @@ export class VerifyScript extends Script {
     // wasm glue every renderer depends on — the fleet-wide wasip2/native sweeps stay opt-in via
     // `verify rust-warnings --target <triple>`, which is far too slow for a pre-close gate.
     console.log("[verify] actor kernel wasm32 bindings…");
-    this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
+    await this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
     console.log("[verify] gate passed.");
   }
 
@@ -26327,7 +26351,7 @@ export function policySchemaFieldDifferences(reference: readonly string[], candi
 
 /** 🗿️ Audits exact document, snapshot and diff field names across all authored representations. */
 export function policyArtifactOwnershipFieldParity(root: string): { path: string; missing: string[]; extra: string[] }[] {
-  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
   const paths = new Set(fixture.artifactSchemas);
   for (const path of fixture.artifactSchemas) if (!path.includes("/🔺️diff/")) paths.add(join(dirname(path), "📸️snapshot/🔣️.json"));
   const representations = [["🦀️.rs", policyExtractRustSchemaFields], ["🟦️.ts", policyExtractTypescriptSchemaFields], ["🔗️.graphql", policyExtractGraphqlSchemaFields], ["🛰️.proto", policyExtractProtobufSchemaFields]] as const;
@@ -26347,7 +26371,7 @@ export function policyArtifactOwnershipFieldParity(root: string): { path: string
 /** 🧪️ Compares language-independent ownership vectors with the independent Ajv schema evaluator. */
 export function abstractionOwnershipChecks(root: string): number {
   const schema = abstractionOwnershipSchema(root);
-  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[]; artifactSchemas: string[]; schemaCases: { name: string; schema: Record<string, unknown>; expected: string[] }[]; sourceCases: { name: string; source: string; expected: string[] }[] };
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[]; artifactSchemas: string[]; schemaCases: { name: string; schema: Record<string, unknown>; expected: string[] }[]; sourceCases: { name: string; source: string; expected: string[] }[] };
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   for (const row of fixture.cases) {
@@ -30800,7 +30824,7 @@ export {
   toolJobTypedRouteFailsClosedBeforePreparation,
   toolJobTypedPersistentFoundation,
   toolJobEphemeralOneItemPublicationBounded,
-  toolJobStoreOneItemPublicationBounded,
+  toolJobStoreBatchPublicationBounded,
   toolJobProductionSource,
   toolJobMountedDispatchOneTurnExact,
   toolJobArtifactEnvelopeRejectionTransferExact,

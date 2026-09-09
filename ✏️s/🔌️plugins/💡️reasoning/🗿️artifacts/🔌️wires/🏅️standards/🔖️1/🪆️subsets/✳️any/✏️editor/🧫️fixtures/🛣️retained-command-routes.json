@@ -41,9 +41,11 @@
     },
     {
       "id": "canvasPointerMove",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "reason": "drag lookup clones the complete graph child"
+      "disposition": "migrated",
+      "lanes": [
+        "window-transient"
+      ],
+      "reason": "The captured canvas advances only its exact transient preview while the gesture is active."
     },
     {
       "id": "canvasPointerDown",
@@ -57,9 +59,10 @@
       "id": "canvasPointerUp",
       "disposition": "migrated",
       "lanes": [
+        "artifact",
         "window-transient"
       ],
-      "reason": "Concrete canvas drag lifecycle uses the exact retained window transient owner; hit lookup advances one field per work step."
+      "reason": "Release scans the current target, rebases the frozen total delta, and atomically publishes one durable move with the exact-window clear."
     }
   ]
 }

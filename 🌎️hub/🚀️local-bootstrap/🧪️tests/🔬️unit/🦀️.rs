@@ -45,11 +45,11 @@ impl IdentityVerificationControl for CancelAtCommit {
 }
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🚇️pipe-v1/🔣️.json")).expect("fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🚇️pipe-v1/🔣️.json")).expect("fixture")
 }
 
 fn admission_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/⏳️idle-admission-v1/🔣️.json")).expect("admission fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/⏳️idle-admission-v1/🔣️.json")).expect("admission fixture")
 }
 
 #[tokio::test]

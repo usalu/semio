@@ -11,8 +11,8 @@ import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import mutationSchema from "../../🧬️mutations/🔣️.json" with { type: "json" };
-import snapshot from "../../🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/📸️snapshot/⬅️before/🔣️.json" with { type: "json" };
-import diff from "../../🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/🔺️diff/🔣️.json" with { type: "json" };
+import snapshot from "../../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/📸️snapshot/⬅️before/🔣️.json" with { type: "json" };
+import diff from "../../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/🔺️diff/🔣️.json" with { type: "json" };
 import { parseWiresArtifact } from "../../🟦️.ts";
 import { parseWiresSnapshot } from "../../📸️snapshot/🟦️.ts";
 

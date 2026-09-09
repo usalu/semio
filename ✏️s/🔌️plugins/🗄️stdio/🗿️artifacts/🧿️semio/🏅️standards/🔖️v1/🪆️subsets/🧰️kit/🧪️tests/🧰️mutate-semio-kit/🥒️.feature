@@ -79,7 +79,7 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Nakagin Capsule Tower kit
-    Given the real capsule tower kit local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    Given the real capsule tower kit shared://🧰️mutate-semio-kit/🏢️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared kit parsed from it
       """
       <mutation>
@@ -107,7 +107,7 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the prepared Nakagin Capsule Tower kit
-    Given the real capsule tower kit local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    Given the real capsule tower kit shared://🧰️mutate-semio-kit/🏢️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the prepared kit parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -135,9 +135,9 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -162,9 +162,9 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed furniture kit and of the real capsule tower kit
-    Given the real committed kit artifact asset://📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio
-    And the real capsule tower kit local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
-    And its binary twin local://🎒️.pack.semio
+    Given the real committed kit artifact asset://🪑️furniture/🗣️.dsl.semio
+    And its committed binary twin asset://🪑️furniture/🎒️.pack.semio
+    And the real capsule tower kit shared://🧰️mutate-semio-kit/🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    And its binary twin shared://🧰️mutate-semio-kit/🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both kits and on the digests of what they emitted

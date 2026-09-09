@@ -68,37 +68,37 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                             | vector                                                                                 |
-      | create-shape-model             | 🧱create-shape-model/🧪️tests/🧱️rehandles-the-occupied-shape-slot                          |
-      | delete-shape-model             | 🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot                                     |
-      | create-building-model          | 🏢create-building-model/🧪️tests/🏢️rehandles-the-occupied-building-slot                    |
-      | delete-building-model          | 💥delete-building-model/🧪️tests/🏚️vacates-the-building-slot                               |
-      | create-energy-model            | ⚡create-energy-model/🧪️tests/⚡️rehandles-the-occupied-energy-slot                        |
-      | delete-energy-model            | 🔌delete-energy-model/🧪️tests/🔌️vacates-the-energy-slot                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic-model/🧪️tests/🏛️rehandles-the-occupied-structure-classic-slot  |
-      | delete-structure-classic-model | 💣delete-structure-classic-model/🧪️tests/🏚️vacates-the-structure-classic-slot             |
-      | create-drawing                 | 📐️create-drawing/🧪️tests/📐️appends-drawing-2                                             |
-      | delete-drawing                 | 🧹delete-drawing/🧪️tests/🚫️removes-drawing-1                                              |
-      | create-node                    | ➕create-node/🧪️tests/🌱️appends-node-3                                                    |
-      | delete-node                    | 🗑️delete-node/🧪️tests/🚫️removes-node-2                                                    |
-      | rename-node                    | 🏷️rename-node/🧪️tests/🔤️relabels-the-root-node                                            |
-      | change-reference-hidden        | 👁️change-reference-hidden/🧪️tests/🙈️hides-the-shape-reference                             |
-      | change-reference-locked        | 🔒change-reference-locked/🧪️tests/🔓️unlocks-the-shape-reference                           |
-      | change-reference-width         | 📏change-reference-width/🧪️tests/↔️widens-the-shape-reference-plane                       |
-      | move-reference                 | 📍move-reference/🧪️tests/📍️moves-the-shape-reference-off-origin                           |
-      | replace-reference-media        | 🖇️replace-reference-media/🧪️tests/🖼️reattaches-the-shape-reference-to-a-new-plan          |
-      | replace-references             | 📎replace-references/🧪️tests/🔄️swaps-the-shape-reference-list                             |
-      | change-active-model-definition | 🎯change-active-model-definition/🧪️tests/🏗️switches-the-active-pane-to-the-building-model |
+      | create-shape-model             | 🧱create-shape-model/🧱️rehandles-the-occupied-shape-slot                          |
+      | delete-shape-model             | 🧨delete-shape-model/🕳️vacates-the-shape-slot                                     |
+      | create-building-model          | 🏢create-building-model/🏢️rehandles-the-occupied-building-slot                    |
+      | delete-building-model          | 💥delete-building-model/🏚️vacates-the-building-slot                               |
+      | create-energy-model            | ⚡create-energy-model/⚡️rehandles-the-occupied-energy-slot                        |
+      | delete-energy-model            | 🔌delete-energy-model/🔌️vacates-the-energy-slot                                   |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-the-occupied-structure-classic-slot  |
+      | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates-the-structure-classic-slot             |
+      | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
+      | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |
+      | create-node                    | ➕create-node/🌱️appends-node-3                                                    |
+      | delete-node                    | 🗑️delete-node/🚫️removes-node-2                                                    |
+      | rename-node                    | 🏷️rename-node/🔤️relabels-the-root-node                                            |
+      | change-reference-hidden        | 👁️change-reference-hidden/🙈️hides-the-shape-reference                             |
+      | change-reference-locked        | 🔒change-reference-locked/🔓️unlocks-the-shape-reference                           |
+      | change-reference-width         | 📏change-reference-width/↔️widens-the-shape-reference-plane                       |
+      | move-reference                 | 📍move-reference/📍️moves-the-shape-reference-off-origin                           |
+      | replace-reference-media        | 🖇️replace-reference-media/🖼️reattaches-the-shape-reference-to-a-new-plan          |
+      | replace-references             | 📎replace-references/🔄️swaps-the-shape-reference-list                             |
+      | change-active-model-definition | 🎯change-active-model-definition/🏗️switches-the-active-pane-to-the-building-model |
 
   @id-inverse
   @level-exhaustive
@@ -108,42 +108,42 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                             | vector                                                                                 |
-      | create-shape-model             | 🧱create-shape-model/🧪️tests/🧱️rehandles-the-occupied-shape-slot                          |
-      | delete-shape-model             | 🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot                                     |
-      | create-building-model          | 🏢create-building-model/🧪️tests/🏢️rehandles-the-occupied-building-slot                    |
-      | delete-building-model          | 💥delete-building-model/🧪️tests/🏚️vacates-the-building-slot                               |
-      | create-energy-model            | ⚡create-energy-model/🧪️tests/⚡️rehandles-the-occupied-energy-slot                        |
-      | delete-energy-model            | 🔌delete-energy-model/🧪️tests/🔌️vacates-the-energy-slot                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic-model/🧪️tests/🏛️rehandles-the-occupied-structure-classic-slot  |
-      | delete-structure-classic-model | 💣delete-structure-classic-model/🧪️tests/🏚️vacates-the-structure-classic-slot             |
-      | create-drawing                 | 📐️create-drawing/🧪️tests/📐️appends-drawing-2                                             |
-      | delete-drawing                 | 🧹delete-drawing/🧪️tests/🚫️removes-drawing-1                                              |
-      | create-node                    | ➕create-node/🧪️tests/🌱️appends-node-3                                                    |
-      | delete-node                    | 🗑️delete-node/🧪️tests/🚫️removes-node-2                                                    |
-      | rename-node                    | 🏷️rename-node/🧪️tests/🔤️relabels-the-root-node                                            |
-      | change-reference-hidden        | 👁️change-reference-hidden/🧪️tests/🙈️hides-the-shape-reference                             |
-      | change-reference-locked        | 🔒change-reference-locked/🧪️tests/🔓️unlocks-the-shape-reference                           |
-      | change-reference-width         | 📏change-reference-width/🧪️tests/↔️widens-the-shape-reference-plane                       |
-      | move-reference                 | 📍move-reference/🧪️tests/📍️moves-the-shape-reference-off-origin                           |
-      | replace-reference-media        | 🖇️replace-reference-media/🧪️tests/🖼️reattaches-the-shape-reference-to-a-new-plan          |
-      | replace-references             | 📎replace-references/🧪️tests/🔄️swaps-the-shape-reference-list                             |
-      | change-active-model-definition | 🎯change-active-model-definition/🧪️tests/🏗️switches-the-active-pane-to-the-building-model |
+      | create-shape-model             | 🧱create-shape-model/🧱️rehandles-the-occupied-shape-slot                          |
+      | delete-shape-model             | 🧨delete-shape-model/🕳️vacates-the-shape-slot                                     |
+      | create-building-model          | 🏢create-building-model/🏢️rehandles-the-occupied-building-slot                    |
+      | delete-building-model          | 💥delete-building-model/🏚️vacates-the-building-slot                               |
+      | create-energy-model            | ⚡create-energy-model/⚡️rehandles-the-occupied-energy-slot                        |
+      | delete-energy-model            | 🔌delete-energy-model/🔌️vacates-the-energy-slot                                   |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-the-occupied-structure-classic-slot  |
+      | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates-the-structure-classic-slot             |
+      | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
+      | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |
+      | create-node                    | ➕create-node/🌱️appends-node-3                                                    |
+      | delete-node                    | 🗑️delete-node/🚫️removes-node-2                                                    |
+      | rename-node                    | 🏷️rename-node/🔤️relabels-the-root-node                                            |
+      | change-reference-hidden        | 👁️change-reference-hidden/🙈️hides-the-shape-reference                             |
+      | change-reference-locked        | 🔒change-reference-locked/🔓️unlocks-the-shape-reference                           |
+      | change-reference-width         | 📏change-reference-width/↔️widens-the-shape-reference-plane                       |
+      | move-reference                 | 📍move-reference/📍️moves-the-shape-reference-off-origin                           |
+      | replace-reference-media        | 🖇️replace-reference-media/🖼️reattaches-the-shape-reference-to-a-new-plan          |
+      | replace-references             | 📎replace-references/🔄️swaps-the-shape-reference-list                             |
+      | change-active-model-definition | 🎯change-active-model-definition/🏗️switches-the-active-pane-to-the-building-model |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the reference-bearing CAD composition
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps-the-shape-reference-list/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/📎replace-references/🔄️swaps-the-shape-reference-list/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

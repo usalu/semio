@@ -52,8 +52,8 @@ pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgD
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior-9684c1/🦠️mutation/🔣️.json")).expect("committed insert-other-segment payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other-segment/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed insert-other-segment payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior-9684c1/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

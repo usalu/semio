@@ -7,7 +7,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor UI patch receipt matches shared canonical vectors and the independent LEB128 encoder", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const lifetimeSchema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", source.url), "utf8"));
     const valueSchema = JSON.parse(readFileSync(new URL("../../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8"));
@@ -42,7 +42,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("actor UI patch receipt rejects invalid authority and enforces exact zero or one patch pairing", async () => {
     const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const receipt = { lifetime: { activationGeneration: 41n, instanceId: 7, guestLifetime: 13n }, patchSequence: 51n };
     const invalidCounters: unknown[] = [0n, -1n, 0x10000000000000000n, 1, "1", null, undefined];
     for (const value of invalidCounters) {

@@ -53,13 +53,13 @@ LETTER_MARK = {letter: kind for kind, letter in MARK_LETTER.items()}
 #: 📰️ The document every mutation row runs on: 384 real runs of the real German article "Zukunft
 #: Bau: Entwerfen mit Bestand", derived ONCE from this repository's own committed HTML 5 fixture by
 #: `🐍️derive-text-fixture.py` in the ticket folder.
-ARTICLE_DSL = "local://🏚️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio"
-ARTICLE_PACK = "local://🎒️.pack.semio"
+ARTICLE_DSL = "shared://🔤️mutate-semio-text/🏚️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio"
+ARTICLE_PACK = "shared://🔤️mutate-semio-text/🎒️.pack.semio"
 #: 🗣️ The tiny committed note, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the article pair — written by this implementation — cannot restate.
-NOTE_DSL = "asset://📚️examples/📃️note/🖼️assets/🗣️.dsl.semio"
-NOTE_PACK = "asset://📚️examples/📃️note/🖼️assets/🎒️.pack.semio"
+NOTE_DSL = "asset://📃️note/🗣️.dsl.semio"
+NOTE_PACK = "asset://📃️note/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

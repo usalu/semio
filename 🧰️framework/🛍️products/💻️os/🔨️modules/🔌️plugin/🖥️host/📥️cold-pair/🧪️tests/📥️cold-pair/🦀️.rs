@@ -56,7 +56,7 @@ fn wit_status(value: ColdPairIngressStatus) -> wit_reactor::ColdPairIngressStatu
 
 #[test]
 fn neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["statusRows"].as_array().unwrap() {
         let expected = fixture_status(row);
         let decoded = wit_cold_ingress_to_kernel(wit_status(expected.clone())).unwrap();

@@ -36,7 +36,7 @@ async fn cold_pair_ingress_status_pack_round_trips_every_exact_variant() {
 
 #[test]
 fn cold_pair_ingress_neutral_fixture_has_exact_semantic_receipts_and_hostiles() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixture/🔣️.json")).expect("fixture json");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("fixture json");
     let rows = fixture["statusRows"].as_array().expect("status rows");
     assert_eq!(rows.len(), 6);
     assert!(rows.iter().all(|row| row["kind"].as_str().is_some()));

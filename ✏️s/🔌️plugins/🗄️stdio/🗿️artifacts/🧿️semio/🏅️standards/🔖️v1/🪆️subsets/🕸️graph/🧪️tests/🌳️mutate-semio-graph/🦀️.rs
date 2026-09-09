@@ -38,15 +38,15 @@ const KINDS: &[&str] = &["create-node", "delete-node", "change-node-kind", "chan
 /// derived ONCE from the real committed IFC 4 file with IfcOpenShell 0.8.4 by
 /// `🐍️derive-graph-fixture.py` in the ticket folder.
 #[cfg(feature = "sut")]
-const TOWER_DSL: &str = "local://🏢️nakagin-capsule-tower/🗣️.dsl.semio";
+const TOWER_DSL: &str = "shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio";
 /// 🎒️ The same graph in its binary envelope, written by the PYTHON implementation — so this codec
 /// reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
-const TOWER_PACK: &str = "local://🎒️.pack.semio";
-const WIRES_DSL: &str = "asset://📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio";
+const TOWER_PACK: &str = "shared://🌳️mutate-semio-graph/🎒️.pack.semio";
+const WIRES_DSL: &str = "asset://🕸️wires/🗣️.dsl.semio";
 /// 🎒️ The same graph in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const WIRES_PACK: &str = "asset://📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio";
+const WIRES_PACK: &str = "asset://🕸️wires/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

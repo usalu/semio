@@ -34,7 +34,7 @@ const ALL: &[&str] = &["600", "600FF", "610", "620", "630", "640", "650", "900",
 
 /// 🌦️ The one weather file both producers read.
 #[cfg(feature = "sut")]
-const WEATHER_ASSET: &str = "asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw";
+const WEATHER_ASSET: &str = "shared://🌦️denver-tmy/🌦️.epw";
 
 /// 📏️ Tolerances from `📓️bestest-contract.md`. Annual and peak are relative; the temperature ones
 /// are absolute kelvin.
@@ -54,11 +54,11 @@ const HOURLY_RMSE_TOLERANCE_K: f64 = 2.0;
 
 #[cfg(feature = "sut")]
 fn model_asset(case: &str) -> String {
-    format!("asset://🧫️fixtures/🏛️bestest-{case}/🔋️model.json")
+    format!("shared://🏛️bestest-{case}/🔋️model.json")
 }
 
 fn reference_asset(case: &str) -> String {
-    format!("asset://🧫️fixtures/🏛️bestest-{case}/🔮️energyplus.json")
+    format!("shared://🏛️bestest-{case}/🔮️energyplus.json")
 }
 //#endregion 🔖️Cases
 

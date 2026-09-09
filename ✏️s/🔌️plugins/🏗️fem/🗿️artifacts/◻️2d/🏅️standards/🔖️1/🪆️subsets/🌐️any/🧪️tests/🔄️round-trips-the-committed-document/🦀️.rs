@@ -11,12 +11,12 @@ use semio_repo_test_host::Adapter;
 
 /// 🗣️ The real committed document this artifact ships as its own example, owned by this subset.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 /// 🧫️ The same derived timber-portal-frame model every fem2d mutation subset case shares, as its
 /// own local copy.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🔄️round-trips-the-committed-document/🏗️timber-portal-frame.snapshot.json";
 
 #[cfg(feature = "sut")]
 mod subject {

@@ -24,12 +24,12 @@ use semio_repo_test_host::Adapter;
 const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
 
 /// 📄️ The plugin's own committed real flow artifact, read where the domain already keeps it.
-const FLOW_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const FLOW_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 /// 🧫️ The four widgets, two synapses and two layout entries the composed content child is seeded
 /// with — see this fixture's own `_provenance` member for which committed leaf payload each value
 /// came from and why each derived one had to exist.
-const BASE_SCENE: &str = "local://🔣️.json";
+const BASE_SCENE: &str = "shared://🌊️mutate-flow-1/🔣️.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

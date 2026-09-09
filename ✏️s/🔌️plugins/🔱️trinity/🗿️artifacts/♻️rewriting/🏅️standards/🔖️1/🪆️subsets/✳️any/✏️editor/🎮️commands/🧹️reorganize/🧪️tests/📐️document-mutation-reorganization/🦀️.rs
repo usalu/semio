@@ -5,7 +5,7 @@ use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation, Rewritin
 
 #[semio_framework_async_macros::async_test]
 async fn reorganize_uses_document_mutations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️document-mutation-reorganization/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut before = RewritingSnapshot::default();
         before.rule_layout = pack::from_json_str(&case["before"].to_string()).unwrap();

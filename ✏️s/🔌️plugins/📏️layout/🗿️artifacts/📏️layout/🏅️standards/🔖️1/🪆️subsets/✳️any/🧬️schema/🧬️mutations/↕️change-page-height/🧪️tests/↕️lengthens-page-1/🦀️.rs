@@ -11,11 +11,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-page-height/↕️lengthens-page-1/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-page-height/↕️lengthens-page-1/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-page-height/↕️lengthens-page-1/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-page-height/↕️lengthens-page-1/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️change-page-height/↕️lengthens-page-1/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     dsl::os_pack::from_json_str(BEFORE).expect("change-page-height/lengthens-page-1: before snapshot decodes")

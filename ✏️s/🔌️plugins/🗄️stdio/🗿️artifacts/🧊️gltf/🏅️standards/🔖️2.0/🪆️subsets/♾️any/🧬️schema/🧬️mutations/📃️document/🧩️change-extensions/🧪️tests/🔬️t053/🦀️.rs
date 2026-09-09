@@ -14,11 +14,11 @@ use crate::schema::mutations::change_document_extension_data::{diff, inverse, mu
 use crate::GltfSnapshot;
 
 const CASE: &str = "change-document-extension-data/attaches-a-punctual-lights-extension-to-the-document-root";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📃️document/🧩️change-extensions/🔬️t053/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📃️document/🧩️change-extensions/🔬️t053/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📃️document/🧩️change-extensions/🔬️t053/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📃️document/🧩️change-extensions/🔬️t053/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📃️document/🧩️change-extensions/🔬️t053/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

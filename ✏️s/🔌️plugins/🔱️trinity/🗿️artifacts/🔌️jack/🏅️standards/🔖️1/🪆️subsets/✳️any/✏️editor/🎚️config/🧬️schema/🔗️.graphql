@@ -1,3 +1,0 @@
-type JackConfig {
-  jackQuery: String! @state(class: CONFIG)
-}

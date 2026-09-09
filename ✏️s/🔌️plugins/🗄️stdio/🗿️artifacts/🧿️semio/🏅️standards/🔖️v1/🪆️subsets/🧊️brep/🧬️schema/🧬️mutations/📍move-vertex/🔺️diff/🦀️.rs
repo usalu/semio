@@ -17,6 +17,9 @@ pub fn diff(payload: &super::MoveVertex, base: &SemioBrepSnapshot) -> protocol::
     if vertex.point == p {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Vertex \"{}\" is already at this point.", payload.vertex_id));
     }
-    protocol::MutationOutcome::new(SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.vertex_id.clone(), diff: BrepVertexDiff { point: Some(p) } }], added: vec![] }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioBrepDiff {
+        vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.vertex_id.clone(), diff: BrepVertexDiff { point: Some(p), tol: None } }], added: vec![] }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

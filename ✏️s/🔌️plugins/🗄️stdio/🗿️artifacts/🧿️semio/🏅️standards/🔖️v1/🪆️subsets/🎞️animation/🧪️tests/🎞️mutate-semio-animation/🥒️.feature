@@ -59,7 +59,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real committed walk cycle
-    Given the real committed animation artifact asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio
+    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
     When the <id> mutation is applied to the walk cycle parsed from it
       """
       <mutation>
@@ -84,7 +84,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real committed walk cycle
-    Given the real committed animation artifact asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio
+    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
     When the no-mutation mutation is applied to the walk cycle parsed from it
       """
       {"kind":"no-mutation","params":{}}
@@ -95,7 +95,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real committed walk cycle
-    Given the real committed animation artifact asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio
+    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
     When the <id> mutation is applied to the walk cycle parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -120,7 +120,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real committed walk cycle
-    Given the real committed animation artifact asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio
+    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
     When the no-mutation mutation is applied to the walk cycle parsed from it and each side undoes it with its own computed inverse
       """
       {"kind":"no-mutation","params":{}}
@@ -131,7 +131,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed specification vector local://<fixture>/🦠️mutation/🔣️.json for the <id> kind
+    Given the committed specification vector shared://🎞️mutate-semio-animation/<fixture>/🦠️mutation/🔣️.json for the <id> kind
     When both implementations apply the vector's mutation to its before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -154,7 +154,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @level-long
   @mode-round-trip
   Scenario: Re-emit the committed encoding of the real walk cycle from the parsed snapshot
-    Given the real committed animation artifact asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio
-    And the committed specification vector local://⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
+    And the committed specification vector shared://🎞️mutate-semio-animation/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the artifact, prints it back and parses the printed text again
     Then both reproduce the committed file byte for byte and agree on the walk cycle and on the digest of what they emitted

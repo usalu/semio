@@ -24,7 +24,9 @@
           "VSCODE_INSPECTOR_OPTIONS": ""
         },
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true
     },
     "build": {
       "executor": "nx:run-commands",

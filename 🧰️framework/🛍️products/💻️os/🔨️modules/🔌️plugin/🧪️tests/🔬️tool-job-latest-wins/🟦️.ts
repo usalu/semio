@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreOneItemPublicationBounded, toolJobProductionSource, toolJobMountedDispatchOneTurnExact } from "../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobProductionSource, toolJobMountedDispatchOneTurnExact } from "../../../../../../../📜️script.ts";
 
 /** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
@@ -135,14 +135,14 @@ export function toolJobLatestWinsSelfTests(): number {
     ["transient scheduler-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })', 'Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits transient scheduler authority" })')],
     ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
   ];
-  mountedChecks.push(["move-only mutation ownership", mountedChecks[0][1], mutatePublisher("emit.artifact_mutations.pop()", "emit.artifact_mutations.last().cloned()")]);
+  mountedChecks.push(["move-only mutation ownership", mountedChecks[0][1], mutatePublisher("std::mem::take(&mut emit.artifact_mutations)", "emit.artifact_mutations.last().cloned()")]);
   for (const [name, check, hostile] of mountedChecks) {
     if (!check(source)) throw new Error(`mounted source binding rejected its real ${name}`);
     if (hostile === source || check(hostile)) throw new Error(`mounted source binding accepted hostile ${name}`);
   }
-  if (!toolJobStoreOneItemPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
-  const replayingOwnedBegin = storeSource.replace("let base = match self.snapshot_read() {", "replay_mutations(); let base = match self.snapshot_read() {");
-  if (replayingOwnedBegin === storeSource || toolJobStoreOneItemPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
+  if (!toolJobStoreBatchPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
+  const replayingOwnedBegin = storeSource.replace("let footprint = match source.footprint(lane) {", "replay_mutations(); let footprint = match source.footprint(lane) {");
+  if (replayingOwnedBegin === storeSource || toolJobStoreBatchPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
   const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
   const validateDispatch = ajv.compile({ $ref: schema.$id + "#/$defs/MountedDispatchBindingV1" });
   if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);

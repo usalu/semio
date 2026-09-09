@@ -15,11 +15,11 @@ use crate::schema::mutations::reorder_meshs::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-meshs/flips-the-hull-and-deck-meshes";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🔀️reorder/🔀️flips-the-hull-ebfffa/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🔀️reorder/🔀️flips-the-hull-ebfffa/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🔀️reorder/🔀️flips-the-hull-ebfffa/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🔀️reorder/🔀️flips-the-hull-ebfffa/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🔀️reorder/🔀️flips-the-hull-ebfffa/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

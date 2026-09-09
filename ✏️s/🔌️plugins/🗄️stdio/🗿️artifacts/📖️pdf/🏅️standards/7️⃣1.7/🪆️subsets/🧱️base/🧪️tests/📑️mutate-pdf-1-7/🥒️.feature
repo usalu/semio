@@ -121,7 +121,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -150,7 +150,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -179,7 +179,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input

@@ -21,6 +21,6 @@ pub fn diff(payload: &InsertTableColumn, base: &NoteSnapshot) -> protocol::Mutat
             row.push(crate::NoteTableCell { content: String::new() });
         }
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

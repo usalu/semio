@@ -16,11 +16,11 @@ use crate::schema::mutations::bind_node_camera::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "bind-node-camera/binds-the-perspective-camera-to-the-eye-node";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📷️node-camera/🔗️bind/🔗️binds-the-843e96/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📷️node-camera/🔗️bind/🔗️binds-the-843e96/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📷️node-camera/🔗️bind/🔗️binds-the-843e96/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📷️node-camera/🔗️bind/🔗️binds-the-843e96/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📷️node-camera/🔗️bind/🔗️binds-the-843e96/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

@@ -61,10 +61,10 @@ Feature: Apply every typed imperative-program mutation to its committed vector, 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed vector and then for real
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed specification vector for the <id> kind and its cached program
     When <id> is replayed against its vector and then applied for real
       """
@@ -73,19 +73,19 @@ Feature: Apply every typed imperative-program mutation to its committed vector, 
     Then the vector reports exactly <code> at <level> with the flow handle untouched, and the real application moves the handle, and the two implementations agree on the committed outcome
     Examples:
       | id               | dir                 | fixture                                                       | code                    | level   | program | params |
-      | create-step      | 🌱create-step        | rejects-a-duplicate-step-id-at-the-root-path                  | mutation.duplicate-id   | Fatal   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "createStep", "pathRef": {}, "step": {"id": "step-9", "kind": "log.print", "params": {}, "bodies": {}}} |
-      | delete-step      | 🗑️delete-step        | rejects-a-root-step-id-addressed-inside-a-branch-body         | mutation.target-missing | Error   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "control.if", "params": {}, "bodies": {"then": {"steps": [{"id": "step-3a", "kind": "log.print", "params": {}, "bodies": {}}]}}}]} | {"mutation": "deleteStep", "pathRef": {"owner": "step-3", "slot": "then"}, "id": "step-3a"} |
-      | reorder-steps    | 🔀reorder-steps      | warns-that-an-over-clamped-index-leaves-the-tail-step-in-place | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "reorderSteps", "pathRef": {}, "id": "step-3", "toIndex": 0} |
-      | edit-step-params | 🔧edit-step-params   | warns-that-step-1-already-carries-the-requested-params        | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {"message": "Guten Tag"}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "editStepParams", "pathRef": {}, "id": "step-1", "newParams": {"message": "Gruezi"}} |
+      | create-step      | 🌱create-step        | 🧪️rejects-a-duplicate-step-id-at-the-root-path                  | mutation.duplicate-id   | Fatal   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "createStep", "pathRef": {}, "step": {"id": "step-9", "kind": "log.print", "params": {}, "bodies": {}}} |
+      | delete-step      | 🗑️delete-step        | 🧪️rejects-a-root-step-id-addressed-inside-a-branch-body         | mutation.target-missing | Error   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "control.if", "params": {}, "bodies": {"then": {"steps": [{"id": "step-3a", "kind": "log.print", "params": {}, "bodies": {}}]}}}]} | {"mutation": "deleteStep", "pathRef": {"owner": "step-3", "slot": "then"}, "id": "step-3a"} |
+      | reorder-steps    | 🔀reorder-steps      | 🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "reorderSteps", "pathRef": {}, "id": "step-3", "toIndex": 0} |
+      | edit-step-params | 🔧edit-step-params   | 🧪️warns-that-step-1-already-carries-the-requested-params        | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {"message": "Guten Tag"}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "editStepParams", "pathRef": {}, "id": "step-1", "newParams": {"message": "Gruezi"}} |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the seeded program
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed before-snapshot for the <id> kind and its cached program
     When the real <id> payload is applied to it and then its own computed inverse steps are applied
       """
@@ -94,15 +94,15 @@ Feature: Apply every typed imperative-program mutation to its committed vector, 
     Then the document equals the before-snapshot again, flow handle included — which for a content-addressed child means the whole program came back, and both implementations agree
     Examples:
       | id               | dir                 | fixture                                                       | code                    | level   | program | params |
-      | create-step      | 🌱create-step        | rejects-a-duplicate-step-id-at-the-root-path                  | mutation.duplicate-id   | Fatal   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "createStep", "pathRef": {}, "step": {"id": "step-9", "kind": "log.print", "params": {}, "bodies": {}}} |
-      | delete-step      | 🗑️delete-step        | rejects-a-root-step-id-addressed-inside-a-branch-body         | mutation.target-missing | Error   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "control.if", "params": {}, "bodies": {"then": {"steps": [{"id": "step-3a", "kind": "log.print", "params": {}, "bodies": {}}]}}}]} | {"mutation": "deleteStep", "pathRef": {"owner": "step-3", "slot": "then"}, "id": "step-3a"} |
-      | reorder-steps    | 🔀reorder-steps      | warns-that-an-over-clamped-index-leaves-the-tail-step-in-place | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "reorderSteps", "pathRef": {}, "id": "step-3", "toIndex": 0} |
-      | edit-step-params | 🔧edit-step-params   | warns-that-step-1-already-carries-the-requested-params        | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {"message": "Guten Tag"}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "editStepParams", "pathRef": {}, "id": "step-1", "newParams": {"message": "Gruezi"}} |
+      | create-step      | 🌱create-step        | 🧪️rejects-a-duplicate-step-id-at-the-root-path                  | mutation.duplicate-id   | Fatal   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "createStep", "pathRef": {}, "step": {"id": "step-9", "kind": "log.print", "params": {}, "bodies": {}}} |
+      | delete-step      | 🗑️delete-step        | 🧪️rejects-a-root-step-id-addressed-inside-a-branch-body         | mutation.target-missing | Error   | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "control.if", "params": {}, "bodies": {"then": {"steps": [{"id": "step-3a", "kind": "log.print", "params": {}, "bodies": {}}]}}}]} | {"mutation": "deleteStep", "pathRef": {"owner": "step-3", "slot": "then"}, "id": "step-3a"} |
+      | reorder-steps    | 🔀reorder-steps      | 🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}, {"id": "step-3", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "reorderSteps", "pathRef": {}, "id": "step-3", "toIndex": 0} |
+      | edit-step-params | 🔧edit-step-params   | 🧪️warns-that-step-1-already-carries-the-requested-params        | mutation.no-op          | Warning | {"steps": [{"id": "step-1", "kind": "log.print", "params": {"message": "Guten Tag"}, "bodies": {}}, {"id": "step-2", "kind": "log.print", "params": {}, "bodies": {}}]} | {"mutation": "editStepParams", "pathRef": {}, "id": "step-1", "newParams": {"message": "Gruezi"}} |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Read the real committed program document through its own DSL carrier and print it back
-    Given the real committed text artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed text artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed, printed back to `.imperative.dsl.semio` and parsed again
     Then every decoding agrees on the same two composed children — an `s.stdio.semio@v1/flow` program and an `s.stdio.semio@v1/text` narrative — and the printed text reproduces the committed file byte for byte

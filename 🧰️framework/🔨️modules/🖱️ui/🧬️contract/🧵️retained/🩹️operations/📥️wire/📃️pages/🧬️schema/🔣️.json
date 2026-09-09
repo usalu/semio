@@ -225,7 +225,7 @@
           ],
           "properties": {
             "builderFixture": {
-              "const": "../../../💾️resident/🏗️builder/🧪️fixture/🔣️.json"
+              "const": "../../../💾️resident/🏗️builder/🧫️fixtures/🔣️.json"
             },
             "terminalChildBytes": {
               "const": 4096
@@ -262,7 +262,7 @@
               "const": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
             },
             "compositionFixture": {
-              "const": "../../../💾️resident/🪪️metadata/🧪️fixture/🔣️.json#/compositionCapacity"
+              "const": "../../../💾️resident/🪪️metadata/🧫️fixtures/🔣️.json#/compositionCapacity"
             },
             "maxDestinationPages": {
               "const": 1

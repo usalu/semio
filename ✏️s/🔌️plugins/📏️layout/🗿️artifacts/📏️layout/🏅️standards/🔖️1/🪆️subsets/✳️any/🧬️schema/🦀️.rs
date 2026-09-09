@@ -104,7 +104,7 @@ impl LayoutArtifact {
             data_fields_json: snapshot.data_fields_json,
             background_drawing: snapshot.background_drawing,
             referenced_model: snapshot.referenced_model,
-            ..Self::default()
+
         }
     }
 

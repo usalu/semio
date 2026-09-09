@@ -4,15 +4,15 @@
 Feature: Read the real derived frame in both languages, and hold the committed carrier to its own law in Rust
 
   This case carries the whole-document identity law and the derivation provenance for
-  `local://🏗️timber-portal-frame.snapshot.json` that used to live inside the artifact-level
+  `shared://🔄️round-trips-the-committed-document/🏗️timber-portal-frame.snapshot.json` that used to live inside the artifact-level
   `mutate-fem2d-1` case alongside the `🕸️mesh`, `✳️material`, `✳️boundary`, `✳️load` and
   `✳️analysis` mutation Examples. It has no vector and no mutation kind, so unlike its five mutation
   siblings it claims no `@mutations-` catalog — `✳️any` owns no mutation catalog of its own now
   that every collection has its smallest owner.
 
-  The artifact is real. `local://🏗️timber-portal-frame.snapshot.json` was derived ONCE by
+  The artifact is real. `shared://🔄️round-trips-the-committed-document/🏗️timber-portal-frame.snapshot.json` was derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem2d-frame.py`
-  from the artifact's own committed demo model (`asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`):
+  from the artifact's own committed demo model (`asset://🎬️demo/🗣️.dsl.semio`):
   a twelve-node timber-and-steel portal frame with a ridge at 7.6 m, nine beam elements, four
   supports, three real materials with their real moduli and densities, four sections with their real
   areas and second moments, a first-floor slab, a dead case carrying an area pressure, a live case
@@ -46,7 +46,7 @@ Feature: Read the real derived frame in both languages, and hold the committed c
   @level-long
   @mode-round-trip
   Scenario: Read the real derived frame in both languages, and hold the committed carrier to its own law in Rust
-    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
-    And the artifact's own committed carrier asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real derived model shared://🔄️round-trips-the-committed-document/🏗️timber-portal-frame.snapshot.json
+    And the artifact's own committed carrier asset://🎬️demo/🗣️.dsl.semio
     When each implementation reads the derived model, and the Rust additionally parses the committed carrier, prints it back and parses it again
     Then both languages read the same nine members, and the Rust reproduces the committed carrier byte for byte

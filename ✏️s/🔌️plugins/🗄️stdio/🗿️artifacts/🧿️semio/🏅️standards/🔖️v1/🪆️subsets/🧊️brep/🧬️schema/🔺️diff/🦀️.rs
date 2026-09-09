@@ -16,7 +16,9 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::snapshot::{
+    dec_edge, dec_face, dec_vertex, enc_edge, enc_face, enc_vertex, BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot,
+};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -149,6 +151,8 @@ where
 pub struct BrepVertexDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub point: Option<SemioPoint3>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub tol: Option<f64>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -160,6 +164,8 @@ pub struct BrepEdgeDiff {
     pub end_vertex: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub curve: Option<BrepCurve>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub tol: Option<f64>,
 }
 
 /// 🔺️ `edges` is whole-value replaced (the loop's traversal order + orientation set is a weak
@@ -182,6 +188,8 @@ pub struct BrepFaceDiff {
     pub surface: Option<BrepSurface>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub tol: Option<f64>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -230,6 +238,9 @@ fn apply_vertex(v: &mut BrepVertex, d: &BrepVertexDiff) {
     if let Some(p) = &d.point {
         v.point = *p;
     }
+    if let Some(tol) = d.tol {
+        v.tol = tol;
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_edge(e: &mut BrepEdge, d: &BrepEdgeDiff) {
@@ -241,6 +252,9 @@ fn apply_edge(e: &mut BrepEdge, d: &BrepEdgeDiff) {
     }
     if let Some(v) = &d.curve {
         e.curve = v.clone();
+    }
+    if let Some(tol) = d.tol {
+        e.tol = tol;
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -263,6 +277,9 @@ fn apply_face(f: &mut BrepFace, d: &BrepFaceDiff) {
     if let Some(v) = &d.orientation {
         f.orientation = *v;
     }
+    if let Some(tol) = d.tol {
+        f.tol = tol;
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_shell(s: &mut BrepShell, d: &BrepShellDiff) {
@@ -282,10 +299,11 @@ fn apply_solid(s: &mut BrepSolid, d: &BrepSolidDiff) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_vertex(a: &BrepVertex, b: &BrepVertex) -> Option<BrepVertexDiff> {
     let point = if a.point != b.point { Some(b.point) } else { None };
-    if point.is_none() {
+    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
+    if point.is_none() && tol.is_none() {
         None
     } else {
-        Some(BrepVertexDiff { point })
+        Some(BrepVertexDiff { point, tol })
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -293,10 +311,11 @@ fn between_edge(a: &BrepEdge, b: &BrepEdge) -> Option<BrepEdgeDiff> {
     let start_vertex = if a.start_vertex != b.start_vertex { Some(b.start_vertex.clone()) } else { None };
     let end_vertex = if a.end_vertex != b.end_vertex { Some(b.end_vertex.clone()) } else { None };
     let curve = if a.curve != b.curve { Some(b.curve.clone()) } else { None };
-    if start_vertex.is_none() && end_vertex.is_none() && curve.is_none() {
+    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
+    if start_vertex.is_none() && end_vertex.is_none() && curve.is_none() && tol.is_none() {
         None
     } else {
-        Some(BrepEdgeDiff { start_vertex, end_vertex, curve })
+        Some(BrepEdgeDiff { start_vertex, end_vertex, curve, tol })
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -314,10 +333,11 @@ fn between_face(a: &BrepFace, b: &BrepFace) -> Option<BrepFaceDiff> {
     let inner_loops = if a.inner_loops != b.inner_loops { Some(b.inner_loops.clone()) } else { None };
     let surface = if a.surface != b.surface { Some(b.surface.clone()) } else { None };
     let orientation = if a.orientation != b.orientation { Some(b.orientation) } else { None };
-    if outer_loop.is_none() && inner_loops.is_none() && surface.is_none() && orientation.is_none() {
+    let tol = if a.tol != b.tol { Some(b.tol) } else { None };
+    if outer_loop.is_none() && inner_loops.is_none() && surface.is_none() && orientation.is_none() && tol.is_none() {
         None
     } else {
-        Some(BrepFaceDiff { outer_loop, inner_loops, surface, orientation })
+        Some(BrepFaceDiff { outer_loop, inner_loops, surface, orientation, tol })
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -343,11 +363,11 @@ fn between_solid(a: &BrepSolid, b: &BrepSolid) -> Option<BrepSolidDiff> {
 //#region 🔖️PerEntityInverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_vertex(base: &BrepVertex, d: &BrepVertexDiff) -> BrepVertexDiff {
-    BrepVertexDiff { point: d.point.as_ref().map(|_| base.point) }
+    BrepVertexDiff { point: d.point.as_ref().map(|_| base.point), tol: d.tol.map(|_| base.tol) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_edge(base: &BrepEdge, d: &BrepEdgeDiff) -> BrepEdgeDiff {
-    BrepEdgeDiff { start_vertex: d.start_vertex.as_ref().map(|_| base.start_vertex.clone()), end_vertex: d.end_vertex.as_ref().map(|_| base.end_vertex.clone()), curve: d.curve.as_ref().map(|_| base.curve.clone()) }
+    BrepEdgeDiff { start_vertex: d.start_vertex.as_ref().map(|_| base.start_vertex.clone()), end_vertex: d.end_vertex.as_ref().map(|_| base.end_vertex.clone()), curve: d.curve.as_ref().map(|_| base.curve.clone()), tol: d.tol.map(|_| base.tol) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_loop(base: &BrepLoop, d: &BrepLoopDiff) -> BrepLoopDiff {
@@ -360,6 +380,7 @@ fn inverse_face(base: &BrepFace, d: &BrepFaceDiff) -> BrepFaceDiff {
         inner_loops: d.inner_loops.as_ref().map(|_| base.inner_loops.clone()),
         surface: d.surface.as_ref().map(|_| base.surface.clone()),
         orientation: d.orientation.as_ref().map(|_| base.orientation),
+        tol: d.tol.map(|_| base.tol),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -378,6 +399,9 @@ fn absorb_vertex_diff(mut a: BrepVertexDiff, b: &BrepVertexDiff) -> BrepVertexDi
     if b.point.is_some() {
         a.point = b.point;
     }
+    if b.tol.is_some() {
+        a.tol = b.tol;
+    }
     a
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -390,6 +414,9 @@ fn absorb_edge_diff(mut a: BrepEdgeDiff, b: BrepEdgeDiff) -> BrepEdgeDiff {
     }
     if b.curve.is_some() {
         a.curve = b.curve;
+    }
+    if b.tol.is_some() {
+        a.tol = b.tol;
     }
     a
 }
@@ -413,6 +440,9 @@ fn absorb_face_diff(mut a: BrepFaceDiff, b: BrepFaceDiff) -> BrepFaceDiff {
     }
     if b.orientation.is_some() {
         a.orientation = b.orientation;
+    }
+    if b.tol.is_some() {
+        a.tol = b.tol;
     }
     a
 }
@@ -754,28 +784,6 @@ pub(crate) fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertex(v: &BrepVertex) -> String {
-    format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: 0.0 })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_edge(e: &BrepEdge) -> String {
-    format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: 0.0 })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_loop(l: &BrepLoop) -> String {
     format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge))
 }
@@ -784,17 +792,6 @@ pub(crate) fn dec_loop(s: &str) -> Result<BrepLoop, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, edges] = parts.as_slice() else { return Err(format!("loop: expected 2 fields, got {}", parts.len())) };
     Ok(BrepLoop { id: dec_str(id)?, edges: dec_list(edges, dec_loop_edge)? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_face(f: &BrepFace) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_face(s: &str) -> Result<BrepFace, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, outer_loop, inner_loops, surface, orientation] = parts.as_slice() else { return Err(format!("face: expected 5 fields, got {}", parts.len())) };
-    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: 0.0 })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -823,23 +820,24 @@ pub(crate) fn dec_solid(s: &str) -> Result<BrepSolid, String> {
 //#region 🔖️DiffValueCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_vertex_diff(d: &BrepVertexDiff) -> String {
-    format!("[{}]", encode_option(&d.point, enc_point3))
+    format!("[{},{}]", encode_option(&d.point, enc_point3), encode_option(&d.tol, |v: &f64| v.to_string()))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(BrepVertexDiff { point: decode_option(inner, dec_point3)? })
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [point, tol] = parts.as_slice() else { return Err(format!("vertex diff: expected 2 fields, got {}", parts.len())) };
+    Ok(BrepVertexDiff { point: decode_option(point, dec_point3)?, tol: decode_option(tol, parse_f64)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_edge_diff(d: &BrepEdgeDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.start_vertex, |v: &String| enc_str(v)), encode_option(&d.end_vertex, |v: &String| enc_str(v)), encode_option(&d.curve, enc_curve))
+    format!("[{},{},{},{}]", encode_option(&d.start_vertex, |v: &String| enc_str(v)), encode_option(&d.end_vertex, |v: &String| enc_str(v)), encode_option(&d.curve, enc_curve), encode_option(&d.tol, |v: &f64| v.to_string()))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_edge_diff(s: &str) -> Result<BrepEdgeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge diff: expected 3 fields, got {}", parts.len())) };
-    Ok(BrepEdgeDiff { start_vertex: decode_option(start_vertex, dec_str)?, end_vertex: decode_option(end_vertex, dec_str)?, curve: decode_option(curve, dec_curve)? })
+    let [start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge diff: expected 4 fields, got {}", parts.len())) };
+    Ok(BrepEdgeDiff { start_vertex: decode_option(start_vertex, dec_str)?, end_vertex: decode_option(end_vertex, dec_str)?, curve: decode_option(curve, dec_curve)?, tol: decode_option(tol, parse_f64)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -855,18 +853,25 @@ fn dec_loop_diff(s: &str) -> Result<BrepLoopDiff, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_face_diff(d: &BrepFaceDiff) -> String {
     format!(
-        "[{},{},{},{}]",
+        "[{},{},{},{},{}]",
         encode_option(&d.outer_loop, |v: &String| enc_str(v)),
         encode_option(&d.inner_loops, |v: &Vec<String>| enc_list(v, |s: &String| enc_str(s))),
         encode_option(&d.surface, enc_surface),
         encode_option(&d.orientation, |b: &bool| enc_bool(*b).to_string()),
+        encode_option(&d.tol, |v: &f64| v.to_string()),
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [outer_loop, inner_loops, surface, orientation] = parts.as_slice() else { return Err(format!("face diff: expected 4 fields, got {}", parts.len())) };
-    Ok(BrepFaceDiff { outer_loop: decode_option(outer_loop, dec_str)?, inner_loops: decode_option(inner_loops, |s| dec_list(s, dec_str))?, surface: decode_option(surface, dec_surface)?, orientation: decode_option(orientation, parse_bool)? })
+    let [outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face diff: expected 5 fields, got {}", parts.len())) };
+    Ok(BrepFaceDiff {
+        outer_loop: decode_option(outer_loop, dec_str)?,
+        inner_loops: decode_option(inner_loops, |s| dec_list(s, dec_str))?,
+        surface: decode_option(surface, dec_surface)?,
+        orientation: decode_option(orientation, parse_bool)?,
+        tol: decode_option(tol, parse_f64)?,
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

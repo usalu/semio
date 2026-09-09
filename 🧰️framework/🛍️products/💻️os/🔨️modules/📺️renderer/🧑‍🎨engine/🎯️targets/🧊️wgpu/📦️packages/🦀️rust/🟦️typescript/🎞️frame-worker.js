@@ -5175,6 +5175,10 @@ class RetainedUiWireValueCursor {
           this.#phase = "attach";
         } else if (tag === 5)
           this.#phase = "float";
+        else if (tag === 4)
+          this.#phase = "uint";
+        else if (tag === 3)
+          this.#phase = "int";
         else if (tag === 6)
           this.#phase = "symbol-reference";
         else if (tag === 7) {
@@ -5186,6 +5190,21 @@ class RetainedUiWireValueCursor {
         } else
           throw new Error("Unknown UI value tag");
         return 1;
+      }
+      case "uint":
+        return this.#nat("uint-done");
+      case "uint-done": {
+        this.#pending = this.#number;
+        this.#phase = "attach";
+        return 8;
+      }
+      case "int":
+        return this.#nat("int-done");
+      case "int-done": {
+        const zigzag = this.#number;
+        this.#pending = zigzag % 2 === 0 ? zigzag / 2 : -(zigzag + 1) / 2;
+        this.#phase = "attach";
+        return 8;
       }
       case "float": {
         this.#stepBytes = 16;
@@ -22133,7 +22152,6 @@ function admitPage2(page, itemCapacity, byteCapacity) {
 function admittedCount2(value) {
   return Number.isSafeInteger(value) && value >= 0;
 }
-
 /* ../../../../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts */
 var DOCUMENT_BROWSER_ACTOR_INTERFACES = Object.freeze([
   "semio:framework/host-async@1.0.0",
@@ -22208,7 +22226,6 @@ var GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1 = Object.freeze({
   longitude: Object.freeze({ en: "Longitude extent", de: "Längengradbereich" }),
   latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" })
 });
-
 /* ../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts */
 function localInteractionIdentityEquals(left, right) {
   return left.appInstanceId === right.appInstanceId && left.generation === right.generation && left.revision === right.revision && left.documentRevision === right.documentRevision && left.topologyRevision === right.topologyRevision;

@@ -37,7 +37,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// own local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature`
 /// for the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🏋️mutate-fem2d-1-any-load/🏗️timber-portal-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -55,53 +55,53 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-load-case" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends-a-live-case-59118a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends-a-live-case-59118a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends-a-live-case-59118a/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends-a-live-case-59118a/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends-a-live-case-59118a/🎯️outcome/🔣️.json"),
         },
         "delete-load-case" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes-the-live-06415d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes-the-live-06415d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes-the-live-06415d/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes-the-live-06415d/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚫️removes-the-live-06415d/🎯️outcome/🔣️.json"),
         },
         "add-load" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➕️add-load/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➕️add-load/📏️appends-a-member-udl-to-the-dead-case/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➕️add-load/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➕️add-load/📏️appends-a-member-udl-to-the-dead-case/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➕️add-load/📏️appends-a-member-udl-to-the-dead-case/🎯️outcome/🔣️.json"),
         },
         "remove-load" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips-the-trailing-member-133914/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips-the-trailing-member-133914/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips-the-trailing-member-133914/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips-the-trailing-member-133914/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/➖️remove-load/➖️strips-the-trailing-member-133914/🎯️outcome/🔣️.json"),
         },
         "change-load-case-self-weight" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches-self-abbff2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches-self-abbff2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches-self-abbff2/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches-self-abbff2/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⚖️switches-self-abbff2/🎯️outcome/🔣️.json"),
         },
         "create-combination" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends-an-uls-0c18bb/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends-an-uls-0c18bb/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends-an-uls-0c18bb/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends-an-uls-0c18bb/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔗️create-combination/🔗️appends-an-uls-0c18bb/🎯️outcome/🔣️.json"),
         },
         "delete-combination" => Vector {
-            before: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem2d-1-load: no committed specification vector is registered for kind {other:?}"),
     }
@@ -202,7 +202,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://🏋️mutate-fem2d-1-any-load/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

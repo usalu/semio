@@ -23,6 +23,6 @@ pub fn diff(payload: &RemoveTableColumn, base: &NoteSnapshot) -> protocol::Mutat
             row.pop();
         }
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

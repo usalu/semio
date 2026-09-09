@@ -1,0 +1,24 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": null,
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": {
+    "entries": {
+      "asset-logo": {
+        "mime": "image/svg+xml",
+        "data": "PHN2Zy8+"
+      }
+    }
+  },
+  "linkedArtifact": null
+}

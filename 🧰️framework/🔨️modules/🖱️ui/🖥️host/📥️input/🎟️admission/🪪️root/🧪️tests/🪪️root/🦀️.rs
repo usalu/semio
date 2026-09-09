@@ -26,7 +26,7 @@ static ALLOCATOR: ObservedAllocator = ObservedAllocator;
 pub(super) fn interfere_after_load(counter: &AtomicU64) {
     INTERFERE.with(|pending| if let Some(value) = pending.take() { counter.store(value, Ordering::SeqCst); });
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
 fn number(value: &serde_json::Value) -> u64 { value.as_str().unwrap().parse().unwrap() }
 fn grant() -> usize { size_of::<EventQueue>() }
 pub(super) fn allocations_start() {

@@ -310,12 +310,12 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     && viewerTestSource.includes('origin: "hub", role: None');
   assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
   assert(exact(editor, editorTests, viewerTests), "Home identity rows expose administration without current author authority");
-  const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦀️.rs";
+  const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps-the-catalog-generation-to-7/🦀️.rs";
   const catalogGenerationSource = readFileSync(join(base, catalogGenerationFixture), "utf8");
   assert(existsSync(join(base, catalogGenerationFixture)), "Home catalog-generation fixture is not present at its canonical bounded physical path");
   assert(homeCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${catalogGenerationFixture}`), "Home artifact crate misses the canonical bounded fixture path");
   const spaceBase = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any");
-  const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-4665d4/🦀️.rs";
+  const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends-artifact-3-to-the-index/🦀️.rs";
   assert(existsSync(join(spaceBase, createArtifactFixture)), "Space create-artifact fixture is not present at its canonical bounded physical path");
   assert(spaceIndexCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${createArtifactFixture}`), "Space Index artifact crate misses the canonical create-artifact fixture path");
   const missingMounts = [

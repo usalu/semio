@@ -1,6 +1,6 @@
 #[test]
 fn primary_asset_is_nonempty() {
-    let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
+    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     assert!(text.len() > 8);
 }
 
@@ -10,7 +10,7 @@ fn inference_determinism_law() {
     use crate::standards::v1::subsets::any::schema::inferences::Fem2dInference;
     use protocol::Inference;
 
-    let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
+    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
     assert_eq!(Fem2dInference::infer(&snapshot), Fem2dInference::infer(&snapshot));
 }

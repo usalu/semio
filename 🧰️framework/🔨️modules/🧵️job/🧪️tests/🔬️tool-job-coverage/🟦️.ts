@@ -1,4 +1,4 @@
-import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProofCatalogFailures, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobActorProgressOverlayExact, toolJobFem2dMountedSessionExact, toolJobScanThenMonolithRows, toolJobFrameworkReservedRoutesExact, toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact, TOOL_JOB_RESERVED_IDS, toolJobImportPreparationBounded, toolJobFullOperationBounded, toolJobStoreOneItemPublicationBounded, toolJobEphemeralOneItemPublicationBounded, toolJobPublicationFreshnessBeforeEveryTurn, toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobDropCancellationBounded, toolJobCancellationScopesBounded, toolJobHardBoundedCloseExact, toolJobErasedCloseTerminalExact, toolJobRuntimeCloseCallbackBounded, toolJobDetachedOutputOwnershipExact, toolJobLiveConstructionCleanupExact, toolJobSnapshotRetirementBounded, toolJobVcsOwnedDisposalExplicit, toolJobRuntimeRegistryFixedClose, toolJobReactorCloseBounded, toolJobOpaqueFutureProductionFailClosed, toolJobSegmentedQueueHardBounded, toolJobSegmentedTerminalDrainExact, toolJobPuzzleReservedRoutesExact, toolJobMediaExportBounded, toolJobImmutableOperationRootsExact, toolJobChildContentRootExact, toolJobMemberStoreOwnerExact, toolJobArtifactStoreStructuralOwnersExact, toolJobHistoryLedgerAdmissionExact, toolJobArtifactResolutionCandidateExact, toolJobArtifactEditMessageLedgerExact, toolJobArtifactEnvelopeOwnedCodecExact, toolJobPresentationEnvelopeCallerRetainedExact, toolJobWriterEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobGisMapEnvelopeCallerRetainedExact, toolJobRasterEnvelopeCallerRetainedExact, toolJobDrawingEnvelopeCallerRetainedExact, toolJobPeerInteractionRootsExact, toolJobPagedIngressExact, toolJobUniversalRetainedOwnershipExact, toolJobLayoutColdRelayRetainedExact } from "../../../../../📜️script.ts";
+import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProofCatalogFailures, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobActorProgressOverlayExact, toolJobFem2dMountedSessionExact, toolJobScanThenMonolithRows, toolJobFrameworkReservedRoutesExact, toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact, TOOL_JOB_RESERVED_IDS, toolJobImportPreparationBounded, toolJobFullOperationBounded, toolJobStoreBatchPublicationBounded, toolJobEphemeralOneItemPublicationBounded, toolJobPublicationFreshnessBeforeEveryTurn, toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobDropCancellationBounded, toolJobCancellationScopesBounded, toolJobHardBoundedCloseExact, toolJobErasedCloseTerminalExact, toolJobRuntimeCloseCallbackBounded, toolJobDetachedOutputOwnershipExact, toolJobLiveConstructionCleanupExact, toolJobSnapshotRetirementBounded, toolJobVcsOwnedDisposalExplicit, toolJobRuntimeRegistryFixedClose, toolJobReactorCloseBounded, toolJobOpaqueFutureProductionFailClosed, toolJobSegmentedQueueHardBounded, toolJobSegmentedTerminalDrainExact, toolJobPuzzleReservedRoutesExact, toolJobMediaExportBounded, toolJobImmutableOperationRootsExact, toolJobChildContentRootExact, toolJobMemberStoreOwnerExact, toolJobArtifactStoreStructuralOwnersExact, toolJobHistoryLedgerAdmissionExact, toolJobArtifactResolutionCandidateExact, toolJobArtifactEditMessageLedgerExact, toolJobArtifactEnvelopeOwnedCodecExact, toolJobPresentationEnvelopeCallerRetainedExact, toolJobWriterEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobGisMapEnvelopeCallerRetainedExact, toolJobRasterEnvelopeCallerRetainedExact, toolJobDrawingEnvelopeCallerRetainedExact, toolJobPeerInteractionRootsExact, toolJobPagedIngressExact, toolJobUniversalRetainedOwnershipExact, toolJobLayoutColdRelayRetainedExact } from "../../../../../📜️script.ts";
 import { toolJobCheckpointSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts";
 import { toolJobScalarConfigCohortSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts";
 import { storeCanonicalEditSealerSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts";
@@ -393,18 +393,22 @@ impl ArtifactEditor for Ownerownerrs {
 pub trait ArtifactStoreOneItemPreparationFactory {}
 pub trait ArtifactStoreOneItemPreparation {}
 pub struct ArtifactStoreOneItemPrepared;
+trait ArtifactStoreBatchSource {}
 pub enum ArtifactStoreOneItemPublicationPhase { Prepare, Commit, Outbound, Retiring, Complete }
-pub struct ArtifactStoreOneItemPublication<P, Mutation> { generation: u64, maximum_items: usize, maximum_bytes: usize, marker: PhantomData<(P, Mutation)> }
-impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
+pub struct ArtifactStoreBatchPublication<P, Mutation> { generation: u64, maximum_items: usize, maximum_bytes: usize, marker: PhantomData<(P, Mutation)> }
+impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
   fn begin_close(&mut self) {}
   fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) { let items = maximum_items.min(1); if items > 0 && maximum_bytes > 0 { self.maximum_items = items; } }
   fn terminal_is_empty(&self) -> bool { self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.marker.is_empty() && self.maximum_items == 0 && self.maximum_bytes == 0 && self.generation == 0 }
 }
-impl<P, Mutation> Drop for ArtifactStoreOneItemPublication<P, Mutation> { fn drop(&mut self) { assert!(self.terminal_is_empty()); } }
+impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> { fn drop(&mut self) { assert!(self.terminal_is_empty()); } }
 impl<P, Mutation> ArtifactStore<P, Mutation> {
-  fn begin_apply_one(&mut self) -> ArtifactStoreOneItemPublication<P, Mutation> { ArtifactStoreOneItemPublication { generation, maximum_items, maximum_bytes, marker: PhantomData } }
-  fn advance_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) { publication.generation += 1; }
-  fn cancel_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) { publication.begin_close(); }
+  fn begin_apply_batch(&mut self) -> ArtifactStoreBatchPublication<P, Mutation> { self.begin_apply_batch_owned() }
+  fn begin_apply_batch_owned(&mut self) -> ArtifactStoreBatchPublication<P, Mutation> { let footprint = source.footprint(lane); ArtifactStoreBatchPublication { generation, maximum_items, maximum_bytes, marker: PhantomData } }
+  fn batch_item_base(&self) -> SnapshotRead<P> { self.snapshot_read() }
+  fn advance_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) { publication.generation += 1; }
+  fn cancel_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) { publication.begin_close(); }
+  fn fold_batch_item(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) { authority.validate_prepared(candidate); inverse.reverse(); publication.staged += 1; }
 }`;
   const retainedPluginPublication = `
 struct Host {
@@ -413,32 +417,38 @@ struct Host {
   draft_one_item_factory: Option<DraftFactory>,
   unsupported_publication_contracts: Contracts,
 }
-struct MountedTypedCommandFullOperation<A> { pending_artifact_publication: Option<ArtifactStoreOneItemPublication<A::Snapshot, A::Mutation>> }
+struct MountedTypedCommandFullOperation<A> { pending_artifact_publication: Option<ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>> }
 async fn publish_mounted_typed_operation_unit() {
-  self.artifact_one_item_factory.as_deref();
-  self.config_one_item_factory.as_deref();
-  self.draft_one_item_factory.as_deref();
-  mounted.pending_artifact_publication = Some(self.store.begin_apply_one());
-  self.store.advance_apply_one(mounted.pending_artifact_publication.as_mut().unwrap());
+  self.artifact_one_item_factory.as_ref();
+  self.config_one_item_factory.as_ref();
+  self.draft_one_item_factory.as_ref();
+  mounted.pending_artifact_publication = Some(self.store.begin_apply_batch(std::mem::take(&mut emit.artifact_mutations)));
+  self.config_store.begin_apply_batch(std::mem::take(&mut emit.config_mutations));
+  self.draft_store.begin_apply_batch(std::mem::take(&mut emit.draft_mutations));
+  self.store.advance_apply_batch(mounted.pending_artifact_publication.as_mut().unwrap());
 }`;
-  if (!toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication))
-    throw new Error("[verify interactivity tool-jobs] self-test retained Store one-item publication was falsely rejected.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("pub trait ArtifactStoreOneItemPreparationFactory {}", ""), retainedPluginPublication))
+  if (!toolJobStoreBatchPublicationBounded(retainedStorePublication, retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test retained Store batched publication was falsely rejected.");
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("pub trait ArtifactStoreOneItemPreparationFactory {}", ""), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication without a domain preparation factory was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "apply_command(publication);"), retainedPluginPublication))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "apply_command(publication);"), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication that restores whole apply_command was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "cursor.try_reserve_exact(total); publication.generation += 1;"), retainedPluginPublication))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "cursor.try_reserve_exact(total); publication.generation += 1;"), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication that hides whole-vector growth in a phase was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("fn terminal_is_empty", "fn terminal_owner_remains"), retainedPluginPublication))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("fn terminal_is_empty", "fn terminal_owner_remains"), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication without terminal-empty witness was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("impl<P, Mutation> Drop for ArtifactStoreOneItemPublication", "impl<P, Mutation> Closed for ArtifactStoreOneItemPublication"), retainedPluginPublication))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("impl<P, Mutation> Drop for ArtifactStoreBatchPublication", "impl<P, Mutation> Closed for ArtifactStoreBatchPublication"), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication without terminal Drop enforcement was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("self.maximum_items = items;", "owners.clear(); self.maximum_items = items;"), retainedPluginPublication))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("self.maximum_items = items;", "owners.clear(); self.maximum_items = items;"), retainedPluginPublication))
     throw new Error("[verify interactivity tool-jobs] self-test Store publication with whole-vector close was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("advance_apply_one", "apply_one")))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("advance_apply_batch", "apply_one")))
     throw new Error("[verify interactivity tool-jobs] self-test plugin publisher that restores monolithic apply_one was falsely accepted.");
-  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("self.artifact_one_item_factory.as_deref();", "A::build_artifact_store_one_item_preparation_factory();")))
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("self.artifact_one_item_factory.as_ref();", "A::build_artifact_store_one_item_preparation_factory();")))
     throw new Error("[verify interactivity tool-jobs] self-test per-publication durable factory reconstruction was falsely accepted.");
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("std::mem::take(&mut emit.artifact_mutations)", "emit.artifact_mutations.last().cloned()")))
+    throw new Error("[verify interactivity tool-jobs] self-test batched publisher that clones instead of draining its whole gesture lane was falsely accepted.");
+  if (toolJobStoreBatchPublicationBounded(retainedStorePublication.replace("inverse.reverse();", ""), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test batched fold without the replay_mutations inverse ordering was falsely accepted.");
   const retainedEphemeralPublication = `
 pub trait ArtifactEphemeralOneItemPreparationFactory {}
 pub trait ArtifactEphemeralOneItemPreparation {}
@@ -494,7 +504,7 @@ async fn publish_mounted_typed_operation_unit() {
   validate_commit(&mounted.operation, live_revision);
   if mounted.canonical_revision != live_revision { return Err(stale); }
   if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
-  self.store.begin_apply_one();
+  self.store.begin_apply_batch();
 }`;
   if (!toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn))
     throw new Error("[verify interactivity tool-jobs] self-test publication freshness before every resumed or new turn was falsely rejected.");
@@ -515,7 +525,7 @@ fn typed_operation_document_is_fresh(operation: &Operation, canonical_revision: 
 async fn publish_mounted_typed_operation_unit() {
   if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) { return Err(stale); }
   if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
-  self.store.begin_apply_one();
+  self.store.begin_apply_batch();
 }`;
   if (!toolJobPublicationFreshnessBeforeEveryTurn(helperFreshPublicationTurn))
     throw new Error("[verify interactivity tool-jobs] self-test exact extracted publication freshness guard was falsely rejected.");

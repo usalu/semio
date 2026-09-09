@@ -657,7 +657,7 @@ impl Process3dRetainedChildCursor {
         }
         let Some(uri) = self.string.step(reader)? else { return Ok(None) };
         self.string = Process3dRetainedStringCursor::default();
-        let target = store::os_io::ArtifactRef::parse_uri(&uri).map_err(|error| error)?;
+        let target = store::os_io::ArtifactRef::parse_uri(&uri)?;
         self.target = Some(target);
         Ok(Some(store::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
     }

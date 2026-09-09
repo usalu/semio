@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import browserAuthorityFixture from "../../🎯️targets/🧊️wgpu/🧪️tests/🔣️browser-entry-authority.json";
+import browserAuthorityFixture from "../../🎯️targets/🧊️wgpu/🧫️fixtures/🔣️browser-entry-authority.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { renderFrameWorker } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script";
 import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";

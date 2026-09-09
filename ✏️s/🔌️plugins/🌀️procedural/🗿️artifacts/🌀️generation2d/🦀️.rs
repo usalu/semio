@@ -221,7 +221,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-9e0bcf/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-layout-entry/🦀️.rs"]
                             mod tests_drops_the_note_a_layout_entry;
                         }
                         #[path = "."]
@@ -234,7 +234,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-8e6d3c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-leaving-both-notes/🦀️.rs"]
                             mod tests_severs_link_ab_leaving_both_notes;
                         }
                         #[path = "."]
@@ -247,7 +247,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️removes-note-a-3ed628/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️removes-note-a-and-flags-the-dangling-synapse/🦀️.rs"]
                             mod tests_removes_note_a_and_flags_the_dangling_synapse;
                         }
                         #[path = "."]
@@ -260,7 +260,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️set-camera/🧪️tests/📷️pans-and-zooms-05c06d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️set-camera/🧪️tests/📷️pans-and-zooms-the-graph-camera/🦀️.rs"]
                             mod tests_pans_and_zooms_the_graph_camera;
                         }
                         #[path = "."]
@@ -273,7 +273,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-note-eb06ce/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-note-a-on-the-canvas/🦀️.rs"]
                             mod tests_repositions_note_a_on_the_canvas;
                         }
                         #[path = "."]
@@ -286,7 +286,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-1e34dd/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema/🦀️.rs"]
                             mod tests_restamps_the_fixture_schema;
                         }
                         #[path = "."]
@@ -299,7 +299,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-03a80d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-note-c-at-index-1/🦀️.rs"]
                             mod tests_joins_note_b_to_note_c_at_index_1;
                         }
                         #[path = "."]
@@ -312,7 +312,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/✍️rewrites-the-note-a5d31d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/✍️rewrites-the-note-b-body-in-place/🦀️.rs"]
                             mod tests_rewrites_the_note_b_body_in_place;
                         }
                         #[path = "."]
@@ -325,7 +325,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-c09fc0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-onto-the-alt-port/🦀️.rs"]
                             mod tests_repoints_link_ab_onto_the_alt_port;
                         }
                         #[path = "."]
@@ -338,7 +338,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🧪️tests/🌱️appends-generatio-47ad4d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🧪️tests/🌱️appends-generation-2-and-selects-it/🦀️.rs"]
                             mod tests_appends_generation_2_and_selects_it;
                         }
                         #[path = "."]
@@ -351,7 +351,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️fallback/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/🦀️.rs"]
                             mod tests_removes_the_selected_generation_2_and_falls_back_to_generation_1;
                         }
                         #[path = "."]
@@ -364,7 +364,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧪️tests/🏷️retitles-a4e713/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧪️tests/🏷️retitles-generation-1/🦀️.rs"]
                             mod tests_retitles_generation_1;
                         }
                         #[path = "."]
@@ -377,7 +377,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-generation-value/🧪️tests/🔬️t005/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-generation-value/🧪️tests/📏️raises-the-height-answer-in-generation-1/🦀️.rs"]
                             mod tests_raises_the_height_answer_in_generation_1;
                         }
                         #[path = "."]
@@ -390,7 +390,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🧪️tests/📝️inserts-note-c-dc36bc/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🧪️tests/📝️inserts-note-c-at-index-2/🦀️.rs"]
                             mod tests_inserts_note_c_at_index_2;
                         }
                     }

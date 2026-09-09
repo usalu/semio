@@ -1,6 +1,8 @@
 
 use super::*;
 
+const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+
 fn bridge_budget() -> AbiWorkBudget {
     AbiWorkBudget { byte_credit: 4_096, now_ms: 0, deadline_ms: Some(8), cancelled: false, interrupted: false }
 }
@@ -408,10 +410,10 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
     assert!(package_build.contains("manifest.exports"));
     assert!(package_build.contains("copyFileSync(join(BROWSER_BRIDGE_DIR, name)"));
     assert!(production_loader.contains("import(\"@semio-tech/flow-core/🌐️flow-browser.js\")"));
-    let rows: Vec<&str> = protocol::FLOW_VCS_PRODUCTION_LEDGER.lines().skip(1).collect();
+    let rows: Vec<&str> = FLOW_VCS_PRODUCTION_LEDGER.lines().skip(1).collect();
     assert_eq!(rows.len(), 6);
     for unit in ["begin_checkpoint", "poll", "take_page", "resume_page", "retry_page", "acknowledge_page", "cancel", "fault", "close_operation_step", "close_retired_step"] {
-        assert!(protocol::FLOW_VCS_PRODUCTION_LEDGER.contains(unit));
+        assert!(FLOW_VCS_PRODUCTION_LEDGER.contains(unit));
     }
 }
 

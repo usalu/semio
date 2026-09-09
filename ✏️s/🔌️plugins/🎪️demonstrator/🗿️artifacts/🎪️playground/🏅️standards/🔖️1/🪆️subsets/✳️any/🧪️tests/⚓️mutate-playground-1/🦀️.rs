@@ -56,7 +56,7 @@ const DECLARED_CODE: &[(&str, &str)] = &[];
 
 /// 🗣️ The real committed example this artifact ships — the identity law's input.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -66,9 +66,9 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "change-schema" => (
-            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-playground-1: {other:?} is not a declared kind of this subset"),
     }

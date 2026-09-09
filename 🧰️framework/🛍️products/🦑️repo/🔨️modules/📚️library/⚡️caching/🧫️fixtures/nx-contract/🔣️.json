@@ -60,8 +60,115 @@
       "target": "test-watch",
       "cache": false,
       "continuous": true
+    },
+    {
+      "target": "test",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "test-quick",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "test-exhaustive",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "lint",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "build",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "generate",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "verify",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "format-check",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "schema-check",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "cpp-build",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "generator-inputs",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "forms-document-contract",
+      "cache": true,
+      "continuous": false
+    },
+    {
+      "target": "catalog-smoke",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify catalog"
+    },
+    {
+      "target": "collab-e2e",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify collab"
+    },
+    {
+      "target": "artifact-field-parity-report",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify artifact-field-parity report"
     }
   ],
+  "pluginGraph": {
+    "leaf": {
+      "directory": "leaf",
+      "name": "leaf",
+      "script": "export {};\n",
+      "testCommand": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+      "derivedTarget": "test-exhaustive"
+    },
+    "workspaceRoot": {
+      "name": "workspace-root-probe",
+      "script": "export {};\n",
+      "targets": [
+        "test",
+        "lint",
+        "build",
+        "generate",
+        "verify",
+        "format-check",
+        "test-exhaustive",
+        "format",
+        "setup",
+        "publish",
+        "dev",
+        "serve",
+        "watch",
+        "generator-inputs"
+      ]
+    }
+  },
   "wasm": [
     {
       "project": "@semio-tech/framework-editor-rs",
@@ -73,7 +180,7 @@
     },
     {
       "project": "@semio-tech/framework-surface-rs",
-      "output": "{projectRoot}/🕸️bindings"
+      "output": "{projectRoot}/\ud83d\udd78\ufe0fbindings"
     },
     {
       "project": "@semio-tech/framework-os-host-rs",
@@ -89,7 +196,7 @@
     },
     {
       "project": "semio-framework-os-flow-core",
-      "output": "{projectRoot}/../../🕸️bindings"
+      "output": "{projectRoot}/../../\ud83d\udd78\ufe0fbindings"
     }
   ],
   "go": {
@@ -156,8 +263,8 @@
   },
   "bootstrap": {
     "dotnetProject": "@semio-tech/repo-test-dotnet",
-    "dotnetPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet",
-    "compile": "🔷️.cs",
+    "dotnetPath": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83e\uddea\ufe0ftest/\ud83d\udce6\ufe0fpackages/\ud83d\udd37\ufe0fdotnet",
+    "compile": "\ud83d\udd37\ufe0f.cs",
     "pythonMembers": [],
     "stylingProject": "@semio-tech/ui-styling-py",
     "stylingGenerator": "@semio-tech/ui-styling-tokens:generate",
@@ -221,7 +328,7 @@
     }
   ],
   "svgExport": {
-    "inputName": "🧪️ animation # source.svg",
+    "inputName": "\ud83e\uddea\ufe0f animation # source.svg",
     "width": 16,
     "height": 16,
     "fps": 2,
@@ -239,7 +346,7 @@
       "target": "build-wasm",
       "output": "{projectRoot}/dist/component",
       "filename": "semio_framework_os_scale_fixture.wasm",
-      "schemaInput": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/**/*.wit",
+      "schemaInput": "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddec\ufe0fschema/**/*.wit",
       "magic": [
         0,
         97,
@@ -297,7 +404,7 @@
   },
   "materialization": {
     "project": "@semio-tech/framework-plugin-web",
-    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+    "root": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
     "profiles": [
       {
         "profile": "dev",
@@ -311,7 +418,9 @@
         "target": "materialize-release",
         "component": "component-release",
         "support": "support-release",
-        "tooling": ["workspace:deps-wasm-opt"]
+        "tooling": [
+          "workspace:deps-wasm-opt"
+        ]
       }
     ],
     "cancellation": {
@@ -328,7 +437,7 @@
     "prerequisite": "generate"
   },
   "playgroundSelections": {
-    "manifest": "owner/📦️packages/🦀️rust/Cargo.toml",
+    "manifest": "owner/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
     "text": "[package]\nname = \"selection-fixture\"\n[package.metadata.component]\npackage = \"semio:selection\"\n[package.metadata.semio]\nrole = \"plugin\"\n[[package.metadata.semio.playground]]\nvariant = \"selection\"\naliases = [\"pick this\"]\nports = { react = 6080, wgpu = 6180 }\n",
     "variant": "selection",
     "alias": "pick this",
@@ -347,17 +456,17 @@
   "engineOutputs": [
     {
       "project": "@semio-tech/framework-surface-rs",
-      "directory": "🕸️bindings",
+      "directory": "\ud83d\udd78\ufe0fbindings",
       "outputs": [
-        "{projectRoot}/🕸️bindings"
+        "{projectRoot}/\ud83d\udd78\ufe0fbindings"
       ]
     },
     {
       "project": "semio-framework-os-flow-core",
-      "directory": "🕸️bindings",
+      "directory": "\ud83d\udd78\ufe0fbindings",
       "outputs": [
-        "{projectRoot}/../../🕸️bindings",
-        "{projectRoot}/../../../📦️packages/🦀️rust/🕸️bindings"
+        "{projectRoot}/../../\ud83d\udd78\ufe0fbindings",
+        "{projectRoot}/../../../\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udd78\ufe0fbindings"
       ]
     }
   ],
@@ -379,12 +488,12 @@
   "socketFrames": {
     "messages": [
       {
-        "root": "🧰️framework/🛍️products/💻️os/📋️project.json",
+        "root": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udccb\ufe0fproject.json",
         "name": "semio"
       },
       {
-        "name": "🧩️puzzle",
-        "source": "Grüße 日本語"
+        "name": "\ud83e\udde9\ufe0fpuzzle",
+        "source": "Gr\u00fc\u00dfe \u65e5\u672c\u8a9e"
       },
       {
         "result": true

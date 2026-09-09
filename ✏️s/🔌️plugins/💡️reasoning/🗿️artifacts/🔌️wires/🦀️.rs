@@ -4,10 +4,8 @@
 //! `board_fixture` field (a `DslValue` blob duplicating a neutral node/edge graph model) is replaced
 //! by a composed `s.stdio.semio.graph` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
 //! defines its own persisted node/edge graph model, it composes stdio's neutral `graph` subset
-//! instead. `camera`/`meta` (pan/zoom view state, kind-catalog/allowed-identity config) are NOT part
-//! of the neutral graph subset — they stay as their own small persisted `DslValue` fields on
-//! `WiresSnapshot`, exactly as they always were, just no longer nested inside the now-gone
-//! `board_fixture` blob. `wires_fixture`'s own shape (identities/relationships semantic layer, incl.
+//! instead. `meta` (kind-catalog/allowed-identity configuration) remains document state while each
+//! concrete canvas owns its own camera. `wires_fixture`'s own shape (identities/relationships semantic layer, incl.
 //! its pre-existing internal `board` mirror) is UNCHANGED by this migration — it's a separate,
 //! narrower duplication concern this pass doesn't touch (see `📓️wave4-reports/reasoning-report.md`).
 //! `⚙️engine`/`🖱️commands`/`🔧️op` still address board nodes/edges generically by id
@@ -15,6 +13,7 @@
 //! every call site that used to read `snapshot.board_fixture` now goes through.
 
 extern crate infinite_canvas as infinite_board_port_directed;
+extern crate semio_framework_replication as replication;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -70,15 +69,14 @@ pub fn empty_wires_fixture() -> DslValue {
     DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![])), ("relationships".into(), DslValue::Array(vec![])), ("board".into(), empty_board_fixture())])
 }
 
-/// 📭️ `{x:0, y:0, zoom:1}` — the default board camera, persisted as its own `WiresSnapshot.camera`
-/// field (never part of the composed graph child — pan/zoom is app view state, not graph data).
+/// 📭️ `{x:0, y:0, zoom:1}` used only by legacy board-shaped render projections.
 pub fn empty_camera() -> DslValue {
     DslValue::object([("x".into(), DslValue::float(0.0)), ("y".into(), DslValue::float(0.0)), ("zoom".into(), DslValue::float(1.0))])
 }
 
 /// 📭️ Fresh wires snapshot with empty fixtures.
 pub fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_with_owner(Vec::new(), Vec::new()), camera: empty_camera(), meta: DslValue::Null }
+    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_with_owner(Vec::new(), Vec::new()), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
 
@@ -183,6 +181,11 @@ pub fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> Wir
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
+    wires_content_child_from_hash(content_hash)
+}
+
+/// 🔏️ Mints the composed-child identity from a hash produced by the bounded neutral graph encoder.
+pub fn wires_content_child_from_hash(content_hash: u64) -> WiresContentChild {
     let child_id = format!("wires-content-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "wires-content".into(), dialect };
@@ -223,14 +226,14 @@ pub fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>
 }
 
 /// 🔎 Reconstructs the FULL legacy board-shaped `DslValue`
-/// (`schema`/`camera`/`nodes`/`edges`/`meta`?/`wires`) from the working scene plus the snapshot's own
-/// `camera`/`meta` fields — the single accessor every render/panel/command call site that used to read
+/// (`schema`/`camera`/`nodes`/`edges`/`meta`?/`wires`) from the working scene plus the snapshot's
+/// `meta` field and a neutral viewport — the single accessor every render/panel/command call site that used to read
 /// `snapshot.board_fixture` directly now goes through. `meta` is omitted entirely when absent
 /// (`DslValue::Null`), matching the old `BoardFixtureDsl.meta`'s `skip_serializing_if` behavior.
 pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
     let scene = wires_working_scene(snapshot);
     let mut entries: Vec<(String, DslValue)> =
-        vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), snapshot.camera.clone()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
+        vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
     if !matches!(snapshot.meta, DslValue::Null) {
         entries.push(("meta".into(), snapshot.meta.clone()));
     }
@@ -419,7 +422,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects-a-node-id-the-board-already-holds/🦀️.rs"]
                             mod tests_rejects_a_node_id_the_board_already_holds;
                         }
                         #[path = "."]
@@ -432,7 +435,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🧪️rejects-deleting-a-node-the-board-never-held/🦀️.rs"]
                             mod tests_rejects_deleting_a_node_the_board_never_held;
                         }
                         #[path = "."]
@@ -445,7 +448,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/🦀️.rs"]
                             mod tests_reports_a_no_op_when_a_y_less_node_is_moved_to_y_zero;
                         }
                         #[path = "."]
@@ -458,7 +461,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🧪️reports-a-no-op-when-the-radius-already-matches/🦀️.rs"]
                             mod tests_reports_a_no_op_when_the_radius_already_matches;
                         }
                         #[path = "."]
@@ -471,7 +474,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🦀️.rs"]
                             mod tests_reports_a_no_op_when_the_kind_already_reads_topic;
                         }
                         #[path = "."]
@@ -484,7 +487,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🦀️.rs"]
                             mod tests_reports_a_no_op_when_the_shape_already_reads_circle;
                         }
                         #[path = "."]
@@ -497,7 +500,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim/🦀️.rs"]
                             mod tests_reports_a_no_op_when_the_label_is_retyped_verbatim;
                         }
                         #[path = "."]
@@ -510,7 +513,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🦀️.rs"]
                             mod tests_reports_a_no_op_when_an_unflagged_node_is_set_to_not_root;
                         }
                         #[path = "."]
@@ -523,7 +526,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🧪️rejects-an-edge-whose-source-node-is-absent/🦀️.rs"]
                             mod tests_rejects_an_edge_whose_source_node_is_absent;
                         }
                         #[path = "."]
@@ -536,7 +539,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🧪️rejects-cutting-an-edge-the-board-never-carried/🦀️.rs"]
                             mod tests_rejects_cutting_an_edge_the_board_never_carried;
                         }
                     }
@@ -823,16 +826,6 @@ pub mod editor {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
-
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;

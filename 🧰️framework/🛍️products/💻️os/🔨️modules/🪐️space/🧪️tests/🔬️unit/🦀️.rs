@@ -659,7 +659,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");
     assert_eq!(imported_blob_bytes, b"hello blob bytes");
     let fresh_blob_store = TestBlobStore::default();
-    import_blob(&fresh_blob_store, imported_blob, imported_blob_bytes.clone()).expect("import blob");
+    import_blob(&fresh_blob_store, imported_blob, &imported_blob_bytes).expect("import blob");
     assert_eq!(crate::host::resolve_kernel_future(fresh_blob_store.get(&blob_ref.hash)).expect("get"), Some(b"hello blob bytes".to_vec()));
 
     // export -> import -> export must stay byte-stable with REAL data too (not just injected

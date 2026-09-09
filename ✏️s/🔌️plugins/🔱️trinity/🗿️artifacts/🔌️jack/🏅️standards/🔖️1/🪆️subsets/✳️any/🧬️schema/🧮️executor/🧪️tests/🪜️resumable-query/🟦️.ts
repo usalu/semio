@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
-import fixture from "./🔣️.json";
+import fixture from "./../../🧫️fixtures/🪜️resumable-query/🔣️.json";
 
 /** 🔎️ SQLite independently validates the neutral graph-query results and mutation counts. */
 export function testResumableQueryOracle(): void {

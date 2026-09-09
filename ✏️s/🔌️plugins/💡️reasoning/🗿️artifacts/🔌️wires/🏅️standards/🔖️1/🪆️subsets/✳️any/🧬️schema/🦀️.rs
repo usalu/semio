@@ -19,8 +19,6 @@ pub struct WiresArtifact {
     #[child(kind = "s.stdio.semio.graph")]
     pub content: crate::WiresContentChild,
     #[state(artifact)]
-    pub camera: DslValue,
-    #[state(artifact)]
     pub meta: DslValue,
 }
 //#endregion 🔖️Artifact
@@ -28,26 +26,25 @@ pub struct WiresArtifact {
 //#region 🔖️Conversions
 impl Default for WiresArtifact {
     fn default() -> Self {
-        Self { wires_fixture: crate::empty_wires_fixture(), content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()), camera: crate::empty_camera(), meta: DslValue::Null }
+        Self { wires_fixture: crate::empty_wires_fixture(), content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()), meta: DslValue::Null }
     }
 }
 
 impl WiresArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::WiresSnapshot {
-        crate::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
+        crate::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds the shared artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::WiresSnapshot) -> Self {
-        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta }
+        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, meta: snapshot.meta }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::WiresSnapshot) {
         self.wires_fixture = snapshot.wires_fixture;
         self.content = snapshot.content;
-        self.camera = snapshot.camera;
         self.meta = snapshot.meta;
     }
 }

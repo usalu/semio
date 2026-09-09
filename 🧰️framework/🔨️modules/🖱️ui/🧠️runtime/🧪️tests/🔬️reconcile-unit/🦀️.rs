@@ -104,7 +104,7 @@ fn reconcile_resumable(current: &SurfaceReconciler, component_tree: crate::Compo
 //#region ⏭️ResumableCursor
 #[test]
 fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
     let mut reservation = SurfaceReconcileReservation::try_new(8_971).expect("real published owner reservation");
     let metadata =
         pending_surface_patch(Some(ui_contract::UiPatch { surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: ui_contract::UiPatchOps::default() }));

@@ -7,7 +7,7 @@ import { join } from "node:path";
 export async function testBinaryenToolchain(workspace: string, output?: string): Promise<void> {
   const root = join(import.meta.dir, "../.."), require = createRequire(import.meta.url);
   const manifest = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "./🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛠️binaryen-toolchain/🔣️.json"), "utf8"));
   assert.equal(new (require("ajv"))().compile(schema)(manifest), true);
   const { binaryenDistribution, binaryenMembers, binaryenIdentity, prepareBinaryen, binaryenDirectory } = await import("../../📜️script.ts");
   assert.deepEqual(manifest.platforms.map((row: any) => `${row.platform}/${row.architecture}`).sort(), fixture.supported.sort());

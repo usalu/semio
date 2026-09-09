@@ -55,8 +55,8 @@ PACK_FORMAT = 1
 #: which is also the order the pack frame writes them.
 SLOTS = ("brep", "mesh", "properties")
 
-CRATE_DSL = "asset://📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio"
-CRATE_PACK = "asset://📚️examples/📦️crate/🖼️assets/🎒️.pack.semio"
+CRATE_DSL = "asset://📦️crate/🗣️.dsl.semio"
+CRATE_PACK = "asset://📦️crate/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

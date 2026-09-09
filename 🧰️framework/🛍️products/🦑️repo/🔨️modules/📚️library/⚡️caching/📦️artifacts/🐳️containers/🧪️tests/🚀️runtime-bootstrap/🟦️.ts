@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization. */
 export function testContainerRuntimeBootstrap(workspace: string): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
   assert.deepEqual(Bun.JSONC.parse(configSource), require("jsonc-parser").parse(configSource));
   assert.deepEqual(Bun.JSONC.parse(configSource).postCreateCommand, fixture.postCreateCommand);

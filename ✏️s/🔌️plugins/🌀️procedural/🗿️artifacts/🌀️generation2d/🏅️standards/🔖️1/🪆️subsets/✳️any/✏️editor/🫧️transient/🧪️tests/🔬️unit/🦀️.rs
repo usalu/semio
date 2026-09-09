@@ -4,7 +4,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 #[test]
 fn preview_state_matches_language_neutral_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️preview-partition/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👁️preview-partition/🔣️.json")).expect("fixture");
     let mut typed = Generation2dTransient::default();
     let mut oracle = serde_json::Map::new();
     for step in fixture["steps"].as_array().expect("steps") {

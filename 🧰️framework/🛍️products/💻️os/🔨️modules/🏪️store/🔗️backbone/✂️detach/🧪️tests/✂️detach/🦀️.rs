@@ -2,7 +2,7 @@ use super::*;
 
 //#region ✂️DetachRefusal
 async fn observe_refusal(case_id: &str) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let case = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == case_id).unwrap();
     let mut store = super::super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None)).await.expect("real initialized Store");
     store.install_member_store_owners_exact(demo_closable_store_owners());

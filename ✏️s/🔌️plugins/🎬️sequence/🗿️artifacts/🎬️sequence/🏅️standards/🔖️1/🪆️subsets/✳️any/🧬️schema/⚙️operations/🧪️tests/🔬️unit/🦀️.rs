@@ -6,7 +6,7 @@ use store::{create_document_envelope, ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn leaf_detection_preserves_language_neutral_plan_vectors() {
-    let suite: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).expect("detection fixture JSON");
+    let suite: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("detection fixture JSON");
     for case in suite["cases"].as_array().expect("detection cases") {
         let before: SequenceFixture = dsl::os_pack::from_json_str(&case["before"].to_string()).expect("before fixture");
         let after: SequenceFixture = dsl::os_pack::from_json_str(&case["after"].to_string()).expect("after fixture");

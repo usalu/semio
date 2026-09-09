@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
+process.env.RUST_MIN_STACK ??= String(8 * 1024 * 1024);
+
 //#region 🌉️BoardSessionPackage
 class WasmScript extends BundleScript {
   run(): void {

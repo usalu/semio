@@ -25,7 +25,15 @@ fn wires_semantic_panels_match_the_json_oracle() {
         assert_eq!(serde_json::Value::Array(lines), row["summary"]);
     }
     let board = crate::wires_working_board(&document);
-    for node in [crate::editor::wires::modes::edit::windows::canvas::render(&board, &document.wires_fixture).expect("editor canvas"), crate::viewer::wires::modes::view::windows::canvas::render(&document).expect("viewer canvas")] {
+    for node in [
+        crate::editor::wires::modes::edit::windows::canvas::render(
+            &board,
+            &document.wires_fixture,
+            &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default(),
+        )
+        .expect("editor canvas"),
+        crate::viewer::wires::modes::view::windows::canvas::render(&document).expect("viewer canvas"),
+    ] {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
         assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));

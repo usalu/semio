@@ -47,7 +47,7 @@ mod cooperative_tests {
             assert_eq!(context, [51, 61]);
             if STEPS.fetch_add(1, Ordering::SeqCst) == 0 { WorkerMaintenanceStep::More } else { WorkerMaintenanceStep::Idle }
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         STEPS.store(0, Ordering::SeqCst);
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         let ticket = pool.install_maintenance_hook(Lane::Io, step, [51, 61]).unwrap();
@@ -81,7 +81,7 @@ mod cooperative_tests {
             ORDER.lock().unwrap().push(context[0]);
             WorkerMaintenanceStep::Idle
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         ORDER.lock().unwrap().clear();
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         let mut tickets = Vec::new();

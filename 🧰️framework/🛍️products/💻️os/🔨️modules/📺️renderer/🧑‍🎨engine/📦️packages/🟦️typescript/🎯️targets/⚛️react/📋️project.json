@@ -13,7 +13,7 @@
   "targets": {
     "scoped-presence-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts scoped-presence-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -21,7 +21,7 @@
     },
     "directory-invite-capability-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-invite-capability-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -29,7 +29,7 @@
     },
     "directory-home-bootstrap-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-home-bootstrap-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -79,7 +79,7 @@
     },
     "tutorial-interaction-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts tutorial-interaction-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -87,7 +87,7 @@
     },
     "flow-browser-runtime-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts flow-browser-runtime-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -95,7 +95,7 @@
     },
     "artifact-creation-progress-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-creation-progress-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -103,7 +103,7 @@
     },
     "document-opening-scope-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-opening-scope-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
@@ -111,7 +111,7 @@
     },
     "agent-bridge-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts agent-bridge-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"

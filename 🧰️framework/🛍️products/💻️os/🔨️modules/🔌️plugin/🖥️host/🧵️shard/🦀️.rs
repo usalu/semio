@@ -40,11 +40,11 @@ use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcom
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap};
-use std::mem::{size_of, MaybeUninit};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::mem::{MaybeUninit, size_of};
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 📨️ShardFrame
 /// 📨️ terra-shard-grants: what actually crosses a [`ShardTransport`] INBOUND (host → shard) —
@@ -55,6 +55,7 @@ use std::sync::Mutex;
 /// [`super::process_transport::ProcessTransport`]/`StdioTransport` — `design-runtime.md` §2's
 /// "thread-or-process, same wire" promise.
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "An admitted frame retains its envelope inline through validation and handoff without allocating an additional wrapper."))]
 pub enum ShardFrame {
     /// 📌️ Announces that `actor` is now live on this shard. A `GuestInstance` cannot cross a
     /// transport (`wasmtime::Store` is not serializable), so an INCOMING `Register` has no
@@ -854,6 +855,7 @@ pub struct CancelCursor {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant, reason = "The fixed owner ring retains complete event authority in preallocated slots through admission, cancellation, and retirement.")]
 pub enum DeferredAuthority {
     Register { actor: ActorId },
     Unregister { actor: ActorId },
@@ -1317,58 +1319,70 @@ impl ShardLoop {
             ReplaySeedPhase::MaterializeKind => {
                 let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
                 let fixed = seed.seed.as_ref().expect("materialize fixed seed");
-                if seed.materialized_kind.is_none() {
-                    let buffer = match try_replay_abi_buffer(fixed.kind_length) {
-                        Ok(buffer) => buffer,
-                        Err(()) => return Err(self.fail_replay_seed(index, "materialize-kind", "ShardLoop::replay: kind ABI admission refused".to_string())),
-                    };
-                    seed.abi_reserved += fixed.kind_length;
-                    seed.materialized_kind = Some(buffer);
-                } else if seed.materialize_page < fixed.kind_pages {
-                    let page = fixed.kind[seed.materialize_page].as_ref().expect("fixed kind page");
-                    seed.materialized_kind.as_mut().expect("kind ABI buffer").extend_from_slice(page.bytes());
-                    seed.materialize_page += 1;
-                } else {
-                    seed.materialize_page = 0;
-                    seed.phase = ReplaySeedPhase::MaterializeInput;
+                match seed.materialized_kind.as_mut() {
+                    None => {
+                        let buffer = match try_replay_abi_buffer(fixed.kind_length) {
+                            Ok(buffer) => buffer,
+                            Err(()) => return Err(self.fail_replay_seed(index, "materialize-kind", "ShardLoop::replay: kind ABI admission refused".to_string())),
+                        };
+                        seed.abi_reserved += fixed.kind_length;
+                        seed.materialized_kind = Some(buffer);
+                    }
+                    Some(buffer) if seed.materialize_page < fixed.kind_pages => {
+                        let page = fixed.kind[seed.materialize_page].as_ref().expect("fixed kind page");
+                        buffer.extend_from_slice(page.bytes());
+                        seed.materialize_page += 1;
+                    }
+                    Some(_) => {
+                        seed.materialize_page = 0;
+                        seed.phase = ReplaySeedPhase::MaterializeInput;
+                    }
                 }
             }
             ReplaySeedPhase::MaterializeInput => {
                 let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
                 let fixed = seed.seed.as_ref().expect("materialize fixed seed");
-                if seed.materialized_input.is_none() {
-                    let buffer = match try_replay_abi_buffer(fixed.input_length) {
-                        Ok(buffer) => buffer,
-                        Err(()) => return Err(self.fail_replay_seed(index, "materialize-input", "ShardLoop::replay: input ABI admission refused".to_string())),
-                    };
-                    seed.abi_reserved += fixed.input_length;
-                    seed.materialized_input = Some(buffer);
-                } else if seed.materialize_page < fixed.input_pages {
-                    let page = fixed.input[seed.materialize_page].as_ref().expect("fixed input page");
-                    seed.materialized_input.as_mut().expect("input ABI buffer").extend_from_slice(page.bytes());
-                    seed.materialize_page += 1;
-                } else {
-                    seed.materialize_page = 0;
-                    seed.phase = ReplaySeedPhase::MaterializeCheckpoint;
+                match seed.materialized_input.as_mut() {
+                    None => {
+                        let buffer = match try_replay_abi_buffer(fixed.input_length) {
+                            Ok(buffer) => buffer,
+                            Err(()) => return Err(self.fail_replay_seed(index, "materialize-input", "ShardLoop::replay: input ABI admission refused".to_string())),
+                        };
+                        seed.abi_reserved += fixed.input_length;
+                        seed.materialized_input = Some(buffer);
+                    }
+                    Some(buffer) if seed.materialize_page < fixed.input_pages => {
+                        let page = fixed.input[seed.materialize_page].as_ref().expect("fixed input page");
+                        buffer.extend_from_slice(page.bytes());
+                        seed.materialize_page += 1;
+                    }
+                    Some(_) => {
+                        seed.materialize_page = 0;
+                        seed.phase = ReplaySeedPhase::MaterializeCheckpoint;
+                    }
                 }
             }
             ReplaySeedPhase::MaterializeCheckpoint => {
                 let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
                 let fixed = seed.seed.as_ref().expect("materialize fixed seed");
-                if seed.materialized_checkpoint.is_none() {
-                    let buffer = match try_replay_abi_buffer(fixed.checkpoint_length) {
-                        Ok(buffer) => buffer,
-                        Err(()) => return Err(self.fail_replay_seed(index, "materialize-checkpoint", "ShardLoop::replay: checkpoint ABI admission refused".to_string())),
-                    };
-                    seed.abi_reserved += fixed.checkpoint_length;
-                    seed.materialized_checkpoint = Some(buffer);
-                } else if seed.materialize_page < fixed.checkpoint_pages {
-                    let page = fixed.checkpoint[seed.materialize_page].as_ref().expect("fixed checkpoint page");
-                    seed.materialized_checkpoint.as_mut().expect("checkpoint ABI buffer").extend_from_slice(page.bytes());
-                    seed.materialize_page += 1;
-                } else {
-                    seed.materialize_page = 0;
-                    seed.phase = ReplaySeedPhase::Restore;
+                match seed.materialized_checkpoint.as_mut() {
+                    None => {
+                        let buffer = match try_replay_abi_buffer(fixed.checkpoint_length) {
+                            Ok(buffer) => buffer,
+                            Err(()) => return Err(self.fail_replay_seed(index, "materialize-checkpoint", "ShardLoop::replay: checkpoint ABI admission refused".to_string())),
+                        };
+                        seed.abi_reserved += fixed.checkpoint_length;
+                        seed.materialized_checkpoint = Some(buffer);
+                    }
+                    Some(buffer) if seed.materialize_page < fixed.checkpoint_pages => {
+                        let page = fixed.checkpoint[seed.materialize_page].as_ref().expect("fixed checkpoint page");
+                        buffer.extend_from_slice(page.bytes());
+                        seed.materialize_page += 1;
+                    }
+                    Some(_) => {
+                        seed.materialize_page = 0;
+                        seed.phase = ReplaySeedPhase::Restore;
+                    }
                 }
             }
             ReplaySeedPhase::Restore => {
@@ -1460,7 +1474,6 @@ impl ShardLoop {
     /// `Kernel::activate` that lands on this shard. `actor.0` (the bit-packed `u64`) is the map key
     /// throughout this type: `Envelope.to`/`ShardOutcome`'s tag both carry the SAME raw id, so no
     /// `RuntimeActorId` round-trip is needed at the boundary.
-
     pub async fn is_registered(&self, actor: ActorId) -> bool {
         self.instances.contains_key(&actor.0)
     }
@@ -1810,7 +1823,7 @@ impl ShardLoop {
         // Phase 2's job-protocol work, not this one's.
         let turn_outcome = {
             let _watchdog = Watchdog::start("plugin-host.shard.execute_turn", OperationId(actor_id), Generation(0), watchdog_stage);
-            self.runtime.execute_turn(instance, &events, turn_budget.await).await
+            self.runtime.execute_turn(instance, events, turn_budget.await).await
         };
         let outcome = match turn_outcome {
             Ok(mut result) => {
@@ -1925,7 +1938,7 @@ impl ShardLoop {
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
-            Err(fault) if super::retryable_lifecycle_turn(&fault, &events) => return Ok(true),
+            Err(fault) if super::retryable_lifecycle_turn(&fault, events) => return Ok(true),
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) },
         };
         self.send_outcome(&outcome).await?;

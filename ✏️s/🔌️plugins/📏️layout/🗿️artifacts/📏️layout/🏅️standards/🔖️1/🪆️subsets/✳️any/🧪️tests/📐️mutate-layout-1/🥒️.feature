@@ -53,9 +53,9 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> reaches its committed after-document
-    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When <id> is applied through apply_layout_mutation_json
     Then the resulting document is the committed after-document, the mutation moved it, and the two implementations agree
     Examples:
@@ -90,8 +90,8 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-document
-    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    Given the committed before-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
     When <id> and then every step of its own computed inverse are applied through undo_layout_mutation_json
     Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
@@ -126,6 +126,6 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   @level-long
   @mode-round-trip
   Scenario: Parse and reprint the real committed example without passing bytes through
-    Given the real committed example asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed example asset://🎬️demo/🗣️.dsl.semio
     When it is parsed, printed back to DSL and parsed again through round_trip_layout_dsl
     Then both parses agree on one document, and the reprinted text reproduces the committed example byte for byte

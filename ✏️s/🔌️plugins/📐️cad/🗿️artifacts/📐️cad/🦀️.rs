@@ -609,7 +609,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🧪️tests/🙈️hides-the-shape-2e8935/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🧪️tests/🙈️hides-the-shape-reference/🦀️.rs"]
                             mod tests_hides_the_shape_reference;
                         }
                         #[path = "."]
@@ -622,7 +622,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🧪️tests/🔓️unlocks-the-af82b4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🧪️tests/🔓️unlocks-the-shape-reference/🦀️.rs"]
                             mod tests_unlocks_the_shape_reference;
                         }
                         #[path = "."]
@@ -635,7 +635,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🧪️tests/↔️widens-the-shape-76c1bd/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🧪️tests/↔️widens-the-shape-reference-plane/🦀️.rs"]
                             mod tests_widens_the_shape_reference_plane;
                         }
                         #[path = "."]
@@ -648,7 +648,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🧪️tests/📍️moves-the-shape-69784e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🧪️tests/📍️moves-the-shape-reference-off-origin/🦀️.rs"]
                             mod tests_moves_the_shape_reference_off_origin;
                         }
                         #[path = "."]
@@ -661,7 +661,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🧪️tests/🖼️reattaches-the-a36deb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🧪️tests/🖼️reattaches-the-shape-reference-to-a-new-plan/🦀️.rs"]
                             mod tests_reattaches_the_shape_reference_to_a_new_plan;
                         }
                         #[path = "."]
@@ -674,7 +674,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps-the-shape-0d7a13/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps-the-shape-reference-list/🦀️.rs"]
                             mod tests_swaps_the_shape_reference_list;
                         }
                         #[path = "."]
@@ -687,7 +687,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles-the-9ee3e8/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles-the-occupied-shape-slot/🦀️.rs"]
                             mod tests_rehandles_the_occupied_shape_slot;
                         }
                         #[path = "."]
@@ -713,7 +713,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles-the-5f041c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles-the-occupied-building-slot/🦀️.rs"]
                             mod tests_rehandles_the_occupied_building_slot;
                         }
                         #[path = "."]
@@ -726,7 +726,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates-the-778336/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates-the-building-slot/🦀️.rs"]
                             mod tests_vacates_the_building_slot;
                         }
                         #[path = "."]
@@ -739,7 +739,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles-the-b93820/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles-the-occupied-energy-slot/🦀️.rs"]
                             mod tests_rehandles_the_occupied_energy_slot;
                         }
                         #[path = "."]
@@ -765,7 +765,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🧪️tests/🏛️rehandles-the-b23c9f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🧪️tests/🏛️rehandles-the-occupied-structure-classic-slot/🦀️.rs"]
                             mod tests_rehandles_the_occupied_structure_classic_slot;
                         }
                         #[path = "."]
@@ -778,7 +778,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates-the-fbb243/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates-the-structure-classic-slot/🦀️.rs"]
                             mod tests_vacates_the_structure_classic_slot;
                         }
                         #[path = "."]
@@ -817,7 +817,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🧪️tests/🏗️switches-the-5c86e0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🧪️tests/🏗️switches-the-active-pane-to-the-building-model/🦀️.rs"]
                             mod tests_switches_the_active_pane_to_the_building_model;
                         }
                     }

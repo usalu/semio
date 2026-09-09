@@ -7,7 +7,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("cold pair WIT status codec agrees with the neutral schema and rejects every hostile authority", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     const authority = (value: Record<string, unknown>): Record<string, unknown> => ({

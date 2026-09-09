@@ -33,19 +33,9 @@ where
         footprint.is_admissible().then_some(footprint).ok_or_else(|| "transient mutation exceeds the one-item publication bound".into())
     }
 
-    fn begin(
-        &self,
-        request: store::ArtifactEphemeralOneItemPreparationRequest<P, M>,
-    ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<P, M>>, store::ArtifactEphemeralOneItemPreparationRequest<P, M>> {
+    fn begin(&self, request: store::ArtifactEphemeralOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<P, M>>, store::ArtifactEphemeralOneItemPreparationRequest<P, M>> {
         let retained_bytes = protocol::OpBinary::encode_op(&request.mutation).map_or(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, |bytes| bytes.len());
-        Ok(Box::new(BoundedTransientPreparation {
-            request: Some(request),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
+        Ok(Box::new(BoundedTransientPreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, closing: false }))
     }
 }
 
@@ -164,8 +154,7 @@ where
     M: protocol::Mutation<P>,
 {
     fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
-        owner.generation_now() == self.terminal_generation
-            && self.terminal_root.as_ref().and_then(std::sync::Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
+        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().and_then(std::sync::Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
     }
 }
 
@@ -192,9 +181,7 @@ where
             self.retired = None;
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        self.owns_terminal(owner)
-            .then_some(PluginCloseStep::Complete)
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("transient.disposer-authority"), "transient terminal owner changed during disposal"))
+        self.owns_terminal(owner).then_some(PluginCloseStep::Complete).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("transient.disposer-authority"), "transient terminal owner changed during disposal"))
     }
 
     fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {

@@ -14,11 +14,11 @@ use crate::schema::mutations::unbind_primitive_material::{diff, inverse, mutatio
 use crate::GltfSnapshot;
 
 const CASE: &str = "unbind-primitive-material/returns-the-primitive-to-the-default-material";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧱️primitive-material/✂️unbind/✂️returns-the-b08a34/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧱️primitive-material/✂️unbind/✂️returns-the-b08a34/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧱️primitive-material/✂️unbind/✂️returns-the-b08a34/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧱️primitive-material/✂️unbind/✂️returns-the-b08a34/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧱️primitive-material/✂️unbind/✂️returns-the-b08a34/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

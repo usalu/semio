@@ -7,6 +7,5 @@ message WiresDiff {
   semio.s.reasoning.wires.artifact.WiresArtifact artifact = 1;
   semio.framework.value.DslValue wires_fixture = 2;
   semio.os.store.ArtifactChild content = 3;
-  semio.framework.value.DslValue camera = 4;
-  semio.framework.value.DslValue meta = 5;
+  semio.framework.value.DslValue meta = 4;
 }

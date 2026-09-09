@@ -1,5 +1,9 @@
 use super::*;
 
+const SEQUENCE_ABI_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+const SEQUENCE_ABI_LIMITS: &str = include_str!("../../🧫️fixtures/📐️limits.tsv");
+const SEQUENCE_ABI_TRACE: &str = include_str!("../../🧫️fixtures/👣️trace/📊️.tsv");
+
 #[derive(Default)]
 struct MockDomain {
     fixture: Vec<u8>,

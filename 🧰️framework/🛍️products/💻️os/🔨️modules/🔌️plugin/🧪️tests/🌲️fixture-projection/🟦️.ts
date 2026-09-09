@@ -5,8 +5,8 @@ import { readFileSync } from "node:fs";
 import stableStringify from "fast-json-stable-stringify";
 
 export function testFixtureProjectionRetirement(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🌲️fixture-projection/🔣️.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🌲️fixture-projection/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(schema);
   const validate = ajv.getSchema(`${schema.$id}#/$defs/FixtureProjectionRetirementV1`)!;

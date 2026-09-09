@@ -10,7 +10,8 @@
 
 import { Textarea } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../../🧪️tests/📚️storybook-types/🟦️.ts";
-import { nakagin } from "../../../../../../../.storybook/fixture/nakagin";
+import nakaginFixture from "../../../🧫️fixtures/🏢️nakagin/🔣️.json";
+const { nakagin } = nakaginFixture;
 
 // 📝️#region 🎏️Textarea
 const meta = {

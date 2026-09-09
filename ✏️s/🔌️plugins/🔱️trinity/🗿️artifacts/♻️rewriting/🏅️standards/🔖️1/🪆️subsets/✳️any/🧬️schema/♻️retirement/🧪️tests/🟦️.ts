@@ -4,7 +4,7 @@ import Ajv from "ajv";
 
 /** ♻️ Independent JSON-tree accounting for exact retained document release receipts. */
 export function testRewritingDocumentRetirementOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true }).compile({ type: "object", required: ["schema", "budgets", "snapshots", "mutations"], properties: { schema: { const: "semio.rewriting.document-retirement/v1" }, budgets: { type: "array", minItems: 2 }, snapshots: { type: "array", minItems: 2 }, mutations: { type: "array", minItems: 7, maxItems: 7 } }, additionalProperties: false });
   assert(validate(fixture), JSON.stringify(validate.errors));
   const text = (value: string): number => Buffer.byteLength(value, "utf8");

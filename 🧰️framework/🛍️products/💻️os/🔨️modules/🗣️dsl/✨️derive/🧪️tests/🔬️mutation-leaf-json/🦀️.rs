@@ -1,7 +1,7 @@
 
 use super::*;
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🔣️mutation-leaf-json/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️mutation-leaf-json/🔣️.json")).unwrap()
 }
 fn authority(owner: &str) -> MutationSourceAuthority {
     MutationSourceAuthority { workspace_root: PathBuf::new(), mutation_root: PathBuf::new(), owner: owner.to_string(), expected_semantic_kind: None, source_path: PathBuf::new(), descriptor_path: PathBuf::new(), taxonomy_path: PathBuf::new() }

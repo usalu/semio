@@ -1,0 +1,594 @@
+{
+  "$schema": "https://semio.tech/schema/repository-test/language-neutral-cases.json",
+  "cases": [
+    {
+      "id": "create-vertex-keeps-nonzero-tolerance",
+      "schema": "create-vertex",
+      "accepted": true,
+      "mutation": {
+        "CreateVertex": {
+          "id": "v-tol",
+          "point": {
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "tol": 2e-7
+        }
+      }
+    },
+    {
+      "id": "create-vertex-rejects-omitted-tolerance",
+      "schema": "create-vertex",
+      "accepted": false,
+      "mutation": {
+        "CreateVertex": {
+          "id": "v-missing",
+          "point": {
+            "x": 1,
+            "y": 2,
+            "z": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "create-edge-keeps-nonzero-tolerance",
+      "schema": "create-edge",
+      "accepted": true,
+      "mutation": {
+        "CreateEdge": {
+          "id": "e-tol",
+          "start_vertex": "v1",
+          "end_vertex": "v2",
+          "curve": {
+            "kind": "line",
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "direction": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "tol": 3e-7
+        }
+      }
+    },
+    {
+      "id": "create-edge-rejects-omitted-tolerance",
+      "schema": "create-edge",
+      "accepted": false,
+      "mutation": {
+        "CreateEdge": {
+          "id": "e-missing",
+          "start_vertex": "v1",
+          "end_vertex": "v2",
+          "curve": {
+            "kind": "line",
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "direction": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "create-face-keeps-nonzero-tolerance",
+      "schema": "create-face",
+      "accepted": true,
+      "mutation": {
+        "CreateFace": {
+          "id": "f-tol",
+          "outer_loop": "l1",
+          "inner_loops": [],
+          "surface": {
+            "kind": "plane",
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "normal": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            }
+          },
+          "orientation": true,
+          "tol": 4e-7
+        }
+      }
+    },
+    {
+      "id": "create-face-rejects-omitted-tolerance",
+      "schema": "create-face",
+      "accepted": false,
+      "mutation": {
+        "CreateFace": {
+          "id": "f-missing",
+          "outer_loop": "l1",
+          "inner_loops": [],
+          "surface": {
+            "kind": "plane",
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "normal": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            }
+          },
+          "orientation": true
+        }
+      }
+    }
+  ],
+  "diffCases": [
+    {
+      "id": "vertex-diff-keeps-nonzero-tolerance",
+      "accepted": true,
+      "diff": {
+        "vertices": {
+          "modified": [
+            {
+              "key": "v1",
+              "diff": {
+                "tol": 2e-7
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "vertex-diff-rejects-text-tolerance",
+      "accepted": false,
+      "diff": {
+        "vertices": {
+          "modified": [
+            {
+              "key": "v1",
+              "diff": {
+                "tol": "2e-7"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "edge-diff-keeps-nonzero-tolerance",
+      "accepted": true,
+      "diff": {
+        "edges": {
+          "modified": [
+            {
+              "key": "e1",
+              "diff": {
+                "tol": 3e-7
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "edge-diff-rejects-text-tolerance",
+      "accepted": false,
+      "diff": {
+        "edges": {
+          "modified": [
+            {
+              "key": "e1",
+              "diff": {
+                "tol": "3e-7"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "face-diff-keeps-nonzero-tolerance",
+      "accepted": true,
+      "diff": {
+        "faces": {
+          "modified": [
+            {
+              "key": "f1",
+              "diff": {
+                "tol": 4e-7
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "face-diff-rejects-text-tolerance",
+      "accepted": false,
+      "diff": {
+        "faces": {
+          "modified": [
+            {
+              "key": "f1",
+              "diff": {
+                "tol": "4e-7"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "inverseCases": [
+    {
+      "id": "delete-vertex-restores-distinct-tolerance-and-edge-cascade",
+      "before": {
+        "schema": "stdio.semio.brep",
+        "vertices": [
+          {
+            "id": "v-delete",
+            "point": {
+              "x": 1,
+              "y": 2,
+              "z": 3
+            },
+            "tol": 2.1e-7
+          },
+          {
+            "id": "v-keep",
+            "point": {
+              "x": 4,
+              "y": 5,
+              "z": 6
+            },
+            "tol": 2.2e-7
+          }
+        ],
+        "edges": [
+          {
+            "id": "e-cascade-a",
+            "startVertex": "v-delete",
+            "endVertex": "v-keep",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 1,
+                "y": 0,
+                "z": 0
+              }
+            },
+            "tol": 3.1e-7
+          },
+          {
+            "id": "e-cascade-b",
+            "startVertex": "v-keep",
+            "endVertex": "v-delete",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+              }
+            },
+            "tol": 3.2e-7
+          }
+        ]
+      },
+      "mutation": {
+        "DeleteVertex": {
+          "id": "v-delete"
+        }
+      },
+      "expectedInverse": [
+        {
+          "CreateVertex": {
+            "id": "v-delete",
+            "point": {
+              "x": 1,
+              "y": 2,
+              "z": 3
+            },
+            "tol": 2.1e-7
+          }
+        },
+        {
+          "CreateEdge": {
+            "id": "e-cascade-a",
+            "start_vertex": "v-delete",
+            "end_vertex": "v-keep",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 1,
+                "y": 0,
+                "z": 0
+              }
+            },
+            "tol": 3.1e-7
+          }
+        },
+        {
+          "CreateEdge": {
+            "id": "e-cascade-b",
+            "start_vertex": "v-keep",
+            "end_vertex": "v-delete",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+              }
+            },
+            "tol": 3.2e-7
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-edge-restores-distinct-tolerance",
+      "before": {
+        "schema": "stdio.semio.brep",
+        "edges": [
+          {
+            "id": "e-delete",
+            "startVertex": "v1",
+            "endVertex": "v2",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 1,
+                "y": 1,
+                "z": 0
+              }
+            },
+            "tol": 3.3e-7
+          }
+        ]
+      },
+      "mutation": {
+        "DeleteEdge": {
+          "id": "e-delete"
+        }
+      },
+      "expectedInverse": [
+        {
+          "CreateEdge": {
+            "id": "e-delete",
+            "start_vertex": "v1",
+            "end_vertex": "v2",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "direction": {
+                "x": 1,
+                "y": 1,
+                "z": 0
+              }
+            },
+            "tol": 3.3e-7
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-face-restores-distinct-tolerance",
+      "before": {
+        "schema": "stdio.semio.brep",
+        "faces": [
+          {
+            "id": "f-delete",
+            "outerLoop": "l1",
+            "innerLoops": [],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "normal": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "orientation": true,
+            "tol": 4.4e-7
+          }
+        ]
+      },
+      "mutation": {
+        "DeleteFace": {
+          "id": "f-delete"
+        }
+      },
+      "expectedInverse": [
+        {
+          "CreateFace": {
+            "id": "f-delete",
+            "outer_loop": "l1",
+            "inner_loops": [],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "normal": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "orientation": true,
+            "tol": 4.4e-7
+          }
+        }
+      ]
+    }
+  ],
+  "diffCodecCases": [
+    {
+      "id": "vertex-text-diff-rejects-one-field-record",
+      "encoding": "text",
+      "entity": "vertex",
+      "expectedArity": 2,
+      "accepted": false,
+      "value": "vertices=[];[7631:[0]];[]"
+    },
+    {
+      "id": "edge-text-diff-rejects-three-field-record",
+      "encoding": "text",
+      "entity": "edge",
+      "expectedArity": 4,
+      "accepted": false,
+      "value": "edges=[];[6531:[0,0,0]];[]"
+    },
+    {
+      "id": "face-text-diff-rejects-four-field-record",
+      "encoding": "text",
+      "entity": "face",
+      "expectedArity": 5,
+      "accepted": false,
+      "value": "faces=[];[6631:[0,0,0,0]];[]"
+    },
+    {
+      "id": "vertex-binary-diff-rejects-one-field-record",
+      "encoding": "binary",
+      "entity": "vertex",
+      "expectedArity": 2,
+      "accepted": false,
+      "bytesHex": "0101105b5d3b5b373633313a5b305d5d3b5b5d"
+    },
+    {
+      "id": "edge-binary-diff-rejects-three-field-record",
+      "encoding": "binary",
+      "entity": "edge",
+      "expectedArity": 4,
+      "accepted": false,
+      "bytesHex": "0102145b5d3b5b363533313a5b302c302c305d5d3b5b5d"
+    },
+    {
+      "id": "face-binary-diff-rejects-four-field-record",
+      "encoding": "binary",
+      "entity": "face",
+      "expectedArity": 5,
+      "accepted": false,
+      "bytesHex": "0108165b5d3b5b363633313a5b302c302c302c305d5d3b5b5d"
+    }
+  ],
+  "textMutationCases": [
+    {
+      "id": "create-vertex-text-rejects-omitted-tolerance",
+      "schema": "create-vertex",
+      "accepted": false,
+      "value": "create-vertex id=7631 point=[1,2,3]"
+    },
+    {
+      "id": "create-edge-text-rejects-omitted-tolerance",
+      "schema": "create-edge",
+      "accepted": false,
+      "value": "create-edge id=6531 start=7631 end=7632 curve=L[[0,0,0],[1,0,0]]"
+    },
+    {
+      "id": "create-face-text-rejects-omitted-tolerance",
+      "schema": "create-face",
+      "accepted": false,
+      "value": "create-face id=6631 outer=6c31 inner=[] surface=P[[0,0,0],[0,0,1]] orientation=1"
+    }
+  ],
+  "transportRequiredFields": [
+    {
+      "schema": "create-vertex",
+      "discriminant": "CREATE_VERTEX",
+      "requiredFields": [
+        "id",
+        "point",
+        "tol"
+      ]
+    },
+    {
+      "schema": "create-edge",
+      "discriminant": "CREATE_EDGE",
+      "requiredFields": [
+        "id",
+        "start_vertex",
+        "end_vertex",
+        "curve",
+        "tol"
+      ]
+    },
+    {
+      "schema": "create-face",
+      "discriminant": "CREATE_FACE",
+      "requiredFields": [
+        "id",
+        "outer_loop",
+        "inner_loops",
+        "surface",
+        "orientation",
+        "tol"
+      ]
+    }
+  ],
+  "sourceLiteralCensus": {
+    "types": [
+      "CreateVertex",
+      "CreateEdge",
+      "CreateFace"
+    ],
+    "requiredField": "tol",
+    "roots": [
+      "brep",
+      "base"
+    ]
+  }
+}

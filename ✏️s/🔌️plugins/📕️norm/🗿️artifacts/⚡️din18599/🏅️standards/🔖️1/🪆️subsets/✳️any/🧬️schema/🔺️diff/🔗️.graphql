@@ -1,13 +1,12 @@
-# 🧬️ Din18599 diff schema — sparse field delta.
-
+# 🪪️ Din18599Diff uses the canonical Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type Din18599Diff {
-  artifact: Din @state(class: ARTIFACT)
   useClass: String @state(class: ARTIFACT)
   heatedAreaM2: Float @state(class: ARTIFACT)
   occupants: Int @state(class: ARTIFACT)
   hT: Float @state(class: ARTIFACT)
   hV: Float @state(class: ARTIFACT)
-  climate: String @state(class: ARTIFACT)
+  climate: ArtifactChild @state(class: ARTIFACT)
   internalGainsWM2: Float @state(class: ARTIFACT)
   solarGainsKwh: Float @state(class: ARTIFACT)
   systemLossesKwh: Float @state(class: ARTIFACT)
@@ -15,20 +14,4 @@ type Din18599Diff {
   annualLimitKwh: Float @state(class: ARTIFACT)
   energyCarrier: String @state(class: ARTIFACT)
   referenceQPKwh: Float @state(class: ARTIFACT)
-}
-
-type Din18599Artifact {
-  useClass: String
-  heatedAreaM2: Float
-  occupants: Int
-  hT: Float
-  hV: Float
-  climate: String
-  internalGainsWM2: Float
-  solarGainsKwh: Float
-  systemLossesKwh: Float
-  renewableKwh: Float
-  annualLimitKwh: Float
-  energyCarrier: String
-  referenceQPKwh: Float
 }

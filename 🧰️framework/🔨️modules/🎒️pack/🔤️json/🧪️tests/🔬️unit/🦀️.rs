@@ -12,7 +12,7 @@ fn macro_borrows_records_and_matches_json_vectors() {
             DslValue::object([("name".into(), self.name.to_value()), ("count".into(), self.count.to_value())])
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️macro-values.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️macro-values.json")).unwrap();
     for vector in fixture.as_array().unwrap() {
         let record = Record { name: vector["name"].as_str().unwrap().into(), count: vector["count"].as_u64().unwrap() };
         let borrowed = &record;

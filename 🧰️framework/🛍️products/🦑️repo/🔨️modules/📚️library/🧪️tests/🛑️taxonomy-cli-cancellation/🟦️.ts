@@ -9,7 +9,7 @@ const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const schemaPath = `${library}/🔣️taxonomy.json`;
-const vector = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/🧫️fixtures/🔣️taxonomy-cli-cancellation.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/🛑️taxonomy-cli-cancellation/🔣️.json"), "utf8"));
 
 /** 🎛️ Compiles the actual CLI plan-options expression with two independent TypeScript implementations. */
 function planOptionFactories(): ((baseline: string, cancel: string | undefined, progress: NonNullable<TaxonomyPlanOptions["progress"]>) => TaxonomyPlanOptions)[] {

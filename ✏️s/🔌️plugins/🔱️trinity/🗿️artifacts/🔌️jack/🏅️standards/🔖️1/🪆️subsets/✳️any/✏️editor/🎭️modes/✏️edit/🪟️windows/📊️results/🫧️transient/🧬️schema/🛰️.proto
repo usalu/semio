@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.trinity.jack.results_window.transient;
+message JackResultsWindowTransient {
+  optional string query_execution_id = 1;
+  optional bytes query_result_pack = 2;
+  optional string query_error = 3;
+}

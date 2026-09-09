@@ -7,14 +7,14 @@ import { spawnSync } from "node:child_process";
 /** 🚦️ Runs the real baseline executor and compares workflow outputs with its schema-valid JSON and native Git commit. */
 export async function testCiBaselineCommand(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), lodash = require("lodash"), ajv = new (require("ajv"))();
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), root = resolve(import.meta.dir, "../.."), script = join(root, "📜️script.ts");
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚦️baseline-command/🔣️.json"), "utf8")), root = resolve(import.meta.dir, "../.."), script = join(root, "📜️script.ts");
   const project = JSON.parse(readFileSync(join(root, "../📋️project.json"), "utf8")), target = project.targets[fixture.target];
   assert.equal(project.name, fixture.project); assert.equal(target.cache, false); assert.deepEqual(target.outputs, []); assert.equal(target.options.command, fixture.command);
   const bundle = await require("esbuild").build({ entryPoints: [script], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   const inputs = Object.keys(bundle.metafile.inputs);
   assert.ok(inputs.length <= fixture.maximumImports); assert.ok(inputs.every(path => !/🧪️tests|📦️packages\/🟦️typescript\/🟦️.ts/.test(path)));
   const schema = JSON.parse(readFileSync(join(root, "🧭️baseline/🧬️schema/🔣️.json"), "utf8")), valid = ajv.compile({ ...schema, $ref: "#/definitions/selection" });
-  const context = JSON.parse(readFileSync(join(root, "🧭️baseline/🌿️environment/🧪️tests/🌿️workflow-context/🔣️.json"), "utf8"));
+  const context = JSON.parse(readFileSync(join(root, "🧭️baseline/🌿️environment/🧫️fixtures/🌿️workflow-context/🔣️.json"), "utf8"));
   const directory = mkdtempSync(join(output, "ci-command-"));
   try {
     const eventPath = join(directory, "event.json"), outputPath = join(directory, "output.txt");

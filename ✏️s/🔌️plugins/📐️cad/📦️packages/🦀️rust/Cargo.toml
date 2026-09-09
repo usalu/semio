@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "cad"
 titlePrefix = "📐️cad"
-sourceRoots = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"]
+sourceRoots = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets"]
 
 [[package.metadata.semio.playground]]
 variant = "cad"
@@ -30,14 +30,14 @@ ports = { react = 6020, wgpu = 6120 }
 
 # 🎪️ The `koordinator` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
-# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-fixture` asset row below
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-assets` asset row below
 # stays here too (a copy also lives on the bundle crate) since the standalone `cad` dev variant needs
 # it independently of the demonstrator.
 [[package.metadata.semio.assets]]
 kind = "static-dir"
-route = "/cad-fixture"
+route = "/cad-assets"
 app = "s.cad.cad@1/*#editor"
-root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

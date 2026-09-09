@@ -353,7 +353,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects-a-duplicate-node-id/🦀️.rs"]
                             mod tests_rejects_a_duplicate_node_id;
                         }
                         #[path = "."]
@@ -365,7 +365,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🧪️rejects-deleting-a-missing-node/🦀️.rs"]
                             mod tests_rejects_deleting_a_missing_node;
                         }
                         #[path = "."]
@@ -377,7 +377,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🧪️rejects-renaming-a-missing-node/🦀️.rs"]
                             mod tests_rejects_renaming_a_missing_node;
                         }
                         #[path = "."]
@@ -389,7 +389,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-f90723/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🧪️rejects-renaming-the-label-of-a-missing-node/🦀️.rs"]
                             mod tests_rejects_renaming_the_label_of_a_missing_node;
                         }
                         #[path = "."]
@@ -401,7 +401,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🧪️rejects-moving-a-missing-node/🦀️.rs"]
                             mod tests_rejects_moving_a_missing_node;
                         }
                         #[path = "."]
@@ -413,7 +413,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🧪️rejects-resizing-a-missing-node/🦀️.rs"]
                             mod tests_rejects_resizing_a_missing_node;
                         }
                         #[path = "."]
@@ -425,7 +425,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-3d1997/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🧪️rejects-reiconing-a-missing-node/🦀️.rs"]
                             mod tests_rejects_reiconing_a_missing_node;
                         }
                         #[path = "."]
@@ -437,7 +437,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbrevi-46aeee/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🧪️rejects-reabbreviating-a-missing-node/🦀️.rs"]
                             mod tests_rejects_reabbreviating_a_missing_node;
                         }
                         #[path = "."]
@@ -449,7 +449,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-45dad2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🧪️rejects-rebinding-the-operator-of-a-missing-node/🦀️.rs"]
                             mod tests_rejects_rebinding_the_operator_of_a_missing_node;
                         }
                         #[path = "."]
@@ -461,7 +461,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-8bbfaf/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🧪️rejects-rekinding-a-missing-node/🦀️.rs"]
                             mod tests_rejects_rekinding_a_missing_node;
                         }
                         #[path = "."]
@@ -473,7 +473,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropert-1ab92a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🧪️rejects-repropertying-a-missing-node/🦀️.rs"]
                             mod tests_rejects_repropertying_a_missing_node;
                         }
                         #[path = "."]
@@ -485,7 +485,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-c304e1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🧪️rejects-a-duplicate-id-in-the-order/🦀️.rs"]
                             mod tests_rejects_a_duplicate_id_in_the_order;
                         }
                         #[path = "."]
@@ -497,7 +497,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🧪️rejects-a-missing-source-node/🦀️.rs"]
                             mod tests_rejects_a_missing_source_node;
                         }
                         #[path = "."]
@@ -509,7 +509,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-ab5dfa/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🧪️rejects-disconnecting-a-missing-edge/🦀️.rs"]
                             mod tests_rejects_disconnecting_a_missing_edge;
                         }
                     }

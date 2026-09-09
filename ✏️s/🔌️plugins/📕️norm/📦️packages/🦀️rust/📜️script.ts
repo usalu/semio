@@ -216,7 +216,7 @@ class SurfaceRenderSourceScript extends BundleScript {
 class SurfaceRenderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-s-plugin-norm"], this.repoRoot, ["--test", "surface_render", ...rest]);
+    await runCargoTestBudgeted(["semio-s-plugin-norm"], this.repoRoot, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
   }
 }
 

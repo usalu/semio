@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMut
 use crate::Camera;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel};
 
-pub(crate) fn set_viewport(viewport_json: &str, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, crate::editor::jack::config::JackConfigMutation>, Fault> {
+pub(crate) fn set_viewport(viewport_json: &str, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let view = view.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("jack.window-required"), "Jack viewport requires a host window context"))?;
     match pack::from_json_str::<Camera>(viewport_json) {
         Ok(camera) if camera.x.is_finite() && camera.y.is_finite() && camera.zoom.is_finite() && camera.zoom > 0.0 => {

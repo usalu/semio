@@ -302,7 +302,7 @@ async fn validate_workflow_snapshot_flags_unresolved_bindings() {
 
 #[semio_framework_async_macros::async_test]
 async fn independent_package_fixture_matches_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
     assert_eq!(fixture["package"], env!("CARGO_PKG_NAME"));
     let document = empty_workflow_snapshot().await;
     let json = dsl::os_pack::json::to_json_string(&document);

@@ -6,6 +6,7 @@ export const ARTIFACT_CREATION_PROGRESS_CAPACITY = 8;
 export type ArtifactCreationProgressOwnerV1 = Readonly<{
   requestId: string;
   spaceId: string;
+  expectedCatalogGenerationId: string;
   kindId: string;
   name: string;
   runtimeKey: string;
@@ -107,7 +108,7 @@ function retainArtifactCreationProgressV1(
   return next;
 }
 
-/** 🌱️ Reduces only exact request/space/kind status into bounded ephemeral Shell UI state. */
+/** 🌱️ Reduces only exact request/space/catalog/kind status into bounded ephemeral Shell UI state. */
 export function reduceArtifactCreationProgressUiV1(
   current: ArtifactCreationProgressUiStateV1,
   action: ArtifactCreationProgressActionV1,
@@ -129,7 +130,7 @@ export function reduceArtifactCreationProgressUiV1(
     if (state.spaceId !== action.spaceId || state.phase !== "ready") return current;
     return { ...current, [state.requestId]: { ...state, openingDisposition: action.kind === "opening" ? "opening" : "failed" } };
   }
-  if (state.spaceId !== action.message.spaceId || (action.message.ready !== undefined && action.message.ready.kindId !== state.kindId)) return current;
+  if (state.spaceId !== action.message.spaceId || state.expectedCatalogGenerationId !== action.message.catalogGenerationId || (action.message.ready !== undefined && action.message.ready.kindId !== state.kindId)) return current;
   return { ...current, [state.requestId]: { ...state, phase: action.message.phase, openingDisposition: action.message.phase === "ready" && state.phase === "ready" ? state.openingDisposition : "idle" } };
 }
 

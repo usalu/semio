@@ -35,6 +35,6 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetN {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🚦️severity-🔢️set-n/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -22,7 +22,7 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   whole-value setters and a set/remove pair over each of two maps — and that is what this one does.
 
   🏗️ **The artifact is real, and it is now the whole building.**
-  `local://🔣️.snapshot.json` carries a before-fixture of 180 real pieces, 364
+  `shared://♻️mutate-rewrite-1/🔣️.snapshot.json` carries a before-fixture of 180 real pieces, 364
   real ports and 179 real connections — 218 839 bytes of `trinity.graph` inside a 246 269-byte rule —
   derived ONCE by `🐍️derive-rewriting-fixture.py` in the ticket folder from the real committed IFC 4
   file `../../../🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️nakagin-capsule-tower.ifc`, read with
@@ -43,7 +43,7 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   `width`/`height` (96×48 for the root piece, 88×40 for a capsule — the committed document's own two
   values for exactly those two roles) and the `camera`. Everything else is real IFC data.
 
-  `local://🏢️nakagin-ground-floor/🔣️.snapshot.json` — the two-node rule this case used to rest on,
+  `shared://♻️mutate-rewrite-1/🏢️nakagin-ground-floor/🔣️.snapshot.json` — the two-node rule this case used to rest on,
   derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-rewrite-rule.py`
   from the artifact's own committed demo document — is NOT gone: `identity-round-trip` still reads it
@@ -74,7 +74,7 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived Nakagin Capsule Tower rule
-    Given the real derived rule local://🔣️.snapshot.json
+    Given the real derived rule shared://♻️mutate-rewrite-1/🔣️.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -94,7 +94,7 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived rule and land back on it
-    Given the real derived rule local://🔣️.snapshot.json
+    Given the real derived rule shared://♻️mutate-rewrite-1/🔣️.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -114,9 +114,9 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-rule asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-rule asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-rule shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-rule shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-rule
     Then each implementation lands on the committed after-rule in role, only the member this verb writes moved, and the two agree
     Examples:
@@ -133,8 +133,8 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
   @level-long
   @mode-round-trip
   Scenario: Read both real derived rules in both languages, and hold the committed carrier to its own law in Rust
-    Given the real derived rule local://🔣️.snapshot.json
-    And the two-node ground-floor rule this case used to rest on local://🏢️nakagin-ground-floor/🔣️.snapshot.json
-    And the artifact's own committed carrier asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real derived rule shared://♻️mutate-rewrite-1/🔣️.snapshot.json
+    And the two-node ground-floor rule this case used to rest on shared://♻️mutate-rewrite-1/🏢️nakagin-ground-floor/🔣️.snapshot.json
+    And the artifact's own committed carrier asset://🎬️demo/🗣️.dsl.semio
     When each implementation reads both derived rules, and the Rust additionally parses the committed carrier, prints it back and parses it again
     Then both languages read the same five members of each rule, and the Rust reproduces the committed carrier byte for byte

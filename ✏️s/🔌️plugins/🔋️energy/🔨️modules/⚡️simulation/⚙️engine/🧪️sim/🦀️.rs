@@ -94,6 +94,7 @@ impl EnergyWireLease {
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The fixed recovery registry accepts abandoned packet ownership from Drop without allocating.")]
 enum EnergyWireLeaseRecoverySlot {
     Vacant,
     Reserved(u64),
@@ -159,6 +160,7 @@ impl EnergyWireQueue {
         Self { kind, slots: std::array::from_fn(|_| None), head: 0, len: 0, next_token: 0, in_flight: None, reserved_push: false }
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn push(&mut self, packet: EnergyWirePacket) -> Result<(), EnergyWirePacket> {
         if packet.kind != self.kind || self.len == ENERGY_WIRE_QUEUE_SLOTS || self.reserved_push {
             return Err(packet);
@@ -177,6 +179,7 @@ impl EnergyWireQueue {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn push_reserved(&mut self, packet: EnergyWirePacket) -> Result<(), EnergyWirePacket> {
         if packet.kind != self.kind || !self.reserved_push || self.len == ENERGY_WIRE_QUEUE_SLOTS {
             return Err(packet);
@@ -206,6 +209,7 @@ impl EnergyWireQueue {
         Some(EnergyWireLease { kind: self.kind, token, recovery_slot, packet: Some(packet) })
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn retry(&mut self, mut lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         if lease.kind != self.kind || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation)) {
             return Err(lease);
@@ -222,6 +226,7 @@ impl EnergyWireQueue {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn ack(&mut self, mut lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         if lease.kind != self.kind
             || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation))
@@ -241,6 +246,7 @@ impl EnergyWireQueue {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn ack_transfer(&mut self, mut lease: EnergyWireLease) -> Result<EnergyWirePacket, EnergyWireLease> {
         if lease.kind != self.kind || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation)) {
             return Err(lease);
@@ -542,6 +548,7 @@ pub struct EnergyAdmissionRejected {
 }
 
 impl EnergyAdmissionRejected {
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry(self, bounds: EnergyNumericalBounds) -> Result<EnergyJob, Self> {
         EnergyJob::admit(self.operation, self.model, self.config, bounds)
     }
@@ -585,6 +592,7 @@ pub enum EnergyCheckpointRejectionReason {
 }
 
 impl EnergyCheckpointRejected {
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry(self, bounds: EnergyNumericalBounds) -> Result<EnergyRestoreJob, Self> {
         EnergyRestoreJob::admit(self.operation, self.model, self.config, self.packet, bounds)
     }
@@ -695,6 +703,7 @@ enum EnergyRestoreAbandonmentSlot {
 static ENERGY_RESTORE_ABANDONMENT_REGISTRY: Mutex<[EnergyRestoreAbandonmentSlot; ENERGY_ABANDONMENT_SLOTS]> = Mutex::new([const { EnergyRestoreAbandonmentSlot::Vacant }; ENERGY_ABANDONMENT_SLOTS]);
 
 impl EnergyRestoreJob {
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn admit(operation: Operation, model: Model, config: SimulationConfig, packet: EnergyWirePacket, bounds: EnergyNumericalBounds) -> Result<Self, EnergyCheckpointRejected> {
         let census = EnergyNumericalCensus::observe(&model, &config).unwrap_or_default();
         let reject = |model, config, packet, reason| EnergyCheckpointRejected { operation, model, config, packet, census, reason };
@@ -991,6 +1000,7 @@ impl EnergyRestoreJob {
         Ok(false)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn finish(mut self, context: &StepContext<'_>) -> Result<EnergyJob, Self> {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation || !self.ready {
             return Err(self);
@@ -1894,10 +1904,12 @@ fn release_energy_abandonment_slot(index: usize) {
 }
 
 impl EnergyJob {
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn new(operation: Operation, model: Model, config: SimulationConfig) -> Result<Self, EnergyAdmissionRejected> {
         Self::admit(operation, model, config, EnergyNumericalBounds::default())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn admit(operation: Operation, model: Model, config: SimulationConfig, bounds: EnergyNumericalBounds) -> Result<Self, EnergyAdmissionRejected> {
         let Some(census) = EnergyNumericalCensus::observe(&model, &config) else {
             return Err(EnergyAdmissionRejected { operation, model, config, census: EnergyNumericalCensus::default(), dimension: EnergyNumericalDimension::ArithmeticOverflow });
@@ -2012,6 +2024,7 @@ impl EnergyJobAuthority {
         Ok(self.publication.preview.take())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry_preview_packet(&mut self, packet: EnergyWirePacket) -> Result<(), EnergyWirePacket> {
         if !self.packet_matches(&packet, EnergyWireKind::Preview) || self.publication.preview.is_some() || self.publication.retiring_preview.is_some() {
             return Err(packet);
@@ -2027,14 +2040,17 @@ impl EnergyJobAuthority {
         Ok(self.publication.checkpoints.take())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry_checkpoint_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         self.publication.checkpoints.retry(lease)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn ack_checkpoint_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         self.publication.checkpoints.ack(lease)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn ack_checkpoint_for_restore(&mut self, lease: EnergyWireLease) -> Result<EnergyWirePacket, EnergyWireLease> {
         self.publication.checkpoints.ack_transfer(lease)
     }
@@ -2046,10 +2062,12 @@ impl EnergyJobAuthority {
         Ok(self.publication.commits.take())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry_commit_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         self.publication.commits.retry(lease)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn ack_commit_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         match self.publication.commits.ack(lease) {
             Ok(()) => {
@@ -2067,10 +2085,12 @@ impl EnergyJobAuthority {
         Ok(self.publication.faults.take())
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn retry_fault_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         self.publication.faults.retry(lease)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn ack_fault_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
         self.publication.faults.ack(lease)
     }
@@ -4608,6 +4628,7 @@ pub struct Engine;
 
 impl Engine {
     /// ⚡️ Create the persistent operation used by interactive hosts and the batch adapter.
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     pub fn job(model: Model, config: SimulationConfig) -> Result<EnergyJob, EnergyAdmissionRejected> {
         EnergyJob::new(Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), 0), model, config)
     }

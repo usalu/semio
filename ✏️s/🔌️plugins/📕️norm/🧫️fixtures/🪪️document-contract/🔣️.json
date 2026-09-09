@@ -1,0 +1,42 @@
+{
+  "artifacts": [
+    {
+      "name": "En1990",
+      "artifact": "⚖️en1990",
+      "childField": "qK",
+      "committed": { "snapshots": 20, "diffs": 6 },
+      "document": {
+        "gK": 45,
+        "qK": { "childId": "actions-a", "target": { "artifactId": "variable-actions", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
+        "resistanceKn": 250,
+        "consequenceClass": 2,
+        "annex": "De",
+        "seismicAEdKn": 0
+      },
+      "invalidFields": { "consequenceClass": 256, "annex": "unknown", "camera": {}, "selectedCheckIndex": 0 }
+    },
+    {
+      "name": "Din18599",
+      "artifact": "⚡️din18599",
+      "childField": "climate",
+      "committed": { "snapshots": 26, "diffs": 12 },
+      "document": {
+        "useClass": "Residential",
+        "heatedAreaM2": 100,
+        "occupants": 4,
+        "hT": 92.5,
+        "hV": 40.75,
+        "climate": { "childId": "climate-a", "target": { "artifactId": "monthly-climate", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table" } } },
+        "internalGainsWM2": 3.5,
+        "solarGainsKwh": 84,
+        "systemLossesKwh": 800,
+        "renewableKwh": 1500,
+        "annualLimitKwh": 7500,
+        "energyCarrier": "natural_gas",
+        "referenceQPKwh": 10000
+      },
+      "invalidFields": { "occupants": -1, "useClass": "unknown", "camera": {}, "selectedCheckIndex": 0 }
+    }
+  ],
+  "invalidChildren": [null, [], "inline climate", {"values": []}, {"childId": "missing-target"}, {"childId": "local", "target": {"artifactId": "a", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "table"}}, "localOwner": {}}]
+}

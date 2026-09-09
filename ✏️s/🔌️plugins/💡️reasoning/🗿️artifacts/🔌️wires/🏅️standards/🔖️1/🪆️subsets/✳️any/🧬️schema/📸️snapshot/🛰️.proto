@@ -5,7 +5,6 @@ import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/�
 message WiresSnapshot {
   semio.framework.value.DslValue wires_fixture = 1;
   semio.os.store.ArtifactChild content = 2;
-  semio.framework.value.DslValue camera = 3;
-  semio.framework.value.DslValue meta = 4;
+  semio.framework.value.DslValue meta = 3;
 }
 message WiresStringList { repeated string values = 1; }

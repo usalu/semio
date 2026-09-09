@@ -8,7 +8,7 @@
 //! This file is a routing table: `handle` → `ShootingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::shooting::commands::{asset, camera, export, fixture, gumball, scene, selection, shot};
+use crate::editor::shooting::commands::{asset, camera, export, document, gumball, scene, selection, shot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::modes::edit;
 use crate::editor::shooting::modes::edit::windows::icon as icon_window;
@@ -37,7 +37,7 @@ const SHOOTING_PLAY_CONTROLLER_ID: &str = SHOOTING_PLAY_APP_ID;
 /// only, `HierarchyProvider::Flat`. Shot selection is NOT part of this domain — see
 /// `ShootingConfig::selected_shot_ids`'s doc comment.
 pub const SHOOTING_INTERACTION_DOMAIN: &str = "assets";
-pub use crate::editor::shooting::commands::fixture::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
+pub use crate::editor::shooting::commands::document::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
 pub use catalogue_panel::SHOOTING_PLAY_BODY_CATALOGUE;
 pub use document_panel::SHOOTING_PLAY_BODY_DOCUMENT;
 pub use icon_window::SHOOTING_PLAY_BODY_ICON;
@@ -263,7 +263,7 @@ semio_framework_plugin::app_commands! {
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
 use export::export_shots;
-use fixture::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
+use document::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use selection::{set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
@@ -303,6 +303,7 @@ fn shooting_bounded_extent(command: &ShootingCommand, _snapshot: &ShootingSnapsh
     SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)).then_some(SHOOTING_BOUNDED_WORK_ITEMS)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn shooting_bounded_reduce(
     command: &ShootingCommand,
     snapshot: &ShootingSnapshot,
@@ -577,10 +578,10 @@ impl ArtifactEditor for ShootingPlayApp {
 //#region 🔖️ResetDocument
 /// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (file import,
-/// load-example, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
+/// load-example, dev document load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
-/// `"document:in"` above, `commands::fixture::{import_snapshot_json,set_active_example,reset_snapshot}`)
+/// `"document:in"` above, `commands::document::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
@@ -627,7 +628,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
-            // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
+            // 🛠️ Dev-only whole-document import — kept out of the command palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))

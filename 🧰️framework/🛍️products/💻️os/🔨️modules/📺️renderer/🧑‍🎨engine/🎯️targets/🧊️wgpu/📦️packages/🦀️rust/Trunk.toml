@@ -22,7 +22,7 @@ backend = "http://127.0.0.1:6141/vt/"
 backend = "http://127.0.0.1:6141/mesh/"
 
 [[proxy]]
-backend = "http://127.0.0.1:6141/infinite-fixture/"
+backend = "http://127.0.0.1:6141/infinite-assets/"
 
 [[proxy]]
 backend = "http://127.0.0.1:6141/cad-fixture/"

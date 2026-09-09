@@ -137,7 +137,7 @@ macro_rules! geo_operation {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel(|$k| {
                     let $i = input;
-                    let handle = $expr.map_err(map_kernel_error)?;
+                    let handle = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, geometry_dict($k, &handle)?))
                 })
             }
@@ -155,7 +155,7 @@ macro_rules! num_operation {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
-                    let value = $expr.map_err(map_kernel_error)?;
+                    let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, number_dictionary(value)))
                 })
             }
@@ -170,7 +170,7 @@ macro_rules! point_operation {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
-                    let value = $expr.map_err(map_kernel_error)?;
+                    let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, point_dictionary(value)))
                 })
             }
@@ -185,7 +185,7 @@ macro_rules! vec_operation {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
-                    let value = $expr.map_err(map_kernel_error)?;
+                    let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, vector_dictionary(value)))
                 })
             }
@@ -200,7 +200,7 @@ macro_rules! text_operation {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
-                    let value = $expr.map_err(map_kernel_error)?;
+                    let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, text_dictionary(value)))
                 })
             }
@@ -220,7 +220,7 @@ impl Operator for ConvexHullPrim {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
-            let handle = kernel.convex_hull(&points).map_err(map_kernel_error)?;
+            let handle = kernel.convex_hull(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -238,7 +238,7 @@ impl Operator for PolylineWire {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
-            let handle = kernel.polyline_wire(&points).map_err(map_kernel_error)?;
+            let handle = kernel.polyline_wire(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
         })
     }
@@ -253,7 +253,7 @@ impl Operator for InterpolateCurve {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
-            let handle = kernel.interpolate_curve(&points, degree).map_err(map_kernel_error)?;
+            let handle = kernel.interpolate_curve(&points, degree).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("curve", geometry_dict(kernel, &handle)?))
         })
     }
@@ -266,7 +266,7 @@ impl Operator for ApproximateCurve {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
             let control_points = read_channel_number(input, "controlPoints")? as usize;
-            let handle = kernel.approximate_curve(&points, degree, control_points).map_err(map_kernel_error)?;
+            let handle = kernel.approximate_curve(&points, degree, control_points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("curve", geometry_dict(kernel, &handle)?))
         })
     }
@@ -283,7 +283,7 @@ impl Operator for PlanarFacePoints {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
-            let handle = kernel.planar_face_from_points(&points).map_err(map_kernel_error)?;
+            let handle = kernel.planar_face_from_points(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("face", geometry_dict(kernel, &handle)?))
         })
     }
@@ -300,7 +300,7 @@ impl Operator for NurbsGridSurface {
             let grid = points_to_grid(&points, rows)?;
             let degree_u = read_channel_number(input, "degreeU")? as usize;
             let degree_v = read_channel_number(input, "degreeV")? as usize;
-            let handle = kernel.nurbs_surface_from_grid(&grid, degree_u, degree_v).map_err(map_kernel_error)?;
+            let handle = kernel.nurbs_surface_from_grid(&grid, degree_u, degree_v).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("surface", geometry_dict(kernel, &handle)?))
         })
     }
@@ -311,7 +311,7 @@ impl Operator for CoonsPatch {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let curves = read_nested_point_lists(input, "curves")?;
-            let handle = kernel.coons_patch(&curves).map_err(map_kernel_error)?;
+            let handle = kernel.coons_patch(&curves).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("surface", geometry_dict(kernel, &handle)?))
         })
     }
@@ -328,7 +328,7 @@ impl Operator for ExtrudeCurve {
         with_kernel(|kernel| {
             let wire = read_geometry(input, "wire")?;
             let vector = read_xyz(input, "vector")?;
-            let handle = kernel.extrude_wire(&wire, vector).map_err(map_kernel_error)?;
+            let handle = kernel.extrude_wire(&wire, vector).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -345,7 +345,7 @@ impl Operator for ExtrudeFace {
                 return Err(EvalError::InvalidInput("extrusion vector magnitude must be positive".into()));
             }
             let direction = [vector[0] / distance, vector[1] / distance, vector[2] / distance];
-            let handle = kernel.extrude(&face, direction, distance).map_err(map_kernel_error)?;
+            let handle = kernel.extrude(&face, direction, distance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -359,7 +359,7 @@ impl Operator for Loft {
         with_kernel(|kernel| {
             let profiles = read_geometry_list(input, "profiles")?;
             let smooth = read_channel_number(input, "smooth")? >= 0.5;
-            let handle = kernel.loft(&profiles, smooth).map_err(map_kernel_error)?;
+            let handle = kernel.loft(&profiles, smooth).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -373,7 +373,7 @@ impl Operator for Pipe {
             let path = read_geometry(input, "path")?;
             let guide_handle = read_optional_geometry(input, "guide");
             let guide = guide_handle.as_ref();
-            let handle = kernel.pipe(&profile, &path, guide).map_err(map_kernel_error)?;
+            let handle = kernel.pipe(&profile, &path, guide).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -400,7 +400,7 @@ impl Operator for CompoundCut {
         with_kernel(|kernel| {
             let target = read_geometry(input, "target")?;
             let tools = read_geometry_list(input, "tools")?;
-            let handle = kernel.compound_cut(&target, &tools).map_err(map_kernel_error)?;
+            let handle = kernel.compound_cut(&target, &tools).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -442,7 +442,7 @@ impl Operator for FilletEdges {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
             let radius = read_channel_number(input, "radius")?;
-            let handle = kernel.fillet_edges(&geometry, &edges, radius).map_err(map_kernel_error)?;
+            let handle = kernel.fillet_edges(&geometry, &edges, radius).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -455,7 +455,7 @@ impl Operator for ChamferEdges {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
             let distance = read_channel_number(input, "distance")?;
-            let handle = kernel.chamfer_edges(&geometry, &edges, distance).map_err(map_kernel_error)?;
+            let handle = kernel.chamfer_edges(&geometry, &edges, distance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -468,7 +468,7 @@ impl Operator for ShellMutation {
             let geometry = read_geometry(input, "geometry")?;
             let thickness = read_channel_number(input, "thickness")?;
             let open_faces = read_geometry_list_or_empty(input, "openFaces")?;
-            let handle = kernel.shell(&geometry, thickness, &open_faces).map_err(map_kernel_error)?;
+            let handle = kernel.shell(&geometry, thickness, &open_faces).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -480,7 +480,7 @@ impl Operator for Draft {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
-            let handle = kernel.draft(&geometry, &faces, read_xyz(input, "pullDirection")?, read_xyz(input, "neutralPoint")?, read_channel_number(input, "angle")?).map_err(map_kernel_error)?;
+            let handle = kernel.draft(&geometry, &faces, read_xyz(input, "pullDirection")?, read_xyz(input, "neutralPoint")?, read_channel_number(input, "angle")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -494,7 +494,7 @@ impl Operator for Defeature {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
-            let handle = kernel.defeature(&geometry, &faces).map_err(map_kernel_error)?;
+            let handle = kernel.defeature(&geometry, &faces).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -508,7 +508,7 @@ struct Section;
 impl Operator for Section {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let faces = kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(map_kernel_error)?;
+            let faces = kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
             if faces.is_empty() {
                 return Err(EvalError::InvalidInput("section produced no faces".into()));
             }
@@ -525,7 +525,7 @@ struct Split;
 impl Operator for Split {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let (positive, negative) = kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(map_kernel_error)?;
+            let (positive, negative) = kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new().insert("positive", Value::Dictionary(geometry_dict(kernel, &positive)?)).insert("negative", Value::Dictionary(geometry_dict(kernel, &negative)?)))
         })
     }
@@ -535,7 +535,7 @@ struct CurveCurveIntersect;
 impl Operator for CurveCurveIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let points = kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
+            let points = kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             let handle = wire_from_points(kernel, &points)?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
         })
@@ -546,7 +546,7 @@ struct CurveSurfaceIntersect;
 impl Operator for CurveSurfaceIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let points = kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
+            let points = kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             let handle = wire_from_points(kernel, &points)?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
         })
@@ -559,7 +559,7 @@ struct SurfaceSurfaceIntersect;
 impl Operator for SurfaceSurfaceIntersect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let wires = kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
+            let wires = kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             if wires.is_empty() {
                 return Err(EvalError::InvalidInput("no intersection wire".into()));
             }
@@ -578,7 +578,7 @@ struct CurveDomain;
 impl Operator for CurveDomain {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
-            let domain = kernel.curve_domain(&read_geometry(input, "curve")?).map_err(map_kernel_error)?;
+            let domain = kernel.curve_domain(&read_geometry(input, "curve")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("span", number_dictionary(domain_span(domain))))
         })
     }
@@ -595,7 +595,7 @@ struct CurveClosestParameter;
 impl Operator for CurveClosestParameter {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
-            let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
+            let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new().insert("parameter", Value::Dictionary(number_dictionary(parameter))).insert("point", Value::Dictionary(point_dictionary(point))).insert("distance", Value::Dictionary(number_dictionary(distance))))
         })
     }
@@ -606,7 +606,7 @@ struct SurfaceClosestUv;
 impl Operator for SurfaceClosestUv {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
-            let (u, v, point, distance) = kernel.surface_closest_uv(&read_geometry(input, "surface")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
+            let (u, v, point, distance) = kernel.surface_closest_uv(&read_geometry(input, "surface")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new()
                 .insert("u", Value::Dictionary(number_dictionary(u)))
                 .insert("v", Value::Dictionary(number_dictionary(v)))
@@ -633,7 +633,7 @@ struct SolidShells;
 impl Operator for SolidShells {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let shells = kernel.solid_shells(&read_geometry(input, "solid")?).map_err(map_kernel_error)?;
+            let shells = kernel.solid_shells(&read_geometry(input, "solid")?).map_err(|error| map_kernel_error(&error))?;
             let list = geometry_list(kernel, shells)?;
             Ok(Dictionary::new().insert("shells", Value::Dictionary(list)))
         })
@@ -645,7 +645,7 @@ impl Operator for CompoundOf {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let solids = read_geometry_list(input, "solids")?;
-            let handle = kernel.compound(&solids).map_err(map_kernel_error)?;
+            let handle = kernel.compound(&solids).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("compound", geometry_dict(kernel, &handle)?))
         })
     }
@@ -656,7 +656,7 @@ struct Explode;
 impl Operator for Explode {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
-            let solids = kernel.explode(&read_geometry(input, "compound")?).map_err(map_kernel_error)?;
+            let solids = kernel.explode(&read_geometry(input, "compound")?).map_err(|error| map_kernel_error(&error))?;
             let list = geometry_list(kernel, solids)?;
             Ok(Dictionary::new().insert("solids", Value::Dictionary(list)))
         })
@@ -689,7 +689,7 @@ struct ClosestPoint;
 impl Operator for ClosestPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
-            let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
+            let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("point", point_dictionary(result.point)))
         })
     }
@@ -699,7 +699,7 @@ struct ClassifyPoint;
 impl Operator for ClassifyPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
-            let classification = kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
+            let classification = kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("classification", number_dictionary(classify_number(classification))))
         })
     }
@@ -718,7 +718,7 @@ impl Operator for SewFaces {
         with_kernel(|kernel| {
             let faces = read_geometry_list(input, "faces")?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = kernel.sew_faces(&faces, tolerance).map_err(map_kernel_error)?;
+            let handle = kernel.sew_faces(&faces, tolerance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
         })
     }
@@ -734,7 +734,7 @@ impl Operator for ExportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
-            let value = kernel.export_step(&[geometry]).map_err(map_kernel_error)?;
+            let value = kernel.export_step(&[geometry]).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("step", text_dictionary(value)))
         })
     }
@@ -746,7 +746,7 @@ impl Operator for ExportStl {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let data = kernel.export_stl(&[geometry], deflection).map_err(map_kernel_error)?;
+            let data = kernel.export_stl(&[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("stl", text_dictionary(encode_base64(&data))))
         })
     }
@@ -758,7 +758,7 @@ impl Operator for ExportObj {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let value = kernel.export_obj(&[geometry], deflection).map_err(map_kernel_error)?;
+            let value = kernel.export_obj(&[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("obj", text_dictionary(value)))
         })
     }
@@ -769,7 +769,7 @@ impl Operator for ImportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
-            let shapes = kernel.import_step(&data).map_err(map_kernel_error)?;
+            let shapes = kernel.import_step(&data).map_err(|error| map_kernel_error(&error))?;
             let handle = shapes.into_iter().next().ok_or_else(|| EvalError::InvalidInput("step import produced no solids".into()))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
@@ -782,7 +782,7 @@ impl Operator for ImportStl {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = kernel.import_stl(&data, tolerance).map_err(map_kernel_error)?;
+            let handle = kernel.import_stl(&data, tolerance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -794,7 +794,7 @@ impl Operator for ImportObj {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = kernel.import_obj(&data, tolerance).map_err(map_kernel_error)?;
+            let handle = kernel.import_obj(&data, tolerance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -806,7 +806,7 @@ impl Operator for ExportDwg {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(map_kernel_error)?;
+            let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("dwg", text_dictionary(encode_base64(&data))))
         })
     }
@@ -818,7 +818,7 @@ impl Operator for ImportDwg {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(map_kernel_error)?;
+            let handle = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }

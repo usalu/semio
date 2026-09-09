@@ -25,11 +25,11 @@ use semio_repo_test_host::Adapter;
 const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"];
 
 /// 📄️ The plugin's own committed real deck artifact, read where the domain already keeps it.
-const DECK_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DECK_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 /// 🧫️ The three tiles the composed presentation child is seeded with — see this fixture's own
 /// `_provenance` member for which committed leaf payload each one came from.
-const BASE_TILES: &str = "local://🔣️.json";
+const BASE_TILES: &str = "shared://🧭️mutate-presentation-1/🔣️.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

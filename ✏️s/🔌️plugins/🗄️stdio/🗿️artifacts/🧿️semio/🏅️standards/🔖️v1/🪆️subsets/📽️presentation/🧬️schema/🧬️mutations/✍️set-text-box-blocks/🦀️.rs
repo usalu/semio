@@ -1,4 +1,4 @@
-//! 🧊 `set-textbox-blocks` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
+//! 🧊 `set-text-box-blocks` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
 //! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
 //! delegates, so the semantics are preserved by construction rather than re-derived.
 //!
@@ -7,9 +7,8 @@
 //! `to_kebab` splits before every uppercase letter that follows a lowercase one, so `TextBox` ->
 //! `text-box` (verified against the already-migrated `svg` baseline's `SetViewBox` ->
 //! `set-view-box`). The op-text/binary keyword (`print_op`/`parse_op`/`OP_KEYWORDS`, this
-//! artifact's grammar files and the committed test fixtures) is a SEPARATE vocabulary the derive
-//! does not see, and keeps its established `set-textbox-blocks` spelling unchanged — only this
-//! leaf's internal descriptor identity changes.
+//! artifact's grammar files and the committed test fixtures) shares the same canonical
+//! `set-text-box-blocks` spelling.
 use super::*;
 
 //#region 🔖️Payload

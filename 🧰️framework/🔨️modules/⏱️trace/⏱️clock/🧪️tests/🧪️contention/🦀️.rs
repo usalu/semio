@@ -6,7 +6,7 @@ use std::time::Duration;
 
 //#region 🧰️Fixture
 fn case(id: &str) -> serde_json::Value {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap().clone()
 }
 
@@ -95,7 +95,7 @@ fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() 
 
 #[test]
 fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(51);
     for law in fixture["verdicts"].as_array().unwrap() {

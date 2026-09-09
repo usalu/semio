@@ -1,0 +1,93 @@
+{
+  "grants": [
+    0,
+    1,
+    7,
+    256
+  ],
+  "validEntries": [
+    [
+      "z",
+      18446744073709551615
+    ],
+    [
+      "a",
+      1.0
+    ],
+    [
+      "m",
+      -9223372036854775808
+    ]
+  ],
+  "duplicateEntries": [
+    [
+      "z",
+      1
+    ],
+    [
+      "a",
+      2
+    ],
+    [
+      "z",
+      3
+    ]
+  ],
+  "duplicatePackJson": "{\"z\":3,\"a\":2}",
+  "duplicateFault": "canonical-value.duplicate-key",
+  "largeKey": {
+    "unit": "🧬ä",
+    "repeat": 300
+  },
+  "cancelSteps": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    21,
+    55,
+    144
+  ],
+  "limitsCases": [
+    {
+      "kind": "capacity",
+      "maximumRetainedBytes": 1,
+      "fault": "canonical-value.capacity-limit"
+    },
+    {
+      "kind": "work",
+      "maximumWorkItems": 1,
+      "fault": "canonical-value.work-limit"
+    },
+    {
+      "kind": "depth",
+      "maximumDepth": 1,
+      "fault": "canonical-value.depth-limit"
+    },
+    {
+      "kind": "nonFinite",
+      "fault": "canonical-value.non-finite-number"
+    }
+  ],
+  "reservationCases": [
+    {
+      "requested": 4,
+      "allocated": 4,
+      "budget": 4,
+      "accepted": true
+    },
+    {
+      "requested": 4,
+      "allocated": 8,
+      "budget": 4,
+      "accepted": false
+    },
+    {
+      "requested": 8,
+      "allocated": 8,
+      "budget": 4,
+      "accepted": false
+    }
+  ]
+}

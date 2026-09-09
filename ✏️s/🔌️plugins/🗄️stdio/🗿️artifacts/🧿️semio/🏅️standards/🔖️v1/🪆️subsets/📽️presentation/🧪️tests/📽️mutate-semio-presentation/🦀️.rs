@@ -11,7 +11,7 @@
 //! here as well would put this repository's own answer on both sides of that comparison, which is
 //! the precise failure the platform exists to prevent.
 //!
-//! **The deck under test is a real one.** `local://🎙️talk/🗣️.dsl.semio` and its binary twin were derived
+//! **The deck under test is a real one.** `shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio` and its binary twin were derived
 //! ONCE from the real committed PowerPoint deck
 //! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🧫️fixtures/📽️.pptx` — a genuine 2020 conference
 //! talk with one master, eleven layouts, seven slides, ninety-eight shapes and three embedded PNG
@@ -84,12 +84,12 @@ mod subject {
     //#region 🔖️Input
     /// 🎤️ The real derived talk deck — the committed `📽️.pptx` read once by an independent
     /// OOXML reader and written out through the independent Python implementation of this carrier.
-    const TALK_DSL: &str = "local://🎙️talk/🗣️.dsl.semio";
-    const TALK_PACK: &str = "local://🎒️.pack.semio";
+    const TALK_DSL: &str = "shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio";
+    const TALK_PACK: &str = "shared://📽️mutate-semio-presentation/🎒️.pack.semio";
     /// 📽️ The committed example deck, kept because it is the artifact this subset's own
     /// `fixture_honesty_law` pins to `demo_semio_presentation_snapshot()`.
-    const DECK_DSL: &str = "asset://📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio";
-    const DECK_PACK: &str = "asset://📚️examples/📽️deck/🖼️assets/🎒️.pack.semio";
+    const DECK_DSL: &str = "asset://📽️deck/🗣️.dsl.semio";
+    const DECK_PACK: &str = "asset://📽️deck/🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order — including the
     /// cells of a step's data table, which is where the specification-vector paths live. The feature
@@ -436,7 +436,7 @@ mod subject {
     /// the deck this payload is about to be applied to, needed only so `decode_mutation` can turn a
     /// `noMutation` payload into the identity `set-snapshot(base)` mutation.
     fn payload(ctx: &Context, base: &SemioPresentationSnapshot) -> Result<SemioPresentationMutation, String> {
-        let uri = step_uris(ctx, "local://").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
+        let uri = step_uris(ctx, "shared://📽️mutate-semio-presentation/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
         Ok(decode_mutation(&ctx.fixture_json(&uri)?, base))
     }
 
@@ -491,7 +491,7 @@ mod subject {
     /// before-state is the committed `📽️deck` example artifact — a THIRD statement of what the verb
     /// means, independent of both implementations.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let uris = step_uris(ctx, "local://");
+        let uris = step_uris(ctx, "shared://📽️mutate-semio-presentation/");
         if uris.len() < 3 {
             return Err(format!("{}: the scenario names {} specification-vector fixtures, expected three", ctx.scenario.id, uris.len()));
         }

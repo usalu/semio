@@ -1,9 +1,7 @@
 syntax = "proto3";
 package semio.s.dag.dag.snapshot;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message DagSnapshot {
-  string schema = 1; // @state artifact
-  repeated DagNodeSpec nodes = 2; // @state artifact
-  repeated DagFixtureEdge edges = 3; // @state artifact
+  string schema = 1;
+  semio.os.store.ArtifactChild content = 2;
 }
-message DagNodeSpec { string id = 1; }
-message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }

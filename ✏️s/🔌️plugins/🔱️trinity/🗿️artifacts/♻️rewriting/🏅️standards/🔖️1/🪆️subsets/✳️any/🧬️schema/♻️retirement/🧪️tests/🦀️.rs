@@ -20,7 +20,7 @@ fn drain(mut owner: Box<dyn store::ErasedSnapshotRetirement>, items: usize, byte
 
 #[test]
 fn rewriting_window_config_document_retirement_respects_exact_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for budget in fixture["budgets"].as_array().unwrap() {
         let items = budget["items"].as_u64().unwrap() as usize;
         let bytes = budget["bytes"].as_u64().unwrap() as usize;

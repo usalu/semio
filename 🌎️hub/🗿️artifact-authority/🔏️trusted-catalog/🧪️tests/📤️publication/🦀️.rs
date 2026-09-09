@@ -32,7 +32,7 @@ fn publication_fixture_receipt(outcome: TrustedCatalogPublicationOutcome) -> ser
 
 #[test]
 fn trusted_publication_revision_matches_neutral_closed_u64_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📤️publication/🔄️cas.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📤️publication/🔄️cas.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let current = row["currentRevision"].as_str().map(publication_revision).transpose();
         let result = current.and_then(|current| {

@@ -1164,20 +1164,21 @@ export type CanonicalGoTestPlan = Readonly<{
 export type CanonicalGoTestLayout = Readonly<{
   testsDirectory: string;
   implementationFilename: string;
+  opaqueDirectoryNames: readonly string[];
 }>;
 
 /** 🔣️Resolves Go test layout names from the repository taxonomy. */
 function canonicalGoTestLayout(): CanonicalGoTestLayout {
   const taxonomy = loadTaxonomy();
   const goKind = taxonomy.testAdapterFileKinds["🐹️go"];
-  if (!taxonomy.testsDirName || !goKind) throw new Error("The taxonomy must define Go test adapters.");
-  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy) };
+  if (!taxonomy.testsDirName || !taxonomy.testFixturesDirName || !goKind) throw new Error("The taxonomy must define Go test adapters and fixture ownership.");
+  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy), opaqueDirectoryNames: [taxonomy.testFixturesDirName] };
 }
 
 /** 🐹️Maps canonical authored Go cases to virtual `_test.go` inputs in their owning packages. */
 export function canonicalGoTestPlan(moduleRoot: string, layout: CanonicalGoTestLayout = canonicalGoTestLayout()): CanonicalGoTestPlan {
   const root = realpathSync(moduleRoot);
-  if (!layout.testsDirectory || layout.testsDirectory.includes("/") || layout.testsDirectory.includes("\\") || !layout.implementationFilename.endsWith(".go") || layout.implementationFilename.includes("/") || layout.implementationFilename.includes("\\")) throw new Error("Invalid canonical Go test layout.");
+  if (!layout.testsDirectory || layout.testsDirectory.includes("/") || layout.testsDirectory.includes("\\") || !layout.implementationFilename.endsWith(".go") || layout.implementationFilename.includes("/") || layout.implementationFilename.includes("\\") || layout.opaqueDirectoryNames.length === 0 || new Set(layout.opaqueDirectoryNames).size !== layout.opaqueDirectoryNames.length || layout.opaqueDirectoryNames.some((name) => !name || name === layout.testsDirectory || name.includes("/") || name.includes("\\"))) throw new Error("Invalid canonical Go test layout.");
   const replacements: Record<string, string> = {};
   const packages = new Set<string>();
   const walk = (directory: string): void => {
@@ -1200,7 +1201,7 @@ export function canonicalGoTestPlan(moduleRoot: string, layout: CanonicalGoTestL
         }
         continue;
       }
-      if (entry.name === ".git" || entry.name === "node_modules" || entry.name === "target" || entry.name === "vendor") continue;
+      if (entry.name === ".git" || entry.name === "node_modules" || entry.name === "target" || entry.name === "vendor" || layout.opaqueDirectoryNames.includes(entry.name)) continue;
       walk(path);
     }
   };

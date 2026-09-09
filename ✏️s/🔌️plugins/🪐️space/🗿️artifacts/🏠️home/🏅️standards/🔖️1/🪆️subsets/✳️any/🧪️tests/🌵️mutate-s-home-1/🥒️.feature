@@ -18,7 +18,7 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
 
   Both implementations now read the SAME committed bytes: `(before, mutation, after, diff, outcome)`
   under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/`
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/📇️bumps-the-catalog-generation-to-7/`
   is a declared `asset://` fixture rather than an `include_str!`-only literal, so the plan pins its
   digest and a Python reference can resolve it.
 
@@ -56,34 +56,34 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                        | dir                            | fixture                          |
-      | change-catalog-generation | 🔢️change-catalog-generation    | bumps-the-catalog-generation-to-7 |
+      | change-catalog-generation | 🔢️change-catalog-generation    | 🧪️bumps-the-catalog-generation-to-7 |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                        | dir                            | fixture                          |
-      | change-catalog-generation | 🔢️change-catalog-generation    | bumps-the-catalog-generation-to-7 |
+      | change-catalog-generation | 🔢️change-catalog-generation    | 🧪️bumps-the-catalog-generation-to-7 |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed launcher document, print it back and cross it against its binary encoding
-    Given the real committed document asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed document asset://🎬️demo/🗣️.dsl.semio
     When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
     Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires

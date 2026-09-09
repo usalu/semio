@@ -47,6 +47,6 @@ attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM r
 target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] {
 }
 references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] {
-  ref-masterarbeit {url="/infinite-fixture/🖼️abbau-aufbau-masterarbeit-grundriss.jpg" media-kind=image} @7,0,0.01 50m true false
-  ref-rathaus-ahlen {url="/infinite-fixture/🖼️rathaus-ahlen-grundriss.png" media-kind=image} @7,0,0.01 50m true true
+  ref-masterarbeit {url="/infinite-assets/🖼️abbau-aufbau-masterarbeit-grundriss.jpg" media-kind=image} @7,0,0.01 50m true false
+  ref-rathaus-ahlen {url="/infinite-assets/🖼️rathaus-ahlen-grundriss.png" media-kind=image} @7,0,0.01 50m true true
 }

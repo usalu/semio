@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.trinity.jack.editor_window.config;
+message JackEditorWindowConfig {
+  // @state config
+  string jack_query = 1;
+}

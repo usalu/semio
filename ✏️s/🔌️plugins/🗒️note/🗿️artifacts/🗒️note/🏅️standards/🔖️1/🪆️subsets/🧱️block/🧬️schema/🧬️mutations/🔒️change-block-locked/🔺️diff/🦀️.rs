@@ -22,6 +22,6 @@ pub fn diff(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> protocol::Mutat
         | crate::NoteBlockNode::Ink { locked, .. }
         | crate::NoteBlockNode::Group { locked, .. } => *locked = payload.new_locked,
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

@@ -196,11 +196,11 @@ def assert_matches_the_standard(case, derived):
 
 # region 🔖️Handlers
 def _model_uri(case):
-    return f"asset://🧫️fixtures/🏛️bestest-{case}/🔋️model.json"
+    return f"shared://🏛️bestest-{case}/🔋️model.json"
 
 
 def _reference_uri(case):
-    return f"asset://🧫️fixtures/🏛️bestest-{case}/🔮️energyplus.json"
+    return f"shared://🏛️bestest-{case}/🔮️energyplus.json"
 
 
 def _parameters_for(case):

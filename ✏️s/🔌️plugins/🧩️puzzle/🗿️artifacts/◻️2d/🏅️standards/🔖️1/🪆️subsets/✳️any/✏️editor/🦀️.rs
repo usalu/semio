@@ -891,6 +891,8 @@ pub struct Puzzle2dActionCtx<'a> {
     pub scene: &'a mut Puzzle2dScene,
     /// 🪟️ The window instance this action was dispatched from, when the caller named one.
     pub window_id: Option<&'a str>,
+    /// 🧭️ The registered kind of that exact window instance.
+    pub window_kind: &'a str,
     /// 🧰️ The active utility resolved for `window_id` BEFORE this action ran.
     pub active_utility: String,
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
@@ -1661,7 +1663,7 @@ fn puzzle2d_dispatch_emit(
     // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
     let mut ui_scope = UiDirtyScope::Full;
     {
-        let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, selection, effects: &mut effects, artifact_mutations: &mut artifact_mutations, ui_scope: &mut ui_scope, operation };
+        let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, window_kind, active_utility, selection, effects: &mut effects, artifact_mutations: &mut artifact_mutations, ui_scope: &mut ui_scope, operation };
         match action {
             "selectSameKind" => select_same_kind::select_same_kind(ctx),
             "deleteSelection" => delete_selection::delete_selection(ctx),

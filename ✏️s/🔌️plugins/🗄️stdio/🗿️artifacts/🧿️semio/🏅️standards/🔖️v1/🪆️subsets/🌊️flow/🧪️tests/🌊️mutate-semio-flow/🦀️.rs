@@ -23,7 +23,7 @@
 //! types: `decode_semio_flow_snapshot_json`/`encode_semio_flow_snapshot_json`,
 //! `decode_semio_flow_mutation_json`/`inverse_semio_flow_mutation`, and the DSL/pack pass-throughs.
 //! Every input is read from a fixture the FEATURE declares — the mutation parameters from the
-//! scenario's doc string, the specification vectors from the `local://` URI its step names — so
+//! scenario's doc string, the specification vectors from the `shared://🌊️mutate-semio-flow/` URI its step names — so
 //! neither adapter holds a transcription that could drift away from what the other one read.
 
 use semio_repo_test_host::Adapter;
@@ -66,12 +66,12 @@ mod subject {
     //#region 🔖️Input
     /// 🌊️ The two-node demo pipeline, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.flow` bytes in this artifact a codec other than the Python one wrote.
-    const PIPELINE_DSL: &str = "asset://📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio";
-    const PIPELINE_PACK: &str = "asset://📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio";
+    const PIPELINE_DSL: &str = "asset://🌊️pipeline/🗣️.dsl.semio";
+    const PIPELINE_PACK: &str = "asset://🌊️pipeline/🎒️.pack.semio";
     /// 🏗️ The real 180-node, 179-edge capsule connection network and its binary twin, derived once
     /// from the committed Nakagin Capsule Tower IFC with IfcOpenShell.
-    const TOWER_DSL: &str = "local://📝️nakagin-capsule-tower.dsl.semio";
-    const TOWER_PACK: &str = "local://📦️nakagin-capsule-tower.pack.semio";
+    const TOWER_DSL: &str = "shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio";
+    const TOWER_PACK: &str = "shared://🌊️mutate-semio-flow/📦️nakagin-capsule-tower.pack.semio";
 
     fn utf8(bytes: Vec<u8>, what: &str) -> Result<String, String> {
         String::from_utf8(bytes).map_err(|error| format!("{what} is not UTF-8: {error}"))
@@ -104,17 +104,17 @@ mod subject {
         decode_semio_flow_mutation_json(text).map_err(|error| format!("the scenario's mutation payload must decode: {error}"))
     }
 
-    /// 🧫️ The first `local://` URI the scenario's steps name. The feature is the single place a
+    /// 🧫️ The first `shared://🌊️mutate-semio-flow/` URI the scenario's steps name. The feature is the single place a
     /// specification-vector path is written down; both adapters read it from there.
     fn step_vector(ctx: &Context) -> Result<Json, String> {
         for (_, text) in &ctx.scenario.steps {
-            if let Some(at) = text.find("local://") {
+            if let Some(at) = text.find("shared://🌊️mutate-semio-flow/") {
                 let tail = &text[at..];
                 let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
                 return ctx.fixture_json(&tail[..end]);
             }
         }
-        Err(format!("{}: the scenario names no local:// specification vector", ctx.scenario.id))
+        Err(format!("{}: the scenario names no shared://🌊️mutate-semio-flow/ specification vector", ctx.scenario.id))
     }
 
     fn member(vector: &Json, name: &str) -> Result<String, String> {

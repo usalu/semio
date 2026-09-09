@@ -2,6 +2,8 @@ mod tests {
     use super::*;
     use semio_framework::{AbiMessage, AbiPageBytes, decode_abi_message};
 
+    const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+
     #[derive(Default)]
     struct FixtureFormatResolver;
 

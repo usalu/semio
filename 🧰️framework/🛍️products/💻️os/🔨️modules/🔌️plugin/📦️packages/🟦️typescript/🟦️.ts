@@ -27,7 +27,7 @@ export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fon
  * {@link shardWorkerSource}. Its OWNER is the schema-owned liveness policy
  * (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient` —
  * `🎭️actor/📮️shard-client/🧬️schema/🔣️.json` +
- * `🧪️fixture/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
+ * `🧫️fixtures/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
  * held equal to `policy.progressIntervalMs` by that module's own in-source suite, which reads this
  * literal straight out of this file, so editing one alone fails closed.
  *
@@ -182,7 +182,7 @@ let heartbeatSabView = null;
 let heartbeatShardIndex = -1;
 const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
 // 🫀️ Progress-heartbeat cadence, interpolated from the ONE schema-owned liveness policy
-// (\`🎭️actor/📮️shard-client/🧪️fixture/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
+// (\`🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
 // host watchdog reads — never a literal of this worker's own.
 const PROGRESS_HEARTBEAT_INTERVAL_MS = ${SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS};
 let progressHandle = null;

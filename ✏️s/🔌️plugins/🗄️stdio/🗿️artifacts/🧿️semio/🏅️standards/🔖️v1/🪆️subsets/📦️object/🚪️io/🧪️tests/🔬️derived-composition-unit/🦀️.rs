@@ -70,8 +70,8 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
-            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/📦️crate/🖼️assets/🎒️.pack.semio");
+            const FIXTURE_DSL: &str = include_str!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
 
             let demo = snapshot::demo_object_snapshot();
 

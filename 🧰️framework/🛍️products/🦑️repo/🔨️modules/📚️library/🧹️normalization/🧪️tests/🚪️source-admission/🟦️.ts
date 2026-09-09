@@ -7,7 +7,7 @@ import { projectTaxonomySourceAdmission } from "../../🟦️.ts";
 
 //#region 🧬️Contract
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-const vectors = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as {
+const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚪️source-admission/🔣️.json", import.meta.url), "utf8")) as {
   cases: readonly { id: string; input: unknown; expected: unknown }[];
   schemaRejections: readonly { id: string; candidate: unknown; expectedKeyword: string }[];
   schemaCases: readonly { id: string; subject: "Candidate" | "SourceAdmissionInput" | "Observation" | "SourceAdmission"; value: unknown; valid: boolean }[];

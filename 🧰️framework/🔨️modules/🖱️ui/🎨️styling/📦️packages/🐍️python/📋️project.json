@@ -8,7 +8,7 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts generate"
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "@semio-tech/ui-styling-tokens:generate"

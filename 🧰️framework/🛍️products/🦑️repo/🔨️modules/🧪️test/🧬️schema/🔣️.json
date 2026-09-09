@@ -1306,12 +1306,11 @@
       "properties": {
         "uri": {
           "type": "string",
-          "pattern": "^(shared|local|asset|cas|schema)://.+$"
+          "pattern": "^(shared|asset|cas|schema)://.+$"
         },
         "scope": {
           "enum": [
             "shared",
-            "local",
             "asset",
             "cas",
             "schema"
@@ -2751,7 +2750,7 @@
         "overrides",
         "cases"
       ],
-      "description": "🧭️ The neutral owner-override vector every contribution-directory implementation is measured against. It lives here, in the owning module, because a case directory holds examples and never the contract they are examples of.",
+      "description": "🧭️ The neutral owner-override vector every contribution-directory implementation is measured against. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
       "properties": {
         "$schema": {
           "type": "string"
@@ -3285,7 +3284,7 @@
         "cases",
         "filenameOracle"
       ],
-      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the sources it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives here, in the owning module, because a case directory holds examples and never the contract they are examples of.",
+      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the sources it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
       "properties": {
         "$schema": {
           "type": "string"
@@ -3379,6 +3378,113 @@
               "items": {
                 "type": "string",
                 "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "FixtureResolutionCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "cases"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "uri",
+              "path"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              },
+              "path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "MutationFixtureCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "owner",
+        "mutation",
+        "scenario",
+        "files",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "owner": {
+          "type": "string"
+        },
+        "mutation": {
+          "type": "string"
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "remove",
+              "add",
+              "valid"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "remove": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "add": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "valid": {
+                "type": "boolean"
               }
             }
           }

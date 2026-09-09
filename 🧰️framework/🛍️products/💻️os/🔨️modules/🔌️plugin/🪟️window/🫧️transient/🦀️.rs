@@ -64,10 +64,15 @@ pub struct WindowTransientSnapshot {
     window_id: String,
     window_kind_id: &'static str,
     generation: u64,
+    document_generation: u64,
     snapshot: Arc<dyn Any + Send + Sync>,
 }
 
 impl WindowTransientSnapshot {
+    pub fn document_generation(&self) -> u64 {
+        self.document_generation
+    }
+
     pub fn generation(&self) -> u64 {
         self.generation
     }
@@ -96,6 +101,7 @@ pub(crate) struct WindowTransientAuthority {
 pub(crate) trait ErasedWindowTransientPublication: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn window_kind_id(&self) -> &str;
+    fn document_generation(&self) -> u64;
     fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase;
     fn fault(&self) -> Option<&str>;
     fn acknowledge(&mut self) -> bool;
@@ -106,6 +112,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
 
 struct TypedWindowTransientPublication<O: WindowTransientOwner> {
     window_id: String,
+    document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
 }
 
@@ -116,6 +123,10 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
 
     fn window_kind_id(&self) -> &str {
         O::WINDOW_KIND_ID
+    }
+
+    fn document_generation(&self) -> u64 {
+        self.document_generation
     }
 
     fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase {
@@ -157,18 +168,9 @@ impl<O: WindowTransientOwner> WindowTransientPartition<O> {
 }
 
 trait ErasedWindowTransientStoreOwner: Send {
-    fn capture(&mut self, window_id: &str) -> WindowTransientAuthority;
-    fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        expected_generation: u64,
-        mutation: WindowTransientMutation,
-    ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
-    fn advance(
-        &mut self,
-        publication: &mut dyn ErasedWindowTransientPublication,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    fn capture(&mut self, window_id: &str, document_generation: u64) -> WindowTransientAuthority;
+    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -184,40 +186,28 @@ impl<O: WindowTransientOwner> TypedWindowTransientStoreOwner<O> {
 }
 
 impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTransientStoreOwner<O> {
-    fn capture(&mut self, window_id: &str) -> WindowTransientAuthority {
+    fn capture(&mut self, window_id: &str, document_generation: u64) -> WindowTransientAuthority {
         let partition = self.partition(window_id);
         WindowTransientAuthority {
             window_id: window_id.to_string(),
             window_kind_id: O::WINDOW_KIND_ID.to_string(),
             generation: partition.store.generation_now(),
-            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), snapshot: partition.store.current_root() },
+            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), document_generation, snapshot: partition.store.current_root() },
         }
     }
 
-    fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        expected_generation: u64,
-        mutation: WindowTransientMutation,
-    ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
         let window_id = mutation.window_id;
-        let typed = mutation
-            .mutation
-            .downcast::<O::Mutation>()
-            .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation did not match its registered window owner"))?;
+        let typed = mutation.mutation.downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation did not match its registered window owner"))?;
         let partition = self.partition(&window_id);
         let publication = partition
             .store
             .begin_publish_one(operation, expected_generation, *typed, Some(O::build_one_item_preparation_factory().as_ref()), Some(O::build_root_retirement_factory()))
             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
-        Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, publication }))
+        Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication }))
     }
 
-    fn advance(
-        &mut self,
-        publication: &mut dyn ErasedWindowTransientPublication,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
         let publication = publication
             .as_any_mut()
             .downcast_mut::<TypedWindowTransientPublication<O>>()
@@ -249,11 +239,19 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
 /// 🗂️ Runtime registry of heterogeneous window-owned transient schemas.
 #[derive(Default)]
 pub struct WindowTransientOwnerRegistry {
+    document_generation: u64,
     owners: BTreeMap<&'static str, Box<dyn ErasedWindowTransientStoreOwner>>,
 }
 
-
 impl WindowTransientOwnerRegistry {
+    pub(crate) fn for_document_generation(document_generation: u64) -> Self {
+        Self { document_generation, owners: BTreeMap::new() }
+    }
+
+    pub(crate) fn document_generation(&self) -> u64 {
+        self.document_generation
+    }
+
     pub fn register<O: WindowTransientOwner>(&mut self) -> Result<(), Fault> {
         if O::WINDOW_KIND_ID.is_empty() || self.owners.contains_key(O::WINDOW_KIND_ID) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient owner id is empty or already registered"));
@@ -275,29 +273,29 @@ impl WindowTransientOwnerRegistry {
             .find(|window| window.id == window_id)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.window-context"), "target window is absent from the exact ViewModel window instance roster"))?;
         let Some(owner) = self.owners.get_mut(window.window_kind_id.as_str()) else { return Ok(None) };
-        Ok(Some(owner.capture(window_id)))
+        Ok(Some(owner.capture(window_id, self.document_generation)))
     }
 
-    pub(crate) fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        authority: &WindowTransientAuthority,
-        mutation: WindowTransientMutation,
-    ) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, authority: &WindowTransientAuthority, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+        if authority.snapshot.document_generation != self.document_generation {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient emission belongs to a replaced document"));
+        }
         if mutation.window_id != authority.window_id || mutation.window_kind_id != authority.window_kind_id {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not match the operation's exact captured window authority"));
         }
-        self.owners
-            .get_mut(authority.window_kind_id.as_str())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no registered concrete window owner"))?
-            .begin(operation, authority.generation, mutation)
+        self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no registered concrete window owner"))?.begin(
+            operation,
+            authority.generation,
+            self.document_generation,
+            mutation,
+        )
     }
 
-    pub(crate) fn advance(
-        &mut self,
-        publication: &mut dyn ErasedWindowTransientPublication,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+        if publication.document_generation() != self.document_generation {
+            publication.begin_close();
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient publication belongs to a replaced document"));
+        }
         self.owners
             .get_mut(publication.window_kind_id())
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication lost its registered concrete window owner"))?
@@ -305,6 +303,9 @@ impl WindowTransientOwnerRegistry {
     }
 
     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if maximum_items == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         let Some(kind) = self.owners.keys().next().copied() else { return Ok(PluginCloseStep::Complete) };
         let owner = self.owners.get_mut(kind).expect("selected window transient owner remains registered");
         let step = owner.close_step(maximum_items, maximum_bytes)?;

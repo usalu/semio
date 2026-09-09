@@ -403,7 +403,7 @@ type InboundMessage =
  * (`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`'s `shardWorkerSource`, which interpolates
  * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
  * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
- * `🧬️schema/🔣️.json` (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧪️fixture/🔣️.json`'s `policy` block; this
+ * `🧬️schema/🔣️.json` (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧫️fixtures/🔣️.json`'s `policy` block; this
  * mirror is asserted field-for-field equal to that fixture by this file's own in-source suite, so a
  * literal edited here alone fails closed rather than silently diverging. */
 export const SHARD_LIVENESS_POLICY = Object.freeze({

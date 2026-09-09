@@ -1,0 +1,3 @@
+type NoteCamera { x: Float! y: Float! zoom: Float! }
+type NoteCompositeWindowConfig { camera: NoteCamera! }
+type NoteCompositeWindowTransient { engagementInput: String! }

@@ -11,24 +11,24 @@
 //! calls: queries are short, the mutex guard is never held across an `.await`, so nothing here
 //! blocks the executor for longer than a real query takes.
 
-use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
+use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
 use crate::artifact_authority::creation::{
-    decide_artifact_creation_fact_append_v1, ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1,
-    DocumentGenesisAppendV1, DocumentGenesisCommitV1,
+    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1,
+    decide_artifact_creation_fact_append_v1,
 };
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
-    directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit,
-    validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append,
-    verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight,
-    InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS,
-    ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
+    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
+    DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
+    UNCONTROLLED_PROJECTION_REBUILD, active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str,
+    directory_projection_rejection_v1, directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
+    validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim,
+    validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
 };
 use directory::os_directory::{
-    validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
-    DocumentDescriptor, DocumentFrontier, DocumentOwner, Hlc, PublishedArtifactCheckpoint,
+    ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner,
+    Hlc, PublishedArtifactCheckpoint, validate_directory_event_page_event,
 };
 use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
@@ -441,8 +441,7 @@ fn insert_auth_audit(conn: &Connection, event: &AuthAuditRecord) -> DirectoryRes
     Ok(())
 }
 
-const ADMIN_OPERATION_AUDIT_SELECT: &str =
-    "sequence, request_id, intent_digest, operation_id, occurred_at, phase, terminal, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code";
+const ADMIN_OPERATION_AUDIT_SELECT: &str = "sequence, request_id, intent_digest, operation_id, occurred_at, phase, terminal, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code";
 const ADMIN_OPERATION_EFFECT_RECEIPT_SELECT: &str = "operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last";
 
 const DIRECTORY_COMMAND_RECEIPT_SELECT: &str = "actor_user_id, request_id, command_sha256, result_kind, disposition, event_seq_first, event_seq_last, receipt_sha256, claimed_at, completed_at";
@@ -547,11 +546,7 @@ fn insert_admin_operation_effect_receipt(tx: &Connection, receipt: &AdminOperati
     }
     let sql = format!("SELECT {ADMIN_OPERATION_EFFECT_RECEIPT_SELECT} FROM hub_admin_operation_effect_receipt WHERE operation_id = ?1");
     let established = tx.query_row(&sql, [&receipt.operation_id], admin_operation_effect_receipt_row).map_err(backend)?;
-    if &established == receipt {
-        Ok(())
-    } else {
-        Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into()))
-    }
+    if &established == receipt { Ok(()) } else { Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into())) }
 }
 
 fn actor_kind_to_str(kind: DirectoryActorKind) -> &'static str {

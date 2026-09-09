@@ -4,7 +4,7 @@
   "targets": {
     "built-tree-retirement-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts built-tree-retirement-check",

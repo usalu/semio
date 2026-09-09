@@ -389,14 +389,14 @@ pub fn equation_geometry(snapshot: &EquationSnapshot) -> EquationGeometry {
 /// 🏗️ Builds a full `EquationSnapshot` from a literal `(graph, geometry)` pair — the standard
 /// fixture/import constructor replacing the old 2-field struct literal now that `notation`/
 /// `results`/`computed` are composed child handles, not plain fields.
-pub fn equation_snapshot_with_state(graph: EquationGraph, geometry: EquationGeometry) -> EquationSnapshot {
-    let (notation, results, computed) = equation_children_from_state(&graph, &geometry);
+pub fn equation_snapshot_with_state(graph: &EquationGraph, geometry: &EquationGeometry) -> EquationSnapshot {
+    let (notation, results, computed) = equation_children_from_state(graph, geometry);
     EquationSnapshot { notation, results, computed, equation: EquationExprSnapshot::default() }
 }
 
 /// 📥️ Rebuilds composed child handles and their exact local owner from a complete carrier fixture.
 pub fn equation_snapshot_from_fixture(fixture: EquationFixture) -> EquationSnapshot {
-    let mut snapshot = equation_snapshot_with_state(fixture.graph, fixture.geometry);
+    let mut snapshot = equation_snapshot_with_state(&fixture.graph, &fixture.geometry);
     snapshot.equation = fixture.equation;
     snapshot
 }
@@ -817,7 +817,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧪️tests/➡️keeps-an-already-8d0f96/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧪️tests/🧪️keeps-an-already-directed-graph-directed/🦀️.rs"]
                             mod tests_keeps_an_already_directed_graph_directed;
                         }
                         #[path = "."]
@@ -830,7 +830,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/🔬️t004/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/🧪️restates-the-unset-algorithm-and-its-absent-seed/🦀️.rs"]
                             mod tests_restates_the_unset_algorithm_and_its_absent_seed;
                         }
                         #[path = "."]
@@ -843,7 +843,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/🕸️replays-the-61d5e6/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/🧪️replays-the-identical-empty-graph/🦀️.rs"]
                             mod tests_replays_the_identical_empty_graph;
                         }
                         #[path = "."]
@@ -856,7 +856,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-13902e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🧪️rejects-a-duplicate-node-id/🦀️.rs"]
                             mod tests_rejects_a_duplicate_node_id;
                         }
                         #[path = "."]
@@ -869,7 +869,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/❌️delete-node/🧪️tests/🚫️rejects-deleting-f1f0e0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/❌️delete-node/🧪️tests/🧪️rejects-deleting-a-node-that-is-not-in-the-graph/🦀️.rs"]
                             mod tests_rejects_deleting_a_node_that_is_not_in_the_graph;
                         }
                         #[path = "."]
@@ -882,7 +882,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-nodes/🧪️tests/🚫️rejects-a-bulk-7b9dc3/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-nodes/🧪️tests/🧪️rejects-a-bulk-delete-where-every-id-is-absent/🦀️.rs"]
                             mod tests_rejects_a_bulk_delete_where_every_id_is_absent;
                         }
                         #[path = "."]
@@ -895,7 +895,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧪️tests/🔬️t003/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧪️tests/🧪️rejects-relabelling-a-node-that-is-not-in-the-graph/🦀️.rs"]
                             mod tests_rejects_relabelling_a_node_that_is_not_in_the_graph;
                         }
                         #[path = "."]
@@ -908,7 +908,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🕹️move-node/🧪️tests/🚫️rejects-moving-a-de6080/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🕹️move-node/🧪️tests/🧪️rejects-moving-a-node-that-is-not-in-the-graph/🦀️.rs"]
                             mod tests_rejects_moving_a_node_that_is_not_in_the_graph;
                         }
                         #[path = "."]
@@ -921,7 +921,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔗️connect-nodes/🧪️tests/🚫️rejects-an-edge-4eac40/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔗️connect-nodes/🧪️tests/🧪️rejects-an-edge-between-two-absent-endpoints/🦀️.rs"]
                             mod tests_rejects_an_edge_between_two_absent_endpoints;
                         }
                         #[path = "."]
@@ -934,7 +934,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🔬️t002/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🧪️rejects-severing-an-edge-that-is-not-in-the-graph/🦀️.rs"]
                             mod tests_rejects_severing_an_edge_that_is_not_in_the_graph;
                         }
                     }
@@ -956,7 +956,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🧪️tests/🔄️replays-the-95870f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🧪️tests/🧪️replays-the-identical-empty-point-cloud/🦀️.rs"]
                             mod tests_replays_the_identical_empty_point_cloud;
                         }
                         #[path = "."]
@@ -969,7 +969,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🧪️tests/📍️seeds-the-empty-b1911b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🧪️tests/🧪️seeds-the-empty-cloud-with-its-first-point/🦀️.rs"]
                             mod tests_seeds_the_empty_cloud_with_its_first_point;
                         }
                         #[path = "."]
@@ -982,7 +982,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➖️remove-point/🧪️tests/🚫️rejects-removing-6265f6/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➖️remove-point/🧪️tests/🧪️rejects-removing-a-point-from-an-empty-cloud/🦀️.rs"]
                             mod tests_rejects_removing_a_point_from_an_empty_cloud;
                         }
                         #[path = "."]
@@ -995,7 +995,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🧪️tests/🚫️rejects-moving-a-3f5e64/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🧪️tests/🧪️rejects-moving-a-point-that-is-not-in-the-cloud/🦀️.rs"]
                             mod tests_rejects_moving_a_point_that_is_not_in_the_cloud;
                         }
                     }
@@ -1017,7 +1017,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🔬️t001/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🧪️raises-the-leading-coefficient-to-three-halves/🦀️.rs"]
                             mod tests_raises_the_leading_coefficient_to_three_halves;
                         }
                     }

@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("glulam-footbridge", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🌉️glulam-footbridge/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

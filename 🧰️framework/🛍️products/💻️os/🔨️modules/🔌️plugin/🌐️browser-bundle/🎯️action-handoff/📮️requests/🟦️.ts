@@ -1,5 +1,5 @@
 /** 📮️ Bounded action replies owned by one displayed browser-actor lifetime. */
-import type { ActionInvocation, CommandInvocation, UiIntent, ViewModel } from "@semio-tech/framework";
+import type { ActionInvocation, CommandInvocation, UiIntent, PluginViewState } from "@semio-tech/framework";
 import { browserActorActionOwnerMatchesV1, parseBrowserActorActionResultV1, type BrowserActorActionOwnerV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../🟦️.ts";
 import { createBrowserActorAppCommandRequestV1 } from "../🎛️command/🟦️.ts";
 import { createBrowserActorUiIntentRequestV1 } from "../🧭️intent/🟦️.ts";
@@ -27,7 +27,7 @@ export class BrowserActorActionMailboxV1 {
   }
 
   /** 🎛️ Captures a complete catalog invocation and view state on the same single-flight owner. */
-  async dispatchCommand(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, invocation: ActionInvocation | CommandInvocation, viewState: ViewModel): Promise<BrowserActorActionResultV1> {
+  async dispatchCommand(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, invocation: ActionInvocation | CommandInvocation, viewState: PluginViewState): Promise<BrowserActorActionResultV1> {
     return await this.dispatchRequest(actionSequence => createBrowserActorAppCommandRequestV1({ ...owner, actionSequence }, invocation, viewState));
   }
 

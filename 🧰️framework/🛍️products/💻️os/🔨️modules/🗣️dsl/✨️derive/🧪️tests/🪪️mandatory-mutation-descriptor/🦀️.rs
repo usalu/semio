@@ -50,7 +50,7 @@ fn mutation_trait_facts(source: &str) -> MutationTraitFacts {
 
 #[test]
 fn mutation_trait_matches_adjacent_required_declaration_facts() {
-    let neutral: NeutralFacts = serde_json::from_str(include_str!("🔣️.json")).expect("adjacent neutral vector must parse");
+    let neutral: NeutralFacts = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️mandatory-mutation-descriptor/🔣️.json")).expect("adjacent neutral vector must parse");
     let expected = neutral.cases.into_iter().find(|case| case.id == "required-items-accepted").expect("neutral vector must contain required-items-accepted");
     assert_eq!(expected.subject, "mutation-trait-facts");
     assert_eq!(expected.category, "required-associated-items");

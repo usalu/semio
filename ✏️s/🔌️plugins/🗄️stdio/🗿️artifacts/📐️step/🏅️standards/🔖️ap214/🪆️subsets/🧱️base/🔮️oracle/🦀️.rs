@@ -132,7 +132,7 @@ mod oracles {
     /// the six `✳️ccN` conformance-class subsets do, and a second copy in this file would be the
     /// duplication the family-module rule exists to prevent. What stays here is what is genuinely
     /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
-    use crate::standards::v_ap214::reference::part21::{args, args_mut, decode_string_literal, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
+    use crate::artifacts::step::standards::v_ap214::reference::part21::{args, args_mut, decode_string_literal, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
 
     fn write_exchange(exchange: &Exchange) -> String {
         String::from_utf8_lossy(&write_exchange_bytes(exchange)).to_string()

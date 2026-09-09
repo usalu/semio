@@ -1,0 +1,13 @@
+{
+  "schema": "semio.plugin.typed-operation-routing/v1",
+  "receiver": 7,
+  "ownedOperation": "4294967297",
+  "foreignOperation": "8589934593",
+  "firstSequence": 0,
+  "faultSequence": 3,
+  "fault": "typed-operation cancelled before its next publication unit",
+  "capacity": 32,
+  "overflow": 2,
+  "unattributedCode": "interactive-job.unattributed-result-fault",
+  "evictionCode": "interactive-job.parked-result-capacity"
+}

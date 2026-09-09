@@ -4,7 +4,7 @@ use super::RuntimePresentationAuthority;
 
 #[test]
 fn metrics_observer_independent_updates_are_not_a_composite_transaction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let count = |field: &str, key: &str| fixture["independentUpdates"][field][key].as_str().unwrap().parse::<u64>().unwrap();
     let authority = RuntimePresentationAuthority::new();
     authority.observe_input_generation(count("old", "inputGeneration"));

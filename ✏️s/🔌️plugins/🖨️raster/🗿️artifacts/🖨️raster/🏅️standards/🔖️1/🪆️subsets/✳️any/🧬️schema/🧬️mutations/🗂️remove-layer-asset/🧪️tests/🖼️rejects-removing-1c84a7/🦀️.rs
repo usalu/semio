@@ -16,10 +16,10 @@
 use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
 use crate::{RasterDiff, RasterSnapshot};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects-removing-1c84a7/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects-removing-1c84a7/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects-removing-1c84a7/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects-removing-1c84a7/🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

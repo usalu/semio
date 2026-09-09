@@ -69,9 +69,6 @@ impl WiresDiff {
             if let Some(content) = &self.content {
                 next.content = content.clone();
             }
-            if let Some(camera) = &self.camera {
-                next.camera = camera.clone();
-            }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
             }
@@ -93,9 +90,6 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
             if let Some(content) = &self.content {
                 next.content = content.clone();
             }
-            if let Some(camera) = &self.camera {
-                next.camera = camera.clone();
-            }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
             }
@@ -116,7 +110,6 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
         }
         take!(wires_fixture);
         take!(content);
-        take!(camera);
         take!(meta);
     }
 }
@@ -132,8 +125,7 @@ pub fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
 /// single always-present-slot diff entry — the sole builder every board-mutating triad's `diff.rs`
 /// goes through (`create-node`/`delete-node`/`move-node`/`resize-node`/`change-node-kind`/
 /// `change-node-shape`/`edit-node-text`/`set-node-root` all call this via `board_after_*`/directly).
-/// `board`'s `camera`/`meta`/`schema`/`wires` keys are intentionally ignored here — those live outside
-/// the composed content on `WiresSnapshot.camera`/`.meta` and no triad in this plugin ever writes them.
+/// `board`'s `camera`/`meta`/`schema`/`wires` keys are intentionally ignored here.
 pub fn diff_board_fixture(board: &DslValue) -> WiresDiff {
     let nodes = crate::schema::fixture_nodes(board).to_vec();
     let edges = crate::schema::fixture_edges(board).to_vec();

@@ -11,8 +11,8 @@ import { sourceFileFactByteCompare, sourceFileFactCatalog, sourceFileFactReferen
 
 //#region 🧭️Inputs
 const root = resolve(import.meta.dir, "../../../../../../../");
-const schemaPath = resolve(import.meta.dir, "../📋️mutation-inventory/🧾️source-file-facts/🛂️schema/🔣️.json");
-const vectorsPath = resolve(import.meta.dir, "../📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
+const schemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
+const vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
 const rootScriptPath = resolve(root, "📜️script.ts");
 const taxonomyPath = resolve(import.meta.dir, "../../🔣️taxonomy.json");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
@@ -83,7 +83,7 @@ test("mutation source-file facts vectors are closed and cover the registered sou
 });
 
 test("mutation source-file facts reference oracle has strict standalone types", () => {
-  const path = resolve(import.meta.dir, "🔮️oracle/🟦️.ts");
+  const path = resolve(import.meta.dir, "../🔮️source-file-facts-oracle/🟦️.ts");
   expect(strictSourceDiagnostics(readFileSync(path, "utf8"), path)).toEqual([]);
 });
 

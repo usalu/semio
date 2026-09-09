@@ -41,8 +41,12 @@ import {
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   SemioFaultError,
+  type UiRefreshSection,
+  type UiRefreshSectionKey,
+  UI_REFRESH_SECTIONS,
   orderPluginRegistryEntries,
   panelViewContext,
+  sectionViewContext,
   windowViewContext,
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
@@ -427,7 +431,10 @@ const TYPED_OPERATION_TERMINAL_OUTPUT = "typed-operation-terminal-output";
 const TYPED_OPERATION_PENDING_OUTPUT = "typed-operation-pending-output";
 const TYPED_OPERATION_TERMINAL_SEEN = "typed-operation-terminal-seen";
 
-function typedOperationResult(effect: WireVariant): { readonly acknowledgement: ShardEventEnvelope; readonly lane: number; readonly payload: Uint8Array; readonly operation: bigint } | null {
+/** 🛤️ Highest `TypedOperationResultLane` discriminant the Rust host emits (`🔌️plugin/🦀️.rs` `TypedOperationResultLane` → byte 25 of a result page: Artifact 0 … Fault 11, Interaction 12, WindowTransient 13, WindowConfig 14). */
+const TYPED_OPERATION_RESULT_LANE_MAX = 14;
+
+function typedOperationResult(effect: WireVariant): { readonly acknowledgement: ShardEventEnvelope; readonly lane: number; readonly payload: Uint8Array; readonly operation: bigint; readonly sequence: number } | null {
   if (effect.tag !== "send-message") return null;
   const value = effect.val as { readonly target?: WireVariant; readonly payload?: unknown } | undefined;
   if (value?.target?.tag !== "shell" || value.payload === undefined) return null;
@@ -439,11 +446,11 @@ function typedOperationResult(effect: WireVariant): { readonly acknowledgement: 
   const receiver = view.getUint32(0, true);
   const lane = body[25]!;
   const length = view.getUint32(26, true);
-  if (Number(value.target.val) !== receiver || lane > 11 || length > 4_096 || body.length !== 30 + length) throw new Error("typed-operation result violates its receiver, lane, or page authority");
+  if (Number(value.target.val) !== receiver || lane > TYPED_OPERATION_RESULT_LANE_MAX || length > 4_096 || body.length !== 30 + length) throw new Error("typed-operation result violates its receiver, lane, or page authority");
   const ack = new Uint8Array(TYPED_OPERATION_ACK_MAGIC.length + 25);
   ack.set(TYPED_OPERATION_ACK_MAGIC);
   ack.set(body.subarray(0, 25), TYPED_OPERATION_ACK_MAGIC.length);
-  return { acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: String(receiver) }, payload: Array.from(ack) } }, lane, payload: body.subarray(30), operation: view.getBigUint64(4, true) };
+  return { acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: String(receiver) }, payload: Array.from(ack) } }, lane, payload: body.subarray(30), operation: view.getBigUint64(4, true), sequence: view.getUint32(20, true) };
 }
 
 function typedOperationAcknowledgements(result: WireTurnResult): ShardEventEnvelope[] {
@@ -453,7 +460,115 @@ function typedOperationAcknowledgements(result: WireTurnResult): ShardEventEnvel
   });
 }
 
-function consumeTypedOperationEffects(effects: readonly WireVariant[]): WireVariant[] {
+/** 🚨️ Real fault code a typed-operation fault page is surfaced under when no host call may be
+ * rejected with it — its operation never revealed a first result page to a live call, or the call that
+ * owned it has already returned. Rejecting an arbitrary in-flight caller would misattribute someone
+ * else's failure, which is exactly the defect this router exists to remove. */
+const TYPED_OPERATION_UNATTRIBUTED_FAULT = "interactive-job.unattributed-result-fault";
+
+/** 🚨️ Real fault code the parked-result registry evicts its oldest entry under once its fixed
+ * capacity is exhausted — an evicted fault is always surfaced, never silently dropped. */
+const TYPED_OPERATION_PARK_EVICTION_FAULT = "interactive-job.parked-result-capacity";
+
+/** 📏️ Foreign fault pages one instance's router parks for their owning host call before the oldest is
+ * evicted through {@link TYPED_OPERATION_PARK_EVICTION_FAULT}. */
+const TYPED_OPERATION_PARK_CAPACITY = 32;
+
+/** 🚨️ Shell fault path for a typed-operation fault page no host call may be rejected with. */
+function reportTypedOperationFault(code: string, message: string): void {
+  console.error(`${code}: ${message}`);
+}
+
+/** 🧭️ One host call's typed-operation ownership scope — one queued command turn, one `refreshUi`, one
+ * instance-open settle, one extension completion, one document-port exchange. Opened by
+ * {@link TypedOperationRouter.open}, closed exactly once by {@link withTypedOperationCall}. */
+class TypedOperationCall {
+  constructor(readonly router: TypedOperationRouter, readonly label: string) {}
+  observe(operation: bigint, sequence: number): boolean { return this.router.observe(this, operation, sequence); }
+  fault(operation: bigint, sequence: number, message: string): boolean { return this.router.fault(this, operation, sequence, message); }
+  takeFault(): string | null { return this.router.takeFault(this); }
+  close(): void { this.router.close(this); }
+}
+
+/** 🧭️ Per-instance owner ledger routing typed-operation result pages to the host call that owns their
+ * operation. Ownership is read off the wire the Rust host already publishes: `🔌️plugin/🦀️.rs`'s
+ * `MountedTypedCommandFullOperation` mounts every operation at `result_sequence: 0` and bumps it per
+ * acknowledged page (`acknowledge_result_page`), so the page carrying `sequence === 0` is that
+ * operation's first reveal and names the call that dispatched it. A fault page observed inside a
+ * foreign call's settle loop is parked for its owner — still acknowledged, since the guest blocks on
+ * the ACK — instead of rejecting the observer; a fault whose owner already returned, or whose
+ * operation never revealed a first page here, goes to the shell fault path exactly once. */
+class TypedOperationRouter {
+  private readonly owners = new Map<bigint, TypedOperationCall>();
+  private readonly live = new Set<TypedOperationCall>();
+  private readonly parked: { readonly call: TypedOperationCall; readonly operation: bigint; readonly message: string }[] = [];
+  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault) {}
+  open(label: string): TypedOperationCall {
+    const call = new TypedOperationCall(this, label);
+    this.live.add(call);
+    return call;
+  }
+  observe(call: TypedOperationCall, operation: bigint, sequence: number): boolean {
+    const owner = this.owners.get(operation);
+    if (owner) return owner === call;
+    if (sequence !== 0 || !this.live.has(call)) return false;
+    this.owners.set(operation, call);
+    return true;
+  }
+  fault(call: TypedOperationCall, operation: bigint, sequence: number, message: string): boolean {
+    if (this.observe(call, operation, sequence)) return true;
+    const owner = this.owners.get(operation);
+    if (!owner || !this.live.has(owner)) {
+      this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
+      return false;
+    }
+    if (this.parked.length >= TYPED_OPERATION_PARK_CAPACITY) {
+      const evicted = this.parked.shift()!;
+      this.report(TYPED_OPERATION_PARK_EVICTION_FAULT, `${evicted.message} (operation ${evicted.operation} parked for ${evicted.call.label} evicted at capacity ${TYPED_OPERATION_PARK_CAPACITY})`);
+    }
+    this.parked.push({ call: owner, operation, message });
+    return false;
+  }
+  takeFault(call: TypedOperationCall): string | null {
+    const index = this.parked.findIndex((entry) => entry.call === call);
+    return index === -1 ? null : this.parked.splice(index, 1)[0]!.message;
+  }
+  close(call: TypedOperationCall): void {
+    this.live.delete(call);
+    for (const [operation, owner] of [...this.owners]) if (owner === call) this.owners.delete(operation);
+    for (let index = this.parked.length - 1; index >= 0; index -= 1) {
+      if (this.parked[index]!.call !== call) continue;
+      const dropped = this.parked.splice(index, 1)[0]!;
+      this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${dropped.message} (operation ${dropped.operation} outlived ${call.label})`);
+    }
+  }
+}
+
+/** 🧭️ One {@link TypedOperationRouter} per live plugin instance, keyed by its actor id (1:1 with the
+ * instance, the same keying {@link retainedWindowByActor} uses) and dropped by
+ * {@link teardownPluginActor}. */
+const typedOperationRoutersByActor = new Map<string, TypedOperationRouter>();
+
+/** 🧭️ Runs one host call under `actorId`'s typed-operation ownership scope: the call rejects with the
+ * fault page parked for this exact call and never with a foreign operation's. */
+async function withTypedOperationCall<T>(actorId: string, label: string, body: (call: TypedOperationCall) => Promise<T>): Promise<T> {
+  let router = typedOperationRoutersByActor.get(actorId);
+  if (!router) {
+    router = new TypedOperationRouter();
+    typedOperationRoutersByActor.set(actorId, router);
+  }
+  const call = router.open(`${actorId}:${label}`);
+  try {
+    const value = await body(call);
+    const fault = call.takeFault();
+    if (fault !== null) throw new Error(`typed-operation failed: ${fault}`);
+    return value;
+  } finally {
+    call.close();
+  }
+}
+
+function consumeTypedOperationEffects(effects: readonly WireVariant[], call?: TypedOperationCall): WireVariant[] {
   const consumed: WireVariant[] = [];
   let terminal = false;
   let terminalOutput: unknown = undefined;
@@ -472,7 +587,12 @@ function consumeTypedOperationEffects(effects: readonly WireVariant[]): WireVari
       consumed.push(effect);
       continue;
     }
-    if (page.lane === 11) throw new Error(`typed-operation failed: ${new TextDecoder().decode(page.payload)}`);
+    if (page.lane === 11) {
+      const message = new TextDecoder().decode(page.payload);
+      if (!call || call.fault(page.operation, page.sequence, message)) throw new Error(`typed-operation failed: ${message}`);
+      continue;
+    }
+    call?.observe(page.operation, page.sequence);
     if (page.lane === 10) {
       terminal = true;
       continue;
@@ -773,9 +893,12 @@ function getThunkScheduler(): TurnScheduler<ThunkTurnPayload, undefined> {
     mailboxCapacity: SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY,
     budgetFor: () => undefined,
     runTurn: async (_actorId, payload) => {
+      console.warn("[DEBUG] thunk start", _actorId);
       try {
         payload.resolve(await payload.run());
+        console.warn("[DEBUG] thunk done", _actorId);
       } catch (error) {
+        console.warn("[DEBUG] thunk failed", _actorId, error instanceof Error ? error.message.slice(0, 160) : String(error));
         payload.reject(error);
       }
     },
@@ -975,6 +1098,7 @@ function teardownPluginActor(actorId: string): void {
     for (const waiter of payload.waiters) waiter.reject(fault);
   });
   getThunkScheduler().teardownActor(`command-ingress:${actorId}`, (payload) => payload.reject(fault));
+  typedOperationRoutersByActor.delete(actorId);
   setTimeout(() => tearingDownPluginActors.delete(actorId), 0);
 }
 
@@ -1044,7 +1168,7 @@ async function yieldPluginUiContinuation(): Promise<void> {
  * publish them across multiple MoreWork frames. A supplied empty `requiredSurfaceIds` means every
  * requested surface is already retained, so an unchanged refresh needs no continuation at all.
  * Accepted patches are acknowledged between turns to release bounded publication capacity. */
-async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[] | PluginPatchAcceptance | Promise<readonly ShardEventEnvelope[] | PluginPatchAcceptance>, drainOperations = false, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
+async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[] | PluginPatchAcceptance | Promise<readonly ShardEventEnvelope[] | PluginPatchAcceptance>, drainOperations = false, activation?: ShardActorActivationLease, call?: TypedOperationCall): Promise<WireTurnResult> {
   const results: WireTurnResult[] = [initial];
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
     activation?.assertActive();
@@ -1062,6 +1186,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork()) {
       await yieldPluginUiContinuation();
     }
+    if ((continuation + 1) % 512 === 0) console.warn(`[DEBUG] settle ${actorId} continuation ${continuation + 1} status=${wireTurnStatusTag(continued.status)} acks=${acknowledgements.length} drain=${drainOperations}`);
   }
   if (acknowledgements.length > 0 || hasWork()) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
@@ -1079,13 +1204,13 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   activation?.assertActive();
   return {
     uiPatches: results.flatMap((result) => result.uiPatches),
-    effects: consumeTypedOperationEffects(results.flatMap((result) => result.effects)),
+    effects: consumeTypedOperationEffects(results.flatMap((result) => result.effects), call),
     nextWake: [...results].reverse().find((result) => result.nextWake !== null)?.nextWake ?? null,
     status: results.at(-1)?.status,
     commandIngress: results.at(-1)?.commandIngress,
   };
 }
-async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
+async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease, call?: TypedOperationCall): Promise<WireTurnResult> {
   const initial: WireTurnResult = {
     uiPatches: [],
     effects: [],
@@ -1093,11 +1218,11 @@ async function settleAcknowledgedPluginTurns(actorId: string, results: readonly 
     commandIngress: results.at(-1)?.commandIngress,
     status: results.at(-1)?.status,
   };
-  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : acceptPatches?.(turn) ?? [], true, activation);
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : acceptPatches?.(turn) ?? [], true, activation, call);
   return {
     ...continued,
     uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],
-    effects: consumeTypedOperationEffects([...results.flatMap((turn) => turn.effects), ...continued.effects]),
+    effects: consumeTypedOperationEffects([...results.flatMap((turn) => turn.effects), ...continued.effects], call),
     nextWake: continued.nextWake ?? [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
   };
 }
@@ -1119,6 +1244,32 @@ function uiRefreshBodyKeys(request: PluginUiRefreshRequest): string[] {
   return [...new Set([...(request.windows ?? []), ...(request.panels ?? [])].flatMap((target) => target.bodyKey ? [target.bodyKey] : []))];
 }
 
+/** 🧩️ The reserved section surfaces this request asks for, in contract order. Unlike a window or a
+ * panel the shell never names their body: the section's identity IS its reserved body key, so it can
+ * never collide with an app-authored one. */
+function uiRefreshSectionTargets(request: PluginUiRefreshRequest): readonly UiRefreshSection[] {
+  return UI_REFRESH_SECTIONS.filter((section) => request[section.key] !== undefined);
+}
+
+/** 🧩️ Rebuilds one reserved section's value from its retained surface tree: the depth-first
+ * concatenation of every text leaf is exactly the canonical JSON the plugin serialized (the tree is
+ * an `UI_BUILT_CHILDREN_MAX`-ary carrier of `UI_TEXT_MAX_BYTES` leaves, see `section_component_tree`
+ * in `🔌️plugin/🦀️.rs`). No `packValueToExactJson` is involved: the payload crosses as text, so
+ * `JSON.parse` reproduces the plugin's own numbers without an integer-carrier projection. */
+function sectionValueFromBuiltNode(bodyKey: string, node: BuiltNode): unknown {
+  if (node.key !== bodyKey) throw new Error(`plugin-ui.section-root-mismatch:${node.key}`);
+  let payload = "";
+  const walk = (current: BuiltNode): void => {
+    if (current.component.type === "text") {
+      if (typeof current.component.value !== "string") throw new Error(`plugin-ui.section-chunk-not-text:${bodyKey}`);
+      payload += current.component.value;
+    }
+    for (const child of current.children) walk(child);
+  };
+  walk(node);
+  return JSON.parse(payload) as unknown;
+}
+
 /** 🪟️ Binds each concrete host surface to its authored body and projected ViewModel. */
 function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequest): ShardEventEnvelope[] {
   const windows = (request.windows ?? []).flatMap((target) => {
@@ -1138,7 +1289,15 @@ function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequ
         viewState: encodePackValue(panelViewContext(request.viewState)),
       },
     } satisfies ShardEventEnvelope] : []);
-  return [...windows, ...panels];
+  const sections = uiRefreshSectionTargets(request).map((section) => ({
+    kind: "surface-visible",
+    payload: {
+      surface: pluginSurfaceRef(instanceId, section.bodyKey),
+      bodyKey: section.bodyKey,
+      viewState: encodePackValue(sectionViewContext(request.viewState)),
+    },
+  } satisfies ShardEventEnvelope));
+  return [...windows, ...panels, ...sections];
 }
 
 /** 🏛️ Projects one turn's host effects without borrowing any retained UI owner. */
@@ -1168,7 +1327,13 @@ function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshR
     const value = surface && retainedSurfaceToBuiltNode(surface);
     return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
   });
-  return { windows: project(request.windows), panels: project(request.panels), requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
+  const sections: { [key in UiRefreshSectionKey]?: { readonly key: string; readonly hash: string; readonly value: unknown } } = {};
+  for (const section of uiRefreshSectionTargets(request)) {
+    const surface = retained.get(retainedSurfaceId(instanceId, section.bodyKey));
+    const built = surface && retainedSurfaceToBuiltNode(surface);
+    if (surface && built) sections[section.key] = { key: section.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value: sectionValueFromBuiltNode(section.bodyKey, built) };
+  }
+  return { windows: project(request.windows), panels: project(request.panels), ...sections, requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
 }
 
 function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface> {
@@ -1332,7 +1497,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       }
       return result;
     };
-    const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels) }))();
+    const projectSections = async (): Promise<{ [key in UiRefreshSectionKey]?: { readonly key: string; readonly hash: string; readonly value: unknown } }> => {
+      const sections: { [key in UiRefreshSectionKey]?: { readonly key: string; readonly hash: string; readonly value: unknown } } = {};
+      for (const section of uiRefreshSectionTargets(request)) {
+        const surface = surfaces.get(retainedSurfaceId(instanceId, section.bodyKey));
+        if (!surface) continue;
+        const projected = await projectOwnedUiSurface(instanceId, actorId, lease, owner, surface);
+        if (projected) sections[section.key] = { key: section.key, hash: projected.hash, value: sectionValueFromBuiltNode(section.bodyKey, projected.value) };
+      }
+      return sections;
+    };
+    const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels), ...(await projectSections()) }))();
     const reads = uiReadsByInstance.get(instanceId) ?? new Set<Promise<unknown>>();
     reads.add(read); uiReadsByInstance.set(instanceId, reads);
     try {
@@ -1455,7 +1630,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const actorId = requireActorId(instanceId);
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
-      const result = await serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
+      const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         const results: WireTurnResult[] = [];
         let acknowledgements: readonly ShardEventEnvelope[] = [];
@@ -1486,11 +1661,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             await acceptTurn(continued);
             terminal = continued.commandIngress?.tag;
             observedStatuses.add(terminal ?? "missing");
+            if (continuation % 32 === 31) console.warn(`[DEBUG] command ingress continuation ${continuation + 1} status=${terminal ?? "missing"} turn=${wireTurnStatusTag(continued.status)}`);
           }
+          console.warn(`[DEBUG] command ingress settled status=${terminal ?? "missing"} observed=${[...observedStatuses].join(",")}`);
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation);
-      });
+        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
+      }));
       requireActorId(instanceId);
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
@@ -1540,10 +1717,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         uiSurfaceByInstance.set(instanceId, new Map());
         uiIntakesByInstance.set(instanceId, new Set());
         requireOpening();
-        await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn));
-        requireOpening();
-        const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
-        await settlePluginTurn(actorId, acknowledged.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn));
+        await withTypedOperationCall(actorId, `open#${instanceId}`, async (call) => {
+          await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
+          requireOpening();
+          const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
+          await settlePluginTurn(actorId, acknowledged.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
+        });
         requireOpening();
         return instanceId;
       });
@@ -1624,7 +1803,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const surface = surfaces?.get(surfaceId);
       return !surface || surface.view.root === null;
     }));
-    const result = await serializeCommandIngressForActor(actorId, async () => {
+    const result = await withTypedOperationCall(actorId, `refresh-ui#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
         await submitTurn(
@@ -1637,9 +1816,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         (turn) => acceptUiPatches(instanceId, turn),
         true,
         activation,
+        call,
       );
       return settled;
-    });
+    }));
     requireActorId(instanceId);
     activation.assertActive();
     return ownedUiRefreshResponse(instanceId, actorId, request, routeDocumentEffects(result.effects, documentPort));
@@ -1657,7 +1837,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       assertActive();
       if (submitted) throw new Error("extension.completion-already-submitted");
       submitted = true;
-      return serializeCommandIngressForActor(actorId, async () => {
+      return withTypedOperationCall(actorId, `extension-completion#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
         assertActive();
         const settled = await settlePluginTurn(
           actorId,
@@ -1667,6 +1847,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           (turn) => { assertActive(); return acceptUiPatches(instanceId, turn); },
           true,
           activation,
+          call,
         );
         assertActive();
         const frames: Uint8Array[] = [];
@@ -1678,7 +1859,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         }
         turnOutcomes.push({ instanceId, frames });
         return invocationFromFrames(frames.map(decodeAppFrame), effects, "extension completion");
-      });
+      }));
     };
     return Object.freeze({ instanceId, req, assertActive, complete });
   };
@@ -1696,10 +1877,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     activation.assertActive();
     const bindingGeneration = (documentBindingGenerations.get(instanceId) ?? 0n) + 1n;
     const current = () => !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId && sourceCurrent();
-    const settle = (events: readonly ShardEventEnvelope[]) => serializeCommandIngressForActor(actorId, async () => {
+    const settle = (events: readonly ShardEventEnvelope[]) => withTypedOperationCall(actorId, `document-port#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
       activation.assertActive();
-      return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => acceptUiPatches(instanceId, turn), true, activation);
-    });
+      return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => acceptUiPatches(instanceId, turn), true, activation, call);
+    }));
     const binding = new ActorDocumentBindingV1({ ...identity, actorId, activationGeneration: activation.activationGeneration, instanceId }, bindingGeneration, {
       current,
       assertActive: () => activation.assertActive(),
@@ -2516,6 +2697,6 @@ export async function loadPluginModulesInDependencyOrder(
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
   const { registerTests1 } = await import("../../🧪️tests/🔌️plugin-runtime/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, typedOperationAcknowledgements, typedOperationResult, uiRefreshBodyKeys, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, yieldPluginUiContinuation }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

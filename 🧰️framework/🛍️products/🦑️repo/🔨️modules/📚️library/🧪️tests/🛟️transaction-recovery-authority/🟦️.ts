@@ -7,7 +7,7 @@ import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🛟️transaction-recovery-authority/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛟️transaction-recovery-authority/🔣️.json"), "utf8"));
 const functionNames = ["reconcileTransactionOwnedTuples", "validateForwardMoveSourceInputs", "validateForwardGeneratorInputs", "validateResumeTuples"];
 const classNames = ["TaxonomyStartedRegenerationPartialError", "TaxonomyMoveSourceInputDriftError", "TaxonomyGeneratorInputDriftError"];
 const compilers = [

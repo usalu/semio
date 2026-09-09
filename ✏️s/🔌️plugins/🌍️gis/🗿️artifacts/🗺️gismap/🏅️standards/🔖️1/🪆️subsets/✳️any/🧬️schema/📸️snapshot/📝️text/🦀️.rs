@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::GisMapSnapshot;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
-pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {

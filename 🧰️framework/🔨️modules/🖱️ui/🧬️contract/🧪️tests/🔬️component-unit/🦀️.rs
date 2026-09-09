@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn typed_wire_neutral_component_defaults_match_serde() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧪️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
     assert_eq!(rows.len(), 18);
     for row in rows {

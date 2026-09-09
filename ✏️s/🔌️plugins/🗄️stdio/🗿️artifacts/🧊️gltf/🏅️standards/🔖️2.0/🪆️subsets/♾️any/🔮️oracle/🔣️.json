@@ -2919,14 +2919,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/✅️add-required-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/add-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/✅️add-required-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/add-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2801ac4caa194114ce00e415f35f3cdd5a1da3f223f0eec3dffbae39ecbf5ad6",
           "bytes": 16589
@@ -2970,14 +2970,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📣️add-used-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/add-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📣️add-used-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/add-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
@@ -3531,14 +3531,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🪪️change-asset-descriptive-metadata-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-descriptive-metadata-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🪪️change-asset-descriptive-metadata-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-descriptive-metadata-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:25c9a67fd6fe2d81112c10b4c93196ca95f2a7d49a89c99eb32d1819719404ad",
           "bytes": 16547
@@ -3582,14 +3582,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🧩️change-asset-extension-data-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-extension-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🧩️change-asset-extension-data-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-extension-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:698eab5bbbd229555a73634b72d22ad5837839bbe8f49d3a92270d86b53dcca3",
           "bytes": 16609
@@ -3633,14 +3633,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔢️change-asset-extra-data-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-extra-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔢️change-asset-extra-data-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-extra-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:cd7c2db0c69ccc4e0cdc1558395535c1418f7a6ed060474fddb0b1457d7310d7",
           "bytes": 16532
@@ -3684,14 +3684,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔖️change-asset-version-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-version-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔖️change-asset-version-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-asset-version-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c8535952600cc855cc2260610fb56f8dfa8eb862b6389ceb5a220301e8e45576",
           "bytes": 16534
@@ -3735,14 +3735,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📎️change-document-extension-data-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-document-extension-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📎️change-document-extension-data-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-document-extension-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e3b50942eb614aa758419aa4c7cade662dfbe4d0f2e10f1e0dce81b385f20471",
           "bytes": 16599
@@ -3786,14 +3786,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📝️change-document-extra-data-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-document-extra-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/📝️change-document-extra-data-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/change-document-extra-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1b20e8b39d6981e7c152486e5028c2a4245768f0f7c823dd5c0fac15b5cb9e7a",
           "bytes": 16523
@@ -3837,14 +3837,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🌫️change-alpha/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/change-alpha/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1545b383900b76608def62365e3440b524d7b63c580f44eacefcdb19371b6ee0",
           "bytes": 16561
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🌫️change-alpha/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/change-alpha/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e5d8752b51b65a37c2acb32d2e9239588021f6dd2e09447af0d45e8b459672cf",
           "bytes": 16560
@@ -3888,14 +3888,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🪞️change-sides/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/change-sides/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d2d33fe3a6acb6c7970c36be03bd02df7793eebe8d442f12090ed0865bda22bd",
           "bytes": 16560
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🪞️change-sides/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/change-sides/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1bbf452cdab75e2a37e310132950190c9cc589853cfb0460fbebfafef5b0c04f",
           "bytes": 16559
@@ -4806,14 +4806,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🌱️create/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/create/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🌱️create/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/create/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4fdfc06c6abc757d226ed5ce9c9ca92246ca650f2bd2527554aa3a4ab712d994",
           "bytes": 16577
@@ -5265,14 +5265,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🗑️delete/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/delete/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🗑️delete/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/delete/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:22f9c47801cd2ebcaccf8f3394a80f7886715b1ff85510ac9e63071d65e39679",
           "bytes": 16202
@@ -5724,14 +5724,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🚚️move/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/move/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🚚️move/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/move/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ba78d928f1b5ccd305a8548140c8e5d378619117409b5ea6d81b84067311b83e",
           "bytes": 16532
@@ -6183,14 +6183,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/➡️move-required-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/move-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0195612fc6a895ef4f09d249ed7e20c9ebe55d92f30df08a33921a75aa03c896",
           "bytes": 16627
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/➡️move-required-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/move-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6818afaab6d1cda42ae5bb2f2350d265ad447c2344d4377b8250750d5089aa84",
           "bytes": 16627
@@ -6387,14 +6387,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🚚️move-used-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/move-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🚚️move-used-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/move-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8edadc27abac0afe0f7c615b63ea5eebe054ba8db7c179f53b7d8759adea609b",
           "bytes": 16551
@@ -6438,14 +6438,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🚫️remove-required-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/remove-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2801ac4caa194114ce00e415f35f3cdd5a1da3f223f0eec3dffbae39ecbf5ad6",
           "bytes": 16589
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🚫️remove-required-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/remove-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:a4852042b8f0a67b98784d67fad87e43969c3ef64b37830a7f4c4917e559c3eb",
           "bytes": 16560
@@ -6489,14 +6489,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔕️remove-used-extension-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/remove-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔕️remove-used-extension-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/remove-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:af2002f76ff7f9d181c30459063b46d34ec43176a2cbcbcf7133d115c5236413",
           "bytes": 16503
@@ -6642,14 +6642,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🔀️reorder/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/reorder/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/💎️material/🔀️reorder/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/material/reorder/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ba78d928f1b5ccd305a8548140c8e5d378619117409b5ea6d81b84067311b83e",
           "bytes": 16532
@@ -7050,14 +7050,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔃️reorder-required-extensions-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/reorder-required-extensions-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0195612fc6a895ef4f09d249ed7e20c9ebe55d92f30df08a33921a75aa03c896",
           "bytes": 16627
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔃️reorder-required-extensions-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/reorder-required-extensions-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6818afaab6d1cda42ae5bb2f2350d265ad447c2344d4377b8250750d5089aa84",
           "bytes": 16627
@@ -7254,14 +7254,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔀️reorder-used-extensions-applied/⬅️before.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/reorder-used-extensions-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/🔀️reorder-used-extensions-applied/➡️after.gltf",
+          "path": "../../🪪️asset/🧫️fixtures/reorder-used-extensions-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8edadc27abac0afe0f7c615b63ea5eebe054ba8db7c179f53b7d8759adea609b",
           "bytes": 16551
@@ -7956,14 +7956,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🌱️create/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/create/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🌱️create/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/create/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e7cd3aa96122c7dc24eefb47cd33524cff99421243a99b6ede99d521fea10173",
           "bytes": 17874
@@ -8003,14 +8003,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🌱️create/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/create/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🌱️create/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/create/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8456edbb2e94f3dc062602a7d89fef9ce4a7b77b3b87deec91b3d9efb7a67b82",
           "bytes": 17734
@@ -8050,14 +8050,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/create/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🌱️create/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/create/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:69bce51c083494447f3ad3b0cb06ecb6424e715b089e09225b4d13dc5172862b",
           "bytes": 17624
@@ -8238,14 +8238,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🗑️delete/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/delete/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🗑️delete/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/delete/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8285,14 +8285,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🗑️delete/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/delete/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🗑️delete/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/delete/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8332,14 +8332,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🗑️delete/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/delete/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🗑️delete/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/delete/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8520,14 +8520,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🚚️move/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/move/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🚚️move/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/move/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:5344f8b91cf54c086b5e6695a93d53a09f7353306faf858494d54f1b18c117fe",
           "bytes": 17666
@@ -8567,14 +8567,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🚚️move/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/move/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🚚️move/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/move/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6b0096d2616588d0f227bbe6b47958c54ae2975318ddda50b9788f2276f62958",
           "bytes": 17596
@@ -8614,14 +8614,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🚚️move/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/move/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🚚️move/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/move/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:33a1527d58bed16d14146a9bf47d72c4b252fd9ded585c984ccc1c68fa391f5c",
           "bytes": 17541
@@ -8802,14 +8802,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🔀️reorder/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/reorder/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🖼️image/🔀️reorder/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/image/reorder/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:a1096cfa548f968365520251e867076eb8dcc5717ec7034f622527aee093244e",
           "bytes": 17666
@@ -8849,14 +8849,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🔀️reorder/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/reorder/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎛️sampler/🔀️reorder/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/sampler/reorder/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0e2ea7a4c93adbbc45ec8765a0fb96ecbd29d12fd63e40b3f5f6d810ab9883a9",
           "bytes": 17596
@@ -8896,14 +8896,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🔀️reorder/⬅️before.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/reorder/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/🎨️texture/🔀️reorder/➡️after.gltf",
+          "path": "../../💎️material/🧫️fixtures/texture/reorder/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d65daef8ecf544023c8541b21737201bb9c2f8907de17a038b9465074f1164fc",
           "bytes": 17541

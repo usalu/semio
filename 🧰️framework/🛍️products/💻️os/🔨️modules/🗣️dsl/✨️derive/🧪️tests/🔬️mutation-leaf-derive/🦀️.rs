@@ -4,7 +4,7 @@ use sha2::Digest;
 
 #[test]
 fn parses_strict_mutation_leaf_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../✨️mutation-leaf-derive/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✨️mutation-leaf-derive/🔣️.json")).unwrap();
     for case in fixture["attributes"].as_array().unwrap() {
         let input: DeriveInput = match syn::parse_str(&format!("{} #[derive(MutationLeaf)] struct Probe;", case["attribute"].as_str().unwrap())) {
             Ok(input) => input,
@@ -23,7 +23,7 @@ fn parses_strict_mutation_leaf_fixture() {
 
 #[test]
 fn hashes_workspace_provenance_with_sha2_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🛂️mutation-source-authority/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️mutation-source-authority/🔣️.json")).unwrap();
     let (workspace, compiler_cwd, source) = mutation_source_authority_tests::materialize("valid", &fixture);
     let authority = mutation_source_authority(&source, &compiler_cwd).unwrap();
     let first = mutation_leaf_workspace_token(&authority).unwrap();

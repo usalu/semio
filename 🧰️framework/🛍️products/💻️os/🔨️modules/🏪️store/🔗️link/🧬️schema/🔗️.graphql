@@ -1,0 +1,8 @@
+# import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
+# import BlobRef from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔗️.graphql"
+enum LinkPinKind { head checkpoint snapshot }
+type LinkHeadPin { kind: LinkPinKind! }
+type LinkCheckpointPin { kind: LinkPinKind! id: String! }
+type LinkSnapshotPin { kind: LinkPinKind! blob: BlobRef! }
+union LinkPin = LinkHeadPin | LinkCheckpointPin | LinkSnapshotPin
+type ArtifactLink { target: ArtifactRef! pin: LinkPin! role: String! }

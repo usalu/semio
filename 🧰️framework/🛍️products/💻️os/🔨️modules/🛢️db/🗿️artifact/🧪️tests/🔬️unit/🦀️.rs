@@ -1292,7 +1292,7 @@ async fn durable_group_witness_batch(kinds: &[serde_json::Value], canonical_pack
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_commits_one_exact_fsync_event() {
     let (authority, storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record();
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
     let canonical_pack = record.canonical_pack().to_vec();
     let decision_sha256 = record.decision_sha256().to_string();
     let anchor_sha256 = record.anchor_sha256().to_string();
@@ -1380,7 +1380,7 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
 async fn committed_durable_group_decision_accepts_only_one_exact_event_transaction() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
     let document = ArtifactId::from(fixture["record"]["document"].as_str().unwrap());
-    let record = store::durable_group::durable_owned_group_journal_test_record();
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
     let canonical_pack = record.canonical_pack().to_vec();
     let backing = storage().await;
     let wal_storage = backing.wal().await;
@@ -1447,7 +1447,7 @@ async fn committed_durable_group_decision_accepts_only_one_exact_event_transacti
 #[semio_framework_async_macros::async_test]
 async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection() {
     let document = ArtifactId::from("map-a");
-    let record = store::durable_group::durable_owned_group_journal_test_record();
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
     let anchor_sha256 = record.anchor_sha256().to_string();
     let decision_sha256 = record.decision_sha256().to_string();
     let canonical_pack = record.into_canonical_pack();
@@ -1510,7 +1510,7 @@ async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_cancellation_before_handoff_is_absent() {
     let (authority, _storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record();
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
     let mut sink = authority.durable_group_journal_sink(9);
     let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), record.decision_sha256().to_string());
     commit.cancel();
@@ -1525,7 +1525,7 @@ async fn document_authority_durable_group_journal_cancellation_before_handoff_is
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_rejects_hash_before_mailbox() {
     let (authority, _storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record();
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
     let mut sink = authority.durable_group_journal_sink(11);
     let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), "0".repeat(64));
     assert!(matches!(commit.advance(journal_grant()).unwrap(), store::durable_group::DurableOwnedGroupJournalAdvanceV1::Rejected(_)));

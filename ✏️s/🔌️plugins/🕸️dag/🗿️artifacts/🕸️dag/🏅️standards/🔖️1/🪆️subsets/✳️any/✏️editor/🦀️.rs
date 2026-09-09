@@ -159,6 +159,7 @@ const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport"];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
 const DAG_RETAINED_RAW_BYTES: usize = 8_192;
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn dag_retained_config_reduce(
     command: &DagCommand,
     snapshot: &DagSnapshot,

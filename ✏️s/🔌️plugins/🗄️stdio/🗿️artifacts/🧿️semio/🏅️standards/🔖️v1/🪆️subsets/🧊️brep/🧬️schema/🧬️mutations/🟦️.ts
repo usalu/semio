@@ -16,6 +16,7 @@ import type { SemioPoint3, BrepCurve, BrepSurface, BrepShellFace, BrepSolidShell
 export interface CreateVertex {
   id: string;
   point: SemioPoint3;
+  tol: number;
 }
 
 export interface DeleteVertex {
@@ -27,6 +28,7 @@ export interface CreateEdge {
   start_vertex: string;
   end_vertex: string;
   curve: BrepCurve;
+  tol: number;
 }
 
 export interface DeleteEdge {
@@ -39,6 +41,7 @@ export interface CreateFace {
   inner_loops?: string[];
   surface: BrepSurface;
   orientation: boolean;
+  tol: number;
 }
 
 export interface DeleteFace {

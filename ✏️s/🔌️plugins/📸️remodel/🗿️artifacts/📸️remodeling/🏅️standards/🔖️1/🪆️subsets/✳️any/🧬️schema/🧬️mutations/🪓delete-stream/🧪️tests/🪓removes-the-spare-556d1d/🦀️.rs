@@ -10,11 +10,11 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🪓removes-the-spare-556d1d/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🪓removes-the-spare-556d1d/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🪓removes-the-spare-556d1d/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🪓removes-the-spare-556d1d/🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🪓removes-the-spare-556d1d/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

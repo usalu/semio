@@ -692,8 +692,8 @@
   },
   "frozenCoordinateEvidenceContracts": {
     "readme-current-source-revision-input": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-revision.json",
-      "sha256": "1dbd35594578a7e2ed00707686263004872c4b925e895b066d8f04ff4693ac58",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
+      "sha256": "7697e8654fa60d6d5befcd501b0ff3a629251a51207e7fc9410344b5870d15fb",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -707,8 +707,8 @@
       ]
     },
     "readme-reviewed-expectation-input": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🧫️fixtures/🎯️reviewed-expectations/🔣️.json",
-      "sha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
+      "sha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -731,7 +731,7 @@
       ]
     },
     "remaining-package-purity-history-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️remaining-package-purity-authority.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
       "sha256": "49087f2dee618c3c8392ce3bc25c348af87d5380fe16523ed61ee6c02448f577",
       "schemaVersion": 1,
       "coordinates": [
@@ -1385,7 +1385,7 @@
       ]
     },
     "cad-draw-projection-vectors-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
       "sha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
       "schemaVersion": 1,
       "coordinates": [
@@ -12282,7 +12282,7 @@
   "semanticPackageProjectionContracts": {
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json",
       "authorityCatalogSha256": "490a3abe1202d10258e6ec972b16ffd76d376b914a80b42250149f2776e4ecc3",
       "packageIds": [
         "wgpu-renderer",
@@ -12329,9 +12329,9 @@
   "semanticProjectedMemberKinds": {
     "mutation-test-subject": {
       "ownerKindIds": [
-        "mutation-test-profile"
+        "schema"
       ],
-      "projectionContractId": "artifact-mutation-tests-v1",
+      "projectionContractId": "canonical-mutation-case-pair-v1",
       "sourceMemberKindId": "members-of-schema",
       "identityField": "mutationDirectoryName"
     },
@@ -12345,20 +12345,6 @@
     }
   },
   "semanticPathProjectionProfileRenderers": {
-    "standard-subset-v1": {
-      "direction": "forward-only",
-      "captureFields": [
-        "standardVersion",
-        "subsetId"
-      ],
-      "directoryKindId": "mutation-test-profile",
-      "template": "🪆️{standardVersion}-{subsetId}",
-      "tupleCollisionFields": [
-        "artifactId",
-        "standardVersion",
-        "subsetId"
-      ]
-    },
     "artifact-standard-subset-v1": {
       "direction": "forward-only",
       "captureFields": [
@@ -12375,170 +12361,6 @@
     }
   },
   "semanticDescendantContracts": {
-    "mutation-scenario-bundle-v1": {
-      "rootDirectoryKindId": "test-case",
-      "requiredNodes": [
-        {
-          "pathSegments": [],
-          "nodeType": "directory",
-          "kindId": "test-case"
-        },
-        {
-          "pathSegments": [],
-          "nodeType": "file",
-          "kindId": "rust-source"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "mutation",
-              "literal": "🦠️mutation"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "mutation"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "mutation",
-              "literal": "🦠️mutation"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "json"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "snapshot",
-              "literal": "📸️snapshot"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "snapshot"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "snapshot",
-              "literal": "📸️snapshot"
-            },
-            {
-              "kindId": "comparison-before",
-              "literal": "⬅️before"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "comparison-before"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "snapshot",
-              "literal": "📸️snapshot"
-            },
-            {
-              "kindId": "comparison-before",
-              "literal": "⬅️before"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "json"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "snapshot",
-              "literal": "📸️snapshot"
-            },
-            {
-              "kindId": "comparison-after",
-              "literal": "➡️after"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "comparison-after"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "snapshot",
-              "literal": "📸️snapshot"
-            },
-            {
-              "kindId": "comparison-after",
-              "literal": "➡️after"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "json"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "diff",
-              "literal": "🔺️diff"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "diff"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "comparison-outcome",
-              "literal": "🎯️outcome"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "comparison-outcome"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "comparison-outcome",
-              "literal": "🎯️outcome"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "json"
-        }
-      ],
-      "exclusiveAlternatives": [
-        {
-          "id": "diff-leaf",
-          "mode": "exactly-one",
-          "nodes": [
-            {
-              "pathSegments": [
-                {
-                  "kindId": "diff",
-                  "literal": "🔺️diff"
-                }
-              ],
-              "nodeType": "file",
-              "kindId": "json"
-            },
-            {
-              "pathSegments": [
-                {
-                  "kindId": "diff",
-                  "literal": "🔺️diff"
-                }
-              ],
-              "nodeType": "file",
-              "kindId": "absence-marker"
-            }
-          ]
-        }
-      ],
-      "realizedNodeCount": 13,
-      "pathBudgetReserve": {
-        "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 42
-      }
-    },
     "cad-model-catalog-bundle-v1": {
       "contractKind": "catalog",
       "rootDirectoryKindId": "models",
@@ -12813,6 +12635,186 @@
         "derivation": "longest-canonical-descendant-suffix",
         "bytes": 72
       }
+    },
+    "mutation-implementation-case-v1": {
+      "rootDirectoryKindId": "test-case",
+      "requiredNodes": [
+        {
+          "pathSegments": [],
+          "nodeType": "directory",
+          "kindId": "test-case"
+        },
+        {
+          "pathSegments": [],
+          "nodeType": "file",
+          "kindId": "rust-source"
+        }
+      ],
+      "exclusiveAlternatives": [],
+      "realizedNodeCount": 2,
+      "pathBudgetReserve": {
+        "derivation": "longest-canonical-descendant-suffix",
+        "bytes": 11
+      }
+    },
+    "mutation-fixture-bundle-v1": {
+      "rootDirectoryKindId": "test-case",
+      "requiredNodes": [
+        {
+          "pathSegments": [],
+          "nodeType": "directory",
+          "kindId": "test-case"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "mutation",
+              "literal": "🦠️mutation"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "mutation"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "mutation",
+              "literal": "🦠️mutation"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "json"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "snapshot"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-before",
+              "literal": "⬅️before"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "comparison-before"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-before",
+              "literal": "⬅️before"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "json"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-after",
+              "literal": "➡️after"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "comparison-after"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "snapshot",
+              "literal": "📸️snapshot"
+            },
+            {
+              "kindId": "comparison-after",
+              "literal": "➡️after"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "json"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "diff",
+              "literal": "🔺️diff"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "diff"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "comparison-outcome",
+              "literal": "🎯️outcome"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "comparison-outcome"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "comparison-outcome",
+              "literal": "🎯️outcome"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "json"
+        }
+      ],
+      "exclusiveAlternatives": [
+        {
+          "id": "diff-leaf",
+          "mode": "exactly-one",
+          "nodes": [
+            {
+              "pathSegments": [
+                {
+                  "kindId": "diff",
+                  "literal": "🔺️diff"
+                }
+              ],
+              "nodeType": "file",
+              "kindId": "json"
+            },
+            {
+              "pathSegments": [
+                {
+                  "kindId": "diff",
+                  "literal": "🔺️diff"
+                }
+              ],
+              "nodeType": "file",
+              "kindId": "absence-marker"
+            }
+          ]
+        }
+      ],
+      "realizedNodeCount": 12,
+      "pathBudgetReserve": {
+        "derivation": "longest-canonical-descendant-suffix",
+        "bytes": 42
+      }
     }
   },
   "semanticPathProjectionCatalogContracts": {
@@ -12941,70 +12943,6 @@
     }
   },
   "semanticPathProjectionContracts": {
-    "artifact-mutation-tests-v1": {
-      "sourceOwnerKindId": "members-of-artifacts",
-      "sourceSegments": [
-        {
-          "kindId": "standards",
-          "literal": "🏅️standards"
-        },
-        {
-          "kindId": "standard",
-          "capture": "standardVersion"
-        },
-        {
-          "kindId": "subsets",
-          "literal": "🪆️subsets"
-        },
-        {
-          "kindId": "subset",
-          "capture": "subsetId"
-        },
-        {
-          "kindId": "schema",
-          "literal": "🧬️schema"
-        },
-        {
-          "kindId": "schema",
-          "literal": "🧬️mutations"
-        },
-        {
-          "projectedMemberKindId": "mutation-test-subject",
-          "capture": "mutationId"
-        },
-        {
-          "kindId": "tests",
-          "literal": "🧪️tests"
-        },
-        {
-          "kindId": "test-case",
-          "capture": "scenarioId"
-        }
-      ],
-      "profileRendererId": "standard-subset-v1",
-      "destinationOwnerKindId": "members-of-artifacts",
-      "destinationSegments": [
-        {
-          "kindId": "tests",
-          "literal": "🧪️tests"
-        },
-        {
-          "kindId": "mutation-test-profile",
-          "render": "profile"
-        },
-        {
-          "projectedMemberKindId": "mutation-test-subject",
-          "copy": "mutationId"
-        },
-        {
-          "kindId": "test-case",
-          "copy": "scenarioId"
-        }
-      ],
-      "descendantContractId": "mutation-scenario-bundle-v1",
-      "catalogContractId": "mutation-catalog-vectors-v1",
-      "rationaleRule": "artifact-mutation-test-projection-v1"
-    },
     "artifact-example-model-catalog-v1": {
       "sourceOwnerKindId": "members-of-artifacts",
       "sourceArtifactMemberName": "📐️cad",
@@ -13254,7 +13192,7 @@
     },
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
       "authorityCatalogSha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
       "currentSourceRevisions": {
         "testing-readme-protocol-v2-reviewed": {
@@ -13268,12 +13206,12 @@
             "mode": "0644"
           },
           "currentPreimage": {
-            "sha256": "da38967020fbe0c9a41372ea9b59dfda71343630758fc4828d47545af72b5460",
-            "size": 12527,
+            "sha256": "20fa38e056c09959c00b652f0ed2985b65cf47b0115df0a6ca9418258dab85fc",
+            "size": 12511,
             "mode": "0644"
           },
-          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🔣️.json",
-          "expectationsSha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6"
+          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json",
+          "expectationsSha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c"
         }
       },
       "sourceFileKindId": "markdown",
@@ -13650,10 +13588,86 @@
     }
   },
   "mutationCatalogProjection": {
-    "projectionContractId": "artifact-mutation-tests-v1",
+    "contractKind": "canonical-mutation-case-pair",
+    "contractId": "canonical-mutation-case-pair-v1",
+    "sourceOwnerKindId": "members-of-artifacts",
     "projectedMemberKindId": "mutation-test-subject",
-    "descendantContractId": "mutation-scenario-bundle-v1",
-    "catalogContractId": "mutation-catalog-vectors-v1"
+    "implementationSegments": [
+      {
+        "kindId": "standards",
+        "literal": "🏅️standards"
+      },
+      {
+        "kindId": "standard",
+        "capture": "standardVersion"
+      },
+      {
+        "kindId": "subsets",
+        "literal": "🪆️subsets"
+      },
+      {
+        "kindId": "subset",
+        "capture": "subsetId"
+      },
+      {
+        "kindId": "schema",
+        "literal": "🧬️schema"
+      },
+      {
+        "kindId": "schema",
+        "literal": "🧬️mutations"
+      },
+      {
+        "projectedMemberKindId": "mutation-test-subject",
+        "capture": "mutationId"
+      },
+      {
+        "kindId": "tests",
+        "literal": "🧪️tests"
+      },
+      {
+        "kindId": "test-case",
+        "capture": "scenarioId"
+      }
+    ],
+    "fixtureSegments": [
+      {
+        "kindId": "standards",
+        "literal": "🏅️standards"
+      },
+      {
+        "kindId": "standard",
+        "capture": "standardVersion"
+      },
+      {
+        "kindId": "subsets",
+        "literal": "🪆️subsets"
+      },
+      {
+        "kindId": "subset",
+        "capture": "subsetId"
+      },
+      {
+        "kindId": "fixtures",
+        "literal": "🧫️fixtures"
+      },
+      {
+        "kindId": "schema",
+        "literal": "🧬️mutations"
+      },
+      {
+        "projectedMemberKindId": "mutation-test-subject",
+        "capture": "mutationId"
+      },
+      {
+        "kindId": "test-case",
+        "capture": "scenarioId"
+      }
+    ],
+    "implementationDescendantContractId": "mutation-implementation-case-v1",
+    "fixtureDescendantContractId": "mutation-fixture-bundle-v1",
+    "catalogContractId": "mutation-catalog-vectors-v1",
+    "coverage": "every-catalog-vector-has-one-implementation-and-one-fixture-bundle"
   },
   "fixedDirectoryContractSets": {
     "dev-jco-all-interfaces": [
@@ -21471,13 +21485,13 @@
       "expires": null
     },
     "repo-analyzer-path-fixture": {
-      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some",
+      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some",
       "authority": "Repo analyzer fixture contract",
       "reason": "This fixture intentionally preserves generic and colliding path identities as analyzer input and expected autofix evidence",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some"
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some"
       },
       "descendants": "reserved",
       "verification": "repo client analyzer fixture tests",
@@ -24248,7 +24262,7 @@
           "inclusion": "tracked"
         },
         {
-          "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+          "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
           "inclusion": "tracked"
         }
       ],
@@ -24375,13 +24389,13 @@
       "currentPackageDestination": {
         "kind": "jco-canonical-package-v1",
         "packageId": "jcoprobe-guest",
-        "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
-        "packageRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
-        "cargoManifestPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-        "cargoLockPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
-        "componentPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
-        "witPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
-        "adapterPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
+        "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest",
+        "packageRoot": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
+        "cargoManifestPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+        "cargoLockPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+        "componentPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+        "witPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+        "adapterPath": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
       },
       "ownerPath": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
       "target": "@semio-tech/framework-os-kernel:generate-jco-package-adapter",
@@ -24391,16 +24405,16 @@
         "📜️script.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
+        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📽️nested-cargo-package-projection/🔣️.json"
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+          "path": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
           "inclusion": "tracked"
         }
       ],
@@ -25733,6 +25747,18 @@
   "_testTaxonomyComment": "🧪️ Tests belong to the nearest language-neutral owner and use file-kind identifiers; no language-neutral test filename is exempt from normalization.",
   "testsDirName": "🧪️tests",
   "testFixturesDirName": "🧫️fixtures",
+  "testFixtureLegacyDirectoryNames": [
+    "fixture",
+    "fixtures",
+    "__fixtures__",
+    "testdata",
+    "test_data",
+    "🧪️fixtures",
+    "🪞️fixtures",
+    "🧫️fixture",
+    "🧪️fixture",
+    "🗃️fixture"
+  ],
   "testFeatureFileKindId": "gherkin-feature",
   "testCaseSlugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
   "testAdapterFileKinds": {
@@ -25847,7 +25873,8 @@
   ],
   "testFixtureSchemes": {
     "shared": "shared://",
-    "local": "local://"
+    "asset": "asset://",
+    "schema": "schema://"
   },
   "testFeatureRequiredFeatureTagPrefixes": [
     "@capability-",

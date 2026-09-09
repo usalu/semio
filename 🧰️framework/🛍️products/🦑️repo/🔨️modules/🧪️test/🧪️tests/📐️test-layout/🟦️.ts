@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
+import { parse as parseToml } from "@iarna/toml";
 import { minimatch } from "minimatch";
+import { build } from "esbuild";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import protocol from "../../🧬️schema/🔣️.json";
-import vectors from "./🔣️.json";
+import vectors from "../../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;
 type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; expected: readonly Expected[] }>;
@@ -19,8 +22,6 @@ const taxonomy = testTaxonomy(repoRootFromHere());
 
 describe("📐️ canonical test layout", () => {
   test("language-neutral vectors satisfy their schema", () => {
-    // 📐️The vector is measured against the OWNING module's export, never a schema beside itself: a case
-    // directory holds examples and never the contract they are examples of.
     const validate = new Ajv({ allErrors: true, strict: true }).compile(protocol.$defs.TestLayoutCases);
     expect(validate(vectors)).toBe(true);
     expect(validate.errors).toBeNull();
@@ -34,6 +35,74 @@ describe("📐️ canonical test layout", () => {
     const sources = (vectors.cases as readonly VectorCase[]).flatMap((vector) => vector.sources);
     const findings = inspectTestLayoutSources(taxonomy, sources);
     for (const path of vectors.filenameOracle.paths) expect(findings.some((finding) => finding.path === path && finding.code === "legacy-test-filename")).toBe(minimatch(path, vectors.filenameOracle.pattern));
+  });
+
+  test("legacy fixture directories agree with minimatch", () => {
+    const patterns = taxonomy.testFixtureLegacyDirectoryNames.map(name => `**/${name}/**`);
+    for (const vector of vectors.cases.filter(row => row.id.startsWith("fixture-directory-"))) for (const source of vector.sources) {
+      const opaque = minimatch(source.path, `**/${taxonomy.testFixturesDirName}/**`, { dot: true });
+      const implementation = minimatch(source.path, `**/${taxonomy.testsDirName}/*/{🟦️.ts,🦀️.rs,🐹️.go,🐍️.py}`, { dot: true });
+      const observed = !opaque && !implementation && patterns.some(pattern => minimatch(source.path, pattern, { dot: true }));
+      expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.path === source.path && finding.code === "legacy-fixture-directory")).toBe(observed);
+    }
+  });
+
+  test("fixture manifests agree with independent TOML parsing and Cargo package discovery", () => {
+    for (const vector of vectors.cases.filter(row => row.id.startsWith("fixture-manifest-") && row.sources[0]!.path.endsWith("Cargo.toml"))) expect(Bun.TOML.parse(vector.sources[0]!.source)).toEqual(parseToml(vector.sources[0]!.source));
+    const vector = vectors.cases.find(row => row.id === "fixture-manifest-workspace-fixture")!;
+    const root = mkdtempSync(join(tmpdir(), "semio-fixture-manifest-"));
+    try {
+      for (const source of [...vector.sources, { path: "owner/🧫️fixtures/guest/src/lib.rs", source: "pub const VALUE: i32 = 1;" }]) {
+        const path = join(root, source.path);
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, source.source);
+      }
+      const observed = spawnSync("cargo", ["metadata", "--offline", "--no-deps", "--format-version", "1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, encoding: "utf8", timeout: 15000 });
+      expect(observed.status, observed.stderr).toBe(0);
+      const packages = JSON.parse(observed.stdout).packages as { manifest_path: string }[];
+      expect(packages).toHaveLength(1);
+      expect(packages[0]!.manifest_path.replaceAll("\\", "/").split("/")).toContain(taxonomy.testFixturesDirName);
+      expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(true);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test("fixture file reads agree with Node filesystem and esbuild module execution", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "semio-fixture-read-"));
+    try {
+      for (const vector of vectors.cases.filter(row => /^fixture-read-(?:node-url|node-alias|node-namespace|asset-url)$/u.test(row.id))) {
+        const root = join(directory, vector.id);
+        for (const source of vector.sources) {
+          const path = join(root, source.path);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, source.source);
+        }
+        const entry = join(root, vector.sources[0]!.path);
+        const output = join(dirname(entry), "📜️script.mjs");
+        await build({ entryPoints: [entry], outfile: output, bundle: true, platform: "node", format: "esm", logLevel: "silent" });
+        const observed = spawnSync(process.execPath.includes("bun") ? "node" : process.execPath, ["--input-type=module", "--eval", `import { value } from ${JSON.stringify(pathToFileURL(output).href)}; process.stdout.write(value);`], { encoding: "utf8" });
+        expect(observed.status, observed.stderr).toBe(0);
+        expect(observed.stdout).toBe("{}");
+        expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(vector.sources[1]!.path.split("/").includes(taxonomy.testFixturesDirName));
+      }
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  test("fixture import boundaries agree with esbuild's resolved dependency graph", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "semio-fixture-import-"));
+    try {
+      for (const vector of vectors.cases.filter(row => /^production-typescript-(?:fixture-import|fixture-reexport|asset-import)$/u.test(row.id))) {
+        const root = join(directory, vector.id);
+        for (const source of vector.sources) {
+          const path = join(root, source.path);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, source.source);
+        }
+        const result = await build({ entryPoints: [vector.sources[0]!.path], absWorkingDir: root, bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent" });
+        const fixture = Object.keys(result.metafile!.inputs).some(path => path.split("/").includes(taxonomy.testFixturesDirName));
+        expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(fixture);
+        console.log(`[DEBUG] ${vector.id}: esbuild fixture dependency ${fixture}`);
+      }
+    } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 
   test("Rust module path bases agree with the compiler", () => {
@@ -91,7 +160,7 @@ describe("📐️ canonical test layout", () => {
   test("feature contracts and implementation paths share the canonical case names", () => {
     const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", caseDir = `${owner}/🧪️tests/🖥️host-protocol-parity`;
     const registry: OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
-    const discovered: DiscoveredCase = { owner, ownerName: "test", case: "", caseDir, featurePath: `${caseDir}/🥒️.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "layout-fixture" };
+    const discovered: DiscoveredCase = { owner, ownerName: "test", case: "", caseDir, featurePath: `${caseDir}/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "layout-fixture" };
     const names = new Map<string, boolean>();
     for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {
       const name = /\/🧪️tests\/([^/]+)\/🟦️\.ts$/u.exec(source.path)?.[1];

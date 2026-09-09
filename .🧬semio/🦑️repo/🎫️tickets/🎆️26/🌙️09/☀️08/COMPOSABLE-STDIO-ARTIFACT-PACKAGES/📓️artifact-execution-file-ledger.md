@@ -11,10 +11,12 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 
 ## shared prerequisite
 
-- Files: 4
+- Files: 6
 
 - `updated` `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🎯️targets/🧊️wgpu/🦀️.rs`
+- `updated` `🧰️framework/🔨️modules/🚪️io/🦀️.rs`
 - `updated` `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `updated` `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs`
 - `updated` `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts`
 - `updated` `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts`
 
@@ -741,9 +743,43 @@ This is the exact Rust/Cargo/source-router ledger for this executor's stdio and 
 - `updated` `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml`
 - `updated` `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml`
 
+## validation recovery repairs
+
+- Files: 29
+
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracle/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/📝️text/🔣️.json`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/✍️set-text-box-blocks/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💾️binary/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🔬️unit/🦀️.rs`
+- `updated` `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts`
+
 ## Historical touched paths later retired externally
 
-These five sources received extraction namespace edits before the separate WindowConfig ownership work removed them. They remain part of the historical touch record and are excluded from the 676-path current-state ledger so this task does not claim their deletion.
+These five sources received extraction namespace edits before the separate WindowConfig ownership work removed them. They remain part of the historical touch record and are excluded from the 703-path current-state ledger so this task does not claim their deletion.
 
 - `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
 - `historically updated; externally removed` `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️contract-vectors/🦀️.rs`
@@ -753,5 +789,5 @@ These five sources received extraction namespace edits before the separate Windo
 
 ## Counts
 
-- Total exact current-state paths: 678
+- Total exact current-state paths: 708
 - Historical touched paths later removed externally: 5

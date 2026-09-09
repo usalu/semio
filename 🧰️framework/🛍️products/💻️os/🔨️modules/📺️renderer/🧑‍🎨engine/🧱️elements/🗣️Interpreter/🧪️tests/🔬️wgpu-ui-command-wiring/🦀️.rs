@@ -7,7 +7,7 @@ fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
 
 #[test]
 fn window_action_context_retained_commands_preserve_the_clicked_window() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🔬️window-action-context/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     let window_id = fixture["clickedWindowId"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();

@@ -3,9 +3,9 @@
 use super::super::super::UiPreferences;
 use super::super::UiPreferencesConfigMutation;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATIONS: &str = include_str!("🦠️mutations/🔣️.json");
+const BEFORE: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/📸️snapshot/➡️after/🔣️.json");
+const MUTATIONS: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json");
 
 fn preferences(text: &str) -> UiPreferences {
     dsl::os_pack::json::from_json_str(text).expect("OS UI preferences decode")

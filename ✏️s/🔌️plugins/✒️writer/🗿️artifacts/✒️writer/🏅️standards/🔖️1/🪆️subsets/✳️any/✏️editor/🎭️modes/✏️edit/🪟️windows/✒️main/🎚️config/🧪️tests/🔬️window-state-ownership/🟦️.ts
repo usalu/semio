@@ -7,11 +7,11 @@ import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientM
 
 /** 🧪️ Validates exact Writer window partitions against Ajv and independent JSON Patch. */
 export function testWriterWindowStateOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
-  const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
-  const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addKeyword("x-semio-state");
   ajv.addKeyword("x-semio-owner");

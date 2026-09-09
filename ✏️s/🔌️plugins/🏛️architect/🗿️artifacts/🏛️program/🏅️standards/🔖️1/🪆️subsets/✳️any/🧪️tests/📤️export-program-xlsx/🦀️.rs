@@ -3,7 +3,7 @@
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 #[cfg(feature = "sut")]
-const PROGRAM: &str = "asset://🧬️schema/🧬️mutations/🧱️program-element/🌱️create/🧪️tests/🌱️creates-a/📸️snapshot/➡️after/🔣️.json";
+const PROGRAM: &str = "shared://🧬️mutations/🧱️program-element/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json";
 
 fn oracle(ctx: &Context) -> Result<Outcome, String> {
     let raw = ctx.subject_raw_bytes("rust")?;

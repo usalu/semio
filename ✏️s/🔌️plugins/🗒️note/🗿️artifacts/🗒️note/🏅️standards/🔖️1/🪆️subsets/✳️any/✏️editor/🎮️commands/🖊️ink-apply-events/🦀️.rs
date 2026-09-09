@@ -11,8 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️CanvasEvents
 /// 🖱️ Batched canvas-event wire shape the `ink-canvas-host` surface emits (`addBlock`/`updateBlock`/
 /// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteMutation`s via
-/// `note_ops_from_canvas_events`, `setCamera` diffs into a `NoteConfigMutation::SetCamera` instead
-/// (session-only view state, never a document field).
+/// `note_ops_from_canvas_events`, while `setCamera` publishes to the exact composite-window config.
 #[derive(Clone, Debug, FromValue)]
 #[value(tag = "mutation")]
 enum NoteCanvasEvent {
@@ -145,19 +144,18 @@ pub struct InkApplyEvents {
 // `InteractionState` now, only ever mutated by the framework's own injected `interactionSelect`
 // handling, never by an app command's `Emit`; the field stays on the wire (the ink-canvas host still
 // sends it) but is no longer acted on.
-pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let document = doc.snapshot;
     let events: Vec<NoteCanvasEvent> = dsl::os_pack::from_json_str(&payload.events_json).unwrap_or_default();
-    let mut config_mutations = Vec::new();
-    // 📷️ Camera rides in the same batch as content edits but never becomes a document operation —
-    // diffs into a config operation instead.
+    let mut window_config_mutations = Vec::new();
     for event in &events {
         if let NoteCanvasEvent::SetCamera { camera } = event {
-            config_mutations.push(NoteConfigMutation::SetCamera(crate::editor::note::config::SetCamera { camera: camera.clone() }));
+            let view = ctx.view_state.as_ref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+            window_config_mutations.push(crate::editor::note::window::addressed_config(view, crate::editor::note::window::NoteCompositeWindowConfig { camera: camera.clone() })?);
         }
     }
     let operations = note_ops_from_canvas_events(document, &events);
-    if operations.is_empty() && config_mutations.is_empty() {
+    if operations.is_empty() && window_config_mutations.is_empty() {
         return Ok(Emit::default());
     }
     // The whole drag (begin → live* → commit) coalesces into ONE undoable edit; a lone `atomic`
@@ -171,7 +169,7 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
             _ => None,
         }
     };
-    Ok(Emit { artifact_mutations: operations, config_mutations, coalesce_key, ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, window_config_mutations, coalesce_key, ..Default::default() })
 }
 
 //#region 🧪️Tests

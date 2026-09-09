@@ -86,7 +86,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Nakagin Capsule Tower model
-    Given the real capsule tower model local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower model shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio
     When the <id> mutation is applied to the model parsed from it
       """
       <mutation>
@@ -109,7 +109,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real Nakagin Capsule Tower model
-    Given the real capsule tower model local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower model shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio
     When the no-mutation mutation is applied to the model parsed from it
       """
       {"mutation":"noMutation"}
@@ -120,7 +120,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real Nakagin Capsule Tower model
-    Given the real capsule tower model local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower model shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio
     When the <id> mutation is applied to the model parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -143,7 +143,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real Nakagin Capsule Tower model
-    Given the real capsule tower model local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule tower model shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio
     When the no-mutation mutation is applied to the model parsed from it and each side undoes it with its own computed inverse
       """
       {"mutation":"noMutation"}
@@ -156,9 +156,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo building
     Given the committed specification fixtures for the <id> kind
       | role     | fixture                     |
-      | before   | local://<fixture>/⬅️before/🔣️.json   |
-      | mutation | local://<fixture>/🦠️mutation/🔣️.json |
-      | after    | local://<fixture>/➡️after/🔣️.json    |
+      | before   | shared://🏛️mutate-semio-model/<fixture>/⬅️before/🔣️.json   |
+      | mutation | shared://🏛️mutate-semio-model/<fixture>/🦠️mutation/🔣️.json |
+      | after    | shared://🏛️mutate-semio-model/<fixture>/➡️after/🔣️.json    |
     When both implementations apply the committed mutation to the committed before-snapshot and undo it again
     Then each reaches the committed after-snapshot, each returns to the before-snapshot, and the two agree
     Examples:
@@ -179,9 +179,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo building and of the real capsule tower from the parsed documents
-    Given the real committed text artifact asset://📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/🏢️building/🖼️assets/🎒️.pack.semio
-    And the real capsule tower model local://📝️nakagin-capsule-tower.dsl.semio
-    And its binary twin local://📦️nakagin-capsule-tower.pack.semio
+    Given the real committed text artifact asset://🏢️building/🗣️.dsl.semio
+    And its committed binary twin asset://🏢️building/🎒️.pack.semio
+    And the real capsule tower model shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio
+    And its binary twin shared://🏛️mutate-semio-model/📦️nakagin-capsule-tower.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on the documents and on the digests of what they emitted

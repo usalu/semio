@@ -1,10 +1,10 @@
 
 use super::*;
-use crate::fixtures;
+use crate::testkit;
 
 #[test]
 fn compiling_the_same_source_twice_is_byte_identical() {
-    let source = fixtures::note_and_cad_source();
+    let source = testkit::note_and_cad_source();
     let first = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let second = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     assert_eq!(first.hash, second.hash);
@@ -13,7 +13,7 @@ fn compiling_the_same_source_twice_is_byte_identical() {
 
 #[test]
 fn entries_are_sorted_by_id() {
-    let source = fixtures::note_and_cad_source();
+    let source = testkit::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let ids: Vec<&str> = catalog.entries.iter().map(|entry| entry.id.as_str()).collect();
     let mut sorted = ids.clone();
@@ -25,7 +25,7 @@ fn entries_are_sorted_by_id() {
 /// capability ids — a bare action id is never a capability id.
 #[test]
 fn two_plugins_declaring_the_same_action_id_compile_to_distinct_capability_ids() {
-    let source = fixtures::colliding_action_id_source();
+    let source = testkit::colliding_action_id_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles distinct ids without error");
     assert!(catalog.get("plugin-a.surface.deleteSelection").is_some());
     assert!(catalog.get("plugin-b.surface.deleteSelection").is_some());
@@ -34,7 +34,7 @@ fn two_plugins_declaring_the_same_action_id_compile_to_distinct_capability_ids()
 
 #[test]
 fn cad_translate_selection_compiles_with_the_dxyz_input_schema() {
-    let source = fixtures::note_and_cad_source();
+    let source = testkit::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let capability = catalog.get("cad.editor.translateSelection").expect("translateSelection present");
     assert_eq!(capability.kind, CapabilityKind::Mutation);
@@ -46,7 +46,7 @@ fn cad_translate_selection_compiles_with_the_dxyz_input_schema() {
 
 #[test]
 fn framework_actions_dedupe_into_one_entry_per_id_across_both_apps() {
-    let source = fixtures::note_and_cad_source();
+    let source = testkit::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
     let framework_undo_count = catalog.entries.iter().filter(|entry| entry.id.as_str() == "framework.undo").count();
     assert_eq!(framework_undo_count, 1);
@@ -55,7 +55,7 @@ fn framework_actions_dedupe_into_one_entry_per_id_across_both_apps() {
 
 #[test]
 fn duplicate_capability_id_is_rejected() {
-    let mut source = fixtures::note_and_cad_source();
+    let mut source = testkit::note_and_cad_source();
     let duplicate = source.gateway.first().cloned();
     if let Some(capability) = duplicate {
         source.gateway.push(capability);

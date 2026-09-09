@@ -36,6 +36,6 @@ impl Deserializer<EquationSnapshot> for CsvIntoEquation {
             })
             .collect();
         let graph = EquationGraph { directed: true, nodes, edges: Vec::new(), algorithm: "topo".into(), algorithm_seed: None };
-        Ok(IoOutcome::clean(equation_snapshot_with_state(graph, EquationGeometry { points: Vec::new() })))
+        Ok(IoOutcome::clean(equation_snapshot_with_state(&graph, &EquationGeometry { points: Vec::new() })))
     }
 }

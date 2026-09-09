@@ -441,7 +441,7 @@ pub fn project_bmp_mutation(_input: &[u8]) -> Result<Json, String> {
 /// 🧫️ One-off real-world fixture derivation. NOT a test step — `#[ignore]`d, run once by hand, the
 /// same convention as the TIFF subset's own `derive_real_world_fixture`. Builds the committed
 /// `shared://🏛️rathaus-ahlen-grundriss/🖼️.bmp` out of the real
-/// `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.png`: the
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png`: the
 /// independent `png` decoder recovers that file's genuine 233-entry PLTE and its real index buffer,
 /// and the `image` reference encoder writes both back as an 8-bit indexed BITMAPINFOHEADER.
 ///

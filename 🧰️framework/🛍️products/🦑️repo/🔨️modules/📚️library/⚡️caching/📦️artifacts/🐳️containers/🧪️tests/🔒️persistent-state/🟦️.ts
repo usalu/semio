@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 /** 🔒️ Keeps container restarts from deleting persisted source-control and database state. */
 export function testContainerPersistentState(workspace: string, native = false): void {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), source = readFileSync(join(workspace, fixture.path), "utf8");
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️persistent-state/🔣️.json"), "utf8")), source = readFileSync(join(workspace, fixture.path), "utf8");
   const matches = fixture.forbidden.filter((command: string) => source.includes(command));
   assert.deepEqual(matches, createRequire(import.meta.url)("lodash").filter(fixture.forbidden, (command: string) => source.includes(command)));
   assert.deepEqual(matches, fixture.expected, "Container restarts must preserve existing source-control and database state");

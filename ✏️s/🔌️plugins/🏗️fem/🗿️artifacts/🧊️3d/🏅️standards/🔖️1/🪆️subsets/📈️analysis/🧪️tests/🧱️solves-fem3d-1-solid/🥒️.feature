@@ -32,14 +32,14 @@ Feature: Hold fem3d's meshed-solid answer to an independent 3D continuum library
   WHAT IS COMPARED. The pressure case's top-face shortening at six significant figures, which both
   implementations reach exactly; the self-weight case as the shared five-percent verdict against the
   closed form. The displacements themselves are asserted numerically by the subject against
-  `local://📊️expected.results.json`, which this case's reference produced with scikit-fem.
+  `shared://🧱️solves-fem3d-1-solid/📊️expected.results.json`, which this case's reference produced with scikit-fem.
 
   @id-solid
   @level-exhaustive
   @mode-differential
   Scenario Outline: The <id> under top pressure and its own weight answers as the continuum does
-    Given the committed model local://<fixture>
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🧱️solves-fem3d-1-solid/<fixture>
+    And the committed reference shared://🧱️solves-fem3d-1-solid/📊️expected.results.json
     When both implementations solve it as a three-dimensional elastic continuum
     Then they agree on the pressure case's top shortening to six significant figures, both land on −pH/E and within five percent of −ρgH²/2E, and the subject is within 5e-2 relative of the reference's own self-weight answer
     Examples:

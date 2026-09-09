@@ -61,33 +61,33 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 
 # 🗺️ kind -> (declared-fixture root, wire tag). The wire tag is the externally-tagged key each
 # committed `🦠️mutation/🔣️.json` uses at its top level — read literally off the committed files,
 # never invented.
 VECTORS = {
-    "rename-layout": (f"{_ROOT}/✏️rename-layout/🧪️tests/🏷️renames-the-document", "RenameLayout"),
+    "rename-layout": (f"{_ROOT}/✏️rename-layout/🏷️renames-the-document", "RenameLayout"),
     "change-print-target": (f"{_ROOT}/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target", "ChangePrintTarget"),
     "change-data-fields": (f"{_ROOT}/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload", "ChangeDataFields"),
-    "create-page": (f"{_ROOT}/🌱create-page/🧪️tests/➕️appends-page-3", "CreatePage"),
-    "delete-page": (f"{_ROOT}/🗑️delete-page/🧪️tests/🚫️removes-page-2", "DeletePage"),
-    "rename-page": (f"{_ROOT}/🏷️rename-page/🧪️tests/🏷️renames-page-1", "RenamePage"),
-    "change-page-width": (f"{_ROOT}/↔️change-page-width/🧪️tests/↔️widens-page-1", "ChangePageWidth"),
-    "change-page-height": (f"{_ROOT}/↕️change-page-height/🧪️tests/↕️lengthens-page-1", "ChangePageHeight"),
+    "create-page": (f"{_ROOT}/🌱create-page/➕️appends-page-3", "CreatePage"),
+    "delete-page": (f"{_ROOT}/🗑️delete-page/🚫️removes-page-2", "DeletePage"),
+    "rename-page": (f"{_ROOT}/🏷️rename-page/🏷️renames-page-1", "RenamePage"),
+    "change-page-width": (f"{_ROOT}/↔️change-page-width/↔️widens-page-1", "ChangePageWidth"),
+    "change-page-height": (f"{_ROOT}/↕️change-page-height/↕️lengthens-page-1", "ChangePageHeight"),
     "update-page-margins": (f"{_ROOT}/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1", "UpdatePageMargins"),
     "update-page-columns": (f"{_ROOT}/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns", "UpdatePageColumns"),
-    "reorder-pages": (f"{_ROOT}/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2", "ReorderPages"),
-    "create-story": (f"{_ROOT}/📖create-story/🧪️tests/📖️appends-story-3", "CreateStory"),
-    "delete-story": (f"{_ROOT}/📕delete-story/🧪️tests/🚫️removes-story-2", "DeleteStory"),
-    "edit-story": (f"{_ROOT}/✍️edit-story/🧪️tests/📝️rewrites-story-1-body", "EditStory"),
-    "create-link": (f"{_ROOT}/🖇️create-link/🧪️tests/🔗️appends-link-3", "CreateLink"),
-    "delete-link": (f"{_ROOT}/✂️delete-link/🧪️tests/🔗️removes-link-2", "DeleteLink"),
+    "reorder-pages": (f"{_ROOT}/🔀reorder-pages/🔀️moves-page-1-behind-page-2", "ReorderPages"),
+    "create-story": (f"{_ROOT}/📖create-story/📖️appends-story-3", "CreateStory"),
+    "delete-story": (f"{_ROOT}/📕delete-story/🚫️removes-story-2", "DeleteStory"),
+    "edit-story": (f"{_ROOT}/✍️edit-story/📝️rewrites-story-1-body", "EditStory"),
+    "create-link": (f"{_ROOT}/🖇️create-link/🔗️appends-link-3", "CreateLink"),
+    "delete-link": (f"{_ROOT}/✂️delete-link/🔗️removes-link-2", "DeleteLink"),
     "change-link-path": (f"{_ROOT}/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file", "ChangeLinkPath"),
     "create-frame": (f"{_ROOT}/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1", "CreateFrame"),
     "delete-frame": (f"{_ROOT}/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership", "DeleteFrame"),
-    "move-frame": (f"{_ROOT}/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame", "MoveFrame"),
-    "resize-frame": (f"{_ROOT}/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame", "ResizeFrame"),
+    "move-frame": (f"{_ROOT}/🕹️move-frame/📍️moves-the-rect-frame", "MoveFrame"),
+    "resize-frame": (f"{_ROOT}/📏resize-frame/📐️resizes-the-rect-frame", "ResizeFrame"),
     "change-frame-fill": (f"{_ROOT}/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill", "ChangeFrameFill"),
     "change-frame-stroke": (f"{_ROOT}/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame", "ChangeFrameStroke"),
     "change-frame-wrap-mode": (f"{_ROOT}/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap", "ChangeFrameWrapMode"),

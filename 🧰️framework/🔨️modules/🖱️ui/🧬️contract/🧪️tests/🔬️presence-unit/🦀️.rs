@@ -7,7 +7,7 @@ use crate::schema_metadata::{ContractFixture, ContractFixtureFlags};
 /// which is what proves the three own-presence flags stay separate rather than collapsing into one.
 #[test]
 fn presence_overlay_fixture_preserves_separate_own_flags() {
-    const FIXTURE: &str = include_str!("../../🧪️fixtures/👥️presence-overlay.json");
+    const FIXTURE: &str = include_str!("../../🧫️fixtures/👥️presence-overlay.json");
     let fixture: ContractFixture = serde_json::from_str(FIXTURE).unwrap();
     let wire: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
     assert_eq!(fixture.cases.len(), 4);

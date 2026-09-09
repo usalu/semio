@@ -1,7 +1,7 @@
 //! 🧵️ Query execution and its transient result share one retained operation owner.
 
-use crate::editor::jack::config::JackConfigMutation;
-use crate::editor::jack::transient::{JackTransientMutation, ReplaceQueryResult};
+use crate::editor::jack::query_window_config::{JackEditorWindowConfigMutation, JackEditorWindowConfigOwner, SetQuery};
+use crate::editor::jack::transient::{JackResultsWindowTransientMutation, JackResultsWindowTransientOwner, ReplaceQueryResult};
 use crate::editor::jack::{TrinityJackCommand, TrinityJackPlayApp};
 use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -16,7 +16,7 @@ const QUERY_BYTES: usize = 4_096;
 const QUERY_CHECKPOINT_BYTES: usize = 32;
 const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 * 16_384 + 1_000_000;
 const PAYLOAD_SCHEMA: &str = "trinity.jack.query-command.v1";
-const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient];
+const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient];
 
 pub(crate) struct JackQueryJobFactory {
     keys: Vec<ToolFactoryKey>,
@@ -75,6 +75,45 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
     if tool != request.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
         return Err(Fault::from("query command does not match its exact factory key"));
     }
+    let view = request.context.view_state.as_ref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
+    let editor_window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("Jack query execution requires its originating editor window"))?;
+    let editor_kind = view.window_instances.iter().find(|window| window.id == editor_window_id).map(|window| window.window_kind_id.as_str());
+    if editor_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_EDITOR) {
+        return Err(Fault::from("Jack query execution origin must be an attached editor window"));
+    }
+    let results_window_id = match request.command.as_ref() {
+        TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => results_window_id.as_str(),
+        _ => return Err(Fault::from("Jack query execution requires an explicit results-window target")),
+    };
+    let results_kind = view.window_instances.iter().find(|window| window.id == results_window_id).map(|window| window.window_kind_id.as_str());
+    if results_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_RESULTS) {
+        return Err(Fault::from("Jack query execution target must be an attached results window"));
+    }
+    if request
+        .context
+        .window_transient
+        .as_ref()
+        .filter(|window| window.window_id() == results_window_id)
+        .and_then(|window| window.get::<JackResultsWindowTransientOwner>())
+        .is_none()
+    {
+        return Err(Fault::from("Jack query execution requires the exact targeted results-window transient snapshot"));
+    }
+    let editor_config = request
+        .context
+        .window_config
+        .as_ref()
+        .filter(|window| window.window_id() == editor_window_id)
+        .and_then(|window| window.get::<JackEditorWindowConfigOwner>())
+        .ok_or_else(|| Fault::from("Jack query execution requires the exact originating editor-window config snapshot"))?;
+    let source = match request.command.as_ref() {
+        TrinityJackCommand::RunQuery { query, .. } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&editor_config.jack_query),
+        TrinityJackCommand::LoadExampleQuery { query, .. } => query,
+        _ => unreachable!(),
+    };
+    if source.len() > QUERY_BYTES {
+        return Err(Fault::from("query source exceeds its admitted capacity"));
+    }
     let operation = AppOperationContext {
         app_instance_id: request.app_instance_id,
         parent_document_id: request.parent_document_id.clone(),
@@ -82,7 +121,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
     };
-    let work = Box::new(JackQueryWork::new(tool, operation.operation_id, operation.generation));
+    let work = Box::new(JackQueryWork::new(tool, source.to_string(), editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
@@ -106,6 +145,8 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
 struct JackQueryWork {
     tool: &'static str,
     source: Option<String>,
+    editor_window_id: Option<String>,
+    results_window_id: Option<String>,
     preparation: Option<crate::executor::QueryExecutionPreparation>,
     execution: Option<crate::executor::QueryExecution>,
     operation_id: u64,
@@ -117,8 +158,8 @@ struct JackQueryWork {
 }
 
 impl JackQueryWork {
-    fn new(tool: &'static str, operation_id: u64, generation: u64) -> Self {
-        Self { tool, source: None, preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false }
+    fn new(tool: &'static str, source: String, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
+        Self { tool, source: Some(source), editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false }
     }
 
     fn identity(&self) -> u64 {
@@ -127,7 +168,8 @@ impl JackQueryWork {
             "loadExampleQuery" => 0x6c6f_6164_5175_6572,
             _ => 0,
         };
-        tool ^ self.operation_id.rotate_left(19) ^ self.generation.rotate_left(41)
+        let fold = |seed: u64, value: Option<&String>| value.map_or(seed, |value| value.bytes().fold(seed, |digest, byte| digest.rotate_left(5) ^ u64::from(byte)));
+        fold(fold(tool ^ self.operation_id.rotate_left(19) ^ self.generation.rotate_left(41), self.editor_window_id.as_ref()), self.results_window_id.as_ref())
     }
 
     fn progress(&mut self, stage: &'static str, preview: &'static [u8]) -> ArtifactCommandWorkStep<Owner> {
@@ -151,11 +193,21 @@ impl JackQueryWork {
     ) -> ArtifactCommandWorkStep<Owner> {
         self.finished = true;
         ArtifactCommandWorkStep::CompleteWithEphemeral {
-            emit: Emit { artifact_mutations: mutations, config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: self.source.as_ref().expect("query source is retained").clone() })], ..Default::default() },
+            emit: Emit {
+                artifact_mutations: mutations,
+                window_config_mutations: vec![semio_framework_plugin::WindowConfigMutation::of::<JackEditorWindowConfigOwner>(
+                    self.editor_window_id.as_ref().expect("editor window id is retained"),
+                    JackEditorWindowConfigMutation::SetQuery(SetQuery { value: self.source.as_ref().expect("query source is retained").clone() }),
+                )],
+                ..Default::default()
+            },
             ephemeral: EphemeralEmit {
                 presence: Vec::new(),
-                transient: vec![JackTransientMutation::ReplaceQueryResult(ReplaceQueryResult { execution_id: Some(input.operation.operation_id.to_string()), result, error })],
-                window_transient: Vec::new(),
+                transient: Vec::new(),
+                window_transient: vec![semio_framework_plugin::WindowTransientMutation::of::<JackResultsWindowTransientOwner>(
+                    self.results_window_id.as_ref().expect("results window id is retained"),
+                    JackResultsWindowTransientMutation::ReplaceQueryResult(ReplaceQueryResult { execution_id: Some(input.operation.operation_id.to_string()), result, error }),
+                )],
             },
         }
     }
@@ -170,8 +222,8 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
     }
     fn extent(&self, command: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, _context: Option<&ArtifactOwnedToolJobContext<Owner>>) -> Option<usize> {
         let bytes = match command {
-            TrinityJackCommand::RunQuery { query } => query.as_ref().map_or(0, String::len),
-            TrinityJackCommand::LoadExampleQuery { query } => query.len(),
+            TrinityJackCommand::RunQuery { query, results_window_id } => query.as_ref().map_or(0, String::len).saturating_add(results_window_id.len()),
+            TrinityJackCommand::LoadExampleQuery { query, results_window_id } => query.len().saturating_add(results_window_id.len()),
             _ => return None,
         };
         let scene = snapshot.content.local_owner::<crate::JackWorkingScene>()?;
@@ -183,18 +235,6 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
         }
         if input.operation.operation_id != self.operation_id || input.operation.generation != self.generation {
             return Err(Fault::from("query operation owner changed"));
-        }
-        if self.source.is_none() {
-            let source = match input.command {
-                TrinityJackCommand::RunQuery { query } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&input.config.jack_query),
-                TrinityJackCommand::LoadExampleQuery { query } => query,
-                _ => return Err(Fault::from("query operation command is invalid")),
-            };
-            if source.len() > QUERY_BYTES {
-                return Err(Fault::from("query source exceeds its admitted capacity"));
-            }
-            self.source = Some(source.to_string());
-            return Ok(self.progress("query-source", br#"{"en":"Reading query","de":"Abfrage wird gelesen"}"#));
         }
         if self.preparation.is_none() && self.execution.is_none() {
             match crate::core::parse(self.source.as_ref().expect("query source is retained")) {
@@ -232,7 +272,7 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
         Ok(QUERY_CHECKPOINT_BYTES)
     }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
-        if checkpoint.len() != QUERY_CHECKPOINT_BYTES || &checkpoint[..4] != b"JQR2" || checkpoint[4..8] != [0, 0, 0, 0] || self.source.is_some() || self.preparation.is_some() || self.execution.is_some() || self.progress != 0 {
+        if checkpoint.len() != QUERY_CHECKPOINT_BYTES || &checkpoint[..4] != b"JQR2" || checkpoint[4..8] != [0, 0, 0, 0] || self.source.is_none() || self.editor_window_id.is_none() || self.results_window_id.is_none() || self.preparation.is_some() || self.execution.is_some() || self.progress != 0 {
             return Err(Fault::from("query checkpoint is invalid for this workspace"));
         }
         let progress = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("query checkpoint progress"))?);
@@ -287,10 +327,26 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             drop(self.source.take());
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
         }
+        if let Some(window_id) = self.editor_window_id.as_ref() {
+            if window_id.len() > maximum_bytes {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            let released_bytes = window_id.len();
+            drop(self.editor_window_id.take());
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
+        if let Some(window_id) = self.results_window_id.as_ref() {
+            if window_id.len() > maximum_bytes {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            let released_bytes = window_id.len();
+            drop(self.results_window_id.take());
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.execution.is_none() && self.preparation.is_none() && self.source.is_none()
+        self.closing && self.execution.is_none() && self.preparation.is_none() && self.source.is_none() && self.editor_window_id.is_none() && self.results_window_id.is_none()
     }
 }
 
@@ -306,13 +362,13 @@ mod tests {
 
     #[test]
     fn query_ownership_checkpoint_binds_exact_operation_and_generation() {
-        let mut first = JackQueryWork::new("runQuery", 501, 12);
+        let mut first = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 501, 12);
         first.progress = 37;
         let bytes = checkpoint(&first);
-        let mut exact = JackQueryWork::new("runQuery", 501, 12);
+        let mut exact = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 501, 12);
         <JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut exact, &bytes).expect("exact owner restores");
         assert_eq!(exact.replay_target, Some(37));
-        let mut xor_collision = JackQueryWork::new("runQuery", 4_194_805, 13);
+        let mut xor_collision = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 4_194_805, 13);
         assert_eq!(first.identity(), xor_collision.identity(), "fixture reproduces the old XOR collision");
         assert!(<JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut xor_collision, &bytes).is_err());
         eprintln!("[DEBUG] Jack query checkpoint rejects the prior operation/generation XOR collision");
@@ -320,15 +376,15 @@ mod tests {
 
     #[test]
     fn query_ownership_checkpoint_accepts_legal_long_scan_progress() {
-        let mut source = JackQueryWork::new("runQuery", 700, 21);
+        let mut source = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 700, 21);
         source.progress = 1_000_001;
         let bytes = checkpoint(&source);
-        let mut restored = JackQueryWork::new("runQuery", 700, 21);
+        let mut restored = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 700, 21);
         <JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut restored, &bytes).expect("legal long scan restores");
         assert_eq!(restored.replay_target, Some(1_000_001));
         source.progress = QUERY_REPLAY_MAXIMUM_STEPS + 1;
         let rejected = checkpoint(&source);
-        let mut target = JackQueryWork::new("runQuery", 700, 21);
+        let mut target = JackQueryWork::new("runQuery", "RETURN 1".into(), "editor".into(), "results".into(), 700, 21);
         assert!(<JackQueryWork as ArtifactCommandWork<Owner>>::restore(&mut target, &rejected).is_err());
         eprintln!("[DEBUG] Jack query checkpoint admits legal scans above one million and rejects progress beyond the derived admission");
     }

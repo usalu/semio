@@ -1495,7 +1495,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
  * across playgrounds), kept as a literal baseline rather than per-plugin metadata. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
   { kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🧫️fixtures" },
-  { kind: "static-dir", route: "/infinite-fixture", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" },
+  { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },
 ];
 //#endregion 🔖️StaticDirAssetPlugin
 

@@ -7,6 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
+#[derive(Default)]
 pub struct Fem2dArtifact {
     #[state(artifact)]
     pub nodes: Vec<FemNode>,
@@ -30,21 +31,7 @@ pub struct Fem2dArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-impl Default for Fem2dArtifact {
-    fn default() -> Self {
-        Self {
-            nodes: Default::default(),
-            elements: Default::default(),
-            regions: Default::default(),
-            materials: Default::default(),
-            sections: Default::default(),
-            supports: Default::default(),
-            load_cases: Default::default(),
-            combinations: Default::default(),
-            analysis: Default::default(),
-        }
-    }
-}
+
 
 impl Fem2dArtifact {
     /// 📸️ Persisted subset.
@@ -74,7 +61,7 @@ impl Fem2dArtifact {
             load_cases: snapshot.load_cases,
             combinations: snapshot.combinations,
             analysis: snapshot.analysis,
-            ..Self::default()
+
         }
     }
 

@@ -56,7 +56,7 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-quick
   @mode-differential
   Scenario Outline: Case <case> model states what ANSI/ASHRAE 140 §5.2 states
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
     When both implementations derive the case parameters the standard publishes from that model alone
     Then the areas, air-to-air U-values, glazing, infiltration rate, internal gain and ground temperature agree
     Examples:
@@ -80,9 +80,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-long
   @mode-differential
   Scenario Outline: Case <case> annual heating and cooling agree with EnergyPlus
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
-    And the committed annual weather asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw
-    And the committed EnergyPlus reference asset://🧫️fixtures/🏛️bestest-<case>/🔮️energyplus.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
+    And the committed annual weather shared://🌦️denver-tmy/🌦️.epw
+    And the committed EnergyPlus reference shared://🏛️bestest-<case>/🔮️energyplus.json
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the annual heating and cooling energies agree within the declared tolerance
     Examples:
@@ -100,9 +100,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-long
   @mode-differential
   Scenario Outline: Case <case> peak heating and cooling agree with EnergyPlus
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
-    And the committed annual weather asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw
-    And the committed EnergyPlus reference asset://🧫️fixtures/🏛️bestest-<case>/🔮️energyplus.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
+    And the committed annual weather shared://🌦️denver-tmy/🌦️.epw
+    And the committed EnergyPlus reference shared://🏛️bestest-<case>/🔮️energyplus.json
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the peak heating and cooling demands agree within the declared tolerance
     Examples:
@@ -114,9 +114,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-long
   @mode-differential
   Scenario Outline: Case <case> free-float zone temperatures agree with EnergyPlus
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
-    And the committed annual weather asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw
-    And the committed EnergyPlus reference asset://🧫️fixtures/🏛️bestest-<case>/🔮️energyplus.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
+    And the committed annual weather shared://🌦️denver-tmy/🌦️.epw
+    And the committed EnergyPlus reference shared://🏛️bestest-<case>/🔮️energyplus.json
     When both implementations simulate the unconditioned case model for a full year at an hourly zone timestep
     Then the annual minimum, maximum and mean zone air temperatures agree within the declared tolerance
     Examples:
@@ -128,9 +128,9 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-exhaustive
   @mode-differential
   Scenario Outline: Case <case> hourly zone air temperature tracks EnergyPlus
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
-    And the committed annual weather asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw
-    And the committed EnergyPlus reference asset://🧫️fixtures/🏛️bestest-<case>/🔮️energyplus.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
+    And the committed annual weather shared://🌦️denver-tmy/🌦️.epw
+    And the committed EnergyPlus reference shared://🏛️bestest-<case>/🔮️energyplus.json
     When both implementations simulate the committed case model for a full year at an hourly zone timestep
     Then the root-mean-square difference across all 8760 hourly zone air temperatures is within the declared tolerance
     Examples:
@@ -143,6 +143,6 @@ Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare th
   @level-quick
   @mode-round-trip
   Scenario: The committed case models are exactly what the case builders produce
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-600/🔋️model.json
+    Given the committed case model shared://🏛️bestest-600/🔋️model.json
     When the committed model is decoded through this subset's own canonical JSON and re-encoded
     Then the re-encoded bytes are identical and the decoded model equals the registered case builder's own output

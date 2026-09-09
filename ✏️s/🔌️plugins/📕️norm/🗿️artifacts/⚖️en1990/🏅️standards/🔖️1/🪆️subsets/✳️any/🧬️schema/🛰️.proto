@@ -1,13 +1,11 @@
 syntax = "proto3";
 package semio.s.norm.en1990.artifact;
-
-// 🧬️ En1990 artifact schema — every field with its state class.
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message En1990Artifact {
   // @state artifact
   double g_k = 1;
   // @state artifact
-  repeated En1990QkEntry q_k = 2;
+  semio.os.store.ArtifactChild q_k = 2;
   // @state artifact
   double resistance_kn = 3;
   // @state artifact
@@ -16,9 +14,4 @@ message En1990Artifact {
   string annex = 5;
   // @state artifact
   double seismic_a_ed_kn = 6;
-}
-
-message En1990QkEntry {
-  string category = 1;
-  double value = 2;
 }

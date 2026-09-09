@@ -186,6 +186,7 @@ fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interactio
     (bytes <= VCS_BOUNDED_RAW_BYTES).then_some(VCS_BOUNDED_WORK_ITEMS)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn vcs_bounded_reduce(
     command: &VcsCommand,
     snapshot: &VcsSnapshot,

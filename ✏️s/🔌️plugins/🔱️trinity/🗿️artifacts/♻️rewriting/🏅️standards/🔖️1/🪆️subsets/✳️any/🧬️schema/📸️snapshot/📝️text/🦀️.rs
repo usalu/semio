@@ -12,7 +12,7 @@ use store::ArtifactDsl;
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewriting` DSL — mirrors the
 /// `trinity-rewriting` app's own real default rule over a trimmed two-node/one-edge slice of the
 /// bundled `🔱️nakagin-capsule-tower.trinity` before-fixture.
-pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.rewriting` DSL text into a `RewritingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RewritingSnapshot, store::TextError> {

@@ -611,6 +611,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔄️retypes-a-map-1c7a17/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔄️retypes-a-map-member-and-repoints-a-graph-node/🦀️.rs"]
 mod set_snapshot_retypes_a_map_member_and_repoints_a_graph_node;
 //#endregion 🧪️FixtureCases

@@ -11,7 +11,7 @@ use crate::En1997Snapshot;
 /// 📄️ The `default` example document, handcrafted in the `.en1997` DSL — a shallow footing +
 /// pile worked example (bearing, sliding, settlement, pile axial, ground investigation depth)
 /// under the DE national annex, DA1-C1 design approach.
-pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1997` DSL text into a `En1997Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, store::TextError> {

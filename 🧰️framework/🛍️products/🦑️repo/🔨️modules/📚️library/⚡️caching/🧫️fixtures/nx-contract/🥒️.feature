@@ -10,6 +10,32 @@ Feature: Correct Nx cache contracts
     When Nx resolves the project
     Then the target is uncached
 
+  Scenario: Deterministic commands are cacheable
+    Given a test, lint, build, generate, verify, format-check, test-exhaustive, or contract target
+    When Nx resolves the project
+    Then the target is cached
+    And native Nx isCacheableTask agrees
+    And authored cache false cannot keep the target uncached
+    And a verify subcommand whose target name omits verify stays cached
+    And live e2e and report verify commands stay uncached
+
+  Scenario: Format check is not uncached by the format prefix
+    Given format-check and format targets
+    When Nx resolves the project
+    Then format-check is cached
+    And format stays uncached
+
+  Scenario: Workspace root does not deny cache
+    Given a workspace-root project declares the policy targets
+    When Nx discovers the project without targetDefaults
+    Then deterministic targets remain cached
+    And format, setup, publish, live servers, and generator-inputs stay uncached
+
+  Scenario: Generator discovery and freshness stay live
+    Given generator-inputs or a required checkTarget freshness guard
+    When Nx resolves the project
+    Then those targets stay uncached
+
   Scenario: Continuous tasks own a live process
     Given a development or watch target
     When Nx resolves the project

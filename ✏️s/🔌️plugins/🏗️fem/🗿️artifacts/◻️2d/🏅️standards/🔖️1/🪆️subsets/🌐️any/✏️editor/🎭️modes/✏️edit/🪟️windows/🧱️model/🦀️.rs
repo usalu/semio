@@ -912,7 +912,7 @@ impl Fem2dVisualJob {
 }
 //#endregion 🧵️MountedVisualJob
 
-fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::json::Value {
+fn vector_layer(id: &str, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::json::Value {
     dsl::json!({
         "kind": "polyline",
         "id": id,
@@ -956,8 +956,8 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
     for field in fields {
         let Some(node) = find_node_2d(&doc.nodes, &field.node_id) else { continue };
         let origin = screen_2d(node.x, node.y);
-        layers.push(vector_layer(format!("displacement-field-{}", field.node_id), origin, [field.displacement[0] * SCALE_2D, field.displacement[1] * SCALE_2D], "#f472b6"));
-        layers.push(vector_layer(format!("residual-field-{}", field.node_id), origin, field.residual, "#eab308"));
+        layers.push(vector_layer(&format!("displacement-field-{}", field.node_id), origin, [field.displacement[0] * SCALE_2D, field.displacement[1] * SCALE_2D], "#f472b6"));
+        layers.push(vector_layer(&format!("residual-field-{}", field.node_id), origin, field.residual, "#eab308"));
     }
     let status = if visual.validated_final {
         "validated-final"
@@ -1045,13 +1045,13 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line
                         FemDof::Ty => [0.0, value.signum() * 18.0],
                         _ => [0.0, -12.0],
                     };
-                    layers.push(vector_layer(format!("load-{id}"), screen_2d(node.x, node.y), vector, "#ef4444"));
+                    layers.push(vector_layer(&format!("load-{id}"), screen_2d(node.x, node.y), vector, "#ef4444"));
                 }
                 FemLoad::MemberUdl { id, element_id: target, wx, wy } => {
                     let Some(element) = doc.elements.iter().find(|element| element_id(element) == target) else { continue };
                     let (start, end) = fem2d_element_endpoints(element);
                     let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
-                    layers.push(vector_layer(format!("load-{id}"), screen_2d((a.x + b.x) * 0.5, (a.y + b.y) * 0.5), [wx.signum() * 18.0, wy.signum() * 18.0], "#ef4444"));
+                    layers.push(vector_layer(&format!("load-{id}"), screen_2d((a.x + b.x) * 0.5, (a.y + b.y) * 0.5), [wx.signum() * 18.0, wy.signum() * 18.0], "#ef4444"));
                 }
                 FemLoad::Area { id, region_id, pressure } => {
                     let Some(region) = doc.regions.iter().find(|region| region.id == *region_id) else { continue };
@@ -1060,7 +1060,7 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line
                     }
                     let center = region.outline.iter().fold([0.0, 0.0], |sum, point| [sum[0] + point[0], sum[1] + point[1]]);
                     let count = region.outline.len() as f64;
-                    layers.push(vector_layer(format!("load-{id}"), screen_2d(center[0] / count, center[1] / count), [0.0, -pressure.signum() * 18.0], "#ef4444"));
+                    layers.push(vector_layer(&format!("load-{id}"), screen_2d(center[0] / count, center[1] / count), [0.0, -pressure.signum() * 18.0], "#ef4444"));
                 }
             }
         }
@@ -1145,12 +1145,12 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
         }));
     }
     let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
 pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
 }
 //#endregion 🔖️Render
 

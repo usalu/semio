@@ -9,12 +9,85 @@
     "Grüße 🌍\n\t\"\\",
     [],
     {},
-    {"nodes":[{"id":"a","x":2.5,"y":-4.0,"meta":{"enabled":true,"names":["one","zwei"]}}],"edges":[],"empty":null}
+    {
+      "nodes": [
+        {
+          "id": "a",
+          "x": 2.5,
+          "y": -4.0,
+          "meta": {
+            "enabled": true,
+            "names": [
+              "one",
+              "zwei"
+            ]
+          }
+        }
+      ],
+      "edges": [],
+      "empty": null
+    }
   ],
-  "largeString": {"unit":"🧬ä\n", "repeat":300},
-  "cancellationAfterSteps": [0,1,2,3,4,5,8,13,21,34],
+  "largeString": {
+    "unit": "🧬ä\n",
+    "repeat": 300
+  },
+  "grantSizes": [
+    0,
+    1,
+    7,
+    256
+  ],
+  "cancellationAfterSteps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    13,
+    21,
+    34
+  ],
   "limits": [
-    {"value":"a", "maximumDepth":64, "maximumRetainedBytes":0, "error":"retained-byte-limit"},
-    {"value":[[[null]]], "maximumDepth":3, "maximumRetainedBytes":4096, "error":"depth-limit"}
+    {
+      "value": "a",
+      "maximumDepth": 64,
+      "maximumRetainedBytes": 0,
+      "error": "retained-byte-limit"
+    },
+    {
+      "value": [
+        [
+          [
+            null
+          ]
+        ]
+      ],
+      "maximumDepth": 3,
+      "maximumRetainedBytes": 4096,
+      "error": "depth-limit"
+    }
+  ],
+  "reservationCases": [
+    {
+      "requested": 4,
+      "allocated": 4,
+      "budget": 4,
+      "accepted": true
+    },
+    {
+      "requested": 4,
+      "allocated": 8,
+      "budget": 4,
+      "accepted": false
+    },
+    {
+      "requested": 8,
+      "allocated": 8,
+      "budget": 4,
+      "accepted": false
+    }
   ]
 }

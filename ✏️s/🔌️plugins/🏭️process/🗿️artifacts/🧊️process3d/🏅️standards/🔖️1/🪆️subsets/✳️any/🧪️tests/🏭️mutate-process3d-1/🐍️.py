@@ -37,7 +37,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 #: 🧫️ (triad dir, fixture name, wire tag, is this kind step-scoped/hash-bearing?)
 VECTORS = {
     "create-step": ("🌱create-step", "🪚️accepts-a-rip-cut-step-and-inserts-it", "createStep", True),

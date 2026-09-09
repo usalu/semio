@@ -6,10 +6,10 @@ import { BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepS
 export interface NamedModified<K, D> { key: K; diff: D; }
 export interface NamedTripleDiff<D, T> { removed: string[]; modified: NamedModified<string, D>[]; added: T[]; }
 
-export interface BrepVertexDiff { point?: SemioPoint3; }
-export interface BrepEdgeDiff { startVertex?: string; endVertex?: string; curve?: BrepCurve; }
+export interface BrepVertexDiff { point?: SemioPoint3; tol?: number; }
+export interface BrepEdgeDiff { startVertex?: string; endVertex?: string; curve?: BrepCurve; tol?: number; }
 export interface BrepLoopDiff { edges?: BrepLoopEdge[]; }
-export interface BrepFaceDiff { outerLoop?: string; innerLoops?: string[]; surface?: BrepSurface; orientation?: boolean; }
+export interface BrepFaceDiff { outerLoop?: string; innerLoops?: string[]; surface?: BrepSurface; orientation?: boolean; tol?: number; }
 export interface BrepShellDiff { faces?: BrepShellFace[]; }
 export interface BrepSolidDiff { shells?: BrepSolidShell[]; }
 

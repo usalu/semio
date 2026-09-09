@@ -153,42 +153,43 @@ impl En1992Mutation {
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1992Snapshot) -> Vec<En1992Mutation> {
-        let mut mutations = Vec::with_capacity(35);
-        mutations.push(En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
-        mutations.push(En1992Mutation::ChangeACMm2(change_a_c_mm2::ChangeACMm2 { new_a_c_mm2: snapshot.a_c_mm2 }));
-        mutations.push(En1992Mutation::ChangeAnchorASMm2(change_anchor_a_s_mm2::ChangeAnchorASMm2 { new_anchor_a_s_mm2: snapshot.anchor_a_s_mm2 }));
-        mutations.push(En1992Mutation::ChangeAnchorC1Mm(change_anchor_c1_mm::ChangeAnchorC1Mm { new_anchor_c1_mm: snapshot.anchor_c1_mm }));
-        mutations.push(En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::ChangeAnchorCracked { new_anchor_cracked: snapshot.anchor_cracked }));
-        mutations.push(En1992Mutation::ChangeAnchorDMm(change_anchor_d_mm::ChangeAnchorDMm { new_anchor_d_mm: snapshot.anchor_d_mm }));
-        mutations.push(En1992Mutation::ChangeAnchorFUkMpa(change_anchor_f_uk_mpa::ChangeAnchorFUkMpa { new_anchor_f_uk_mpa: snapshot.anchor_f_uk_mpa }));
-        mutations.push(En1992Mutation::ChangeAnchorFYkMpa(change_anchor_f_yk_mpa::ChangeAnchorFYkMpa { new_anchor_f_yk_mpa: snapshot.anchor_f_yk_mpa }));
-        mutations.push(En1992Mutation::ChangeAnchorHEfMm(change_anchor_h_ef_mm::ChangeAnchorHEfMm { new_anchor_h_ef_mm: snapshot.anchor_h_ef_mm }));
-        mutations.push(En1992Mutation::ChangeAnchorNEdKn(change_anchor_n_ed_kn::ChangeAnchorNEdKn { new_anchor_n_ed_kn: snapshot.anchor_n_ed_kn }));
-        mutations.push(En1992Mutation::ChangeAnchorVEdKn(change_anchor_v_ed_kn::ChangeAnchorVEdKn { new_anchor_v_ed_kn: snapshot.anchor_v_ed_kn }));
-        mutations.push(En1992Mutation::ChangeASMm2(change_a_s_mm2::ChangeASMm2 { new_a_s_mm2: snapshot.a_s_mm2 }));
-        mutations.push(En1992Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: snapshot.b_mm }));
-        mutations.push(En1992Mutation::ChangeBridgeDeltaSigmaSMpa(change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: snapshot.bridge_delta_sigma_s_mpa }));
-        mutations.push(En1992Mutation::ChangeBridgeSigmaCMpa(change_bridge_sigma_c_mpa::ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: snapshot.bridge_sigma_c_mpa }));
-        mutations.push(En1992Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: snapshot.d_mm }));
-        mutations.push(En1992Mutation::ChangeFCk(change_f_ck::ChangeFCk { new_f_ck: snapshot.f_ck }));
-        mutations.push(En1992Mutation::ChangeFYk(change_f_yk::ChangeFYk { new_f_yk: snapshot.f_yk }));
-        mutations.push(En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: snapshot.fire_rating }));
-        mutations.push(En1992Mutation::ChangeHdOverH(change_hd_over_h::ChangeHdOverH { new_hd_over_h: snapshot.hd_over_h }));
-        mutations.push(En1992Mutation::ChangeLiquidESMpa(change_liquid_e_s_mpa::ChangeLiquidESMpa { new_liquid_e_s_mpa: snapshot.liquid_e_s_mpa }));
-        mutations.push(En1992Mutation::ChangeLiquidFCtEffMpa(change_liquid_f_ct_eff_mpa::ChangeLiquidFCtEffMpa { new_liquid_f_ct_eff_mpa: snapshot.liquid_f_ct_eff_mpa }));
-        mutations.push(En1992Mutation::ChangeLiquidRhoPEff(change_liquid_rho_p_eff::ChangeLiquidRhoPEff { new_liquid_rho_p_eff: snapshot.liquid_rho_p_eff }));
-        mutations.push(En1992Mutation::ChangeLiquidSigmaSMpa(change_liquid_sigma_s_mpa::ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: snapshot.liquid_sigma_s_mpa }));
-        mutations.push(En1992Mutation::ChangeLiquidSRMaxMm(change_liquid_s_r_max_mm::ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: snapshot.liquid_s_r_max_mm }));
-        mutations.push(En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm }));
-        mutations.push(En1992Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn }));
-        mutations.push(En1992Mutation::ChangePKn(change_p_kn::ChangePKn { new_p_kn: snapshot.p_kn }));
-        mutations.push(En1992Mutation::ChangeProvidedAxisDistanceMm(change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: snapshot.provided_axis_distance_mm }));
-        mutations.push(En1992Mutation::ChangeRhoL(change_rho_l::ChangeRhoL { new_rho_l: snapshot.rho_l }));
-        mutations.push(En1992Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: snapshot.span_m }));
-        mutations.push(En1992Mutation::ChangeTightnessClass(change_tightness_class::ChangeTightnessClass { new_tightness_class: snapshot.tightness_class }));
-        mutations.push(En1992Mutation::ChangeUdlKnM(change_udl_kn_m::ChangeUdlKnM { new_udl_kn_m: snapshot.udl_kn_m }));
-        mutations.push(En1992Mutation::ChangeUseFem(change_use_fem::ChangeUseFem { new_use_fem: snapshot.use_fem }));
-        mutations.push(En1992Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn }));
+        let mutations = vec![
+            En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }),
+            En1992Mutation::ChangeACMm2(change_a_c_mm2::ChangeACMm2 { new_a_c_mm2: snapshot.a_c_mm2 }),
+            En1992Mutation::ChangeAnchorASMm2(change_anchor_a_s_mm2::ChangeAnchorASMm2 { new_anchor_a_s_mm2: snapshot.anchor_a_s_mm2 }),
+            En1992Mutation::ChangeAnchorC1Mm(change_anchor_c1_mm::ChangeAnchorC1Mm { new_anchor_c1_mm: snapshot.anchor_c1_mm }),
+            En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::ChangeAnchorCracked { new_anchor_cracked: snapshot.anchor_cracked }),
+            En1992Mutation::ChangeAnchorDMm(change_anchor_d_mm::ChangeAnchorDMm { new_anchor_d_mm: snapshot.anchor_d_mm }),
+            En1992Mutation::ChangeAnchorFUkMpa(change_anchor_f_uk_mpa::ChangeAnchorFUkMpa { new_anchor_f_uk_mpa: snapshot.anchor_f_uk_mpa }),
+            En1992Mutation::ChangeAnchorFYkMpa(change_anchor_f_yk_mpa::ChangeAnchorFYkMpa { new_anchor_f_yk_mpa: snapshot.anchor_f_yk_mpa }),
+            En1992Mutation::ChangeAnchorHEfMm(change_anchor_h_ef_mm::ChangeAnchorHEfMm { new_anchor_h_ef_mm: snapshot.anchor_h_ef_mm }),
+            En1992Mutation::ChangeAnchorNEdKn(change_anchor_n_ed_kn::ChangeAnchorNEdKn { new_anchor_n_ed_kn: snapshot.anchor_n_ed_kn }),
+            En1992Mutation::ChangeAnchorVEdKn(change_anchor_v_ed_kn::ChangeAnchorVEdKn { new_anchor_v_ed_kn: snapshot.anchor_v_ed_kn }),
+            En1992Mutation::ChangeASMm2(change_a_s_mm2::ChangeASMm2 { new_a_s_mm2: snapshot.a_s_mm2 }),
+            En1992Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: snapshot.b_mm }),
+            En1992Mutation::ChangeBridgeDeltaSigmaSMpa(change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: snapshot.bridge_delta_sigma_s_mpa }),
+            En1992Mutation::ChangeBridgeSigmaCMpa(change_bridge_sigma_c_mpa::ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: snapshot.bridge_sigma_c_mpa }),
+            En1992Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: snapshot.d_mm }),
+            En1992Mutation::ChangeFCk(change_f_ck::ChangeFCk { new_f_ck: snapshot.f_ck }),
+            En1992Mutation::ChangeFYk(change_f_yk::ChangeFYk { new_f_yk: snapshot.f_yk }),
+            En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: snapshot.fire_rating }),
+            En1992Mutation::ChangeHdOverH(change_hd_over_h::ChangeHdOverH { new_hd_over_h: snapshot.hd_over_h }),
+            En1992Mutation::ChangeLiquidESMpa(change_liquid_e_s_mpa::ChangeLiquidESMpa { new_liquid_e_s_mpa: snapshot.liquid_e_s_mpa }),
+            En1992Mutation::ChangeLiquidFCtEffMpa(change_liquid_f_ct_eff_mpa::ChangeLiquidFCtEffMpa { new_liquid_f_ct_eff_mpa: snapshot.liquid_f_ct_eff_mpa }),
+            En1992Mutation::ChangeLiquidRhoPEff(change_liquid_rho_p_eff::ChangeLiquidRhoPEff { new_liquid_rho_p_eff: snapshot.liquid_rho_p_eff }),
+            En1992Mutation::ChangeLiquidSigmaSMpa(change_liquid_sigma_s_mpa::ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: snapshot.liquid_sigma_s_mpa }),
+            En1992Mutation::ChangeLiquidSRMaxMm(change_liquid_s_r_max_mm::ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: snapshot.liquid_s_r_max_mm }),
+            En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm }),
+            En1992Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn }),
+            En1992Mutation::ChangePKn(change_p_kn::ChangePKn { new_p_kn: snapshot.p_kn }),
+            En1992Mutation::ChangeProvidedAxisDistanceMm(change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: snapshot.provided_axis_distance_mm }),
+            En1992Mutation::ChangeRhoL(change_rho_l::ChangeRhoL { new_rho_l: snapshot.rho_l }),
+            En1992Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: snapshot.span_m }),
+            En1992Mutation::ChangeTightnessClass(change_tightness_class::ChangeTightnessClass { new_tightness_class: snapshot.tightness_class }),
+            En1992Mutation::ChangeUdlKnM(change_udl_kn_m::ChangeUdlKnM { new_udl_kn_m: snapshot.udl_kn_m }),
+            En1992Mutation::ChangeUseFem(change_use_fem::ChangeUseFem { new_use_fem: snapshot.use_fem }),
+            En1992Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn }),
+        ];
         mutations
     }
 }

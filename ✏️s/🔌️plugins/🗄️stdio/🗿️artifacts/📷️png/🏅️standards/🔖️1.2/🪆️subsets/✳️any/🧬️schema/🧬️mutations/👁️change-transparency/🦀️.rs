@@ -47,7 +47,7 @@ pub fn contribute(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-transparency payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/👁️change-transparency/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-transparency payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

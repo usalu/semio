@@ -22,7 +22,7 @@ const KINDS: &[&str] = &["bind-node-child", "bind-scene-root-node", "change-mate
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "local://🌳️base-with-nested-node/🧊️.glb";
+const INPUT: &str = "shared://🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb";
 
 /// 🧫️ Copies the derived-once fixture into the work directory and returns its bytes; the committed
 /// fixture itself is never written to.

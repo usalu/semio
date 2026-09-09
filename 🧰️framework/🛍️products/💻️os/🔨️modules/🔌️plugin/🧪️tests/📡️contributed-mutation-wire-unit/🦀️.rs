@@ -5,7 +5,7 @@ use super::*;
 use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationLeaf, OpBinary};
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
+    serde_json::from_str(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
 }
 
 fn operation(delta: i32) -> WireTestMutation {
@@ -14,7 +14,10 @@ fn operation(delta: i32) -> WireTestMutation {
 
 #[test]
 fn descriptor_and_provenance_are_direct() {
-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON"));
+    assert_eq!(
+        serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)),
+        serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
+    );
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
     assert_eq!(<WireTestMutation as Mutation<WireTestSnapshot>>::DESCRIPTORS, &[AddValue::DESCRIPTOR]);
     assert_eq!(operation(5).descriptor(), &AddValue::DESCRIPTOR);

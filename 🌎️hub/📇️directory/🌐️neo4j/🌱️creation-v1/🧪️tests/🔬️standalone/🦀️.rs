@@ -1,10 +1,10 @@
 //! 🧪️ Real Neo4j genesis acknowledgement, lock-time authority, and recovery ownership laws.
 
-use super::tests::{test_directory, Neo4jContainer};
+use super::tests::{Neo4jContainer, test_directory};
 use super::*;
 use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
-use crate::artifact_authority::creation::{artifact_creation_command_digest_v1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS};
-use crate::artifact_authority::{checkpoint_id_encoding_v1, ArtifactPair};
+use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
+use crate::artifact_authority::{ArtifactPair, checkpoint_id_encoding_v1};
 use crate::directory::published_artifact_checkpoint;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 

@@ -46,12 +46,9 @@ pub(crate) async fn register_content_child(app: &mut FlowApp) {
     app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");
 }
 
-/// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+/// 🧪️ Uses the real registered application so every concrete tool factory has declared authority.
 pub async fn flow_app() -> FlowApp {
-    install_first_party_light_flow_extensions_for_tests();
-    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::new(EditorApp::default()).await;
-    register_content_child(&mut app).await;
-    app
+    flow_app_with_registry().await
 }
 
 /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
@@ -60,6 +57,7 @@ pub async fn flow_app_with_registry() -> FlowApp {
     let definition = create_flow_app();
     let registry = AppActionRegistry::from_definition(&definition);
     let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
+    app.bind_instance_id(meta("local").instance_id).await;
     register_content_child(&mut app).await;
     app
 }

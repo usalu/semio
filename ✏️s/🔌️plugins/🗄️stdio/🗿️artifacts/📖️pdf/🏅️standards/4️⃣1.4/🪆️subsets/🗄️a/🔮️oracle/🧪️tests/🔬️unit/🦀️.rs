@@ -25,7 +25,7 @@ fn every_real_document_feature_row_is_observable_and_invertible() {
 fn language_neutral_direct_vectors_match_independent_lopdf() {
     use crate::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
     use semio_repo_test_host::parse_json;
-    let vectors = [include_str!("../../../🧬️schema/🧬️mutations/📝️set-page-text/🧪️tests/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧬️schema/🧬️mutations/🧹️clear-page-text/🧪️tests/🔄️round-trips-the-concrete-inverse/🔣️.json")];
+    let vectors = [include_str!("../../../🧫️fixtures/🧬️mutations/📝️set-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧫️fixtures/🧬️mutations/🧹️clear-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json")];
     for text in vectors {
         let fixture = parse_json(text).unwrap();
         let to_page = |p: &Json| OraclePage {

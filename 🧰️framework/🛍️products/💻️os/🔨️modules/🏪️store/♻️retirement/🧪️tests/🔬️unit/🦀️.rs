@@ -21,7 +21,7 @@ fn drain(mut retirement: Box<dyn ErasedSnapshotRetirement>, items: usize, bytes:
 
 #[test]
 fn owned_retirement_matches_neutral_exact_byte_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
     for row in fixture["cases"].as_array().unwrap() {
         for budget in fixture["budgets"].as_array().unwrap() {

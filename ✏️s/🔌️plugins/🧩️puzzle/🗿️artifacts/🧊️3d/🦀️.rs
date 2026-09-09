@@ -995,7 +995,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes-object-a-and-ce36fb/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes-object-a-and-severs-attraction/🦀️.rs"]
                                     mod tests_removes_object_a_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1115,7 +1115,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-e60441/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-object-b/🦀️.rs"]
                                     mod tests_appends_vortex_3_to_object_b;
                                 }
                                 #[path = "."]
@@ -1127,7 +1127,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-8436d0/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-and-severs-attraction/🦀️.rs"]
                                     mod tests_removes_vortex_2_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1175,7 +1175,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions-43523e/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions-attraction-1/🦀️.rs"]
                                     mod tests_repositions_attraction_1;
                                 }
                                 #[path = "."]
@@ -1319,7 +1319,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints-017eb5/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints-reference-1-source/🦀️.rs"]
                                     mod tests_repoints_reference_1_source;
                                 }
                                 #[path = "."]
@@ -1367,7 +1367,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-664041/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-pair/🦀️.rs"]
                                     mod tests_adds_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1379,7 +1379,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-a24eec/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-kind-pair/🦀️.rs"]
                                     mod tests_removes_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1391,7 +1391,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-a9d291/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-kind-catalog/🦀️.rs"]
                                     mod tests_installs_vortex_kind_catalog;
                                 }
                             }

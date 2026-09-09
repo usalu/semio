@@ -53,7 +53,7 @@ mod tests {
     use crate::os_spr::{fold_plan_diff, fold_plan_inverse, Mutation, OpBinary, OpText};
 
     fn cases() -> serde_json::Value {
-        serde_json::from_str(include_str!("🔣️.json")).unwrap()
+        serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).unwrap()
     }
 
     #[test]

@@ -783,7 +783,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblyEntropy {
 }
 
 fn shannon_entropy_over_modules(snapshot: &AssemblySnapshot) -> f64 {
-    let weights: Vec<f64> = snapshot.modules.iter().map(|module| snapshot.weights.iter().find(|w| w.module_id == module.child_id).map(|w| w.weight).unwrap_or(1.0)).collect();
+    let weights: Vec<f64> = snapshot.modules.iter().map(|module| snapshot.weights.iter().find(|w| w.module_id == module.child_id).map_or(1.0, |w| w.weight)).collect();
     let total: f64 = weights.iter().sum();
     if weights.is_empty() || total <= 0.0 {
         return 0.0;

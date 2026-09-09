@@ -10,7 +10,7 @@ Feature: Edit an existing PDF document
   @level-long
   @mode-differential
   Scenario: Replace the document metadata of an existing document
-    Given the two-page input document local://2️⃣two-pages.pdf
+    Given the two-page input document shared://✏️edit-existing-pdf/2️⃣two-pages.pdf
     When the document title is replaced with "Replaced Title" and the author with "Replaced Author"
     Then the document reports the replaced metadata
     And the two pages are unchanged
@@ -19,7 +19,7 @@ Feature: Edit an existing PDF document
   @level-long
   @mode-differential
   Scenario: Delete a page from an existing document
-    Given the two-page input document local://2️⃣two-pages.pdf
+    Given the two-page input document shared://✏️edit-existing-pdf/2️⃣two-pages.pdf
     When the second page is deleted
     Then the document contains exactly one page
     And the remaining page media box is unchanged

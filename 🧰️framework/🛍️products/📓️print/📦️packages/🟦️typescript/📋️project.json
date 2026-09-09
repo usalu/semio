@@ -149,7 +149,7 @@
     },
     "build-viz": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
@@ -159,7 +159,8 @@
         "fonts",
         "deps-tectonic",
         "generate"
-      ]
+      ],
+      "outputs": []
     },
     "watch-viz": {
       "executor": "nx:run-commands",

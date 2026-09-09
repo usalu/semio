@@ -667,7 +667,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         VortexWeights,
     }
     let object = |index| FixtureObject { id: format!("object-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new(), reveal_index: None };
-    let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1, 2]).expect("body");
+    let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 4.0, 0.0], &[0, 1, 2]).expect("body");
     let roots = |branch: HostileRoot, count| {
         let mut scene =
             SceneConfig { fixture: Fixture::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
@@ -796,8 +796,10 @@ fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fa
     assert_eq!((builder.preview.operation, builder.preview.base_revision, builder.preview.registry_generation, builder.preview.generation), (37, 9, 13, 11));
     assert_eq!(builder.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_str()));
     assert!(builder.preview.candidate_ghost.is_none());
-    assert!(builder.preview.sequence > 0);
+    assert_eq!(builder.preview.sequence, 0, "the refusal is published under the operation's own first preview sequence");
     assert!(faulted(builder.step(&mut context)));
+    drop(context);
+    assert_eq!(sequence, 1, "publishing the refusal consumed exactly one preview sequence, and the fault that follows consumes none");
 }
 
 #[test]
@@ -901,7 +903,7 @@ fn all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_
     set_boundary();
     map_boundary(|index| index as f64);
     map_boundary(|index| index as f64);
-    let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1, 2]).expect("body");
+    let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 4.0, 0.0], &[0, 1, 2]).expect("body");
     map_boundary(|_| body.clone());
     set_boundary();
     set_boundary();
@@ -1008,11 +1010,16 @@ fn stale_generation_faults_without_progress() {
     assert_eq!(builder.operation.base_revision, RevisionId(1));
 }
 
+/// 📏️ Turns an EMPTY scene's cursorized planner needs to reach `Complete`: seven preparation stages
+/// (three of them walking three empty roots apiece), then target preparation and the stall, one
+/// bounded unit per turn. Doubled as headroom for a stage split.
+const EMPTY_FILL_TRANSITION_TURNS: usize = 64;
+
 #[test]
 fn empty_fill_transition_stays_below_watchdog_ceiling() {
     let mut builder = empty_builder();
     let mut sequence = 0;
-    for _ in 0..16 {
+    for _ in 0..EMPTY_FILL_TRANSITION_TURNS {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let started = Instant::now();
         let _ = builder.step(&mut context);

@@ -15,11 +15,11 @@ use crate::schema::mutations::change_mesh_extension_data::{diff, inverse, mutati
 use crate::GltfSnapshot;
 
 const CASE: &str = "change-mesh-extension-data/attaches-an-unlit-extension-object-to-the-mesh";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🧩️change-extensions/🔌️attaches-an-9e1e51/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🧩️change-extensions/🔌️attaches-an-9e1e51/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🧩️change-extensions/🔌️attaches-an-9e1e51/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🧩️change-extensions/🔌️attaches-an-9e1e51/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🕸️mesh/🧩️change-extensions/🔌️attaches-an-9e1e51/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

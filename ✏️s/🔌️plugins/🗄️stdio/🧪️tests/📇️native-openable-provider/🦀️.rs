@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 #[test]
 fn native_catalog_dependency_is_exactly_its_compiled_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"))).unwrap();
     let expected = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency().unwrap();
     assert_eq!(serde_json::to_value(&expected).unwrap(), fixture["nativeCases"][0]["dependencies"][0]);
     let rows = fixture["nativeCases"].as_array().unwrap();

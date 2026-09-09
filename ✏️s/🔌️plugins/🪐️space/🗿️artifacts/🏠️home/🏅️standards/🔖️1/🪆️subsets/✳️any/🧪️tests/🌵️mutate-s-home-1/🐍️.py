@@ -27,7 +27,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/bumps-the-catalog-generation-to-7"
+_ROOT = "shared://🧬️mutations/🔢️change-catalog-generation/bumps-the-catalog-generation-to-7"
 BEFORE_URI = f"{_ROOT}/📸️snapshot/⬅️before/🔣️.json"
 MUTATION_URI = f"{_ROOT}/🦠️mutation/🔣️.json"
 AFTER_URI = f"{_ROOT}/📸️snapshot/➡️after/🔣️.json"

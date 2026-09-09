@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 Feature: One representative command per group constructs and reports its manifest id, and patchObject dispatches
   This case exercises the lowpoly editor's declared command CATALOG — 47 commands across 13 groups
-  (`✏️patch-object`, `➕️add-primitive`, `🌞️sun`, `🎥️camera`, `👁️chrome`, `💬️engagement`, `🧫️fixture`,
+  (`✏️patch-object`, `➕️add-primitive`, `🌞️sun`, `🎥️camera`, `👁️chrome`, `💬️engagement`, `📄️document`,
   `🔷️mesh-edit`, `🖌️paint`, `🗂️selection`, `🧰️utility`, `🧲️transform`, `🧵️uv`; this ticket's own
   research report's headline count of 48 is off by one against the macro's own row count and the
   crate's own `command_ids_are_unique` test, which asserts 47 — corrected here) — one representative
@@ -39,7 +39,7 @@ Feature: One representative command per group constructs and reports its manifes
       | camera        | camera        | setCamera        |
       | chrome        | chrome        | toggleShowEdges  |
       | engagement    | engagement    | engagementInput  |
-      | fixture       | fixture       | setFixtureJson   |
+      | fixture       | fixture       | replaceSnapshotJson   |
       | mesh-edit     | mesh-edit     | toggleSmooth     |
       | paint         | paint         | addPaintLayer    |
       | selection     | selection     | setActiveObject  |

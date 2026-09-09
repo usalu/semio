@@ -4,7 +4,7 @@
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `procedure.document` is a
 //! semio-NATIVE program document with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🧬️mutations/<slug>/<fixture>/`)
 //! literally — no recomputation, no reimplementation of mutation semantics. `subject` drives this
 //! repository's own `apply_procedure_mutation_reporting` over the full four-kind
 //! `ProcedureMutation` vocabulary.
@@ -52,7 +52,7 @@ const KINDS: &[&str] = &["create-step", "delete-step", "reorder-steps", "edit-st
 /// 🗣️ The real committed program document — one `s.stdio.semio@v1/flow` child and one
 /// `s.stdio.semio@v1/text` child, both carried as hex-encoded handles.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -62,28 +62,28 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-step" => (
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🚫️rejects-a-135fff/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🚫️rejects-a-135fff/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🚫️rejects-a-135fff/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🚫️rejects-a-135fff/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path/🎯️outcome/🔣️.json"),
         ),
         "delete-step" => (
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-a-root-b05b22/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-a-root-b05b22/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-a-root-b05b22/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-a-root-b05b22/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/🎯️outcome/🔣️.json"),
         ),
         "reorder-steps" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔬️t036/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔬️t036/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔬️t036/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔬️t036/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🎯️outcome/🔣️.json"),
         ),
         "edit-step-params" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🔬️t037/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🔬️t037/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🔬️t037/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🔬️t037/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-procedure-1: no specification vector registered for kind {other:?}"),
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
-import { SCALE_COMPONENT_ARTIFACT } from "../../../../../🧫️fixtures/⚖️scale/🟦️.ts";
+import { SCALE_COMPONENT_ARTIFACT } from "../../../../../🧪️testkit/⚖️scale/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import findIndex from "lodash-es/findIndex.js";
@@ -107,7 +107,7 @@ function moduleExportValidator(ajv: Ajv, modulePath: string, exportId: string) {
 /** 🪪️ Pins typed guest-fault transport and independently checks lifecycle replay eligibility. */
 function guestFaultOracle(): number {
   const hostRoot = join(import.meta.dir, "..", "..");
-  const fixture = JSON.parse(readFileSync(join(hostRoot, "🔁️lifecycle", "🧫️fixture", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(hostRoot, "🔁️lifecycle", "🧫️fixtures", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = moduleExportValidator(ajv, join(hostRoot, "🔁️lifecycle", "🧬️schema", "🔣️.json"), "ReactorTurnLifecycleV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
@@ -134,7 +134,7 @@ function guestFaultOracle(): number {
 /** 📨️ Checks neutral retry ordering against an independent collection implementation. */
 function retainedLifecycleOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🧵️shard", "🔁️lifecycle");
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures", "🔣️.json"), "utf8"));
   const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(root, "🧬️schema", "🔣️.json"), "ShardLifecycleV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const trace of fixture.traces) {
@@ -163,7 +163,7 @@ function retainedLifecycleOracle(): number {
 /** 🎠️ Checks failed activation ownership with a separate declarative validator. */
 function activationOwnershipOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🎠️activation");
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = moduleExportValidator(ajv, join(root, "🧬️schema", "🔣️.json"), "ActivationAdmissionV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
@@ -185,7 +185,7 @@ function activationOwnershipOracle(): number {
 /** 🎟️ Validates reservation event traces against a separate collection-based transition model. */
 function kernelReservationOracle(): number {
   const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation-reservation");
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures", "🔣️.json"), "utf8"));
   const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(root, "🧬️schema", "🔣️.json"), "ActivationReservation");
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const row of fixture.traces) {
@@ -278,7 +278,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     );
     const hostRoot = join(import.meta.dir, "..", "..");
     const owner = join(hostRoot, "📥️ui-patch");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures", "🔣️.json"), "utf8"));
     const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(owner, "🧬️schema", "🔣️.json"), "NativeUiPatchMarshallingV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.equal(new Set(fixture.operationKinds).size, 11);

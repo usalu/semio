@@ -22,7 +22,7 @@ import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveM
 
 import { buildCargoArtifacts } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 
-const binaryContract = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧱️binary-gate.json", import.meta.url), "utf8")) as { cargoPackage: string; cargoBinary: string; profile: "debug" };
+const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as { cargoPackage: string; cargoBinary: string; profile: "debug" };
 if (binaryContract.cargoPackage !== MCP_CARGO_PACKAGE || binaryContract.cargoBinary !== MCP_BINARY_NAME || binaryContract.profile !== "debug") throw new Error("semio-os-mcp binary fixture disagrees with the shared path contract");
 
 /** 🧬️ One compiled export of the GIS plugin's own module contract (`✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json`).
@@ -108,7 +108,7 @@ class TestScript extends BundleScript {
 
 class CanonicalPairCheckScript extends BundleScript {
   run(): void {
-    const oracle = join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🧪️oracle", "🟦️.ts");
+    const oracle = join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🧪️tests", "🧪️canonical-pair-oracle", "🟦️.ts");
     const hub = join(this.repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
     if (!existsSync(oracle)) throw new Error(`missing canonical pair oracle at ${oracle}`);
     if (!existsSync(join(hub, "Cargo.toml"))) throw new Error(`missing Hub manifest at ${hub}`);

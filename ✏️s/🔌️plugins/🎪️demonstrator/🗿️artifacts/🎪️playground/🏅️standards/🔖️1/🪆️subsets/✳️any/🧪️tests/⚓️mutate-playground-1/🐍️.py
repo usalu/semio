@@ -35,7 +35,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema"
+_ROOT = "shared://🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema"
 BEFORE_URI = f"{_ROOT}/📸️snapshot/⬅️before/🔣️.json"
 MUTATION_URI = f"{_ROOT}/🦠️mutation/🔣️.json"
 AFTER_URI = f"{_ROOT}/📸️snapshot/➡️after/🔣️.json"

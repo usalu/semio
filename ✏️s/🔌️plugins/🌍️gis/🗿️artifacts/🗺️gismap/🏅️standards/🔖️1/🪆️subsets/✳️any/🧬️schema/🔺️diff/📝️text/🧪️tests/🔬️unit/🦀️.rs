@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn repeated_feature_patches_match_the_neutral_serde_oracle() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("patch composition fixture");
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️unit/🔣️.json")).expect("patch composition fixture");
     for case in cases.as_array().expect("fixture cases") {
         let id = case["id"].as_str().expect("case identity");
         let base = GisMapSnapshot { regions: vec![MapFeature { id: id.into(), data: dsl::DslValue::from(&case["initial"]) }], ..Default::default() };

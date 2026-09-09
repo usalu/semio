@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import type { Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import type { TaxonomySourceInventory, TaxonomySourceObservation } from "../../🧹️normalization/🟦️.ts";
@@ -19,12 +20,12 @@ const root = (() => {
   return candidate;
 })();
 const library = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📸️source-index-capture-66");
+const runRoot = join(realpathSync(tmpdir()), "semio-source-index-capture");
 const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json";
 const taxonomyRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const rootScriptPath = join(root, "📜️script.ts");
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "../📋️mutation-inventory/📸️source-index-capture/🛂️schema/🔣️.json"), "utf8"));
-const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8")) as {
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8"));
+const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
   readonly expectedRoots: readonly string[];
   readonly existingEvidence: readonly string[];
@@ -36,10 +37,10 @@ const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../📋️mutatio
 const sha256 = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
 const compare = (left: string, right: string): number => sourceFileFactByteCompare(left, right);
 
-/** 🧫️ Creates one ticket-owned physical fixture without collector or Git access. */
+/** 🧫️ Creates one isolated physical fixture without collector or Git access. */
 function fixture(): string {
-  mkdirSync(ticket, { recursive: true });
-  return mkdtempSync(join(ticket, "🧫️run-"));
+  mkdirSync(runRoot, { recursive: true });
+  return mkdtempSync(join(runRoot, "🧫️run-"));
 }
 
 /** 🧫️ Writes an owned relative fixture file. */

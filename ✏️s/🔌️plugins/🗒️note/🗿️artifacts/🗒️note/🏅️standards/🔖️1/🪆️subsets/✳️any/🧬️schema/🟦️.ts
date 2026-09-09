@@ -1,125 +1,131 @@
-/** 🧬️ Note artifact schema — every field with its state class. */
+/** 🗒️ Authored Note fields and block payloads, using shared Store child and link identities. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+export type { ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 
 export interface NoteArtifact {
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   id: string;
-  /** @state artifact */
-  title?: string;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
+  title?: string | null;
+  /** 🧬️ @state artifact */
   blocks: NoteBlockNode[];
-  /** @state artifact */
-  gridVisible?: boolean;
-  /** @state artifact */
-  gridSpacing?: number;
-  /** @state artifact */
-  gridSubdivisions?: number;
-  /** @state artifact */
-  gridOpacity?: number;
-  /** @state artifact */
-  snapEnabled?: boolean;
-  /** @state artifact */
-  snapGridSpacing?: number;
-  /** @state artifact */
-  pencilWidth?: number;
-  /** @state artifact */
-  eraserRadius?: number;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
+  gridVisible?: boolean | null;
+  /** 🧬️ @state artifact */
+  gridSpacing?: number | null;
+  /** 🧬️ @state artifact */
+  gridSubdivisions?: number | null;
+  /** 🧬️ @state artifact */
+  gridOpacity?: number | null;
+  /** 🧬️ @state artifact */
+  snapEnabled?: boolean | null;
+  /** 🧬️ @state artifact */
+  snapGridSpacing?: number | null;
+  /** 🧬️ @state artifact */
+  pencilWidth?: number | null;
+  /** 🧬️ @state artifact */
+  eraserRadius?: number | null;
+  /** 🧬️ @state artifact */
   assets: Record<string, NoteImageAsset>;
+  /** 🧬️ @state artifact */
+  linkedArtifact?: ArtifactLink | null;
 }
 
-export interface NoteBlockNode {
-  kind: string;
-  [key: string]: unknown;
+export interface NoteBlockFrame { id: string; name: string; x: number; y: number; width: number; height: number; rotation?: number; visible?: boolean; locked?: boolean }
+export type NoteBlockNode = NoteBlockFrame & (
+  { kind: "text"; content: NoteTextChild; fontSize: number; fontWeight: string; align: string } |
+  { kind: "image"; imageKey: string } |
+  { kind: "table"; columns: string[]; rows: NoteTableCell[][] } |
+  { kind: "math"; tex: string; displayMode: boolean } |
+  { kind: "stroke"; points: [number, number][]; strokeWidth: number; color: [number, number, number, number] } |
+  { kind: "group"; children: NoteBlockNode[] }
+);
+export interface NoteImageAsset { mime: string; data: string; width?: number | null; height?: number | null }
+export interface NoteTextChild { handle: ArtifactChild; paragraphs: NoteTextParagraph[] }
+export interface NoteTextParagraph { runs: NoteTextRun[] }
+export interface NoteTextRun { text: string; bold?: boolean | null; italic?: boolean | null; underline?: boolean | null; link?: string | null }
+export interface NoteTableCell { content: string }
+export type NoteValueParser = (value: unknown, at: string) => unknown;
+
+/** 🪪️ Checks an exact object field set and validates every retained field through its owner. */
+export function parseNoteRecord(value: unknown, parsers: Readonly<Record<string, NoteValueParser>>, required: readonly string[], at: string): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected an object`);
+  const row = value as Record<string, unknown>;
+  if (required.some((key) => !Object.hasOwn(row, key)) || Object.keys(row).some((key) => !Object.hasOwn(parsers, key))) throw new Error(`${at}: fields do not match the Note contract`);
+  return Object.fromEntries(Object.entries(row).map(([key, value]) => [key, parsers[key](value, `${at}.${key}`)]));
 }
 
-export interface NoteImageAsset {
-  mime: string;
-  data: string;
-  width?: number;
-  height?: number;
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class noteNoteArtifactGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const noteNoteArtifactGuardReject = (at: string, why: string): never => {
-  throw new noteNoteArtifactGuardRefusal(at, why);
+export const noteString: NoteValueParser = (value, at) => { if (typeof value !== "string") throw new Error(`${at}: expected a string`); return value; };
+export const noteNumber: NoteValueParser = (value, at) => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: expected a finite number`); return value; };
+export const noteBoolean: NoteValueParser = (value, at) => { if (typeof value !== "boolean") throw new Error(`${at}: expected a boolean`); return value; };
+export const noteNullable = (parse: NoteValueParser): NoteValueParser => (value, at) => value === null ? null : parse(value, at);
+export const noteArray = (parse: NoteValueParser): NoteValueParser => (value, at) => {
+  if (!Array.isArray(value)) throw new Error(`${at}: expected an array`);
+  return value.map((item, index) => parse(item, `${at}[${index}]`));
+};
+export const noteMap = (parse: NoteValueParser): NoteValueParser => (value, at) => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected a map`);
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, parse(item, `${at}.${key}`)]));
+};
+const tuple = (length: number): NoteValueParser => (value, at) => {
+  if (!Array.isArray(value) || value.length !== length) throw new Error(`${at}: expected ${length} coordinates`);
+  return value.map((item, index) => noteNumber(item, `${at}[${index}]`));
 };
 
-type noteNoteArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type noteNoteArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type noteNoteArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const noteNoteArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : noteNoteArtifactGuardReject(at, "value is not an object");
-export const noteNoteArtifactGuardArray = (value: unknown, at: string, bounds: noteNoteArtifactGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return noteNoteArtifactGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) noteNoteArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) noteNoteArtifactGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const noteNoteArtifactGuardString = (value: unknown, at: string, bounds: noteNoteArtifactGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return noteNoteArtifactGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) noteNoteArtifactGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) noteNoteArtifactGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) noteNoteArtifactGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const noteNoteArtifactGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : noteNoteArtifactGuardReject(at, "value is not a boolean"));
-export const noteNoteArtifactGuardNumber = (value: unknown, at: string, bounds: noteNoteArtifactGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return noteNoteArtifactGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) noteNoteArtifactGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) noteNoteArtifactGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const noteNoteArtifactGuardInteger = (value: unknown, at: string, bounds: noteNoteArtifactGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? noteNoteArtifactGuardNumber(value, at, bounds) : noteNoteArtifactGuardReject(at, "value is not an integer");
-export const noteNoteArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : noteNoteArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const noteNoteArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : noteNoteArtifactGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseNoteArtifact(value: unknown, at = "$"): NoteArtifact {
-  const row = noteNoteArtifactGuardObject(value, at);
-  return {
-    schema: noteNoteArtifactGuardString(row["schema"], `${at}.schema`),
-    id: noteNoteArtifactGuardString(row["id"], `${at}.id`),
-    title: row["title"] === undefined ? undefined : noteNoteArtifactGuardString(row["title"], `${at}.title`),
-    blocks: noteNoteArtifactGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => parseNoteBlockNode(item, `${at}.blocks[${index}]`)),
-    gridVisible: row["gridVisible"] === undefined ? undefined : noteNoteArtifactGuardBoolean(row["gridVisible"], `${at}.gridVisible`),
-    gridSpacing: row["gridSpacing"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["gridSpacing"], `${at}.gridSpacing`),
-    gridSubdivisions: row["gridSubdivisions"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["gridSubdivisions"], `${at}.gridSubdivisions`),
-    gridOpacity: row["gridOpacity"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["gridOpacity"], `${at}.gridOpacity`),
-    snapEnabled: row["snapEnabled"] === undefined ? undefined : noteNoteArtifactGuardBoolean(row["snapEnabled"], `${at}.snapEnabled`),
-    snapGridSpacing: row["snapGridSpacing"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["snapGridSpacing"], `${at}.snapGridSpacing`),
-    pencilWidth: row["pencilWidth"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["pencilWidth"], `${at}.pencilWidth`),
-    eraserRadius: row["eraserRadius"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["eraserRadius"], `${at}.eraserRadius`),
-    assets: noteNoteArtifactGuardObject(row["assets"], `${at}.assets`),
-  };
-}
-
-export function parseNoteBlockNode(value: unknown, at = "$"): NoteBlockNode {
-  const row = noteNoteArtifactGuardObject(value, at);
-  return {
-    kind: noteNoteArtifactGuardString(row["kind"], `${at}.kind`),
-  };
-}
-
+/** 🖼️ Parses image metadata and optional native dimensions. */
 export function parseNoteImageAsset(value: unknown, at = "$"): NoteImageAsset {
-  const row = noteNoteArtifactGuardObject(value, at);
-  return {
-    mime: noteNoteArtifactGuardString(row["mime"], `${at}.mime`),
-    data: noteNoteArtifactGuardString(row["data"], `${at}.data`),
-    width: row["width"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["width"], `${at}.width`),
-    height: row["height"] === undefined ? undefined : noteNoteArtifactGuardNumber(row["height"], `${at}.height`),
+  return parseNoteRecord(value, { mime: noteString, data: noteString, width: noteNullable(noteNumber), height: noteNullable(noteNumber) }, ["mime", "data"], at) as unknown as NoteImageAsset;
+}
+
+/** 📝️ Parses one authored text run while preserving its optional marks. */
+export function parseNoteTextRun(value: unknown, at = "$"): NoteTextRun {
+  return parseNoteRecord(value, { text: noteString, bold: noteNullable(noteBoolean), italic: noteNullable(noteBoolean), underline: noteNullable(noteBoolean), link: noteNullable(noteString) }, ["text"], at) as unknown as NoteTextRun;
+}
+
+/** ¶️ Parses one paragraph's native run sequence. */
+export function parseNoteTextParagraph(value: unknown, at = "$"): NoteTextParagraph {
+  return parseNoteRecord(value, { runs: noteArray(parseNoteTextRun) }, ["runs"], at) as unknown as NoteTextParagraph;
+}
+
+/** 🪆️ Parses a durable text child record and its shared composition handle. */
+export function parseNoteTextChild(value: unknown, at = "$"): NoteTextChild {
+  return parseNoteRecord(value, { handle: parseArtifactChild, paragraphs: noteArray(parseNoteTextParagraph) }, ["handle", "paragraphs"], at) as unknown as NoteTextChild;
+}
+
+/** 🧮️ Parses one table cell's authored text. */
+export function parseNoteTableCell(value: unknown, at = "$"): NoteTableCell {
+  return parseNoteRecord(value, { content: noteString }, ["content"], at) as unknown as NoteTableCell;
+}
+
+/** 🧱️ Parses the exact payload of all six native Note block variants. */
+export function parseNoteBlockNode(value: unknown, at = "$"): NoteBlockNode {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected a block`);
+  const kind = (value as Record<string, unknown>).kind;
+  const variants: Record<string, Record<string, NoteValueParser>> = {
+    text: { content: parseNoteTextChild, fontSize: noteNumber, fontWeight: noteString, align: noteString },
+    image: { imageKey: noteString },
+    table: { columns: noteArray(noteString), rows: noteArray(noteArray(parseNoteTableCell)) },
+    math: { tex: noteString, displayMode: noteBoolean },
+    stroke: { points: noteArray(tuple(2)), strokeWidth: noteNumber, color: tuple(4) },
+    group: { children: noteArray(parseNoteBlockNode) },
   };
+  if (typeof kind !== "string" || !Object.hasOwn(variants, kind)) throw new Error(`${at}: unknown block kind`);
+  const fields = { kind: noteString, id: noteString, name: noteString, x: noteNumber, y: noteNumber, width: noteNumber, height: noteNumber, rotation: noteNumber, visible: noteBoolean, locked: noteBoolean, ...variants[kind] };
+  return parseNoteRecord(value, fields, ["kind", "id", "name", "x", "y", "width", "height", ...Object.keys(variants[kind])], at) as unknown as NoteBlockNode;
+}
+
+export const noteDocumentFields: Readonly<Record<string, NoteValueParser>> = {
+  schema: noteString, id: noteString, title: noteNullable(noteString), blocks: noteArray(parseNoteBlockNode),
+  gridVisible: noteNullable(noteBoolean), gridSpacing: noteNullable(noteNumber), gridSubdivisions: noteNullable(noteNumber), gridOpacity: noteNullable(noteNumber),
+  snapEnabled: noteNullable(noteBoolean), snapGridSpacing: noteNullable(noteNumber), pencilWidth: noteNullable(noteNumber), eraserRadius: noteNullable(noteNumber),
+  assets: noteMap(parseNoteImageAsset), linkedArtifact: noteNullable(parseArtifactLink),
+};
+
+/** 📄️ Parses the complete authored artifact without editor configuration or transient fields. */
+export function parseNoteArtifact(value: unknown, at = "$"): NoteArtifact {
+  return parseNoteRecord(value, noteDocumentFields, ["schema", "id", "blocks", "assets"], at) as unknown as NoteArtifact;
 }

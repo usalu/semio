@@ -1,31 +1,17 @@
 syntax = "proto3";
 package semio.s.norm.en1990.diff;
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message En1990Diff {
   // @state artifact
-  optional En1990Artifact artifact = 1;
+  optional double g_k = 1;
   // @state artifact
-  optional double g_k = 2;
+  semio.os.store.ArtifactChild q_k = 2;
   // @state artifact
-  optional En1990QkList q_k = 3;
+  optional double resistance_kn = 3;
   // @state artifact
-  optional double resistance_kn = 4;
+  optional uint32 consequence_class = 4;
   // @state artifact
-  optional uint32 consequence_class = 5;
+  optional string annex = 5;
   // @state artifact
-  optional string annex = 6;
-  // @state artifact
-  optional double seismic_a_ed_kn = 7;
+  optional double seismic_a_ed_kn = 6;
 }
-
-message En1990Artifact {
-  double g_k = 1;
-  repeated En1990QkEntry q_k = 2;
-  double resistance_kn = 3;
-  uint32 consequence_class = 4;
-  string annex = 5;
-  double seismic_a_ed_kn = 6;
-}
-
-message En1990QkEntry { string category = 1; double value = 2; }
-message En1990QkList { repeated En1990QkEntry values = 1; }

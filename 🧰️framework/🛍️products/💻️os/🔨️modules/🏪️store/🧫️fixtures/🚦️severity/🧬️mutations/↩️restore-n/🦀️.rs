@@ -28,5 +28,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for RestoreN {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🚦️severity-↩️restore-n/🦀️.rs"]
 mod tests;

@@ -29,6 +29,6 @@ pub fn diff(payload: &MoveBlock, base: &NoteSnapshot) -> protocol::MutationOutco
             *y = payload.new_y;
         }
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

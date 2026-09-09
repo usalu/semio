@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config/🧬️schema/🧬️mutations/🔎️set-query",
+  "semanticKind": "set-query",
+  "displayName": "Set Query",
+  "emoji": "🔎️",
+  "aggregateVariant": "SetQuery",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-query",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

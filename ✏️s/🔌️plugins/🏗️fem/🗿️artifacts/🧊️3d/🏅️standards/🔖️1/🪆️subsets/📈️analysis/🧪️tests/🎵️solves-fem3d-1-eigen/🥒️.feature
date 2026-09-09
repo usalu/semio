@@ -28,7 +28,7 @@ Feature: Hold fem3d's modal and buckling answers to an independent eigensolver a
   whether each of them independently lands within two percent of it over an eight-element
   discretisation. SciPy's own agreement (better than 0.3 % on every scenario below) is the evidence
   that two percent is a fair demand of the discretisation rather than of the solver. The eigenvalues
-  themselves are asserted numerically by the subject against `local://📊️expected.results.json`, which
+  themselves are asserted numerically by the subject against `shared://🎵️solves-fem3d-1-eigen/📊️expected.results.json`, which
   this case's reference produced and which is committed beside these models.
 
   THE CLOSED FORMS. A cantilever's natural frequencies are `βₙ²/(2πL²)·√(EI/ρA)` with
@@ -43,8 +43,8 @@ Feature: Hold fem3d's modal and buckling answers to an independent eigensolver a
   @level-exhaustive
   @mode-differential
   Scenario Outline: The <id>'s natural frequencies are the textbook's, to two percent
-    Given the committed model local://<fixture>
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🎵️solves-fem3d-1-eigen/<fixture>
+    And the committed reference shared://🎵️solves-fem3d-1-eigen/📊️expected.results.json
     When both implementations solve its free-vibration eigenproblem
     Then each lands within two percent of βₙ²/(2πL²)·√(EI/ρA) for the first four modes, they agree on that verdict mode by mode, and the subject is within 1e-3 relative of the reference's own frequencies
     Examples:
@@ -55,8 +55,8 @@ Feature: Hold fem3d's modal and buckling answers to an independent eigensolver a
   @level-exhaustive
   @mode-differential
   Scenario Outline: The <id> column buckles at π²EI/(KL)² with K = <k>, to two percent
-    Given the committed model local://<fixture>
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🎵️solves-fem3d-1-eigen/<fixture>
+    And the committed reference shared://🎵️solves-fem3d-1-eigen/📊️expected.results.json
     When both implementations solve its linear-buckling eigenproblem under the unit axial reference load
     Then each lands within two percent of π²EI/(K·L)², they agree on that verdict, and the subject is within 1e-3 relative of the reference's own lowest load factor
     Examples:

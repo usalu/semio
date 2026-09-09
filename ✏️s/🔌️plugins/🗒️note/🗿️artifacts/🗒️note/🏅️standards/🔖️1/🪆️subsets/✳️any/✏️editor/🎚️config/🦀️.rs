@@ -1,49 +1,20 @@
-//! 🧮️ Note play app — view state (`NoteConfig`) and its operation enum (`NoteConfigMutation`).
-//!
-//! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
-//! because nothing in it survives into the `.note` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so camera/utility edits are VCS'd exactly like document
-//! content.
+//! 🧮️ Note editor app configuration.
 
-use crate::NoteCamera;
+use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
-//#region 🔖️Config
-/// 🧮️ Note's real `ArtifactEditor::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
-/// Absorbs every field that used to live on the old ui crate's `NotePlayRuntime` (the in-progress
-/// engagement-rename input, and the free/live canvas camera) plus the two `ViewModel` fields the note
-/// UI actually reads — see `crate::editor::note::NotePlayApp::render`.
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_block_ids`/`hovered_block_id`
-/// moved OUT of here into the framework-owned `InteractionState` (the "blocks" domain declared on
-/// `create_note_app`) — see `crate::editor::note::NoteDispatchCtx`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[dsl(id = "note.config", layout = "lines")]
-pub struct NoteConfig {
-    /// ✏️ In-progress engagement-rename input — was `NotePlayRuntime::engagement_input`.
-    pub engagement_input: String,
-    /// 📷️ The free/live canvas camera — session-only, never a document field. Was
-    /// `NotePlayRuntime::camera`.
-    #[dsl(block)]
-    pub camera: NoteCamera,
-}
+pub struct NoteConfig {}
 
-//#region 🔖️ArtifactCodec
-/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for NoteConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
+    fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
+        let body = match store::semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
@@ -54,46 +25,82 @@ impl store::ArtifactDsl for NoteConfig {
     }
 }
 
-/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for NoteConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        let (record, _) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-
-//#endregion 🔖️ArtifactCodec
-
-impl Default for NoteConfig {
-    fn default() -> Self {
-        Self { engagement_input: String::new(), camera: NoteCamera::default() }
-    }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
 store::impl_whole_record_config!(NoteConfig);
-//#endregion 🔖️Config
 
-#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-mod mutations;
-pub use mutations::*;
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+pub enum NoteConfigMutation {
+    #[dsl(key = "snapshot")]
+    Snapshot { #[dsl(block)] config: NoteConfig },
+}
 
-//#region 🧪️Tests
+impl protocol::OpText for NoteConfigMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        for (keyword, spec_fn) in <Self as dsl::DslVariants>::variants() {
+            if line == keyword || line.starts_with(&format!("{keyword} ")) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(&keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec = variants.iter().find(|(key, _)| key == &keyword).expect("declared variant").1();
+        dsl::print(&record, &spec, dsl::JoinMode::Inline)
+    }
+}
+
+impl protocol::OpBinary for NoteConfigMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+}
+
+impl Mutation<NoteConfig> for NoteConfigMutation {
+    type Diff = NoteConfig;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+        semantic_kind: "snapshot",
+        display_name: "Snapshot",
+        emoji: "📄",
+        aggregate_variant: "Snapshot",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }];
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
+    fn diff(&self, _base: &NoteConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
+    }
+    fn inverse(&self, base: &NoteConfig) -> Vec<Self> { vec![Self::Snapshot { config: base.clone() }] }
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]

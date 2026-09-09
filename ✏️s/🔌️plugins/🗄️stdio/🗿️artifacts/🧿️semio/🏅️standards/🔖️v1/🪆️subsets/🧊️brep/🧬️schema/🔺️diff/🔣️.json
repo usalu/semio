@@ -6,16 +6,16 @@
   "type": "object",
   "properties": {
     "vertices": {
-      "$ref": "#/definitions/namedTriple"
+      "$ref": "#/definitions/vertexTriple"
     },
     "edges": {
-      "$ref": "#/definitions/namedTriple"
+      "$ref": "#/definitions/edgeTriple"
     },
     "loops": {
       "$ref": "#/definitions/namedTriple"
     },
     "faces": {
-      "$ref": "#/definitions/namedTriple"
+      "$ref": "#/definitions/faceTriple"
     },
     "shells": {
       "$ref": "#/definitions/namedTriple"
@@ -25,6 +25,138 @@
     }
   },
   "definitions": {
+    "vertexTriple": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/namedTriple"
+        }
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vertexModified"
+          }
+        }
+      }
+    },
+    "edgeTriple": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/namedTriple"
+        }
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeModified"
+          }
+        }
+      }
+    },
+    "faceTriple": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/namedTriple"
+        }
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/faceModified"
+          }
+        }
+      }
+    },
+    "vertexModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "diff"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "point": {},
+            "tol": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "edgeModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "diff"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "startVertex": {
+              "type": "string"
+            },
+            "endVertex": {
+              "type": "string"
+            },
+            "curve": {},
+            "tol": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "faceModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "diff"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outerLoop": {
+              "type": "string"
+            },
+            "innerLoops": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "surface": {},
+            "orientation": {
+              "type": "boolean"
+            },
+            "tol": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
     "namedTriple": {
       "type": "object",
       "properties": {

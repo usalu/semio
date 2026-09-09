@@ -30,7 +30,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
-const INPUT: &str = "asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf";
+const INPUT: &str = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

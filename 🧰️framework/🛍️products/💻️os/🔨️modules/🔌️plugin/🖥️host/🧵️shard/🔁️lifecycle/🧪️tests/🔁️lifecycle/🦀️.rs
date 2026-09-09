@@ -34,7 +34,7 @@ fn enqueue(shard: &mut ShardLoop, actor: u64, sequence: u64, bytes: usize) {
 
 #[semio_framework_async_macros::async_test]
 async fn neutral_retry_order_uses_the_production_selector() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for trace in fixture["traces"].as_array().unwrap() {
         let (mut shard, _, _) = setup().await;
         for label in trace["queued"].as_array().unwrap() {
@@ -169,7 +169,7 @@ async fn terminal_faults_never_create_a_lifecycle_retry() {
 #[semio_framework_async_macros::async_test]
 async fn unknown_transport_actors_never_allocate_host_bookkeeping() {
     let (mut shard, mock, outbound) = setup().await;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let count = fixture["unknownActorGrants"].as_u64().unwrap();
     let before = (shard.granted_budgets.len(), shard.actor_lanes.len(), shard.allocations.len());
     for raw in 3..3 + count {

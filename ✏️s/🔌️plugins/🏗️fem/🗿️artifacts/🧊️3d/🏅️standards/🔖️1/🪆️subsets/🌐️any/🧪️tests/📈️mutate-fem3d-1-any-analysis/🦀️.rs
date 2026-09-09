@@ -37,7 +37,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for
 /// the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🧊️steel-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://📈️mutate-fem3d-1-any-analysis/🧊️steel-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -55,11 +55,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }
@@ -160,7 +160,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://📈️mutate-fem3d-1-any-analysis/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

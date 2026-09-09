@@ -3338,7 +3338,7 @@
       "files": [
         {
           "role": "expected-analysis",
-          "path": "../../📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks/🧫️fixtures/📊️expected.results.json",
+          "path": "../../📈️analysis/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📊️expected.results.json",
           "mediaType": "application/json",
           "sha256": "sha256:4ae1fc6f9f8f8cdc3947f3b0e9641208c66ba79c37aac5819491d752e06bcc29",
           "bytes": 491605
@@ -3383,7 +3383,7 @@
       "files": [
         {
           "role": "expected-analysis",
-          "path": "../../📈️analysis/🧪️tests/🎵️solves-fem3d-1-eigen/🧫️fixtures/📊️expected.results.json",
+          "path": "../../📈️analysis/🧫️fixtures/🎵️solves-fem3d-1-eigen/📊️expected.results.json",
           "mediaType": "application/json",
           "sha256": "sha256:876c3aa968c8a176394b13ac089240cc45d448a92df78d82c569d1423ba5be48",
           "bytes": 2556
@@ -3428,7 +3428,7 @@
       "files": [
         {
           "role": "expected-analysis",
-          "path": "../../📈️analysis/🧪️tests/🧱️solves-fem3d-1-solid/🧫️fixtures/📊️expected.results.json",
+          "path": "../../📈️analysis/🧫️fixtures/🧱️solves-fem3d-1-solid/📊️expected.results.json",
           "mediaType": "application/json",
           "sha256": "sha256:25e5cebf1ff58f57fe8124da38c1e529948f9b4e92f6de9a264f9bc16bef42ad",
           "bytes": 751

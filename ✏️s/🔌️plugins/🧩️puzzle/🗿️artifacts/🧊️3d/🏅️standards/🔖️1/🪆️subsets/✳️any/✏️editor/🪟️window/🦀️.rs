@@ -157,33 +157,33 @@ pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransient
 }
 
 pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient: &Puzzle3dWindowTransient, view: Option<&semio_framework_plugin::ViewModel>) -> Puzzle3dRuntime {
-    let mut runtime = Puzzle3dRuntime::default();
-    runtime.fill_count = shared.fill_count;
-    runtime.overlap_budget = shared.overlap_budget;
-    runtime.object_kind_weights = shared.object_kind_weights.clone();
-    runtime.vortex_kind_weights = shared.vortex_kind_weights.clone();
-    runtime.lod_automatic = window.lod_automatic;
-    runtime.lod_depth_variable = window.lod_depth_variable;
-    runtime.grid_visible = window.grid_visible;
-    runtime.lod_manual = window.lod_manual;
-    runtime.grid_snap_enabled = window.grid_snap_enabled;
-    runtime.grid_spacing = window.grid_spacing;
-    runtime.selectable_kinds = window.selectable_kinds.clone();
-    runtime.proximity_radius = window.proximity_radius;
-    runtime.chunk_size = window.chunk_size;
-    runtime.voxel_dims = window.voxel_dims;
-    runtime.transform_move = window.transform_move;
-    runtime.transform_rotate = window.transform_rotate;
-    runtime.vortex_show = window.vortex_show.clone();
-    runtime.vortex_direction = window.vortex_direction.clone();
-    runtime.sun = window.sun.clone();
-    runtime.camera = window.camera.clone();
-    runtime.suggestion_menu = transient.suggestion_menu.clone();
-    runtime.engagement_input = transient.engagement_input.clone();
-    runtime.brush_candidate_index = transient.brush_candidate_index;
-    runtime.active_tool_id = view.and_then(|value| value.active_tool_id.clone());
-    runtime.window_ids = view.map(|value| value.window_instances.iter().map(|window| window.id.clone()).collect()).unwrap_or_else(|| vec![main::WINDOW_KIND_ID.into()]);
-    runtime
+    Puzzle3dRuntime {
+        fill_count: shared.fill_count,
+        overlap_budget: shared.overlap_budget,
+        object_kind_weights: shared.object_kind_weights.clone(),
+        vortex_kind_weights: shared.vortex_kind_weights.clone(),
+        lod_automatic: window.lod_automatic,
+        lod_depth_variable: window.lod_depth_variable,
+        grid_visible: window.grid_visible,
+        lod_manual: window.lod_manual,
+        grid_snap_enabled: window.grid_snap_enabled,
+        grid_spacing: window.grid_spacing,
+        selectable_kinds: window.selectable_kinds.clone(),
+        proximity_radius: window.proximity_radius,
+        chunk_size: window.chunk_size,
+        voxel_dims: window.voxel_dims,
+        transform_move: window.transform_move,
+        transform_rotate: window.transform_rotate,
+        vortex_show: window.vortex_show.clone(),
+        vortex_direction: window.vortex_direction.clone(),
+        sun: window.sun.clone(),
+        camera: window.camera.clone(),
+        suggestion_menu: transient.suggestion_menu.clone(),
+        engagement_input: transient.engagement_input.clone(),
+        brush_candidate_index: transient.brush_candidate_index,
+        active_tool_id: view.and_then(|value| value.active_tool_id.clone()),
+        window_ids: view.map_or_else(|| vec![main::WINDOW_KIND_ID.into()], |value| value.window_instances.iter().map(|window| window.id.clone()).collect()),
+    }
 }
 
 pub fn shared(runtime: &Puzzle3dRuntime) -> Puzzle3dConfig {

@@ -43,6 +43,13 @@
     "brokerReplacement": "queued-old-request-denied",
     "authorityRetirement": ["invalid-response", "http-401", "non-200", "old-body-after-proof-replacement"],
     "portReplacement": "old-body-cannot-bind-successor-port",
+    "directoryPageBinding": ["same-authority", "foreign-binding", "foreign-generation"],
+    "authorityFence": {
+      "cases": ["absent-authority-refused", "sealed-request-proof-replacement"],
+      "openingCode": "inference.denied",
+      "blockedOpeningCode": "inference.capacity",
+      "successorRoutes": []
+    },
     "successorProof": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "unknownPhase": "indeterminate",
     "terminalPhase": "cancelled",
@@ -1164,7 +1171,7 @@
     }
   ],
   "crossFixture": {
-    "approvalFixture": "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1",
+    "approvalFixture": "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1",
     "serverLifecycleKinds": [
       "accepted",
       "running",

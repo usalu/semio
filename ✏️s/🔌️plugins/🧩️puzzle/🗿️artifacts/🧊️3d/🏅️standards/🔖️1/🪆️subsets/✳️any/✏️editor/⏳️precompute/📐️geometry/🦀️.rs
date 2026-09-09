@@ -151,9 +151,11 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
     }
 }
 
+type FixedOwnerMapPage<K, V, const N: usize> = Box<[Option<(K, V)>; N]>;
+
 #[derive(Debug)]
 pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
-    page: Option<Box<[Option<(K, V)>; N]>>,
+    page: Option<FixedOwnerMapPage<K, V, N>>,
     len: usize,
 }
 
@@ -1029,6 +1031,18 @@ impl CollisionIndexMutation {
     }
 }
 
+impl CollisionIndexRemoval {
+    /// ♻️ One owner per close grant, exactly as the replacement cursor: the withdrawn owner id is the
+    /// removal's only allocation.
+    pub(crate) fn retire_one_owner(&mut self) -> bool {
+        if self.id.capacity() != 0 {
+            drop(std::mem::take(&mut self.id));
+            return false;
+        }
+        true
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CollisionIndexOwnerCensusStep {
     Pending { items: usize, bytes: usize },
@@ -1045,6 +1059,14 @@ pub(crate) struct CollisionIndexOwnerCensusCursor {
 
 fn collision_index_string_credit(value: &String) -> Option<(usize, usize)> {
     (value.capacity() <= 16 * 1024).then_some((usize::from(value.capacity() != 0), value.capacity()))
+}
+
+/// 📏️ Credit for a fixed page that may already have been handed back: a container whose backing was
+/// retired owns nothing and costs nothing. Only a semantic owner over its declared byte cap is a
+/// census refusal, so an index walked WHILE it retires (the close census does exactly that) must not
+/// read a released page as "over capacity".
+fn collision_index_backing_credit(credit: Option<(usize, usize)>) -> (usize, usize) {
+    credit.unwrap_or((0, 0))
 }
 
 impl CollisionSpatialIndex {
@@ -1380,7 +1402,7 @@ impl CollisionSpatialIndex {
 
     pub(crate) fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
         let credit = match cursor.section {
-            0 => self.entries.backing_credit(),
+            0 => Some(collision_index_backing_credit(self.entries.backing_credit())),
             1 => match self.entries.keys().nth(cursor.index) {
                 Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
                 None => {
@@ -1389,11 +1411,11 @@ impl CollisionSpatialIndex {
                     return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
                 }
             },
-            2 => self.cells.backing_credit(),
+            2 => Some(collision_index_backing_credit(self.cells.backing_credit())),
             3 => match self.cells.values().nth(cursor.index) {
                 Some(bucket) if cursor.inner == 0 => {
                     cursor.inner = 1;
-                    bucket.backing_credit().and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes)))
+                    { let (items, bytes) = collision_index_backing_credit(bucket.backing_credit()); items.checked_add(1).map(|items| (items, bytes)) }
                 }
                 Some(bucket) => match bucket.iter().nth(cursor.inner - 1) {
                     Some(id) => collision_index_string_credit(id),
@@ -1410,7 +1432,7 @@ impl CollisionSpatialIndex {
                     return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
                 }
             },
-            4 => self.oversized.backing_credit(),
+            4 => Some(collision_index_backing_credit(self.oversized.backing_credit())),
             5 => match self.oversized.iter().nth(cursor.index) {
                 Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
                 None => {
@@ -1427,7 +1449,7 @@ impl CollisionSpatialIndex {
                 };
                 if cursor.inner == 0 {
                     cursor.inner = 1;
-                    bucket.backing_credit()
+                    Some(collision_index_backing_credit(bucket.backing_credit()))
                 } else {
                     match bucket.iter().nth(cursor.inner - 1) {
                         Some(id) => collision_index_string_credit(id),

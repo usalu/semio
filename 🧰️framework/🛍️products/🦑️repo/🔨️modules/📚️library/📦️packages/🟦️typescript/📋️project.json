@@ -6,19 +6,21 @@
   "targets": {
     "test-process-budgets": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test process-budgets"
-      }
+      },
+      "outputs": []
     },
     "test-exact-cargo-laws": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exact-cargo-laws"
-      }
+      },
+      "outputs": []
     },
     "test-path-emoji-statutes": {
       "executor": "nx:run-commands",
@@ -138,7 +140,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test inventory-artifact-shards"
-      }
+      },
+      "cache": true
     },
     "test-root-script-compiler": {
       "executor": "nx:run-commands",
@@ -429,11 +432,12 @@
     },
     "generate-ticket-important-fem-handoff": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate-ticket-important-fem-handoff"
-      }
+      },
+      "outputs": []
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -445,11 +449,12 @@
     },
     "check-ticket-important-fem-handoff": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-ticket-important-fem-handoff"
-      }
+      },
+      "outputs": []
     },
     "workspaces-check": {
       "executor": "nx:run-commands",

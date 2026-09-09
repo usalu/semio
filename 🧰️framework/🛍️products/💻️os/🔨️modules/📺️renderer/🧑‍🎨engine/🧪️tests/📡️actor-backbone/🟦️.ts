@@ -6,7 +6,7 @@ import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/
 import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
 import bindingSchema from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json";
-import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️fixture/🔣️.json";
+import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json";
 
 const owner = { ...fixture.owner, activationGeneration: BigInt(fixture.owner.activationGeneration) };
 const source = { runtimeKey: owner.runtimeKey, clientInstanceId: owner.clientInstanceId, scope: owner.scope };

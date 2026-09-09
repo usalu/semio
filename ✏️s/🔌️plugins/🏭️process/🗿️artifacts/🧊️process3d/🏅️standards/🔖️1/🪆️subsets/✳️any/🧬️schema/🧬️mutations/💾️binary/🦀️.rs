@@ -303,16 +303,23 @@ pub fn process3d_take_publication_hostile_observed(operation: semio_framework_jo
     slot.take()?.observed
 }
 
+/// 🧮️ Domain item, output page, and control limits admitted for one publication.
+#[derive(Clone, Copy)]
+pub struct Process3dPublicationLimits {
+    pub maximum_items: usize,
+    pub maximum_output_pages: usize,
+    pub maximum_controls: usize,
+}
+
 pub fn process3d_admit_publication_authority(
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     base_revision: u64,
     parent_revision: u64,
     live_revision: u64,
-    maximum_items: usize,
-    maximum_output_pages: usize,
-    maximum_controls: usize,
+    limits: Process3dPublicationLimits,
 ) -> Result<(), &'static str> {
+    let Process3dPublicationLimits { maximum_items, maximum_output_pages, maximum_controls } = limits;
     if generation.0 != live_revision || base_revision != live_revision || parent_revision != base_revision {
         return Err("process3d-publication.initial-freshness");
     }

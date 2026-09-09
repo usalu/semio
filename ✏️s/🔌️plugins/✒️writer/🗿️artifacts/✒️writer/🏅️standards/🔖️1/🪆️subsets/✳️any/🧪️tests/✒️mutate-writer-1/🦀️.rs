@@ -13,7 +13,7 @@
 //! and format-neutral by their own doc comment.
 //!
 //! What the evidence rests on is the committed `(before, mutation, after, outcome)` specification
-//! vector under each of the four `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves. Those files are
+//! vector under each of the four `🧫️fixtures/🧬️mutations/<slug>/<fixture>/` leaves. Those files are
 //! read HERE through `asset://`, so the plan pins their digests and a silently edited vector
 //! changes the plan rather than the result. Nothing is transcribed into this file: the only literal
 //! this adapter carries is the kind list, and the production module's own
@@ -48,11 +48,11 @@ const GUARD_VECTORS: &[&str] = &["edit-text"];
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` table is rooted, relative to this
 /// case's owner — the artifact root, which is what `asset://` resolves against.
-const VECTORS: &str = "asset://🧬️schema/🧬️mutations";
+const VECTORS: &str = "shared://🧬️mutations";
 
 /// 📄️ The real committed `jack` document, in this subset's own `.dsl.semio` text envelope.
 #[cfg(feature = "sut")]
-const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject

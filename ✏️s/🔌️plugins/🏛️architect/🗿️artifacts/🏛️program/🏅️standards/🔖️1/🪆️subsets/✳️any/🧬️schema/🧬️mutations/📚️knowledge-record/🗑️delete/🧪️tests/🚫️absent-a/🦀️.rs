@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/🦠️mutation/🔣️.json");
+const ABSENT: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("delete-knowledge-record/rejects-deleting-absent-knowledge-record-a: before snapshot decodes")

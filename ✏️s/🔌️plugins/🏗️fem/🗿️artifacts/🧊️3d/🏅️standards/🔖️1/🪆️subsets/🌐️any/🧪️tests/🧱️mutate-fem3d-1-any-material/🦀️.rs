@@ -37,7 +37,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for
 /// the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🧊️steel-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🧱️mutate-fem3d-1-any-material/🧊️steel-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -55,25 +55,25 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-material" => Vector {
-            before: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/🎯️outcome/🔣️.json"),
         },
         "delete-material" => Vector {
-            before: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-b7b56a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-b7b56a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-b7b56a/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-b7b56a/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-b7b56a/🎯️outcome/🔣️.json"),
         },
         "replace-material" => Vector {
-            before: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️softens-the-2cd183/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️softens-the-2cd183/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️softens-the-2cd183/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️softens-the-2cd183/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️softens-the-2cd183/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-material: no committed specification vector is registered for kind {other:?}"),
     }
@@ -174,7 +174,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://🧱️mutate-fem3d-1-any-material/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

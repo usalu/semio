@@ -6,7 +6,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { it, expect } = vitest;
 
   it("PluginPollCompositionWit preserves the canonical six scalars and exact nested field names", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixture/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
+    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
     const { default: schema } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const library = "lodash"; const { default: _ } = await import(library); const { Buffer } = await import("node:buffer");
     const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.getSchema("https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/CompositionFixture")!(fixture)).toBe(true);
@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("PluginPollCompositionWit checks every WIT u64 before conversion and keeps number and bigint dialects distinct", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixture/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json"); const library = "lodash"; const { default: _ } = await import(library);
+    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json"); const library = "lodash"; const { default: _ } = await import(library);
     const original = fixture.valid[1]!.input.composition; const wire = api.pluginPollCompositionToWit(original);
     for (const path of contract.wireOrder) {
       for (const invalid of [-1n, BigInt(contract.scalar.maximum) + 1n, 0x10000000000000000n, 1, "1", null, undefined]) { const value = _.cloneDeep(wire); _.set(value, path, invalid); expect(() => api.pluginPollCompositionFromWit(value)).toThrow(/composition/); }
@@ -33,7 +33,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("PluginPollCompositionWit reads only own data fields without claiming unknown-root retirement or private owner authority", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixture/🔣️.json"); const original = fixture.valid[1]!.input.composition; let reads = 0;
+    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixtures/🔣️.json"); const original = fixture.valid[1]!.input.composition; let reads = 0;
     const wrapper = { ...original, payload: new Uint8Array(8193), get extra() { reads++; throw new Error("unread"); } };
     expect(api.pluginPollCompositionToWit(wrapper)).toEqual(api.pluginPollCompositionToWit(original)); expect(wrapper.payload.byteLength).toBe(8193); expect(reads).toBe(0);
     for (const key of ["bytes", "slots", "owners", "control"]) { const accessor = { ...original }; Object.defineProperty(accessor, key, { get() { reads++; throw new Error("accessor"); } }); expect(() => api.pluginPollCompositionToWit(accessor)).toThrow(/field/); }

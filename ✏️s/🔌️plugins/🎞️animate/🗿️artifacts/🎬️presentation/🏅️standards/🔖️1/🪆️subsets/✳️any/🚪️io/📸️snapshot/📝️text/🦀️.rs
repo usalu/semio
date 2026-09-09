@@ -11,7 +11,7 @@ use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 /// 📄️ The handcrafted `.presentation` DSL-text fixture — a multi-tile deck exercising every field
 /// (including the optional `source-aspect`), embedded at compile time as the permanent proof that
 /// the checked-in fixture still parses and round trips.
-pub const PRESENTATION_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const PRESENTATION_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.presentation` DSL text into a `PresentationSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PresentationSnapshot, store::TextError> {

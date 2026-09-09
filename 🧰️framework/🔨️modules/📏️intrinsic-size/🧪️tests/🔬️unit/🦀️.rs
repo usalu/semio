@@ -29,7 +29,7 @@ struct RasterCase {
 }
 
 fn corpus() -> Corpus {
-    serde_json::from_str(include_str!("../🔣️.json")).expect("valid intrinsic-size fixture corpus")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("valid intrinsic-size fixture corpus")
 }
 
 #[test]

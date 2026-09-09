@@ -11,7 +11,9 @@ pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Vec<Sem
     };
     let tail = &base.faces[index..];
     let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: x.id.clone() })).collect();
-    undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation })));
+    undo.extend(
+        tail.iter().map(|x| SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation, tol: x.tol })),
+    );
     undo
 }
 //#endregion 🔖️Inverse

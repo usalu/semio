@@ -1,9 +1,8 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `set-active-example`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
-use semio_framework_plugin::Emit;
+use semio_framework_plugin::{Emit, NoConfigMutation};
 use store::ArtifactDsl;
 
 pub(crate) fn preset_query(preset_id: &str) -> &'static str {
@@ -21,11 +20,10 @@ fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     }
 }
 
-pub(crate) fn set_active_example(example_id: &str) -> Emit<TrinityGraphMutation, JackConfigMutation> {
+pub(crate) fn set_active_example(example_id: &str) -> Emit<TrinityGraphMutation, NoConfigMutation> {
     match fixture_dsl_for_preset(example_id).and_then(|dsl| JackSnapshot::parse_dsl(dsl).ok()) {
         Some(next) => {
-            let query = preset_query(example_id).to_string();
-            Emit { effects: vec![crate::editor::jack::reset_document_effect(&next)], config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query })], ..Default::default() }
+            Emit { effects: vec![crate::editor::jack::reset_document_effect(&next)], ..Default::default() }
         }
         None => Emit::default(),
     }

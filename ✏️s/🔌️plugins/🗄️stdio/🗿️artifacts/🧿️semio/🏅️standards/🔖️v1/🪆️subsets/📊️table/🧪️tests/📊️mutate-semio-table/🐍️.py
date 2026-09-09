@@ -34,12 +34,12 @@ Nothing here imports, links, wraps or transliterates the Rust subject; no file u
 was written against the documents above; where the two implementations disagree the disagreement is
 a finding, not something to tune away.
 
-🧫️ **Provenance of the complex artifact.** `local://📝️reuse-marketplaces.dsl.semio` and its binary
+🧫️ **Provenance of the complex artifact.** `shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio` and its binary
 twin were derived ONCE, by `derive_document_from_csv` below, from the real committed survey table
 `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv` — 50 data rows over
 12 columns of real German building-material-reuse marketplace research, with commas, em dashes and
 umlauts inside quoted fields. That source file is committed beside them as
-`local://📊️reuse-marketplaces.csv`, and `payload-fidelity` re-derives the document from it on every
+`shared://📊️mutate-semio-table/📊️reuse-marketplaces.csv`, and `payload-fidelity` re-derives the document from it on every
 run through Python's own `csv` module — an independent RFC 4180 implementation — so the fixture can
 never silently drift away from the real data it claims to carry.
 """
@@ -572,7 +572,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 # region 🔖️Derivation
 def derive_document_from_csv(raw: bytes) -> dict:
     """🧫️ The real committed survey table as an `s.stdio.semio.table` document — the ONE derivation
-    that produced `local://📝️reuse-marketplaces.dsl.semio`, kept here and re-run by
+    that produced `shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio`, kept here and re-run by
     `payload-fidelity` so the fixture can never drift from the CSV it claims to carry.
 
     It is a faithful transcription and nothing more: the header record names the columns, every
@@ -598,11 +598,11 @@ def derive_document_from_csv(raw: bytes) -> dict:
 
 
 # region 🔖️Scenario input
-SHEET_DSL = "asset://📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio"
-SHEET_PACK = "asset://📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio"
-SURVEY_CSV = "local://♻️reuse-marketplaces/📊️.csv"
-SURVEY_DSL = "local://📝️reuse-marketplaces.dsl.semio"
-SURVEY_PACK = "local://📦️reuse-marketplaces.pack.semio"
+SHEET_DSL = "asset://📃️sheet/🗣️.dsl.semio"
+SHEET_PACK = "asset://📃️sheet/🎒️.pack.semio"
+SURVEY_CSV = "shared://📊️mutate-semio-table/♻️reuse-marketplaces/📊️.csv"
+SURVEY_DSL = "shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio"
+SURVEY_PACK = "shared://📊️mutate-semio-table/📦️reuse-marketplaces.pack.semio"
 
 
 def doc_string(ctx: Context) -> str:

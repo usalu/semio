@@ -1,5 +1,8 @@
 type WiresCanvasTransient {
   dragNodeId: String @state(class: TRANSIENT)
+  dragStartX: Float! @state(class: TRANSIENT)
+  dragStartY: Float! @state(class: TRANSIENT)
   dragLastX: Float! @state(class: TRANSIENT)
   dragLastY: Float! @state(class: TRANSIENT)
+  dragZoom: Float! @state(class: TRANSIENT)
 }

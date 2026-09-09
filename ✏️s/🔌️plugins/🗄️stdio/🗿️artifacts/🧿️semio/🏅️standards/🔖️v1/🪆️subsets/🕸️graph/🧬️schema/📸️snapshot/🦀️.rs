@@ -557,7 +557,7 @@ pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot
 /// 📝️ Parses `s.stdio.semio.graph` DSL text into a [`SemioGraphSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `🌳️mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
-/// artifact (`../../📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// artifact (`../../🖼️assets/🕸️wires/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_graph_dsl(text: &str) -> Result<SemioGraphSnapshot, String> {
     <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
@@ -579,7 +579,7 @@ pub fn encode_semio_graph_pack(snapshot: &SemioGraphSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioGraphSnapshot`] — the inverse of
-/// [`encode_semio_graph_pack`], reading `../../📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio`.
+/// [`encode_semio_graph_pack`], reading `../../🖼️assets/🕸️wires/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_graph_pack(bytes: &[u8]) -> Result<SemioGraphSnapshot, String> {
     <SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

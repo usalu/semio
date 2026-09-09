@@ -14,11 +14,11 @@ use crate::schema::mutations::reorder_materials::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-materials/flips-the-glass-and-steel-materials";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/💎️material/🔀️reorder/🔀️flips-the-glass-98d5db/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/💎️material/🔀️reorder/🔀️flips-the-glass-98d5db/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/💎️material/🔀️reorder/🔀️flips-the-glass-98d5db/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/💎️material/🔀️reorder/🔀️flips-the-glass-98d5db/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/💎️material/🔀️reorder/🔀️flips-the-glass-98d5db/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

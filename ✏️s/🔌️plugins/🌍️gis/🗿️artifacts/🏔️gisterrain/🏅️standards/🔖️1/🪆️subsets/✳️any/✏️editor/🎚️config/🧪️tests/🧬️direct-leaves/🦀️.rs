@@ -8,7 +8,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {
-    serde_json::from_str(include_str!("🔣️.json")).expect("domain neutral vectors")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🧬️direct-leaves/🔣️.json")).expect("domain neutral vectors")
 }
 
 fn decode<T: dsl::FromValue>(value: &Value) -> T {
@@ -150,7 +150,7 @@ where
     assert_eq!(<T as MutationKind<Gis3dConfig, Gis3dConfigMutation>>::SEMANTICS.kind, T::DESCRIPTOR.semantic_kind);
     assert_eq!(provenance.owner, T::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", T::DESCRIPTOR.owner));
-    assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", T::DESCRIPTOR.owner));
+    assert_eq!(provenance.descriptor_path, format!("{}/../../🧫️fixtures/🧬️direct-leaves/🔣️.json", T::DESCRIPTOR.owner));
     let mutation_root: &'static str = T::DESCRIPTOR.owner.rsplit_once('/').expect("direct leaf parent").0;
     let scope = protocol::MutationLeafSourceScope {
         workspace_token: provenance.workspace_token,
@@ -159,7 +159,7 @@ where
         taxonomy_path: provenance.taxonomy_path,
         mutation_payload_facet: "🦠️mutation",
         source_filename: "🦀️.rs",
-        descriptor_filename: "🔣️.json",
+        descriptor_filename: "../../🧫️fixtures/🧬️direct-leaves/🔣️.json",
     };
     assert!(protocol::validate_mutation_leaf_source(&T::DESCRIPTOR, &provenance, &scope).is_ok());
     assert_eq!(<Gis3dConfigMutation as Mutation<Gis3dConfig>>::DESCRIPTORS.iter().filter(|entry| entry.owner == T::DESCRIPTOR.owner).count(), 1);

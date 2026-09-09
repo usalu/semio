@@ -15,33 +15,32 @@
   "properties": {
     "gK": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "qK": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/norm/en1990/artifact.json#/$defs/En1990QkEntry"
-      },
+      "$ref": "https://semio.tech/schema/os/store/child.json",
       "x-semio-state": "artifact"
     },
     "resistanceKn": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "consequenceClass": {
       "type": "integer",
-      "format": "uint32",
+      "minimum": 0,
+      "maximum": 255,
       "x-semio-state": "artifact"
     },
     "annex": {
       "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
       "x-semio-state": "artifact"
     },
     "seismicAEdKn": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     }
   }

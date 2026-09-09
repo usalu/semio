@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 📦️ The `fem2d-play` "default" example, embedded at compile time as handcrafted `.fem2d` DSL text —
 /// shared by the manifest's `.example(...)` registration, the `setActiveExample` handler, and every
 /// test fixture.
-pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.fem2d` DSL text into a `Fem2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Fem2dSnapshot, store::TextError> {

@@ -2,28 +2,39 @@
   "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "uncached": [
-    "setup",
-    "deps",
-    "install",
-    "postinstall",
-    "update",
-    "publish",
-    "deploy",
-    "migrate",
-    "seed",
+    "activate",
+    "audit",
+    "bench",
+    "cache-verify",
+    "ci-baseline",
     "clean",
-    "purge",
+    "deploy",
+    "deps",
     "disk-prune",
+    "disk-report",
+    "doctor",
     "format",
     "format-fix",
-    "bench",
     "fuzz",
-    "doctor",
-    "audit",
-    "disk-report",
+    "generator-inputs",
+    "install",
+    "migrate",
+    "new",
     "perf-baseline",
-    "cache-verify",
-    "new"
+    "postinstall",
+    "prepare",
+    "publish",
+    "purge",
+    "seed",
+    "setup",
+    "test-discover",
+    "test-doctor",
+    "test-e2e",
+    "test-fixture-generate",
+    "test-fixture-reproduce",
+    "test-inventory",
+    "test-metrics",
+    "update"
   ],
   "continuous": [
     "dev",
@@ -295,7 +306,7 @@
           "env": "SEMIO_BUILD_BUDGET_MS"
         }
       ],
-      "cache": false
+      "cache": true
     },
     "publish": {
       "cache": false
@@ -414,6 +425,60 @@
         "^default"
       ],
       "outputs": [],
+      "cache": true
+    },
+    "generate": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "verify": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-quick": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-build": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-test": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "cpp-configure": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "schema-generate": {
+      "inputs": [
+        "schemaSources"
+      ],
       "cache": true
     }
   },

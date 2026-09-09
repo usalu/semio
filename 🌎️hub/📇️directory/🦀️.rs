@@ -512,13 +512,13 @@ pub mod model {
 //#endregion 🔖️Model
 
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
+pub use crate::artifact_authority::creation::{ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use directory::os_directory::{
-    descriptor_digest_v1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1,
-    DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint,
+    ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent,
+    DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint, descriptor_digest_v1,
 };
 use directory::os_identity::time_ordered_id;
 use error::{DirectoryError, DirectoryResult};
-pub use crate::artifact_authority::creation::{ArtifactCreationIntentV1, ArtifactCreationClaimV1, ArtifactCreationFactV1, ArtifactCreationFactAppendV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use model::*;
 use semio_framework_hash::Sha256;
 use std::collections::HashMap;
@@ -1371,11 +1371,7 @@ pub(crate) fn visibility_to_str(visibility: DirectorySpaceVisibility) -> &'stati
 /// @emoji 🧬️ Rejects descriptors that cannot safely select and verify a cold-open codec.
 pub fn validate_document_descriptor(descriptor: &DocumentDescriptor) -> DirectoryResult<()> {
     fn present(value: &str, field: &str) -> DirectoryResult<()> {
-        if value.trim().is_empty() {
-            Err(DirectoryError::Conflict(format!("document descriptor {field} must not be empty")))
-        } else {
-            Ok(())
-        }
+        if value.trim().is_empty() { Err(DirectoryError::Conflict(format!("document descriptor {field} must not be empty"))) } else { Ok(()) }
     }
     fn hash(value: &str, field: &str) -> DirectoryResult<()> {
         if value.len() != 64 || value == "0".repeat(64) || !value.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
@@ -1512,27 +1508,65 @@ pub(crate) fn validate_published_checkpoint_lineage(descriptor: &DocumentDescrip
         return Err(DirectoryError::Conflict("artifact checkpoint durable descriptor or lineage bound differs".into()));
     }
     match active {
-        None if count == 0 && candidate.parent_checkpoint_id.is_none() && candidate.baseline_frontier.is_genesis_for(&candidate.scope)
-            && descriptor.bootstrap_frontier == (::directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 }) && descriptor.bootstrap_snapshot_hash == candidate.pack.sha256.hex() => Ok(()),
-        Some(previous) if previous.scope == candidate.scope && candidate.parent_checkpoint_id == Some(previous.checkpoint_id)
-            && candidate.baseline_frontier.is_edited_for(&candidate.scope) && frontier_strictly_advances(&previous.baseline_frontier, &candidate.baseline_frontier) => Ok(()),
+        None if count == 0
+            && candidate.parent_checkpoint_id.is_none()
+            && candidate.baseline_frontier.is_genesis_for(&candidate.scope)
+            && descriptor.bootstrap_frontier == (::directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 })
+            && descriptor.bootstrap_snapshot_hash == candidate.pack.sha256.hex() =>
+        {
+            Ok(())
+        }
+        Some(previous)
+            if previous.scope == candidate.scope
+                && candidate.parent_checkpoint_id == Some(previous.checkpoint_id)
+                && candidate.baseline_frontier.is_edited_for(&candidate.scope)
+                && frontier_strictly_advances(&previous.baseline_frontier, &candidate.baseline_frontier) =>
+        {
+            Ok(())
+        }
         _ => Err(DirectoryError::Conflict("artifact checkpoint durable parent or frontier differs".into())),
     }
 }
 
 /// 🌱️ Validates the exact prepared creation and its fixed author/author/system event packet.
 pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1) -> DirectoryResult<()> {
-    let Some(prepared) = operation.prepared.as_ref() else { return Err(DirectoryError::Conflict("genesis creation has no durable prepared pair".into())); };
+    let Some(prepared) = operation.prepared.as_ref() else {
+        return Err(DirectoryError::Conflict("genesis creation has no durable prepared pair".into()));
+    };
     prepared.validate(&operation.intent)?;
-    if operation.intent != append.intent || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing || operation.revision != 2 || append.now_ms >= append.intent.deadline_ms || append.now_ms < prepared.checkpoint.published_at_ms { return Err(DirectoryError::Conflict("genesis creation identity, phase or deadline changed".into())); }
+    if operation.intent != append.intent
+        || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing
+        || operation.revision != 2
+        || append.now_ms >= append.intent.deadline_ms
+        || append.now_ms < prepared.checkpoint.published_at_ms
+    {
+        return Err(DirectoryError::Conflict("genesis creation identity, phase or deadline changed".into()));
+    }
     let mut canonical = append.checkpoint.clone();
-    canonical.pack.storage_key = prepared.checkpoint.pack.storage_key.clone(); canonical.spr.storage_key = prepared.checkpoint.spr.storage_key.clone();
-    if canonical != prepared.checkpoint { return Err(DirectoryError::Conflict("genesis checkpoint differs from prepared bytes".into())); }
+    canonical.pack.storage_key = prepared.checkpoint.pack.storage_key.clone();
+    canonical.spr.storage_key = prepared.checkpoint.spr.storage_key.clone();
+    if canonical != prepared.checkpoint {
+        return Err(DirectoryError::Conflict("genesis checkpoint differs from prepared bytes".into()));
+    }
     crate::artifact_authority::chunk_cas::validate_artifact_cas_publication_v1(&append.reservation.plan, &append.checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
     validate_published_checkpoint_lineage(&prepared.descriptor, None, 0, &published_artifact_checkpoint(&append.checkpoint))?;
-    let expected = [DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() }, DirectoryEventBody::DocumentIndexed { scope: append.intent.scope.clone(), descriptor_digest_v1: prepared.checkpoint.descriptor_digest_v1, entry: ::directory::os_directory::DocumentIndexEntryV1 { name: append.intent.request.name.clone(), dialect: append.intent.parent_dialect.clone() } }];
+    let expected = [
+        DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() },
+        DirectoryEventBody::DocumentIndexed {
+            scope: append.intent.scope.clone(),
+            descriptor_digest_v1: prepared.checkpoint.descriptor_digest_v1,
+            entry: ::directory::os_directory::DocumentIndexEntryV1 { name: append.intent.request.name.clone(), dialect: append.intent.parent_dialect.clone() },
+        },
+    ];
     for (event, body) in append.events[..2].iter().zip(expected) {
-        if event.body != body || event.actor.kind != DirectoryActorKind::User || actor_user_id(&event.actor)? != append.intent.actor.user_id || event.user_id.as_deref() != Some(&append.intent.actor.user_id) || event.space_id.as_deref() != Some(&append.intent.scope.space_id) { return Err(DirectoryError::Conflict("genesis author event packet differs".into())); }
+        if event.body != body
+            || event.actor.kind != DirectoryActorKind::User
+            || actor_user_id(&event.actor)? != append.intent.actor.user_id
+            || event.user_id.as_deref() != Some(&append.intent.actor.user_id)
+            || event.space_id.as_deref() != Some(&append.intent.scope.space_id)
+        {
+            return Err(DirectoryError::Conflict("genesis author event packet differs".into()));
+        }
     }
     validate_verified_checkpoint_append(&append.events[2], &append.checkpoint)?;
     Ok(())
@@ -1541,24 +1575,57 @@ pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOp
 /// 🧾️ Only the transaction's actual dense public triple can construct its completion fact.
 pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1, events: &[DirectoryEvent]) -> DirectoryResult<ArtifactCreationFactV1> {
     validate_document_genesis_append_v1(operation, append)?;
-    if events.len() != 3 || events[0].seq == 0 || events[0].seq.checked_add(1) != Some(events[1].seq) || events[1].seq.checked_add(1) != Some(events[2].seq) || events.iter().zip(&append.events).any(|(event, original)| event.body != original.body || event.actor != original.actor || event.space_id != original.space_id || event.user_id != original.user_id) { return Err(DirectoryError::Conflict("genesis committed event sequence differs".into())); }
-    Ok(ArtifactCreationFactV1 { actor_user_id: append.intent.actor.user_id.clone(), request_id: append.intent.request.request_id.clone(), revision: 3, recorded_at_ms: append.now_ms, body: crate::artifact_authority::creation::ArtifactCreationFactBodyV1::Committed { receipt: crate::artifact_authority::creation::ArtifactCreationReceiptV1 { ready: append.intent.ready(), checkpoint_id: append.checkpoint.checkpoint_id, descriptor_digest_v1: append.checkpoint.descriptor_digest_v1, event_seq_first: events[0].seq, event_seq_last: events[2].seq, event_ids: events.iter().map(|event| event.id.clone()).collect() } } })
+    if events.len() != 3
+        || events[0].seq == 0
+        || events[0].seq.checked_add(1) != Some(events[1].seq)
+        || events[1].seq.checked_add(1) != Some(events[2].seq)
+        || events.iter().zip(&append.events).any(|(event, original)| event.body != original.body || event.actor != original.actor || event.space_id != original.space_id || event.user_id != original.user_id)
+    {
+        return Err(DirectoryError::Conflict("genesis committed event sequence differs".into()));
+    }
+    Ok(ArtifactCreationFactV1 {
+        actor_user_id: append.intent.actor.user_id.clone(),
+        request_id: append.intent.request.request_id.clone(),
+        revision: 3,
+        recorded_at_ms: append.now_ms,
+        body: crate::artifact_authority::creation::ArtifactCreationFactBodyV1::Committed {
+            receipt: crate::artifact_authority::creation::ArtifactCreationReceiptV1 {
+                ready: append.intent.ready(),
+                checkpoint_id: append.checkpoint.checkpoint_id,
+                descriptor_digest_v1: append.checkpoint.descriptor_digest_v1,
+                event_seq_first: events[0].seq,
+                event_seq_last: events[2].seq,
+                event_ids: events.iter().map(|event| event.id.clone()).collect(),
+            },
+        },
+    })
 }
 
 /// 🔏️ Validates the exact immutable descriptor binding before any backend indexes a document.
 pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &DocumentDescriptor) -> DirectoryResult<::directory::os_directory::DirectoryIndexedDocumentViewV1> {
-    let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else { return Err(DirectoryError::Conflict("document index event required".into())); };
+    let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else {
+        return Err(DirectoryError::Conflict("document index event required".into()));
+    };
     ::directory::os_directory::validate_directory_event_page_event(event).map_err(|_| DirectoryError::Conflict("document index event is invalid".into()))?;
     if descriptor.space_id != scope.space_id || descriptor.document_id != scope.document_id || descriptor.artifact_kind != entry.dialect.artifact_kind || descriptor_digest_v1(descriptor).ok().as_ref() != Some(digest) {
         return Err(DirectoryError::Conflict("document index descriptor binding differs".into()));
     }
-    Ok(::directory::os_directory::DirectoryIndexedDocumentViewV1 { descriptor: descriptor.clone(), descriptor_digest_v1: *digest, entry: entry.clone(), created_at_ms: event.recorded_at_ms, created_by: event.user_id.clone().ok_or(DirectoryError::Unauthorized)? })
+    Ok(::directory::os_directory::DirectoryIndexedDocumentViewV1 {
+        descriptor: descriptor.clone(),
+        descriptor_digest_v1: *digest,
+        entry: entry.clone(),
+        created_at_ms: event.recorded_at_ms,
+        created_by: event.user_id.clone().ok_or(DirectoryError::Unauthorized)?,
+    })
 }
 
 /// 📇️ No active checkpoint may outlive its descriptor-bound discoverable index row.
 pub(crate) fn validate_checkpoint_index_v1(index: Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1>, descriptor: &DocumentDescriptor, checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
-    if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1 && row.entry.dialect.artifact_kind == descriptor.artifact_kind) { Ok(()) }
-    else { Err(DirectoryError::Conflict("artifact checkpoint requires its descriptor-bound index".into())) }
+    if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1 && row.entry.dialect.artifact_kind == descriptor.artifact_kind) {
+        Ok(())
+    } else {
+        Err(DirectoryError::Conflict("artifact checkpoint requires its descriptor-bound index".into()))
+    }
 }
 
 /// 🧠️ Dependency-free in-memory artifact projection used by embedded hosts and backend parity laws.
@@ -1768,12 +1835,7 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 /// - Any command naming a missing/deleted space ⇒ `DirectoryError::NotFound`.
 /// - `upsert-member` with an email that has no `UserRecord` yet emits `user.created` first, using
 ///   a freshly minted user id the following `member.upserted` also uses.
-pub async fn decide(
-    dir: &HubDirectories,
-    actor: &DirectoryActor,
-    command: DirectoryCommand,
-    clock: &mut HubClock,
-) -> DirectoryResult<Decision> {
+pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: DirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
     match command {
         DirectoryCommand::CreateSpace { name, space_kind, visibility } => {
             let space_id = time_ordered_id();
@@ -1848,9 +1910,9 @@ pub async fn decide(
             require_space(dir, &descriptor.space_id).await?;
             let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
             match dir.get_document_descriptor(&scope).await? {
-                Some(existing) if existing == descriptor => Ok(Decision { events: Vec::new(), result: None }),
+                Some(existing) if existing == *descriptor => Ok(Decision { events: Vec::new(), result: None }),
                 Some(_) => Err(DirectoryError::Conflict(format!("document descriptor for '{}/{}' is immutable", descriptor.space_id, descriptor.document_id))),
-                None => Ok(single(clock, actor, Some(descriptor.space_id.clone()), None, DirectoryEventBody::DocumentAnnounced { descriptor })),
+                None => Ok(single(clock, actor, Some(descriptor.space_id.clone()), None, DirectoryEventBody::DocumentAnnounced { descriptor: *descriptor })),
             }
         }
     }
@@ -2058,7 +2120,9 @@ pub struct DirectoryService {
 }
 
 /// 🔐️ A socket retains this opaque read lease only through its bounded final network send.
-pub struct DirectoryDeliveryLeaseV1<'a> { _guard: tokio::sync::RwLockReadGuard<'a, ()> }
+pub struct DirectoryDeliveryLeaseV1<'a> {
+    _guard: tokio::sync::RwLockReadGuard<'a, ()>,
+}
 
 const DIRECTORY_DELIVERY_SCOPE_MAX: usize = 4096;
 
@@ -2078,7 +2142,9 @@ impl DirectoryService {
     }
 
     /// 📡️ A wakeup is advisory; consumers recheck the epoch before any later event delivery.
-    pub fn subscribe_delivery_invalidations(&self) -> tokio::sync::broadcast::Receiver<String> { self.delivery_invalidations.subscribe() }
+    pub fn subscribe_delivery_invalidations(&self) -> tokio::sync::broadcast::Receiver<String> {
+        self.delivery_invalidations.subscribe()
+    }
 
     /// 🛂️ The epoch check and actual send share a lease; authority and visibility reads precede it.
     pub async fn acquire_delivery_lease(&self, space_id: Option<&str>, expected_epoch: u64) -> Option<DirectoryDeliveryLeaseV1<'_>> {
@@ -2100,33 +2166,72 @@ impl DirectoryService {
     }
 
     /// 🗄️ Server-owned services share the exact directory backend without exposing a driver.
-    pub(crate) fn backend(&self) -> &Arc<HubDirectories> { &self.dir }
+    pub(crate) fn backend(&self) -> &Arc<HubDirectories> {
+        &self.dir
+    }
 
     /// 📣️ Holds one writer through the sole genesis transaction and ordered publication of its triple.
-    pub async fn publish_document_genesis(&self, intent: ArtifactCreationIntentV1, prepared: &crate::artifact_authority::creation::ArtifactCreationPreparedV1, checkpoint: ArtifactCheckpoint, reservation: ArtifactCasReservation, now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
+    pub async fn publish_document_genesis(
+        &self,
+        intent: ArtifactCreationIntentV1,
+        prepared: &crate::artifact_authority::creation::ArtifactCreationPreparedV1,
+        checkpoint: ArtifactCheckpoint,
+        reservation: ArtifactCasReservation,
+        now_ms: u64,
+    ) -> DirectoryResult<ArtifactCreationOperationV1> {
         let mut clock = self.write.lock().await;
         let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#artifact-creation", intent.actor.user_id) };
-        let bodies = [DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() }, DirectoryEventBody::DocumentIndexed { scope: intent.scope.clone(), descriptor_digest_v1: checkpoint.descriptor_digest_v1, entry: ::directory::os_directory::DocumentIndexEntryV1 { name: intent.request.name.clone(), dialect: intent.parent_dialect.clone() } }, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: published_artifact_checkpoint(&checkpoint) }];
+        let bodies = [
+            DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() },
+            DirectoryEventBody::DocumentIndexed {
+                scope: intent.scope.clone(),
+                descriptor_digest_v1: checkpoint.descriptor_digest_v1,
+                entry: ::directory::os_directory::DocumentIndexEntryV1 { name: intent.request.name.clone(), dialect: intent.parent_dialect.clone() },
+            },
+            DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: published_artifact_checkpoint(&checkpoint) },
+        ];
         let mut ordinal = 0;
-        let events = bodies.map(|body| { let system = ordinal == 2; ordinal += 1; NewDirectoryEvent { hlc: clock.tick(), actor: if system { DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-creation".into() } } else { actor.clone() }, space_id: Some(intent.scope.space_id.clone()), user_id: if system { None } else { Some(intent.actor.user_id.clone()) }, body } });
+        let events = bodies.map(|body| {
+            let system = ordinal == 2;
+            ordinal += 1;
+            NewDirectoryEvent {
+                hlc: clock.tick(),
+                actor: if system { DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-creation".into() } } else { actor.clone() },
+                space_id: Some(intent.scope.space_id.clone()),
+                user_id: if system { None } else { Some(intent.actor.user_id.clone()) },
+                body,
+            }
+        });
         let append = DocumentGenesisAppendV1 { intent, events, checkpoint, reservation, now_ms };
         match self.dir.append_document_genesis(&append).await? {
-            DocumentGenesisCommitV1::Committed { events, operation } => { self.publish_persisted_locked(&clock, events); Ok(operation) }
+            DocumentGenesisCommitV1::Committed { events, operation } => {
+                self.publish_persisted_locked(&clock, events);
+                Ok(operation)
+            }
             DocumentGenesisCommitV1::Existing(operation) => Ok(operation),
             DocumentGenesisCommitV1::Indeterminate => {
                 let reconciled = async {
-                let facts = self.dir.read_artifact_creation(&append.intent.actor.user_id, &append.intent.request.request_id).await?;
-                let operation = ArtifactCreationOperationV1::fold(&facts)?;
-                if operation.intent != append.intent { return Err(DirectoryError::Conflict("genesis uncertain receipt belongs to another intent".into())); }
-                let Some(receipt) = operation.receipt.as_ref() else { return Err(DirectoryError::Backend("genesis commit acknowledgement is indeterminate; no durable receipt is readable".into())); };
-                let events = self.dir.events_since(receipt.event_seq_first - 1, 3).await?;
-                let prepared = ArtifactCreationOperationV1::fold(&facts[..2])?;
-                let completion = document_genesis_completion_v1(&prepared, &append, &events)?;
-                if facts.last() != Some(&completion) { return Err(DirectoryError::Conflict("genesis uncertain public triple differs from its exact stored receipt".into())); }
-                self.publish_persisted_locked(&clock, events);
-                Ok(operation)
-                }.await;
-                if reconciled.is_err() { self.invalidate_delivery_locked(&clock, &append.intent.scope.space_id).await; }
+                    let facts = self.dir.read_artifact_creation(&append.intent.actor.user_id, &append.intent.request.request_id).await?;
+                    let operation = ArtifactCreationOperationV1::fold(&facts)?;
+                    if operation.intent != append.intent {
+                        return Err(DirectoryError::Conflict("genesis uncertain receipt belongs to another intent".into()));
+                    }
+                    let Some(receipt) = operation.receipt.as_ref() else {
+                        return Err(DirectoryError::Backend("genesis commit acknowledgement is indeterminate; no durable receipt is readable".into()));
+                    };
+                    let events = self.dir.events_since(receipt.event_seq_first - 1, 3).await?;
+                    let prepared = ArtifactCreationOperationV1::fold(&facts[..2])?;
+                    let completion = document_genesis_completion_v1(&prepared, &append, &events)?;
+                    if facts.last() != Some(&completion) {
+                        return Err(DirectoryError::Conflict("genesis uncertain public triple differs from its exact stored receipt".into()));
+                    }
+                    self.publish_persisted_locked(&clock, events);
+                    Ok(operation)
+                }
+                .await;
+                if reconciled.is_err() {
+                    self.invalidate_delivery_locked(&clock, &append.intent.scope.space_id).await;
+                }
                 reconciled
             }
         }
@@ -2350,12 +2455,7 @@ impl DirectoryService {
     }
 
     /// 🧷️ Runs one pre-audited command and commits its factual effect receipt with the writer.
-    pub async fn execute_with_admin_effect(
-        &self,
-        actor: DirectoryActor,
-        command: DirectoryCommand,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<(Vec<DirectoryEvent>, Option<CommandResult>)> {
+    pub async fn execute_with_admin_effect(&self, actor: DirectoryActor, command: DirectoryCommand, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<(Vec<DirectoryEvent>, Option<CommandResult>)> {
         let mut clock = self.write.lock().await;
         match &command {
             DirectoryCommand::CreateInvite { space_id, role, ttl_secs } => {
@@ -2762,27 +2862,12 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
 pub trait HubDirectory: Send + Sync + 'static {
     //#region ShareTokens
     async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken>;
-    async fn issue_share_token_as_with_admin_effect(
-        &self,
-        scope: &DocumentScope,
-        ttl_secs: i64,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<IssuedShareToken>;
+    async fn issue_share_token_as_with_admin_effect(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedShareToken>;
     async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         self.issue_share_token_as(scope, ttl_secs, None, correlation_id).await
     }
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
-    async fn revoke_share_token_as_with_admin_effect(
-        &self,
-        scope: &DocumentScope,
-        share_id: &str,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<()>;
+    async fn revoke_share_token_as_with_admin_effect(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()>;
     async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         self.revoke_share_token_as(scope, share_id, reason, None, correlation_id).await
     }
@@ -2893,14 +2978,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn socket_session_binding(&self, session_id: &str, user_id: &str, authorization_generation: u64, space_id: Option<&str>, now_ms: i64) -> DirectoryResult<SocketSessionBindingStatus>;
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>>;
     async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
-    async fn revoke_auth_sessions_for_user_with_admin_effect(
-        &self,
-        user_id: &str,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>>;
+    async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>>;
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>>;
     //#endregion
@@ -2951,15 +3029,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
     // `decide` as its one documented write exception (`//#region 🔖️Decider`).
     async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
-    async fn issue_invite_as_with_admin_effect(
-        &self,
-        space_id: &str,
-        role: SpaceRole,
-        ttl_secs: i64,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<IssuedInvite>;
+    async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite>;
     async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
         self.issue_invite_as(space_id, role, ttl_secs, None, correlation_id).await
     }
@@ -2968,15 +3038,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// 🎟️ Claims `accepted_at`, appends the derived event and applies membership in one backend transaction.
     async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit>;
     async fn revoke_invite_as(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
-    async fn revoke_invite_as_with_admin_effect(
-        &self,
-        space_id: &str,
-        invite_id: &str,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<()>;
+    async fn revoke_invite_as_with_admin_effect(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()>;
     async fn revoke_invite(&self, space_id: &str, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         self.revoke_invite_as(space_id, invite_id, reason, None, correlation_id).await
     }

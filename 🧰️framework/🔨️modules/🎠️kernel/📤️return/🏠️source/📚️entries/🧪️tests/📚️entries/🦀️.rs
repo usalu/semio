@@ -2,7 +2,7 @@
 use super::return_source_entries::{ReturnSourceEntries, ReturnSourceEntry};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn release_entry<T>(entry: &mut Option<ReturnSourceEntry<T>>) -> Option<T> {

@@ -153,39 +153,40 @@ impl En1991Mutation {
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1991Snapshot) -> Vec<En1991Mutation> {
-        let mut mutations = Vec::with_capacity(32);
-        mutations.push(En1991Mutation::ChangeDeltaTK(change_delta_tk::ChangeDeltaTK { new_delta_t_k: snapshot.delta_t_k }));
-        mutations.push(En1991Mutation::ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane { new_bridge_lane: snapshot.bridge_lane }));
-        mutations.push(En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3 }));
-        mutations.push(En1991Mutation::ChangeWindZone(change_wind_zone::ChangeWindZone { new_wind_zone: snapshot.wind_zone }));
-        mutations.push(En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM { new_snow_altitude_m: snapshot.snow_altitude_m }));
-        mutations.push(En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: snapshot.hoisting_speed_m_s }));
-        mutations.push(En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT { new_accidental_mass_t: snapshot.accidental_mass_t }));
-        mutations.push(En1991Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m }));
-        mutations.push(En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2 }));
-        mutations.push(En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM { new_bridge_span_m: snapshot.bridge_span_m }));
-        mutations.push(En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2 { new_en_s_k_kn_m2: snapshot.en_s_k_kn_m2 }));
-        mutations.push(En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC { new_fire_member_capacity_c: snapshot.fire_member_capacity_c }));
-        mutations.push(En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial { new_self_weight_material: snapshot.self_weight_material.clone() }));
-        mutations.push(En1991Mutation::ChangeSnowZone(change_snow_zone::ChangeSnowZone { new_snow_zone: snapshot.snow_zone }));
-        mutations.push(En1991Mutation::ChangeEnVBMS(change_en_vbms::ChangeEnVBMS { new_en_v_b_m_s: snapshot.en_v_b_m_s }));
-        mutations.push(En1991Mutation::ChangeSiloMu(change_silo_mu::ChangeSiloMu { new_silo_mu: snapshot.silo_mu }));
-        mutations.push(En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: snapshot.silo_hydraulic_radius_m }));
-        mutations.push(En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm }));
-        mutations.push(En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: snapshot.crane_class.clone() }));
-        mutations.push(En1991Mutation::ChangeCD(change_cd::ChangeCD { new_c_d: snapshot.c_d }));
-        mutations.push(En1991Mutation::ChangeCS(change_cs::ChangeCS { new_c_s: snapshot.c_s }));
-        mutations.push(En1991Mutation::ChangeSiloK(change_silo_k::ChangeSiloK { new_silo_k: snapshot.silo_k }));
-        mutations.push(En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: snapshot.fire_curve }));
-        mutations.push(En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: snapshot.accidental_speed_km_h }));
-        mutations.push(En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: snapshot.bridge_lane_width_m }));
-        mutations.push(En1991Mutation::ChangeHoistClass(change_hoist_class::ChangeHoistClass { new_hoist_class: snapshot.hoist_class.clone() }));
-        mutations.push(En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: snapshot.area_m2 }));
-        mutations.push(En1991Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
-        mutations.push(En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: snapshot.category }));
-        mutations.push(En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: snapshot.self_weight_thickness_m }));
-        mutations.push(En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min }));
-        mutations.push(En1991Mutation::ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity { new_construction_activity: snapshot.construction_activity.clone() }));
+        let mutations = vec![
+            En1991Mutation::ChangeDeltaTK(change_delta_tk::ChangeDeltaTK { new_delta_t_k: snapshot.delta_t_k }),
+            En1991Mutation::ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane { new_bridge_lane: snapshot.bridge_lane }),
+            En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3 }),
+            En1991Mutation::ChangeWindZone(change_wind_zone::ChangeWindZone { new_wind_zone: snapshot.wind_zone }),
+            En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM { new_snow_altitude_m: snapshot.snow_altitude_m }),
+            En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: snapshot.hoisting_speed_m_s }),
+            En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT { new_accidental_mass_t: snapshot.accidental_mass_t }),
+            En1991Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m }),
+            En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2 }),
+            En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM { new_bridge_span_m: snapshot.bridge_span_m }),
+            En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2 { new_en_s_k_kn_m2: snapshot.en_s_k_kn_m2 }),
+            En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC { new_fire_member_capacity_c: snapshot.fire_member_capacity_c }),
+            En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial { new_self_weight_material: snapshot.self_weight_material.clone() }),
+            En1991Mutation::ChangeSnowZone(change_snow_zone::ChangeSnowZone { new_snow_zone: snapshot.snow_zone }),
+            En1991Mutation::ChangeEnVBMS(change_en_vbms::ChangeEnVBMS { new_en_v_b_m_s: snapshot.en_v_b_m_s }),
+            En1991Mutation::ChangeSiloMu(change_silo_mu::ChangeSiloMu { new_silo_mu: snapshot.silo_mu }),
+            En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: snapshot.silo_hydraulic_radius_m }),
+            En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm }),
+            En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: snapshot.crane_class.clone() }),
+            En1991Mutation::ChangeCD(change_cd::ChangeCD { new_c_d: snapshot.c_d }),
+            En1991Mutation::ChangeCS(change_cs::ChangeCS { new_c_s: snapshot.c_s }),
+            En1991Mutation::ChangeSiloK(change_silo_k::ChangeSiloK { new_silo_k: snapshot.silo_k }),
+            En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: snapshot.fire_curve }),
+            En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: snapshot.accidental_speed_km_h }),
+            En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: snapshot.bridge_lane_width_m }),
+            En1991Mutation::ChangeHoistClass(change_hoist_class::ChangeHoistClass { new_hoist_class: snapshot.hoist_class.clone() }),
+            En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: snapshot.area_m2 }),
+            En1991Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }),
+            En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: snapshot.category }),
+            En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: snapshot.self_weight_thickness_m }),
+            En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min }),
+            En1991Mutation::ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity { new_construction_activity: snapshot.construction_activity.clone() }),
+        ];
         mutations
     }
 }

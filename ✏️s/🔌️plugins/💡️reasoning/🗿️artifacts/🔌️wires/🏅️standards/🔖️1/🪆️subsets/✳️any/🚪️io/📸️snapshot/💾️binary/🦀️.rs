@@ -48,7 +48,6 @@ fn encode_wires_snapshot_binary(snapshot: &WiresSnapshot) -> Vec<u8> {
     write_dsl(&mut out, &snapshot.wires_fixture);
     write_dsl_list(&mut out, &scene.nodes);
     write_dsl_list(&mut out, &scene.edges);
-    write_dsl(&mut out, &snapshot.camera);
     write_dsl(&mut out, &snapshot.meta);
     out
 }
@@ -58,10 +57,9 @@ fn decode_wires_snapshot_binary(bytes: &[u8]) -> Result<WiresSnapshot, String> {
     let wires_fixture = read_dsl(&mut reader)?;
     let nodes = read_dsl_list(&mut reader)?;
     let edges = read_dsl_list(&mut reader)?;
-    let camera = read_dsl(&mut reader)?;
     let meta = read_dsl(&mut reader)?;
     let content = crate::wires_content_child_with_owner(nodes, edges);
-    Ok(WiresSnapshot { wires_fixture, content, camera, meta })
+    Ok(WiresSnapshot { wires_fixture, content, meta })
 }
 //#endregion 🔖️BinaryPrimitives
 

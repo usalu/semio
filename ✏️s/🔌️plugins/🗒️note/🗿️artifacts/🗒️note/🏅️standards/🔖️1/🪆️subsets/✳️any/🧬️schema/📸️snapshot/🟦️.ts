@@ -1,42 +1,38 @@
-/** 🧬️ Note snapshot schema — artifact-lane fields only. */
-
+/** 📸️ Persisted Note projection uses the same field parsers and nested domain types. */
+import { parseNoteRecord, noteDocumentFields, type NoteBlockNode, type NoteImageAsset, type ArtifactLink } from "../🟦️.ts";
+export type { NoteBlockNode, NoteImageAsset, ArtifactLink } from "../🟦️.ts";
 export interface NoteSnapshot {
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   id: string;
-  /** @state artifact */
-  title?: string;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
+  title?: string | null;
+  /** 🧬️ @state artifact */
   blocks: NoteBlockNode[];
-  /** @state artifact */
-  gridVisible?: boolean;
-  /** @state artifact */
-  gridSpacing?: number;
-  /** @state artifact */
-  gridSubdivisions?: number;
-  /** @state artifact */
-  gridOpacity?: number;
-  /** @state artifact */
-  snapEnabled?: boolean;
-  /** @state artifact */
-  snapGridSpacing?: number;
-  /** @state artifact */
-  pencilWidth?: number;
-  /** @state artifact */
-  eraserRadius?: number;
-  /** @state artifact */
-  assets: Record<string, NoteImageAsset>;
+  /** 🧬️ @state artifact */
+  gridVisible?: boolean | null;
+  /** 🧬️ @state artifact */
+  gridSpacing?: number | null;
+  /** 🧬️ @state artifact */
+  gridSubdivisions?: number | null;
+  /** 🧬️ @state artifact */
+  gridOpacity?: number | null;
+  /** 🧬️ @state artifact */
+  snapEnabled?: boolean | null;
+  /** 🧬️ @state artifact */
+  snapGridSpacing?: number | null;
+  /** 🧬️ @state artifact */
+  pencilWidth?: number | null;
+  /** 🧬️ @state artifact */
+  eraserRadius?: number | null;
+  /** 🧬️ @state artifact */
+  assets?: Record<string, NoteImageAsset>;
+  /** 🧬️ @state artifact */
+  linkedArtifact?: ArtifactLink | null;
 }
 
-export interface NoteBlockNode {
-  kind: string;
-  [key: string]: unknown;
-}
-
-export interface NoteImageAsset {
-  mime: string;
-  data: string;
-  width?: number;
-  height?: number;
+/** 📸️ Empty assets may be omitted by the native snapshot codec. */
+export function parseNoteSnapshot(value: unknown, at = "$"): NoteSnapshot {
+  return parseNoteRecord(value, noteDocumentFields, ["schema", "id", "blocks"], at) as unknown as NoteSnapshot;
 }

@@ -6,7 +6,7 @@ import { classifyPackageGlueContent, fixedContractScopeSpecificityRank, type Fix
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const vectors = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as {
+const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/📦️package-boundary-classification/🔣️.json", import.meta.url), "utf8")) as {
   glueRoleCases: readonly { id: string; analyzer: PackageGlueAnalyzer; maxDelegationStatements: number; content: string; expectedRole: TaxonomyPackageRole }[];
   scopeSpecificityOrder: readonly FixedContractScopeKind[];
 };

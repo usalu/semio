@@ -629,7 +629,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧪️tests/🚫️rejects-a-547ea4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧪️tests/🚫️rejects-a-duplicate-step-id/🦀️.rs"]
                             mod tests_rejects_a_duplicate_step_id;
                         }
                         #[path = "."]
@@ -642,7 +642,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-1e4599/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-a-missing-step/🦀️.rs"]
                             mod tests_rejects_deleting_a_missing_step;
                         }
                         #[path = "."]
@@ -655,7 +655,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no-ops-when-the-b925f0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no-ops-when-the-step-is-already-at-that-position/🦀️.rs"]
                             mod tests_no_ops_when_the_step_is_already_at_that_position;
                         }
                         #[path = "."]
@@ -668,7 +668,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no-ops-when-the-70413d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no-ops-when-the-params-are-already-identical/🦀️.rs"]
                             mod tests_no_ops_when_the_params_are_already_identical;
                         }
                         #[path = "."]
@@ -681,7 +681,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no-ops-when-the-bd4f9d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no-ops-when-the-step-is-already-collapsed/🦀️.rs"]
                             mod tests_no_ops_when_the_step_is_already_collapsed;
                         }
                         #[path = "."]
@@ -694,7 +694,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧪️tests/🚫️rejects-when-the-48fafc/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧪️tests/🚫️rejects-when-the-new-id-already-exists/🦀️.rs"]
                             mod tests_rejects_when_the_new_id_already_exists;
                         }
                     }
@@ -716,7 +716,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧪️tests/🚫️rejects-connectin-17a073/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧪️tests/🚫️rejects-connecting-a-step-to-itself/🦀️.rs"]
                             mod tests_rejects_connecting_a_step_to_itself;
                         }
                         #[path = "."]
@@ -729,7 +729,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧪️tests/🚫️rejects-disconnec-c7496b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧪️tests/🚫️rejects-disconnecting-a-missing-edge/🦀️.rs"]
                             mod tests_rejects_disconnecting_a_missing_edge;
                         }
                     }

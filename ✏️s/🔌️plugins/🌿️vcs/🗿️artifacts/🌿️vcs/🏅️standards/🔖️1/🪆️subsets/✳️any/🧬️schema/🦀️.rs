@@ -50,7 +50,7 @@ impl VcsArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::VcsSnapshot) -> Self {
-        Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags, ..Self::default() }
+        Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

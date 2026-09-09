@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("aluminium-roof-purlin", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🏠️aluminium-roof-purlin/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

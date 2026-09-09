@@ -37,6 +37,48 @@ func Match(pattern, name string) (bool, error) {
 	return expression.MatchString(filepath.ToSlash(name)), nil
 }
 
+// 🪗️ braceAlternations identifies balanced comma groups without treating literal braces as syntax.
+func braceAlternations(pattern []rune) map[int]string {
+	type group struct {
+		start  int
+		commas []int
+	}
+	stack := []group{}
+	result := map[int]string{}
+	for index := 0; index < len(pattern); index++ {
+		switch pattern[index] {
+		case '\\':
+			index++
+		case '[':
+			for index+1 < len(pattern) && pattern[index+1] != ']' {
+				index++
+			}
+			index++
+		case '{':
+			stack = append(stack, group{start: index})
+		case ',':
+			if len(stack) > 0 {
+				top := &stack[len(stack)-1]
+				top.commas = append(top.commas, index)
+			}
+		case '}':
+			if len(stack) == 0 {
+				continue
+			}
+			top := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if len(top.commas) == 0 {
+				continue
+			}
+			result[top.start], result[index] = "(?:", ")"
+			for _, comma := range top.commas {
+				result[comma] = "|"
+			}
+		}
+	}
+	return result
+}
+
 func compile(pattern string) (*regexp.Regexp, error) {
 	pattern = filepath.ToSlash(pattern)
 	patternCache.RLock()
@@ -47,12 +89,18 @@ func compile(pattern string) (*regexp.Regexp, error) {
 	}
 	var expression strings.Builder
 	expression.WriteString("^")
-	for index := 0; index < len(pattern); index++ {
-		switch pattern[index] {
+	symbols := []rune(pattern)
+	alternations := braceAlternations(symbols)
+	for index := 0; index < len(symbols); index++ {
+		if syntax, ok := alternations[index]; ok {
+			expression.WriteString(syntax)
+			continue
+		}
+		switch symbols[index] {
 		case '*':
-			if index+1 < len(pattern) && pattern[index+1] == '*' {
+			if index+1 < len(symbols) && symbols[index+1] == '*' {
 				index++
-				if index+1 < len(pattern) && pattern[index+1] == '/' {
+				if index+1 < len(symbols) && symbols[index+1] == '/' {
 					index++
 					expression.WriteString("(?:.*/)?")
 				} else {
@@ -64,25 +112,27 @@ func compile(pattern string) (*regexp.Regexp, error) {
 		case '?':
 			expression.WriteString("[^/]")
 		case '[':
-			end := strings.IndexByte(pattern[index+1:], ']')
-			if end < 0 {
+			end := index + 1
+			for end < len(symbols) && symbols[end] != ']' {
+				end++
+			}
+			if end == len(symbols) {
 				return nil, fmt.Errorf("invalid glob %q: unclosed character class", pattern)
 			}
-			end += index + 1
-			class := pattern[index+1 : end]
+			class := string(symbols[index+1 : end])
 			if strings.HasPrefix(class, "!") {
 				class = "^" + regexp.QuoteMeta(class[1:])
 			}
 			expression.WriteString("[" + class + "]")
 			index = end
 		case '\\':
-			if index+1 >= len(pattern) {
+			if index+1 >= len(symbols) {
 				return nil, fmt.Errorf("invalid glob %q: trailing escape", pattern)
 			}
 			index++
-			expression.WriteString(regexp.QuoteMeta(string(pattern[index])))
+			expression.WriteString(regexp.QuoteMeta(string(symbols[index])))
 		default:
-			expression.WriteString(regexp.QuoteMeta(string(pattern[index])))
+			expression.WriteString(regexp.QuoteMeta(string(symbols[index])))
 		}
 	}
 	expression.WriteString("$")
@@ -150,7 +200,7 @@ func traversalRoot(pattern string) string {
 		root += string(filepath.Separator)
 	}
 	for _, part := range parts {
-		if strings.ContainsAny(part, "*?[") {
+		if strings.ContainsAny(part, "*?[{") {
 			break
 		}
 		root = filepath.Join(root, part)

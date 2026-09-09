@@ -62,9 +62,9 @@ mod subject {
     //#region 🔖️Input
     /// 🎞️ The real derived animation — the first three native-resolution frames of the committed
     /// `🖼️color-animated-text.gif`, decoded by Pillow once and committed here with its provenance.
-    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
+    const ARTIFACT_DSL: &str = "shared://🖼️mutate-semio-image/🗣️.dsl.semio";
     /// 🎒️ The same animation in its binary envelope, written by a separate codec from the DSL text.
-    const ARTIFACT_PACK: &str = "local://🎒️.pack.semio";
+    const ARTIFACT_PACK: &str = "shared://🖼️mutate-semio-image/🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
@@ -172,7 +172,7 @@ mod subject {
     /// 📜️ The scenario's own committed mutation payload — the feature owns the vector. `base` is
     /// only consulted for the `no-mutation` scenario's identity mapping.
     fn payload(ctx: &Context, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
-        let uri = only_uri(ctx, "local://", "mutation payload")?;
+        let uri = only_uri(ctx, "shared://🖼️mutate-semio-image/", "mutation payload")?;
         decode_mutation(&ctx.fixture_json(&uri)?, base).map_err(|error| format!("{}: {error}", ctx.scenario.id))
     }
     //#endregion 🔖️Decode

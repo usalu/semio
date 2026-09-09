@@ -49,7 +49,7 @@ async fn inverse_round_trip_law_covers_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_vertex_round_trips_explicitly() {
     let base = fixture();
-    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } });
+    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }, tol: 2e-7 });
     let after_create = round_trip(&base, &create);
     assert!(after_create.vertices.iter().any(|v| v.id == "v3"));
 
@@ -152,6 +152,19 @@ async fn op_text_binary_roundtrip_law() {
         let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
         let decoded = SemioBrepMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
         assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn language_neutral_tolerance_contract_matches_rust_decoder() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    for test_case in fixture["cases"].as_array().expect("tolerance cases are an array") {
+        let accepted = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).is_ok();
+        assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
+    }
+    for test_case in fixture["diffCases"].as_array().expect("tolerance diff cases are an array") {
+        let accepted = crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
+        assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
     }
 }
 //#endregion 🧪️OpCodecRoundTripLaw

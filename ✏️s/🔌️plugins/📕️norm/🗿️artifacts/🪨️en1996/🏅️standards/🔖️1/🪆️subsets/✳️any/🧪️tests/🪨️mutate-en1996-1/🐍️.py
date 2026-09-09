@@ -81,7 +81,7 @@ VECTORS = {
 }
 
 #: 🗣️ The real committed EN 1996 document, read where the domain already keeps it.
-DSL_ASSET = "asset://📚️examples/🧱️loadbearing-wall/🖼️assets/🧱️loadbearing-wall/🗣️.dsl.semio"
+DSL_ASSET = "asset://🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio"
 
 #: ✉️ The envelope token that artifact's text preamble must carry.
 ENVELOPE = "norm.en1996.dsl"
@@ -93,5 +93,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("EN 1996", KINDS, VECTORS, DSL_ASSET, ENVELOPE, vector_root="asset://🧬️schema/🧬️mutations"))
+    return build_adapter(Subset("EN 1996", KINDS, VECTORS, DSL_ASSET, ENVELOPE, vector_root="shared://🧬️mutations"))
 # endregion 🔖️Registration

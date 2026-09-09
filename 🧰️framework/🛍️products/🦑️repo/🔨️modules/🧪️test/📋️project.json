@@ -9,7 +9,8 @@
       "options": {
         "command": "bun ./📜️script.ts discover",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "test-contract": {
       "executor": "nx:run-commands",
@@ -41,7 +42,7 @@
     },
     "test-report": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts report",
         "forwardAllArgs": true
@@ -64,7 +65,7 @@
     },
     "test-doctor": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts doctor",
         "forwardAllArgs": true
@@ -72,7 +73,7 @@
     },
     "test-inventory": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts inventory",
         "forwardAllArgs": true
@@ -80,11 +81,12 @@
     },
     "test-schema": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test schema",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-fixture-verify": {
       "executor": "nx:run-commands",
@@ -102,7 +104,7 @@
     },
     "test-fixture-reproduce": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts fixture reproduce",
         "forwardAllArgs": true
@@ -110,7 +112,7 @@
     },
     "test-fixture-generate": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts fixture generate",
         "forwardAllArgs": true
@@ -125,15 +127,16 @@
     },
     "test-matrix": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts matrix",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-gc": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts gc",
         "forwardAllArgs": true

@@ -29,8 +29,8 @@ function asset(relativePath: string): string {
   } finally { closeSync(fd); }
 }
 
-const schema = JSON.parse(asset("../📣️typescript-declaration-facts/🛂️schema/🔣️.json"));
-const vectors = JSON.parse(asset("../📣️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
+const schema = JSON.parse(asset("../../🧬️schema/📣️typescript-declaration-facts/🔣️.json"));
+const vectors = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
 const ajv = new Ajv({ strict: true, allErrors: true });
 const validateVectors = ajv.compile(schema);
 const validateFacts = ajv.compile({ $defs: schema.$defs, $ref: "#/$defs/expected" });
@@ -98,8 +98,8 @@ test("TypeScript declaration compiler oracle has strict source types", () => {
 //#endregion 🧪️Declarations
 
 //#region 🧪️MalformedDeclarations
-const malformedSchema = JSON.parse(asset("💥️malformed/🛂️schema/🔣️.json"));
-const malformed = JSON.parse(asset("💥️malformed/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly { readonly code: number; readonly start: number; readonly length: number }[]; readonly expected: { readonly completeness: "incomplete"; readonly providerInference: "forbidden" } }[] };
+const malformedSchema = JSON.parse(asset("../../🧬️schema/📣️typescript-declaration-facts/💥️malformed/🔣️.json"));
+const malformed = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/💥️malformed/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly { readonly code: number; readonly start: number; readonly length: number }[]; readonly expected: { readonly completeness: "incomplete"; readonly providerInference: "forbidden" } }[] };
 const validateMalformed = ajv.compile(malformedSchema);
 
 test("TypeScript malformed declaration cases use the closed neutral schema", () => {
@@ -129,8 +129,8 @@ for (const row of malformed.cases) {
 //#endregion 🧪️MalformedDeclarations
 
 //#region 🧪️UnsupportedDeclarations
-const unsupportedSchema = JSON.parse(asset("🚫️unsupported/🛂️schema/🔣️.json"));
-const unsupported = JSON.parse(asset("🚫️unsupported/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly never[]; readonly expected: { readonly completeness: "incomplete"; readonly forbiddenDiagnosticCodes: readonly string[] } }[] };
+const unsupportedSchema = JSON.parse(asset("../../🧬️schema/📣️typescript-declaration-facts/🚫️unsupported/🔣️.json"));
+const unsupported = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/🚫️unsupported/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly never[]; readonly expected: { readonly completeness: "incomplete"; readonly forbiddenDiagnosticCodes: readonly string[] } }[] };
 const validateUnsupported = ajv.compile(unsupportedSchema);
 
 test("TypeScript unsupported declaration cases use the closed neutral schema", () => {

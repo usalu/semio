@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 /** 🧠️ Verifies the declared optimizer against native Binaryen and WebAssembly execution. */
 export async function testWasmOptimizer(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🕸️wasm/🔣️.json"), "utf8"));
   const source = readFileSync(join(workspace, fixture.manifest), "utf8"), manifest = Bun.TOML.parse(source) as any;
   assert.deepEqual(manifest, require("smol-toml").parse(source));
   for (const profile of fixture.profiles) assert.deepEqual(manifest.package.metadata["wasm-pack"]?.profile?.[profile]?.["wasm-opt"], fixture.optimizer, `${profile} must optimize Rust bulk-memory instructions`);

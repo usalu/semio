@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT } from "../../../../../../📜️script.ts";
 /** 🧪️ Executes tool job cooperative maintenance policy assertions. */
 export function toolJobCooperativeMaintenanceSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/🤝️cooperative");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`cooperative maintenance schema: ${JSON.stringify(validate.errors)}`);

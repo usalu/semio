@@ -55,7 +55,7 @@ pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_JACK: &str = "trinity-rewriting-j
 pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewriting-parameters";
 const TRINITY_REWRITING_PLAY_RULE_NAME: &str = "label-core";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 const DEFAULT_LHS_JSON: &str = r#"{
   "pattern": {
@@ -105,8 +105,7 @@ pub(crate) fn default_rule_state() -> RewritingSnapshot {
 /// (outside undo history) instead of an `artifact_mutations` entry.
 pub(crate) fn reset_document_effect(state: &RewritingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewritingSnapshot as ArtifactPack>::encode_pack(state);
-    let envelope = store::create_document_envelope::<RewritingSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA, "rewriting", state.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("rewriting document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 

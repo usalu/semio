@@ -339,6 +339,7 @@ fn process3d_resumable_extent(command: &Process3dCommand, _snapshot: &Process3dS
     (extent <= PROCESS3D_RETAINED_WORK_ITEMS && value.len() <= PROCESS3D_RETAINED_RAW_BYTES).then_some(extent)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn process3d_retained_reduce(
     command: &Process3dCommand,
     snapshot: &Process3dSnapshot,

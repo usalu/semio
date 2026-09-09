@@ -79,7 +79,7 @@ fn stream_produces_the_same_bytes_as_one_shot_inflate() {
 
 #[test]
 fn accepts_a_short_final_huffman_tail() {
-    let fixture = include_str!("../🏁️deflate-tail-cases.json");
+    let fixture = include_str!("../../🧫️fixtures/🏁️deflate-tail-cases.json");
     let file: TailCorpusFile = serde_json::from_str(fixture).expect("valid DEFLATE tail fixture");
     assert_eq!(file.cases.len(), 1, "expected one fixed-EOB tail vector");
     for case in file.cases {
@@ -160,7 +160,7 @@ struct TailCorpusCase {
 
 #[test]
 fn ours_inflates_miniz_oxide_output_and_vice_versa() {
-    let raw = include_str!("../🧪️deflate-corpus.json");
+    let raw = include_str!("../../🧫️fixtures/🧪️deflate-corpus.json");
     let file: CorpusFile = serde_json::from_str(raw).expect("valid deflate corpus fixture");
     assert!(file.cases.len() >= 8, "expected a real length sweep");
     for case in &file.cases {

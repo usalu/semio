@@ -16,10 +16,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚨️no-such-case-ef1fde/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚨️no-such-case-ef1fde/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚨️no-such-case-ef1fde/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚨️no-such-case-ef1fde/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

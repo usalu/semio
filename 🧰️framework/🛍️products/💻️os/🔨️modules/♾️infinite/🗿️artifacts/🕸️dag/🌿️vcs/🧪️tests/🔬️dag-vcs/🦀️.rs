@@ -224,7 +224,7 @@ fn dag_document_dsl_round_trips_the_demo_fixture() {
 
 #[test]
 fn bundled_demo_fixture_is_canonical() {
-    let actual = include_str!("../../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+    let actual = crate::DAG_DEMO_TEXT;
     let expected = <DagSnapshot as crate::os_store::ArtifactDsl>::print_dsl(&default_dag_document());
     assert_eq!(actual, expected, "bundled demo fixture must stay in canonical owned DSL form");
 }
@@ -339,3 +339,15 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     close_dag_test_store(store);
 }
 //#endregion 🔖️DslTests
+
+/// 🪪️ The framework-owned demo preserves its neutral graph identities through the first-party codec.
+#[test]
+fn dag_demo_ownership_matches_neutral_graph_identity() {
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    let document = default_dag_document();
+    let encoded: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&document)).unwrap();
+    assert_eq!(encoded["schema"], expected["schema"]);
+    assert_eq!(encoded["nodes"].as_array().unwrap().iter().map(|node| node["id"].clone()).collect::<Vec<_>>(), *expected["nodeIds"].as_array().unwrap());
+    assert_eq!(encoded["edges"].as_array().unwrap().iter().map(|edge| edge["id"].clone()).collect::<Vec<_>>(), *expected["edgeIds"].as_array().unwrap());
+    println!("[DEBUG] framework DAG demo owns five nodes and four edges; native codecs agree with the independent JSON identity fixture");
+}

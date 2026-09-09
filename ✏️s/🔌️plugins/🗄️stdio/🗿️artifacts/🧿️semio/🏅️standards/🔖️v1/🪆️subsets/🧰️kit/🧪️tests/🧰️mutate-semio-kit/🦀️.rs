@@ -58,15 +58,15 @@ const KINDS: &[&str] = &[
 /// and 179 real port-to-port connections — derived ONCE from the real committed IFC 4 file with
 /// IfcOpenShell 0.8.4 by `🐍️derive-kit-fixture.py` in the ticket folder.
 #[cfg(feature = "sut")]
-const TOWER_DSL: &str = "local://🏢️nakagin-capsule-tower/🗣️.dsl.semio";
+const TOWER_DSL: &str = "shared://🧰️mutate-semio-kit/🏢️nakagin-capsule-tower/🗣️.dsl.semio";
 /// 🎒️ The same kit in its binary envelope, written by the PYTHON implementation — so this codec
 /// reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
-const TOWER_PACK: &str = "local://🎒️.pack.semio";
-const FURNITURE_DSL: &str = "asset://📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio";
+const TOWER_PACK: &str = "shared://🧰️mutate-semio-kit/🎒️.pack.semio";
+const FURNITURE_DSL: &str = "asset://🪑️furniture/🗣️.dsl.semio";
 /// 🎒️ The same kit in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const FURNITURE_PACK: &str = "asset://📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio";
+const FURNITURE_PACK: &str = "asset://🪑️furniture/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

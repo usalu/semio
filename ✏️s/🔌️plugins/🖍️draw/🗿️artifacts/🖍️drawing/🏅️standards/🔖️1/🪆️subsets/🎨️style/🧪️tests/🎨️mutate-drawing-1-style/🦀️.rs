@@ -34,24 +34,24 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "replace-layer-fill" => (
-            include_str!("../../🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid-to-linear-9bdbe8/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid-to-linear-9bdbe8/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid-to-linear-9bdbe8/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid-to-linear-gradient/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid-to-linear-gradient/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid-to-linear-gradient/📸️snapshot/➡️after/🔣️.json"),
         ),
         "replace-layer-stroke" => (
-            include_str!("../../🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds-a-dashed-92bad7/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds-a-dashed-92bad7/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds-a-dashed-92bad7/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds-a-dashed-stroke/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds-a-dashed-stroke/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds-a-dashed-stroke/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-blend-mode" => (
-            include_str!("../../🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal-to-b12530/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal-to-b12530/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal-to-b12530/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal-to-multiply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal-to-multiply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal-to-multiply/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-opacity" => (
-            include_str!("../../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims-shape-a-to-c25ad9/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims-shape-a-to-c25ad9/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims-shape-a-to-c25ad9/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims-shape-a-to-half/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims-shape-a-to-half/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims-shape-a-to-half/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-style: {other:?} is not a declared kind of this subset"),
     }

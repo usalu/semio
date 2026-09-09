@@ -1,4 +1,3 @@
-
 use super::sqlite::SqliteDirectory;
 use super::*;
 use crate::artifact_authority::chunk_cas::{
@@ -60,7 +59,7 @@ impl IdentityAssertionVerifier for TestIdentityVerifier {
 
 #[test]
 fn typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️auth/🧪️fixtures/🔑️capability-v1/🔣️.json")).expect("auth capability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️auth/🧫️fixtures/🔑️capability-v1/🔣️.json")).expect("auth capability fixture");
     let session = SessionCapability::parse(fixture["session"]["capability"].as_str().expect("session capability")).expect("session parser");
     let share = ShareCapability::parse(fixture["share"]["capability"].as_str().expect("share capability")).expect("share parser");
     let invite = InviteCapability::parse(fixture["invite"]["capability"].as_str().expect("invite capability")).expect("invite parser");
@@ -144,7 +143,7 @@ fn descriptor(space_id: &str, document_id: &str) -> DocumentDescriptor {
 }
 
 fn artifact_projection_fixture() -> (DocumentDescriptor, PublishedArtifactCheckpoint, PublishedArtifactCheckpoint, ArtifactRetention, u64) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     let decode = |field: &str| DslValue::from(fixture.get(field).expect("fixture field").clone());
     (
         DocumentDescriptor::from_value(decode("descriptor")).expect("fixture descriptor"),
@@ -562,7 +561,7 @@ async fn admin_bounded_overview_space_and_document_projections_enforce_exact_pag
     let owner = user_actor("u-owner");
     let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
     for index in 0..=ADMIN_PAGE_MAX {
-        service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: descriptor(&space_id, &format!("document:{index:03}")) }).await.expect("announce bounded-page document");
+        service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: Box::new(descriptor(&space_id, &format!("document:{index:03}"))) }).await.expect("announce bounded-page document");
     }
 
     assert_eq!(directory.admin_overview_counts().await.expect("constant-space overview counts"), AdminDirectoryOverviewCounts { spaces: 1, users: 1, connections: 0 },);
@@ -596,7 +595,7 @@ async fn create_space(service: &DirectoryService, owner: &DirectoryActor, kind: 
 /// 📣️ A committed page cannot be overtaken on the live channel while it still owns the writer guard.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
     assert_eq!(fixture["schema"], "semio.hub.directory.ordered-append-broadcast/v1");
     assert_eq!(fixture["cases"].as_array().expect("ordered publication cases").len(), 4);
 
@@ -737,7 +736,7 @@ async fn artifact_chunk_cas_expiry_supersedes_tokens_and_sweep_cancellation_comm
     let mut descriptor = template_descriptor;
     descriptor.space_id = space_id;
     descriptor.document_id = "artifact-cas-expiry".into();
-    service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce expiry document");
+    service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: Box::new(descriptor.clone()) }).await.expect("announce expiry document");
     let pair = ArtifactPair { pack: b"expired-pack".to_vec(), spr: b"expired-spr".to_vec() };
     let checkpoint = scoped_materialized_checkpoint(public, &descriptor, &pair, None, 1);
     let plan = prepare_artifact_cas_ownership_v1(&checkpoint, &pair).expect("ownership");
@@ -784,7 +783,7 @@ async fn artifact_chunk_cas_expiry_supersedes_tokens_and_sweep_cancellation_comm
 
 #[tokio::test]
 async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
     let law = &fixture["sweepContinuation"];
     let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
     let total_objects = law["totalObjects"].as_u64().expect("total objects");
@@ -851,7 +850,7 @@ async fn artifact_chunk_cas_failed_epoch_advance_releases_directory_lease() {
 
 #[tokio::test]
 async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
     let barrier = &fixture["deleteBarrier"];
     assert_eq!(barrier["leaseMaximumMs"].as_u64(), Some(ARTIFACT_CAS_DELETE_LEASE_TTL_MS));
     assert_eq!(barrier["dryRunAdvancesEpoch"].as_bool(), Some(false));
@@ -866,7 +865,7 @@ async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized
     orphan_descriptor.document_id = "artifact-cas-race-orphan".into();
     let mut live_descriptor = orphan_descriptor.clone();
     live_descriptor.document_id = "artifact-00000000000000000000000000000003".into();
-    service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: orphan_descriptor.clone() }).await.expect("announce orphan document");
+    service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: Box::new(orphan_descriptor.clone()) }).await.expect("announce orphan document");
     let pair = ArtifactPair { pack: b"race-pack".to_vec(), spr: b"race-spr".to_vec() };
     let orphan = scoped_materialized_checkpoint(orphan_public, &orphan_descriptor, &pair, None, 1);
     let storage = Arc::new(BlockingDeleteArtifactCas::new());
@@ -962,7 +961,7 @@ async fn artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preser
         let directory = SqliteDirectory::connect(&path_text).await.expect("open process race directory");
         directory.seed().await.expect("seed process race directory");
         let service = DirectoryService::new(Arc::new(HubDirectories::from(directory)), 16);
-        service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: orphan_descriptor }).await.expect("announce process race orphan");
+        service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: Box::new(orphan_descriptor) }).await.expect("announce process race orphan");
         let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("open process race filesystem CAS"));
         let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
         let control = ArtifactCasProbe::new(100, None);
@@ -1123,7 +1122,7 @@ async fn artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replay
 #[test]
 fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
     let (descriptor, first, second, retention, fixture_maximum) = artifact_projection_fixture();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     let genesis = PublishedArtifactCheckpoint::from_value(DslValue::from(fixture["genesis"].clone())).expect("fixture genesis");
     let entry = directory::os_directory::DocumentIndexEntryV1::from_value(DslValue::from(fixture["indexEntry"].clone())).expect("fixture index entry");
     let mut announced = artifact_event(1, DirectoryEventBody::DocumentAnnounced { descriptor });
@@ -1174,7 +1173,7 @@ fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
 
 #[test]
 fn artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     assert_eq!(fixture["wireIntegerMaximum"].as_u64(), Some(DIRECTORY_WIRE_INTEGER_MAX));
     assert_eq!(fixture["privateLocatorMaximumBytes"].as_u64(), Some(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES as u64));
     assert_eq!(fixture["eventReadMaximum"].as_u64(), Some(DIRECTORY_EVENT_READ_MAX as u64));
@@ -1281,12 +1280,12 @@ async fn document_descriptor_is_immutable_space_scoped_and_survives_restart() {
         directory.seed().await.expect("seed");
         let directories = Arc::new(HubDirectories::from(directory));
         let service = DirectoryService::new(directories.clone(), 16);
-        let (events, _) = service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: persisted.clone() }).await.expect("announce");
+        let (events, _) = service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: Box::new(persisted.clone()) }).await.expect("announce");
         assert!(matches!(&events[0].body, DirectoryEventBody::DocumentAnnounced { descriptor } if descriptor == &persisted));
 
         let mut conflict = persisted.clone();
         conflict.pack_schema_hash = "44".repeat(32);
-        assert!(matches!(service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: conflict }).await, Err(DirectoryError::Conflict(_))));
+        assert!(matches!(service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: Box::new(conflict) }).await, Err(DirectoryError::Conflict(_))));
 
         let other = descriptor("other-space", "shared-document");
         let actor = user_actor("seed");
@@ -1294,7 +1293,7 @@ async fn document_descriptor_is_immutable_space_scoped_and_survives_restart() {
         let other_space = created[0].space_id.clone().expect("space id");
         let mut other = other;
         other.space_id = other_space.clone();
-        service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: other.clone() }).await.expect("announce same document id in other space");
+        service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: Box::new(other.clone()) }).await.expect("announce same document id in other space");
         assert_eq!(directories.list_document_descriptors(&other_space).await.expect("other descriptors"), vec![other]);
     }
 

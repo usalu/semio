@@ -1,48 +1,37 @@
-/** 🧬️ Din18599 diff schema — sparse field delta. */
+/** 🪪️ Din18599Diff contains document fields and canonical child identities. */
+import { type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseDin18599Fields } from "../🟦️.ts";
 
 export interface Din18599Diff {
-  /** @state artifact */
-  artifact?: Din18599Artifact;
-  /** @state artifact */
-  useClass?: string;
-  /** @state artifact */
-  heatedAreaM2?: number;
-  /** @state artifact */
-  occupants?: number;
-  /** @state artifact */
-  hT?: number;
-  /** @state artifact */
-  hV?: number;
-  /** @state artifact */
-  climate?: string;
-  /** @state artifact */
-  internalGainsWM2?: number;
-  /** @state artifact */
-  solarGainsKwh?: number;
-  /** @state artifact */
-  systemLossesKwh?: number;
-  /** @state artifact */
-  renewableKwh?: number;
-  /** @state artifact */
-  annualLimitKwh?: number;
-  /** @state artifact */
-  energyCarrier?: string;
-  /** @state artifact */
-  referenceQPKwh?: number;
+  /** 🗿️ @state artifact */
+  useClass?: "Residential" | "Office" | "School" | null;
+  /** 🗿️ @state artifact */
+  heatedAreaM2?: number | null;
+  /** 🗿️ @state artifact */
+  occupants?: number | null;
+  /** 🗿️ @state artifact */
+  hT?: number | null;
+  /** 🗿️ @state artifact */
+  hV?: number | null;
+  /** 🗿️ @state artifact */
+  climate?: ArtifactChild | null;
+  /** 🗿️ @state artifact */
+  internalGainsWM2?: number | null;
+  /** 🗿️ @state artifact */
+  solarGainsKwh?: number | null;
+  /** 🗿️ @state artifact */
+  systemLossesKwh?: number | null;
+  /** 🗿️ @state artifact */
+  renewableKwh?: number | null;
+  /** 🗿️ @state artifact */
+  annualLimitKwh?: number | null;
+  /** 🗿️ @state artifact */
+  energyCarrier?: string | null;
+  /** 🗿️ @state artifact */
+  referenceQPKwh?: number | null;
 }
 
-export interface Din18599Artifact {
-  useClass: string;
-  heatedAreaM2: number;
-  occupants: number;
-  hT: number;
-  hV: number;
-  climate: string;
-  internalGainsWM2: number;
-  solarGainsKwh: number;
-  systemLossesKwh: number;
-  renewableKwh: number;
-  annualLimitKwh: number;
-  energyCarrier: string;
-  referenceQPKwh: number;
+/** 📥️ Decodes the exact Din18599Diff wire contract. */
+export function parseDin18599Diff(value: unknown, at = "$"): Din18599Diff {
+  return parseDin18599Fields(value, true, at) as Din18599Diff;
 }

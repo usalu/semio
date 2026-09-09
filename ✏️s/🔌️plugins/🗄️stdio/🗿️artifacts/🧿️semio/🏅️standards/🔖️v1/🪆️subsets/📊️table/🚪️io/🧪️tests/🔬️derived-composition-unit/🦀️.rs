@@ -93,8 +93,8 @@ mod tests {
         /// doc comment) — this test is EXPECTED TO FAIL until that happens.
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
-            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio");
+            const FIXTURE_DSL: &str = include_str!("../../../🖼️assets/📃️sheet/🗣️.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../🖼️assets/📃️sheet/🎒️.pack.semio");
 
             let demo = snapshot::demo_table_snapshot();
 

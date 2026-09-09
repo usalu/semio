@@ -96,7 +96,7 @@ impl Default for JackSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`JackSnapshot`] as this facet's own camelCase JSON projection — the comparison
 /// surface `🔌️mutate-jack-1`'s scenarios are measured through, and the shape the committed
-/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
+/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. It carries `content` as a HANDLE, never as a scene, and
 /// that handle's `childId` is a digest of the child — so it moves if and only if the working scene
 /// moved, which is what makes it a usable observability surface here.

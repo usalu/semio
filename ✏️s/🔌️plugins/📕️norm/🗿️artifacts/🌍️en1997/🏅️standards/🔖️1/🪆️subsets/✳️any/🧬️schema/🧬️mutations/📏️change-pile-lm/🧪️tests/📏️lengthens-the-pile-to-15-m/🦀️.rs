@@ -11,11 +11,11 @@
 
 use crate::{En1997Diff, En1997Mutation, En1997Snapshot};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-pile-lm/📏️lengthens-the-pile-to-15-m/🎯️outcome/🔣️.json");
 
 fn before() -> En1997Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")

@@ -11,6 +11,7 @@ pub struct CreateEdge {
     pub start_vertex: String,
     pub end_vertex: String,
     pub curve: BrepCurve,
+    pub tol: f64,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateEdge {

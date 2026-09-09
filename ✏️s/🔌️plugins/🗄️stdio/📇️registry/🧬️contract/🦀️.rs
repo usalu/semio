@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// 🧩 One schema definition paired with its optional executable declaration.
 pub enum ArtifactAssembly {
     Definition(ArtifactDefinition),
-    Runtime(ArtifactDeclaration),
+    Runtime(Box<ArtifactDeclaration>),
 }
 
 impl ArtifactAssembly {
@@ -658,7 +658,7 @@ pub fn runtime_assembly(artifact: &'static str, definition: ArtifactDefinition, 
     if definition.identity().as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())));
     }
-    declaration(definition).map(ArtifactAssembly::Runtime).map_err(PluginAssemblyError::definition)
+    declaration(definition).map(|declaration| ArtifactAssembly::Runtime(Box::new(declaration))).map_err(PluginAssemblyError::definition)
 }
 
 /// 🧾 Preserves a schema-only artifact without fabricating runtime capabilities.
@@ -751,7 +751,7 @@ pub fn native_codec_hash(value: &str) -> Result<[u8; 32], PluginAssemblyError> {
         return Err(failure("native codec pack schema hash must contain exactly 64 lowercase hexadecimal digits"));
     }
     let mut hash = [0u8; 32];
-    for (index, chunk) in value.as_bytes().chunks_exact(2).enumerate() {
+    for (index, chunk) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
         let digit = |byte| match byte {
             b'0'..=b'9' => Some(byte - b'0'),
             b'a'..=b'f' => Some(byte - b'a' + 10),
@@ -851,15 +851,15 @@ pub fn native_codec_factory_receipts(contribution: &ArtifactContribution, plugin
 pub fn base64_standard(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut output = String::with_capacity(bytes.len().div_ceil(3).saturating_mul(4));
-    let mut chunks = bytes.chunks_exact(3);
-    for chunk in &mut chunks {
+    let (chunks, remainder) = bytes.as_chunks::<3>();
+    for chunk in chunks {
         let value = u32::from_be_bytes([0, chunk[0], chunk[1], chunk[2]]);
         output.push(ALPHABET[((value >> 18) & 63) as usize] as char);
         output.push(ALPHABET[((value >> 12) & 63) as usize] as char);
         output.push(ALPHABET[((value >> 6) & 63) as usize] as char);
         output.push(ALPHABET[(value & 63) as usize] as char);
     }
-    match chunks.remainder() {
+    match remainder {
         [first] => {
             output.push(ALPHABET[(first >> 2) as usize] as char);
             output.push(ALPHABET[((first & 3) << 4) as usize] as char);
@@ -884,7 +884,7 @@ fn hash_hex_bytes(hash: &str) -> Vec<u8> {
             _ => unreachable!("framework hash must be lowercase hexadecimal"),
         }
     }
-    hash.as_bytes().chunks_exact(2).map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
+    hash.as_bytes().as_chunks::<2>().0.iter().map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
 }
 
 /// 🪪 Computes the stable BLAKE3 identity of a semantic projection.

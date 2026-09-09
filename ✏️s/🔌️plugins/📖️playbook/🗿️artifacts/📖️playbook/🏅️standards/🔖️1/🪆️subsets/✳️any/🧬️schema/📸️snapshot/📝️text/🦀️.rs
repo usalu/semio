@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::PlaybookSnapshot;
 
 /// 📄️ The `facade-generator` example spec, handcrafted in the `.playbook` DSL.
-pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {

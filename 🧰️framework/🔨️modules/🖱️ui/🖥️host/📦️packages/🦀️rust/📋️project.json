@@ -16,39 +16,43 @@
   "targets": {
     "test-source": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test source",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check-wasm": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-wasm",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

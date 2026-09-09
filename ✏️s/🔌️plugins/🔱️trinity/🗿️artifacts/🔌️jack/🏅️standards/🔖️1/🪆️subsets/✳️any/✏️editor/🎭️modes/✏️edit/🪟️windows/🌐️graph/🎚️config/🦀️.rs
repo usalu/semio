@@ -72,7 +72,7 @@ pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry
     registry.register::<JackGraphWindowConfigOwner>()
 }
 
-pub fn current<'a>(view: &'a semio_framework_plugin::ConfigView<'_, crate::editor::jack::config::JackConfig>) -> Option<&'a JackGraphWindowConfig> {
+pub fn current<'a>(view: &'a semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Option<&'a JackGraphWindowConfig> {
     view.window::<JackGraphWindowConfigOwner>()
 }
 

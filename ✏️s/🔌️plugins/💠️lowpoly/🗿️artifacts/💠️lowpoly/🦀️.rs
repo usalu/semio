@@ -520,7 +520,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🧪️tests/⛵️inserts-obj-mast-c60a92/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🧪️tests/⛵️inserts-obj-mast-between-hull-and-fin/🦀️.rs"]
                             mod tests_inserts_obj_mast_between_hull_and_fin;
                         }
                         #[path = "."]
@@ -533,7 +533,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🧪️tests/🚫️removes-obj-fin-b0cb61/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🧪️tests/🚫️removes-obj-fin-without-touching-the-order/🦀️.rs"]
                             mod tests_removes_obj_fin_without_touching_the_order;
                         }
                         #[path = "."]
@@ -546,7 +546,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🧪️tests/🔀️moves-obj-fin-in-cfb501/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🧪️tests/🔀️moves-obj-fin-in-front-of-obj-hull/🦀️.rs"]
                             mod tests_moves_obj_fin_in_front_of_obj_hull;
                         }
                         #[path = "."]
@@ -572,7 +572,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🧪️tests/🟢️turns-on-smooth-e6be9e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🧪️tests/🟢️turns-on-smooth-shading-for-obj-hull/🦀️.rs"]
                             mod tests_turns_on_smooth_shading_for_obj_hull;
                         }
                         #[path = "."]
@@ -585,7 +585,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🧪️tests/📍️translates-obj-bb774a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🧪️tests/📍️translates-obj-hull-along-x-and-z/🦀️.rs"]
                             mod tests_translates_obj_hull_along_x_and_z;
                         }
                         #[path = "."]
@@ -598,7 +598,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🧪️tests/🔄️yaws-obj-hull-3de70a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🧪️tests/🔄️yaws-obj-hull-about-the-y-axis/🦀️.rs"]
                             mod tests_yaws_obj_hull_about_the_y_axis;
                         }
                         #[path = "."]
@@ -611,7 +611,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🧪️tests/📐️halves-obj-hull-f4206f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🧪️tests/📐️halves-obj-hull-uniformly/🦀️.rs"]
                             mod tests_halves_obj_hull_uniformly;
                         }
                         #[path = "."]
@@ -624,7 +624,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-226325/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-child-handle-to-obj-fin/🦀️.rs"]
                             mod tests_attaches_a_mesh_child_handle_to_obj_fin;
                         }
                         #[path = "."]
@@ -637,7 +637,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/✂️detaches-the-mesh-67db32/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/✂️detaches-the-mesh-child-handle-from-obj-hull/🦀️.rs"]
                             mod tests_detaches_the_mesh_child_handle_from_obj_hull;
                         }
                         #[path = "."]
@@ -650,7 +650,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🧪️tests/🪜️stacks-a-detail-8006c2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🧪️tests/🪜️stacks-a-detail-layer-above-the-base-layer/🦀️.rs"]
                             mod tests_stacks_a_detail_layer_above_the_base_layer;
                         }
                         #[path = "."]
@@ -663,7 +663,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🧪️tests/➖️drops-the-detail-630aca/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🧪️tests/➖️drops-the-detail-layer-at-index-1/🦀️.rs"]
                             mod tests_drops_the_detail_layer_at_index_1;
                         }
                         #[path = "."]
@@ -676,7 +676,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🧪️tests/🏷️retitles-the-b8f732/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🧪️tests/🏷️retitles-the-base-layer-to-undercoat/🦀️.rs"]
                             mod tests_retitles_the_base_layer_to_undercoat;
                         }
                         #[path = "."]
@@ -689,7 +689,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🧪️tests/🙈️hides-the-base-b24cf7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🧪️tests/🙈️hides-the-base-layer/🦀️.rs"]
                             mod tests_hides_the_base_layer;
                         }
                         #[path = "."]
@@ -702,7 +702,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🧪️tests/🌫️fades-the-base-3cee87/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🧪️tests/🌫️fades-the-base-layer-to-half/🦀️.rs"]
                             mod tests_fades_the_base_layer_to_half;
                         }
                         #[path = "."]
@@ -715,7 +715,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🧪️tests/✖️switches-the-base-152ae9/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🧪️tests/✖️switches-the-base-layer-to-multiply/🦀️.rs"]
                             mod tests_switches_the_base_layer_to_multiply;
                         }
                         #[path = "."]
@@ -728,7 +728,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🧪️tests/🖌️paints-red-over-389630/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🧪️tests/🖌️paints-red-over-the-second-half-of-the-base-layer/🦀️.rs"]
                             mod tests_paints_red_over_the_second_half_of_the_base_layer;
                         }
                     }
@@ -1071,8 +1071,8 @@ pub mod editor {
             pub mod chrome;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️.rs"]
             pub mod engagement;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️fixture/🦀️.rs"]
-            pub mod fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️.rs"]
+            pub mod document;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️.rs"]
             pub mod mesh_edit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️.rs"]

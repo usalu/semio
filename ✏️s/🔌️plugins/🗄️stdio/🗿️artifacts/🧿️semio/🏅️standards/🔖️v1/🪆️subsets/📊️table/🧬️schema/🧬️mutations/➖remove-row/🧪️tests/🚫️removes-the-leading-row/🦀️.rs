@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
     dsl::json::from_json_str(BEFORE).expect("remove-row before snapshot decodes")

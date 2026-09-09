@@ -3,7 +3,7 @@
 //! (`../../🔣️oracle.json`): `s.vcs.vcs` is a
 //! semio-NATIVE checkpoint document with no third-party reader or writer, so `oracle` here reads
 //! the committed, independently handcrafted per-kind specification fixtures
-//! (`../../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
+//! (`../../🧬️schema/🧫️fixtures/🧬️mutations/<slug>/<fixture>/`)
 //! literally — no recomputation, no reimplementation of mutation semantics. `subject` drives this
 //! repository's own `apply_vcs_mutation_reporting` over the full six-kind `VcsDemoMutation`
 //! vocabulary.
@@ -51,7 +51,7 @@ const KINDS: &[&str] = &["rename-vcs", "change-counter", "change-notes", "change
 
 /// 🗣️ The real committed checkpoint — "VCS Demo" at counter 2, status `draft`, tags `alpha` then `beta`.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -62,40 +62,40 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "rename-vcs" => (
-            include_str!("../../🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-vcs/🧪️retitles-the-document/🎯️outcome/🔣️.json"),
         ),
         "change-counter" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢change-counter/🧪️sets-counter-to-seven/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢change-counter/🧪️sets-counter-to-seven/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢change-counter/🧪️sets-counter-to-seven/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢change-counter/🧪️sets-counter-to-seven/🎯️outcome/🔣️.json"),
         ),
         "change-notes" => (
-            include_str!("../../🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🎯️outcome/🔣️.json"),
         ),
         "change-status" => (
-            include_str!("../../🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🎯️outcome/🔣️.json"),
         ),
         "add-tag" => (
-            include_str!("../../🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️add-tag/🧪️appends-urgent-tag/🎯️outcome/🔣️.json"),
         ),
         "remove-tag" => (
-            include_str!("../../🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-vcs-1: no specification vector registered for kind {other:?}"),
     }

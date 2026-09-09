@@ -1,6 +1,6 @@
 //! 🌉️ `semio-framework-os-mcp` glue — mounts every `🌉️mcp` facet (`⚠️errors`/`🧬️schema`/`🧭️protocol`/
 //! `🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge`/`🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`/
-//! `🧫️fixtures`/`🔀️dispatch`/`🛡️policy`/`🏠️workspace`/`📇️registry`/`🗿️artifact`/`💡️inference`/`🖥️ui`/`💬️prompts`)
+//! `🔀️dispatch`/`🛡️policy`/`🏠️workspace`/`📇️registry`/`🗿️artifact`/`💡️inference`/`🖥️ui`/`💬️prompts`)
 //! plus the module root, exactly as
 //! `🏃️run`/`🖥️shell`'s own glue files mount theirs.
 
@@ -48,8 +48,9 @@ pub mod context;
 #[path = "../../🧪️conformance/🦀️.rs"]
 pub mod conformance;
 
-#[path = "../../🧫️fixtures/🦀️.rs"]
-pub mod fixtures;
+#[cfg(test)]
+#[path = "../../🧪️testkit/🦀️.rs"]
+pub(crate) mod testkit;
 
 #[path = "../../🔀️dispatch/🦀️.rs"]
 #[macro_use]

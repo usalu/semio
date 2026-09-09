@@ -17,7 +17,7 @@
         "insert-shape",
         "remove-shape",
         "set-shape-frame",
-        "set-textbox-blocks",
+        "set-text-box-blocks",
         "insert-master",
         "remove-master",
         "insert-layout",

@@ -9,6 +9,7 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct ShootingPresence {
     /// 👥️ Genuinely app-specific — asset selection/hover broadcast automatically now via the
     /// framework's typed `PresencePeer.interaction` (`"assets"` domain, ticket
@@ -19,11 +20,7 @@ pub struct ShootingPresence {
     pub camera: ShootingCamera,
 }
 
-impl Default for ShootingPresence {
-    fn default() -> Self {
-        Self { selected_shot_ids: Vec::new(), camera: ShootingCamera::default() }
-    }
-}
+
 
 impl protocol::MutationDiff<ShootingPresence> for ShootingPresence {
     fn apply(&self, _base: &ShootingPresence) -> protocol::MutationApplyResult<ShootingPresence> {

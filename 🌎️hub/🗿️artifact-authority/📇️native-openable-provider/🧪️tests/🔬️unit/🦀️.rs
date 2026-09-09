@@ -74,7 +74,7 @@ fn hexadecimal(bytes: &[u8; 32]) -> String {
 
 #[test]
 fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../✏️s/🔌️plugins/🌿️vcs/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     assert_eq!(fixture["codecCount"].as_u64().unwrap() as usize, expected["receipts"].as_array().unwrap().len());
@@ -107,7 +107,7 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
 
 #[test]
 fn linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
     let providers = NativeCodecProviderSetV1::linked();
     let control = SelectionControl { cancelled: false, now_ms: 0 };
     let context = OperationContext::new(u64::MAX, super::super::AuthorityLimits::maximum(), &control);
@@ -138,8 +138,8 @@ fn linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_std
 
 #[tokio::test]
 async fn linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
-    let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
     let kind: semio_framework::ArtifactKindSpec = semio_framework::from_dsl_value(kind_json.clone().into()).unwrap();
     assert_eq!(serde_json::to_value(&kind).unwrap(), kind_json);
     let independent: semio_framework::ArtifactKindSpec = serde_json::from_value(kind_json.clone()).unwrap();

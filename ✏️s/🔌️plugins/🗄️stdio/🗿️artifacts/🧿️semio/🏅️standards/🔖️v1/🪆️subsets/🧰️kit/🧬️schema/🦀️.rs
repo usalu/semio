@@ -40,15 +40,18 @@ impl Default for SemioKitArtifact {
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioKitArtifact {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
+        let mut entries = vec![
             ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
             ("types".to_string(), dsl::ToValue::to_value(&self.types)),
             ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
             ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
             ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
-            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
             ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
-        ])
+        ];
+        if let Some(properties) = &self.properties {
+            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+        }
+        dsl::DslValue::object(entries)
     }
 }
 impl dsl::FromValue for SemioKitArtifact {
@@ -58,12 +61,12 @@ impl dsl::FromValue for SemioKitArtifact {
         let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
         Ok(Self {
             schema: dsl::FromValue::from_value(field("schema")?)?,
-            types: dsl::FromValue::from_value(field("types")?)?,
-            designs: dsl::FromValue::from_value(field("designs")?)?,
-            objects: dsl::from_dsl_value(field("objects")?).map_err(dsl::ValueError::new)?,
-            models: dsl::from_dsl_value(field("models")?).map_err(dsl::ValueError::new)?,
-            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
-            representations: dsl::from_dsl_value(field("representations")?).map_err(dsl::ValueError::new)?,
+            types: get("types").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
+            designs: get("designs").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
+            objects: get("objects").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            models: get("models").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            representations: get("representations").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
         })
     }
 }

@@ -30,7 +30,7 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   papered over.
 
   Because the committed example carries no regions at all, the twenty-four real-document scenarios
-  read local://🗺️liege-with-derived-regions.dsl.semio, DERIVED ONCE from that same committed file by
+  read shared://🗺️mutate-gismap-1/🗺️liege-with-derived-regions.dsl.semio, DERIVED ONCE from that same committed file by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-gismap-regions.py`:
   nothing is removed or edited, and three regions are added whose every coordinate is the
   axis-aligned envelope of geometry already in the file — route one's polyline, route two's
@@ -71,7 +71,7 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Liège document
-    Given the real Liège document local://🗺️liege-with-derived-regions.dsl.semio
+    Given the real Liège document shared://🗺️mutate-gismap-1/🗺️liege-with-derived-regions.dsl.semio
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -96,7 +96,7 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real Liège document and land back on it
-    Given the real Liège document local://🗺️liege-with-derived-regions.dsl.semio
+    Given the real Liège document shared://🗺️mutate-gismap-1/🗺️liege-with-derived-regions.dsl.semio
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -121,9 +121,9 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-snapshot
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
@@ -145,6 +145,6 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
   @level-long
   @mode-round-trip
   Scenario: Read the artifact's own committed Liège document in both languages and agree on it
-    Given the real committed document asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed document asset://🎬️demo/🗣️.dsl.semio
     When each implementation parses it, prints it back through its own carrier and parses it again
     Then both languages read the same positions, routes and regions out of the same real bytes, the Python reproduces the file byte for byte, and the Rust holds its own canonical printing to ArtifactDsl's fixpoint law and cross-checks the pack codec

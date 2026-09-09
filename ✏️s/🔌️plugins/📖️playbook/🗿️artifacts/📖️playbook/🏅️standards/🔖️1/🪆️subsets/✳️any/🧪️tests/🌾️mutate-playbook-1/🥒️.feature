@@ -56,10 +56,10 @@ Feature: Apply every typed playbook document mutation twice — once in Rust, on
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_playbook_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -67,22 +67,22 @@ Feature: Apply every typed playbook document mutation twice — once in Rust, on
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id            | vector                                                                | scene                                                                                                                                              |
-      | add-step      | ➕add-step/🧪️tests/no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
-      | remove-step   | ➖remove-step/🧪️tests/rejects-removing-a-missing-step                  | []                                                                                                                                                 |
-      | move-step     | ↔️move-step/🧪️tests/no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | add-block     | 🧱add-block/🧪️tests/rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
-      | remove-block  | 🗑️remove-block/🧪️tests/rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | move-block    | 🔀move-block/🧪️tests/rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
-      | replace-block | 🔄replace-block/🧪️tests/no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
-      | update-step   | 🩹update-step/🧪️tests/no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
-      | change-title  | ✏️change-title/🧪️tests/changes-the-playbook-title                     | []                                                                                                                                                 |
+      | add-step      | ➕add-step/🧪️no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
+      | remove-step   | ➖remove-step/🧪️rejects-removing-a-missing-step                  | []                                                                                                                                                 |
+      | move-step     | ↔️move-step/🧪️no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | add-block     | 🧱add-block/🧪️rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
+      | remove-block  | 🗑️remove-block/🧪️rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | move-block    | 🔀move-block/🧪️rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
+      | replace-block | 🔄replace-block/🧪️no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
+      | update-step   | 🩹update-step/🧪️no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
+      | change-title  | ✏️change-title/🧪️changes-the-playbook-title                     | []                                                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_playbook_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -90,20 +90,20 @@ Feature: Apply every typed playbook document mutation twice — once in Rust, on
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id            | vector                                                                | scene                                                                                                                                              |
-      | add-step      | ➕add-step/🧪️tests/no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
-      | remove-step   | ➖remove-step/🧪️tests/rejects-removing-a-missing-step                  | []                                                                                                                                                 |
-      | move-step     | ↔️move-step/🧪️tests/no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | add-block     | 🧱add-block/🧪️tests/rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
-      | remove-block  | 🗑️remove-block/🧪️tests/rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | move-block    | 🔀move-block/🧪️tests/rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
-      | replace-block | 🔄replace-block/🧪️tests/no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
-      | update-step   | 🩹update-step/🧪️tests/no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
-      | change-title  | ✏️change-title/🧪️tests/changes-the-playbook-title                     | []                                                                                                                                                 |
+      | add-step      | ➕add-step/🧪️no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
+      | remove-step   | ➖remove-step/🧪️rejects-removing-a-missing-step                  | []                                                                                                                                                 |
+      | move-step     | ↔️move-step/🧪️no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | add-block     | 🧱add-block/🧪️rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
+      | remove-block  | 🗑️remove-block/🧪️rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | move-block    | 🔀move-block/🧪️rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
+      | replace-block | 🔄replace-block/🧪️no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
+      | update-step   | 🩹update-step/🧪️no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
+      | change-title  | ✏️change-title/🧪️changes-the-playbook-title                     | []                                                                                                                                                 |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed example document and print it back without losing or copying anything
-    Given the real committed artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed to a PlaybookSnapshot, printed back to `.playbook` DSL and parsed again
     Then both parses agree on the same document and the printed text reproduces the committed bytes exactly

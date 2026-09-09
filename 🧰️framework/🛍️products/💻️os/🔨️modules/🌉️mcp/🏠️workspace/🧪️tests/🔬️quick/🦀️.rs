@@ -51,7 +51,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);
     let repo_root = find_repo_root().expect("repo root");
-    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
     let lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
     let descriptor = load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
@@ -265,7 +265,7 @@ fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
 }
 
 fn note_and_cad_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::fixtures::note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("note+cad fixture source compiles"))
+    Arc::new(crate::compile(&crate::testkit::note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("note+cad fixture source compiles"))
 }
 
 #[test]

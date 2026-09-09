@@ -22,6 +22,6 @@ pub fn diff(payload: &RenameBlock, base: &NoteSnapshot) -> protocol::MutationOut
         | crate::NoteBlockNode::Ink { name, .. }
         | crate::NoteBlockNode::Group { name, .. } => *name = payload.new_name.clone(),
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

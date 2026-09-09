@@ -509,10 +509,8 @@ impl Element for Tet4 {
         let stress = d.mul_vec(&strain);
         let (sxx, syy, szz, sxy, syz, sxz) = (stress.get(0), stress.get(1), stress.get(2), stress.get(3), stress.get(4), stress.get(5));
         let mut kg = MatD::zeros(12, 12);
-        for i in 0..4 {
-            let gi = grads[i];
-            for j in 0..4 {
-                let gj = grads[j];
+        for (i, gi) in grads.iter().enumerate() {
+            for (j, gj) in grads.iter().enumerate() {
                 let s = gi[0] * (sxx * gj[0] + sxy * gj[1] + sxz * gj[2]) + gi[1] * (sxy * gj[0] + syy * gj[1] + syz * gj[2]) + gi[2] * (sxz * gj[0] + syz * gj[1] + szz * gj[2]);
                 let val = s * v;
                 for a in 0..3 {
@@ -588,9 +586,9 @@ impl Hex8 {
         let param = hex8_param_derivs(xi, eta, zeta);
         let mut j = MatD::zeros(3, 3);
         for (i, pd) in param.iter().enumerate() {
-            for a in 0..3 {
-                for b in 0..3 {
-                    j.add_at(a, b, pd[a] * ctx.positions[i][b]);
+            for (a, derivative) in pd.iter().enumerate() {
+                for (b, coordinate) in ctx.positions[i].iter().enumerate() {
+                    j.add_at(a, b, derivative * coordinate);
                 }
             }
         }
@@ -679,10 +677,8 @@ impl Element for Hex8 {
             let stress = d.mul_vec(&strain);
             let (sxx, syy, szz, sxy, syz, sxz) = (stress.get(0), stress.get(1), stress.get(2), stress.get(3), stress.get(4), stress.get(5));
             let scale = det_j * weight;
-            for i in 0..8 {
-                let gi = grads[i];
-                for j in 0..8 {
-                    let gj = grads[j];
+            for (i, gi) in grads.iter().enumerate() {
+                for (j, gj) in grads.iter().enumerate() {
                     let s = gi[0] * (sxx * gj[0] + sxy * gj[1] + sxz * gj[2]) + gi[1] * (sxy * gj[0] + syy * gj[1] + syz * gj[2]) + gi[2] * (sxz * gj[0] + syz * gj[1] + szz * gj[2]);
                     let val = s * scale;
                     for a in 0..3 {

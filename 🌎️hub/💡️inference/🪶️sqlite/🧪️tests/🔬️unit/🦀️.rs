@@ -2,7 +2,7 @@ use super::*;
 use std::sync::{Arc, Barrier};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap()
 }
 
 fn selected(fixture: &serde_json::Value) -> InferenceIdentityV1 {
@@ -24,7 +24,7 @@ fn gis_inference_sqlite_ledger_executes_neutral_traces_with_private_first_termin
     let fixture = fixture();
     let selected = selected(&fixture);
     assert_eq!(selected.digest().unwrap(), fixture["identityDigest"].as_str().unwrap());
-    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
+    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
     for row in identifiers["cases"].as_array().unwrap() {
         for field in identifiers["fields"].as_array().unwrap() {
             let mut candidate = fixture["identity"].clone();
@@ -164,7 +164,7 @@ fn gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounde
 #[test]
 fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_independent() {
     let fixture = fixture();
-    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
     let request = &reconcile["request"];
     assert!(InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(request).unwrap()).is_ok());
     for row in reconcile["requestCases"].as_array().unwrap() {
@@ -346,13 +346,15 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         );
         let count = reopened.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_event_v1 WHERE kind='approved'", [], |row| read_integer(row, 0)).unwrap();
         assert_eq!(count, outbox["reconciledCount"].as_u64().unwrap());
+        let undo_head_edit_ordinal = i64::try_from(frontier.head_edit_ordinal.checked_add(1).unwrap()).unwrap();
+        let undo_frontier_commit_seq = i64::try_from(frontier.last_commit_seq.checked_add(1).unwrap()).unwrap();
         reopened
             .connection
             .lock()
             .unwrap()
             .execute(
                 "UPDATE inference_approval_undo_v1 SET phase='committed',original_command=X'',undo_command=X'',undo_frontier_head_ordinal=?2,undo_frontier_head_edit_id=?3,undo_frontier_commit_seq=?4,undo_frontier_chain_sha256=?5 WHERE target_id=?1",
-                params![reconciled.undo.target_id, frontier.head_edit_ordinal + 1, "99".repeat(16), frontier.last_commit_seq + 1, "aa".repeat(32)],
+                params![reconciled.undo.target_id, undo_head_edit_ordinal, "99".repeat(16), undo_frontier_commit_seq, "aa".repeat(32)],
             )
             .unwrap();
         let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();

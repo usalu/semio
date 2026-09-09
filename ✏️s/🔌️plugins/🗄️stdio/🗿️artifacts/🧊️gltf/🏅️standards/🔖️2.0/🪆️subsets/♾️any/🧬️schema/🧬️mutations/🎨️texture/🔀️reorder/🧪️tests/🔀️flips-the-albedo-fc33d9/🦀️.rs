@@ -15,11 +15,11 @@ use crate::schema::mutations::reorder_textures::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-textures/flips-the-albedo-and-normal-textures";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

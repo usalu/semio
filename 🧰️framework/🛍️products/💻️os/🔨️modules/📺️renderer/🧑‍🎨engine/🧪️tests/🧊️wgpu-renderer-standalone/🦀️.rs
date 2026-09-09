@@ -21,7 +21,7 @@ fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[test]
 fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🧫️fixtures/🔣️native-socket-probe-codec.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧊️wgpu-native-socket-probe-codec/🔣️.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["nativeSocketProbeCodec"];
     let value = probe["value"].as_str().expect("fixture value is a string").to_string();
     let snapshot = NativeSocketProbeSnapshot(value.clone());

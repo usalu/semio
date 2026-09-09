@@ -70,7 +70,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real recording
-    Given the real recording local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
+    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the <id> mutation is applied to the recording parsed from it
       """
       <mutation>
@@ -92,7 +92,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real recording
-    Given the real recording local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
+    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it
       """
       {"kind":"no-mutation","params":{}}
@@ -103,7 +103,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real recording
-    Given the real recording local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
+    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the <id> mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -125,7 +125,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real recording
-    Given the real recording local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
+    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
       """
       {"kind":"no-mutation","params":{}}
@@ -136,7 +136,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed specification vector local://<fixture>/🦠️mutation/🔣️.json for the <id> kind
+    Given the committed specification vector shared://🔊️mutate-semio-audio/<fixture>/🦠️mutation/🔣️.json for the <id> kind
     When both implementations apply the vector's mutation to its before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -156,8 +156,8 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @level-long
   @mode-round-trip
   Scenario: Re-emit the committed encodings of the reference tone and of the real recording
-    Given the real committed audio artifact asset://📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio
-    And the committed specification vector local://⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
-    And the real recording local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
+    Given the real committed audio artifact asset://🎵️tone/🗣️.dsl.semio
+    And the committed specification vector shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When each implementation parses both artifacts, prints them back and parses the printed text again
     Then both reproduce the two files byte for byte and agree on both documents and on the digests of what they emitted

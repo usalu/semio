@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn neutral_mesh_catalog_agrees_with_independent_serde_projection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let catalog = parse_mesh_delivery_catalog(&fixture["delivery"].to_string(), |path| Ok(fixture["catalogs"][path].to_string())).unwrap();
     let actual: Vec<_> = catalog.iter().map(|entry| serde_json::json!({ "url": entry.url, "source": entry.source, "path": entry.path })).collect();
     assert_eq!(serde_json::Value::Array(actual), fixture["expected"]);
@@ -16,7 +16,7 @@ fn neutral_mesh_catalog_agrees_with_independent_serde_projection() {
 
 #[test]
 fn hostile_mesh_catalog_is_rejected_without_alias_or_path_fallback() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for key in ["url", "source", "path"] {
         let mut input = fixture["delivery"].clone();
         let mut extra = serde_json::json!({ "url": "/mesh/🛖️hut.glb", "source": "🛖️hut/🧊️shape.glb", "path": "🛖️hut/🧊️shape.glb" });

@@ -334,7 +334,7 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
     throw new Error("the production port constants and the neutral corpus disagree");
   }
 
-  const approval = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1", "🔣️.json"), "utf8")) as {
+  const approval = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🗳️gis-map-proposal-approval-v1", "🔣️.json"), "utf8")) as {
     lifecycle: readonly { kind: string }[];
     cancelLifecycle: readonly { kind: string }[];
     limits: Readonly<Record<string, number>>;

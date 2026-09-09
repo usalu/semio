@@ -6,12 +6,38 @@
     "maximumDepth": 64,
     "maximumCopiedBytesPerStep": 256,
     "maximumStructuralItemsPerStep": 1,
-    "retainedCapacity": "Caller-supplied byte limit checked before each payload allocation"
+    "retainedCapacity": "Requested payload capacity is checked against the remaining operation limit before reservation; actual reported capacity is checked before admitting the empty allocation. Allocator-private memory, fixed cursor metadata, and source ownership are excluded."
   },
+  "grant": {
+    "maximumItems": "Caller permit for structural work; each step consumes at most one",
+    "maximumBytes": "Caller permit for copied UTF-8 bytes; each step consumes at most this value and 256",
+    "zero": "Report blocked without changing phase, checkpoint, pending UTF-8 bytes, or retained ownership"
+  },
+  "receipt": [
+    "structuralItems",
+    "copiedBytes"
+  ],
   "completion": "Preserve variant, object entry order, duplicate keys, integer precision, and UTF-8 bytes",
-  "cancellation": "Retire partial values by structural item; return the exact source only after completion or cancellation",
+  "cancellation": "Retire at most one partial structural item per granted close step; return the exact source in the terminal close receipt after completion or cancellation",
+  "lifecycle": "Cursor and step receipts are must-use; explicit terminal-empty close is enforced without recursively draining in Drop",
   "sourceAccess": "At most maximumDepth indexed array/object lookups; no scanning or recursive cloning",
-  "checkpoint": ["completedItems", "copiedBytes", "retainedBytes"],
-  "states": ["active", "complete", "closing", "closed"],
-  "errors": ["invalid-depth-limit", "depth-limit", "retained-byte-limit", "allocation-failed", "invalid-source-path", "closing"]
+  "checkpoint": [
+    "completedItems",
+    "copiedBytes",
+    "retainedBytes"
+  ],
+  "states": [
+    "active",
+    "complete",
+    "closing",
+    "closed"
+  ],
+  "errors": [
+    "invalid-depth-limit",
+    "depth-limit",
+    "retained-byte-limit",
+    "allocation-failed",
+    "invalid-source-path",
+    "closing"
+  ]
 }

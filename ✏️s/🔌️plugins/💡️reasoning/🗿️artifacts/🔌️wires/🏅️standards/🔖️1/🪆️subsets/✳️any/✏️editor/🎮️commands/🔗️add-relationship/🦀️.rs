@@ -1,12 +1,12 @@
 //! 🔗️ 🔗️ Wires play app commands command — `add-relationship`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
 use crate::op::WiresMutation;
 use crate::schema::fixture_edges;
 use crate::WiresSnapshot;
 use dsl::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -15,10 +15,8 @@ pub struct AddRelationship {
     pub kind: String,
 }
 
-/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-/// the newly created edge is selected via a requested `interactionSelect` effect instead of a
-/// `WiresConfigMutation::SetSelection`.
-pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+/// 🕹️ Creates the edge and selects it through the framework interaction effect.
+pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
     let edge_id = format!("edge-{}", fixture_edges(&crate::wires_working_board(document)).len() + 1);

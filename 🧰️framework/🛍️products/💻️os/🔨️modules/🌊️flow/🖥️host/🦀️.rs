@@ -2702,8 +2702,8 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
     host
 }
 
-fn node_eval_status_json(status: NodeEvalStatus) -> crate::os_pack::json::Value {
-    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&status))
+fn node_eval_status_json(status: &NodeEvalStatus) -> crate::os_pack::json::Value {
+    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(status))
 }
 
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
@@ -2717,33 +2717,33 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     for widget in &host.fixture.widgets {
         let id = widget_id_for(widget);
         if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
-            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Ok));
+            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
             continue;
         }
         if let Some(entry) = eval.get(id) {
             if let Some(message) = entry.get("error").and_then(crate::os_pack::json::Value::as_str) {
-                widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Error { message: message.to_string() }));
+                widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Error { message: message.to_string() }));
                 continue;
             }
         }
         let blocked = host.widget_blocked_ports(id);
         if !blocked.is_empty() {
-            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Blocked { ports: blocked }));
+            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Blocked { ports: blocked }));
             continue;
         }
         if active == Some(id) {
-            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Computing));
+            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Computing));
             continue;
         }
         if remaining.iter().any(|entry| entry == id) {
-            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Queued));
+            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Queued));
             continue;
         }
         if dirty.contains(id) && !remaining.is_empty() {
-            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Stale));
+            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Stale));
             continue;
         }
-        widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Ok));
+        widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
     }
     tree.retire_cold();
     seeds.retire_cold();

@@ -135,7 +135,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let seed = seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
 
     let repo_root = crate::workspace::find_repo_root().expect("repo root");
-    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
     let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
     let descriptor = crate::workspace::load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
     let descriptor_bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());

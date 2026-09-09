@@ -1585,9 +1585,9 @@ impl ReconstructionEngine {
         let end = bounded_terminal_end(preparation.cursor, cloud.positions.len(), point_budget);
         if !preparation.bounds_complete {
             for &point in &cloud.positions[preparation.cursor..end] {
-                for axis in 0..3 {
-                    preparation.bounds_min[axis] = preparation.bounds_min[axis].min(point[axis]);
-                    preparation.bounds_max[axis] = preparation.bounds_max[axis].max(point[axis]);
+                for (axis, coordinate) in point.iter().copied().enumerate() {
+                    preparation.bounds_min[axis] = preparation.bounds_min[axis].min(coordinate);
+                    preparation.bounds_max[axis] = preparation.bounds_max[axis].max(coordinate);
                 }
             }
             preparation.cursor = end;

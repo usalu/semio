@@ -972,6 +972,16 @@ mod plugin_builder_contract_tests {
             built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
         }
 
+        /// 🪟️ One group per live window instance — the reserved `measures` section surface's own payload.
+        async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+            view_state.window_instances.iter().map(|window| (window.id.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
+        }
+
+        /// 🛠️ One group for the active tool — the reserved `tools` section surface's own payload.
+        async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+            view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+        }
+
         async fn clipboard_media_type() -> Option<MediaType> {
             Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
         }
@@ -1843,7 +1853,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
-        test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
+        test_retained_document_cancellation::<TestApp>(std::sync::Arc::new(TestCountOneItemPreparationFactory), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3930,7 +3940,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(request.menu.id, "window");
         assert_eq!(view_state.locale, crate::Locale::De);
         assert_eq!(view_state.terminology, crate::Terminology::Reuse);
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         for surface in fixture["surfaces"].as_array().unwrap() {
             let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":surface["windowId"],"viewState":fixture["view"]})).unwrap();
             let (_, view) = wire.into_parts().unwrap();
@@ -3943,7 +3953,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_reaches_real_app_render_and_rejects_hidden_surfaces() {
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         let runtime = super::PluginRuntime::new();
         let app = contract_app_under_test().await;
@@ -3972,7 +3982,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_refresh_projects_panels_from_focused_window_state() {
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         let focused = host_view.for_window_instance("right").unwrap();
         let runtime = super::PluginRuntime::new();
@@ -3988,8 +3998,71 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn reserved_section_surfaces_render_accessor_maps_instead_of_app_bodies() {
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let mut host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+        host_view.active_tool_id = Some("fill".into());
+        let runtime = super::PluginRuntime::new();
+        let app = contract_app_under_test().await;
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        let mut payloads = BTreeMap::new();
+        for section in UiRefreshSection::ALL {
+            let surface = format!("7:{}", section.body_key());
+            super::plugin_mount_surface(&runtime, 7, surface.clone(), section.body_key().into(), &super::encode_wire_serialized(&host_view)).await.unwrap();
+            let (tree, presence) = super::plugin_render_surface(&runtime, 7, &surface).await.unwrap();
+            assert!(presence.is_empty());
+            assert!(RENDER_CONTEXT_PROBE.with(|probe| probe.take()).is_none(), "a reserved section body key must never reach ArtifactApp::render");
+            let projected: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
+            assert_eq!(projected["key"], section.body_key());
+            assert_eq!(projected["component"]["type"], "container");
+            let mut payload = String::new();
+            let mut frontier = vec![projected.clone()];
+            while let Some(node) = frontier.pop() {
+                if node["component"]["type"] == "text" {
+                    payload.push_str(node["component"]["value"].as_str().unwrap());
+                }
+                for child in node["children"].as_array().unwrap().iter().rev() {
+                    frontier.push(child.clone());
+                }
+            }
+            payloads.insert(section.key(), serde_json::from_str::<Value>(&payload).unwrap());
+        }
+        assert_eq!(payloads["engagements"], serde_json::json!({}));
+        assert_eq!(payloads["measures"]["left"][0]["id"], "left-measure");
+        assert_eq!(payloads["measures"]["right"][0]["id"], "right-measure");
+        assert_eq!(payloads["tools"]["fill"][0]["id"], "fill-measure");
+        eprintln!("[DEBUG] reserved section surfaces rendered {} accessor maps through the retained chunk carrier", payloads.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_section_carrier_pages_a_payload_past_one_node_of_children() {
+        let payload = serde_json::to_string(&(0..1_200).map(|index| (format!("window-{index:04}"), format!("measure-{index:04}"))).collect::<BTreeMap<_, _>>()).unwrap();
+        assert!(payload.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX);
+        let tree = section_component_tree(UiRefreshSection::Measures, &payload).unwrap();
+        let projected: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
+        let mut chunks = Vec::new();
+        let mut depth = 0usize;
+        let mut frontier = vec![(projected.clone(), 0usize)];
+        while let Some((node, level)) = frontier.pop() {
+            depth = depth.max(level);
+            if node["component"]["type"] == "text" {
+                let value = node["component"]["value"].as_str().unwrap();
+                assert!(value.len() <= UI_TEXT_MAX_BYTES);
+                chunks.push(value.to_string());
+            }
+            assert!(node["children"].as_array().unwrap().len() <= UI_BUILT_CHILDREN_MAX);
+            for child in node["children"].as_array().unwrap().iter().rev() {
+                frontier.push((child.clone(), level + 1));
+            }
+        }
+        assert!(depth > 1, "a payload past one node of children must page into a nested carrier");
+        assert_eq!(chunks.concat(), payload);
+        eprintln!("[DEBUG] section carrier paged {} bytes into {} bounded text leaves at depth {depth}", payload.len(), chunks.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn surface_context_presence_targets_each_concrete_surface() {
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         let mut app = interaction_app_under_test().await;
         let mut peers = PeerPresenceRoot::empty();
@@ -4648,7 +4721,7 @@ mod plugin_builder_contract_tests {
     /// `TestApp` instance, exactly like a live task's own resume.
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
-        let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
+        let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
         let instance = 507;
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
@@ -4698,7 +4771,7 @@ mod plugin_builder_contract_tests {
 
     #[test]
     fn checkpoint_restart_mode_requires_its_exact_concrete_factory_owner() {
-        let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
         assert_eq!(<TestCommand as ::protocol::OpBinary>::TOOL_JOB_IDS, fixture["restartAuthority"]["generatedToolIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>());
         assert_eq!(TestApp::<false>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["defaultProofs"].as_u64().unwrap());
         assert_eq!(TestApp::<true>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["retainedProofs"].as_u64().unwrap());

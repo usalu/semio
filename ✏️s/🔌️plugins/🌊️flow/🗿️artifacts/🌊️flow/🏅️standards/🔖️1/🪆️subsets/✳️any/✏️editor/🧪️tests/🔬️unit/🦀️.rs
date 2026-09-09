@@ -43,23 +43,14 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let mut lanes = Vec::new();
-    for turn in 0..100_000 {
-        let _ = PluginApp::maintenance_step(&mut app, 1, 16_384).expect("retained addWidget maintenance");
-        PluginApp::advance_typed_operation_publication(&mut app).await.expect("retained addWidget publication");
-        if let Some(page) = PluginApp::take_typed_operation_result_page(&mut app, 1) {
-            assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-            lanes.push(page.lane);
-            assert!(PluginApp::acknowledge_typed_operation_result(&mut app, page.token).expect("retained addWidget ACK"));
-        }
-        if !PluginApp::has_pending_typed_operations(&app) {
-            eprintln!("[DEBUG] retained addWidget completed Worker/Child/Terminal publication and ACK in {turn} bounded turns");
-            break;
-        }
-        std::thread::yield_now();
+    let settled = semio_framework_plugin::testkit::settle_registered_typed_operation(&mut app, 1).await;
+    if let Err(error) = &settled {
+        let violations = semio_framework_trace::Watchdog::violations();
+        semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+        panic!("retained addWidget publication and exact ACK: {error:?}; callback violations: {violations:?}");
     }
-    assert_eq!(lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Child).count(), 1);
-    assert_eq!(lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Terminal).count(), 1);
+    let lanes = settled.expect("retained addWidget publication and exact ACK").lanes;
+    assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Terminal]);
     assert!(!PluginApp::has_pending_typed_operations(&app));
     let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
     assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");

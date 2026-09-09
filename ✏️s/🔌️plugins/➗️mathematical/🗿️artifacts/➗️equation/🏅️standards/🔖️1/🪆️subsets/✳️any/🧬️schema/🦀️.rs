@@ -69,11 +69,11 @@ impl EquationArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::EquationSnapshot) -> Self {
-        Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
+        Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation }
     }
 
     fn default_ui() -> Self {
-        let default_snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
+        let default_snapshot = crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default());
         Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation }
     }
 

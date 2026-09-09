@@ -3,10 +3,10 @@
   "node": "node-1",
   "initialNode": {"id":"node-1","nodeKind":"identity","x":0.0,"y":0.0,"text":"Test Node","metadata":{"names":["One","Zwei"],"enabled":true}},
   "steps": [
-    {"command":"down","window":"left","x":10.0,"y":20.0,"position":[0.0,0.0],"generations":[1,0],"documentPublication":false},
-    {"command":"move","window":"right","x":100.0,"y":200.0,"position":[0.0,0.0],"generations":[1,0],"documentPublication":false},
-    {"command":"move","window":"left","x":16.0,"y":28.0,"position":[6.0,8.0],"generations":[2,0],"documentPublication":true},
-    {"command":"move","window":"left","x":18.0,"y":24.0,"position":[8.0,4.0],"generations":[3,0],"documentPublication":true},
-    {"command":"up","window":"left","x":0.0,"y":0.0,"position":[8.0,4.0],"generations":[4,0],"documentPublication":false}
+    {"command":"down","window":"left","x":10.0,"y":20.0,"position":[0.0,0.0],"previews":{"left":[0.0,0.0],"right":null},"generations":[1,0],"documentPublication":false},
+    {"command":"move","window":"right","x":100.0,"y":200.0,"position":[0.0,0.0],"previews":{"left":[0.0,0.0],"right":null},"generations":[1,0],"documentPublication":false},
+    {"command":"move","window":"left","x":16.0,"y":28.0,"position":[0.0,0.0],"previews":{"left":[6.0,8.0],"right":null},"generations":[2,0],"documentPublication":false},
+    {"command":"move","window":"left","x":18.0,"y":24.0,"position":[0.0,0.0],"previews":{"left":[8.0,4.0],"right":null},"generations":[3,0],"documentPublication":false},
+    {"command":"up","window":"left","x":0.0,"y":0.0,"position":[8.0,4.0],"previews":{"left":null,"right":null},"generations":[4,0],"documentPublication":true}
   ]
 }

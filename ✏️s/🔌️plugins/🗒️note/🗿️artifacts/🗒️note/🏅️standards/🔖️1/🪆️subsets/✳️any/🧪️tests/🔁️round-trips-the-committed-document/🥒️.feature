@@ -22,6 +22,6 @@ Feature: Parse the real committed example document and print it back without los
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed example document and print it back without losing or copying anything
-    Given the real committed artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed to a NoteSnapshot, printed back to `.note` DSL and parsed again
     Then both parses agree on the same document and the printed text reproduces the committed bytes exactly

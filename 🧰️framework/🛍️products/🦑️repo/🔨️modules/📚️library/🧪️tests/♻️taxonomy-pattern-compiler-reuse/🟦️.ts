@@ -13,7 +13,7 @@ type Matcher = Readonly<{ matches(path: string, pattern: string): boolean }>;
 type Row = Readonly<{ id: string; path: string; pattern: string; expected: boolean }>;
 type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string } } }>;
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🔍️discovery/🟦️.ts");
-const bytes = readFileSync(join(import.meta.dir, "../♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
+const bytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
 const source = ts.createSourceFile(sourcePath, readFileSync(sourcePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizer = ts.createSourceFile(normalizerPath, readFileSync(normalizerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const compilers = [{ id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) }, { id: "typescript", compile: (code: string): string => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText }];
@@ -57,7 +57,7 @@ function compiled(compiler: typeof compilers[number], factory: boolean): { oneOf
 }
 
 test("pattern compilation reuse has a closed language-neutral schema and independent JSON parser", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, extra: true }, { ...vector, rounds: 1 }, { ...vector, uniqueNormalizedPatterns: 1 }, { ...vector, factory: "processGlobalCache" }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
@@ -272,8 +272,8 @@ test("changed runtime matcher declarations and call sites are strictly typed", (
 });
 
 test("registers pattern compiler reuse through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../♻️taxonomy-pattern-compiler-reuse/🧪️registration"), bytes = readFileSync(join(directory, "../♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../♻️taxonomy-pattern-compiler-reuse/🛂️schema/🔣️.json"), "utf8")));
+  const directory = join(import.meta.dir, "../../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/♻️taxonomy-pattern-compiler-reuse/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "../♻️taxonomy-pattern-compiler-reuse/🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.205 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

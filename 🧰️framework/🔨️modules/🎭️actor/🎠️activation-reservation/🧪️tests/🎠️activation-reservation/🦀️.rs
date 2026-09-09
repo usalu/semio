@@ -11,7 +11,7 @@ fn binding(reservation: &KernelActivationReservation) -> ActorShardKey {
 
 #[semio_framework_async_macros::async_test]
 async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["traces"].as_array().unwrap() {
         let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
         let mut reservation = None;
@@ -90,7 +90,7 @@ async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
 
 #[semio_framework_async_macros::async_test]
 async fn reservation_exhaustion_collision_and_stale_binding_leave_no_partial_admission() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
     kernel.next_ordinal.insert(request().package, fixture["ordinalMaximum"].as_u64().unwrap().try_into().unwrap());
     let refused = kernel.reserve_activation(request()).await.unwrap_err();

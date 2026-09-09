@@ -5,7 +5,7 @@
  *
  * 1. the **source oracle** — `proveMcpInferenceBridgeFixture` (`💡️inference-bridge.ts`), a real
  *    third-party AJV draft-07 pass over the shared neutral fixture
- *    `🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1`, the four closed wire shapes with their
+ *    `🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1`, the four closed wire shapes with their
  *    hostile mutations, and a cross-check of the client's five path builders against the routes the
  *    hub binary actually registers;
  * 2. the **process laws** — the REAL `semio-os-mcp` binary driven over raw stdio JSON-RPC.

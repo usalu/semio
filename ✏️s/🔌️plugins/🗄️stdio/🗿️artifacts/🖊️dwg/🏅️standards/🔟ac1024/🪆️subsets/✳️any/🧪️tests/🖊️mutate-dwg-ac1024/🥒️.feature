@@ -3,7 +3,7 @@
 @comparison-semantic-dwg-preamble-v1
 @mutations-dwg-ac1024-any
 Feature: Apply every typed DWG AC1024 mutation to the container that is actually stamped R2010
-  The input is asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg,
+  The input is asset://🏛️architectural/🏛️architectural.dwg,
   a real 148,638-byte architectural drawing, and for THIS case it is a native fixture: its first six
   bytes read `AC1024`. That is the whole reason the two DWG cases are not one. The sibling AC1018
   case reads the same file and has to say so as a limitation; here there is nothing to disclose, and
@@ -69,7 +69,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the R2010 container
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -85,7 +85,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   @level-exhaustive
   @mode-conformance
   Scenario: Apply no-mutation to the R2010 container
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the no-mutation mutation is applied with its parameters
       """
       {"kind": "no-mutation", "params": {}}
@@ -97,7 +97,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the R2010 container
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -113,7 +113,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   @level-exhaustive
   @mode-property
   Scenario: Undoing no-mutation restores the R2010 container
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the no-mutation mutation is applied with its parameters
       """
       {"kind": "no-mutation", "params": {}}
@@ -125,7 +125,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the R2010 container's preamble
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the preamble region is zeroed and rewritten from the parsed fields alone
     Then the preamble projection is unchanged, asserted in role
     And the re-encoded bytes reproduce the input exactly, asserted in role

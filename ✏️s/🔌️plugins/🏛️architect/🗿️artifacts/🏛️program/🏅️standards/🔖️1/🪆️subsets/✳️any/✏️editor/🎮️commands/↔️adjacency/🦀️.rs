@@ -23,7 +23,7 @@ pub mod set_adjacency_field {
             return Ok(Emit::default());
         };
         let patch = vec![(payload.field.clone(), value)];
-        match patch_register_item_operation(doc.snapshot, "adjacencies", EntityId(payload.entity_id.clone()), Value::Object(patch)) {
+        match patch_register_item_operation(doc.snapshot, "adjacencies", &EntityId(payload.entity_id.clone()), &Value::Object(patch)) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }

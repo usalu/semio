@@ -3,7 +3,7 @@ use super::*;
 
 use crate::audit::InMemoryAuditSink;
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
-use crate::fixtures;
+use crate::testkit;
 use semio_framework::manifest::kernel;
 use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
 use semio_framework::{Locale, Terminology};
@@ -41,7 +41,7 @@ fn two_capability_catalog(a: CapabilityDefinition, b: CapabilityDefinition) -> C
 }
 
 fn real_fixture_catalog() -> Catalog {
-    compile(&fixtures::note_and_cad_source(), Locale::En, Terminology::Native).expect("fixture catalog compiles")
+    compile(&testkit::note_and_cad_source(), Locale::En, Terminology::Native).expect("fixture catalog compiles")
 }
 
 // 🔀️ dedyn-fw-os-misc: returns `Arc<AuditSinks>` (was `Arc<InMemoryAuditSink>`) — ONE shared

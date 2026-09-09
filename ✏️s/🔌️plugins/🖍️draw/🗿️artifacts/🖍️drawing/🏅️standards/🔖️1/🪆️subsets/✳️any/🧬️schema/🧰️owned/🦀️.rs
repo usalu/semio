@@ -450,6 +450,7 @@ fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {
 
 macro_rules! drawing_owned_field_authority {
     ($state:ident, $authority:ident, $value:ty, $authority_trait:ident, $target_trait:ident, $publish:ident, $decode:path, $factory:expr, $kind:literal) => {
+        #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
         enum $state {
             AwaitToken,
             Decode(store::OwnedSchemaHexAuthority<DRAWING_OWNED_FIELD_BYTES>),
@@ -1673,8 +1674,8 @@ impl DrawingLayerCloneAuthority {
         crate::DrawingRect { x: source.x, y: source.y, width: source.width, height: source.height }
     }
 
-    fn skeleton(source: &DrawingLayerNode) -> Result<DrawingLayerNode, &'static str> {
-        Ok(match source {
+    fn skeleton(source: &DrawingLayerNode) -> DrawingLayerNode {
+        match source {
             DrawingLayerNode::Shape(value) => DrawingLayerNode::Shape(crate::DrawingShapeBody {
                 base: Self::base_skeleton(&value.base),
                 shape_kind: String::new(),
@@ -1694,18 +1695,18 @@ impl DrawingLayerCloneAuthority {
                 source_key: String::new(),
                 params: crate::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon },
             }),
-        })
+        }
     }
 
-    fn new(source: &DrawingLayerNode) -> Result<Self, &'static str> {
-        Ok(Self {
-            value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source)?)),
+    fn new(source: &DrawingLayerNode) -> Self {
+        Self {
+            value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source))),
             retirement: std::mem::ManuallyDrop::new(None),
             depth: 0,
             path: [0; DRAWING_MAXIMUM_LAYER_DEPTH],
             frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH],
             terminal: false,
-        })
+        }
     }
 
     fn source_at<'a>(root: &'a DrawingLayerNode, path: &[usize]) -> Option<&'a DrawingLayerNode> {
@@ -1886,7 +1887,7 @@ impl DrawingLayerCloneAuthority {
                         if self.depth + 1 >= DRAWING_MAXIMUM_LAYER_DEPTH {
                             return Err("drawing-store.initializer-depth-capacity");
                         }
-                        target.children.push(Self::skeleton(child)?);
+                        target.children.push(Self::skeleton(child));
                         self.path[self.depth] = frame.child;
                         self.frames[self.depth].child += 1;
                         self.depth += 1;
@@ -2891,6 +2892,14 @@ impl DrawingPathSegmentDigestAuthority {
     }
 }
 
+#[derive(Clone, Copy)]
+struct DrawingOptionalDigestField {
+    tag: u16,
+    present: bool,
+    next: u8,
+    absent: u8,
+}
+
 struct DrawingLayerVariantDigestAuthority {
     phase: u8,
     index: usize,
@@ -2904,7 +2913,8 @@ impl DrawingLayerVariantDigestAuthority {
         Self { phase: 1, index: 0, field: 0, segment: None, terminal: false }
     }
 
-    fn option(&mut self, digest: &mut store::ArtifactStoreInitializationDigest, credit: &mut DrawingSemanticDigestCredit, tag: u16, present: bool, next: u8, absent: u8, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), &'static str> {
+    fn option(&mut self, digest: &mut store::ArtifactStoreInitializationDigest, credit: &mut DrawingSemanticDigestCredit, field: DrawingOptionalDigestField, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), &'static str> {
+        let DrawingOptionalDigestField { tag, present, next, absent } = field;
         credit.observe(digest, tag, &[u8::from(present)], cx)?;
         self.phase = if present { next } else { absent };
         Ok(())
@@ -2920,31 +2930,31 @@ impl DrawingLayerVariantDigestAuthority {
                     credit.observe_owned_string(digest, 340, &value.shape_kind, true, cx)?;
                     self.phase = 2;
                 }
-                2 => self.option(digest, credit, 341, value.rect.is_some(), 3, 7, cx)?,
+                2 => self.option(digest, credit, DrawingOptionalDigestField { tag: 341, present: value.rect.is_some(), next: 3, absent: 7 }, cx)?,
                 3..=6 => {
                     let rect = value.rect.as_ref().ok_or("drawing-store.digest-rect-missing")?;
                     credit.scalar_f64(digest, 342 + u16::from(self.phase - 3), [rect.x, rect.y, rect.width, rect.height][(self.phase - 3) as usize], cx)?;
                     self.phase += 1;
                 }
-                7 => self.option(digest, credit, 346, value.ellipse.is_some(), 8, 12, cx)?,
+                7 => self.option(digest, credit, DrawingOptionalDigestField { tag: 346, present: value.ellipse.is_some(), next: 8, absent: 12 }, cx)?,
                 8..=11 => {
                     let ellipse = value.ellipse.as_ref().ok_or("drawing-store.digest-ellipse-missing")?;
                     credit.scalar_f64(digest, 347 + u16::from(self.phase - 8), [ellipse.cx, ellipse.cy, ellipse.rx, ellipse.ry][(self.phase - 8) as usize], cx)?;
                     self.phase += 1;
                 }
-                12 => self.option(digest, credit, 351, value.circle.is_some(), 13, 16, cx)?,
+                12 => self.option(digest, credit, DrawingOptionalDigestField { tag: 351, present: value.circle.is_some(), next: 13, absent: 16 }, cx)?,
                 13..=15 => {
                     let circle = value.circle.as_ref().ok_or("drawing-store.digest-circle-missing")?;
                     credit.scalar_f64(digest, 352 + u16::from(self.phase - 13), [circle.cx, circle.cy, circle.r][(self.phase - 13) as usize], cx)?;
                     self.phase += 1;
                 }
-                16 => self.option(digest, credit, 355, value.line.is_some(), 17, 21, cx)?,
+                16 => self.option(digest, credit, DrawingOptionalDigestField { tag: 355, present: value.line.is_some(), next: 17, absent: 21 }, cx)?,
                 17..=20 => {
                     let line = value.line.as_ref().ok_or("drawing-store.digest-line-missing")?;
                     credit.scalar_f64(digest, 356 + u16::from(self.phase - 17), [line.x1, line.y1, line.x2, line.y2][(self.phase - 17) as usize], cx)?;
                     self.phase += 1;
                 }
-                21 => self.option(digest, credit, 360, value.polygon.is_some(), 22, 24, cx)?,
+                21 => self.option(digest, credit, DrawingOptionalDigestField { tag: 360, present: value.polygon.is_some(), next: 22, absent: 24 }, cx)?,
                 22 => {
                     let points = &value.polygon.as_ref().ok_or("drawing-store.digest-polygon-missing")?.points;
                     credit.source_vec(points)?;
@@ -3394,7 +3404,7 @@ impl DrawingMutationDigestAuthority {
         self.terminal.then(|| self.credit.totals()).flatten()
     }
 
-    fn close_step(&mut self, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _maximum_bytes: usize) -> store::SnapshotRetirementStep {
         if let Some(layer) = self.layer.as_mut() {
             layer.close();
         }
@@ -3402,7 +3412,7 @@ impl DrawingMutationDigestAuthority {
         self.fill = None;
         self.stroke = None;
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        store::SnapshotRetirementStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3438,6 +3448,15 @@ struct DrawingMutationAggregateReservation {
     container_slots: usize,
 }
 
+#[derive(Clone, Copy)]
+struct DrawingMutationBackingCredit {
+    reverse_slots: usize,
+    output_slots: usize,
+    overlay_slots: usize,
+    overlay_bytes: usize,
+    duplicate_id_bytes: usize,
+}
+
 impl DrawingMutationAggregateReservation {
     fn checked_total(values: &[usize], fault: &'static str) -> Result<usize, &'static str> {
         values.iter().try_fold(0usize, |total, value| total.checked_add(*value).ok_or(fault))
@@ -3447,12 +3466,9 @@ impl DrawingMutationAggregateReservation {
         source: DrawingSnapshotOwnerTotals,
         mutation: DrawingSemanticDigestTotals,
         operation: &DrawingMutation,
-        reverse_slots: usize,
-        output_slots: usize,
-        overlay_slots: usize,
-        overlay_bytes: usize,
-        duplicate_id_bytes: usize,
+        backing: DrawingMutationBackingCredit,
     ) -> Result<Self, &'static str> {
+        let DrawingMutationBackingCredit { reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes } = backing;
         let container_slots = reverse_slots.checked_add(output_slots).ok_or("drawing-store.mutation-container-credit-overflow")?;
         let container_items = 2;
         let container_bytes = container_slots.checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-container-credit-overflow")?;
@@ -3709,11 +3725,11 @@ impl DrawingDuplicateRewriteAuthority {
         }
     }
 
-    fn close_step(&mut self, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _maximum_bytes: usize) -> store::SnapshotRetirementStep {
         self.hasher = None;
         self.material_len = 0;
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        store::SnapshotRetirementStep::Complete
     }
 
     fn take_owners(&mut self) -> Option<(String, String)> {
@@ -4091,7 +4107,7 @@ impl DrawingMutationCandidateAuthority {
                     .iter()
                     .try_fold(overlay_slots.checked_mul(size_of::<String>()).ok_or("drawing-store.mutation-overlay-byte-overflow")?, |total, page| total.checked_add(page.capacity()).ok_or("drawing-store.mutation-overlay-byte-overflow"))?;
                 let duplicate_id_bytes = self.duplicate_id_owner.as_ref().map_or(0, |value| size_of::<String>().saturating_add(value.capacity()));
-                self.reservation = Some(DrawingMutationAggregateReservation::admit(source_credit, mutation_credit, mutation, reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes)?);
+                self.reservation = Some(DrawingMutationAggregateReservation::admit(source_credit, mutation_credit, mutation, DrawingMutationBackingCredit { reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes })?);
                 drop(self.preflight_mutation.take());
                 self.preflight_source = None;
                 self.preflight_digest = None;
@@ -4148,7 +4164,7 @@ impl DrawingMutationCandidateAuthority {
                 match mutation {
                     DrawingMutation::CreateLayer(value) => {
                         if self.layer_clone.is_none() {
-                            *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(&value.layer)?));
+                            *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(&value.layer)));
                             cx.consume_fuel(1);
                             return Ok(false);
                         }
@@ -4163,7 +4179,7 @@ impl DrawingMutationCandidateAuthority {
                         let duplicate_source = DrawingLayerLocator::node_at(source, self.primary.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-duplicate-source")?;
                         if self.pending_layer.is_none() {
                             if self.layer_clone.is_none() {
-                                *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(duplicate_source)?));
+                                *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(duplicate_source)));
                                 cx.consume_fuel(1);
                                 return Ok(false);
                             }
@@ -4518,7 +4534,7 @@ impl DrawingMutationCandidateAuthority {
             };
         }
         if let Some(rewrite) = self.duplicate_rewrite.as_mut() {
-            return match rewrite.close_step(maximum_bytes)? {
+            return match rewrite.close_step(maximum_bytes) {
                 store::SnapshotRetirementStep::Complete => {
                     let pages = self.overlay_pages.as_mut().ok_or("Drawing duplicate name arena missing")?;
                     if pages.len() >= pages.capacity() {
@@ -4791,7 +4807,7 @@ impl DrawingStoreInitializationAuthority {
         }
         drop(self.owner_catalog.take());
         if let Some(digest) = self.mutation_digest.as_mut() {
-            return match digest.close_step(DRAWING_OWNED_FIELD_BYTES)? {
+            return match digest.close_step(DRAWING_OWNED_FIELD_BYTES) {
                 store::SnapshotRetirementStep::Complete if digest.terminal_is_empty() => {
                     drop(self.mutation_digest.take());
                     Ok(false)

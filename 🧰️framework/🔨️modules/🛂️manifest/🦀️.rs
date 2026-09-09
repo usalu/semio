@@ -4156,7 +4156,7 @@ impl std::error::Error for DependencyGraphError {}
 /// ✅️ Checks every declared dependency resolves to a loaded plugin at a satisfying version —
 /// deterministic: manifests are checked in input order, each manifest's dependencies in declaration
 /// order, so the first violation found is always the same for the same input.
-async fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
+fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
     let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
     for manifest in manifests {
         for dependency in &manifest.dependencies {
@@ -4176,8 +4176,8 @@ async fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), D
 /// picked next, so the returned order is a pure, deterministic function of the input set. Runs
 /// `validate_dependency_graph` first, so a missing dependency or version mismatch is reported
 /// before any cycle would be detected.
-pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
-    validate_dependency_graph(manifests).await?;
+pub fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+    validate_dependency_graph(manifests)?;
 
     let mut in_degree: BTreeMap<&str, usize> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), 0)).collect();
     let mut dependents_of: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
@@ -4209,7 +4209,7 @@ pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<Stri
     if order.len() != manifests.len() {
         let resolved: std::collections::BTreeSet<&str> = order.iter().map(String::as_str).collect();
         let leftover: std::collections::BTreeSet<String> = manifests.iter().map(|manifest| manifest.plugin_id.as_str()).filter(|id| !resolved.contains(id)).map(str::to_string).collect();
-        return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover).await });
+        return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover) });
     }
     Ok(order)
 }
@@ -4217,7 +4217,7 @@ pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<Stri
 /// 🔁️ Walks the leftover (never-ready) subgraph depth-first from its lexicographically smallest
 /// node, following each plugin's first declared dependency that is also leftover, until a node
 /// repeats — the repeated slice of the walked path is the named cycle.
-async fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections::BTreeSet<String>) -> Vec<String> {
+fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections::BTreeSet<String>) -> Vec<String> {
     let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
     let mut visited: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for start in leftover {
@@ -4251,7 +4251,7 @@ async fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collec
 /// 🔎️ Every plugin (direct dependents only, not transitive) that declares `plugin_id` as a
 /// dependency, sorted for determinism — used to refuse unload/hot-reload while dependents are
 /// loaded (contract freeze §4).
-pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+pub fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
     let mut result: Vec<String> = manifests.iter().filter(|manifest| manifest.dependencies.iter().any(|dependency| dependency.plugin_id == plugin_id)).map(|manifest| manifest.plugin_id.clone()).collect();
     result.sort_unstable();
     result
@@ -4355,6 +4355,59 @@ impl ViewModel {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window-view-context/🦀️.rs"]
 mod window_view_context_tests;
+
+//#region 🔖️UiRefreshSection
+/// 🧩️ The three refresh sections that are NOT authored window/panel bodies. Each is its own retained
+/// surface whose reserved body key names the object-safe accessor the plugin runtime calls in place of
+/// `PluginApp::render` (`window_engagements`/`window_measures`/`tool_measures`), so measures, tool
+/// measures and engagements publish, re-publish and page through exactly the same
+/// `Event::SurfaceVisible` → mount → reconcile → `UiPatch` law as a window body.
+///
+/// Mirrored in TypeScript by `UI_REFRESH_SECTIONS` in `🧰️framework/🔨️modules/🛂️manifest/🟦️.ts`.
+/// Both sides are pinned against the one language-neutral declaration in
+/// `🧪️tests/🔬️ui-refresh-section/🔣️.json`, so neither can drift.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiRefreshSection {
+    Engagements,
+    Measures,
+    Tools,
+}
+
+/// 🔑️ Response field / host refresh-cache key of each [`UiRefreshSection`], in `UiRefreshSection::ALL` order.
+pub const UI_REFRESH_SECTION_KEYS: [&str; 3] = ["engagements", "measures", "tools"];
+
+/// 🪧️ Reserved body key — and retained surface key — of each [`UiRefreshSection`], in
+/// `UiRefreshSection::ALL` order. Dotted and `framework.`-prefixed so it can never collide with an
+/// app-authored window instance id or panel tab id, which are plain identifiers.
+pub const UI_REFRESH_SECTION_BODY_KEYS: [&str; 3] = ["framework.section.engagements", "framework.section.measures", "framework.section.tools"];
+
+impl UiRefreshSection {
+    pub const ALL: [Self; 3] = [Self::Engagements, Self::Measures, Self::Tools];
+
+    /// 🔑️ See [`UI_REFRESH_SECTION_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn key(self) -> &'static str {
+        UI_REFRESH_SECTION_KEYS[self as usize]
+    }
+
+    /// 🪧️ See [`UI_REFRESH_SECTION_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        UI_REFRESH_SECTION_BODY_KEYS[self as usize]
+    }
+
+    /// 🔎️ Resolves a mounted surface's body key back to the section it renders, `None` for every
+    /// app-authored body.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|section| section.body_key() == body_key)
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️ui-refresh-section/🦀️.rs"]
+mod ui_refresh_section_tests;
+//#endregion 🔖️UiRefreshSection
 
 // 🎗️ `AppLabelsOverlay` (the stringly-typed, per-id runtime label-patch map) is deleted — manifest
 // labels are now `LocalizedLabel` fields resolved directly via `.resolve(terminology, locale)`, so a

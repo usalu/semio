@@ -1,0 +1,50 @@
+{
+  "schema": "framework.window-transient.retained-input.v1",
+  "cases": [
+    {
+      "windowId": "canvas-left",
+      "windowKindId": "canvas",
+      "generation": 0,
+      "documentGeneration": 0
+    },
+    {
+      "windowId": "canvas-right",
+      "windowKindId": "canvas",
+      "generation": 0,
+      "documentGeneration": 0
+    },
+    {
+      "windowId": "canvas-left",
+      "windowKindId": "canvas",
+      "generation": 1,
+      "documentGeneration": 0
+    },
+    {
+      "windowId": "canvas-left",
+      "windowKindId": "world",
+      "generation": 0,
+      "documentGeneration": 0
+    },
+    {
+      "windowId": "canvas-left",
+      "windowKindId": "canvas",
+      "generation": 0,
+      "documentGeneration": 1
+    }
+  ],
+  "expectedUniqueOwners": 5,
+  "documentReplacement": {
+    "before": {
+      "canvas-left": 5,
+      "canvas-right": 7
+    },
+    "after": {
+      "canvas-left": 0,
+      "canvas-right": 0
+    },
+    "documentGeneration": 1,
+    "oldPublicationAccepted": false,
+    "oldWorkCancelled": true,
+    "newWorkCancelled": false
+  }
+}

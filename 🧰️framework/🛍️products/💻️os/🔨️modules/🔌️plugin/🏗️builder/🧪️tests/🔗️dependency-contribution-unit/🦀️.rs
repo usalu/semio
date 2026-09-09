@@ -4,7 +4,7 @@ use super::*;
 use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🔗️dependency-contribution/🔣️.json")).expect("neutral builder fixture cases")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔣️.json")).expect("neutral builder fixture cases")
 }
 fn operation(delta: i32) -> DependencyTestOp {
     DependencyTestOp::AddValue(AddValue { delta })
@@ -139,7 +139,7 @@ fn keyword_owned_record_codec_is_forwarded_once() {
     assert_eq!(spec.keyword.as_deref(), Some("add-value"));
     let variants = <DependencyTestOp as dsl::DslVariants>::variants();
     assert_eq!((variants[0].1)().keyword, spec.keyword);
-    let rows: serde_json::Value = serde_json::from_str(include_str!("../🔗️dependency-contribution/🧪️tests/🔤️keywords/🔣️.json")).unwrap();
+    let rows: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔤️keywords/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let delta = i32::try_from(row["delta"].as_i64().unwrap()).unwrap();
         let expected = row["text"].as_str().unwrap();

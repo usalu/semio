@@ -10,7 +10,7 @@ import isEqual from "lodash/isEqual";
 import { SmartBuffer } from "smart-buffer";
 import ts from "typescript";
 
-const owner = import.meta.dir, scope = resolve(owner, "../../🔨️modules/🔩️native/👁️observe"), path = join(scope, "🟦️.ts"), vectorPath = join(owner, "../🧪️transaction-process-ownership/🔣️.json"), vectorText = readFileSync(vectorPath, "utf8"), vector = JSON.parse(vectorText), schema = JSON.parse(readFileSync(join(scope, "🧬️schema/🔣️.json"), "utf8"));
+const owner = import.meta.dir, scope = resolve(owner, "../../🔨️modules/🔩️native/👁️observe"), path = join(scope, "🟦️.ts"), vectorPath = join(owner, "../../🧫️fixtures/⚙️transaction-process-ownership/🔣️.json"), vectorText = readFileSync(vectorPath, "utf8"), vector = JSON.parse(vectorText), schema = JSON.parse(readFileSync(join(scope, "🧬️schema/🔣️.json"), "utf8"));
 const require = createRequire(import.meta.url), compilers = [{ id: "bun", compile: (code: string) => new Bun.Transpiler({ loader: "ts", target: "node" }).transformSync(code) }, { id: "typescript", compile: (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText }];
 const clone = <T>(value: T): T => structuredClone(value);
 const inputs = [path, vectorPath, join(scope, "🧬️schema/🔣️.json"), import.meta.filename].map((file) => ({ path: file, bytes: existsSync(file) ? readFileSync(file) : null }));

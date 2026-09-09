@@ -32,6 +32,7 @@
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { Validator } from "jsonschema";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -494,6 +495,51 @@ async function verifyReproducibility(b: Kernel, recipe: Recipe, primaryDir: stri
 }
 //#endregion 🏭️Generate
 
+//#region 📏️ToleranceContract
+type ToleranceCase = Readonly<{
+  id: string;
+  schema: "create-vertex" | "create-edge" | "create-face";
+  accepted: boolean;
+  mutation: Record<string, Record<string, unknown>>;
+}>;
+
+/** 📏️ Validates the shared tolerance cases with the independent JSON Schema implementation. */
+function validateToleranceContract(): number {
+  const fixturePath = join(import.meta.dir, "..", "🧫️fixtures", "📏️tolerance", "🔣️.json");
+  const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: ToleranceCase[]; diffCases: { id: string; accepted: boolean; diff: Record<string, unknown> }[] };
+  const cases = fixture.cases;
+  const validator = new Validator();
+  let failed = 0;
+  for (const testCase of cases) {
+    const schemaPath = join(import.meta.dir, "..", "🧬️schema", "🧬️mutations", testCase.schema === "create-vertex" ? "🏗️create-vertex" : testCase.schema === "create-edge" ? "🖇️create-edge" : "🔷create-face", "🧬️schema", "🔣️.json");
+    const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
+    const payload = Object.values(testCase.mutation)[0];
+    const result = validator.validate(payload, schema);
+    const accepted = result.valid;
+    if (accepted !== testCase.accepted) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${testCase.id} expected=${testCase.accepted} actual=${accepted} errors=${result.errors.map((error) => error.stack).join(" | ")}`);
+    } else {
+      console.error(`[tolerance-contract] ${testCase.id} accepted=${accepted}`);
+    }
+  }
+  const diffSchema = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧬️schema", "🔺️diff", "🔣️.json"), "utf8"));
+  for (const testCase of fixture.diffCases) {
+    const result = validator.validate(testCase.diff, diffSchema);
+    const accepted = result.valid;
+    if (accepted !== testCase.accepted) {
+      failed += 1;
+      console.error(`[tolerance-contract] ${testCase.id} expected=${testCase.accepted} actual=${accepted} errors=${result.errors.map((error) => error.stack).join(" | ")}`);
+    } else {
+      console.error(`[tolerance-contract] ${testCase.id} accepted=${accepted}`);
+    }
+  }
+  const total = cases.length + fixture.diffCases.length;
+  console.error(`[tolerance-contract] ${total - failed}/${total} cases matched the JSON Schema contract`);
+  return failed === 0 ? 0 : 1;
+}
+//#endregion 📏️ToleranceContract
+
 //#region 🚪️Entry
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
@@ -501,6 +547,7 @@ async function main(argv: readonly string[]): Promise<number> {
     const index = rest.indexOf(flag);
     return index === -1 ? null : (rest[index + 1] ?? null);
   };
+  if (command === "tolerance-contract") return validateToleranceContract();
   const only = value("--only");
   const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
   if (recipes.length === 0) {
@@ -576,7 +623,7 @@ async function main(argv: readonly string[]): Promise<number> {
     if (failed > 0) console.error(`[generator] failures: ${JSON.stringify(failures, null, 2)}`);
     return failed > 0 ? 1 : 0;
   }
-  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests`);
+  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | tolerance-contract`);
   return 1;
 }
 

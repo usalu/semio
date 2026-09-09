@@ -45,7 +45,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts bench"
-      }
+      },
+      "cache": false
     },
     "lint": {
       "executor": "nx:run-commands",

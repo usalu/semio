@@ -14,10 +14,10 @@ modified = hex, ':', item diff ;
 item = vertex | edge | brep loop | face | shell | solid ;
 item diff = vertex diff | edge diff | loop diff | face diff | shell diff | solid diff ;
 
-vertex diff = '[', option point3, ']' ;
-edge diff = '[', option hex, ',', option hex, ',', option curve, ']' ;
+vertex diff = '[', option point3, ',', option number, ']' ;
+edge diff = '[', option hex, ',', option hex, ',', option curve, ',', option number, ']' ;
 loop diff = '[', option loop edge list, ']' ;
-face diff = '[', option hex, ',', option hex list, ',', option surface, ',', option bool, ']' ;
+face diff = '[', option hex, ',', option hex list, ',', option surface, ',', option bool, ',', option number, ']' ;
 shell diff = '[', option shell face list, ']' ;
 solid diff = '[', option solid shell list, ']' ;
 
@@ -26,15 +26,16 @@ option hex = '[0]' | ( '[1,', hex, ']' ) ;
 option curve = '[0]' | ( '[1,', curve, ']' ) ;
 option surface = '[0]' | ( '[1,', surface, ']' ) ;
 option bool = '[0]' | ( '[1,', bool, ']' ) ;
+option number = '[0]' | ( '[1,', number, ']' ) ;
 option hex list = '[0]' | ( '[1,', hex list, ']' ) ;
 option loop edge list = '[0]' | ( '[1,', loop edge list, ']' ) ;
 option shell face list = '[0]' | ( '[1,', shell face list, ']' ) ;
 option solid shell list = '[0]' | ( '[1,', solid shell list, ']' ) ;
 
-vertex = '[', hex, ',', point3, ']' ;
-edge = '[', hex, ',', hex, ',', hex, ',', curve, ']' ;
+vertex = '[', hex, ',', point3, ',', number, ']' ;
+edge = '[', hex, ',', hex, ',', hex, ',', curve, ',', number, ']' ;
 brep loop = '[', hex, ',', loop edge list, ']' ;
-face = '[', hex, ',', hex, ',', hex list, ',', surface, ',', bool, ']' ;
+face = '[', hex, ',', hex, ',', hex list, ',', surface, ',', bool, ',', number, ']' ;
 shell = '[', hex, ',', shell face list, ']' ;
 solid = '[', hex, ',', solid shell list, ']' ;
 

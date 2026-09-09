@@ -7,44 +7,68 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🧱️binary-gate.json",
       "{projectRoot}/**/*"
     ]
   },
   "targets": {
     "test": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "cache": true,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-quick": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "cache": true,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-long": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "cache": true,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "inference-bridge-source-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts inference-bridge-check --source"
@@ -52,8 +76,15 @@
     },
     "inference-bridge-process-check": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "cache": true,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts inference-bridge-check --process"
@@ -61,13 +92,21 @@
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "cache": true,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

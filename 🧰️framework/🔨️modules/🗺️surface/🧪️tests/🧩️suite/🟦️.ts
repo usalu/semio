@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import fixture from "../📇️bindings.json";
+import fixture from "../../🧫️fixtures/📇️bindings.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { fixedFilenameContractIdsForPath, loadTaxonomy } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 

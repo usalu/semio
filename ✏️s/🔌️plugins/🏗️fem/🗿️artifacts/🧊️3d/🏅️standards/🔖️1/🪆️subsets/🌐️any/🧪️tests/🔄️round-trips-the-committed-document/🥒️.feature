@@ -4,15 +4,15 @@
 Feature: Read the real derived frame in both languages, and hold the committed carrier to its own law in Rust
 
   This case carries the whole-document identity law and the derivation provenance for
-  `local://🧊️steel-frame.snapshot.json` that used to live inside the artifact-level
+  `shared://🔄️round-trips-the-committed-document/🧊️steel-frame.snapshot.json` that used to live inside the artifact-level
   `mutate-fem3d-1` case alongside the `🕸️mesh`, `✳️material`, `✳️boundary`, `✳️load` and
   `✳️analysis` mutation Examples. It has no vector and no mutation kind, so unlike its five
   mutation siblings it claims no `@mutations-` catalog — `✳️any` owns no mutation catalog of its
   own now that every collection has its smallest owner.
 
-  The artifact is real. `local://🧊️steel-frame.snapshot.json` was derived ONCE by
+  The artifact is real. `shared://🔄️round-trips-the-committed-document/🧊️steel-frame.snapshot.json` was derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem3d-frame.py`
-  from the artifact's own committed demo model (`asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`):
+  from the artifact's own committed demo model (`asset://🎬️demo/🗣️.dsl.semio`):
   a sixteen-node, two-storey steel frame on an 8 × 10 m grid, four fully clamped column bases,
   sixteen HEA 200 members, two real materials with their real moduli, a first-floor concrete slab
   solid, four pinned slab-corner supports, a dead case with an area pressure, a live case with a
@@ -44,7 +44,7 @@ Feature: Read the real derived frame in both languages, and hold the committed c
   @level-long
   @mode-round-trip
   Scenario: Read the real derived frame in both languages, and hold the committed carrier to its own law in Rust
-    Given the real derived model local://🧊️steel-frame.snapshot.json
-    And the artifact's own committed carrier asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real derived model shared://🔄️round-trips-the-committed-document/🧊️steel-frame.snapshot.json
+    And the artifact's own committed carrier asset://🎬️demo/🗣️.dsl.semio
     When each implementation reads the derived model, and the Rust additionally parses the committed carrier, prints it back and parses it again
     Then both languages read the same nine members, and the Rust reproduces the committed carrier byte for byte

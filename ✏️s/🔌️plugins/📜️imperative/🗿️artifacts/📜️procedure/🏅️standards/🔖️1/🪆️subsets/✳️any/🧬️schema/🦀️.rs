@@ -36,7 +36,7 @@ impl ProcedureArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::ProcedureSnapshot) -> Self {
-        Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text, ..Self::default() }
+        Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

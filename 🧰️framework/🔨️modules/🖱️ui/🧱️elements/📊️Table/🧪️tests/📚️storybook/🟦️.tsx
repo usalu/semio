@@ -30,7 +30,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-import { architects } from "../../../../../../../.storybook/fixture/nakagin";
+import nakaginFixture from "../../../🧫️fixtures/🏢️nakagin/🔣️.json";
+const { architects } = nakaginFixture;
 
 interface Person {
   id: string;

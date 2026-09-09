@@ -1,0 +1,9 @@
+type WiresCanvasCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type WiresCanvasWindowConfig {
+  camera: WiresCanvasCamera! @state(class: CONFIG)
+}

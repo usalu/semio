@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 /** 🧩️ Executes the attach packaging block against native Bash with isolated package/editor doubles. */
 export function testExtensionAttach(workspace: string, generated: string, native = process.platform !== "win32"): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧩️extension-attach/🔣️.json"), "utf8"));
   const source = readFileSync(join(workspace, fixture.path), "utf8"), start = source.indexOf(fixture.start), end = source.indexOf(fixture.end);
   assert.ok(start >= 0 && end > start);
   const block = source.slice(start, end), project = JSON.parse(readFileSync(join(workspace, fixture.project), "utf8"));

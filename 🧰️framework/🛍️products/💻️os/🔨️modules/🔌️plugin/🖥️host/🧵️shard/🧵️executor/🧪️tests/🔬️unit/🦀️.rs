@@ -38,7 +38,7 @@ async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
 
 #[semio_framework_async_macros::async_test]
 async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["registrationStages"].as_array().unwrap() {
         let stage = row.as_str().unwrap();
         let mock = Arc::new(MockGuestRuntime::new().await);
@@ -103,7 +103,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
 
 #[semio_framework_async_macros::async_test]
 async fn terminal_registration_reply_wakes_outside_the_state_lock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
     struct Probe {
         executor: std::sync::Weak<ShardExecutor>,
         lockable: AtomicBool,
@@ -142,7 +142,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
 
 #[semio_framework_async_macros::async_test]
 async fn admitted_registration_reply_wakes_outside_the_state_lock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
     struct Probe {
         executor: std::sync::Weak<ShardExecutor>,
         lockable: AtomicBool,

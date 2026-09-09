@@ -27,7 +27,7 @@ fn built_child_retirement_contention_retains_exact_page() {
 
 #[test]
 fn built_tree_retirement_preserves_foreign_queued_page_at_full_capacity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
     let contract = &fixture["foreignPage"];
     let node = || BuiltNode::try_new("node", crate::Component::Separator(crate::SeparatorProps {})).unwrap();
     let mut foreign = BuiltChildren::default();

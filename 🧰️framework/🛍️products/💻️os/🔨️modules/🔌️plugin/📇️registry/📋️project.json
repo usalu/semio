@@ -33,7 +33,7 @@
     },
     "native-catalog-selection-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts native-catalog-selection-check"
@@ -65,7 +65,8 @@
       "dependsOn": [
         "generate"
       ],
-      "cache": false
+      "cache": true,
+      "outputs": []
     },
     "new": {
       "executor": "nx:run-commands",
@@ -73,11 +74,12 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts new",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false
     },
     "rust-taxonomy-mounts-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
@@ -85,7 +87,7 @@
     },
     "plugin-root-ownership-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts plugin-root-ownership-check"

@@ -15,12 +15,12 @@ Feature: Apply every typed SEQUENCE dependency mutation to the real committed st
   and a Python reference cannot read them at all. Until that is done, every assertion below still
   lives in the SUBJECT role.
 
-  📄️ The base document is real and committed. `local://🗣️.dsl.semio`
+  📄️ The base document is real and committed. `shared://🔗️mutate-sequence-1-dependency/🗣️.dsl.semio`
   is parsed by production's own `parse_dsl` and supplies the document skeleton every scenario starts
   from. What the committed artifact cannot supply is the graph itself: `SequenceSnapshot` keeps its
   steps and edges in a composed `s.stdio.semio.flow` CHILD and the `.sequence` DSL persists the child
   HANDLE, not the child, so the three steps and one edge are committed once in
-  `local://🎬️base-scene.json`, derived from this vocabulary's own committed per-kind leaf fixtures
+  `shared://🔗️mutate-sequence-1-dependency/🎬️base-scene.json`, derived from this vocabulary's own committed per-kind leaf fixtures
   under the sibling `🪜️step` subset for the step verbs and this subset's own committed leaves for
   `connect`/`disconnect`.
 
@@ -40,8 +40,8 @@ Feature: Apply every typed SEQUENCE dependency mutation to the real committed st
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> to the real committed step graph and observe it move
-    Given the real committed sequence artifact local://🗣️.dsl.semio
-    And its composed content child seeded from local://🎬️base-scene.json
+    Given the real committed sequence artifact shared://🔗️mutate-sequence-1-dependency/🗣️.dsl.semio
+    And its composed content child seeded from shared://🔗️mutate-sequence-1-dependency/🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -56,8 +56,8 @@ Feature: Apply every typed SEQUENCE dependency mutation to the real committed st
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real committed step graph exactly
-    Given the real committed sequence artifact local://🗣️.dsl.semio
-    And its composed content child seeded from local://🎬️base-scene.json
+    Given the real committed sequence artifact shared://🔗️mutate-sequence-1-dependency/🗣️.dsl.semio
+    And its composed content child seeded from shared://🔗️mutate-sequence-1-dependency/🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
       {"kind": "<id>", "params": <params>}

@@ -75,7 +75,7 @@ LETTER_INTERPOLATION = {letter: kind for kind, letter in INTERPOLATION_LETTER.it
 DOCUMENT_SCHEMA = "s.stdio.semio.animation"
 DSL_PREAMBLE = "semio s.stdio.semio.animation.dsl v1"
 
-WALK_DSL = "asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio"
+WALK_DSL = "asset://🚶️walk/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -432,7 +432,7 @@ def walk(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://🎞️mutate-semio-animation/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

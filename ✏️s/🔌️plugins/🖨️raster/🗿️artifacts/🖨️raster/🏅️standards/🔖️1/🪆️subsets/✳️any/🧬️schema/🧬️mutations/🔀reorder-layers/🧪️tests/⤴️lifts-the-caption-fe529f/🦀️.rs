@@ -12,11 +12,11 @@ use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMut
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_transform, locate_layer};
 use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-layers/⤴️lifts-the-caption-fe529f/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-layers/⤴️lifts-the-caption-fe529f/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-layers/⤴️lifts-the-caption-fe529f/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-layers/⤴️lifts-the-caption-fe529f/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-layers/⤴️lifts-the-caption-fe529f/🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

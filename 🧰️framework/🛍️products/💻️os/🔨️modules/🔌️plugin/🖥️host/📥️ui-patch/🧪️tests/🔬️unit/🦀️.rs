@@ -81,7 +81,7 @@ fn every_wit_patch_variant_moves_into_one_exact_kernel_owner() {
 
 #[test]
 fn emitted_and_returned_channels_are_atomic_bounded_and_drained_once() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).expect("neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral fixture");
     assert_eq!(fixture["operationKinds"].as_array().unwrap().len(), 11);
     for row in fixture["cases"].as_array().unwrap() {
         let emitted = (0..row["emitted"].as_u64().unwrap()).map(|_| wit_patch(7)).collect();

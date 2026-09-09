@@ -2,32 +2,36 @@
   "name": "@semio-tech/fixture-generator-stdio-gif-87a-any",
   "targets": {
     "🏭️generator": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-manifests": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-aspect": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts aspect",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-aspect-manifests": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts aspect-manifests",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

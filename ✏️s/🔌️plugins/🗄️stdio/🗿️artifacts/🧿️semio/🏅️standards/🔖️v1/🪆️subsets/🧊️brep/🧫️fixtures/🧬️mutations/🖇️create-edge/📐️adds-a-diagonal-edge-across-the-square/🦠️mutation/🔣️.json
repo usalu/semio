@@ -1,0 +1,21 @@
+{
+  "CreateEdge": {
+    "id": "e5",
+    "start_vertex": "v1",
+    "end_vertex": "v3",
+    "curve": {
+      "kind": "line",
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "direction": {
+        "x": 1,
+        "y": 1,
+        "z": 0
+      }
+    },
+    "tol": 3e-7
+  }
+}

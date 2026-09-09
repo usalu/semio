@@ -17,6 +17,6 @@ pub fn diff(payload: &EditBlockText, base: &NoteSnapshot) -> protocol::MutationO
     if let crate::NoteBlockNode::Text { content, .. } = &mut updated {
         *content = crate::note_text_child_record(&payload.id, &payload.new_paragraphs);
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

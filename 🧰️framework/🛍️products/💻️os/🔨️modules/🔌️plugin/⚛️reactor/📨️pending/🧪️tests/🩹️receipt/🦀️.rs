@@ -27,7 +27,7 @@ fn close(pending: &mut PendingPatchAuthority) {
 
 #[test]
 fn reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🩹️receipt.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️receipt.json")).unwrap();
     for rejection in [false, true] {
         for row in fixture["cases"].as_array().unwrap() {
             let mut pending = PendingPatchAuthority::new();
@@ -66,7 +66,7 @@ fn reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple() {
 
 #[test]
 fn reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🩹️receipt.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️receipt.json")).unwrap();
     let mut pending = PendingPatchAuthority::new();
     let first = receipt(&fixture["issued"]);
     let second = ActorUiPatchReceipt { patch_sequence: first.patch_sequence + 1, ..first };
@@ -87,7 +87,7 @@ fn reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent() {
 
 #[test]
 fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🩹️receipt.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️receipt.json")).unwrap();
     let mut pending = PendingPatchAuthority::new();
     pending.push_external(patch(&fixture["issued"])).unwrap();
     let patch = take(&mut pending);
@@ -109,7 +109,7 @@ fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
 
 #[test]
 fn reactor_acknowledged_patch_slots_retire_without_instance_close() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🩹️receipt.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️receipt.json")).unwrap();
     let mut pending = PendingPatchAuthority::new();
     for rejection in [false, true] {
         for sequence in 1..=fixture["retirementCycles"].as_u64().unwrap() {

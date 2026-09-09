@@ -1,5 +1,155 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-09 07:50 UTC Authenticated Session Frontier
+
+At09:42UTC current full styling81848 is GREEN41 laws/1371 assertions after the
+single stale font-fixture path correction. Renderer37676 is terminal RED321;
+no diagnostic remains in the root build-hook, browser action/view-context imports,
+ShellHost, session-refresh or broker-client paths in that snapshot. The global
+type gate remains incomplete. WGPU's current pending/cancel session UI focused
+qualification is in progress; no new creation production contract was changed yet.
+
+Terra identified a new ordinary-creation catalog TOCTOU: local dialog G1 admission
+does not send its generation to Hub, so a preaccept rotation can silently choose
+G2. The chosen schema-first correction requires expectedCatalogGenerationId in
+the client create request and accepted catalogGenerationId in every status, with
+exact nonzero lowercase64hex identities. Hub must reject a mismatch before
+claim/mint, include the expectation in the digest, and return the accepted intent's
+generation. Worker and Shell must correlate status before Ready/open. Root owns
+TS domain schema/common corpus/Shell; WGPU owns worker wire/runtime and OS tests
+after the current session baseline; Home owns Rust/Hub after native96646 terminal.
+Root added neutral current/rotated/missing-generation Shell status cases and a
+request-binding test; focused renderer59764 is running against unchanged production.
+
+At09:20UTC full OS80739 is terminal331 passed/1 failed. WGPU traced the last
+invalid-plan failure to error classification after proof retirement aborted the
+document; capturing cancellation before retirement now passes focused7578.
+The current full suite awaits the pending/cancel session UI packet. Native96646
+remains active. Terra found approval replay's internal newly-reconciled boolean
+leaks into a public committed receipt; root chose committed-witness semantics for
+public `applied`, preserving internal first/replay side-effect control and strict
+native validation. Home owns the subsequent runtime and hostile-law correction.
+
+Root repaired the repository-owned build-plugin interface's absent config and
+untyped HTML hooks, including post-server middleware callback returns. The neutral
+HTML-entry law now compares declared config and brand transformation with real
+Vite output/preview. First test15497 failed during graph construction on a moved
+actor-import fixture, not test execution; fresh graph40011 and type98927 are active.
+No global type or mounted browser qualification is claimed.
+
+At09:04UTC WGPU repaired all5 fixture-order failures by performing genuine
+canonical broker me before opening each artifact, without relaxing production
+retirement or expiry-binding checks. Full OS80739 is running. Current renderer
+37714 is terminal RED883 diagnostics across the repository; no ShellHost,
+session-refresh or private broker-client diagnostic remains in that run.
+The overall typecheck is still a goal gate. WGPU next owns accessible bilingual
+pending/cancel UI for the bounded cold session connection; source-qualified
+same-entry retirement still requires an actual physical document reopening.
+
+At08:58UTC full OS21473 reached Vitest and is terminal327 passed/5 failed,
+332 total. All current root refresh/action/90s-ACK/pre-read-cancellation and
+actual Shell-client→worker-broker composition tests passed in that run.
+The5 failures share the execution-target harness frontier: byte verification,
+single-field substitution, body-reader owner mutation, localized viewer and
+invalid/max-plus-one plans fail as already cancelled before their intended
+assertions. WGPU owns that genuine authentication-before-artifact ordering
+repair without weakening retirement or hostile assertions. A current renderer
+typecheck is active on the now-admitted final graph.
+
+At08:54UTC Terra traced the css-color error to a secondary custom Nx plugin
+cascade: fixture imports threw before external nodes were emitted, while the
+parallel dependency phase still emitted their edges. Current bun.lock and
+installed css-color both validate; no lockfile, node_modules or cache mutation
+is needed. Root is running one fresh current full-OS verification graph after
+the exact fixture import repairs. Home's proposal source is GREEN49 hostile,
+11 checkpoint,9 retained-runtime,17 durable-Undo and27 process-source checks.
+Its17-law native cohort96646 is active against the warm ticket target.
+
+At08:45UTC the cold initialization correction is refined to90s, leaving margin
+inside the relay's120s bootstrap lifetime; dispatched me remains2s. The prior
+71169 rerun and type2070 failed during Nx graph construction, not test/type
+execution. Both warm and fresh-directory22855/80895 attempts also fail there:
+concurrent fixture import moves plus an absent npm:@asamuzakjp/css-color source
+node. WGPU repaired only exact canonical reasoning and field-parity fixture
+imports; Terra is tracing the remaining graph-node inconsistency.
+
+Root authored and attempted the stronger pre-read cancellation law, but no
+behavioral RED was captured because graph admission failed. A microtask guard
+now prevents invoking the read callback after cancellation. The controller's
+during-read law now waits for an actual entered reader before cancelling.
+A new composition law connects BrowserBrokerPortClientV1 through an actual
+MessageChannel to the worker broker with canonical authority responses; it is
+authored, not yet executed. All of these current refinements await graph
+admission. WGPU's broader inference33916 is GREEN22/309 skipped; direct-actor
+and full OS qualification remain pending.
+
+At08:30UTC Shell action admission42112 is GREEN1/329 skipped after missing-helper
+65190 RED. Shell now captures verified authority before opening, rechecks after
+the mailbox await and on later AI actions, retires presentation immediately on
+replacement/refusal, and records authority on remote Undo presentation. Retired
+document-entry objects remain fenced until an actual document reopening creates
+a fresh entry; this is not automatic authenticated reconnect.
+
+The private broker client was extracted from Shell and now awaits strict worker
+initialization before sending me. Missing-module1760 RED became94129 GREEN1/
+330 skipped for7 MessageChannel acknowledgement/refusal/cancel/late-response cases.
+A cold initialization law52103 then reproduced the too-short2s handshake.
+The client now separates bounded120s initialization from2s dispatched requests;
+that8-case rerun is active. Renderer38435 identified a constructor return-void
+typing defect; it is corrected, with a current type rerun pending. No global
+typecheck pass is claimed.
+
+Home's real browser-broker lifecycle oracle and4 OS ratchet tests are GREEN:
+launcher-only take after Vite readiness, unarmed denial, bootstrap120s to
+active15s transition, duplicate issue/expiry/replay/shard/401/cancel. Native16751
+is terminal RED before Hub tests at3 async plugin-host callsites, now owned by
+Home for exact await propagation and warm retry. WGPU's current pre-me fence
+79763 is GREEN1/330 skipped; its broader inference/Undo cohort is still running.
+
+At08:08UTC Directory33053 is GREEN1/327 skipped. Root added a dedicated
+schema-first Directory session-refresh module and production Shell wiring:
+strict canonical broker me every5s, serialized requests, explicit cancellation,
+no retry after refusal, verified authority required for Home, and bilingual
+unavailable status. Missing implementation50696 was RED;19758 was RED on the
+subsequently added localized-text assertion; current18550 is GREEN1/329 skipped
+against the complete neutral serial/refusal/cancellation corpus with AJV and
+fast-deep-equal. Renderer33045 remains terminal RED across the concurrently
+changing repository; relevant diagnostics are being inspected, not waived.
+
+The Shell AI-action boundary still needs the verified-authority guard that
+Terra found after refresh integration, and its broker port still needs a strict
+initialized acknowledgement. Home additionally owns the launcher-only one-shot
+bootstrap proof issue after Vite readiness: explicit unarmed/bootstrap120s/
+active-ratchet15s phases, no HTTP mint. This fixes the discovered pre-ready
+15s expiry without claiming indefinite recovery. Actual fresh startup and
+mounted authenticated peers remain runtime gates.
+
+Continuation restored the full four-agent fleet and retained all earlier evidence.
+Port replacement79611 is terminal GREEN2/325 skipped: non-200 refusal and an
+actually locked old response body cannot install authority on the successor port.
+Current-source inference36820 passed20 and failed only the new Directory page
+correlation law. Focused59912 reproduced the same defect: a canonical, correctly
+hashed foreign-session page was presented to Home. The worker now checks the
+verified unexpired session binding and authorization generation before presenting
+each page, posts non-retryable unauthorized, and retires broker/Directory ownership
+on mismatch. Focused33053 is running; no pass is claimed yet.
+
+Selected-GIS browser-byte staging88130 passed1/88 skipped and current two-author
+source43848 passed17 laws/10 hostiles. These qualify staged provenance, not mounted
+browser peers. Home's latest native proposal run reached Hub compilation and failed
+on12 current source drifts; Home has repaired the DTO imports, boxed command/event
+boundary, test constructors and checked SQLite integer conversion, and owns the
+sole fleet Cargo retry. The actual mounted authenticated two-peer journey,
+real MCP progress/cancel, CreateRegion, durable Undo and same-root restart remain
+unqualified.
+
+Terra found an additional pre-/me ownership gap: null authority retirement did
+not advance the session fence, allowing a sealed old operation to reconcile after
+proof replacement. WGPU owns the schema-first immutable operation-fence repair,
+verified-authority inference admission and hostile interleavings. Root owns
+Directory page correlation and production Shell authority refresh. No goal or
+ticket closure is justified.
+
 ## 2026-09-09 03:20 UTC Current Hub Inference Wire
 
 At03:57UTC the actual broker MessagePort session-binding law17468 is GREEN1 after

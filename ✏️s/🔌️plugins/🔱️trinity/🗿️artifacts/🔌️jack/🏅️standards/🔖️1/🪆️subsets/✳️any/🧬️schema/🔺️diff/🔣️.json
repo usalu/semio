@@ -4,274 +4,33 @@
   "title": "JackDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId"],
   "properties": {
-    "artifact": {
-      "title": "JackArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "name": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "manifestId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
+    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "name": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "manifestId": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "manifest": {
-      "$ref": "#/$defs/Manifest",
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Manifest" }
+      ],
       "x-semio-state": "artifact"
     },
     "camera": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
-      "x-semio-state": "artifact"
-    },
-    "nodes": {
-      "$ref": "#/$defs/JackNodesDelta",
-      "x-semio-state": "artifact"
-    },
-    "edges": {
-      "$ref": "#/$defs/JackEdgesDelta",
-      "x-semio-state": "artifact"
-    },
-    "rootNodeId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera" }
       ],
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "JackNodesDelta": {
-      "title": "JackNodesDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
+    },
+    "content": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "https://semio.tech/schema/os/store/child.json" }
       ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Node"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/JackNodePatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.graph"
     },
-    "JackNodePatchEntry": {
-      "title": "JackNodePatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/JackNodePatch"
-        }
-      }
-    },
-    "JackNodePatch": {
-      "title": "JackNodePatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "width": {
-          "type": "number",
-          "format": "double"
-        },
-        "height": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "JackEdgesDelta": {
-      "title": "JackEdgesDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Edge"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/JackEdgePatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "JackEdgePatchEntry": {
-      "title": "JackEdgePatchEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/JackEdgePatch"
-        }
-      }
-    },
-    "JackEdgePatch": {
-      "title": "JackEdgePatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "valueJson": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        }
-      }
-    },
-    "Node": {
-      "title": "Node",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "name"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "Edge": {
-      "title": "Edge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "source",
-        "target"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
-      }
-    },
-    "Manifest": {
-      "title": "Manifest",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "nodeKinds"
-      ],
-      "properties": {
-        "nodeKinds": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        }
-      }
-    }
+    "rootNodeId": { "type": ["string", "null"], "x-semio-state": "artifact" }
   }
 }

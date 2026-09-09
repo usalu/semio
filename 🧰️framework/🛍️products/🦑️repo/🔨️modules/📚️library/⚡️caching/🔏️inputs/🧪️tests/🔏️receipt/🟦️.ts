@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 /** 🔏️ Validates deterministic digest publication, failure preservation and explicit Nx ownership. */
 export async function testGeneratorInputReceipt(workspace: string, generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔏️receipt/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
   const validate = new (require("ajv"))().compile(schema), stable = require("fast-json-stable-stringify");
   const receipt = { version: 1, kind: fixture.kind, digest: fixture.initialDigest };

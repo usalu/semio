@@ -5,9 +5,9 @@ import { join } from "node:path";
 
 /** 🧭️ Exercises event-to-history-to-ancestry resolution and validates its result with Ajv. */
 export async function testCiResolution(): Promise<void> {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const input = JSON.parse(readFileSync(join(import.meta.dir, "../../../🌿️environment/🧪️tests/🌿️workflow-context/🔣️.json"), "utf8"));
-  const github = JSON.parse(readFileSync(join(import.meta.dir, "../../../../🐙️github/🧪️tests/🐙️workflow-history/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧭️baseline-resolution/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(join(import.meta.dir, "../../../🌿️environment/🧫️fixtures/🌿️workflow-context/🔣️.json"), "utf8"));
+  const github = JSON.parse(readFileSync(join(import.meta.dir, "../../../../🐙️github/🧫️fixtures/🐙️workflow-history/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../../🧬️schema/🔣️.json"), "utf8")), valid = new (createRequire(import.meta.url)("ajv"))().compile({ ...schema, $ref: "#/definitions/selection" });
   const { resolveCiValidation } = await import("../../🟦️.ts");
   for (const row of fixture.cases) {

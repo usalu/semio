@@ -1,11 +1,10 @@
 //! 📄️ Trinity Jack app — Document panel (node/edge tree).
 
-use crate::editor::jack::config::JackConfig;
 use crate::editor::jack::terminology::TrinityJackLabels;
 use crate::JackSnapshot;
 use semio_framework_plugin::{tree_item, tree_item_desc, PanelTreeBuilder};
 
-pub(crate) fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(fixture: &JackSnapshot, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("trinity-document")?;
     let scene = crate::jack_working_scene(fixture);
     // 🕹️ Domain "ast" targets nodes by their RAW document id (matching `interaction_topology` and the

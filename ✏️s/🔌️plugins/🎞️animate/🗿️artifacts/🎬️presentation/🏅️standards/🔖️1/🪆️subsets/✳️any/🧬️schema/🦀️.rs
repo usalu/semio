@@ -35,7 +35,7 @@ impl PresentationArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PresentationSnapshot) -> Self {
-        Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation, ..Self::default() }
+        Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

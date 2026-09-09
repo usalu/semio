@@ -5,7 +5,7 @@ use super::*;
 /// filed under the ac1018 example tree but its version string is `AC1024`: it is an R2010
 /// container. See this subset's `🔣️.json` and both DWG cases' feature descriptions.
 fn fixture() -> Vec<u8> {
-    include_bytes!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg").to_vec()
+    include_bytes!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg").to_vec()
 }
 
 fn spec(kind: &str, params: Json) -> Json {
@@ -166,12 +166,12 @@ fn kinds_match_both_catalogs_and_the_vocabulary() {
 /// copy-paste that could silently rot.
 #[test]
 fn every_ac1018_facet_is_a_re_export_of_this_one() {
-    for (facet, source) in [
-        ("mutations", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs")),
-        ("schema", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🦀️.rs")),
-        ("snapshot", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs")),
-        ("oracle", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/🦀️.rs")),
+    for (facet, source, root) in [
+        ("mutations", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"), "crate::standards"),
+        ("schema", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "crate::standards"),
+        ("snapshot", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"), "crate::standards"),
+        ("oracle", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/🦀️.rs"), "crate::artifacts::dwg::standards"),
     ] {
-        assert!(source.contains("pub use crate::standards::v_ac1024::subsets::any::"), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
+        assert!(source.contains(&format!("pub use {root}::v_ac1024::subsets::any::")), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
     }
 }

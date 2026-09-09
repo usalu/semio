@@ -3787,9 +3787,9 @@ impl BoundedUnwrapPreparation {
         match self.phase {
             BoundedUnwrapPhase::Bounds => {
                 for position in &mesh.positions[self.cursor..end] {
-                    for axis in 0..3 {
-                        self.lower[axis] = self.lower[axis].min(position[axis]);
-                        self.upper[axis] = self.upper[axis].max(position[axis]);
+                    for (axis, coordinate) in position.iter().copied().enumerate() {
+                        self.lower[axis] = self.lower[axis].min(coordinate);
+                        self.upper[axis] = self.upper[axis].max(coordinate);
                     }
                 }
                 self.cursor = end;

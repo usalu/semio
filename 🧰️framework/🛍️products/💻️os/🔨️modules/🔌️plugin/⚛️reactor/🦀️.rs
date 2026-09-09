@@ -633,6 +633,7 @@ impl FixedResumeQueue {
         Self { entries: std::mem::ManuallyDrop::new(entries), allocation_admitted }
     }
 
+    #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
     fn push(&mut self, value: PendingResume) -> Result<(), PendingResume> {
         if !self.allocation_admitted || self.entries.len() >= REACTOR_RESUME_SLOTS || value.admitted_bytes().is_none() {
             return Err(value);
@@ -991,6 +992,7 @@ pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_r
 /// `TASK_RESUMES` as an ordinary `Command` resume (the SAME resume path a live task's own
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
+#[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
 pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
     let pack = checkpoint::restore(runtime, state).await?;
     let instances = pack.instances().await;

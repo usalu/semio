@@ -53,7 +53,7 @@ pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "
 #[cfg(feature = "oracles")]
 mod oracles {
     use super::{CLASS, MAX_RUNG};
-    use crate::standards::v_ap214::reference::{ladder, part21};
+    use crate::artifacts::step::standards::v_ap214::reference::{ladder, part21};
     use semio_repo_test_host::Json;
 
     fn params_of(spec: &Json) -> Json {

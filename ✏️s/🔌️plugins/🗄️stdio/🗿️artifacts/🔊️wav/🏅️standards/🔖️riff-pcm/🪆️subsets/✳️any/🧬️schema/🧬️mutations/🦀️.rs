@@ -116,6 +116,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔊️resamples-to-16-a155c9/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️.rs"]
 mod set_snapshot_resamples_to_16_khz_and_doubles_the_pcm16_amplitude;
 //#endregion 🧪️FixtureCases

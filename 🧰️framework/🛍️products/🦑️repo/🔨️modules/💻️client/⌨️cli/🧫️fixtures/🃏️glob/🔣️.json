@@ -1,0 +1,59 @@
+{
+  "$schema": "../../🧬️schema/🃏️glob/🔣️.json",
+  "cases": [
+    {
+      "id": "policy-typescript",
+      "pattern": "**/*.{ts,tsx,py,cs,go,rs}",
+      "path": "🧩️domain/🧫️fixtures/🧪️invalid/🟦️.tsx",
+      "match": true
+    },
+    {
+      "id": "policy-python",
+      "pattern": "**/*.{ts,tsx,py,cs,go,rs}",
+      "path": "🧩️domain/🧫️fixtures/🧪️invalid/🐍️.py",
+      "match": true
+    },
+    {
+      "id": "policy-negative",
+      "pattern": "**/*.{ts,tsx,py,cs,go,rs}",
+      "path": "🧩️domain/🔣️.json",
+      "match": false
+    },
+    {
+      "id": "unicode-path",
+      "pattern": "🧩️domain/**/*.tsx",
+      "path": "🧩️domain/🟦️.tsx",
+      "match": true
+    },
+    {
+      "id": "nested-alternation",
+      "pattern": "**/*.{ts,{tsx,js}}",
+      "path": "🧩️domain/🟦️.js",
+      "match": true
+    },
+    {
+      "id": "recursive-directory",
+      "pattern": "**/{source,tests}/**/*.go",
+      "path": "a/tests/deep/case.go",
+      "match": true
+    },
+    {
+      "id": "literal-braces",
+      "pattern": "**/{source}/file.go",
+      "path": "a/{source}/file.go",
+      "match": true
+    },
+    {
+      "id": "literal-comma",
+      "pattern": "**/x,y.go",
+      "path": "a/x,y.go",
+      "match": true
+    },
+    {
+      "id": "escaped-brace",
+      "pattern": "**/\\{source\\}/file.go",
+      "path": "a/{source}/file.go",
+      "match": true
+    }
+  ]
+}

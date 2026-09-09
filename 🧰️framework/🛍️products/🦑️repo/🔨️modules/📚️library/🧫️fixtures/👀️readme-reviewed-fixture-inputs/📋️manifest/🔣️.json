@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "contract": "reviewed-readme-fixture-inputs-v1",
+  "catalog": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+    "sha256": "2dcb31628412a9e95b4adfc8756d8fbe9dfa1b397742b3f8a47c603ad15ccc79",
+    "caseIndex": 31
+  },
+  "revision": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
+    "id": "testing-readme-protocol-v2-reviewed"
+  },
+  "provenance": {
+    "kind": "newly-authored-copy-of-current-reviewed-bytes",
+    "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
+    "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
+    "baselinePreimage": {
+      "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
+      "size": 7205,
+      "mode": 420
+    }
+  },
+  "inputs": [
+    {
+      "role": "source",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/📥️reviewed-source/📝️.md",
+      "origin": {
+        "authority": "catalog",
+        "pointer": "/cases/31/sourcePath"
+      },
+      "preimage": {
+        "sha256": "20fa38e056c09959c00b652f0ed2985b65cf47b0115df0a6ca9418258dab85fc",
+        "size": 12511,
+        "mode": 420
+      }
+    },
+    {
+      "role": "expectation",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
+      "origin": {
+        "authority": "revision",
+        "pointer": "/revisions/testing-readme-protocol-v2-reviewed/expectationsPath"
+      },
+      "preimage": {
+        "sha256": "7c6c64ee9bb155ec4180e6bb9e476cbca84fe24752c868eb28ec53a6ee73f62c",
+        "size": 12357,
+        "mode": 420
+      }
+    }
+  ]
+}

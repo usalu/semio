@@ -14,11 +14,11 @@ use crate::schema::mutations::unbind_node_skin::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "unbind-node-skin/clears-the-skin-binding-on-the-rig-node";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🩻️node-skin/✂️unbind/🔗️clears-the-skin-f3dcd3/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🩻️node-skin/✂️unbind/🔗️clears-the-skin-f3dcd3/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🩻️node-skin/✂️unbind/🔗️clears-the-skin-f3dcd3/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🩻️node-skin/✂️unbind/🔗️clears-the-skin-f3dcd3/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🩻️node-skin/✂️unbind/🔗️clears-the-skin-f3dcd3/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

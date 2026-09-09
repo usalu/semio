@@ -757,46 +757,46 @@ fn merge_json_patch<T: Clone + dsl::ToValue + dsl::FromValue>(existing: &T, patc
     dsl::FromValue::from_value(Value::Object(base)).ok()
 }
 
-pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
+pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: &EntityId, patch: &Value) -> Option<ProgramMutation> {
     Some(match register {
         "stakeholders" => {
-            let existing = program.stakeholders.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.stakeholders.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceStakeholder(leaves::replace_stakeholder::ReplaceStakeholder { stakeholder: merged })
         }
         "elements" => {
-            let existing = program.elements.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.elements.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceProgramElement(leaves::replace_program_element::ReplaceProgramElement { program_element: merged })
         }
         "adjacencies" => {
-            let existing = program.adjacencies.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.adjacencies.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merged })
         }
         "requirements" => {
-            let existing = program.requirements.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.requirements.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceRequirement(leaves::replace_requirement::ReplaceRequirement { requirement: merged })
         }
         "risks" => {
-            let existing = program.risks.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.risks.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceRisk(leaves::replace_risk::ReplaceRisk { risk: merged })
         }
         "issues" => {
-            let existing = program.issues.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.issues.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceIssue(leaves::replace_issue::ReplaceIssue { issue: merged })
         }
         "functions" => {
-            let existing = program.functions.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.functions.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceFunction(leaves::replace_function::ReplaceFunction { function: merged })
         }
         "users" => {
-            let existing = program.users.iter().find(|row| row.header.id == entity_id)?;
-            let merged = merge_json_patch(existing, &patch)?;
+            let existing = program.users.iter().find(|row| row.header.id == *entity_id)?;
+            let merged = merge_json_patch(existing, patch)?;
             ProgramMutation::ReplaceUserProfile(leaves::replace_user_profile::ReplaceUserProfile { user_profile: merged })
         }
         _ => return None,

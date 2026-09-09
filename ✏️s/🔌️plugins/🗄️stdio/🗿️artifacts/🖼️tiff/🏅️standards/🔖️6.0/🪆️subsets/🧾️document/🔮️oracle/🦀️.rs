@@ -771,7 +771,7 @@ pub fn project_tiff(_input: &[u8]) -> Result<Json, String> {
 /// NOT a test step — `#[ignore]`d, run once by hand, same convention as this artifact's own
 /// `zzz_write_native_tiff_fixture` (`../🚪️io/🦀️.rs`). Builds the committed
 /// `shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff`: IFD 0 is the REAL 500 DPI architectural
-/// scan (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/📸️jpg`, 2275x2560), encoded to
+/// scan (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/📸️jpg`, 2275x2560), encoded to
 /// TIFF with the registered `image` reference encoder (`image::codecs::tiff::TiffEncoder` — the
 /// REAL third-party writer, not this module's own). IFD 1 is a REAL second page — the actual
 /// decoded, downsampled pixels of `…rathaus-ahlen-grundriss.png` (no synthetic content) — appended

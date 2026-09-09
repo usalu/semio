@@ -25,7 +25,7 @@
 //! never invents or reimplements any mutation SEMANTICS, which still run through the real
 //! `apply_semio_model_mutation`/`semio_model_mutation_inverse`. Every input is read from a fixture
 //! the FEATURE declares — the mutation parameters from the scenario's doc string, the specification
-//! vectors from the `local://` URIs its data table names — so neither adapter holds a transcription
+//! vectors from the `shared://🏛️mutate-semio-model/` URIs its data table names — so neither adapter holds a transcription
 //! that could drift away from what the other one read.
 
 use semio_repo_test_host::Adapter;
@@ -343,12 +343,12 @@ mod subject {
     //#region 🔖️Input
     /// 🏢️ The two-node demo building, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.model` bytes in this artifact a codec other than the Python one wrote.
-    const BUILDING_DSL: &str = "asset://📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio";
-    const BUILDING_PACK: &str = "asset://📚️examples/🏢️building/🖼️assets/🎒️.pack.semio";
+    const BUILDING_DSL: &str = "asset://🏢️building/🗣️.dsl.semio";
+    const BUILDING_PACK: &str = "asset://🏢️building/🎒️.pack.semio";
     /// 🏗️ The real 3-node, 181-element, 362-relation capsule tower and its binary twin, derived once
     /// from the committed Nakagin Capsule Tower IFC with IfcOpenShell.
-    const TOWER_DSL: &str = "local://📝️nakagin-capsule-tower.dsl.semio";
-    const TOWER_PACK: &str = "local://📦️nakagin-capsule-tower.pack.semio";
+    const TOWER_DSL: &str = "shared://🏛️mutate-semio-model/📝️nakagin-capsule-tower.dsl.semio";
+    const TOWER_PACK: &str = "shared://🏛️mutate-semio-model/📦️nakagin-capsule-tower.pack.semio";
 
     fn utf8(bytes: Vec<u8>, what: &str) -> Result<String, String> {
         String::from_utf8(bytes).map_err(|error| format!("{what} is not UTF-8: {error}"))
@@ -366,13 +366,13 @@ mod subject {
         Ok(decode_mutation(&json, base))
     }
 
-    /// 🧫️ Every `local://` URI the scenario's steps name, in step order, including the ones its data
+    /// 🧫️ Every `shared://🏛️mutate-semio-model/` URI the scenario's steps name, in step order, including the ones its data
     /// table carries — which is how the specification vectors are declared.
     fn step_fixtures(ctx: &Context) -> Vec<String> {
         let mut found = Vec::new();
         let mut scan = |text: &str| {
             let mut rest = text;
-            while let Some(at) = rest.find("local://") {
+            while let Some(at) = rest.find("shared://🏛️mutate-semio-model/") {
                 let tail = &rest[at..];
                 let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
                 found.push(tail[..end].to_string());

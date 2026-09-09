@@ -43,14 +43,14 @@ const UNOBSERVABLE: &[&str] = &[
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 /// 🧫️ The real derived terrain document: the committed example's exaggeration and `mesh` handle,
 /// carrying the two REAL Liège positions the sibling `gismap` example commits. Derived once,
 /// provenance recorded in the feature description, because the committed example's imported payload
 /// is empty and `change-imported-features` would otherwise replace nothing with something.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🔣️.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🏔️mutate-gisterrain-1/🔣️.snapshot.json";
 
 /// 🗂️ The two fields `GisTerrainSnapshot` declares — the cross-language projection.
 const FIELDS: &[&str] = &["exaggeration", "importedFeaturesJson"];
@@ -71,18 +71,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-exaggeration" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises-exaggeration-from-1-to-2-5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises-exaggeration-from-1-to-2-5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises-exaggeration-from-1-to-2-5/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises-exaggeration-from-1-to-2-5/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises-exaggeration-from-1-to-2-5/🎯️outcome/🔣️.json"),
         },
         "change-imported-features" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports-harbor-position-descriptor/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gisterrain-1: no committed specification vector is registered for kind {other:?}"),
     }

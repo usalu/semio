@@ -161,7 +161,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🧪️appends-urgent-tag/🦀️.rs"]
                             mod tests_appends_urgent_tag;
                         }
                         #[path = "."]
@@ -174,7 +174,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/🧪️retitles-the-document/🦀️.rs"]
                             mod tests_retitles_the_document;
                         }
                         #[path = "."]
@@ -187,7 +187,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/🧪️rewrites-the-notes/🦀️.rs"]
                             mod tests_rewrites_the_notes;
                         }
                         #[path = "."]
@@ -200,7 +200,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/🧪️sets-counter-to-seven/🦀️.rs"]
                             mod tests_sets_counter_to_seven;
                         }
                         #[path = "."]
@@ -213,7 +213,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/🧪️detaches-the-review-tag/🦀️.rs"]
                             mod tests_detaches_the_review_tag;
                         }
                         #[path = "."]
@@ -226,7 +226,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🧪️draft-to-review/🦀️.rs"]
                             mod tests_draft_to_review;
                         }
                     }

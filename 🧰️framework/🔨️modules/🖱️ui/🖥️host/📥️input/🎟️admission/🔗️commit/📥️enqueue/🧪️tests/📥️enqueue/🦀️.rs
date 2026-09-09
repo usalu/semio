@@ -27,7 +27,7 @@ pub(super) fn pause_after_completion_publication() {
 //#region 🧪️SingleEnqueue
 #[test]
 fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_invalidation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let count = |field: &str, key: &str| fixture[field][key].as_str().unwrap().parse::<u64>().unwrap();
     let queue = Mutex::new(RuntimeCompletionQueue::new());
     let presentation = RuntimePresentationAuthority::new();

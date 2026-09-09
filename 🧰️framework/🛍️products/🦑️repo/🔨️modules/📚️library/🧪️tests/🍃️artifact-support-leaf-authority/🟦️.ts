@@ -22,7 +22,7 @@ const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/�
 const schemaPath = `${library}/🔣️taxonomy.json`;
 const schemaBytes = readFileSync(join(repoRoot, schemaPath));
 const taxonomy = JSON.parse(schemaBytes.toString()) as Taxonomy;
-const vector = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🧫️fixtures/🍃️artifact-support-leaf-authority/🔣️.json"), "utf8")) as Vector;
+const vector = JSON.parse(readFileSync(join(repoRoot, library, "🧫️fixtures/🍃️artifact-support-leaf-authority/🔣️.json"), "utf8")) as Vector;
 const fixtureRetention = vector.execution.fixtureRetention;
 const subset = `${vector.owner}/${vector.subset}`;
 const sourceBytes = new Map(vector.cases.map((row) => [row.id, Buffer.from(vector.sourceInputs[row.id])]));
@@ -348,7 +348,7 @@ describe("artifact support leaf authority", () => {
       mkdirSync(dirname(join(row.root, path)), { recursive: true });
       writeFileSync(join(row.root, path), JSON.stringify(value) + "\n");
     };
-    const bundle = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🧫️fixtures/🔣️mutation-path-projection.json"), "utf8")).bundle as readonly { source: string }[];
+    const bundle = JSON.parse(readFileSync(join(repoRoot, library, "🧫️fixtures/🛤️mutation-path-projection/🔣️.json"), "utf8")).bundle as readonly { source: string }[];
     const scenario = source.slice(0, -"/🎯️outcome/🔣️.json".length);
     for (const owner of [vector.owner, foreignOwner]) for (const leaf of bundle) {
       const path = `${owner}/${scenario}/${leaf.source}`;

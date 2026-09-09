@@ -110,3 +110,44 @@ Added seven existing framework tests to the shared library target: retained page
 ## Current Dispatch Scope
 
 The native worker selection exactly matches the root shipping-scope oracle. The current runtime catalog contains 485 laws in 69 groups, including all previously verified packages whose sources have since changed. Native compilation and combined runtime execution remain pending.
+
+## World and Reactor Regression Coverage
+
+Extended the infinite library target with twelve existing pool, terrain, marquee, gumball, and asset ownership assertions and added the reactor bounded close assertion. These exercise the current interfaces touched by the warning repairs. Runtime execution remains pending.
+
+- mesh_pool_release_clears_at_zero_refcount
+- terrain_writer_matches_legacy_bands_and_closes_interrupted_authority
+- world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degenerate_cases
+- world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba
+- world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry
+- world_gumball_update_validates_one_selected_aba_token_per_turn
+- world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority
+- asset_authority_rejects_request_and_byte_capacity_plus_one_before_string_ownership
+- asset_response_rejects_page_plus_one_and_retires_partial_stream_one_page_per_step
+- asset_decode_resume_and_stale_generation_keep_claimed_pages_until_terminal_return
+- asset_unknown_length_releases_unused_aggregate_credit_at_seal
+- asset_completed_cursor_advances_one_fixed_slot_per_grant_and_hands_back_exact_owner
+
+## Launch Registration Revalidated
+
+The current shared launch file retained the sequential regression entry but no longer contained the combined entry. Restored the combined launch alongside it with order 411.51; validated JSONC before the guarded write.
+
+
+## Current Scope
+
+Validated unique package targets and exact selectors after the host, shell, world, and reactor additions: {"batches":2,"groups":70,"laws":506,"host":5,"shell":3,"infinite":19}.
+
+
+## Synchronous Boundaries and Relay Coverage
+
+Registered 35 existing assertions covering neutral relay traces, cancellation and panic recovery, completion subscriptions, deterministic plugin graphs, IO routing, and bounded shared-value cloning. This covers the latest warning and borrow repairs. Runtime execution remains pending.
+
+
+## Current Scope
+
+Validated unique package targets and exact selectors after the host, shell, world, and reactor additions: {"batches":2,"groups":70,"laws":541,"host":22,"shell":3,"infinite":19}.
+
+
+## Current Scope
+
+Validated unique package targets and exact selectors after the host, shell, world, and reactor additions: {"batches":2,"groups":72,"laws":545,"host":22,"shell":3,"infinite":19}.

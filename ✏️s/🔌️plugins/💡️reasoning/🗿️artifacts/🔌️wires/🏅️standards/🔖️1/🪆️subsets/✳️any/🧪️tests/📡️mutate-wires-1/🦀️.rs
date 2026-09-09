@@ -3,7 +3,7 @@
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.reasoning.wires` is a
 //! semio-NATIVE argument board with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🧬️mutations/<slug>/<fixture>/`)
 //! literally — no recomputation, no reimplementation of mutation semantics. `subject` drives this
 //! repository's own `apply_wires_mutation_reporting` over the full ten-kind `WiresMutation`
 //! vocabulary.
@@ -50,7 +50,7 @@ const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node
 /// 🗣️ The real committed board — one `node-1` identity circle at the canvas origin, carried as five
 /// hex-encoded `DslValue` lines.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -62,64 +62,64 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-node-id-the-board-already-holds/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-node-id-the-board-already-holds/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-node-id-the-board-already-holds/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-node-id-the-board-already-holds/🎯️outcome/🔣️.json"),
         ),
         "delete-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held/🎯️outcome/🔣️.json"),
         ),
         "move-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/🎯️outcome/🔣️.json"),
         ),
         "resize-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches/🎯️outcome/🔣️.json"),
         ),
         "change-node-kind" => (
-            include_str!("../../🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🎯️outcome/🔣️.json"),
         ),
         "change-node-shape" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🎯️outcome/🔣️.json"),
         ),
         "edit-node-text" => (
-            include_str!("../../🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim/🎯️outcome/🔣️.json"),
         ),
         "set-node-root" => (
-            include_str!("../../🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🎯️outcome/🔣️.json"),
         ),
         "connect-nodes" => (
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent/🎯️outcome/🔣️.json"),
         ),
         "disconnect-nodes" => (
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-wires-1: no specification vector registered for kind {other:?}"),
     }
@@ -278,7 +278,7 @@ mod subject {
     }
 
     /// 🔁️ The real committed board through its own DSL carrier. `.wires.dsl.semio` is a fixed
-    /// five-line layout — `wires=`, `nodes=`, `edges=`, `camera=`, `meta=`, each a hex-encoded
+    /// four-line layout — `wires=`, `nodes=`, `edges=`, `meta=`, each a hex-encoded
     /// `DslValue` — with no writer freedom at all, and the committed example is this codec's own
     /// output, committed as such. The wave's usual "output must not equal input" tripwire therefore
     /// does not apply and would be the wrong law here; the byte-exact law is asserted instead,

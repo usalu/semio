@@ -19,15 +19,15 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   only the real `.dsl.semio` example's own parser resolves it — so `resize-source-frame` and
   `replace-source` are modelled with `source` as an OPAQUE marker (touched vs not) rather than real
   content; the seven `tiles`-scoped kinds are verified for real against this case's own committed
-  `local://🔣️.json` base graph, already declared as this case's local fixture.
+  `shared://🧭️mutate-presentation-1/🔣️.json` base graph, already declared as this case's local fixture.
 
-  📄️ The base document is real and committed. `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
+  📄️ The base document is real and committed. `asset://🎬️demo/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl`, and the figure SOURCE every scenario starts from is whatever
   that artifact decodes to — never a literal in this case. What the committed artifact cannot supply is
   tiles: `PresentationSnapshot` keeps its `(source, tiles)` in a composed `s.stdio.semio.presentation` CHILD
   and the `.presentation` DSL persists the child HANDLE, not the child, so a case that only parsed the file
   would find an empty tile list and six of the nine kinds would address nothing. The three tiles are
-  therefore committed once in `local://🔣️.json`, derived from this vocabulary's OWN committed
+  therefore committed once in `shared://🧭️mutate-presentation-1/🔣️.json`, derived from this vocabulary's OWN committed
   per-kind leaf fixtures under `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/`
   — that file records exactly which id and which crop came from which committed payload, and which two
   crops are this case's own derivation.
@@ -51,8 +51,8 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real committed deck and observe it move
-    Given the real committed deck artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
-    And its composed presentation child seeded from local://🔣️.json
+    Given the real committed deck artifact asset://🎬️demo/🗣️.dsl.semio
+    And its composed presentation child seeded from shared://🧭️mutate-presentation-1/🔣️.json
     When the <id> mutation is applied through apply_presentation_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
@@ -74,8 +74,8 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real committed deck exactly
-    Given the real committed deck artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
-    And its composed presentation child seeded from local://🔣️.json
+    Given the real committed deck artifact asset://🎬️demo/🗣️.dsl.semio
+    And its composed presentation child seeded from shared://🧭️mutate-presentation-1/🔣️.json
     When the <id> mutation is applied through apply_presentation_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
@@ -98,7 +98,7 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed deck artifact
-    Given the real committed deck artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed deck artifact asset://🎬️demo/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

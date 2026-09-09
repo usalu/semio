@@ -351,6 +351,10 @@ fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, nam
     Ok(bytes)
 }
 
+/// 🗃️ Reads serialized pack and SPR bytes for one artifact without taking filesystem ownership.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+pub type ArtifactArchiveReader<'a> = dyn Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + 'a;
+
 /// 📤️ Exports a collection to a zip byte stream: `collection.collection.pack`/`.spr` at the root, each
 /// document artifact at `<folder path>/<name>.pack` + `.spr` (lossless — full VCS history survives via
 /// the injected `read_artifact` bytes), each blob raw at its path. IO-free: `read_artifact`/`read_blob`
@@ -361,7 +365,7 @@ fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, nam
 pub fn export_collection_zip(
     collection: &CollectionSnapshot,
     collection_spr: &[u8],
-    read_artifact: &dyn Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError>,
+    read_artifact: &ArtifactArchiveReader<'_>,
     read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>,
 ) -> Result<Vec<u8>, SpaceZipError> {
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
@@ -492,8 +496,8 @@ where
 /// content hash matches the `store::BlobRef` recorded in the collection (a mismatch means the zip was
 /// tampered with or corrupted in transit).
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn import_blob<B: store::BlobStore>(blob_store: &B, blob: &store::BlobRef, bytes: Vec<u8>) -> Result<(), SpaceZipError> {
-    let stored = crate::host::resolve_kernel_future(blob_store.put(&bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+pub fn import_blob<B: store::BlobStore>(blob_store: &B, blob: &store::BlobRef, bytes: &[u8]) -> Result<(), SpaceZipError> {
+    let stored = crate::host::resolve_kernel_future(blob_store.put(bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     if stored.hash != blob.hash {
         return Err(SpaceZipError::Pack(format!("blob hash mismatch on import: expected {}, got {}", blob.hash, stored.hash)));
     }

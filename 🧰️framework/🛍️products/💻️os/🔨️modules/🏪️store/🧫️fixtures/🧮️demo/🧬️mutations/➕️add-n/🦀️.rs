@@ -34,5 +34,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for AddN {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🧮️demo-➕️add-n/🦀️.rs"]
 mod tests;

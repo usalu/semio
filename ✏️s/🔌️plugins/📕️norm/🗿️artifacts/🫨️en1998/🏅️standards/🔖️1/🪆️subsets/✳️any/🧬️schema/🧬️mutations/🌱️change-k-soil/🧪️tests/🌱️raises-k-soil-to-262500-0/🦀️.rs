@@ -11,11 +11,11 @@ use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
 use crate::En1998Snapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️change-k-soil/🌱️raises-k-soil-to-262500-0/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️change-k-soil/🌱️raises-k-soil-to-262500-0/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️change-k-soil/🌱️raises-k-soil-to-262500-0/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️change-k-soil/🌱️raises-k-soil-to-262500-0/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️change-k-soil/🌱️raises-k-soil-to-262500-0/🎯️outcome/🔣️.json");
 
 fn before() -> En1998Snapshot {
     serde_json::from_str(BEFORE).expect("change-k-soil before-snapshot decodes")

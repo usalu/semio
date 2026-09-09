@@ -1,8 +1,6 @@
 syntax = "proto3";
 package semio.s.norm.din18599.artifact;
-
-// 🧬️ Din18599 artifact schema — every field with its state class.
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message Din18599Artifact {
   // @state artifact
   string use_class = 1;
@@ -15,7 +13,7 @@ message Din18599Artifact {
   // @state artifact
   double h_v = 5;
   // @state artifact
-  string climate = 6;
+  semio.os.store.ArtifactChild climate = 6;
   // @state artifact
   double internal_gains_w_m2 = 7;
   // @state artifact

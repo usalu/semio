@@ -1369,7 +1369,7 @@ pub mod backbone {
             let path = std::path::Path::new(file_path);
             let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
             let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
-            let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| std::path::PathBuf::from("."));
+            let folder = path.parent().map_or_else(|| std::path::PathBuf::from("."), std::path::Path::to_path_buf);
             Ok(Self {
                 kind: Some(SpacePortKind::File { uri, storage: crate::host::resolve_kernel_future(FolderTextStorage::new(folder)), document_id, extension }),
                 memory: crate::host::resolve_kernel_future(MemoryBackbonePort::new()),
@@ -3122,7 +3122,6 @@ pub mod codec_abi {
     };
 
     pub const OS_HOST_CODEC_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
-    pub const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("🧫️fixtures/📊️.tsv");
     pub const OS_HOST_CODEC_MAX_INPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_OUTPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_KIND_COUNT: usize = 256;

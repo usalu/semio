@@ -28,5 +28,5 @@ impl crate::os_spr::MutationKind<Value, ValueMutation> for SetValue {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../🧪️tests/🧫️fixture-🧬️mutations-🔢️set-value/🦀️.rs"]
 mod tests;

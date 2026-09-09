@@ -227,7 +227,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   for (const marker of ["DurableOwnedMapMemberAdmissionV1", "AdmittingParent", "AdmittingDrawing", "AdmittingValue", "PreparingParent", "PreparingDrawing", "PreparingValue", "take_assembly_prepared", "bind_store_owned", "mount_map", "take_mounted_host", "take_terminal_owners"]) {
     if (!assembly.includes(marker)) throw new Error(`Store durable assembly missing ${marker}`);
   }
-  if (assembly.includes("begin_member_apply_one") || assembly.includes("group_id:") || !assembly.includes("begin_apply_one(")) throw new Error("Store durable assembly admits a caller group or catalog factory shortcut");
+  if (assembly.includes("begin_member_apply_batch") || assembly.includes("group_id:") || !assembly.includes("begin_apply_batch(")) throw new Error("Store durable assembly admits a caller group or catalog factory shortcut");
   const journal = storeSource.slice(storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::StartingJournal =>"), storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::Journal =>"));
   if (!journal.includes("sink.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?") || (journal.match(/\.begin_commit\(/gu) ?? []).length !== 1) throw new Error("Store durable journal does not begin exactly once");
   const gisSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");

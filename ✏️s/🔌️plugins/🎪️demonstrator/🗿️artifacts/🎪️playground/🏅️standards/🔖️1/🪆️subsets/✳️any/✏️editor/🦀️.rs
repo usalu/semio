@@ -55,6 +55,7 @@ fn playground_retained_extent(command: &PlaygroundCommand, _snapshot: &Playgroun
     }
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn playground_retained_reduce(
     command: &PlaygroundCommand,
     snapshot: &PlaygroundSnapshot,

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import fixture from "./🔣️.json";
+import fixture from "../../🧫️fixtures/🔒️playground-preferences/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import mapping from "../../🔣️.json";
 

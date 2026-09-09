@@ -3,7 +3,7 @@ use crate::standards::v1_4::subsets::base::schema::snapshot::demo_pdf_snapshot;
 
 /// 🧫️ The real committed document every 1.4 test case runs on — 65 pages, a classic
 /// cross-reference table, page 1 typeset at A4.
-const THESIS: &[u8] = include_bytes!("../../../📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf");
+const THESIS: &[u8] = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
 
 /// 🧪️ `codec_retention_law`: decode→encode→decode is stable on everything this standard's
 /// snapshot carries — every page, its extent and its shown text.

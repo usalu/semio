@@ -204,6 +204,7 @@ fn layout_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(LAYOUT_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn layout_retained_reduce(
     command: &LayoutCommand,
     snapshot: &LayoutSnapshot,

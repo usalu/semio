@@ -68,10 +68,10 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> and land on the committed after-snapshot, diff and outcome
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
     When <id> is applied to that vector's before-snapshot through process3d_mutation_report_json
     Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, a kind the vector declares observable really moved the projection, and the two implementations agree
@@ -98,9 +98,9 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
     When <id> is applied and then its own computed inverse is applied through process3d_mutation_report_json
     Then the snapshot's projection is the before-snapshot's projection again, any divergence is reported by JSON path, and both implementations agree
@@ -127,6 +127,6 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed fabrication document, print it back and cross it against its binary encoding
-    Given the real committed document asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed document asset://🎬️demo/🗣️.dsl.semio
     When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
     Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires

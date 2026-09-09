@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { applyPatch } from "fast-json-patch";
-import fixture from "./🔣️.json";
+import fixture from "../../🧫️fixtures/🔬️window-action-context/🔣️.json";
 
 /** 🎯️ RFC 6902 independently projects the host target onto the shared native action fixtures. */
 export function testWindowActionContextOracle(): void {

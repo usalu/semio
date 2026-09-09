@@ -42,7 +42,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-version-info"];
 /// 🖊️ The one real DWG committed to this repository — 148,638 bytes of a genuine architectural
 /// drawing. It is filed under the ac1018 example tree; its version stamp is `AC1024`, so for THIS
 /// case it is a native fixture and no relabelling caveat applies.
-const INPUT: &str = "asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg";
+const INPUT: &str = "asset://🏛️architectural/🏛️architectural.dwg";
 
 /// 🧫️ Copies the immutable committed drawing into the work directory and returns the mutable copy's
 /// bytes; the committed file is never written to.

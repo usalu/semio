@@ -3,7 +3,7 @@
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `dag.dag` is a semio-NATIVE
 //! port-directed computation graph with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🧬️mutations/<slug>/<fixture>/`)
 //! literally — no recomputation, no reimplementation of mutation semantics. `subject` drives this
 //! repository's own `apply_dag_mutation_reporting` over the full fourteen-kind `DagMutation`
 //! vocabulary.
@@ -65,7 +65,7 @@ const KINDS: &[&str] = &[
 /// 🗣️ The real committed pipeline — `slider → scale → combine → screen` with `mode` feeding
 /// `combine`'s second input, five nodes over four edges.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -75,88 +75,88 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🎯️outcome/🔣️.json"),
         ),
         "delete-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects-deleting-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "rename-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-node/🧪️rejects-renaming-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-node/🧪️rejects-renaming-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-node/🧪️rejects-renaming-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-node/🧪️rejects-renaming-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-name" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-f90723/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-f90723/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-f90723/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-f90723/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔤change-node-name/🧪️rejects-renaming-the-label-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔤change-node-name/🧪️rejects-renaming-the-label-of-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔤change-node-name/🧪️rejects-renaming-the-label-of-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔤change-node-name/🧪️rejects-renaming-the-label-of-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "move-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧪️rejects-moving-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧪️rejects-moving-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧪️rejects-moving-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧪️rejects-moving-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "resize-node" => (
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️rejects-resizing-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️rejects-resizing-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️rejects-resizing-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐resize-node/🧪️rejects-resizing-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-icon" => (
-            include_str!("../../🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-3d1997/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-3d1997/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-3d1997/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-3d1997/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧪️rejects-reiconing-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧪️rejects-reiconing-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧪️rejects-reiconing-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧪️rejects-reiconing-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-abbreviation" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbrevi-46aeee/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbrevi-46aeee/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbrevi-46aeee/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbrevi-46aeee/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔡change-node-abbreviation/🧪️rejects-reabbreviating-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔡change-node-abbreviation/🧪️rejects-reabbreviating-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔡change-node-abbreviation/🧪️rejects-reabbreviating-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔡change-node-abbreviation/🧪️rejects-reabbreviating-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-operator-kind" => (
-            include_str!("../../🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-45dad2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-45dad2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-45dad2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-45dad2/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "replace-node-kind" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-8bbfaf/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-8bbfaf/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-8bbfaf/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-8bbfaf/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-node-kind/🧪️rejects-rekinding-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-node-kind/🧪️rejects-rekinding-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-node-kind/🧪️rejects-rekinding-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-node-kind/🧪️rejects-rekinding-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "replace-node-properties" => (
-            include_str!("../../🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropert-1ab92a/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropert-1ab92a/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropert-1ab92a/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropert-1ab92a/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧪️rejects-repropertying-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧪️rejects-repropertying-a-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧪️rejects-repropertying-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧪️rejects-repropertying-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "reorder-nodes" => (
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-c304e1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-c304e1/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-c304e1/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-c304e1/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🧪️rejects-a-duplicate-id-in-the-order/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🧪️rejects-a-duplicate-id-in-the-order/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🧪️rejects-a-duplicate-id-in-the-order/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🧪️rejects-a-duplicate-id-in-the-order/🎯️outcome/🔣️.json"),
         ),
         "connect-nodes" => (
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-a-missing-source-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-a-missing-source-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-a-missing-source-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🤝️connect-nodes/🧪️rejects-a-missing-source-node/🎯️outcome/🔣️.json"),
         ),
         "disconnect-nodes" => (
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-ab5dfa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-ab5dfa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-ab5dfa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-ab5dfa/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-disconnecting-a-missing-edge/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-disconnecting-a-missing-edge/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-disconnecting-a-missing-edge/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects-disconnecting-a-missing-edge/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-dag-1: no specification vector registered for kind {other:?}"),
     }

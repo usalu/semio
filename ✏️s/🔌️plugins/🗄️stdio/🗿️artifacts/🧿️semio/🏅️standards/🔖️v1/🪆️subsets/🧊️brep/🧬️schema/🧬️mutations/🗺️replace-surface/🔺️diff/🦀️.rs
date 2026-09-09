@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ReplaceSurface, base: &SemioBrepSnapshot) -> protoc
     protocol::MutationOutcome::new(SemioBrepDiff {
         faces: Some(NamedTripleDiff {
             removed: vec![],
-            modified: vec![NamedModified { key: payload.face_id.clone(), diff: BrepFaceDiff { outer_loop: None, inner_loops: None, surface: Some(payload.new_surface.clone()), orientation: None } }],
+            modified: vec![NamedModified { key: payload.face_id.clone(), diff: BrepFaceDiff { outer_loop: None, inner_loops: None, surface: Some(payload.new_surface.clone()), orientation: None, tol: None } }],
             added: vec![],
         }),
         ..Default::default()

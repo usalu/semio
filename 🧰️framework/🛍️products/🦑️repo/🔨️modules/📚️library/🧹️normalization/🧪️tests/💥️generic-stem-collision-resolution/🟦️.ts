@@ -9,7 +9,7 @@ import { classifyPackageGlueContent } from "../../🟦️.ts";
 
 //#region 🧬️Contract
 const repoRoot = resolve(import.meta.dir, "../../../../../../../..");
-const vectors = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as {
+const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/💥️generic-stem-collision-resolution/🔣️.json", import.meta.url), "utf8")) as {
   siblingCases: readonly { id: string; dir: string; implName: string; roleName: string }[];
   gluePurityCases: readonly { id: string; path: string }[];
   packageBoundaryHoistCases: readonly { id: string; packageDir: string; ownerTestPath: string }[];

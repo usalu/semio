@@ -204,7 +204,7 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     for assembly in assemblies {
         builder = match assembly {
             crate::registry::ArtifactAssembly::Definition(definition) => builder.artifact_definition(definition),
-            crate::registry::ArtifactAssembly::Runtime(declaration) => builder.artifact(declaration),
+            crate::registry::ArtifactAssembly::Runtime(declaration) => builder.artifact(*declaration),
         };
     }
     for artifact_kind in crate::registry::native_codec_artifact_kinds() {

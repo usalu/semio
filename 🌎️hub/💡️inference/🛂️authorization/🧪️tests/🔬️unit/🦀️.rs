@@ -9,8 +9,8 @@ use std::sync::Arc;
 
 #[tokio::test]
 async fn inference_live_author_rechecks_real_sqlite_session_scope_role_revocation_and_cancellation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🛂️inference-author-v1/🔣️.json")).unwrap();
-    let base: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛂️inference-author-v1/🔣️.json")).unwrap();
+    let base: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let directory = Arc::new(HubDirectories::Sqlite(SqliteDirectory::connect(":memory:").await.unwrap()));
         let owner = directory.create_user("owner@example.test", "Owner", None, None, None).await.unwrap();

@@ -3,11 +3,11 @@ use crate::inference::schema::{INPUT_MAX_BYTES, InferenceIdentityV1 as Identity,
 use std::future::Future;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
+    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
 }
 
 fn ledger_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture")
+    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture")
 }
 
 fn identity() -> Identity {
@@ -419,7 +419,7 @@ async fn gis_map_approval_fails_closed_without_a_composition_transaction_and_nev
 #[tokio::test]
 async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply() {
     let (identity, base) = canonical_identity_and_base();
-    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
+    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
     let undo_contract = &undo_fixture["genesisFirstUndo"];
     let genesis_snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).expect("exact initial Map snapshot");
     let owner = reader(&identity);

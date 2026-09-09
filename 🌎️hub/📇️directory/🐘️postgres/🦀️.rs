@@ -10,24 +10,24 @@
 //! — folding it into a string literal is a zero-behavior-change mechanical transform (see
 //! `📋️TEMPLATE-FAMILY.md`'s "non-source assets" section for the general rule this establishes).
 
-use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
+use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
 use crate::artifact_authority::creation::{
-    decide_artifact_creation_fact_append_v1, ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1,
-    DocumentGenesisAppendV1, DocumentGenesisCommitV1,
+    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1,
+    decide_artifact_creation_fact_append_v1,
 };
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
+    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1,
+    HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, UNCONTROLLED_PROJECTION_REBUILD,
     active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
     directory_projection_space_v1, document_genesis_completion_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
     validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim,
-    validate_document_genesis_append_v1, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
-    DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
-    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
+    validate_document_genesis_append_v1, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
 };
 use directory::os_directory::{
-    validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
-    DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
+    ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
+    validate_directory_event_page_event,
 };
 use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
@@ -425,11 +425,7 @@ async fn insert_admin_operation_effect_receipt(tx: &mut sqlx_core::transaction::
     };
     let established =
         AdminOperationEffectReceiptV1 { operation_id, intent_digest, committed_at, outcome_code, event_seq_first: first.map(u64::try_from).transpose().map_err(backend)?, event_seq_last: last.map(u64::try_from).transpose().map_err(backend)? };
-    if &established == receipt {
-        Ok(())
-    } else {
-        Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into()))
-    }
+    if &established == receipt { Ok(()) } else { Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into())) }
 }
 
 fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
@@ -2090,11 +2086,7 @@ impl HubDirectory for PostgresDirectory {
                 tx.rollback().await.map_err(backend)?;
                 let established =
                     self.admin_operation_audit_for_request(&fact.request_id).await?.into_iter().find(|row| (row.fact.phase != "accepted") == terminal).ok_or_else(|| DirectoryError::Conflict("admin request race has no established receipt".into()))?;
-                if same_admin_operation_request(&established.fact, fact) {
-                    Ok(established)
-                } else {
-                    Err(DirectoryError::Conflict("admin request id race changed intent".into()))
-                }
+                if same_admin_operation_request(&established.fact, fact) { Ok(established) } else { Err(DirectoryError::Conflict("admin request id race changed intent".into())) }
             }
         }
     }

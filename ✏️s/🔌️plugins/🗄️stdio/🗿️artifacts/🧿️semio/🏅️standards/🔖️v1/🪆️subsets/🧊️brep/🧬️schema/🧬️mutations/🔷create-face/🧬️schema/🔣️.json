@@ -8,7 +8,8 @@
     "id",
     "outer_loop",
     "surface",
-    "orientation"
+    "orientation",
+    "tol"
   ],
   "properties": {
     "id": {
@@ -28,6 +29,9 @@
     },
     "orientation": {
       "type": "boolean"
+    },
+    "tol": {
+      "type": "number"
     }
   },
   "$defs": {

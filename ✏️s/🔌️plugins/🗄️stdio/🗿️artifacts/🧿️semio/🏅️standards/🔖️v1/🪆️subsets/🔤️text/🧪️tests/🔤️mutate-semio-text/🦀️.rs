@@ -55,17 +55,17 @@ mod subject {
     /// 📰️ The document every mutation row runs on: 384 real runs of the real German article
     /// "Zukunft Bau: Entwerfen mit Bestand", derived ONCE from this repository's own committed
     /// HTML 5 fixture by `🐍️derive-text-fixture.py` in the ticket folder.
-    const ARTICLE_DSL: &str = "local://🏚️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio";
+    const ARTICLE_DSL: &str = "shared://🔤️mutate-semio-text/🏚️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio";
     /// 🎒️ The same article in its binary envelope, written by the PYTHON implementation — so this
     /// codec reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
-    const ARTICLE_PACK: &str = "local://🎒️.pack.semio";
+    const ARTICLE_PACK: &str = "shared://🔤️mutate-semio-text/🎒️.pack.semio";
     /// 🗣️ The tiny committed note — an unmarked English run, an English run carrying a `bold` mark
     /// and a German run carrying a `link` mark with a non-empty `href`. It is kept for the BYTE half
     /// of the identity law: its two files were written by THIS codec, so the Python side reproducing
     /// them is the other direction of the same cross-language agreement.
-    const DSL_ASSET: &str = "asset://📚️examples/📃️note/🖼️assets/🗣️.dsl.semio";
+    const DSL_ASSET: &str = "asset://📃️note/🗣️.dsl.semio";
     /// 🎒️ The same note in its binary envelope, written by a separate codec from the DSL text.
-    const PACK_ASSET: &str = "asset://📚️examples/📃️note/🖼️assets/🎒️.pack.semio";
+    const PACK_ASSET: &str = "asset://📃️note/🎒️.pack.semio";
 
     /// 📰️ The article, parsed through this repository's own DSL codec.
     fn note(ctx: &Context) -> Result<SemioTextSnapshot, String> {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::editor::puzzle3d::precompute::fill::FillJobStage;
 use crate::standards::v1::subsets::any::schema::testkit::*;
@@ -236,10 +235,12 @@ fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
     let mut engine = Puzzle3dCollision::new();
     let json = single_object_scene_json();
     engine.set_scene(&json).expect("seed scene");
+    let progress_after_seed = engine.precompute_progress_for_test();
     let queue_len_after_seed = engine.work_pending_for_test();
     engine.precompute_step(8);
     let queue_len_after_step = engine.work_pending_for_test();
-    assert!(queue_len_after_step < queue_len_after_seed);
+    assert!(engine.precompute_progress_for_test() > progress_after_seed, "a precompute turn must complete work in at least one lane");
+    assert_eq!(queue_len_after_seed, FILL_COUNT_MAX, "the seed arms one fill step per planned placement");
 
     let mut object_weights = std::collections::BTreeMap::new();
     object_weights.insert("Host".to_string(), 0.25);
@@ -262,9 +263,10 @@ fn set_scene_with_identical_json_preserves_precompute_progress() {
     engine.set_scene(&json).expect("first set_scene should succeed");
     let queue_len_before = engine.work_pending_for_test();
     assert!(queue_len_before > 0, "rebuild_queue should have enqueued at least the fill steps");
+    let progress_before = engine.precompute_progress_for_test();
     engine.precompute_step(4);
     let queue_len_after_step = engine.work_pending_for_test();
-    assert!(queue_len_after_step < queue_len_before, "precompute_step should have drained some queue items");
+    assert!(engine.precompute_progress_for_test() > progress_before, "precompute_step should have completed some precompute work");
 
     engine.set_scene(&json).expect("resync with identical json should succeed");
     assert_eq!(engine.work_pending_for_test(), queue_len_after_step, "identical scene JSON must not rebuild (wipe) the queue");
@@ -342,6 +344,7 @@ fn set_scene_with_applied_fill_projection_preserves_slider_session() {
     assert_eq!(fill.applied_count, 3, "applied fill count must survive incidental set_scene syncs");
     assert_eq!(fill.sequence.len(), 3, "planned fill sequence must survive incidental set_scene syncs");
     assert_eq!(fill.base.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"]);
+    drop(fill);
 
     let reduced = engine.apply_fill_count(1).expect("decreasing after sync");
     assert_eq!(reduced.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"], "slider must still be able to remove fill objects after a document re-sync");
@@ -437,6 +440,33 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     assert!(fixture.objects.iter().any(|object| object.id == "host"));
 }
 
+/// ⏳️ Drives the fill lane until the planner's cursorized preparation has copied the scene into the
+/// builder's fixed pages and stops there — the state every admission law below describes. A builder
+/// straight out of `set_scene` still owns its preparation roots and holds EMPTY catalog/base pages,
+/// so admitting one measures nothing and the nested-owner injections have no row to reach.
+fn drive_fill_preparation(engine: &mut Puzzle3dCollision) {
+    for _ in 0..FILL_PREPARATION_DRIVE_TURNS {
+        let preparing = engine.fill.as_ref().and_then(|fill| fill.try_lock().ok()).is_some_and(|fill| {
+            matches!(
+                fill.stage,
+                FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration
+            )
+        });
+        // 🧵️ The lane leaves the last outcome checked out of the worker session; admission refuses a
+        // session in that state, so the drive only stops on a fully handed-back worker.
+        if !preparing && engine.fill_worker_outcome.is_none() {
+            return;
+        }
+        engine.precompute_step_lane(PrecomputeLane::Fill, 1);
+    }
+    panic!("fill preparation must finish within its own bounded turns");
+}
+
+/// 📏️ Turns the widest test scene's cursorized preparation needs, with an order of magnitude of
+/// headroom: one turn per fixture/catalog/mesh/entry/placement/weight row plus one per stage
+/// transition, each one job step behind three lane turns (step, outcome close, resume).
+const FILL_PREPARATION_DRIVE_TURNS: usize = 4096;
+
 fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
     let mut engine = fill_capable_engine();
     if seed != 1 {
@@ -444,6 +474,7 @@ fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
         scene.seed = seed;
         engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("reseed scene");
     }
+    drive_fill_preparation(&mut engine);
     engine.fill.as_ref().expect("fill").lock().expect("fill lock").max_count = FILL_COUNT_MAX;
     Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
 }
@@ -469,6 +500,25 @@ fn enqueue_measured_fill_job(session: &mut Puzzle3dPrecomputeSession) -> Option<
 fn fill_envelope_test_guard() -> std::sync::MutexGuard<'static, ()> {
     static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
     GUARD.get_or_init(|| Mutex::new(())).lock().expect("fill envelope test guard")
+}
+
+/// 📏️ Close grants one envelope spends before the admitted fill reaches its own retirement cursor:
+/// `FillEnvelopeTerminalHandle::close_step` retires the last worker outcome (stage 0) and then the
+/// whole worker session — its job shell, batch params and payload pages (stage 1) — one owner per
+/// grant, before stage 2 can unwrap the fill. Measured at exactly nine; doubled as headroom for one
+/// more owner in either stage.
+const FILL_ENVELOPE_CLOSE_GRANTS_TO_RETIREMENT: usize = 18;
+
+/// ♻️ Grants close steps until the admitted fill has moved into its own retirement cursor, asserting
+/// every grant stays incremental, and answers how many that took.
+fn close_until_fill_retirement(terminal: &mut FillEnvelopeTerminalHandle, request: &FillJobRequest) -> usize {
+    for grant in 1..=FILL_ENVELOPE_CLOSE_GRANTS_TO_RETIREMENT {
+        assert_eq!(terminal.close_step(), FillEnvelopeCloseStep::Pending, "one close grant retires one owner and never bulk-closes");
+        if fill_envelope_registry().lock().expect("registry").authority_mut(request).is_some_and(|authority| authority.fill_retirement.is_some()) {
+            return grant;
+        }
+    }
+    panic!("the admitted fill must reach its retirement cursor within the declared close grants");
 }
 
 fn drain_orphaned_fill_envelope(request: &FillJobRequest) {
@@ -538,15 +588,18 @@ fn fill_worker_cross_generation_restore_rejects_measuring_and_every_live_termina
         let mut other = fill_worker_session(51);
         let (_, other_token) = enqueue_measured_fill_job(&mut other).expect("other request");
         let other_request = decode_fill_envelope_token(&other_token).expect("other identity");
-        let (mounted_observation, aggregate_before) = {
+        let aggregate_before = {
             let mut registry = fill_envelope_registry().lock().expect("registry");
             let authority = registry.authority_mut(&mounted_request).expect("mounted authority");
             authority.phase = phase;
             if matches!(phase, FillEnvelopePhase::Terminal(_)) {
                 authority.observation.done = true;
             }
-            (authority.observation, registry.aggregate_bytes)
+            registry.aggregate_bytes
         };
+        // 🪪️ The session's OWN observation is what a rejected restore must not disturb; the registry's
+        // copy is forced above precisely to prove the rejection never adopts it.
+        let mounted_observation = mounted.fill_observation;
         assert!(!mounted.restore_persisted_fill(&other_token));
         assert_eq!(mounted.fill_job.as_ref(), Some(&mounted_request), "restore cannot replace the exact mounted producer");
         assert_eq!(mounted.fill_observation, mounted_observation, "restore rejection leaves mounted observation unchanged");
@@ -577,7 +630,7 @@ fn fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zer
     let other_request = decode_fill_envelope_token(&other_token).expect("other identity");
     terminalize_fill_envelope(&mounted_request, FillEnvelopeTerminalReason::Closed);
     let mut terminal = mounted.take_terminal_fill_job().expect("mounted terminal");
-    assert_eq!(terminal.close_step(), FillEnvelopeCloseStep::Pending);
+    close_until_fill_retirement(&mut terminal, &mounted_request);
     let retirement_pointer =
         fill_envelope_registry().lock().expect("registry").authority_mut(&mounted_request).and_then(|authority| authority.fill_retirement.as_ref()).map(|cursor| cursor as *const FillBuilderRetirementCursor as usize).expect("retained close cursor");
     drop(terminal);
@@ -727,9 +780,14 @@ fn fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once() 
         authority.observation.done = true;
     }
     drop(session);
+    // ♻️ `Puzzle3dPrecomputeSession::drop` no longer only ASKS for the terminal: it drains the
+    // registry itself (see its own docstring — a session that merely asked and died leaked one of the
+    // four slots forever), so the dying session is the one caller that reclassifies the completed
+    // envelope to `closed` and mounts it, exactly once.
+    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none(), "the dying session's own drain reclassifies and returns the completed slot");
     let mut mounted = Puzzle3dPrecomputeSession::new();
-    assert!(mounted.poll_fill_job(), "a mounted caller consumes the retained close intent");
-    assert_eq!(mounted.fill_terminal.as_ref().and_then(FillEnvelopeTerminalHandle::reason), Some("closed"));
+    assert!(!mounted.poll_fill_job(), "the same terminal cannot mount a second time");
+    assert!(mounted.fill_terminal.is_none());
     drop(mounted);
     drain_orphaned_fill_envelope(&request);
 }
@@ -742,7 +800,7 @@ fn fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once() {
     let request = decode_fill_envelope_token(&token).expect("request");
     terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Closed);
     let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
-    assert_eq!(terminal.close_step(), FillEnvelopeCloseStep::Pending, "one close grant only moves the admitted fill into its retirement cursor");
+    close_until_fill_retirement(&mut terminal, &request);
     let registry = fill_envelope_registry().lock().expect("registry contention");
     let authority = registry.slots[usize::from(request.slot)].as_ref().expect("closing authority");
     assert!(matches!(authority.phase, FillEnvelopePhase::Closing));
@@ -971,7 +1029,7 @@ fn fill_lane_advances_while_brush_targets_remain_queued() {
     let mut engine = Puzzle3dCollision::new();
     engine.set_scene(&single_object_scene_json()).expect("seed");
     assert!(engine.fill_steps_pending_for_test() > 0, "seed scene must schedule fill steps");
-    assert!(!engine.brush_queue.is_empty(), "seed scene must schedule brush targets");
+    assert!(engine.brush_lane_active(), "seed scene must schedule brush targets — the queue itself fills from the preparation cursor, one target per lane turn");
     let before = engine.fill_progress_summary().count;
     for _ in 0..24 {
         engine.precompute_step_lane(PrecomputeLane::Fill, 4);

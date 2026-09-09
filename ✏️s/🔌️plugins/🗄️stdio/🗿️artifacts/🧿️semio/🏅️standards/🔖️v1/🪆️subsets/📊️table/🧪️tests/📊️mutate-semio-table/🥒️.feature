@@ -22,11 +22,11 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   re-derived on every run by the `payload-fidelity` scenario — from the real committed survey
   `../../../📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv`: 50 records over 12 columns of German
   building-material-reuse marketplace research, with commas, em dashes and umlauts inside quoted
-  fields. Its source is committed beside this case as `local://♻️reuse-marketplaces/📊️.csv` so the
+  fields. Its source is committed beside this case as `shared://📊️mutate-semio-table/♻️reuse-marketplaces/📊️.csv` so the
   provenance is checkable in the tree, and the derivation is a faithful transcription — the header
   names the columns, every column is `str` because every source field is text, and every cell carries
   its field verbatim. The result is 600 cells, 24 399 bytes of DSL and 12 212 bytes of pack, against
-  240 and 132 for the demo sheet the case used to rest on. `local://` rather than `asset://` because
+  240 and 132 for the demo sheet the case used to rest on. this owner's `🧫️fixtures/📊️mutate-semio-table` tree rather than `asset://` because
   `asset://` resolves against the artifact root and the CSV lives in a sibling artifact.
 
   The `mutate-` and `inverse-` parameters are chosen against the survey's own shape, so a plausible
@@ -65,7 +65,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real 50-row survey table
-    Given the real survey table local://📝️reuse-marketplaces.dsl.semio
+    Given the real survey table shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio
     When the <id> mutation is applied to the table parsed from it
       """
       <mutation>
@@ -86,7 +86,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real 50-row survey table
-    Given the real survey table local://📝️reuse-marketplaces.dsl.semio
+    Given the real survey table shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio
     When the <id> mutation is applied to the table parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -107,9 +107,9 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -127,8 +127,8 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-exhaustive
   @mode-differential
   Scenario: The derived survey table still carries exactly what the real CSV carries
-    Given the real committed survey source local://♻️reuse-marketplaces/📊️.csv
-    And the table document derived from it local://📝️reuse-marketplaces.dsl.semio
+    Given the real committed survey source shared://📊️mutate-semio-table/♻️reuse-marketplaces/📊️.csv
+    And the table document derived from it shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio
     When each implementation re-tokenizes the source with its own RFC 4180 reader and rebuilds the table from it
     Then the rebuilt table equals the committed derived document and the two implementations agree on all 600 fields
 
@@ -136,9 +136,9 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo sheet and of the real survey table from the parsed documents
-    Given the committed demo sheet asset://📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio
-    And the real survey table local://📝️reuse-marketplaces.dsl.semio
-    And its binary twin local://📦️reuse-marketplaces.pack.semio
+    Given the committed demo sheet asset://📃️sheet/🗣️.dsl.semio
+    And its committed binary twin asset://📃️sheet/🎒️.pack.semio
+    And the real survey table shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio
+    And its binary twin shared://📊️mutate-semio-table/📦️reuse-marketplaces.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on the documents and on the digests of what they emitted

@@ -52,11 +52,11 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed diff asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🔺️diff/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed diff shared://🧬️mutations/<dir>/<fixture>/🔺️diff/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed before-snapshot, mutation and outcome fixtures for the <id> kind
     When <id> is applied through apply_vcs_mutation_reporting
       """
@@ -65,21 +65,21 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
     Then the resulting snapshot matches the committed after-snapshot, only <moves> moved, the reported diagnostics match the committed outcome, and the two implementations agree
     Examples:
       | id             | dir              | fixture                    | moves   |
-      | rename-vcs     | ✏️rename-vcs      | ✏️retitles-the-document       | title   |
-      | change-counter | 🔢change-counter  | 🔢️sets-counter-to-seven       | counter |
-      | change-notes   | 📝change-notes    | 📝️rewrites-the-notes          | notes   |
-      | change-status  | 🚦change-status   | 🔎️draft-to-review             | status  |
-      | add-tag        | 🏷️add-tag         | 🏷️appends-urgent-tag          | tags    |
-      | remove-tag     | 🗑️remove-tag      | ➖️detaches-the-review-tag     | tags    |
+      | rename-vcs     | ✏️rename-vcs      | 🧪️retitles-the-document       | title   |
+      | change-counter | 🔢change-counter  | 🧪️sets-counter-to-seven       | counter |
+      | change-notes   | 📝change-notes    | 🧪️rewrites-the-notes          | notes   |
+      | change-status  | 🚦change-status   | 🧪️draft-to-review             | status  |
+      | add-tag        | 🏷️add-tag         | 🧪️appends-urgent-tag          | tags    |
+      | remove-tag     | 🗑️remove-tag      | 🧪️detaches-the-review-tag     | tags    |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     And the committed before-snapshot and mutation fixtures for the <id> kind
     When <id> is applied and then its own computed inverse steps are applied
       """
@@ -88,17 +88,17 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
     Then the snapshot equals the committed before-snapshot again, member for member, and both implementations agree
     Examples:
       | id             | dir              | fixture                    | moves   |
-      | rename-vcs     | ✏️rename-vcs      | ✏️retitles-the-document       | title   |
-      | change-counter | 🔢change-counter  | 🔢️sets-counter-to-seven       | counter |
-      | change-notes   | 📝change-notes    | 📝️rewrites-the-notes          | notes   |
-      | change-status  | 🚦change-status   | 🔎️draft-to-review             | status  |
-      | add-tag        | 🏷️add-tag         | 🏷️appends-urgent-tag          | tags    |
-      | remove-tag     | 🗑️remove-tag      | ➖️detaches-the-review-tag     | tags    |
+      | rename-vcs     | ✏️rename-vcs      | 🧪️retitles-the-document       | title   |
+      | change-counter | 🔢change-counter  | 🧪️sets-counter-to-seven       | counter |
+      | change-notes   | 📝change-notes    | 🧪️rewrites-the-notes          | notes   |
+      | change-status  | 🚦change-status   | 🧪️draft-to-review             | status  |
+      | add-tag        | 🏷️add-tag         | 🧪️appends-urgent-tag          | tags    |
+      | remove-tag     | 🗑️remove-tag      | 🧪️detaches-the-review-tag     | tags    |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Read the real committed checkpoint through its own DSL carrier and print it back
-    Given the real committed text artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed text artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed, printed back to `.vcs.dsl.semio` and parsed again
     Then every decoding agrees on the same checkpoint — "VCS Demo" at counter 2, status draft, tags alpha then beta — and the printed text reproduces the committed file byte for byte

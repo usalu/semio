@@ -8,11 +8,11 @@
 use crate::{En1999Diff, En1999Mutation, En1999Snapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🎯️outcome/🔣️.json");
 
 fn before() -> En1999Snapshot {
     serde_json::from_str(BEFORE).expect("change-alloy/switches-alloy-to-aw7020t6: before snapshot decodes")

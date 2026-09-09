@@ -1,6 +1,10 @@
 
 use super::*;
 
+const BROWSER_HOST_TRACE_FIXTURE: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+const BROWSER_HOST_LIMITS_FIXTURE: &str = include_str!("../../🧫️fixtures/📐️browser-host-limits.tsv");
+const BROWSER_HOST_FRAMING_FIXTURE: &str = include_str!("../../🧫️fixtures/🧪️browser-host-framing/📊️.tsv");
+
 //#region 🎡️Wheel tests
 
 #[test]

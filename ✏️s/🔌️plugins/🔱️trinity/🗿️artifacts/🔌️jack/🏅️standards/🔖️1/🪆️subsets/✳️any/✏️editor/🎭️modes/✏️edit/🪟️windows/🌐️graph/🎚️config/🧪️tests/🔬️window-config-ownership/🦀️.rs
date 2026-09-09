@@ -6,7 +6,7 @@ use semio_framework_plugin::WindowConfigOwner;
 
 #[test]
 fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: JackGraphWindowConfig = pack::from_json_str(&fixture["base"].to_string()).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {

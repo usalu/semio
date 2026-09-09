@@ -109,7 +109,7 @@ impl store::ArtifactDsl for WriterSnapshot {
 /// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `store::ArtifactDsl`) instead
 /// of JSON — {@link jack_example_document}/{@link jack_example_json} are the only ways it should be
 /// consumed.
-pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
 pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio");
 

@@ -127,11 +127,12 @@ impl Vdi3805Mutation {
     /// is required because `products`/`geometry`/`curves` are real id-keyed collections needing full
     /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
     pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
-        let mut mutations = Vec::new();
-        mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
-        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }));
-        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }));
-        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits }));
+        let mut mutations = vec![
+            Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }),
+            Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }),
+            Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }),
+            Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits }),
+        ];
 
         for sheet in base.edition_profile.keys() {
             if !target.edition_profile.contains_key(sheet) {

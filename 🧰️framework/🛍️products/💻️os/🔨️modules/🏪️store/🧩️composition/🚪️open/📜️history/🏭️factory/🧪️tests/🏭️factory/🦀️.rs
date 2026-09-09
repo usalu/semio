@@ -135,13 +135,13 @@ factory!(Missing, missing());
 factory!(TooMany, [DECLARATIONS[0]; 65]);
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 fn hex(value: &str) -> Vec<u8> {
     value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 fn selection_history() -> Vec<u8> {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
     hex(fixture["historyHex"].as_str().unwrap())
 }
 fn expected_error(row: &Value) -> Option<MemberOpenDiagnostic> {

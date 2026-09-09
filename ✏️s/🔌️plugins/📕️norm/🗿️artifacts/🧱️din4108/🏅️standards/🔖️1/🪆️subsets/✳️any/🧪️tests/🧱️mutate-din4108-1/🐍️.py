@@ -81,7 +81,7 @@ VECTORS = {
 }
 
 #: 🗣️ The real committed DIN 4108 document, read where the domain already keeps it.
-DSL_ASSET = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"
+DSL_ASSET = "asset://🎬️demo/🗣️.dsl.semio"
 
 #: ✉️ The envelope token that artifact's text preamble must carry.
 ENVELOPE = "norm.din4108.dsl"

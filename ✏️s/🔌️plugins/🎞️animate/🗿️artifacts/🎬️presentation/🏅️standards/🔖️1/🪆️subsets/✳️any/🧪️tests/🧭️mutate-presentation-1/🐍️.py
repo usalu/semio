@@ -11,7 +11,7 @@ per-ordered-collection recipe. It imports nothing from the Rust it judges and tr
 it.
 
 🗂️ SHAPE. `tiles` are read from `../../../🧪️tests/🧭️mutate-presentation-1/🧫️fixtures/🔣️.json` — this
-case's own committed, derived-once base (the SAME `local://🔣️.json` this feature's `Given` step
+case's own committed, derived-once base (the SAME `shared://🧭️mutate-presentation-1/🔣️.json` this feature's `Given` step
 declares). `source`, by contrast, is NOT committed anywhere this file can read: it is whatever the
 real `.dsl.semio` example decodes to through production's own parser, which this reference does not
 reimplement.
@@ -38,7 +38,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-BASE_URI = "local://🔣️.json"
+BASE_URI = "shared://🧭️mutate-presentation-1/🔣️.json"
 
 #: 🧫️ Transcribed verbatim from this feature's `Examples` `params` column.
 PARAMS = {

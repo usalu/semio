@@ -19,7 +19,7 @@ use crate::editor::puzzle5d::commands::{
     engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_placement_overlap_budget,
     set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_fixture_json, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, translate_selection, world_relocate, zoom_to_selection,
 };
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
+use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
@@ -3929,6 +3929,8 @@ pub struct Puzzle5dActionCtx<'a> {
     pub scene: &'a mut Puzzle5dScene,
     /// 🪟️ The window this action targets (already defaulted to the 3D window).
     pub window_id: &'a str,
+    /// 🧭️ The registered kind of the exact target window.
+    pub window_kind: &'a str,
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
     /// `.selected_part_ids()?`/etc. here instead of the deleted `Puzzle5dConfig` selection fields.
@@ -4184,8 +4186,9 @@ impl Puzzle5dPlayApp {
         let transient_before = window_ownership::transient_from_runtime(config, window_id.unwrap_or(world3d::WINDOW_KIND_ID));
         let active_utility_initial = puzzle5d_scene_active_utility(view_state, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
+        let window_kind = view_state.and_then(window_ownership::kind_for_view).unwrap_or(world3d::WINDOW_KIND_ID);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
-        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, selection, abort: false };
+        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, window_kind, selection, abort: false };
         dispatch_puzzle5d_action(&mut ctx, action, args);
         if ctx.abort {
             return (Emit::default(), EphemeralEmit::default());
@@ -4200,7 +4203,7 @@ impl Puzzle5dPlayApp {
             _ => None,
         };
         let effects = if next_active_utility != active_utility_initial {
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| Effect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
+            vec![Effect::SetActiveUtility { window_id: wid.clone(), utility_id: next_active_utility.clone() }]
         } else {
             Vec::new()
         };
@@ -4439,7 +4442,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         &mut self,
         command: &Puzzle5dCommand,
         snapshot: &Puzzle5dPlaySnapshot,
-        config: &Puzzle5dConfig,
+        _config: &Puzzle5dConfig,
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
@@ -4805,230 +4808,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 
     fn terminal_is_empty(&self) -> bool {
         self.stage == Puzzle5dKindWeightStage::Closing && self.ids.is_empty() && self.seen.is_empty() && self.result.is_empty() && self.changed_id.is_none()
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dEngagementAbortStage {
-    Input,
-    BoardUtility,
-    WorldUtility,
-    Publish,
-    Complete,
-    Closing,
-}
-
-struct Puzzle5dEngagementAbortWork {
-    stage: Puzzle5dEngagementAbortStage,
-    input: Option<Puzzle5dConfigMutation>,
-    effects: [Option<Effect>; 2],
-}
-
-impl Default for Puzzle5dEngagementAbortWork {
-    fn default() -> Self {
-        Self { stage: Puzzle5dEngagementAbortStage::Input, input: None, effects: [None, None] }
-    }
-}
-
-impl Puzzle5dEngagementAbortWork {
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dEngagementAbortWork {
-    fn tool_id(&self) -> &'static str {
-        "engagementAbort"
-    }
-
-    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        Some(4)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle5dCommand,
-        _snapshot: &Puzzle5dPlaySnapshot,
-        config: &Puzzle5dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let args = command.args();
-        let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
-        let utility_id = if window_id == world3d::WINDOW_KIND_ID { "move" } else { "select" };
-        match self.stage {
-            Puzzle5dEngagementAbortStage::Input => {
-                if PUZZLE5D_PLAY_WINDOWS.contains(&window_id) {
-                    self.input = Some(Puzzle5dConfigMutation::Snapshot { config: config.clone() });
-                }
-                self.stage = Puzzle5dEngagementAbortStage::BoardUtility;
-                Ok(Self::progress("puzzle5d-engagement-abort-input", "Clearing engagement input", "Eingabe wird geleert"))
-            }
-            Puzzle5dEngagementAbortStage::BoardUtility => {
-                self.effects[0] = Some(Effect::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), utility_id: utility_id.to_string() });
-                self.stage = Puzzle5dEngagementAbortStage::WorldUtility;
-                Ok(Self::progress("puzzle5d-engagement-abort-board", "Preparing board utility", "Board-Werkzeug wird vorbereitet"))
-            }
-            Puzzle5dEngagementAbortStage::WorldUtility => {
-                self.effects[1] = Some(Effect::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), utility_id: utility_id.to_string() });
-                self.stage = Puzzle5dEngagementAbortStage::Publish;
-                Ok(Self::progress("puzzle5d-engagement-abort-world", "Preparing world utility", "Welt-Werkzeug wird vorbereitet"))
-            }
-            Puzzle5dEngagementAbortStage::Publish => {
-                let mut config_mutations = Vec::with_capacity(1);
-                if let Some(input) = self.input.take() {
-                    config_mutations.push(input);
-                }
-                let mut effects = Vec::with_capacity(2);
-                if let Some(effect) = self.effects[0].take() {
-                    effects.push(effect);
-                }
-                if let Some(effect) = self.effects[1].take() {
-                    effects.push(effect);
-                }
-                self.stage = Puzzle5dEngagementAbortStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations, effects, ui_scope: UiDirtyScope::Full, ..Default::default() }))
-            }
-            Puzzle5dEngagementAbortStage::Complete => Err(Fault::from("puzzle5d-engagement-abort-complete-repolled")),
-            Puzzle5dEngagementAbortStage::Closing => Err(Fault::from("puzzle5d-engagement-abort-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle5dEngagementAbortStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.input.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        for effect in &mut self.effects {
-            if effect.take().is_some() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dEngagementAbortStage::Closing && self.input.is_none() && self.effects.iter().all(Option::is_none)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dEngagementSubmitStage {
-    Parse,
-    BoardEffect,
-    WorldEffect,
-    Input,
-    Publish,
-    Complete,
-    Closing,
-}
-
-struct Puzzle5dEngagementSubmitWork {
-    stage: Puzzle5dEngagementSubmitStage,
-    emit: Option<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>>,
-    utility: Option<String>,
-    window_id: Option<String>,
-}
-
-impl Default for Puzzle5dEngagementSubmitWork {
-    fn default() -> Self {
-        Self { stage: Puzzle5dEngagementSubmitStage::Parse, emit: Some(Emit::default()), utility: None, window_id: None }
-    }
-}
-
-impl Puzzle5dEngagementSubmitWork {
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    fn emit_mut(&mut self) -> Result<&mut Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
-        self.emit.as_mut().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-emit-owner"))
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dEngagementSubmitWork {
-    fn tool_id(&self) -> &'static str {
-        "engagementSubmit"
-    }
-
-    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        Some(5)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle5dCommand,
-        _snapshot: &Puzzle5dPlaySnapshot,
-        config: &Puzzle5dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        match self.stage {
-            Puzzle5dEngagementSubmitStage::Parse => {
-                let args = command.args();
-                let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID).to_string();
-                let token = args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").trim().to_lowercase();
-                self.utility = match token.as_str() {
-                    "select" if window_id == world3d::WINDOW_KIND_ID => Some("move".to_string()),
-                    "select" | "brush" | "fill" => Some(token),
-                    _ => None,
-                };
-                self.window_id = Some(window_id);
-                self.stage = if self.utility.is_some() { Puzzle5dEngagementSubmitStage::BoardEffect } else { Puzzle5dEngagementSubmitStage::Input };
-                Ok(Self::progress("puzzle5d-engagement-submit-parse", "Reading engagement command", "Eingabebefehl wird gelesen"))
-            }
-            Puzzle5dEngagementSubmitStage::BoardEffect => {
-                let utility_id = self.utility.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-utility-owner"))?;
-                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), utility_id });
-                self.stage = Puzzle5dEngagementSubmitStage::WorldEffect;
-                Ok(Self::progress("puzzle5d-engagement-submit-board-effect", "Preparing board publication", "Board-Veröffentlichung wird vorbereitet"))
-            }
-            Puzzle5dEngagementSubmitStage::WorldEffect => {
-                let utility_id = self.utility.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-utility-owner"))?;
-                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), utility_id });
-                self.stage = Puzzle5dEngagementSubmitStage::Input;
-                Ok(Self::progress("puzzle5d-engagement-submit-world-effect", "Preparing world publication", "Welt-Veröffentlichung wird vorbereitet"))
-            }
-            Puzzle5dEngagementSubmitStage::Input => {
-                let window_id = self.window_id.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-window-owner"))?;
-                if PUZZLE5D_PLAY_WINDOWS.contains(&window_id.as_str()) {
-                    let _ = window_id;
-                    self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::Snapshot { config: config.clone() });
-                }
-                self.stage = Puzzle5dEngagementSubmitStage::Publish;
-                Ok(Self::progress("puzzle5d-engagement-submit-input", "Clearing engagement input", "Eingabe wird geleert"))
-            }
-            Puzzle5dEngagementSubmitStage::Publish => {
-                self.stage = Puzzle5dEngagementSubmitStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.emit.take().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-publish-owner"))?))
-            }
-            Puzzle5dEngagementSubmitStage::Complete => Err(Fault::from("puzzle5d-engagement-submit-complete-repolled")),
-            Puzzle5dEngagementSubmitStage::Closing => Err(Fault::from("puzzle5d-engagement-submit-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle5dEngagementSubmitStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.emit.take().is_some() || self.utility.take().is_some() || self.window_id.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dEngagementSubmitStage::Closing && self.emit.is_none() && self.utility.is_none() && self.window_id.is_none()
     }
 }
 
@@ -7799,218 +7578,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dPrecomputeCommandStage {
-    Decode,
-    Parts,
-    Grips,
-    Fasteners,
-    CatalogParts,
-    CatalogGrips,
-    Positions,
-    Indices,
-    FillCount,
-    BoardUtility,
-    WorldUtility,
-    Publish,
-    Complete,
-    Closing,
-}
-
-struct Puzzle5dPrecomputeCommandWork {
-    tool_id: &'static str,
-    stage: Puzzle5dPrecomputeCommandStage,
-    part_cursor: usize,
-    grip_cursor: usize,
-    fastener_cursor: usize,
-    catalog_cursor: usize,
-    payload_cursor: usize,
-    candidate_count: usize,
-    requested_count: u32,
-    processed_units: usize,
-    emit: Option<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>>,
-}
-
-impl Puzzle5dPrecomputeCommandWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, stage: Puzzle5dPrecomputeCommandStage::Decode, part_cursor: 0, grip_cursor: 0, fastener_cursor: 0, catalog_cursor: 0, payload_cursor: 0, candidate_count: 0, requested_count: 0, processed_units: 0, emit: Some(Emit::default()) }
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    fn emit_mut(&mut self) -> Result<&mut Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
-        self.emit.as_mut().ok_or_else(|| Fault::from("puzzle5d-precompute-emit-owner"))
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPrecomputeCommandWork {
-    fn tool_id(&self) -> &'static str {
-        self.tool_id
-    }
-
-    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map_or(0, Vec::len);
-        let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map_or(0, Vec::len);
-        (positions <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && indices <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(1)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle5dCommand,
-        snapshot: &Puzzle5dPlaySnapshot,
-        config: &Puzzle5dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let projection = puzzle5d_projection_value(&snapshot.0);
-        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
-            return Err(Fault::from("puzzle5d-precompute-work-capacity"));
-        }
-        self.processed_units += 1;
-        match self.stage {
-            Puzzle5dPrecomputeCommandStage::Decode => {
-                self.requested_count = command.args().and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64).map_or(0, |value| value.round().max(0.0) as u32).min(PUZZLE5D_FILL_COUNT_MAX);
-                self.stage = if self.tool_id == "registerBrushMesh" { Puzzle5dPrecomputeCommandStage::Positions } else { Puzzle5dPrecomputeCommandStage::Parts };
-                Ok(Self::progress("puzzle5d-precompute-decode", "Reading precompute command", "Vorberechnungsbefehl wird gelesen"))
-            }
-            Puzzle5dPrecomputeCommandStage::Parts => {
-                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                let Some(part) = parts.get(self.part_cursor) else {
-                    self.stage = Puzzle5dPrecomputeCommandStage::Fasteners;
-                    return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning fastener owner", "Verbindungsinhaber wird geprüft"));
-                };
-                let grip_count = part.get("grips").and_then(Value::as_array).map_or(0, Vec::len);
-                if grip_count > crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
-                    return Err(Fault::from("puzzle5d-precompute-grip-capacity"));
-                }
-                self.stage = Puzzle5dPrecomputeCommandStage::Grips;
-                Ok(Self::progress("puzzle5d-precompute-part", "Scanning part owner", "Teilinhaber wird geprüft"))
-            }
-            Puzzle5dPrecomputeCommandStage::Grips => {
-                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                let part = parts.get(self.part_cursor).ok_or_else(|| Fault::from("puzzle5d-precompute-part-cursor"))?;
-                let grips = part.get("grips").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if grips.get(self.grip_cursor).is_some() {
-                    self.grip_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-precompute-grip", "Scanning one grip owner", "Ein Griffinhaber wird geprüft"));
-                }
-                self.part_cursor += 1;
-                self.grip_cursor = 0;
-                self.stage = Puzzle5dPrecomputeCommandStage::Parts;
-                Ok(Self::progress("puzzle5d-precompute-part", "Advancing part cursor", "Teilzeiger wird fortgesetzt"))
-            }
-            Puzzle5dPrecomputeCommandStage::Fasteners => {
-                let fasteners = projection.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if fasteners.get(self.fastener_cursor).is_some() {
-                    self.fastener_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning one fastener owner", "Ein Verbindungsinhaber wird geprüft"));
-                }
-                self.stage = Puzzle5dPrecomputeCommandStage::CatalogParts;
-                Ok(Self::progress("puzzle5d-precompute-catalog-part", "Scanning part kind owner", "Teilartinhaber wird geprüft"))
-            }
-            Puzzle5dPrecomputeCommandStage::CatalogParts => {
-                let entries = projection.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if entries.get(self.catalog_cursor).is_some() {
-                    self.catalog_cursor += 1;
-                    self.candidate_count += 1;
-                    return Ok(Self::progress("puzzle5d-precompute-catalog-part", "Scanning one part kind", "Eine Teilart wird geprüft"));
-                }
-                self.catalog_cursor = 0;
-                self.stage = Puzzle5dPrecomputeCommandStage::CatalogGrips;
-                Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning grip kind owner", "Griffartinhaber wird geprüft"))
-            }
-            Puzzle5dPrecomputeCommandStage::CatalogGrips => {
-                let entries = projection.get("kindCatalogs").and_then(|catalogs| catalogs.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if entries.get(self.catalog_cursor).is_some() {
-                    self.catalog_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning one grip kind", "Eine Griffart wird geprüft"));
-                }
-                self.stage = if self.tool_id == "setFillCount" { Puzzle5dPrecomputeCommandStage::FillCount } else { Puzzle5dPrecomputeCommandStage::Publish };
-                Ok(Self::progress("puzzle5d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
-            }
-            Puzzle5dPrecomputeCommandStage::Positions => {
-                let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if let Some(value) = positions.get(self.payload_cursor) {
-                    if value.as_f64().filter(|value| value.is_finite()).is_none() {
-                        return Err(Fault::from("puzzle5d-register-mesh-position-malformed"));
-                    }
-                    self.payload_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-register-mesh-position", "Reading one mesh position", "Eine Mesh-Position wird gelesen"));
-                }
-                self.payload_cursor = 0;
-                self.stage = Puzzle5dPrecomputeCommandStage::Indices;
-                Ok(Self::progress("puzzle5d-register-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
-            }
-            Puzzle5dPrecomputeCommandStage::Indices => {
-                let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                if let Some(value) = indices.get(self.payload_cursor) {
-                    if value.as_u64().filter(|value| *value <= u32::MAX as u64).is_none() {
-                        return Err(Fault::from("puzzle5d-register-mesh-index-malformed"));
-                    }
-                    self.payload_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-register-mesh-index", "Reading one mesh index", "Ein Mesh-Index wird gelesen"));
-                }
-                self.stage = Puzzle5dPrecomputeCommandStage::Publish;
-                Ok(Self::progress("puzzle5d-register-mesh-transfer", "Transferring validated mesh owner", "Geprüfter Mesh-Inhaber wird übertragen"))
-            }
-            Puzzle5dPrecomputeCommandStage::FillCount => {
-                let count = self.requested_count;
-                let _ = count;
-                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::Snapshot { config: config.clone() });
-                self.stage = Puzzle5dPrecomputeCommandStage::BoardUtility;
-                Ok(Self::progress("puzzle5d-fill-count-owner", "Transferring fill count", "Füllanzahl wird übertragen"))
-            }
-            Puzzle5dPrecomputeCommandStage::BoardUtility => {
-                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), utility_id: "fill".to_string() });
-                self.stage = Puzzle5dPrecomputeCommandStage::WorldUtility;
-                Ok(Self::progress("puzzle5d-fill-board-utility", "Transferring board fill utility", "Board-Füllwerkzeug wird übertragen"))
-            }
-            Puzzle5dPrecomputeCommandStage::WorldUtility => {
-                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), utility_id: "fill".to_string() });
-                self.stage = Puzzle5dPrecomputeCommandStage::Publish;
-                Ok(Self::progress("puzzle5d-fill-world-utility", "Transferring world fill utility", "Welt-Füllwerkzeug wird übertragen"))
-            }
-            Puzzle5dPrecomputeCommandStage::Publish => {
-                match self.tool_id {
-                    "cycleBrushCandidate" => {
-                        let index = if self.candidate_count == 0 { 1 } else { 1 % self.candidate_count };
-                        let _ = index;
-                        self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::Snapshot { config: config.clone() });
-                        self.emit_mut()?.ui_scope = UiDirtyScope::Full;
-                    }
-                    "setFillCount" => self.emit_mut()?.ui_scope = UiDirtyScope::Full,
-                    "registerBrushMesh" => self.emit_mut()?.ui_scope = UiDirtyScope::None,
-                    _ => return Err(Fault::from("puzzle5d-precompute-tool-authority")),
-                }
-                self.stage = Puzzle5dPrecomputeCommandStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.emit.take().ok_or_else(|| Fault::from("puzzle5d-precompute-publish-owner"))?))
-            }
-            Puzzle5dPrecomputeCommandStage::Complete => Err(Fault::from("puzzle5d-precompute-complete-repolled")),
-            Puzzle5dPrecomputeCommandStage::Closing => Err(Fault::from("puzzle5d-precompute-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle5dPrecomputeCommandStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.emit.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dPrecomputeCommandStage::Closing && self.emit.is_none()
-    }
-}
-
 struct Puzzle5dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
@@ -8465,10 +8032,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "createFastener" => Box::new(Puzzle5dCreateFastenerWork::default()),
             "setActiveExample" => Box::new(Puzzle5dSetActiveExampleWork::default()),
             "worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default()),
-            "engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default()),
-            "engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default()),
             "setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id)),
-            "cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id)),
             "worldPointerDown" | "canvasPointerDown" | "selectSameKind" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent)),
         };

@@ -130,9 +130,9 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
 
 /// 🧵️ The migrated route end to end: `dispatch_typed` passes the UI-dispatch classification gate,
 /// `build_norm_tool_job` hands the command to the shared owned factory, and repeated
-/// `maintenance_step` turns publish every `from_snapshot` field mutation through the exact
-/// one-item Artifact preparation authority — proving both the wiring and the LIFO drain order
-/// `norm_retained_reduce` compensates for. `app_with_registry` + a bound instance id is mandatory:
+/// `maintenance_step` turns stage every `from_snapshot` field mutation into ONE batched Artifact
+/// edit through the exact per-item preparation authority — proving both the wiring and that the
+/// authored bundle order survives the staging. `app_with_registry` + a bound instance id is mandatory:
 /// a registry-less wrapper fails closed with `interactive-job.catalog-authority` once proofs exist.
 #[semio_framework_async_macros::async_test]
 async fn set_snapshot_dispatches_through_the_tool_job_path_and_publishes_the_payload_document() {

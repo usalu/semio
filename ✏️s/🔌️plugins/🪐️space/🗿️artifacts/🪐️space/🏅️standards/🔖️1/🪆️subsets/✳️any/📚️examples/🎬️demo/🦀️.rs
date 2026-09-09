@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "layout-grid";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
+pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

@@ -1,6 +1,9 @@
 
 use super::*;
 
+const ABI_LEDGER_FIXTURE: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+const ABI_LIMITS_FIXTURE: &str = include_str!("../../🧫️fixtures/📐️limits.tsv");
+
 fn operation(code: u16) -> AbiOperation {
     AbiOperation::try_new(code).unwrap()
 }

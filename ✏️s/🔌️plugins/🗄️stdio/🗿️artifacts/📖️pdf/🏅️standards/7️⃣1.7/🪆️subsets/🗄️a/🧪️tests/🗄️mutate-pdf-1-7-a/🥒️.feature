@@ -73,7 +73,7 @@ Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conforma
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document asset://📚️examples/🧬️conformance-seed/🖼️assets/🧬️conformance-seed.pdf
+    Given the real input document asset://🧬️conformance-seed/🧬️conformance-seed.pdf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -100,7 +100,7 @@ Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conforma
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real document
-    Given the real input document asset://📚️examples/🧬️conformance-seed/🖼️assets/🧬️conformance-seed.pdf
+    Given the real input document asset://🧬️conformance-seed/🧬️conformance-seed.pdf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -128,7 +128,7 @@ Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conforma
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document asset://📚️examples/🧬️conformance-seed/🖼️assets/🧬️conformance-seed.pdf
+    Given the real input document asset://🧬️conformance-seed/🧬️conformance-seed.pdf
     When the document is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the conformance-class projection
     And the re-encoded bytes are not bit-identical to the input

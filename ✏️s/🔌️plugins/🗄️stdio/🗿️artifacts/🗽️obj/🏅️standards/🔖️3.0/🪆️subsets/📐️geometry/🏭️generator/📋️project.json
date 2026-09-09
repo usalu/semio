@@ -2,39 +2,44 @@
   "name": "@semio-tech/fixture-generator-stdio-obj-3-0-any",
   "targets": {
     "🏭️generator": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-manifests": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-list-recipes": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts list-recipes",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-document": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-document-manifests": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-manifests",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

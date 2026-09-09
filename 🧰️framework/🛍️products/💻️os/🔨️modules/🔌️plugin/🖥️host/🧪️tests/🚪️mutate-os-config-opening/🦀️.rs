@@ -46,16 +46,16 @@ const KINDS: &[&str] = &["set-default-app", "clear-default-app"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "set-default-app" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json"),
         ),
         "clear-default-app" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-opening: no specification vector registered for kind {other:?}"),
     }

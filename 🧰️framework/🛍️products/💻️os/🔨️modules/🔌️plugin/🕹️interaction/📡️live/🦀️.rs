@@ -211,6 +211,20 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         !self.terminal_sent && (self.closing || !self.started || !self.page_sent || self.owned.query.as_ref().is_some_and(LocalInteractionQuery::has_pending_work))
     }
 
+    /// 🐞️ `[DEBUG]` state summary — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    pub(crate) fn debug_state(&self) -> String {
+        format!(
+            "started={} page_sent={} closing={} cancelled={} failed={} terminal_sent={} inner={}",
+            self.started,
+            self.page_sent,
+            self.closing,
+            self.cancelled,
+            self.failed,
+            self.terminal_sent,
+            self.owned.query.as_ref().map_or_else(|| "none".to_string(), LocalInteractionQuery::debug_state)
+        )
+    }
+
     pub(crate) fn owners_are_empty(&self) -> bool {
         self.closing && self.owned.error_bytes.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
     }

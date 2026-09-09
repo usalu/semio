@@ -67,6 +67,12 @@ There are other agents working on other logical, even if they work on the same f
 
 ---
 
+Use the main chat with Cursor Grok 4.6 Extra High for main plan coordination, use multiple Cursor Grok 4.6 High agents for task execution, use multiple Composer 2.5 Extra High agents for read-only exploration and audits.
+Always use a work fleet of maximum possible parallel agents.
+There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+
+---
+
 Implement everything end to end. The plan is trusted, no need to double check it. There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---

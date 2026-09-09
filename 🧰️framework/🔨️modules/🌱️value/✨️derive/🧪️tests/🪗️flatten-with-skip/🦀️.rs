@@ -266,7 +266,7 @@ fn required_option_rejects_omission_and_accepts_explicit_null_like_serde() {
 
     let explicit_null = DslValue::object([("value".to_string(), DslValue::Null)]);
     assert_eq!(RequiredNullableField::from_value(explicit_null), Ok(RequiredNullableField { value: None }));
-    assert_eq!(serde_json::from_str::<RequiredNullableField>(r#"{"value":null}"#), Ok(RequiredNullableField { value: None }));
+    assert_eq!(serde_json::from_str::<RequiredNullableField>(r#"{"value":null}"#).expect("serde explicit null"), RequiredNullableField { value: None });
 }
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]

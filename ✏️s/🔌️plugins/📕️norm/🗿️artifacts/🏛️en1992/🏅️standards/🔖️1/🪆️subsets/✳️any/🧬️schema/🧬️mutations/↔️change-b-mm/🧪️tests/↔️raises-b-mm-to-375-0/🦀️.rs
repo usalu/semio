@@ -11,11 +11,11 @@ use crate::diff::En1992Diff;
 use crate::mutations::En1992Mutation;
 use crate::En1992Snapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️raises-b-mm-to-375-0/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️raises-b-mm-to-375-0/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️raises-b-mm-to-375-0/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️raises-b-mm-to-375-0/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️raises-b-mm-to-375-0/🎯️outcome/🔣️.json");
 
 fn before() -> En1992Snapshot {
     serde_json::from_str(BEFORE).expect("change-b-mm before-snapshot decodes")

@@ -1,30 +1,37 @@
-/** 🧬️ Din18599 snapshot schema — artifact-lane fields only. */
+/** 🪪️ Din18599Snapshot contains document fields and canonical child identities. */
+import { type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseDin18599Artifact } from "../🟦️.ts";
 
 export interface Din18599Snapshot {
-  /** @state artifact */
-  useClass: string;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
+  useClass: "Residential" | "Office" | "School";
+  /** 🗿️ @state artifact */
   heatedAreaM2: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   occupants: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   hT: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   hV: number;
-  /** @state artifact */
-  climate: string;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
+  climate: ArtifactChild;
+  /** 🗿️ @state artifact */
   internalGainsWM2: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   solarGainsKwh: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   systemLossesKwh: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   renewableKwh: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   annualLimitKwh: number;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   energyCarrier: string;
-  /** @state artifact */
+  /** 🗿️ @state artifact */
   referenceQPKwh: number;
+}
+
+/** 📥️ Decodes the exact Din18599Snapshot wire contract. */
+export function parseDin18599Snapshot(value: unknown, at = "$"): Din18599Snapshot {
+  return parseDin18599Artifact(value, at);
 }

@@ -3,6 +3,41 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "🧪️dag-demo-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dag-demo-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.142 }
+    },
+    {
+      "name": "🧪️note-document-contract-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:note-document-contract-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "3_test", "order": 311.141 }
+    },
+    {
+      "name": "⚖️note-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:note-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.141 }
+    },
+    {
+      "name": "⚖️norm-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:norm-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.14
+      }
+    },
+    {
       "name": "♻️reset-document-ownership",
       "type": "node-terminal",
       "request": "launch",
@@ -308,6 +343,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.113
+      }
+    },
+    {
+      "name": "🧪️test🔎️dag-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-dag-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.11104
+      }
+    },
+    {
+      "name": "🧪️test🔎️jack-document-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-jack-document-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.11105
       }
     },
     {
@@ -4023,11 +4080,33 @@
       "name": "⚖️gate💻️os🎯️browser-intent-ownership",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"browser UI intent|browser intent mailbox|direct browser intent owners|projects real browser intent publications|admits inference opening only|retains the preceding inference job\"",
+      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"browser UI intent|browser intent mailbox|direct browser intent owners|projects real browser intent publications|admits inference opening only|retains the preceding inference job|requires verified session authority\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 400.9948
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🪪️session-authority-cancellation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:test-long -- --testNamePattern=\"closes the private broker proof|refreshes Shell session authority\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.99482
+      }
+    },
+    {
+      "name": "⚖️gate💻️os🪧️session-authority-notice",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test-long -- ../../../../🧪️tests/📇️session-authority-notice/🟦️.tsx --run --testNamePattern=\"session authority progress and cancellation\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.99484
       }
     },
     {
@@ -4764,6 +4843,14 @@
         "group": "4_gate",
         "order": 408.38
       }
+    },
+    {
+      "name": "⚖️gate🖱️ui🎨️styling🧪️long",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling:test-long",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.39 }
     },
     {
       "name": "⚖️gate🗂️ordered🧪️native",
@@ -5791,6 +5878,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.4
+      }
+    },
+    {
+      "name": "⚖️gate🦀️zero-warnings🧪️regressions📦️combined",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=workspace -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/📜️script.ts\" laws-fleet",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.51
       }
     },
     {

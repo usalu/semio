@@ -3,7 +3,7 @@
  *
  * It observes two things it never imports:
  *
- * 1. the **neutral fixture** `🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1` — the same
+ * 1. the **neutral fixture** `🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1` — the same
  *    language-agnostic corpus the hub's own Rust laws and Bun oracle read. Reused, never forked, so
  *    a hub-side change to the closed error vocabulary, the lifecycle, the visibility law or the
  *    fixed limits fails here loudly instead of drifting;
@@ -216,7 +216,7 @@ function must(condition: unknown, message: string): void {
 /** 💡️ Runs every source-level law and returns the counts a gate prints. It throws on the first
  * violation, so a zero-exit run is itself the receipt. */
 export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridgeReport {
-  const fixtureRoot = resolve(repoRoot, "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1");
+  const fixtureRoot = resolve(repoRoot, "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
   const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
 

@@ -17,7 +17,9 @@
           "STORYBOOK_PORT": "6010"
         },
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true
     },
     "build": {
       "executor": "nx:run-commands",

@@ -1,6 +1,6 @@
 //! 🧪️ `rename-note` fixture — `retitles-the-document`.
 //!
-//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! Source of truth is the committed JSON quartet in this subset's `🧫️fixtures` (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
@@ -9,11 +9,11 @@ use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteM
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-note/🏷️retitles-the-document/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-note/🏷️retitles-the-document/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-note/🏷️retitles-the-document/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-note/🏷️retitles-the-document/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-note/🏷️retitles-the-document/🎯️outcome/🔣️.json");
 
 fn before() -> NoteSnapshot {
     dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")

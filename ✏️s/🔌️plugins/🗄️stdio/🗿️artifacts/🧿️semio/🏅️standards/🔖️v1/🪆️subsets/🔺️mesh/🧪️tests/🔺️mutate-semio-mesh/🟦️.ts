@@ -91,8 +91,8 @@ const KINDS = [
   "move-vertex",
 ] as const;
 
-const ARTIFACT_DSL = "local://🗣️.dsl.semio";
-const ARTIFACT_PACK = "local://🎒️.pack.semio";
+const ARTIFACT_DSL = "shared://🔺️mutate-semio-mesh/🗣️.dsl.semio";
+const ARTIFACT_PACK = "shared://🔺️mutate-semio-mesh/🎒️.pack.semio";
 // #endregion 🧬️Model
 
 // #region 🔡️Leaves
@@ -908,14 +908,14 @@ function assertion(message: string): Error {
 // #region 🎯️Handlers
 function mutate(ctx: AdapterContext): AdapterOutcome {
   const document = artifact(ctx);
-  const mutation = fixtureJson(ctx, stepUris(ctx, "local://").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
+  const mutation = fixtureJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
   const applied = applyMutation(document, mutation);
   return { projection: { document: projectionOf(applied), geometry: threeReport(applied) } };
 }
 
 function inverse(ctx: AdapterContext): AdapterOutcome {
   const document = artifact(ctx);
-  const mutation = fixtureJson(ctx, stepUris(ctx, "local://").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
+  const mutation = fixtureJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
   const undo = inverseMutation(document, mutation);
   const mutated = applyMutation(document, mutation);
   let restored = mutated;

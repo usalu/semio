@@ -1,29 +1,10 @@
-# 🧬️ En1990 diff schema — sparse field delta.
-
+# 🪪️ En1990Diff uses the canonical Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type En1990Diff {
-  artifact: En1990Artifact @state(class: ARTIFACT)
   gK: Float @state(class: ARTIFACT)
-  qK: En1990QkList @state(class: ARTIFACT)
+  qK: ArtifactChild @state(class: ARTIFACT)
   resistanceKn: Float @state(class: ARTIFACT)
   consequenceClass: Int @state(class: ARTIFACT)
   annex: String @state(class: ARTIFACT)
   seismicAEdKn: Float @state(class: ARTIFACT)
-}
-
-type En1990Artifact {
-  gK: Float
-  qK: [qKItem!]!
-  resistanceKn: Float
-  consequenceClass: Int
-  annex: String
-  seismicAEdKn: Float
-}
-
-type En1990QkEntry {
-  category: String!
-  value: Float!
-}
-
-type En1990QkList {
-  values: [En1990QkEntry!]!
 }

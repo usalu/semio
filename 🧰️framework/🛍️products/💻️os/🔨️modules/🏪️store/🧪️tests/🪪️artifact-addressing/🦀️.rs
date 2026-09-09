@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fields() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["valid"].as_array().unwrap() {
         let value = DslValue::from(row["child"].clone());
         let mut child = ArtifactChild::<()>::from_value(value).unwrap();
@@ -27,4 +27,20 @@ fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fie
         assert!(crate::os_io::ArtifactRef::parse_uri(value.as_str().unwrap()).is_err());
     }
     eprintln!("[DEBUG] shared artifact addressing preserved three exact child identities, rejected five foreign child records, and omitted local materialization from every native wire projection");
+}
+
+/// 🔗️ Link identity admits exactly its target, pin variant and role across native JSON and independent vectors.
+#[test]
+fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreign_fields() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
+    for row in fixture["validLinks"].as_array().unwrap() {
+        let link = ArtifactLink::from_value(DslValue::from(row.clone())).unwrap();
+        let encoded = crate::os_pack::json::to_json_string(&link);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), *row);
+        assert_eq!(ArtifactLink::from_value(link.to_value()).unwrap(), link);
+    }
+    for row in fixture["invalidLinks"].as_array().unwrap() {
+        assert!(ArtifactLink::from_value(DslValue::from(row.clone())).is_err(), "accepted foreign link shape {row}");
+    }
+    eprintln!("[DEBUG] shared link identity preserved three pin variants and rejected nine foreign or malformed records");
 }

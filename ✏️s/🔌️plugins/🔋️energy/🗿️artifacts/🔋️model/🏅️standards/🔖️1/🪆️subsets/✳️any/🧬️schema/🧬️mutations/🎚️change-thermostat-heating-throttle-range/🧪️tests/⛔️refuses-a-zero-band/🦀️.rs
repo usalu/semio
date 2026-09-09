@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -35,7 +35,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 
 fn case() -> Case {
     Case {
-        kind: "change-thermostat-heating-throttle-range", directory: "🎚️change-thermostat-heating-throttle-range/🧪️tests/⛔️refuses-a-zero-band", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+        kind: "change-thermostat-heating-throttle-range", directory: "🎚️change-thermostat-heating-throttle-range/⛔️refuses-a-zero-band", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
     }
 }
 

@@ -47,7 +47,7 @@ pub fn contribute(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-palette payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🎨️replace-palette/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-palette payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

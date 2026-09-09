@@ -36,7 +36,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for
 /// the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🧊️steel-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🛡️mutate-fem3d-1-boundary/🧊️steel-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -54,25 +54,25 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps-the-column-f801c9/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps-the-column-f801c9/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps-the-column-f801c9/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps-the-column-f801c9/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps-the-column-f801c9/🎯️outcome/🔣️.json"),
         },
         "delete-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-b3ebb0/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-b3ebb0/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-b3ebb0/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-b3ebb0/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-b3ebb0/🎯️outcome/🔣️.json"),
         },
         "replace-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees-the-three-7783c9/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees-the-three-7783c9/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees-the-three-7783c9/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees-the-three-7783c9/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees-the-three-7783c9/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-boundary: no committed specification vector is registered for kind {other:?}"),
     }
@@ -90,25 +90,25 @@ fn canonical(text: &str) -> Json {
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
         "replace-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall-fixes-base-b5aa1b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall-fixes-base-b5aa1b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall-fixes-base-b5aa1b/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall-fixes-base-b5aa1b/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall-fixes-base-b5aa1b/🎯️outcome/🔣️.json"),
         },
         "delete-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🏗️hall-cut-pin-66d795/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🏗️hall-cut-pin-66d795/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🏗️hall-cut-pin-66d795/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🏗️hall-cut-pin-66d795/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🏗️hall-cut-pin-66d795/🎯️outcome/🔣️.json"),
         },
         "create-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🏗️hall-new-pin-c033f2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🏗️hall-new-pin-c033f2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🏗️hall-new-pin-c033f2/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🏗️hall-new-pin-c033f2/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🏗️hall-new-pin-c033f2/🎯️outcome/🔣️.json"),
         },
         other => panic!("🛡️mutate-fem3d-1-boundary: no committed hall vector is registered for kind {other:?}"),
     }
@@ -123,39 +123,39 @@ const REJECT_VECTORS: &[&str] = &["same-support-bff8b3", "dangling-node-d44469",
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
         "same-support-bff8b3" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same-support-bff8b3/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same-support-bff8b3/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same-support-bff8b3/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same-support-bff8b3/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same-support-bff8b3/🎯️outcome/🔣️.json"),
         },
         "dangling-node-d44469" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🚨️dangling-node-d44469/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🚨️dangling-node-d44469/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🚨️dangling-node-d44469/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🚨️dangling-node-d44469/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🚨️dangling-node-d44469/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🚨️dangling-node-d44469/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🚨️dangling-node-d44469/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🚨️dangling-node-d44469/🎯️outcome/🔣️.json"),
         },
         "renames-pin-29f41a" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️renames-pin-29f41a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️renames-pin-29f41a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️renames-pin-29f41a/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️renames-pin-29f41a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️renames-pin-29f41a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️renames-pin-29f41a/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️renames-pin-29f41a/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️renames-pin-29f41a/🎯️outcome/🔣️.json"),
         },
         "no-such-support-edd22a" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🚨️no-such-support-edd22a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🚨️no-such-support-edd22a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🚨️no-such-support-edd22a/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🚨️no-such-support-edd22a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🚨️no-such-support-edd22a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🚨️no-such-support-edd22a/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🚨️no-such-support-edd22a/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🚨️no-such-support-edd22a/🎯️outcome/🔣️.json"),
         },
         "dangling-node-af37e2" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚨️dangling-node-af37e2/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚨️dangling-node-af37e2/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚨️dangling-node-af37e2/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚨️dangling-node-af37e2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚨️dangling-node-af37e2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚨️dangling-node-af37e2/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚨️dangling-node-af37e2/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚨️dangling-node-af37e2/🎯️outcome/🔣️.json"),
         },
         other => panic!("🛡️mutate-fem3d-1-boundary: no committed rejection vector is registered for {other:?}"),
     }
@@ -250,7 +250,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://🛡️mutate-fem3d-1-boundary/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

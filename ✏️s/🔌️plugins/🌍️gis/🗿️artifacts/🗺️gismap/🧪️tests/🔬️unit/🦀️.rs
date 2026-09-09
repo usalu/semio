@@ -58,7 +58,7 @@ async fn declaration_exposes_one_executable_whole_map_inference() {
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payload() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️infer-gismap-1/🧫️fixtures/🔣️.json")).expect("language-neutral inference vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/📐️infer-gismap-1/🔣️.json")).expect("language-neutral inference vectors");
     assert_eq!(vectors["subjectSchema"], "../../../🧬️schema/💡️inferences/🔣️.json");
     assert_eq!(vectors["inferenceSchema"], "s.gis.gismap.inference");
     assert_eq!(vectors["schemaVersion"], 1);

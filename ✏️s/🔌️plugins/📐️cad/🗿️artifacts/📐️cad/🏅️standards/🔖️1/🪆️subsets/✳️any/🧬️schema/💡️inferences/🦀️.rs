@@ -608,7 +608,7 @@ mod scene_compute {
 
     pub const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure.classic";
 
-    const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/🖼️concrete-forest-reference.png";
+    const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-assets/🖼️concrete-forest-reference.png";
 
     pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 28.6;
 

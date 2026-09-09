@@ -27,7 +27,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
   shapes were read off the committed vectors instead — including the one that only they state: an
   `element` is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none.
 
-  The artifact is real. `local://🧊️steel-frame.snapshot.json` is the SAME derived steel frame model every fem3d
+  The artifact is real. `shared://🕸️mutate-fem3d-1-any-mesh/🧊️steel-frame.snapshot.json` is the SAME derived steel frame model every fem3d
   mutation subset case shares — a sixteen-node, two-storey steel frame on an 8 × 10 m grid, derived
   ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem3d-frame.py`
@@ -50,7 +50,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived steel frame
-    Given the real derived model local://🧊️steel-frame.snapshot.json
+    Given the real derived model shared://🕸️mutate-fem3d-1-any-mesh/🧊️steel-frame.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -74,7 +74,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived frame and land back on it
-    Given the real derived model local://🧊️steel-frame.snapshot.json
+    Given the real derived model shared://🕸️mutate-fem3d-1-any-mesh/🧊️steel-frame.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>

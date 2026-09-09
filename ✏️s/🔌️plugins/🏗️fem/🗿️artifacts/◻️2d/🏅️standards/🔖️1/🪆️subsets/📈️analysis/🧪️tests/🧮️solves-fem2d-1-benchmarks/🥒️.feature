@@ -30,32 +30,32 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   has reproduced every displacement and every reaction of every load case to 1e-6 relative, and until
   anastruct's own N/Q/M sampling has reproduced the end forces at both member ends.
 
-  THE FIXTURES. `local://🏗️timber-portal-frame.snapshot.json` is the committed real-world timber
+  THE FIXTURES. `shared://🧮️solves-fem2d-1-benchmarks/🏗️timber-portal-frame.snapshot.json` is the committed real-world timber
   portal frame every fem2d mutation case shares, carried here verbatim.
-  `local://🪵️timber-frame-members.snapshot.json` is its FRAME SUBSTRUCTURE — identical nodes,
+  `shared://🧮️solves-fem2d-1-benchmarks/🪵️timber-frame-members.snapshot.json` is its FRAME SUBSTRUCTURE — identical nodes,
   members, materials, sections and supports, with the two slab regions and the two area loads
   dropped. The committed document itself is not solved, and the `derives-the-timber-frame-substructure`
   scenario states the reason as a checkable geometric fact rather than as prose: its `slab_spare`
   region touches the rest of the model at exactly ONE node, so the meshed slab can rotate rigidly
   about that node. That region exists to give the `delete-`/`replace-region` verbs a trailing target,
-  not to be analysed. `local://📏️steel-cantilever.snapshot.json` (6 m IPE 300, eight elements) and
-  `local://📐️steel-simple-beam.snapshot.json` (8 m IPE 400 under 12 kN/m) carry the two closed forms
+  not to be analysed. `shared://🧮️solves-fem2d-1-benchmarks/📏️steel-cantilever.snapshot.json` (6 m IPE 300, eight elements) and
+  `shared://🧮️solves-fem2d-1-benchmarks/📐️steel-simple-beam.snapshot.json` (8 m IPE 400 under 12 kN/m) carry the two closed forms
   `PL³/(3EI)` and `5wL⁴/(384EI)`, exact at the nodes for consistent-load Euler-Bernoulli elements.
-  `local://🌉️concrete-two-span.snapshot.json` is a 2 × 6 m continuous 300×600 concrete beam whose
+  `shared://🧮️solves-fem2d-1-benchmarks/🌉️concrete-two-span.snapshot.json` is a 2 × 6 m continuous 300×600 concrete beam whose
   `0.375wL : 1.25wL : 0.375wL` reaction split is a textbook value.
-  `local://🏢️steel-frame-base.snapshot.json` is a three-bay two-storey steel moment frame with dead,
+  `shared://🧮️solves-fem2d-1-benchmarks/🏢️steel-frame-base.snapshot.json` is a three-bay two-storey steel moment frame with dead,
   live, wind and spare cases, three combinations, a detached four-corner-pinned plant-room slab and
   one spare record for every `delete-`/`replace-` verb this vocabulary declares — it is the base every
-  mutation is applied to. `local://🏛️steel-columns.snapshot.json` carries four disjoint columns, one
+  mutation is applied to. `shared://🧮️solves-fem2d-1-benchmarks/🏛️steel-columns.snapshot.json` carries four disjoint columns, one
   per standard effective-length factor, each with its own reference compression.
 
-  THE COMMITTED REFERENCE VALUES are `local://📊️expected.results.json`, in SI units, produced by the
+  THE COMMITTED REFERENCE VALUES are `shared://🧮️solves-fem2d-1-benchmarks/📊️expected.results.json`, in SI units, produced by the
   reference above and pinned by BOTH implementations on every run. It also carries the four
   normalisation decades the cross-language projection divides by, because the comparison profile
   carries one absolute tolerance and a projection mixing metres at 1e-5 with newtons at 1e5 could not
   be judged by it at all.
 
-  THE MUTATION CORPUS is `local://🧬️mutated.snapshots.json`: per kind, the payload and the committed
+  THE MUTATION CORPUS is `shared://🧮️solves-fem2d-1-benchmarks/🧬️mutated.snapshots.json`: per kind, the payload and the committed
   post-mutation snapshot, plus whether that kind is expected to CHANGE the frame analysis or to leave
   it INVARIANT. Both are evidence. A kind declared `changes` that answers exactly as the base model
   did has not been exercised at all; a kind declared `invariant` that moves the frame has corrupted
@@ -75,8 +75,8 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario Outline: Solve <id> and answer what a third-party structural solver answers
-    Given the committed model local://<fixture>
-    And the committed reference values local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem2d-1-benchmarks/<fixture>
+    And the committed reference values shared://🧮️solves-fem2d-1-benchmarks/📊️expected.results.json
     When every load case and every combination is solved for linear static equilibrium
     Then both implementations report the same displacements, reactions and member end forces, and every closed form the model carries holds
     Examples:
@@ -92,9 +92,9 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the base frame, solve what it left behind, and answer what the solver answers
-    Given the base model local://🏢️steel-frame-base.snapshot.json
-    And the committed post-mutation corpus local://🧬️mutated.snapshots.json
-    And the committed reference values local://📊️expected.results.json
+    Given the base model shared://🧮️solves-fem2d-1-benchmarks/🏢️steel-frame-base.snapshot.json
+    And the committed post-mutation corpus shared://🧮️solves-fem2d-1-benchmarks/🧬️mutated.snapshots.json
+    And the committed reference values shared://🧮️solves-fem2d-1-benchmarks/📊️expected.results.json
     When the <id> mutation is applied through production dispatch and the result is solved
     Then both implementations report the same analysis, and the model <effect> exactly as this kind declares
     Examples:
@@ -129,8 +129,8 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario: Free-vibration frequencies of the cantilever match the closed form to two percent
-    Given the committed model local://📏️steel-cantilever.snapshot.json
-    And the committed reference values local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem2d-1-benchmarks/📏️steel-cantilever.snapshot.json
+    And the committed reference values shared://🧮️solves-fem2d-1-benchmarks/📊️expected.results.json
     When the lowest natural frequencies the analysis settings ask for are solved
     Then each one is within 2 percent of βₙ²/(2πL²)·√(EI/ρA) for βₙL of 1.8751, 4.6941 and 7.8548, and both implementations agree
 
@@ -138,8 +138,8 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario: Buckling factors of the four columns match π²EI/(KL)² to two percent
-    Given the committed model local://🏛️steel-columns.snapshot.json
-    And the committed reference values local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem2d-1-benchmarks/🏛️steel-columns.snapshot.json
+    And the committed reference values shared://🧮️solves-fem2d-1-benchmarks/📊️expected.results.json
     When each column's own load case is solved for its lowest linear-buckling factor
     Then each factor is within 2 percent of π²EI/(KL)² divided by the applied reference load, for K of 2.0, 1.0, 0.6992 and 0.5, and both implementations agree
 
@@ -147,7 +147,7 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario: A cantilever with its only support deleted is refused rather than answered
-    Given the committed model local://📏️steel-cantilever.snapshot.json
+    Given the committed model shared://🧮️solves-fem2d-1-benchmarks/📏️steel-cantilever.snapshot.json
     When every support is deleted and the model is solved again
     Then both implementations report the singular condition instead of a displacement, and both still solve the supported model
 
@@ -155,7 +155,7 @@ Feature: Solve real fem2d models, and every mutation of one, against a third-par
   @level-exhaustive
   @mode-differential
   Scenario: The frame substructure is the committed real-world document, minus a slab hung off one node
-    Given the committed real-world model local://🏗️timber-portal-frame.snapshot.json
-    And the derived frame substructure local://🪵️timber-frame-members.snapshot.json
+    Given the committed real-world model shared://🧮️solves-fem2d-1-benchmarks/🏗️timber-portal-frame.snapshot.json
+    And the derived frame substructure shared://🧮️solves-fem2d-1-benchmarks/🪵️timber-frame-members.snapshot.json
     When the two are compared member by member
     Then the substructure changes nothing but the regions and the area loads, and the dropped `slab_spare` region is shown to touch the frame at exactly one node

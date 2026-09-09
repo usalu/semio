@@ -1,10 +1,10 @@
 //! 🔄️ 🔄️ Wires play app commands command — `force-layout`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::op::WiresMutation;
 use crate::schema::{fixture_nodes, force_layout_board, node_position};
 use crate::WiresSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
@@ -36,7 +36,7 @@ fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
 #[dsl(keyword = "force-layout")]
 pub struct ForceLayout {}
 
-pub fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
 }
 

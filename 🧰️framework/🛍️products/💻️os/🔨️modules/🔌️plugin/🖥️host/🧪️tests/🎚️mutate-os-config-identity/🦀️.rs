@@ -33,16 +33,16 @@ const KINDS: &[&str] = &["sign-in", "sign-out"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "sign-in" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json"),
         ),
         "sign-out" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-identity: no specification vector registered for kind {other:?}"),
     }

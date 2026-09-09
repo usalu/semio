@@ -1,6 +1,6 @@
 
 use super::*;
-use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
+use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, testkit};
 
 /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
 /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -13,7 +13,9 @@ pub fn meta(actor: &str) -> ActionMeta {
 }
 
 pub fn app() -> Puzzle5dApp {
-    semio_framework::io::resolve_ready(testkit::new_app::<EditorApp<Puzzle5dPlayApp>>())
+    let mut app = semio_framework::io::resolve_ready(testkit::new_app::<EditorApp<Puzzle5dPlayApp>>());
+    semio_framework::io::resolve_ready(app.bind_instance_id(1));
+    app
 }
 
 /// ✏️ Adapts `create_puzzle5d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -26,7 +28,58 @@ pub fn puzzle5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
 /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle5dApp {
-    semio_framework::io::resolve_ready(testkit::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_testkit))
+    let mut app = semio_framework::io::resolve_ready(testkit::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_testkit));
+    semio_framework::io::resolve_ready(app.bind_instance_id(1));
+    app
+}
+
+fn action_window_kind(action: &str) -> &'static str {
+    if matches!(action, "setCamera2d" | "setLodMode" | "setGridSnapEnabled" | "setGridFactor" | "setSuggestionOffset" | "setFillCount" | "canvasPointerDown") {
+        board2d::WINDOW_KIND_ID
+    } else {
+        world3d::WINDOW_KIND_ID
+    }
+}
+
+pub fn window_view(kind: &str, id: &str) -> ViewModel {
+    let mut window_instances = vec![
+        ViewWindowInstance { id: board2d::WINDOW_KIND_ID.into(), window_kind_id: board2d::WINDOW_KIND_ID.into() },
+        ViewWindowInstance { id: world3d::WINDOW_KIND_ID.into(), window_kind_id: world3d::WINDOW_KIND_ID.into() },
+    ];
+    if !window_instances.iter().any(|window| window.id == id) {
+        window_instances.push(ViewWindowInstance { id: id.into(), window_kind_id: kind.into() });
+    }
+    ViewModel { window_instances, ..Default::default() }.for_window_instance(id).expect("puzzle5d test window roster")
+}
+
+fn action_meta(action: &str, args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
+    let requested_window = args.and_then(|value| value.get("windowId").or_else(|| value.get("window"))).and_then(Value::as_str);
+    let kind = requested_window.filter(|window| PUZZLE5D_PLAY_WINDOWS.contains(window)).unwrap_or_else(|| action_window_kind(action));
+    let id = window_id.or(requested_window).unwrap_or(kind);
+    ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
+}
+
+fn settle(app: &mut Puzzle5dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    let mut result = result?;
+    for _ in 0..1_048_576 {
+        if !app.has_pending_typed_operations() {
+            return Ok(result);
+        }
+        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+        semio_framework::io::resolve_ready(app.advance_typed_operation_publication())?;
+        if let Some(page) = app.take_typed_operation_result_page(1) {
+            if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+            }
+            app.acknowledge_typed_operation_result(page.token)?;
+        }
+        result.requested_effects.extend(app.take_typed_operation_effect());
+        result.events.extend(app.take_typed_operation_event());
+        if let Some(scope) = app.take_typed_operation_ui_scope() {
+            result.ui_scope = scope;
+        }
+    }
+    Err(Fault::from("puzzle5d test operation did not settle"))
 }
 
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
@@ -34,6 +87,7 @@ pub fn app_with_registry() -> Puzzle5dApp {
 /// `Self::Command` channel). Reconstructs the `Puzzle5dCommand` from the same
 /// `(action, args, window_id)` triple every pre-migration test already passed.
 pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    let action_meta = action_meta(action, args, window_id);
     // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
     // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
     // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -59,9 +113,11 @@ pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, windo
             | "setInteractionGranularity"
     ) {
         let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
-        return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
+        let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta));
+        return settle(app, result);
     }
-    semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")))
+    let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+    settle(app, result)
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -96,6 +152,22 @@ pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
     }
     let projected = testkit::project_and_retire_fixture_tree(tree).expect("retire rendered node");
     scene_json.unwrap_or(projected)
+}
+
+pub fn render_window(app: &mut Puzzle5dApp, body_key: &str, window_id: &str) -> String {
+    render_body(app, &format!("{body_key}:{window_id}"))
+}
+
+pub fn close_app(app: &mut Puzzle5dApp) {
+    for _ in 0..1_048_576 {
+        if app.close_terminal_is_empty() {
+            return;
+        }
+        if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 5D registered app close") == semio_framework_plugin::PluginCloseStep::Complete {
+            break;
+        }
+    }
+    assert!(app.close_terminal_is_empty(), "Puzzle 5D registered app close did not reach terminal-empty ownership");
 }
 
 pub fn projection_of(app: &Puzzle5dApp) -> Value {

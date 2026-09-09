@@ -1,196 +1,85 @@
-/** 🧬️ Jack artifact schema — every field with its state class. */
+/** 🧬️ Jack artifact schema with one composed graph-content identity. */
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export interface JackArtifact {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  name: string;
-  /** @state artifact */
-  manifestId?: string;
-  /** @state artifact */
-  manifest: Manifest;
-  /** @state artifact */
-  camera: Camera;
-  /** @state artifact */
-  nodes: Node[];
-  /** @state artifact */
-  edges: Edge[];
-  /** @state artifact */
-  rootNodeId?: string;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ name: string;
+  /** @state artifact */ manifestId?: string;
+  /** @state artifact */ manifest: Manifest;
+  /** @state artifact */ camera: Camera;
+  /** @state artifact @child kind=s.stdio.semio.graph */ content: ArtifactChild;
+  /** @state artifact */ rootNodeId?: string;
 }
 
+export interface Camera { x: number; y: number; zoom: number }
+export interface Manifest { nodeKinds: ManifestKind[]; edgeKinds: ManifestKind[]; portKinds: ManifestPortKind[] }
+export interface ManifestKind { name: string }
+export interface ManifestPortKind { name: string; direction: string }
 
-export interface Camera {
-  x: number;
-  y: number;
-  zoom: number;
-}
-
-export interface Node {
-  id: string;
-  kind: string;
-  name: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  ports: Port[];
-}
-
-export interface Port {
-  id: string;
-  kind: string;
-  direction: string;
-}
-
-export interface Edge {
-  id: string;
-  kind: string;
-  source: string;
-  target: string;
-}
-
-export interface Manifest {
-  nodeKinds: ManifestKind[];
-  edgeKinds: ManifestKind[];
-  portKinds: ManifestPortKind[];
-}
-
-export interface ManifestKind {
-  name: string;
-}
-
-export interface ManifestPortKind {
-  name: string;
-  direction: string;
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class trinityJackArtifactGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const trinityJackArtifactGuardReject = (at: string, why: string): never => {
-  throw new trinityJackArtifactGuardRefusal(at, why);
+const object = (value: unknown, at: string): Readonly<Record<string, unknown>> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: value must be an object`);
+  return value as Record<string, unknown>;
 };
 
-type trinityJackArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type trinityJackArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type trinityJackArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const trinityJackArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : trinityJackArtifactGuardReject(at, "value is not an object");
-export const trinityJackArtifactGuardArray = (value: unknown, at: string, bounds: trinityJackArtifactGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return trinityJackArtifactGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) trinityJackArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) trinityJackArtifactGuardReject(at, `array has more than ${bounds.maxItems} items`);
+const string = (value: unknown, at: string): string => {
+  if (typeof value !== "string") throw new Error(`${at}: value must be a string`);
   return value;
 };
-export const trinityJackArtifactGuardString = (value: unknown, at: string, bounds: trinityJackArtifactGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return trinityJackArtifactGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) trinityJackArtifactGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) trinityJackArtifactGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) trinityJackArtifactGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const trinityJackArtifactGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : trinityJackArtifactGuardReject(at, "value is not a boolean"));
-export const trinityJackArtifactGuardNumber = (value: unknown, at: string, bounds: trinityJackArtifactGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return trinityJackArtifactGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) trinityJackArtifactGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) trinityJackArtifactGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const trinityJackArtifactGuardInteger = (value: unknown, at: string, bounds: trinityJackArtifactGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? trinityJackArtifactGuardNumber(value, at, bounds) : trinityJackArtifactGuardReject(at, "value is not an integer");
-export const trinityJackArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : trinityJackArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const trinityJackArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : trinityJackArtifactGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
 
+const number = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: value must be a finite number`);
+  return value;
+};
+
+const exact = (row: Readonly<Record<string, unknown>>, required: readonly string[], optional: readonly string[], at: string): void => {
+  const allowed = new Set([...required, ...optional]);
+  if (required.some((key) => !Object.hasOwn(row, key)) || Object.keys(row).some((key) => !allowed.has(key))) throw new Error(`${at}: fields do not match the Jack schema`);
+};
+
+/** 🪪️ Parses the persisted Jack document boundary and refuses embedded graph payloads. */
 export function parseJackArtifact(value: unknown, at = "$"): JackArtifact {
-  const row = trinityJackArtifactGuardObject(value, at);
+  const row = object(value, at);
+  exact(row, ["schema", "name", "manifest", "camera", "content"], ["manifestId", "rootNodeId"], at);
   return {
-    schema: trinityJackArtifactGuardString(row["schema"], `${at}.schema`),
-    name: trinityJackArtifactGuardString(row["name"], `${at}.name`),
-    manifestId: row["manifestId"] === undefined ? undefined : trinityJackArtifactGuardString(row["manifestId"], `${at}.manifestId`),
-    manifest: parseManifest(row["manifest"], `${at}.manifest`),
-    camera: parseCamera(row["camera"], `${at}.camera`),
-    nodes: trinityJackArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseNode(item, `${at}.nodes[${index}]`)),
-    edges: trinityJackArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parseEdge(item, `${at}.edges[${index}]`)),
-    rootNodeId: row["rootNodeId"] === undefined ? undefined : trinityJackArtifactGuardString(row["rootNodeId"], `${at}.rootNodeId`),
+    schema: string(row.schema, `${at}.schema`),
+    name: string(row.name, `${at}.name`),
+    manifestId: row.manifestId === undefined ? undefined : string(row.manifestId, `${at}.manifestId`),
+    manifest: parseManifest(row.manifest, `${at}.manifest`),
+    camera: parseCamera(row.camera, `${at}.camera`),
+    content: parseArtifactChild(row.content),
+    rootNodeId: row.rootNodeId === undefined ? undefined : string(row.rootNodeId, `${at}.rootNodeId`),
   };
 }
 
 export function parseCamera(value: unknown, at = "$"): Camera {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    x: trinityJackArtifactGuardNumber(row["x"], `${at}.x`),
-    y: trinityJackArtifactGuardNumber(row["y"], `${at}.y`),
-    zoom: trinityJackArtifactGuardNumber(row["zoom"], `${at}.zoom`),
-  };
-}
-
-export function parseNode(value: unknown, at = "$"): Node {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    id: trinityJackArtifactGuardString(row["id"], `${at}.id`),
-    kind: trinityJackArtifactGuardString(row["kind"], `${at}.kind`),
-    name: trinityJackArtifactGuardString(row["name"], `${at}.name`),
-    x: trinityJackArtifactGuardNumber(row["x"], `${at}.x`),
-    y: trinityJackArtifactGuardNumber(row["y"], `${at}.y`),
-    width: trinityJackArtifactGuardNumber(row["width"], `${at}.width`),
-    height: trinityJackArtifactGuardNumber(row["height"], `${at}.height`),
-    properties: trinityJackArtifactGuardObject(row["properties"], `${at}.properties`),
-    ports: trinityJackArtifactGuardArray(row["ports"], `${at}.ports`).map((item, index) => parsePort(item, `${at}.ports[${index}]`)),
-  };
-}
-
-export function parsePort(value: unknown, at = "$"): Port {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    id: trinityJackArtifactGuardString(row["id"], `${at}.id`),
-    kind: trinityJackArtifactGuardString(row["kind"], `${at}.kind`),
-    direction: trinityJackArtifactGuardString(row["direction"], `${at}.direction`),
-    properties: trinityJackArtifactGuardObject(row["properties"], `${at}.properties`),
-  };
-}
-
-export function parseEdge(value: unknown, at = "$"): Edge {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    id: trinityJackArtifactGuardString(row["id"], `${at}.id`),
-    kind: trinityJackArtifactGuardString(row["kind"], `${at}.kind`),
-    source: trinityJackArtifactGuardString(row["source"], `${at}.source`),
-    target: trinityJackArtifactGuardString(row["target"], `${at}.target`),
-    properties: trinityJackArtifactGuardObject(row["properties"], `${at}.properties`),
-  };
+  const row = object(value, at);
+  exact(row, ["x", "y", "zoom"], [], at);
+  return { x: number(row.x, `${at}.x`), y: number(row.y, `${at}.y`), zoom: number(row.zoom, `${at}.zoom`) };
 }
 
 export function parseManifest(value: unknown, at = "$"): Manifest {
-  const row = trinityJackArtifactGuardObject(value, at);
+  const row = object(value, at);
+  exact(row, ["nodeKinds", "edgeKinds", "portKinds"], [], at);
+  const kinds = (entry: unknown, key: string): ManifestKind[] => {
+    if (!Array.isArray(entry)) throw new Error(`${at}.${key}: value must be an array`);
+    return entry.map((item, index) => parseManifestKind(item, `${at}.${key}[${index}]`));
+  };
+  if (!Array.isArray(row.portKinds)) throw new Error(`${at}.portKinds: value must be an array`);
   return {
-    nodeKinds: trinityJackArtifactGuardArray(row["nodeKinds"], `${at}.nodeKinds`).map((item, index) => parseManifestKind(item, `${at}.nodeKinds[${index}]`)),
-    edgeKinds: trinityJackArtifactGuardArray(row["edgeKinds"], `${at}.edgeKinds`).map((item, index) => parseManifestKind(item, `${at}.edgeKinds[${index}]`)),
-    portKinds: trinityJackArtifactGuardArray(row["portKinds"], `${at}.portKinds`).map((item, index) => parseManifestPortKind(item, `${at}.portKinds[${index}]`)),
+    nodeKinds: kinds(row.nodeKinds, "nodeKinds"),
+    edgeKinds: kinds(row.edgeKinds, "edgeKinds"),
+    portKinds: row.portKinds.map((item, index) => parseManifestPortKind(item, `${at}.portKinds[${index}]`)),
   };
 }
 
 export function parseManifestKind(value: unknown, at = "$"): ManifestKind {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    name: trinityJackArtifactGuardString(row["name"], `${at}.name`),
-  };
+  const row = object(value, at);
+  exact(row, ["name"], [], at);
+  return { name: string(row.name, `${at}.name`) };
 }
 
 export function parseManifestPortKind(value: unknown, at = "$"): ManifestPortKind {
-  const row = trinityJackArtifactGuardObject(value, at);
-  return {
-    name: trinityJackArtifactGuardString(row["name"], `${at}.name`),
-    direction: trinityJackArtifactGuardString(row["direction"], `${at}.direction`),
-  };
+  const row = object(value, at);
+  exact(row, ["name", "direction"], [], at);
+  return { name: string(row.name, `${at}.name`), direction: string(row.direction, `${at}.direction`) };
 }

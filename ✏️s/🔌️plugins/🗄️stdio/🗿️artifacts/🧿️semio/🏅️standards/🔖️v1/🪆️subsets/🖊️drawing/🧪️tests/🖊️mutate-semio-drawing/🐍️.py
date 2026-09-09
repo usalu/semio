@@ -81,8 +81,8 @@ KINDS = (
     "change-stroke-width",
 )
 
-ARTIFACT_DSL = "local://🗣️.dsl.semio"
-ARTIFACT_PACK = "local://🎒️.pack.semio"
+ARTIFACT_DSL = "shared://🖊️mutate-semio-drawing/🗣️.dsl.semio"
+ARTIFACT_PACK = "shared://🖊️mutate-semio-drawing/🎒️.pack.semio"
 
 
 def hex_of_text(text: str) -> str:
@@ -1127,7 +1127,7 @@ def shape_report(document: dict) -> dict:
 def mutate(ctx: Context) -> Outcome:
     """🎯️ One verb applied to the real derived drawing by this implementation alone."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "local://") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
     applied = apply_mutation(document, mutation)
     return Outcome({"document": projection_of(applied), "shape": shape_report(applied)})
 
@@ -1136,7 +1136,7 @@ def inverse(ctx: Context) -> Outcome:
     """↩️ The metamorphic inverse law on the real drawing: the verb followed by its OWN computed
     inverse must restore it exactly, scene-graph ORDER and nesting included."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "local://") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
     undo = inverse_mutation(document, mutation)
     mutated = apply_mutation(document, mutation)
     restored = mutated

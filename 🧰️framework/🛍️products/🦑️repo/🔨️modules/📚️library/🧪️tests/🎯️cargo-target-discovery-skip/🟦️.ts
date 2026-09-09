@@ -8,7 +8,7 @@ import { isDiscoverySkipDirectory } from "../../🔍️discovery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as {
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️cargo-target-discovery-skip/🔣️.json"), "utf8")) as {
   schemaVersion: number;
   skipped: string[];
   admitted: string[];

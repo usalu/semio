@@ -63,14 +63,14 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 
 # 📸️ The ONE before-document all thirty-one leaves share (confirmed byte-identical across all
 # thirty-one copies by this feature's own description) — read once, from where the domain already
 # keeps it, rather than a thirty-second copy.
 _BASE_URI = f"{_ROOT}/✏️rename-asset/🧪️tests/🏷️renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json"
 
-# 🗺️ kind -> (dir, fixture, wire tag). The wire tag is the `"mutation"` field's own committed value.
+# 🗺️ kind -> (dir, document, wire tag). The wire tag is the `"mutation"` field's own committed value.
 VECTORS = {
     "create-asset": ("➕️create-asset", "➕️appends-asset-detail", "createAsset"),
     "delete-asset": ("🗑️delete-asset", "🗑️removes-trailing-asset-prop", "deleteAsset"),
@@ -109,7 +109,7 @@ WIRE_TAG_TO_KIND = {tag: kind for kind, (_dir, _fixture, tag) in VECTORS.items()
 
 
 def _leaf_root(kind: str) -> str:
-    dirname, fixture, _tag = VECTORS[kind]
+    dirname, document, _tag = VECTORS[kind]
     return f"{_ROOT}/{dirname}/🧪️tests/{fixture}"
 
 

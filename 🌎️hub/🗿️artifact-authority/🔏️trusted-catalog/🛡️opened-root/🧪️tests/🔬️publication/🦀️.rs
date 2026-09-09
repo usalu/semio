@@ -26,7 +26,7 @@ fn fixture_root() -> std::path::PathBuf {
 #[tokio::test]
 async fn trusted_publication_owner_process_crash_releases_exact_lock() {
     const ROOT_ENV: &str = "SEMIO_TRUSTED_PUBLICATION_PROCESS_ROOT";
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📤️publication/🔒️owner.json")).unwrap();
     let control = Control(AtomicBool::new(false));
     let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
     if let Some(root) = std::env::var_os(ROOT_ENV) {
@@ -83,7 +83,7 @@ async fn trusted_publication_owner_process_crash_releases_exact_lock() {
 
 #[tokio::test]
 async fn trusted_publication_owner_lock_drop_and_exact_replacement_match_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📤️publication/🔒️owner.json")).unwrap();
     let root = fixture_root();
     let control = Control(AtomicBool::new(false));
     let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
@@ -114,7 +114,7 @@ async fn trusted_publication_owner_lock_drop_and_exact_replacement_match_fixture
 
 #[tokio::test]
 async fn trusted_publication_owner_remains_rooted_after_path_replacement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📤️publication/🔒️owner.json")).unwrap();
     let root = fixture_root();
     let control = Control(AtomicBool::new(false));
     let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);

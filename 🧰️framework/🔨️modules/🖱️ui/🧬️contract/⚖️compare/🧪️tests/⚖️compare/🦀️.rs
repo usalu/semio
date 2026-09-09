@@ -3,7 +3,7 @@ use super::*;
 
 //#region 🧪️TypedComparison
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

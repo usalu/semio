@@ -10,7 +10,7 @@
 use semio_repo_test_host::Adapter;
 
 /// 🗣️ The real committed document this artifact ships as its own example, owned by this subset.
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 #[cfg(feature = "sut")]
 mod subject {

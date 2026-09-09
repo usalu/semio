@@ -66,7 +66,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @level-long
   @mode-differential
   Scenario: networkx reproduces every topological kind and the ownership invariant on every board
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When each board is rebuilt as a networkx MultiDiGraph over node and handle vertices
     Then every handle vertex is owned by exactly one node and every wire joins two handle vertices
     And the graph networkx computes for each applied topological kind equals the graph of the committed after-snapshot
@@ -76,7 +76,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @level-long
   @mode-differential
   Scenario: networkx reproduces the kind-compatibility relation and holds it to one edge per ordered pair
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When the meta relation is rebuilt as a networkx DiGraph over kind labels
     Then the relation carries exactly as many distinct ordered pairs as it declares records
     And connect-kind-compatibility and disconnect-kind-compatibility reproduce the committed after-snapshot's relation
@@ -86,7 +86,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @level-long
   @mode-differential
   Scenario: shapely reproduces position, scale, anchor invariance and the null-dropping extent rebuild
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When each node's footprint is built as a shapely Point buffer or box at the node's own scale
     Then move-node equals shapely's translate of the before footprint and preserves its area
     And scale-node equals shapely's scale about the node's own position and multiplies the area by its square
@@ -98,7 +98,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @level-long
   @mode-conformance
   Scenario: jsonschema accepts every committed payload against its own leaf schema and rejects an undeclared member
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When each payload is validated against its leaf 🧬️schema/🔣️.json by the draft the schema itself names
     Then the committed payload carries its kind's own internally tagged discriminator
     And the validator accepts the committed payload with no error
@@ -108,7 +108,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @level-long
   @mode-differential
   Scenario: jsonpatch reproduces every after-snapshot and deepdiff corroborates whether the document moved
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When an RFC 6902 patch is derived from the before and after snapshots by jsonpatch
     Then applying that patch to the before-snapshot reproduces the committed after-snapshot exactly
     And deepdiff and jsonpatch agree on whether the document moved at all

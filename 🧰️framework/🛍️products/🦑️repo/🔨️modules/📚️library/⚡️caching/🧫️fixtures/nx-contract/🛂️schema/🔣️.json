@@ -5,6 +5,7 @@
   "required": [
     "version",
     "policies",
+    "pluginGraph",
     "wasm",
     "go",
     "rust",
@@ -88,6 +89,10 @@
           },
           "continuous": {
             "type": "boolean"
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
@@ -607,7 +612,9 @@
               "tooling": {
                 "type": "array",
                 "uniqueItems": true,
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -886,6 +893,77 @@
       "minProperties": 1,
       "additionalProperties": {
         "type": "string"
+      }
+    },
+    "pluginGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leaf",
+        "workspaceRoot"
+      ],
+      "properties": {
+        "leaf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directory",
+            "name",
+            "script",
+            "testCommand",
+            "derivedTarget"
+          ],
+          "properties": {
+            "directory": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "script": {
+              "type": "string",
+              "minLength": 1
+            },
+            "testCommand": {
+              "type": "string",
+              "minLength": 1
+            },
+            "derivedTarget": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "workspaceRoot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "script",
+            "targets"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "script": {
+              "type": "string",
+              "minLength": 1
+            },
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
       }
     }
   }

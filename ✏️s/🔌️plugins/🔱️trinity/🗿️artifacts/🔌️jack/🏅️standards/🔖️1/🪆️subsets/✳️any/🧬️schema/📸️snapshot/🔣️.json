@@ -4,52 +4,18 @@
   "title": "JackSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "name",
-    "manifest",
-    "camera",
-    "nodes",
-    "edges"
-  ],
+  "required": ["schema", "name", "manifest", "camera", "content"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "name": { "type": "string", "x-semio-state": "artifact" },
+    "manifestId": { "type": "string", "x-semio-state": "artifact" },
+    "manifest": { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Manifest", "x-semio-state": "artifact" },
+    "camera": { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera", "x-semio-state": "artifact" },
+    "content": {
+      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.graph"
     },
-    "name": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "manifestId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "manifest": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Manifest",
-      "x-semio-state": "artifact"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
-      "x-semio-state": "artifact"
-    },
-    "nodes": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Node"
-      },
-      "x-semio-state": "artifact"
-    },
-    "edges": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Edge"
-      },
-      "x-semio-state": "artifact"
-    },
-    "rootNodeId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    }
+    "rootNodeId": { "type": "string", "x-semio-state": "artifact" }
   }
 }

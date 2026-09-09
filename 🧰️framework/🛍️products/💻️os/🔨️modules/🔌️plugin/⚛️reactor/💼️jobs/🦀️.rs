@@ -680,10 +680,10 @@ async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
         semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
     });
     if source != carrier {
-        return Ok(vec![semio_framework::io_schema::Confidence::None.rank().await]);
+        return Ok(vec![semio_framework::io_schema::Confidence::None.rank()]);
     }
     let confidence = semio_framework::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
-    Ok(vec![confidence.rank().await])
+    Ok(vec![confidence.rank()])
 }
 
 //#endregion

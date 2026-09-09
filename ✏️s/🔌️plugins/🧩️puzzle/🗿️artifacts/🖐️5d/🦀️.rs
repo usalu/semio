@@ -1338,7 +1338,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes-part-a-and-5f0581/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes-part-a-and-severs-fastener/🦀️.rs"]
                                     mod tests_removes_part_a_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -1533,7 +1533,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-5d2306/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-severs-fastener/🦀️.rs"]
                                     mod tests_removes_grip_1_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -1663,7 +1663,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-1464bd/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-pair/🦀️.rs"]
                                     mod tests_removes_grip_pair;
                                 }
                                 #[path = "."]

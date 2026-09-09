@@ -8,11 +8,11 @@
 use crate::{En1994Diff, En1994Mutation, En1994Snapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/🎯️outcome/🔣️.json");
 
 fn before() -> En1994Snapshot {
     serde_json::from_str(BEFORE).expect("change-span-m/lengthens-span-to-12-m: before snapshot decodes")

@@ -113,7 +113,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️appends-slot-c-b3fd5a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️appends-slot-c-at-index-2/🦀️.rs"]
                             mod tests_appends_slot_c_at_index_2;
                         }
                         #[path = "."]
@@ -126,7 +126,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes-slot-a-06e92b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes-slot-a-and-cascades-edge-ab/🦀️.rs"]
                             mod tests_removes_slot_a_and_cascades_edge_ab;
                         }
                         #[path = "."]
@@ -139,7 +139,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/⛔️appends-a-rule-059003/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/⛔️appends-a-rule-forbidding-roof-over-wall/🦀️.rs"]
                             mod tests_appends_a_rule_forbidding_roof_over_wall;
                         }
                         #[path = "."]
@@ -152,7 +152,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/🚫️removes-the-wall-3d5715/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/🚫️removes-the-wall-roof-rule/🦀️.rs"]
                             mod tests_removes_the_wall_roof_rule;
                         }
                         #[path = "."]
@@ -165,7 +165,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-weight/🧪️tests/⚖️raises-the-wall-4578a3/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-weight/🧪️tests/⚖️raises-the-wall-module-selection-bias/🦀️.rs"]
                             mod tests_raises_the_wall_module_selection_bias;
                         }
                         #[path = "."]
@@ -178,7 +178,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️remove-weight/🧪️tests/🪶️drops-the-wall-36f28b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️remove-weight/🧪️tests/🪶️drops-the-wall-module-weight-override/🦀️.rs"]
                             mod tests_drops_the_wall_module_weight_override;
                         }
                         #[path = "."]
@@ -191,7 +191,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-c622ac/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-slot-c-at-index-1/🦀️.rs"]
                             mod tests_joins_slot_b_to_slot_c_at_index_1;
                         }
                         #[path = "."]
@@ -204,7 +204,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-c14030/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-leaving-both-slots/🦀️.rs"]
                             mod tests_severs_edge_ab_leaving_both_slots;
                         }
                         #[path = "."]
@@ -217,7 +217,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-93c15b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
                             mod tests_reseeds_the_solve_from_7_to_99;
                         }
                     }

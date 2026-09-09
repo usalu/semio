@@ -176,8 +176,8 @@ impl EquationExprSnapshot {
     /// ✏️ Structural replace-in-place by label; a no-op (returns `false`) if `label` isn't
     /// present — callers (mutation `diff`s) must treat that as "nothing to do", never a panic,
     /// since `base` may already have moved past the label a stale payload still names.
-    pub fn replace(&mut self, label: EquationNodeLabel, new_kind: EquationNodeKind) -> bool {
-        replace_labeled(&mut self.expr, label, &new_kind)
+    pub fn replace(&mut self, label: EquationNodeLabel, new_kind: &EquationNodeKind) -> bool {
+        replace_labeled(&mut self.expr, label, new_kind)
     }
 }
 
@@ -260,7 +260,7 @@ pub fn expr_to_equation_node(expr: &crate::cas::expr::Expr, next_label: &mut u64
 
 impl Default for EquationSnapshot {
     fn default() -> Self {
-        crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default())
+        crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default())
     }
 }
 //#endregion 🔖️Snapshot

@@ -61,7 +61,7 @@ async fn strict_artifact_identity_mixed_channels_publish_nothing() {
 
 #[test]
 fn strict_artifact_identity_matches_independent_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).expect("neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-admission/🔣️.json")).expect("neutral fixture");
     let rows = fixture["cases"].as_array().expect("cases");
     assert_eq!(rows.len(), 15);
     for row in rows {

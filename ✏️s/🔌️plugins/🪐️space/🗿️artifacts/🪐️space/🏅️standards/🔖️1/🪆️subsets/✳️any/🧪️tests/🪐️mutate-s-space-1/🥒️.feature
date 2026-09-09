@@ -54,40 +54,40 @@ Feature: Apply every typed s.space.space index mutation against an independent P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id              | dir                | fixture                              |
-      | create-artifact | 🌱create-artifact  | appends-artifact-3-to-the-index      |
-      | delete-artifact | 🗑️delete-artifact  | removes-artifact-2-from-the-index    |
-      | rename-artifact | 🏷️rename-artifact  | renames-artifact-1                   |
-      | touch-artifact  | 🕒touch-artifact   | stamps-artifact-1-with-a-new-editor  |
+      | create-artifact | 🌱create-artifact  | 🧪️appends-artifact-3-to-the-index      |
+      | delete-artifact | 🗑️delete-artifact  | 🧪️removes-artifact-2-from-the-index    |
+      | rename-artifact | 🏷️rename-artifact  | 🧪️renames-artifact-1                   |
+      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps-artifact-1-with-a-new-editor  |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id              | dir                | fixture                              |
-      | create-artifact | 🌱create-artifact  | appends-artifact-3-to-the-index      |
-      | delete-artifact | 🗑️delete-artifact  | removes-artifact-2-from-the-index    |
-      | rename-artifact | 🏷️rename-artifact  | renames-artifact-1                   |
-      | touch-artifact  | 🕒touch-artifact   | stamps-artifact-1-with-a-new-editor  |
+      | create-artifact | 🌱create-artifact  | 🧪️appends-artifact-3-to-the-index      |
+      | delete-artifact | 🗑️delete-artifact  | 🧪️removes-artifact-2-from-the-index    |
+      | rename-artifact | 🏷️rename-artifact  | 🧪️renames-artifact-1                   |
+      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps-artifact-1-with-a-new-editor  |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed space index document, print it back and cross it against its binary encoding
-    Given the real committed document asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed document asset://🎬️demo/🗣️.dsl.semio
     When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
     Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires

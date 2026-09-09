@@ -203,6 +203,7 @@ fn block2d_retained_extent(command: &Block2dCommand, snapshot: &Block2dSnapshot,
     (items <= BLOCK2D_RETAINED_WORK_ITEMS).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn block2d_retained_reduce(
     command: &Block2dCommand,
     snapshot: &Block2dSnapshot,

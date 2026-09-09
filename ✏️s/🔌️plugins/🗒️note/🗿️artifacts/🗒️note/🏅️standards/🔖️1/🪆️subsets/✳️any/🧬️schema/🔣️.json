@@ -20,7 +20,14 @@
       "x-semio-state": "artifact"
     },
     "title": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "blocks": {
@@ -31,41 +38,91 @@
       "x-semio-state": "artifact"
     },
     "gridVisible": {
-      "type": "boolean",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "gridSpacing": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "gridSubdivisions": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "gridOpacity": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "snapEnabled": {
-      "type": "boolean",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "snapGridSpacing": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "pencilWidth": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "eraserRadius": {
-      "type": "number",
-      "format": "double",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "assets": {
@@ -74,24 +131,372 @@
         "$ref": "#/$defs/NoteImageAsset"
       },
       "x-semio-state": "artifact"
+    },
+    "linkedArtifact": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/os/store/link.json"
+        }
+      ],
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {
     "NoteBlockNode": {
-      "title": "NoteBlockNode",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "content",
+            "fontSize",
+            "fontWeight",
+            "align"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "content": {
+              "$ref": "#/$defs/NoteTextChild"
+            },
+            "fontSize": {
+              "type": "number"
+            },
+            "fontWeight": {
+              "type": "string"
+            },
+            "align": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "imageKey"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "imageKey": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "columns",
+            "rows"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/NoteTableCell"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "tex",
+            "displayMode"
+          ],
+          "properties": {
+            "kind": {
+              "const": "math"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "tex": {
+              "type": "string"
+            },
+            "displayMode": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "points",
+            "strokeWidth",
+            "color"
+          ],
+          "properties": {
+            "kind": {
+              "const": "stroke"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "color": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "children"
+          ],
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/NoteBlockNode"
+              }
+            }
+          }
         }
-      }
+      ]
     },
     "NoteImageAsset": {
-      "title": "NoteImageAsset",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -106,12 +511,122 @@
           "type": "string"
         },
         "width": {
-          "type": "number",
-          "format": "double"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
         },
         "height": {
-          "type": "number",
-          "format": "double"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    "NoteTextChild": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "paragraphs"
+      ],
+      "properties": {
+        "handle": {
+          "$ref": "https://semio.tech/schema/os/store/child.json"
+        },
+        "paragraphs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteTextParagraph"
+          }
+        }
+      }
+    },
+    "NoteTextParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs"
+      ],
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteTextRun"
+          }
+        }
+      }
+    },
+    "NoteTextRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "underline": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "link": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "NoteTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "content": {
+          "type": "string"
         }
       }
     }

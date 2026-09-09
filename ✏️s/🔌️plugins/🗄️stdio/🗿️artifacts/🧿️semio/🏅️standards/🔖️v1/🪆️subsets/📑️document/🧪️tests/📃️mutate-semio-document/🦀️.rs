@@ -70,14 +70,14 @@ mod subject {
         decode_semio_document_pack, decode_semio_document_snapshot_json, encode_semio_document_pack, encode_semio_document_snapshot_json, parse_semio_document_dsl, print_semio_document_dsl, SemioDocumentSnapshot,
     };
 
-    const DSL_ASSET: &str = "asset://📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio";
-    const PACK_ASSET: &str = "asset://📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio";
+    const DSL_ASSET: &str = "asset://🗒️memo/🗣️.dsl.semio";
+    const PACK_ASSET: &str = "asset://🗒️memo/🎒️.pack.semio";
 
     //#region 🔖️Fixtures
     /// 🧫️ The SAME committed vector `../🦀️.rs::vector` reads, decoded into real values
     /// through this subset's own `serde_json` bridges rather than transcribed into Rust literals.
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("local://") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
+        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://📃️mutate-semio-document/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
     }
 
     fn snapshot_of(vector: &Json, name: &str) -> Result<SemioDocumentSnapshot, String> {

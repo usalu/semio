@@ -32,7 +32,15 @@ impl ArtifactEditor for SchemaStampEditorFixture {
         NoConfig::default()
     }
 
-    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
+    fn handle(
+        _command: &NoConfigMutation,
+        _doc: &ArtifactView<'_, NoConfig>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
+        _draft: &DraftView<'_, NoDraft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<NoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 
@@ -61,7 +69,14 @@ impl ArtifactViewer for SchemaStampViewerFixture {
         NoConfig::default()
     }
 
-    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+    fn handle(
+        _command: &NoConfigMutation,
+        _doc: &ArtifactView<'_, NoConfig>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

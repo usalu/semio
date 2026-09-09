@@ -1102,6 +1102,7 @@ fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interacti
     CAD_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn cad_retained_reduce(
     command: &CadCommand,
     snapshot: &CadSnapshot,

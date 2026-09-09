@@ -1,0 +1,6 @@
+scalar JackQueryResult
+type JackResultsWindowTransient {
+  queryExecutionId: String @state(kind: TRANSIENT)
+  result: JackQueryResult @state(kind: TRANSIENT)
+  queryError: String @state(kind: TRANSIENT)
+}

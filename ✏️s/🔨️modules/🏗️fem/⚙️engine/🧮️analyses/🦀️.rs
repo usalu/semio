@@ -2121,7 +2121,7 @@ impl<'model> AssemblyJob<'model> {
             self.state.merge_scan_partition += 1;
             return Some(false);
         }
-        let Some((partition_index, entry)) = self.state.merge_candidate.take() else { return None };
+        let (partition_index, entry) = self.state.merge_candidate.take()?;
         if full {
             self.state.full_merge_cursors[partition_index] += 1;
             self.state.merged_full.push(entry);
@@ -2681,8 +2681,8 @@ fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Co
         for (i, (_, res)) in cr.elements.iter().enumerate() {
             elements[i].1 = add_scaled_element_result(&elements[i].1, res, *factor);
         }
-        for k in 0..6 {
-            reaction_sum[k] += factor * cr.checks.reaction_sum[k];
+        for (sum, reaction) in reaction_sum.iter_mut().zip(cr.checks.reaction_sum) {
+            *sum += factor * reaction;
         }
         residual_norm += factor.abs() * cr.checks.residual_norm;
     }

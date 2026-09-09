@@ -134,7 +134,7 @@ fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     let target_uri = dec_hex_str(target)?;
-    let target = store::os_io::ArtifactRef::parse_uri(&target_uri).map_err(|e| e)?;
+    let target = store::os_io::ArtifactRef::parse_uri(&target_uri)?;
     Ok(store::ArtifactChild::new(dec_hex_str(child_id)?, target))
 }
 //#endregion 🔖️ChildCodecPrimitives

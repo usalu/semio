@@ -1,5 +1,5 @@
-# 🧬️ Note artifact schema.
-
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 type NoteArtifact {
   schema: String!
   id: String!
@@ -14,20 +14,18 @@ type NoteArtifact {
   pencilWidth: Float
   eraserRadius: Float
   assets: [NoteImageAssetEntry!]!
+  linkedArtifact: ArtifactLink
 }
-
-type NoteBlockNode {
-  kind: String!
-}
-
-type NoteImageAssetEntry {
-  key: String!
-  value: NoteImageAsset!
-}
-
-type NoteImageAsset {
-  mime: String!
-  data: String!
-  width: Float
-  height: Float
-}
+interface NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean }
+type NoteTextBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean content: NoteTextChild! fontSize: Float! fontWeight: String! align: String! }
+type NoteImageBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean imageKey: String! }
+type NoteTableBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean columns: [String!]! rows: [[NoteTableCell!]!]! }
+type NoteMathBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean tex: String! displayMode: Boolean! }
+type NoteStrokeBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean points: [[Float!]!]! strokeWidth: Float! color: [Float!]! }
+type NoteGroupBlock implements NoteBlockNode { kind: String! id: String! name: String! x: Float! y: Float! width: Float! height: Float! rotation: Float visible: Boolean locked: Boolean children: [NoteBlockNode!]! }
+type NoteTextChild { handle: ArtifactChild! paragraphs: [NoteTextParagraph!]! }
+type NoteTextParagraph { runs: [NoteTextRun!]! }
+type NoteTextRun { text: String! bold: Boolean italic: Boolean underline: Boolean link: String }
+type NoteTableCell { content: String! }
+type NoteImageAssetEntry { key: String! value: NoteImageAsset! }
+type NoteImageAsset { mime: String! data: String! width: Float height: Float }

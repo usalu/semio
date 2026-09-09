@@ -1,6 +1,9 @@
 //! 🕸️ Wires play app — the canvas window: the editable WIRES mindmap board.
 
-use crate::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+
+use crate::schema::{dsl_to_json, fixture_edges, fixture_nodes, wires_relationships};
 use dsl::os_pack::json::Value;
 use dsl::DslValue;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -62,8 +65,10 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     layers
 }
 
-pub fn render(board: &DslValue, wires: &DslValue) -> UiAssemblyResult<BuiltNode> {
-    let (camera_x, camera_y, zoom) = fixture_camera(board);
+pub fn render(board: &DslValue, wires: &DslValue, window: &config::WiresCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
+    let camera_x = window.camera.x;
+    let camera_y = window.camera.y;
+    let zoom = window.camera.zoom;
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));

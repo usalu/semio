@@ -53,7 +53,7 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
   @level-long
   @mode-differential
   Scenario: graphology reproduces every topological kind and the ownership invariant on every board
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When each board is rebuilt as a graphology multi-directed graph over node and handle vertices
     Then every handle vertex is owned by exactly one node and every wire joins two handle vertices
     And the graph graphology computes for each applied topological kind equals the graph of the committed after-snapshot
@@ -63,7 +63,7 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
   @level-long
   @mode-differential
   Scenario: graphology reproduces the kind-compatibility relation and holds it to one edge per ordered pair
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When the meta relation is rebuilt as a graphology directed graph over kind labels
     Then the relation carries exactly as many distinct ordered pairs as it declares records
     And connect-kind-compatibility and disconnect-kind-compatibility reproduce the committed after-snapshot's relation
@@ -73,7 +73,7 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
   @level-long
   @mode-conformance
   Scenario: the npm jsonschema accepts every committed payload against its own leaf schema and rejects an undeclared member
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When each payload is validated against its leaf 🧬️schema/🔣️.json
     Then the committed payload carries its kind's own internally tagged discriminator
     And the validator accepts the committed payload with no error
@@ -83,7 +83,7 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
   @level-long
   @mode-differential
   Scenario: fast-json-patch reproduces every after-snapshot and holds the typed diff to its operations
-    Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
+    Given every committed vector under shared://🧬️mutations/🔣️.json
     When an RFC 6902 patch is derived from the before and after snapshots by fast-json-patch
     Then applying that patch to the before-snapshot reproduces the committed after-snapshot exactly
     And a rejected or no-op vector yields no operation

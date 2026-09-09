@@ -1212,7 +1212,7 @@ impl TimestepWork {
             }
             PlantStage::Dispatch => {
                 if plant.equipment_ids.get(work.equipment_cursor).is_some() {
-                    let load = work.remaining_load_w.min(100_000.0).max(0.0);
+                    let load = if work.remaining_load_w.is_nan() { 100_000.0 } else { work.remaining_load_w.clamp(0.0, 100_000.0) };
                     if work.equipment_cursor == 0 {
                         work.first_load_w = load;
                     }
@@ -1327,7 +1327,7 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
             if let Some(schedule) = schedules.constants.get(cursor.cursor) {
                 cursor.cursor += 1;
                 if schedule.id == requested_id {
-                    return finish_schedule_lookup(work, schedule.value);
+                    return Some(finish_schedule_lookup(work, schedule.value));
                 }
             } else {
                 cursor.stage = ScheduleLookupStage::Annual;
@@ -1390,7 +1390,7 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
                     if let Some(limits) = schedule.limits {
                         value = value.clamp(limits.min, limits.max);
                     }
-                    return finish_schedule_lookup(work, value);
+                    return Some(finish_schedule_lookup(work, value));
                 }
             } else {
                 cursor.stage = cursor.daily_fallback;
@@ -1421,7 +1421,7 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
                     if let Some(limits) = schedule.limits {
                         value = value.clamp(limits.min, limits.max);
                     }
-                    return finish_schedule_lookup(work, value);
+                    return Some(finish_schedule_lookup(work, value));
                 }
             } else {
                 cursor.stage = ScheduleLookupStage::TimeSeries;
@@ -1433,19 +1433,19 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
                 cursor.cursor += 1;
                 if schedule.id == requested_id {
                     let index = (context.timestep_index as usize).min(schedule.values.len().saturating_sub(1));
-                    return finish_schedule_lookup(work, schedule.values.get(index).copied().unwrap_or(1.0));
+                    return Some(finish_schedule_lookup(work, schedule.values.get(index).copied().unwrap_or(1.0)));
                 }
             } else {
-                return finish_schedule_lookup(work, 1.0);
+                return Some(finish_schedule_lookup(work, 1.0));
             }
         }
     }
     None
 }
 
-fn finish_schedule_lookup(work: &mut Option<ScheduleLookupWork>, value: f64) -> Option<f64> {
+fn finish_schedule_lookup(work: &mut Option<ScheduleLookupWork>, value: f64) -> f64 {
     *work = None;
-    Some(value)
+    value
 }
 
 fn schedule_date_in_range(month: u8, day: u8, start_month: u8, start_day: u8, end_month: u8, end_day: u8) -> bool {

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "sections": [
+    { "key": "engagements", "bodyKey": "framework.section.engagements", "accessor": "window_engagements" },
+    { "key": "measures", "bodyKey": "framework.section.measures", "accessor": "window_measures" },
+    { "key": "tools", "bodyKey": "framework.section.tools", "accessor": "tool_measures" }
+  ],
+  "authoredBodyKeys": ["main", "properties", "framework.section", "framework.section.labels"]
+}

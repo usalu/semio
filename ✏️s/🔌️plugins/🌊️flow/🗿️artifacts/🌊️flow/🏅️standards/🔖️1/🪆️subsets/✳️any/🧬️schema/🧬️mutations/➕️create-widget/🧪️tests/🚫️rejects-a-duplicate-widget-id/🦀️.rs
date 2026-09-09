@@ -21,10 +21,10 @@ use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowM
 use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::OrderedMap;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-widget/🚫️rejects-a-duplicate-widget-id/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-widget/🚫️rejects-a-duplicate-widget-id/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-widget/🚫️rejects-a-duplicate-widget-id/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-widget/🚫️rejects-a-duplicate-widget-id/🎯️outcome/🔣️.json");
 
 fn mutation() -> FlowMutation {
     flow::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")

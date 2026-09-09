@@ -1427,7 +1427,7 @@ fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
 /// compare identical inputs.
 ///
 /// @see 🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
-const MERCATOR_ORACLE_FIXTURE: &str = include_str!("../🕸️web-mercator-tile-oracle/🧫️fixtures/🔣️.json");
+const MERCATOR_ORACLE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json");
 
 #[test]
 fn lod_band_selection_matches_frozen_specification_vectors() {

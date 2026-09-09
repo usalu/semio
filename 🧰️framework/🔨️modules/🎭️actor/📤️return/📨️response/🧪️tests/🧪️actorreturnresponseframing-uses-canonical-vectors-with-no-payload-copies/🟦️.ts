@@ -12,8 +12,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   };
   it("ActorReturnResponseFraming uses canonical vectors with no payload copies or backing escape", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: schema } = await import("../../🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("../../🌿️framing/🧪️fixture/🔣️.json");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json"); const { default: returned } = await import("../../../🧫️fixture/🔣️.json");
+    const { default: schema } = await import("../../🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("../../🌿️framing/🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json"); const { default: returned } = await import("../../../🧫️fixtures/🔣️.json");
     const { default: returnedSchema } = await import("../../../🧬️schema/🔣️.json"); const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json"); const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
@@ -46,8 +46,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("ActorReturnResponseFraming keeps malformed bodies and incomplete authority failed", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
-    const { default: returned } = await import("../../../🧫️fixture/🔣️.json");
+    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: returned } = await import("../../../🧫️fixtures/🔣️.json");
     const reject = (bytes: readonly number[]) => {
       const parser = new api.ActorReturnResponseFraming();
       expect(() => { for (const byte of bytes) parser.push(byte); parser.finish(); }).toThrow();
@@ -78,7 +78,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n"))).toEqual([]);
   });
   it("ActorWorkerInboxInventory binds mixed message kinds and logical shells to current source", async () => {
-    const { default: schema } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json");
+    const { default: schema } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const validate = new Ajv({ strict: true }).compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const shardPath = new URL("../../📮️shard-client/🟦️.ts", testSource.url);
@@ -142,7 +142,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(worker.text.includes("msg.returnDrive")).toBe(false);
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
-    const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
+    const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
     const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
     const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
     const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
@@ -193,7 +193,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(fixture.currentFaultTraces.semanticallyAccepted).toBe(false);
   });
   it("ActorReturnResponseMetadata matches actual fixed source records and separately prices the projection graph", async () => {
-    const { default: schema } = await import("../../🎟️credit/📋️metadata/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🎟️credit/📋️metadata/🧪️fixture/🔣️.json");
+    const { default: schema } = await import("../../🎟️credit/📋️metadata/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🎟️credit/📋️metadata/🧫️fixtures/🔣️.json");
     const { default: resident } = await import("../../../../../🌱️value/💾️resident/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const ajv = new Ajv({ strict: true }).addSchema(resident); const validate = ajv.compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
@@ -213,7 +213,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     totals.set("framing", { bytes: framing.bytes + BigInt(graph.records * fixture.model.recordBytes + graph.fields * fixture.model.fieldBytes), slots: framing.slots + BigInt(graph.records), owners: framing.owners + BigInt(graph.records) });
     for (const [group, expected] of Object.entries(fixture.minimumEnvelopes)) expect(Object.fromEntries(Object.entries(totals.get(group)!).map(([axis, count]) => [axis, Number(count)]))).toEqual(expected);
     expect(fixture.boundaries.finalMountEnvelope).toBe(false); expect(fixture.boundaries.neutralIntrinsicRecordsIncluded).toBe(false); expect(fixture.boundaries.rawBytesIncluded).toBe(false);
-    const { default: responses } = await import("../../🧪️fixture/🔣️.json"); let maximumRecords = 0; let maximumFields = 0;
+    const { default: responses } = await import("../../🧫️fixtures/🔣️.json"); let maximumRecords = 0; let maximumFields = 0;
     for (const row of responses.vectors) {
       const bytes = Buffer.from(row.hex, "hex"); const parser = new ActorReturnResponseFraming(); const freeze = Object.freeze; const records: object[] = [];
       const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value !== null && typeof value === "object") records.push(value); return freeze(value); });
@@ -224,7 +224,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse declaration matches strict schemas and independent envelope encoding", async () => {
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const fixtureSchema = schema;
     const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
@@ -245,7 +245,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponseCredit declaration validates exact one-reply and retained-fault transitions", async () => {
     const { default: schema } = await import("../../🎟️credit/🧬️schema/🔣️.json");
-    const { default: fixture } = await import("../../🎟️credit/🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🎟️credit/🧫️fixtures/🔣️.json");
     const fixtureSchema = schema;
     const { default: response } = await import("../../🧬️schema/🔣️.json");
     const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
@@ -292,7 +292,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse header routing preserves exact authority without decoding malformed bodies", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const uint = await oracle();
     for (const row of fixture.headerCases) {
       const raw = backing(row.hex); const expected = hydrate(row.header);
@@ -315,7 +315,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse codec preserves transport correlation and closed fault variants", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     for (const row of fixture.vectors) {
       const value = hydrate(row.value);
       const encoded = api.encodeActorReturnResponse(value);
@@ -331,8 +331,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse maximum page is exact and decoder rejects non-owning backings", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
-    const { default: returned } = await import("../../../🧫️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: returned } = await import("../../../🧫️fixtures/🔣️.json");
     const { createActorBytePage } = await import("../../../../📃️page/🟦️.ts");
     const row = returned.pageResultVectors[fixture.maximumPage.sharedPageVector]!;
     const bytes = Uint8Array.from({ length: row.pageLength }, (_, index) => (index * 37 + 11) % 256);
@@ -349,7 +349,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse actual Node transfer detaches the whole fixed backing and preserves exact bytes", async () => {
     const { execFileSync } = await import("node:child_process");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const source = `
       import { MessageChannel } from "node:worker_threads";
       import { once } from "node:events";
@@ -369,7 +369,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse actual Node codec rejects shared resizable detached and view backings", async () => {
     const { execFileSync } = await import("node:child_process");
-    const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const source = `
       const api = await import(process.argv[1]);
       const bytes = Buffer.from(process.argv[2], "hex");

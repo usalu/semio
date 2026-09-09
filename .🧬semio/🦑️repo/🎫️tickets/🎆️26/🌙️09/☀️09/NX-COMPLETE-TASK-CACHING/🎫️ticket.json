@@ -1,0 +1,10 @@
+{
+  "title": "Nx Complete Task Caching",
+  "emoji": "⚡️",
+  "status": "open",
+  "description": "Setup the complete monorepo to use proper caching on every build, test, lint, generate, schema, verify, stdio, cpp, and other deterministic Nx step. Continuous targets (dev, serve, watch, start) stay uncached. Mutating setup/deps/clean/publish stay uncached. Cache hits must be correct; cache misses only when inputs change. Evidence: plugin targetPolicy, policy.json, project metadata, and runtime cache-hit/miss checks.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪1e78163e30c04e369b860a762352153c"
+  ]
+}

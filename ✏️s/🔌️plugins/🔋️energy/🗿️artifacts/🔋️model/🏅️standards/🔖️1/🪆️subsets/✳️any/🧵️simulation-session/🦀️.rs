@@ -934,6 +934,7 @@ struct MountedState {
     close_lane: u8,
 }
 
+#[expect(clippy::large_enum_variant, reason = "Stale admission returns the exact checkpoint owner for retry or bounded retirement without allocating.")]
 enum MountedAdmissionError {
     Stale { checkpoint: Option<EnergyWirePacket> },
     Rejected(&'static str),
@@ -986,6 +987,7 @@ impl MountedState {
         capture.step_one(source)
     }
 
+    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
     fn admit_job(&mut self, render: AppRenderOperationContext, live_request: u64, expected: MountedIdentity, checkpoint: Option<EnergyWirePacket>) -> Result<(), MountedAdmissionError> {
         if self.config.checkpoint_token != 0 && checkpoint.is_none() {
             self.admission_blocked = true;
@@ -1066,7 +1068,7 @@ impl MountedState {
         self.snapshot_is_fresh() && identity.operation == self.identity.operation.0 && identity.base_revision == self.identity.document_revision.0 && identity.generation == self.identity.generation.0 && identity.seed == self.identity.operation().seed
     }
 
-    fn install_preview(&mut self, preview: EnergyJobPreview) -> bool {
+    fn install_preview(&mut self, preview: &EnergyJobPreview) -> bool {
         let tier_index = quality_tier_index(preview.tier);
         let prior_tier = self.projection.latest_tier.map_or(0, quality_tier_index);
         if preview.sequence <= self.projection.latest_sequence || tier_index < prior_tier {
@@ -1101,15 +1103,7 @@ impl MountedState {
             if let Some(packet) = packet {
                 let fresh = self.packet_is_fresh(packet.identity());
                 if fresh {
-                    if let Some(preview) = packet.preview().map(|preview| EnergyJobPreview {
-                        sequence: preview.sequence,
-                        tier: preview.tier,
-                        stage: preview.stage,
-                        warmup_hour: preview.warmup_hour,
-                        timestep: preview.timestep,
-                        total_timesteps: preview.total_timesteps,
-                        facility_electricity_kwh: preview.facility_electricity_kwh,
-                    }) {
+                    if let Some(preview) = packet.preview() {
                         let _ = self.install_preview(preview);
                     }
                 }

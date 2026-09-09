@@ -1,6 +1,5 @@
 type WiresArtifact {
   wiresFixture: DslValue @state(class: ARTIFACT)
   content: ArtifactChild! @state(class: ARTIFACT)
-  camera: DslValue @state(class: ARTIFACT)
   meta: DslValue @state(class: ARTIFACT)
 }

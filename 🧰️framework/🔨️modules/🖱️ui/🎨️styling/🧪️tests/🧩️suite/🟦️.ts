@@ -106,7 +106,7 @@ describe("shared asset delivery", () => {
 
 describe("favicon delivery", () => {
   it("serves only the exact handpicked browser-icon routes with unchanged payloads", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🌐️favicon-delivery.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🌐️favicon-delivery.json"), "utf8"));
     const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌐️favicon.json"), "utf8"));
     const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
@@ -154,11 +154,16 @@ describe("favicon delivery", () => {
 describe("declared HTML entry", () => {
   it("builds and serves the declared HTML entry without publishing generic aliases", async () => {
     const { build, preview } = await import("vite"), { parse } = await import("parse5");
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🏠️html-entry.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🏠️html-entry.json"), "utf8"));
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "html-entry-"))), output = join(sandbox, "📤️output");
     writeFileSync(join(sandbox, fixture.entry), fixture.html);
     const plugin = semioEmojiIndexHtmlVitePlugin(sandbox, fixture.entry);
-    await build({ configFile: false, root: sandbox, publicDir: false, plugins: [plugin as import("vite").Plugin], build: { outDir: output, emptyOutDir: false }, logLevel: "silent" });
+    expect(await plugin.config!({}, { command: "build", mode: "production" })).toEqual({ build: { rollupOptions: { input: join(sandbox, fixture.entry) } } });
+    const brand = semioBrandHtmlVitePlugins(sandbox, { windowTitle: fixture.title, logoSvg: "" }).find(item => item.name === "semio-brand-html")!;
+    const transform = brand.transformIndexHtml;
+    if (!transform || typeof transform === "function") throw new Error("Missing ordered brand HTML transform");
+    expect(await transform.handler(fixture.html, { path: `/${fixture.entry}`, filename: join(sandbox, fixture.entry) })).toBe(fixture.html.replace("Neutral Entry", fixture.title));
+    await build({ configFile: false, root: sandbox, publicDir: false, plugins: [plugin, brand] as import("vite").Plugin[], build: { outDir: output, emptyOutDir: false }, logLevel: "silent" });
     const server = await preview({ configFile: false, root: sandbox, plugins: [plugin as import("vite").Plugin], build: { outDir: output }, preview: { port: 0, host: "127.0.0.1", strictPort: false }, logLevel: "silent" });
     try {
       const address = server.httpServer.address();
@@ -168,6 +173,7 @@ describe("declared HTML entry", () => {
         expect(response.status).toBe(row.status);
         const markup = await response.text();
         expect(markup).toContain("runtime-kept");
+        expect(markup).toContain(`<title>${fixture.title}</title>`);
         expect(parse(markup).childNodes.some(node => node.nodeName === "html")).toBe(true);
       }
       for (const path of fixture.forbiddenFiles) expect(existsSync(join(output, path))).toBe(false);
@@ -179,7 +185,7 @@ describe("declared HTML entry", () => {
 
 describe("build output write authority", () => {
   it("preserves every retained byte in all seven adapters and writes only declared outputs", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🛡️build-writes.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🛡️build-writes.json"), "utf8"));
     const { default: glob } = await import("fast-glob"), failures: string[] = [];
     const sandbox = mkdtempSync(join(tmpdir(), "semio-build-write-"));
     const put = (path: string, content: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
@@ -244,7 +250,7 @@ describe("font source identity", () => {
   });
 
   it("resolves neutral explicit subset identities without reading handpicked filenames", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(resolveSemioAssetRoot(repoRoot), "🔤️fonts/🧪️tests/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(resolveSemioAssetRoot(repoRoot), "🔤️fonts/🧫️fixtures/🔣️.json"), "utf8"));
     const parsed = parseGoogleFontWoff2Map(fixture.css);
     expect(Object.fromEntries(parsed)).toEqual(fixture.expectedSubsets);
     const { parse } = await import("postcss");
@@ -399,7 +405,7 @@ describe("styling resolve", () => {
 
 describe("nested mesh source identity", () => {
   it("preserves explicit neutral source ownership and nested output paths in HTTP and static output", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧊️mesh-collection.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧊️mesh-collection.json"), "utf8"));
     const sandbox = mkdtempSync(join(tmpdir(), "semio-mesh-collection-"));
     let server: ReturnType<typeof createServer> | undefined;
     try {

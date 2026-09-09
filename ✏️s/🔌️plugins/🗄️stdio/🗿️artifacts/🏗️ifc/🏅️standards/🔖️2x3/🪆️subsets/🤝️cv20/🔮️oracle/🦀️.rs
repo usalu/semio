@@ -34,7 +34,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️Oracles
 #[cfg(feature = "oracles")]
 mod oracles {
-    use crate::standards::v2x3::reference::part21;
+    use crate::artifacts::ifc::standards::v2x3::reference::part21;
     use ruststep::ast::{Exchange, Name, Parameter};
     use semio_repo_test_host::Json;
 

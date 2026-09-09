@@ -23,11 +23,11 @@ use semio_repo_test_host::Adapter;
 const KINDS: &[&str] = &["create-step", "delete-step", "move-step", "edit-step-params", "change-step-collapsed", "duplicate-step"];
 
 /// 📄️ This subset's own local copy of the plugin's committed real sequence artifact.
-const SEQUENCE_ASSET: &str = "local://🗣️.dsl.semio";
+const SEQUENCE_ASSET: &str = "shared://🪜️mutate-sequence-1-step/🗣️.dsl.semio";
 
 /// 🧫️ The three steps and one edge the composed content child is seeded with — see this fixture's
 /// own `_provenance` member for which committed leaf payload each value came from.
-const BASE_SCENE: &str = "local://🎬️base-scene.json";
+const BASE_SCENE: &str = "shared://🪜️mutate-sequence-1-step/🎬️base-scene.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

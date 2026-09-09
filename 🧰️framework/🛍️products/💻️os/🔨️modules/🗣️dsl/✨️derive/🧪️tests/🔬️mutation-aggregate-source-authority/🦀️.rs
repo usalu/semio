@@ -2,7 +2,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🏛️mutation-aggregate-source-authority/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🏛️mutation-aggregate-source-authority/🔣️.json")).unwrap()
 }
 
 fn link_file(target: &Path, link: &Path) {
@@ -132,7 +132,7 @@ fn validates_explicit_aggregate_component_sources() {
             })
             .collect()
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🏛️mutation-aggregate-source-authority/🧫️fixtures/🧩️sources.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️mutation-aggregate-source-authority/🧩️sources.json")).unwrap();
     for vector in fixture["cases"].as_array().unwrap() {
         let name = vector["name"].as_str().unwrap();
         let (workspace, cwd, source, _) = materialize("direct-canonical");

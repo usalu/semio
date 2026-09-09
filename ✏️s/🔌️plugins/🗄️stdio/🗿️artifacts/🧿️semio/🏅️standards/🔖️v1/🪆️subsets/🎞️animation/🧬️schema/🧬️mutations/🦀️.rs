@@ -441,6 +441,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🌀️steps-the-spin-21469b/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🌀️steps-the-spin-channel-and-appends-a-keyframe/🦀️.rs"]
 mod set_snapshot_steps_the_spin_channel_and_appends_a_keyframe;
 //#endregion 🧪️FixtureCases

@@ -284,6 +284,7 @@ fn animate_presentation_retained_extent(command: &PresentationCommand, _snapshot
     }
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn animate_presentation_retained_reduce(
     command: &PresentationCommand,
     snapshot: &PresentationSnapshot,

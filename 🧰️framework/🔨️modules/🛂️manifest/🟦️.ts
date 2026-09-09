@@ -1131,6 +1131,31 @@ export type PluginUiRefreshRequest = {
   readonly labels?: { readonly hash?: string };
 };
 
+/** @emoji 🧩️ The three refresh sections that are NOT authored window/panel bodies. Each is its own
+ * retained surface whose reserved body key names the plugin accessor the runtime calls in place of
+ * `render` (`window_engagements`/`window_measures`/`tool_measures`), so they publish, re-publish and
+ * page through exactly the same `surface-visible` → mount → reconcile → patch law as a window body.
+ *
+ * Mirrors the Rust `UiRefreshSection` / `UI_REFRESH_SECTION_KEYS` / `UI_REFRESH_SECTION_BODY_KEYS` in
+ * `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`. Both sides are pinned against the one language-neutral
+ * declaration in `🛂️manifest/🧪️tests/🔬️ui-refresh-section/🔣️.json`, so neither can drift. */
+export type UiRefreshSectionKey = "engagements" | "measures" | "tools";
+
+export type UiRefreshSection = { readonly key: UiRefreshSectionKey; readonly bodyKey: string };
+
+export const UI_REFRESH_SECTIONS: readonly UiRefreshSection[] = [
+  { key: "engagements", bodyKey: "framework.section.engagements" },
+  { key: "measures", bodyKey: "framework.section.measures" },
+  { key: "tools", bodyKey: "framework.section.tools" },
+];
+
+/** @emoji 🎯️ Projects host-owned context for a section surface — the FULL view state, unnarrowed:
+ * `window_measures`/`window_engagements` iterate `windowInstances` and re-project each instance
+ * themselves, and `tool_measures` keys off `activeToolId`, so narrowing here would blind all three. */
+export function sectionViewContext(view: PluginViewState): PluginViewState {
+  return { ...view };
+}
+
 /** @emoji 🐢️ `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
 export type PluginUiRefreshSectionResponse = { readonly key: string; readonly hash: string; readonly value?: unknown };
 

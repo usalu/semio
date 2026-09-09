@@ -19,8 +19,8 @@ type Snapshot = Readonly<Record<string, string>>;
 
 const TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
 const SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-ledger-boundaries.json");
-const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-protocol.json");
+const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json");
+const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🤝️transaction-protocol/🔣️.json");
 const NORMALIZATION_MODULE = process.env.SEMIO_TRANSACTION_V2_MODULE ?? resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const FIXTURE_SCHEMA = process.env.SEMIO_TRANSACTION_V2_SCHEMA ?? resolve(getWorkspaceRoot(), SCHEMA_REL);
 const FIXTURE_RUN_ID = process.env.SEMIO_TRANSACTION_V2_RUN_ID ?? `${process.pid}-${crypto.randomUUID()}`;
@@ -574,7 +574,7 @@ function expectEmptyPlan(row: Fixture): void {
 //#region 🧾️TransactionV2
 describe("transaction plan journal v2 aggregate", () => {
   test("keeps the language-neutral golden aligned with owned no-follow enumeration", async () => {
-    const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-harness-retention.json"), "utf8"));
+    const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"), "utf8"));
     const ts = await import("typescript");
     const launcher = ts.createSourceFile(harness.launcherPath, readFileSync(join(getWorkspaceRoot(), harness.launcherPath), "utf8"), ts.ScriptTarget.Latest, true);
     const testSource = ts.createSourceFile(harness.testPath, readFileSync(join(getWorkspaceRoot(), harness.testPath), "utf8"), ts.ScriptTarget.Latest, true);

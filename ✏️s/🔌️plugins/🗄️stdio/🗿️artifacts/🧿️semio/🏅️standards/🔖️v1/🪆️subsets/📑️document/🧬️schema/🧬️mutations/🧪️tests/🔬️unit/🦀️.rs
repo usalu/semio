@@ -189,10 +189,19 @@ fn apply_valid(diff: &SemioDocumentDiff, base: &SemioDocumentSnapshot) -> SemioD
     MutationDiff::apply(diff, base).expect("valid Semio document diff fixture")
 }
 
+/// 🖼️ Supplies the existing image required by the removal law's starting document.
+fn law_fixture(mutation: &SemioDocumentMutation) -> SemioDocumentSnapshot {
+    let mut base = fixture();
+    if matches!(mutation, SemioDocumentMutation::RemoveImage(_)) {
+        base.images.push(DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1] });
+    }
+    base
+}
+
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
-        let base = fixture();
+        let base = law_fixture(&mutation);
         let diff_direct = Mutation::diff(&mutation, &base);
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
@@ -209,7 +218,7 @@ async fn mutation_diff_law() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_law() {
     for mutation in sample_mutations() {
-        let base = fixture();
+        let base = law_fixture(&mutation);
 
         let mut round_tripped = base.clone();
         apply_semio_document_mutation(&mut round_tripped, &mutation);

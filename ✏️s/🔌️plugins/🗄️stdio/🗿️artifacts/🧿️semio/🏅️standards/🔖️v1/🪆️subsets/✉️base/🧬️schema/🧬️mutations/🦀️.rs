@@ -580,6 +580,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-a60559/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
 //#endregion 🧪️FixtureCases

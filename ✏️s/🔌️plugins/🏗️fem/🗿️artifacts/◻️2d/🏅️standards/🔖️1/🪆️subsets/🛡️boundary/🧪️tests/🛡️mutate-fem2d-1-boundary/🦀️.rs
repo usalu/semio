@@ -36,7 +36,7 @@ const UNOBSERVABLE: &[&str] = &[
 /// own local copy — see `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature`
 /// for the full derivation provenance.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
+const DERIVED_ASSET: &str = "shared://🛡️mutate-fem2d-1-boundary/🏗️timber-portal-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Scenarios
@@ -76,81 +76,81 @@ struct Vector {
 fn vector(scenario: &str) -> Vector {
     match scenario {
         "spec-vector-create-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🎯️outcome/🔣️.json"),
         },
         "frame-vector-create-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔻️props-the-canopy-b9d719/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔻️props-the-canopy-b9d719/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔻️props-the-canopy-b9d719/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔻️props-the-canopy-b9d719/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🔻️props-the-canopy-b9d719/🎯️outcome/🔣️.json"),
         },
         "reject-create-support-1" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚫️rejects-a-dangling-b0d60b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚫️rejects-a-dangling-b0d60b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚫️rejects-a-dangling-b0d60b/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🛡️create-support/🚫️rejects-a-dangling-b0d60b/🎯️outcome/🔣️.json"),
         },
         "spec-vector-delete-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/🎯️outcome/🔣️.json"),
         },
         "frame-vector-delete-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees-the-roof-tie-44562b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees-the-roof-tie-44562b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees-the-roof-tie-44562b/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees-the-roof-tie-44562b/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees-the-roof-tie-44562b/🎯️outcome/🔣️.json"),
         },
         "reject-delete-support-1" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/⛔️rejects-a-missing-23f3c3/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/⛔️rejects-a-missing-23f3c3/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/⛔️rejects-a-missing-23f3c3/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-support/⛔️rejects-a-missing-23f3c3/🎯️outcome/🔣️.json"),
         },
         "spec-vector-replace-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🎯️outcome/🔣️.json"),
         },
         "frame-vector-replace-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins-the-left-base-7891ec/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins-the-left-base-7891ec/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins-the-left-base-7891ec/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins-the-left-base-7891ec/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins-the-left-base-7891ec/🎯️outcome/🔣️.json"),
         },
         "reject-replace-support-1" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⛔️rejects-a-missing-afbf6d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⛔️rejects-a-missing-afbf6d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⛔️rejects-a-missing-afbf6d/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/⛔️rejects-a-missing-afbf6d/🎯️outcome/🔣️.json"),
         },
         "reject-replace-support-2" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️denies-rename-63ec90/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️denies-rename-63ec90/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️denies-rename-63ec90/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/🪪️denies-rename-63ec90/🎯️outcome/🔣️.json"),
         },
         "reject-replace-support-3" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/👻️dangling-node-98d979/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/👻️dangling-node-98d979/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/👻️dangling-node-98d979/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-support/👻️dangling-node-98d979/🎯️outcome/🔣️.json"),
         },
         other => panic!("🛡️mutate-fem2d-1-boundary: no committed specification vector is registered for scenario {other:?}"),
     }
@@ -251,7 +251,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, step)| step.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://🛡️mutate-fem2d-1-boundary/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }

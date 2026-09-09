@@ -33,10 +33,10 @@ const KINDS: &[&str] = &["change-merge-policy"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-merge-policy" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-merge-policy: no specification vector registered for kind {other:?}"),
     }

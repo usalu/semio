@@ -279,7 +279,7 @@ async function verifyIndependentOracles(rawPath: string, corePath: string, descr
 }
 
 async function runCatalogRootContractTests(root: string): Promise<void> {
-  const fixtureRoot = join(root, "🧫️fixtures", "🌳️catalog-root");
+  const fixtureRoot = join(root, "../..", "🧫️fixtures", "🌳️catalog-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
     packageId: string;
     vectors: { raw: string; core: string; distinct: boolean }[];
@@ -654,7 +654,7 @@ function readScannedText(path: string): string | undefined {
 /** 🖊️ Checks codec ownership against an independent JSON Schema oracle and the framework source tree. */
 async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const fixtureRoot = join(root, "🧫️fixtures/🖊️dwg-artifact-ownership");
+  const fixtureRoot = join(root, "../../🧫️fixtures/🖊️dwg-artifact-ownership");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { path: string; allowed: boolean }[]; forbiddenFrameworkPatterns: string[] };
   const validate = await compileStdioScopeExport(join(root, "../.."), "StdioDwgArtifactOwnership");
   const ownsCodec = (path: string): boolean => {
@@ -707,7 +707,7 @@ class HomeIoSurfaceScript extends BundleScript {
     const mode = segments[0] ?? "source";
     if (mode !== "source" && mode !== "native") throw new Error("home-io-surface expects source|native");
     const { default: assert } = await import("node:assert/strict");
-    const fixtureRoot = join(this.root, "🧫️fixtures/🏠️home-io-surface");
+    const fixtureRoot = join(this.root, "../../🧫️fixtures/🏠️home-io-surface");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as HomeIoSurfaceFixture;
     const validate = await compileStdioScopeExport(join(this.root, "../.."), "StdioHomeIoSurface");
     assert(validate(fixture), JSON.stringify(validate.errors));

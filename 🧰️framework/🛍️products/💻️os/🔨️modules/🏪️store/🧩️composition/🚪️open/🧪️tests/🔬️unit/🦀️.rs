@@ -28,7 +28,7 @@ fn retire_request(request: &mut MemberOpenRequest) {
 #[test]
 fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
     use semio_framework_job::{root_cancel_token, StepBudget};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["framing"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();
         for fuel in [1, 2, 13] {
@@ -100,7 +100,7 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
 
 #[test]
 fn member_open_request_rejection_retains_exact_pages_and_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let bytes = row["bytes"].as_u64().unwrap() as usize;
         let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: bytes.max(1).div_ceil(OWNED_SCHEMA_DECODE_PAGE_BYTES), maximum_bytes: bytes.max(1) }).unwrap();

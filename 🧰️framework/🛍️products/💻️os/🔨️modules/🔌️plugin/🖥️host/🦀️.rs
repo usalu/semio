@@ -34,8 +34,8 @@ mod ui_patch_component_tests;
 pub mod runtime;
 
 use semio_framework::{
-    kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
     DslValue, PluginManifest,
+    kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
 };
 use semio_framework_actor::ActorId as RuntimeActorId;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
@@ -63,26 +63,34 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 /// 🧯️ Errors from the host's engine/component/call-boundary plumbing (`SharedWasmtimeEngine`,
 /// `WasmtimeRuntime`, `PluginInstanceHandle`'s post-turn job dispatch).
+/// 🗝️ Conflicting ownership of one composer route.
+#[derive(Debug)]
+pub struct IoRouteConflict {
+    pub key: semio_framework::IoKey,
+    pub existing_plugin: String,
+    pub incoming_plugin: String,
+}
+
+/// 🛤️ Conflicting ownership of one dialect conversion route.
+#[derive(Debug)]
+pub struct IoEntryRouteConflict {
+    pub from: semio_framework::io_schema::ArtifactDialect,
+    pub into: semio_framework::io_schema::ArtifactDialect,
+    pub existing_plugin: String,
+    pub incoming_plugin: String,
+}
+
 #[derive(Debug)]
 pub enum PluginHostError {
     Io(std::io::Error),
     Json(String),
     Wasmtime(String),
     Plugin(String),
-    IoRouteConflict {
-        key: semio_framework::IoKey,
-        existing_plugin: String,
-        incoming_plugin: String,
-    },
+    IoRouteConflict(Box<IoRouteConflict>),
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW `(ArtifactDialect,
     /// ArtifactDialect)`-keyed graph's own conflict — separate from `IoRouteConflict` above (OLD
     /// `IoKey`-keyed graph), since the two mechanisms are additive and independently registered.
-    IoEntryRouteConflict {
-        from: semio_framework::io_schema::ArtifactDialect,
-        into: semio_framework::io_schema::ArtifactDialect,
-        existing_plugin: String,
-        incoming_plugin: String,
-    },
+    IoEntryRouteConflict(Box<IoEntryRouteConflict>),
     PluginRuntimeConflict {
         plugin_id: String,
     },
@@ -96,8 +104,8 @@ impl std::fmt::Display for PluginHostError {
             Self::Json(error) => write!(formatter, "json: {error}"),
             Self::Wasmtime(message) => write!(formatter, "wasmtime: {message}"),
             Self::Plugin(message) => write!(formatter, "plugin: {message}"),
-            Self::IoRouteConflict { key, existing_plugin, incoming_plugin } => write!(formatter, "io route conflict for {key:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it"),
-            Self::IoEntryRouteConflict { from, into, existing_plugin, incoming_plugin } => write!(formatter, "io entry route conflict for {from:?} -> {into:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it"),
+            Self::IoRouteConflict(conflict) => write!(formatter, "io route conflict for {:?}: {} already owns it; {} cannot replace it", conflict.key, conflict.existing_plugin, conflict.incoming_plugin),
+            Self::IoEntryRouteConflict(conflict) => write!(formatter, "io entry route conflict for {:?} -> {:?}: {} already owns it; {} cannot replace it", conflict.from, conflict.into, conflict.existing_plugin, conflict.incoming_plugin),
             Self::PluginRuntimeConflict { plugin_id } => write!(formatter, "plugin runtime conflict for {plugin_id}"),
             Self::LockPoisoned(name) => write!(formatter, "{name} lock poisoned"),
         }
@@ -654,7 +662,7 @@ pub trait GuestRuntime: Send + Sync {
 /// see that variant's own doc comment.
 #[allow(dead_code)]
 enum ScriptedOutcome {
-    Turn(TurnResult),
+    Turn(Box<TurnResult>),
     Job(JobStep),
     #[cfg(test)]
     PendingJob {
@@ -797,7 +805,7 @@ impl MockGuestRuntime {
     }
 
     pub async fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
-        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(result));
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(Box::new(result)));
     }
 
     pub async fn script_guest_fault(&self, actor: RuntimeActorId, fault: semio_framework::Fault) {
@@ -930,7 +938,7 @@ impl GuestRuntime for MockGuestRuntime {
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
         let queue = scripts.entry(inst.actor.0).or_default();
         match queue.pop_front() {
-            Some(ScriptedOutcome::Turn(result)) => Ok(result),
+            Some(ScriptedOutcome::Turn(result)) => Ok(*result),
             Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
             Some(ScriptedOutcome::PendingJob { .. }) => Err(TurnFault::Trapped("scripted outcome was a pending job step, not a turn".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
@@ -1640,7 +1648,7 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
     }
 
     fn now_ms(&mut self) -> i64 {
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
     }
 
     fn trace_span(&mut self, name: String) {
@@ -2085,6 +2093,7 @@ impl GuestRuntime for WasmtimeRuntime {
 /// test in this crate keeps a second handle to the SAME `WasmtimeRuntime` for out-of-band inherent
 /// calls — so it stays a bare value, one indirection (the enum's own `Arc<GuestRuntimes>` wrapper at
 /// every call site) instead of two.
+#[cfg_attr(target_pointer_width = "64", expect(clippy::large_enum_variant, reason = "The runtime is retained behind shared Arc owners; another box would add indirection and allocation to the dominant native runtime."))]
 pub enum GuestRuntimes {
     Owned(OwnedRuntime),
     Wasmtime(WasmtimeRuntime),
@@ -2553,7 +2562,7 @@ async fn kernel_message_endpoint_to_wit_reverse(endpoint: wit_types::MessageEndp
 }
 
 async fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
-    let body_key = surface.split_once(':').map(|(_, body_key)| body_key).unwrap_or(surface);
+    let body_key = surface.split_once(':').map_or(surface, |(_, body_key)| body_key);
     wit_ui::SurfaceRef { instance: instance_id, surface: body_key.to_owned() }
 }
 
@@ -2711,11 +2720,13 @@ mod wasmtime_runtime_tests;
 const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
 
 /// 🔁️ One retained-waker future polled once per finite shared-pool turn.
+type GuestRelayFailureHandler = Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>;
+
 struct GuestRelayPoolFuture {
     pool: WorkerPool,
     lane: Lane,
     future: Mutex<Option<std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>>>>,
-    failure_handler: Mutex<Option<Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>>>,
+    failure_handler: Mutex<Option<GuestRelayFailureHandler>>,
     scheduled: AtomicBool,
     wake_requested: AtomicBool,
     complete: AtomicBool,
@@ -2732,7 +2743,7 @@ impl GuestRelayPoolFuture {
         Self::spawn_inner(pool, lane, future, Box::new(failure_handler));
     }
 
-    fn spawn_inner(pool: WorkerPool, lane: Lane, future: impl std::future::Future<Output = ()> + Send + 'static, failure_handler: Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>) {
+    fn spawn_inner(pool: WorkerPool, lane: Lane, future: impl std::future::Future<Output = ()> + Send + 'static, failure_handler: GuestRelayFailureHandler) {
         let task =
             Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), failure_handler: Mutex::new(Some(failure_handler)), scheduled: AtomicBool::new(false), wake_requested: AtomicBool::new(false), complete: AtomicBool::new(false) });
         task.schedule();
@@ -3143,18 +3154,20 @@ fn foreground_cancel_completion(result: Result<bool, TurnFault>, guest: &mut Gue
     }
 }
 
-async fn run_guest_relay_request(
+#[derive(Clone)]
+struct GuestRelayAttempt {
     runtime: Arc<GuestRuntimes>,
     instance: Arc<Mutex<GuestInstanceSlot>>,
     instance_gate: Arc<semio_framework_async::Semaphore>,
     pool: WorkerPool,
-    cancel: semio_framework_async::CancelToken,
-    _cancel_scheduled: Arc<AtomicBool>,
+    cancel_scheduled: Arc<AtomicBool>,
     cancel_admitted: Arc<AtomicBool>,
     job: u64,
-    request: GuestRelayRequest,
     sender: GuestRelayCompletionSender,
-) {
+}
+
+async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: semio_framework_async::CancelToken, request: GuestRelayRequest) {
+    let GuestRelayAttempt { runtime, instance, instance_gate, pool, cancel_scheduled: _cancel_scheduled, cancel_admitted, job, sender } = attempt;
     let permit = if matches!(&request, GuestRelayRequest::Cancel) {
         instance_gate.acquire_owned().await
     } else {
@@ -3222,18 +3235,8 @@ async fn run_guest_relay_request(
     sender.send(completion);
 }
 
-fn recover_guest_relay_failure(
-    runtime: Arc<GuestRuntimes>,
-    instance: Arc<Mutex<GuestInstanceSlot>>,
-    instance_gate: Arc<semio_framework_async::Semaphore>,
-    pool: WorkerPool,
-    job: u64,
-    cancel_scheduled: Arc<AtomicBool>,
-    cancel_admitted: Arc<AtomicBool>,
-    sender: GuestRelayCompletionSender,
-    request: GuestRelayRequestKind,
-    failure: GuestRelayPoolFailure,
-) {
+fn recover_guest_relay_failure(attempt: GuestRelayAttempt, request: GuestRelayRequestKind, failure: GuestRelayPoolFailure) {
+    let GuestRelayAttempt { runtime, instance, instance_gate, pool, cancel_scheduled, cancel_admitted, job, sender } = attempt;
     if let GuestRelayPoolFailure::Admission(kind) = failure {
         let detail = match kind {
             semio_framework_async::WorkerSubmitErrorKind::Shutdown => b"plugin instance quarantined after relay scheduler shutdown".to_vec(),
@@ -3258,7 +3261,7 @@ fn recover_guest_relay_failure(
                 Lane::UserVisible,
                 async move {
                     barrier.wait().await;
-                    recover_guest_relay_failure(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted, sender, request, GuestRelayPoolFailure::FuturePanicked);
+                    recover_guest_relay_failure(GuestRelayAttempt { runtime, instance, instance_gate, pool, cancel_scheduled, cancel_admitted, job, sender }, request, GuestRelayPoolFailure::FuturePanicked);
                 },
                 move |_| quarantine_guest_instance(&panic_instance, b"plugin instance quarantined after relay panic recovery panic".to_vec()),
             );
@@ -3411,34 +3414,18 @@ impl GuestColdRelayJob {
 
     fn submit(&mut self, request: GuestRelayRequest) {
         let slot = Arc::new(GuestRelayCompletionSlot::new());
-        let sender = GuestRelayCompletionSender::new(Arc::clone(&slot));
         let request_kind = request.kind();
-        GuestRelayPoolFuture::spawn_recoverable(
-            self.pool.clone(),
-            Lane::UserVisible,
-            run_guest_relay_request(
-                Arc::clone(&self.runtime),
-                Arc::clone(&self.instance),
-                Arc::clone(&self.instance_gate),
-                self.pool.clone(),
-                self.cancel.clone(),
-                Arc::clone(&self.cancel_scheduled),
-                Arc::clone(&self.cancel_admitted),
-                self.job,
-                request,
-                sender.clone(),
-            ),
-            {
-                let runtime = Arc::clone(&self.runtime);
-                let instance = Arc::clone(&self.instance);
-                let instance_gate = Arc::clone(&self.instance_gate);
-                let pool = self.pool.clone();
-                let job = self.job;
-                let cancel_scheduled = Arc::clone(&self.cancel_scheduled);
-                let cancel_admitted = Arc::clone(&self.cancel_admitted);
-                move |failure| recover_guest_relay_failure(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted, sender, request_kind, failure)
-            },
-        );
+        let attempt = GuestRelayAttempt {
+            runtime: Arc::clone(&self.runtime),
+            instance: Arc::clone(&self.instance),
+            instance_gate: Arc::clone(&self.instance_gate),
+            pool: self.pool.clone(),
+            cancel_scheduled: Arc::clone(&self.cancel_scheduled),
+            cancel_admitted: Arc::clone(&self.cancel_admitted),
+            job: self.job,
+            sender: GuestRelayCompletionSender::new(Arc::clone(&slot)),
+        };
+        GuestRelayPoolFuture::spawn_recoverable(self.pool.clone(), Lane::UserVisible, run_guest_relay_request(attempt.clone(), self.cancel.clone(), request), move |failure| recover_guest_relay_failure(attempt, request_kind, failure));
         self.pending = Some(slot);
     }
 
@@ -3636,7 +3623,7 @@ impl Drop for GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
-    fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, kind: String, input: Vec<u8>) -> Self {
+    fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, start: (String, Vec<u8>)) -> Self {
         Self {
             runtime,
             instance,
@@ -3646,7 +3633,7 @@ impl GuestColdRelayJob {
             cancel_scheduled: Arc::new(AtomicBool::new(false)),
             cancel_admitted: Arc::new(AtomicBool::new(false)),
             job,
-            start: Some((kind, input)),
+            start: Some(start),
             pending: None,
             publication: None,
             closing: false,
@@ -3747,6 +3734,7 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "Failed worker admission must retain the exact job and credits for bounded retirement without allocating on rejection.")]
 enum GuestRelayMountedOwner {
     Session(semio_framework_job::WorkerJobSession<GuestColdRelayJob>),
     Rejected(semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>),
@@ -3815,6 +3803,7 @@ enum GuestRelayMountedClose {
     Blocked { wake_registered: bool },
 }
 
+#[expect(clippy::large_enum_variant, reason = "The fixed registry allocates all slot storage before admission, including retained rejection and terminal owners.")]
 enum GuestRelayMountedSlot {
     Empty,
     Reserved { generation: u64, output: GuestRelayMountedOutput },
@@ -4387,7 +4376,7 @@ fn guest_relay_lifecycle_barrier(pool: &WorkerPool) -> Result<(), String> {
             let _ = sender.send(());
         }),
     );
-    semio_framework_async::block_on(async move { receiver.await }).map_err(|_| "relay lifecycle worker barrier closed".to_string())
+    semio_framework_async::block_on(receiver).map_err(|_| "relay lifecycle worker barrier closed".to_string())
 }
 
 fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool, detail: &'static str) -> Result<(), String> {
@@ -4400,8 +4389,8 @@ fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool
     Err(detail.to_string())
 }
 
-fn guest_relay_lifecycle_probe_session(control: Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
-    let job = GuestRelayLifecycleProbeJob { control: Arc::clone(&control), remaining, terminal_output, closing: false };
+fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
+    let job = GuestRelayLifecycleProbeJob { control: Arc::clone(control), remaining, terminal_output, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(generation),
         generation: semio_framework_job::Generation(generation),
@@ -4436,7 +4425,7 @@ fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) ->
         registry.next_generation.store(trace.generation, std::sync::atomic::Ordering::Release);
         let (index, generation) = registry.reserve().ok_or_else(|| "relay lifecycle slot unavailable".to_string())?;
         let control = Arc::new(GuestRelayLifecycleProbeControl::new());
-        let session = guest_relay_lifecycle_probe_session(Arc::clone(&control), generation, None, 2)?;
+        let session = guest_relay_lifecycle_probe_session(&control, generation, None, 2)?;
         registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
         let mut first_reason = None;
         for event in &trace.events {
@@ -4483,7 +4472,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
             if let Some(output) = event.strip_prefix("terminal:") {
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 control.wake();
-                let session = guest_relay_lifecycle_probe_session(control, generation, Some(output.as_bytes().to_vec()), 0)?;
+                let session = guest_relay_lifecycle_probe_session(&control, generation, Some(output.as_bytes().to_vec()), 0)?;
                 registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
                 for _ in 0..256 {
                     let _ = registry.pump(index, generation, std::task::Waker::noop());
@@ -4500,7 +4489,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
             } else if event == "reap-other" {
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 let (other_index, other_generation) = registry.reserve().ok_or_else(|| "relay lifecycle competing slot unavailable".to_string())?;
-                let session = guest_relay_lifecycle_probe_session(Arc::clone(&control), other_generation, None, 2)?;
+                let session = guest_relay_lifecycle_probe_session(&control, other_generation, None, 2)?;
                 registry.mount(other_index, other_generation, GuestRelayMountedOwner::LifecycleProbe(session));
                 registry.detach(other_index, other_generation);
                 guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle competing reaper did not park")?;
@@ -4662,7 +4651,7 @@ impl PluginInstanceHandle {
             },
             now_us: semio_framework_job::default_now_us,
         };
-        let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, kind.to_string(), input);
+        let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, (kind.to_string(), input));
         let (index, mounted_generation) = self.relay_registry.reserve().ok_or_else(|| PluginHostError::Plugin(format!("{kind} mounted relay registry is full")))?;
         let owner = match semio_framework_job::WorkerJobSession::try_new(relay, params) {
             Ok(session) => GuestRelayMountedOwner::Session(session),
@@ -4784,7 +4773,6 @@ mod guest_cold_relay_tests;
 /// `WasmPluginRuntime`. Kept (not deleted) because that fixture still needs it; `cfg_attr` silences
 /// the resulting "never used" warning on a plain (non-test) `--lib` build without hiding a REAL
 /// dead-code case under a blanket `#[allow]`.
-
 //#region 📈️RuntimeMetricsPublisher
 /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): native-side sampling + 2Hz cadence gate for bus
 /// topic `os.runtime.metrics` — `semio_framework_actor::KernelMetrics`'s own doc comment: "the host
@@ -5025,7 +5013,7 @@ struct IoEntryRoute {
 
 /// 🌉️ Inverse of `io_schema::Confidence::rank()` — the WIT `io-sniff` guest export returns a raw
 /// `u8` rank byte, so the host reconstructs the typed `Confidence` from it before merging.
-async fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
+fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
     match rank {
         3 => semio_framework::io_schema::Confidence::High,
         2 => semio_framework::io_schema::Confidence::Medium,
@@ -5037,7 +5025,7 @@ async fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confiden
 /// 🌉️ Inverse of `io_schema::IoFidelity::rank()` — mirrors `io::io_mechanism::rank_to_fidelity`
 /// (this file cannot import that private fn from `🚪️io/**`, out of this wave's boundary, so the
 /// tiny 4-arm match is duplicated here rather than requesting a visibility patch for one line).
-async fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
+fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
     match rank {
         3 => semio_framework::io_schema::IoFidelity::Exact,
         2 => semio_framework::io_schema::IoFidelity::Canonical,
@@ -5051,13 +5039,10 @@ async fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity
 /// a DIFFERENT data structure (owner-aware, built from N plugins' wire rosters) than the guest-local
 /// `io_mechanism`'s own `&'static IoEntry` registry; the algorithm is identical, only the storage
 /// differs.
-async fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
-    // 🚫️async: R10 residue shape 1 — `IoFidelity::rank`/`ArtifactDialect::to_coordinate` are
-    // external `🚪️io` async accessors that cannot be awaited inside `Iterator::map`'s sync
-    // closure, so both are hoisted into plain loops instead.
+fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
     let mut min_fidelity: Option<u8> = None;
     for hop in hops {
-        let rank = hop.fidelity.rank().await;
+        let rank = hop.fidelity.rank();
         min_fidelity = Some(min_fidelity.map_or(rank, |current| current.min(rank)));
     }
     let mut coordinates = Vec::with_capacity(hops.len());
@@ -5074,7 +5059,7 @@ async fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -
 /// plus sorting the FULL candidate set at the end in `resolve_io_route` (never short-circuiting on
 /// the first hit) is what makes the result independent of plugin load order — proven by
 /// `io_router_route_is_deterministic_across_load_order` below.
-async fn walk_io_routes(
+fn walk_io_routes(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     current: &semio_framework::io_schema::ArtifactDialect,
     into: &semio_framework::io_schema::ArtifactDialect,
@@ -5096,7 +5081,7 @@ async fn walk_io_routes(
             candidates.push(path.clone());
         } else {
             visited.insert(hop_into.clone());
-            Box::pin(walk_io_routes(graph, hop_into, into, remaining_hops - 1, path, visited, candidates)).await;
+            walk_io_routes(graph, hop_into, into, remaining_hops - 1, path, visited, candidates);
             visited.remove(hop_into);
         }
         path.pop();
@@ -5107,12 +5092,7 @@ async fn walk_io_routes(
 /// multi-plugin graph instead of one plugin's own local registry. Pure — no lock, no wasm call —
 /// so it is directly unit-testable with a synthetic graph (`io_router_route_is_deterministic_
 /// across_load_order`, `io_router_route_prefers_higher_minimum_fidelity`, below).
-async fn resolve_io_route(
-    graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
-    from: &semio_framework::io_schema::ArtifactDialect,
-    into: &semio_framework::io_schema::ArtifactDialect,
-    max_hops: u8,
-) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
     let max_hops = max_hops.min(3);
     if max_hops == 0 {
         return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
@@ -5121,7 +5101,7 @@ async fn resolve_io_route(
     let mut path: Vec<semio_framework::io_schema::IoEntryDescriptor> = Vec::new();
     let mut visited: BTreeSet<semio_framework::io_schema::ArtifactDialect> = BTreeSet::new();
     visited.insert(from.clone());
-    walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
+    walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates);
     if candidates.is_empty() {
         return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
     }
@@ -5129,17 +5109,17 @@ async fn resolve_io_route(
     // the sync `sort_by` comparator rather than called from inside it.
     let mut ranked: Vec<(_, Vec<semio_framework::io_schema::IoEntryDescriptor>)> = Vec::with_capacity(candidates.len());
     for candidate in candidates {
-        let rank = io_route_rank(&candidate).await;
+        let rank = io_route_rank(&candidate);
         ranked.push((rank, candidate));
     }
     ranked.sort_by(|a, b| a.0.cmp(&b.0));
     let best = ranked.into_iter().next().expect("candidates checked non-empty above").1;
     let mut min_rank: Option<u8> = None;
     for hop in &best {
-        let rank = hop.fidelity.rank().await;
+        let rank = hop.fidelity.rank();
         min_rank = Some(min_rank.map_or(rank, |current| current.min(rank)));
     }
-    let fidelity = rank_to_io_fidelity(min_rank.expect("a route has at least one hop")).await;
+    let fidelity = rank_to_io_fidelity(min_rank.expect("a route has at least one hop"));
     Ok(semio_framework::io_schema::IoRoute { hops: best, fidelity })
 }
 
@@ -5148,12 +5128,12 @@ async fn resolve_io_route(
 /// claim a `(from, into)` key a DIFFERENT plugin already owns? `None` means the merge is safe
 /// (either a brand-new key, or `plugin_id` re-claiming its OWN key — idempotent). Extracted as its
 /// own function so the conflict rule is unit-testable without a real `Arc<WasmPluginRuntime>`.
-async fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
+fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
     for descriptor in incoming {
         let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
         if let Some(current) = existing.get(&key) {
             if current.owner != plugin_id {
-                return Some(PluginHostError::IoEntryRouteConflict { from: key.0, into: key.1, existing_plugin: current.owner.clone(), incoming_plugin: plugin_id.to_string() });
+                return Some(PluginHostError::IoEntryRouteConflict(Box::new(IoEntryRouteConflict { from: key.0, into: key.1, existing_plugin: current.owner.clone(), incoming_plugin: plugin_id.to_string() })));
             }
         }
     }
@@ -5165,7 +5145,7 @@ async fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plug
 /// error message, or `None` if the whole route is safe to execute. Extracted as its own function so
 /// the guard is unit-testable without a real `Arc<WasmPluginRuntime>` (`run_io` needs one for every
 /// OTHER hop it actually executes; this predicate needs none).
-async fn route_reenters_calling_plugin<'route>(
+fn route_reenters_calling_plugin<'route>(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     route: &'route semio_framework::io_schema::IoRoute,
     calling_plugin_id: &str,
@@ -5230,11 +5210,11 @@ impl IoRouter {
         for key in &candidate_routes {
             if let Some(existing_plugin) = state.routes.get(key) {
                 if existing_plugin != plugin_id {
-                    return Err(PluginHostError::IoRouteConflict { key: key.clone(), existing_plugin: existing_plugin.clone(), incoming_plugin: plugin_id.to_owned() });
+                    return Err(PluginHostError::IoRouteConflict(Box::new(IoRouteConflict { key: key.clone(), existing_plugin: existing_plugin.clone(), incoming_plugin: plugin_id.to_owned() })));
                 }
             }
         }
-        if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, io_entries).await {
+        if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, io_entries) {
             return Err(conflict);
         }
         state.runtimes.entry(plugin_id.to_owned()).or_insert(handle);
@@ -5272,17 +5252,18 @@ impl IoRouter {
     pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let key_text = std::str::from_utf8(key_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let key: semio_framework::IoKey = dsl::os_pack::json::from_json_str(key_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-        let owner = state
-            .routes
-            .get(&key)
-            .cloned()
-            .ok_or_else(|| PluginHostError::Plugin(format!("no plugin registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset)))?;
-        if owner == calling_plugin_id {
-            return Err(PluginHostError::Plugin(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)")));
-        }
-        let handle = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")))?;
-        drop(state);
+        let handle = {
+            let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+            let owner = state
+                .routes
+                .get(&key)
+                .cloned()
+                .ok_or_else(|| PluginHostError::Plugin(format!("no plugin registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset)))?;
+            if owner == calling_plugin_id {
+                return Err(PluginHostError::Plugin(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)")));
+            }
+            state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")))?
+        };
         handle.compose(key_bytes, sources_bytes).await
     }
 
@@ -5311,7 +5292,7 @@ impl IoRouter {
         let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
         let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-        let route = resolve_io_route(&state.io_entries, &from, &into, 3).await?;
+        let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
         drop(state);
         Ok(dsl::os_pack::json::to_json_string(&route).into_bytes())
     }
@@ -5330,8 +5311,8 @@ impl IoRouter {
         let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
         let hops = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-            let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3).await?;
-            if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id).await {
+            let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3)?;
+            if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id) {
                 return Err(PluginHostError::Plugin(format!(
                     "io-run refused: hop {} -> {} is owned by the calling plugin `{calling_plugin_id}` itself — executing it would re-enter that plugin's own in-flight, non-reentrant store lock",
                     reentrant_hop.0.to_coordinate(),
@@ -5384,7 +5365,7 @@ impl IoRouter {
             let carrier_coord = carrier.to_coordinate();
             let into_coord = into.to_coordinate();
             let rank = runtime.io_sniff(&carrier_coord, &into_coord, &payload_bytes).await?;
-            let confidence = rank_to_io_confidence(rank).await;
+            let confidence = rank_to_io_confidence(rank);
             if confidence != semio_framework::io_schema::Confidence::None {
                 found.push((into, confidence));
             }
@@ -5393,7 +5374,7 @@ impl IoRouter {
         // external async accessors, so the sort key is precomputed before the sync `sort_by`.
         let mut decorated = Vec::with_capacity(found.len());
         for (dialect, confidence) in found {
-            let rank = confidence.rank().await;
+            let rank = confidence.rank();
             let coord = dialect.to_coordinate();
             decorated.push((rank, coord, dialect, confidence));
         }
@@ -5578,7 +5559,7 @@ impl ArtifactInferenceRouter {
             }
             candidate.insert(key, (plugin_id.to_string(), item.clone()));
         }
-        validate_inference_dependency_graph(&candidate).await?;
+        validate_inference_dependency_graph(&candidate)?;
         *routes = candidate;
         drop(routes);
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), handle);
@@ -5693,7 +5674,7 @@ impl ArtifactInferenceRouter {
 /// `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own field doc). Genuinely new logic —
 /// distinct from W0-C's plugin-manifest toposort, a different domain (inference schemas within one
 /// artifact kind, not plugins).
-async fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
+fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
     let mut adjacency: BTreeMap<(&str, &str), Vec<&str>> = BTreeMap::new();
     for ((artifact_kind, inference_schema), (_, item)) in routes {
         adjacency.entry((artifact_kind.as_str(), inference_schema.as_str())).or_default().extend(item.depends_on.iter().map(|dep| dep.as_str()));
@@ -5859,7 +5840,7 @@ impl PluginGraph {
         Self { state: Mutex::new(BTreeMap::new()) }
     }
 
-    async fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
+    fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
         self.state.lock().map_err(|_| PluginGraphError::LockPoisoned)
     }
 
@@ -5869,7 +5850,7 @@ impl PluginGraph {
     /// dispatch time — an owner unloaded after registration, or a contributor loaded against a
     /// different build — so the transaction path asks again rather than assuming.
     pub async fn contribution_block(&self, contributor: &str, owner: &str) -> Result<Option<(&'static str, String)>, PluginGraphError> {
-        let state = self.lock().await?;
+        let state = self.lock()?;
         let Some(contributor_manifest) = state.get(contributor) else {
             return Ok(Some(("transaction.dependency-missing", format!("contributor `{contributor}` is not loaded"))));
         };
@@ -5890,7 +5871,7 @@ impl PluginGraph {
     /// before committing — an invalid addition (missing dependency, version mismatch, cycle)
     /// leaves the previously-registered set untouched.
     pub async fn register(&self, manifest: PluginManifest) -> Result<(), PluginGraphError> {
-        let mut state = self.lock().await?;
+        let mut state = self.lock()?;
         let mut candidate = state.clone();
         candidate.insert(manifest.plugin_id.clone(), manifest);
         let list: Vec<PluginManifest> = candidate.values().cloned().collect();
@@ -5898,7 +5879,7 @@ impl PluginGraph {
         // CYCLE — per W0-C's own report: "a real cycle among present plugins passes validation and
         // is caught by the toposort leftover-set walk". `validate_dependency_graph` alone only
         // catches missing-dependency/version-mismatch.
-        semio_framework::resolve_load_order(&list).await?;
+        semio_framework::resolve_load_order(&list)?;
         *state = candidate;
         Ok(())
     }
@@ -5908,11 +5889,11 @@ impl PluginGraph {
     /// is re-checked against `new_manifest.version`, so a reload that would break a live
     /// dependent's contribution is rejected before the swap. Does not mutate on failure.
     pub async fn prepare_hot_reload(&self, new_manifest: &PluginManifest) -> Result<(), PluginGraphError> {
-        let state = self.lock().await?;
+        let state = self.lock()?;
         let mut candidate = state.clone();
         candidate.insert(new_manifest.plugin_id.clone(), new_manifest.clone());
         let list: Vec<PluginManifest> = candidate.values().cloned().collect();
-        semio_framework::resolve_load_order(&list).await?;
+        semio_framework::resolve_load_order(&list)?;
         Ok(())
     }
 
@@ -5933,31 +5914,31 @@ impl PluginGraph {
 
     /// ✂️ Removes `plugin_id`'s registration — callers MUST call `guard_unload` first.
     pub async fn unregister(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
-        let mut state = self.lock().await?;
+        let mut state = self.lock()?;
         state.remove(plugin_id).ok_or_else(|| PluginGraphError::Unknown { plugin_id: plugin_id.to_string() })?;
         Ok(())
     }
 
     /// 🔢️ Deterministic dependency-respecting load order over every currently registered plugin.
     pub async fn load_order(&self) -> Result<Vec<String>, PluginGraphError> {
-        let state = self.lock().await?;
+        let state = self.lock()?;
         let list: Vec<PluginManifest> = state.values().cloned().collect();
-        Ok(semio_framework::resolve_load_order(&list).await?)
+        Ok(semio_framework::resolve_load_order(&list)?)
     }
 
     /// 👥️ Direct dependents of `plugin_id`, sorted.
     pub async fn dependents(&self, plugin_id: &str) -> Result<Vec<String>, PluginGraphError> {
-        let state = self.lock().await?;
+        let state = self.lock()?;
         let list: Vec<PluginManifest> = state.values().cloned().collect();
-        Ok(semio_framework::dependents(&list, plugin_id).await)
+        Ok(semio_framework::dependents(&list, plugin_id))
     }
 
     pub async fn manifest(&self, plugin_id: &str) -> Result<Option<PluginManifest>, PluginGraphError> {
-        Ok(self.lock().await?.get(plugin_id).cloned())
+        Ok(self.lock()?.get(plugin_id).cloned())
     }
 
     pub async fn is_registered(&self, plugin_id: &str) -> Result<bool, PluginGraphError> {
-        Ok(self.lock().await?.contains_key(plugin_id))
+        Ok(self.lock()?.contains_key(plugin_id))
     }
 }
 
@@ -6671,7 +6652,7 @@ impl AppRouter {
         let mut breach: Option<semio_framework::Fault> = None;
         for app in &manifest.apps {
             let owner = state.owners.entry(app.dialect.artifact_kind.clone()).or_insert_with(|| plugin_id.to_string()).clone();
-            if owner != plugin_id && !state.dependencies.get(plugin_id).map(|deps| deps.contains(&owner)).unwrap_or(false) {
+            if owner != plugin_id && !state.dependencies.get(plugin_id).is_some_and(|deps| deps.contains(&owner)) {
                 breach = Some(
                     semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
@@ -6686,7 +6667,7 @@ impl AppRouter {
             if state.registered_refs.contains(&(app_ref.plugin_id.clone(), app_ref.app_id.clone())) || !staged_refs.insert(app_ref.app_id.clone()) {
                 breach = Some(
                     semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("surface.conflict"), format!("surface `{}` is already registered for plugin `{}`", app_ref.app_id, app_ref.plugin_id))
-                        .with_scope(semio_framework::FaultScope { plugin_id: Some(app_ref.plugin_id.clone()), app_id: Some(app_ref.app_id.clone()), ..Default::default() }),
+                        .with_scope(semio_framework::FaultScope { plugin_id: Some(app_ref.plugin_id), app_id: Some(app_ref.app_id), ..Default::default() }),
                 );
                 break;
             }
@@ -6785,7 +6766,7 @@ impl AppRouter {
         for dialect in dialects {
             let Some(owner) = state.owners.get(&dialect.artifact_kind) else { continue };
             for role in [semio_framework::AppRole::Viewer, semio_framework::AppRole::Editor] {
-                let has_surface = state.surfaces.get(&(dialect.clone(), role)).map(|refs| !refs.is_empty()).unwrap_or(false);
+                let has_surface = state.surfaces.get(&(dialect.clone(), role)).is_some_and(|refs| !refs.is_empty());
                 if !has_surface {
                     gaps.push(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,

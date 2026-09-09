@@ -17,7 +17,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await testFixtureSweepExtraction();
-    const fixture = JSON.parse(readFileSync(join(this.root, "../../🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(this.root, "../../🧫️fixtures/🔣️.json"), "utf8"));
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot, cargoArgs: rest, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000,
       env: { ...process.env, RUST_TEST_NOCAPTURE: "1" },

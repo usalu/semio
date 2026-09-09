@@ -56,7 +56,7 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
         events: Vec<Value>,
         expected: UiPreferences,
     }
-    let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧪️tests/🎚️canonical-os-ui-preferences/🧫️fixtures/🔁️event-replay.json")).expect("shared event fixture");
+    let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json")).expect("shared event fixture");
     let events = fixture
         .events
         .iter()

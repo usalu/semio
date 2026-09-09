@@ -59,9 +59,9 @@ catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️cata
 
 [[package.metadata.semio.assets]]
 kind = "static-dir"
-route = "/infinite-fixture"
+route = "/infinite-assets"
 app = "s.puzzle.puzzle3d@1/*#editor"
-root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
+root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

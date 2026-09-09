@@ -38,7 +38,7 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 
 // #region 🧫️Vectors
 /** 🧫️ The declared fixture. Its DIRECTORY is the mutation vocabulary; every vector is found beneath it. */
-const VECTOR_ROOT_URI = "asset://🧬️schema/🧬️mutations/🔣️.json";
+const VECTOR_ROOT_URI = "shared://🧬️mutations/🔣️.json";
 const SCENARIOS_DIR = "🧪️tests";
 const LEAF_SCHEMA = "🧬️schema/🔣️.json";
 const MEMBERS = ["schema", "camera", "nodes", "edges", "meta"] as const;

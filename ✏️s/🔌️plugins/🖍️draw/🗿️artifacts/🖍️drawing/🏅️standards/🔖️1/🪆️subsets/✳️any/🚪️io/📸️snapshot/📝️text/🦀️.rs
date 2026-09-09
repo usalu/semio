@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::DrawingSnapshot;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `drawing`'s DSL (`store::ArtifactDsl`).
-pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ P6 handcrafted `ArtifactDsl` (derive no longer emits this trait) — relocated from

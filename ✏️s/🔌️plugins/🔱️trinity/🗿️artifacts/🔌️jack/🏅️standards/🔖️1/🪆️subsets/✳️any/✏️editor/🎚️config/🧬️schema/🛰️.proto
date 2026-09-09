@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.app.trinity.jack;
-message JackConfig {
-  // @state config
-  string jack_query = 1;
-}

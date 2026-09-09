@@ -94,3 +94,15 @@ Read-only MCP tool schema capture; no ticket or goal mutation was made. Final cl
 }
 ```
 
+
+## Current Ledger Candidate
+
+Refreshed a provisional source-path union from all five exact ownership ledgers. This is not the final close request: active repairs can add paths, so it must be regenerated after acceptance. Missing historical paths remain listed as touches only; no deletion attribution is inferred from absence. The Nx ledger is consumed only from its explicit Ticket Close Files section. Ticket Markdown reports and the retained PDF consumer inputs are included separately. Raw candidate: `🗑️generated/ticket-close-candidate-current.json`.
+
+- `📓️artifact-execution-file-ledger.md`: 713 unique source/report path entries.
+- `📓️nx-owned-file-ledger.md`: 564 unique source/report path entries.
+- `📓️registry-execution-owned-files.md`: 859 unique source/report path entries.
+- `📓️coordinator-owned-files.md`: 661 unique source/report path entries.
+- `📓️brep-tolerance-touched-path-ledger.md`: 112 unique source/report path entries.
+
+Union: 2805 source paths, 609 currently absent historical paths, 69 ticket Markdown reports, 2 retained consumer inputs.

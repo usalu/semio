@@ -272,6 +272,7 @@ fn gis2d_retained_extent(command: &Gis2dCommand, _snapshot: &GisMapSnapshot, _in
     GIS2D_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn gis2d_retained_reduce(
     command: &Gis2dCommand,
     snapshot: &GisMapSnapshot,

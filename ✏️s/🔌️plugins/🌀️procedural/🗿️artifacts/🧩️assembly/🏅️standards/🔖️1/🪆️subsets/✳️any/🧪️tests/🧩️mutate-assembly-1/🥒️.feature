@@ -74,26 +74,26 @@ Feature: Apply every typed assembly mutation twice — once in Rust, once in Pyt
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id               | vector                                                        |
-      | create-slot      | 🧩️create-slot/🧪️tests/🧩️appends-slot-c-at-index-2                |
-      | delete-slot      | 🕳️delete-slot/🧪️tests/🚫️removes-slot-a-and-cascades-edge-ab     |
-      | create-rule      | 🚦️create-rule/🧪️tests/⛔️appends-a-rule-forbidding-roof-over-wall |
-      | delete-rule      | ❌delete-rule/🧪️tests/🚫️removes-the-wall-roof-rule              |
-      | change-weight    | 🔢️change-weight/🧪️tests/⚖️raises-the-wall-module-selection-bias  |
-      | remove-weight    | 🪶️remove-weight/🧪️tests/🪶️drops-the-wall-module-weight-override |
-      | connect-slots    | 🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-slot-c-at-index-1      |
-      | disconnect-slots | ✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-leaving-both-slots  |
-      | change-seed      | 🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99           |
+      | create-slot      | 🧩️create-slot/🧩️appends-slot-c-at-index-2                |
+      | delete-slot      | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab     |
+      | create-rule      | 🚦️create-rule/⛔️appends-a-rule-forbidding-roof-over-wall |
+      | delete-rule      | ❌delete-rule/🚫️removes-the-wall-roof-rule              |
+      | change-weight    | 🔢️change-weight/⚖️raises-the-wall-module-selection-bias  |
+      | remove-weight    | 🪶️remove-weight/🪶️drops-the-wall-module-weight-override |
+      | connect-slots    | 🔗️connect-slots/🔗️joins-slot-b-to-slot-c-at-index-1      |
+      | disconnect-slots | ✂️disconnect-slots/✂️severs-edge-ab-leaving-both-slots  |
+      | change-seed      | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99           |
 
   @id-inverse
   @level-exhaustive
@@ -103,31 +103,31 @@ Feature: Apply every typed assembly mutation twice — once in Rust, once in Pyt
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id               | vector                                                        |
-      | create-slot      | 🧩️create-slot/🧪️tests/🧩️appends-slot-c-at-index-2                |
-      | delete-slot      | 🕳️delete-slot/🧪️tests/🚫️removes-slot-a-and-cascades-edge-ab     |
-      | create-rule      | 🚦️create-rule/🧪️tests/⛔️appends-a-rule-forbidding-roof-over-wall |
-      | delete-rule      | ❌delete-rule/🧪️tests/🚫️removes-the-wall-roof-rule              |
-      | change-weight    | 🔢️change-weight/🧪️tests/⚖️raises-the-wall-module-selection-bias  |
-      | remove-weight    | 🪶️remove-weight/🧪️tests/🪶️drops-the-wall-module-weight-override |
-      | connect-slots    | 🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-slot-c-at-index-1      |
-      | disconnect-slots | ✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-leaving-both-slots  |
-      | change-seed      | 🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99           |
+      | create-slot      | 🧩️create-slot/🧩️appends-slot-c-at-index-2                |
+      | delete-slot      | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab     |
+      | create-rule      | 🚦️create-rule/⛔️appends-a-rule-forbidding-roof-over-wall |
+      | delete-rule      | ❌delete-rule/🚫️removes-the-wall-roof-rule              |
+      | change-weight    | 🔢️change-weight/⚖️raises-the-wall-module-selection-bias  |
+      | remove-weight    | 🪶️remove-weight/🪶️drops-the-wall-module-weight-override |
+      | connect-slots    | 🔗️connect-slots/🔗️joins-slot-b-to-slot-c-at-index-1      |
+      | disconnect-slots | ✂️disconnect-slots/✂️severs-edge-ab-leaving-both-slots  |
+      | change-seed      | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99           |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the three-slot wave-function-collapse assembly
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-slot-c-at-index-1/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🔗️connect-slots/🔗️joins-slot-b-to-slot-c-at-index-1/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

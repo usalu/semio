@@ -6,7 +6,7 @@
 //! document and `LowpolyMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
-//! `../../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, replayed
+//! `../../🧬️schema/🧬️mutations/<kind>/<fixture>/`, replayed
 //! through the platform, plus two metamorphic laws asserted IN ROLE.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner
@@ -258,7 +258,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "asset://🧬️schema/🧬️mutations/➖️remove-paint-layer/🧪️tests/drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/➖️remove-paint-layer/drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

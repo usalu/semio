@@ -917,16 +917,17 @@ function workerWireCreationRequestIdV1(value: unknown): string | null {
 
 function parseSpaceArtifactCreationWorkerRequestV1(parsed: Readonly<Record<string, unknown>>): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" | "space-artifact-create-cancel" }> {
   const create = parsed.kind === "space-artifact-create";
-  const expected = create ? "kind,kindId,name,requestId,spaceId" : "kind,requestId,spaceId";
+  const expected = create ? "expectedCatalogGenerationId,kind,kindId,name,requestId,spaceId" : "kind,requestId,spaceId";
   if (Object.keys(parsed).sort().join(",") !== expected) throw new Error("backbone worker request: invalid space artifact creation fields");
   const requestId = workerWireCreationRequestIdV1(parsed.requestId),
     spaceId = workerWireCreationIdentityV1(parsed.spaceId);
   if (requestId === null || spaceId === null) throw new Error("backbone worker request: invalid space artifact creation owner");
   if (!create) return { kind: "space-artifact-create-cancel", requestId, spaceId };
-  const kindId = workerWireCreationIdentityV1(parsed.kindId),
+  const expectedCatalogGenerationId = workerWireSha256V1(parsed.expectedCatalogGenerationId),
+    kindId = workerWireCreationIdentityV1(parsed.kindId),
     name = workerWireTextV1(parsed.name);
-  if (kindId === null || name === null) throw new Error("backbone worker request: invalid space artifact creation intent");
-  return { kind: "space-artifact-create", requestId, spaceId, kindId, name };
+  if (expectedCatalogGenerationId === null || kindId === null || name === null) throw new Error("backbone worker request: invalid space artifact creation intent");
+  return { kind: "space-artifact-create", requestId, spaceId, expectedCatalogGenerationId, kindId, name };
 }
 
 /** 🛡️ Validates the exact worker-visible projection of the Hub's durable creation status. */
@@ -936,11 +937,12 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
   const phases: readonly SpaceArtifactCreationPhaseV1[] = ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"];
   const phase = phases.includes(row.phase as SpaceArtifactCreationPhaseV1) ? (row.phase as SpaceArtifactCreationPhaseV1) : null;
   const requestId = workerWireCreationRequestIdV1(row.requestId),
-    spaceId = workerWireCreationIdentityV1(row.spaceId);
-  if (row.kind !== "space-artifact-creation-status" || phase === null || requestId === null || spaceId === null) throw new Error("space artifact creation status: invalid owner");
-  const expected = phase === "ready" ? "kind,phase,ready,requestId,spaceId" : "kind,phase,requestId,spaceId";
+    spaceId = workerWireCreationIdentityV1(row.spaceId),
+    catalogGenerationId = workerWireSha256V1(row.catalogGenerationId);
+  if (row.kind !== "space-artifact-creation-status" || phase === null || requestId === null || spaceId === null || catalogGenerationId === null) throw new Error("space artifact creation status: invalid owner");
+  const expected = phase === "ready" ? "catalogGenerationId,kind,phase,ready,requestId,spaceId" : "catalogGenerationId,kind,phase,requestId,spaceId";
   if (Object.keys(row).sort().join(",") !== expected) throw new Error("space artifact creation status: invalid fields");
-  if (phase !== "ready") return { kind: "space-artifact-creation-status", requestId, spaceId, phase };
+  if (phase !== "ready") return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase };
   if (typeof row.ready !== "object" || row.ready === null || Array.isArray(row.ready)) throw new Error("space artifact creation status: invalid ready record");
   const ready = row.ready as Readonly<Record<string, unknown>>;
   if (Object.keys(ready).sort().join(",") !== "artifactSchema,documentId,kindId,parentDialect") throw new Error("space artifact creation status: invalid ready fields");
@@ -954,7 +956,7 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
     standard = workerWireCreationIdentityV1(parentDialect.standard),
     subset = workerWireCreationIdentityV1(parentDialect.subset);
   if (documentId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
-  return { kind: "space-artifact-creation-status", requestId, spaceId, phase, ready: { documentId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
+  return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase, ready: { documentId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
 }
 
 /** 🗂️ Validates the presentation-only selected-current creation catalog from the worker. */
@@ -1067,6 +1069,7 @@ export type SpaceArtifactCreationStatusV1 = Readonly<{
   kind: "space-artifact-creation-status";
   requestId: string;
   spaceId: string;
+  catalogGenerationId: string;
   phase: SpaceArtifactCreationPhaseV1;
   ready?: SpaceArtifactCreationReadyV1;
 }>;
@@ -1118,7 +1121,7 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-command-cancel"; readonly requestId: string }
   | { readonly kind: "space-artifact-creation-catalog-open"; readonly clientInstanceId: string; readonly spaceId: string }
-  | { readonly kind: "space-artifact-create"; readonly requestId: string; readonly spaceId: string; readonly kindId: string; readonly name: string }
+  | { readonly kind: "space-artifact-create"; readonly requestId: string; readonly spaceId: string; readonly expectedCatalogGenerationId: string; readonly kindId: string; readonly name: string }
   | { readonly kind: "space-artifact-create-cancel"; readonly requestId: string; readonly spaceId: string }
   | { readonly kind: "directory-administration-open"; readonly operationEpoch: number; readonly spaceId: string }
   | { readonly kind: "directory-administration-refresh"; readonly operationEpoch: number; readonly cursor?: string }
@@ -3762,7 +3765,8 @@ export type SocketGrantReceiptV1 = Readonly<{
 export type BrowserBrokerPortRequestV1 =
   | Readonly<{ kind: "initialize"; proof: string }>
   | Readonly<{ kind: "request"; requestId: string; operation: "me" }>
-  | Readonly<{ kind: "cancel"; requestId: string }>;
+  | Readonly<{ kind: "cancel"; requestId: string }>
+  | Readonly<{ kind: "close" }>;
 
 export type BrowserBrokerPortResponseV1 =
   | Readonly<{ kind: "initialized"; ok: boolean }>
@@ -3891,6 +3895,7 @@ export function parseBrowserBrokerPortRequestV1(value: unknown): BrowserBrokerPo
   if (record.kind === "initialize" && exactRecordKeys(record, ["kind", "proof"]) && typeof record.proof === "string" && /^[0-9a-f]{64}$/u.test(record.proof)) return record as BrowserBrokerPortRequestV1;
   if (record.kind === "request" && exactRecordKeys(record, ["kind", "operation", "requestId"]) && record.operation === "me" && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
   if (record.kind === "cancel" && exactRecordKeys(record, ["kind", "requestId"]) && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
+  if (record.kind === "close" && exactRecordKeys(record, ["kind"])) return record as BrowserBrokerPortRequestV1;
   return undefined;
 }
 

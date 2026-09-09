@@ -23,7 +23,7 @@ impl PageAllocation for Overallocated {
 
 #[test]
 fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_release() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut list = PagedList::<u64, 1>::default();
     let requested = list.next_allocation_bytes().unwrap();
     let error = list.reserve_page_using::<Overallocated>(requested).unwrap_err();

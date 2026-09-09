@@ -14,8 +14,8 @@ import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from 
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
 const root = import.meta.dir;
-const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(root, "../../🧬️schema/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
 
 test("mutation catalogs resolve only explicitly registered same-artifact and same-standard source owners", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
@@ -78,7 +78,7 @@ test("normalization reads explicit cross-subset catalogs without searching unrel
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
-  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "projectMutationTestBundles"];
+  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner"];
   const definitions = names.map((name) => syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === name));
   expect(definitions.every(Boolean)).toBe(true);
   const entries = new Map<string, any>(), documents = new Map<string, string>();
@@ -87,22 +87,13 @@ test("normalization reads explicit cross-subset catalogs without searching unrel
     entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "file", fileKind: "json", violations: [] });
     documents.set(path, JSON.stringify({ mutationCatalogs: [{ id: mutationId, capability: "mutation", standardDirectoryName: "🔖️1", subsetDirectoryName: basename(owner), kinds: [mutationId], vectors: [{ mutationId, sourceMutationDirectoryName: "🌱️create", mutationDirectoryName: "🌱️create", scenarios: [{ id: "applied", directoryName: "✅️applied" }] }] }] }));
   }
-  const scenarioSources = [
-    { mutationId: "create-camera", owner: "🎥️camera/🌱️create", subset: "camera" },
-    { mutationId: "create-node", owner: "🌳️node/🌱️create", subset: "any" }
-  ].map((row) => ({ artifactRoot: "🗿️sample", artifactId: "sample", standardVersion: "1", standardDirectoryName: "🔖️1", subsetId: "any", subsetDirectoryName: "✳️any", mutationId: row.mutationId, mutationDirectoryName: "🌱️create", sourceScenarioId: "applied", sourceScenarioDirectoryName: "✅️applied", subsetRoot: contract.source, mutationRoot: `${sourceRoot}/${row.owner}`, scenarioRoot: `${sourceRoot}/${row.owner}/🧪️tests/✅️applied`, expected: `🗿️sample/🧪️tests/🪆️1-${row.subset}/${row.owner}/✅️applied` }));
-  for (const row of scenarioSources) entries.set(row.scenarioRoot, { sourcePath: row.scenarioRoot, normalizedPath: row.scenarioRoot, nodeKind: "directory", violations: [] });
-  const support = { basename, dirname, Buffer, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), record: (value: unknown) => value, requiredString: (value: unknown) => { if (typeof value !== "string" || !value) throw new Error("string required"); return value; }, stringArray: (value: unknown) => value, splitLeadingEmoji: leadingEmojiIdentity, emojiFold: (value: string) => value.replaceAll("\uFE0F", ""), canonicalProjectedMemberName: () => null, projectionSourceAt: (path: string) => scenarioSources.find((row) => row.scenarioRoot === path) ?? null, mutationDescendantContract: () => ({ pathBudgetReserve: { bytes: 0 } }), projectionBundleProblem: () => null, setProjectedPath: (entry: any, path: string) => { entry.normalizedPath = path; }, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
+  const support = { basename, dirname, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), record: (value: unknown) => value, requiredString: (value: unknown) => { if (typeof value !== "string" || !value) throw new Error("string required"); return value; }, stringArray: (value: unknown) => value };
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const readers = new Function(...Object.keys(support), `${compile(definitions.map((node) => node!.getText(syntax)).join("\n"))}\nreturn {catalogs: projectionCatalogsForMutationSource, owner: canonicalProjectedMutationOwner, project: projectMutationTestBundles};`)(...Object.values(support));
+    const readers = new Function(...Object.keys(support), `${compile(definitions.map((node) => node!.getText(syntax)).join("\n"))}\nreturn {catalogs: projectionCatalogsForMutationSource, owner: canonicalProjectedMutationOwner};`)(...Object.values(support));
     const catalogs = readers.catalogs(".", entries, contract.source, { discoverySchema: taxonomy });
     expect(catalogs.map((catalog: any) => catalog.owner).sort()).toEqual([contract.source, contract.catalog].sort());
     expect(catalogs.flatMap((catalog: any) => catalog.vectors).map((vector: any) => vector.mutationId).sort()).toEqual(["create-camera", "create-node"]);
     expect(catalogs.every((catalog: any) => !catalog.error)).toBe(true);
-    const projected = structuredClone(entries);
-    readers.project(".", "🗿️sample", projected, new Map(), { schema: taxonomy, discoverySchema: taxonomy });
-    for (const row of scenarioSources) expect(projected.get(row.scenarioRoot).normalizedPath).toBe(row.expected);
-    expect([...projected.values()].flatMap((entry: any) => entry.violations)).toEqual([]);
     expect(readers.owner("🌱️create", "create-camera", contract.catalog, { discoverySchema: taxonomy })).toBe("🎥️camera/🌱️create");
     expect(readers.owner("🌱️create", "create-unknown", contract.catalog, { discoverySchema: taxonomy })).toBeNull();
     expect(readers.catalogs(".", new Map(), contract.source, { discoverySchema: taxonomy }).every((catalog: any) => Boolean(catalog.error))).toBe(true);
@@ -376,37 +367,21 @@ test("captured structural schema checks reject linked and unadmitted authority",
   }
 });
 
-test("domain test reference coordinates retain their declared owner depth and semantic scenario", () => {
-  const artifactRoot = "🗿️fixture", profile = "🏅️standards/🔖️1/🪆️subsets/✳️any", mutationRoot = `${artifactRoot}/${profile}/🧬️schema/🧬️mutations`;
-  const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [mutationRoot]: fixture.mutationDomainContract.domains } };
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
-  const constants = ["MUTATION_SOURCE_TEST_PREFIX", "MUTATION_SOURCE_STRUCTURE"].map((name) => source.match(new RegExp(`^const ${name} = .*;`, "m"))![0]).join("\n");
-  const definitions = ["mutationStructuralPaths", "mutationProjectionRationale"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
-  const support = { basename, artifactRootForPath: () => artifactRoot, mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, splitLeadingEmoji: leadingEmojiIdentity, pathEmojiStatuteFindings, canonicalProjectedMemberName: () => null };
-  for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const readers = new Function(...Object.keys(support), `${compile(`${constants}\n${definitions}`)}\nreturn {paths: mutationStructuralPaths, rationale: mutationProjectionRationale};`)(...Object.values(support));
-    for (const row of fixture.mutationDomainContract.cases) {
-      const from = `${mutationRoot}/${row.path}/🧪️tests/📨️sample/🔣️.json`, to = `${artifactRoot}/🧪️tests/🪆️1-any/${row.path}/📨️sample/🔣️.json`;
-      const result = readers.rationale(from, to, { schema: taxonomy, discoverySchema: taxonomy });
-      expect(result !== null, row.path).toBe(row.expected !== null);
-      if (row.expected !== null) expect(readers.paths(from)[0].mutation).toBe(row.path);
-    }
-  }
-});
-
-test("cross-subset reference rationale accepts only the explicit catalog profile", () => {
-  const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
-  const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
-  const constants = ["MUTATION_SOURCE_TEST_PREFIX", "MUTATION_SOURCE_STRUCTURE"].map((name) => source.match(new RegExp(`^const ${name} = .*;`, "m"))![0]).join("\n");
-  const definitions = ["mutationStructuralPaths", "mutationProjectionRationale"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
-  const support = { basename, artifactRootForPath: () => "🗿️sample", mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, splitLeadingEmoji: leadingEmojiIdentity, pathEmojiStatuteFindings, canonicalProjectedMemberName: () => null };
-  for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const rationale = new Function(...Object.keys(support), `${compile(`${constants}\n${definitions}`)}\nreturn mutationProjectionRationale;`)(...Object.values(support));
-    const from = `${sourceRoot}/🎥️camera/🌱️create/🧪️tests/✅️applied/🔣️.json`;
-    expect(rationale(from, "🗿️sample/🧪️tests/🪆️1-camera/🎥️camera/🌱️create/✅️applied/🔣️.json", { schema: taxonomy, discoverySchema: taxonomy })).toBe("artifact-mutation-test-projection-v1");
-    expect(rationale(from, "🗿️sample/🧪️tests/🪆️1-unknown/🎥️camera/🌱️create/✅️applied/🔣️.json", { schema: taxonomy, discoverySchema: taxonomy })).toBeNull();
-  }
+test("mutation catalogs declare one canonical implementation and fixture bundle pair", () => {
+  const taxonomy = loadCatalogTaxonomy(), pair = taxonomy.mutationCatalogProjection;
+  expect(pair.contractKind).toBe("canonical-mutation-case-pair");
+  expect(pair.contractId).toBe("canonical-mutation-case-pair-v1");
+  expect(pair.coverage).toBe("every-catalog-vector-has-one-implementation-and-one-fixture-bundle");
+  expect(taxonomy.semanticPathProjectionContracts[pair.contractId]).toBeUndefined();
+  expect(pair.implementationSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧬️schema", "🧬️mutations", "mutationId", "🧪️tests", "scenarioId"]);
+  expect(pair.fixtureSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧫️fixtures", "🧬️mutations", "mutationId", "scenarioId"]);
+  const implementation = taxonomy.semanticDescendantContracts[pair.implementationDescendantContractId], fixtureBundle = taxonomy.semanticDescendantContracts[pair.fixtureDescendantContractId];
+  expect(implementation.realizedNodeCount).toBe(2);
+  expect(implementation.requiredNodes.map((node) => node.nodeType)).toEqual(["directory", "file"]);
+  expect(fixtureBundle.realizedNodeCount).toBe(12);
+  expect(fixtureBundle.requiredNodes).toHaveLength(11);
+  expect(fixtureBundle.exclusiveAlternatives).toEqual([{ id: "diff-leaf", nodes: [{ nodeType: "file", pathSegments: [{ literal: "🔺️diff" }], kindId: "json" }, { nodeType: "file", pathSegments: [{ literal: "🔺️diff" }], kindId: "absent" }] }]);
+  expect(validateTaxonomy(taxonomy)).toEqual([]);
 });
 
 test("domain-owned mutations keep explicit identities with short unique operation siblings", () => {

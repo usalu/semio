@@ -30,7 +30,7 @@ fn feed(cursor: &mut RetainedHistoryIdV1, wire: &[u8], dictionary: Option<&str>,
 
 #[test]
 fn retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resolution() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["completion"].as_array().unwrap() {
         let source = fixture["cases"].as_array().unwrap().iter().find(|case| case["id"] == row["case"]).unwrap();
         let wire = hex(source["wire"].as_str().unwrap());

@@ -2,7 +2,7 @@ use super::*;
 
 //#region 🧪️BindingCopyLaws
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn source(count: usize) -> crate::UiNodeBindings {

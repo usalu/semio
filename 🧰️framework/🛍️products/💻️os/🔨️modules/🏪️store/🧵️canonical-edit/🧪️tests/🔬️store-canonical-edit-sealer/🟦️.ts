@@ -78,7 +78,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     const validation = method(storeText, /fn validate_prepared</);
     const mint = method(storeText, /fn seal_prepared_owned</);
     const advance = method(sealerText, /pub fn advance\(&mut self, grant: ArtifactStoreOneItemGrant/);
-    const commitStart = storeText.indexOf("ArtifactStoreOneItemPublicationPhase::PreflightingCommit =>", storeText.indexOf("pub fn advance_apply_one("));
+    const commitStart = storeText.indexOf("fn fold_batch_item(");
     const commit = commitStart < 0 ? "" : toolJobRustBlock(storeText, storeText.indexOf("{", commitStart))?.body ?? "";
     return validation.includes("Arc::ptr_eq(self, &prepared.seal.authority)")
       && validation.includes("prepared.seal.edit_address != prepared.edit.as_ref() as *const")
@@ -90,14 +90,14 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
       && advance.includes("self.hash.update(&self.last_chunk[..self.last_length])")
       && advance.includes("authority.seal_prepared_owned(edit, post, self.hash.clone().finalize(), identities)")
       && !/serde_json::to_(?:vec|value|string)|prepared_edit_digest\(/.test(advance)
-      && commit.includes("authority.validate_prepared(prepared)") && !commit.includes("prepared_edit_digest(");
+      && commit.includes("authority.validate_prepared(candidate)") && !commit.includes("prepared_edit_digest(");
   };
   if (!exact(store, source)) throw new Error("live Store canonical sealer authority/byte source linkage missing");
   const sourceHostiles = [
     [store.replace("Arc::ptr_eq(self, &prepared.seal.authority)", "true"), source],
     [store.replace("prepared.seal.edit_address != prepared.edit.as_ref() as *const", "prepared.seal.edit_address != forged_edit as *const"), source],
     [store.replace("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)", "prepared.seal.post_address != 0"), source],
-    [store.replace("authority.validate_prepared(prepared)", "authority.prepared_edit_digest(&prepared.edit)"), source],
+    [store.replace("authority.validate_prepared(candidate)", "authority.prepared_edit_digest(&candidate.edit)"), source],
     [store.replace("fn seal_prepared_owned<", "pub fn seal_prepared_owned<"), source],
     [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
   ];

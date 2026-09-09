@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, defaultBudgetMs, orchestratorBudgetMs } from "../../🏃️process/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
-const schema = JSON.parse(readFileSync(new URL("./🛂️schema/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
+const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
 const execa = createRequire(import.meta.url)("execa");
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];

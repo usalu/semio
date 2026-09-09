@@ -112,7 +112,7 @@ describe("WASI codegen profile policy", () => {
     }
     const describe = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(describe.match(/"--target", "wasm32-wasip2", "--profile", "wasm-dev"/g)).toHaveLength(2);
-    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧪️testkit/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(scale).toContain('"--target", "wasm32-wasip2", "--profile", "wasm-dev"');
   });
 

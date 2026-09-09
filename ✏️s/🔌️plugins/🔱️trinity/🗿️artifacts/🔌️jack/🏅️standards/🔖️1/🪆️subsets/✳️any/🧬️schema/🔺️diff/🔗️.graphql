@@ -1,84 +1,15 @@
-# 🧬️ Jack diff schema — sparse field delta.
-
+# 🔺️ Jack sparse durable delta with whole child-handle replacement.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type JackDiff {
   schema: String @state(class: ARTIFACT)
   name: String @state(class: ARTIFACT)
   manifestId: String @state(class: ARTIFACT)
   manifest: Manifest @state(class: ARTIFACT)
   camera: Camera @state(class: ARTIFACT)
-  nodes: JackNodesDelta @state(class: ARTIFACT)
-  edges: JackEdgesDelta @state(class: ARTIFACT)
+  content: ArtifactChild @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
 }
-
-type JackNodesDelta {
-  added: [Node!]!
-  removed: [String!]!
-  patched: [JackNodePatchEntry!]!
-  reordered: [String!]
-}
-
-type JackNodePatchEntry {
-  id: String!
-  patch: JackNodePatch!
-}
-
-type JackNodePatch {
-  name: String
-  x: Float
-  y: Float
-  width: Float
-  height: Float
-  key: String
-  valueJson: String
-}
-
-type JackEdgesDelta {
-  added: [Edge!]!
-  removed: [String!]!
-  patched: [JackEdgePatchEntry!]!
-  reordered: [String!]
-}
-
-type JackEdgePatchEntry {
-  id: String!
-  patch: JackEdgePatch!
-}
-
-type JackEdgePatch {
-  key: String
-  valueJson: String
-}
-
-type StringOptEntry {
-  key: String!
-  value: String
-}
-
-
-type Camera {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
-
-type Node {
-  id: String!
-  kind: String!
-  name: String!
-}
-
-type Edge {
-  id: String!
-  kind: String!
-  source: String!
-  target: String!
-}
-
-type Manifest {
-  nodeKinds: [ManifestKind!]!
-}
-
-type ManifestKind {
-  name: String!
-}
+type Camera { x: Float! y: Float! zoom: Float! }
+type Manifest { nodeKinds: [ManifestKind!]! edgeKinds: [ManifestKind!]! portKinds: [ManifestPortKind!]! }
+type ManifestKind { name: String! }
+type ManifestPortKind { name: String! direction: String! }

@@ -120,7 +120,7 @@ fn cancellation_is_observable_and_still_requires_terminal_empty_close() {
 
 #[test]
 fn language_neutral_retained_law_ledger_is_complete() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🔣️.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).expect("fixture JSON");
     assert_eq!(fixture["admission"]["pageBytes"], RETAINED_PACK_PAGE_BYTES);
     assert_eq!(fixture["valueTags"].as_array().expect("tags").len(), 24);
     assert!(fixture["hostile"].as_array().expect("hostile laws").iter().any(|law| law == "terminal-empty"));

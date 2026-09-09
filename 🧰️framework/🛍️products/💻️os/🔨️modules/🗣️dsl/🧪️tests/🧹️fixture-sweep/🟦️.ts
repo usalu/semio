@@ -59,7 +59,7 @@ function exampleInventory(root: string): { directories: string[]; files: string[
 
 export async function testFixtureSweepExtraction(): Promise<void> {
   const root = repoRoot();
-  const fixture = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧫️fixture/🔣️.json")));
+  const fixture = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧫️fixtures/🔣️.json")));
   const document = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧬️schema/🔣️.json")));
   const sweepAjv = new Ajv({ strict: true, allErrors: true });
   sweepAjv.addSchema(document);

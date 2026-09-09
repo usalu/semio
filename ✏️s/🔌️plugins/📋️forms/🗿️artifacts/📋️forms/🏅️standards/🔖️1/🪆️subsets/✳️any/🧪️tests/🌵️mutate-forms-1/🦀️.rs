@@ -68,11 +68,11 @@ const GUARD_VECTORS: &[&str] = &[
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
 /// case's owner — the artifact root, which is what `asset://` resolves against.
-const VECTORS: &str = "asset://🧬️schema/🧬️mutations";
+const VECTORS: &str = "shared://🧬️mutations";
 
 #[cfg(feature = "sut")]
 /// 📄️ The real committed example document, in this subset's own `.dsl.semio` text envelope.
-const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject

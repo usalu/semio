@@ -16,7 +16,9 @@
             "@semio-tech/framework-schema"
           ]
         }
-      ]
+      ],
+      "cache": false,
+      "continuous": true
     },
     "test": {
       "executor": "nx:run-commands",

@@ -38,13 +38,13 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   testContainerRuntimeBootstrap(workspace);
   testContainerPersistentState(workspace);
   testExtensionAttach(workspace, output);
-  const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🧪️tests/🧩️host-build/🟦️.ts");
+  const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts");
   await testExtensionHostBuild(output);
-  const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🧪️tests/📦️package/🟦️.ts");
+  const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts");
   await testExtensionPackage(output);
   await testCommandImportClosure(workspace, output);
   await testTrunkLockfile(workspace);
-  const { testWgpuBootInputs } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🧪️tests/⚡️cache-inputs/🟦️.ts");
+  const { testWgpuBootInputs } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
   await testWgpuBootInputs(workspace, output);
   const { testTypeScriptSourceInputs } = await import("../../../🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts");
   await testTypeScriptSourceInputs(output);
@@ -594,15 +594,9 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const schema = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧬️schema/🔣️.json"), "utf8"));
     assert.equal(validate(policy, schema).valid, true);
     assert.ok(cacheInternals, "cache policy must be exposed for contract verification");
-    for (const name of ["setup", "publish", "update", "deploy", "format", "clean-test", "bench"]) {
-      const target = cacheInternals.targetPolicy(name, { cache: true, options: { command: `bun ./📜️script.ts ${name}` } }, policy);
-      assert.equal(target.cache, false, name);
-    }
-    for (const name of ["dev", "dev-storybook", "serve", "watch", "test-watch"]) {
-      const target = cacheInternals.targetPolicy(name, { cache: true }, policy);
-      assert.equal(target.cache, false, name);
-      assert.equal(target.continuous, true, name);
-    }
+    const authoredWorkspace = JSON.parse(readFileSync(join(getWorkspaceRoot(), "📋️project.json"), "utf8"));
+    for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
+    for (const name of ["format", "setup", "publish", "dev"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
     assert.equal(Object.keys(JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {}).length, 0, "Native Nx defaults override custom project metadata; apply defaults inside the repository plugin");
     assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, join(root, ".🧬semio/🦑️repo/⚡️cache/cargo/browser"));
@@ -635,9 +629,19 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       for (let offset = 0; offset < bytes.length; offset += size) consume(bytes.subarray(offset, offset + size));
       assert.deepEqual(received, vectors.socketFrames.messages, `Unicode socket frame size ${size}`);
     }
+    const { isCacheableTask } = createRequire(testSource.url)("nx/src/tasks-runner/utils");
+    assert.equal(typeof cacheInternals.matchesUncached, "function");
+    assert.equal(typeof cacheInternals.cacheableFamily, "function");
+    assert.equal(cacheInternals.matchesUncached("format-check", policy.uncached), false);
+    assert.equal(cacheInternals.matchesUncached("format", policy.uncached), true);
+    assert.equal(cacheInternals.cacheableFamily("format-check"), true);
+    assert.equal(cacheInternals.cacheableFamily("generator-inputs"), false);
     for (const row of vectors.policies) {
-      const target = cacheInternals.targetPolicy(row.target, { cache: true }, policy);
-      assert.deepEqual({ cache: target.cache, continuous: target.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
+      const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
+      const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
+      assert.deepEqual({ cache: enabled.cache, continuous: enabled.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
+      assert.equal(disabled.cache, row.cache, `${row.target} must not keep authored cache when policy is authoritative`);
+      assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
     const selectionApi = await import("../../../🎮️playground/🟦️.ts");
     assert.equal(typeof selectionApi.loadFrameworkOsPlaygroundSelections, "function", "Development selection must read authored metadata before generation");
@@ -837,6 +841,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(workspace.targets.setup.dependsOn, vectors.lifecycle.setupDependencies);
     assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
+    for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
+    assert.equal(workspace.targets.dev.cache, false);
+    assert.equal(workspace.targets.dev.continuous, true);
+    assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
     const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);
@@ -1015,11 +1023,14 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const kernelInputs = contracts.find((project) => project.name === "@semio-tech/framework-os-kernel")?.namedInputs?.default;
     assert.ok(kernelInputs?.includes("{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"));
     assert.ok(!kernelInputs?.includes("{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*.{rs,toml,json,semio,wit,wgsl,glsl,h,c,cpp}"));
-    mkdirSync(join(fixture, "leaf"), { recursive: true });
+    const graph = vectors.pluginGraph;
+    mkdirSync(join(fixture, graph.leaf.directory), { recursive: true });
     mkdirSync(join(fixture, "other"), { recursive: true });
-    writeFileSync(join(fixture, "leaf", "📋️project.json"), JSON.stringify({ name: "leaf", targets: { test: { options: { command: "bun ./📜️script.ts test" } } } }));
-    writeFileSync(join(fixture, "leaf", "📜️script.ts"), "export {};\n");
-    writeFileSync(join(fixture, "other", "📋️project.json"), JSON.stringify({ name: "leaf" }));
+    writeFileSync(join(fixture, graph.leaf.directory, "📋️project.json"), JSON.stringify({ name: graph.leaf.name, targets: { test: { options: { command: graph.leaf.testCommand } } } }));
+    writeFileSync(join(fixture, graph.leaf.directory, "📜️script.ts"), graph.leaf.script);
+    writeFileSync(join(fixture, "other", "📋️project.json"), JSON.stringify({ name: graph.leaf.name }));
+    writeFileSync(join(fixture, "📜️script.ts"), graph.workspaceRoot.script);
+    writeFileSync(join(fixture, "📋️project.json"), JSON.stringify({ name: graph.workspaceRoot.name, targets: Object.fromEntries(graph.workspaceRoot.targets.map((name) => [name, { options: { command: `bun ./📜️script.ts ${name}` } }])) }));
     const goManifest = vectors.go.manifest;
     writeFileSync(join(fixture, "go.mod"), goManifest);
     const goOracle = Bun.spawnSync(["go", "mod", "edit", "-json", `-modfile=${join(fixture, "go.mod")}`], { cwd: fixture, env: { ...process.env, GOWORK: "off" }, stdout: "pipe", stderr: "pipe" });
@@ -1028,10 +1039,18 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { manifest: _manifest, ...expectedGo } = vectors.go;
     assert.deepEqual(cacheInternals.goDependencies(goManifest), expectedGo);
     assert.deepEqual(cacheInternals.goDependencies(goManifest), { module: go.Module.Path, requires: go.Require.map((row: any) => row.Path), replacements: go.Replace.map((row: any) => ({ module: row.Old.Path, path: row.New.Path })) });
-    assert.throws(() => plugin.createNodesV2[1](["leaf/📋️project.json", "other/📋️project.json"], {}, { workspaceRoot: fixture }), /duplicate.*leaf/i);
-    const projects = plugin.createNodesV2[1](["leaf/📋️project.json"], {}, { workspaceRoot: fixture });
-    assert.equal(projects[0][1].projects.leaf.targets["test-exhaustive"].cache, false);
-    assert.equal(projects[0][1].projects.leaf.targets.test.executor, "nx:run-commands");
+    assert.throws(() => plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`, "other/📋️project.json"], {}, { workspaceRoot: fixture }), new RegExp(`duplicate.*${graph.leaf.name}`, "i"));
+    const projects = plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`], {}, { workspaceRoot: fixture });
+    assert.equal(projects[0][1].projects[graph.leaf.name].targets[graph.leaf.derivedTarget].cache, true);
+    const rooted = plugin.createNodesV2[1](["📋️project.json"], {}, { workspaceRoot: fixture });
+    const resolvedRoot = rooted[0][1].projects[graph.workspaceRoot.name].targets;
+    for (const name of graph.workspaceRoot.targets) {
+      const expected = vectors.policies.find((row) => row.target === name);
+      assert.ok(expected, `workspace-root fixture target ${name} needs a policy row`);
+      assert.equal(resolvedRoot[name].cache, expected.cache, `workspace-root ${name}`);
+      assert.equal(resolvedRoot[name].continuous ?? false, expected.continuous, `workspace-root ${name} continuous`);
+    }
+    assert.equal(projects[0][1].projects[graph.leaf.name].targets.test.executor, "nx:run-commands");
     assert.deepEqual(cacheInternals.nativeDependencies({ dependencies: { core: { path: "../core" }, serde: "1" } }, {}), [{ name: "core", path: "../core", workspace: false, kind: "dependencies" }]);
     const artifact = join(fixture, "consumer");
     writeFileSync(artifact, "native fixture\n");

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/browser-broker-proof-lifecycle-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "delayedBootstrap", "bootstrapExpiry", "expected"],
+  "properties": {
+    "schema": { "const": "semio.hub.browser-broker-proof-lifecycle-fixture/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bootstrapMaximumMs", "activeMaximumMs"],
+      "properties": {
+        "bootstrapMaximumMs": { "const": 120000 },
+        "activeMaximumMs": { "const": 15000 }
+      }
+    },
+    "delayedBootstrap": {
+      "$ref": "#/$defs/timing"
+    },
+    "bootstrapExpiry": {
+      "$ref": "#/$defs/timing"
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unarmed", "admitted", "expired", "replayed"],
+      "properties": {
+        "unarmed": { "const": 401 },
+        "admitted": { "const": 200 },
+        "expired": { "const": 401 },
+        "replayed": { "const": 401 }
+      }
+    }
+  },
+  "$defs": {
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activeProofTtlMs", "bootstrapProofTtlMs", "delayMs"],
+      "properties": {
+        "activeProofTtlMs": { "type": "integer", "minimum": 1, "maximum": 15000 },
+        "bootstrapProofTtlMs": { "type": "integer", "minimum": 1, "maximum": 120000 },
+        "delayMs": { "type": "integer", "minimum": 1, "maximum": 120000 }
+      }
+    }
+  }
+}

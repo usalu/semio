@@ -146,11 +146,7 @@ impl Default for BrepSurface {
 pub struct BrepVertex {
     pub id: String,
     pub point: SemioPoint3,
-    /// 🎚️ Native `Vertex::tol` (containment ball radius, model units) — `0.0` (the Rust default)
-    /// means "unspecified"; [`crate::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
-    /// treats `<= 0.0` as "use the kernel default" rather than a literal zero tolerance, so
-    /// pre-this-wave fixture JSON (missing this field) still reconstructs a valid `Body`.
-    #[value(default)]
+    /// 🎚️ Native `Vertex::tol` containment radius in model units, persisted explicitly.
     pub tol: f64,
 }
 
@@ -162,9 +158,7 @@ pub struct BrepEdge {
     pub start_vertex: String,
     pub end_vertex: String,
     pub curve: BrepCurve,
-    /// 🎚️ Native `Edge::tol` (tube radius, model units) — same "`<= 0.0` means unspecified"
-    /// convention as [`BrepVertex::tol`].
-    #[value(default)]
+    /// 🎚️ Native `Edge::tol` tube radius in model units, persisted explicitly.
     pub tol: f64,
 }
 
@@ -221,9 +215,7 @@ pub struct BrepFace {
     pub inner_loops: Vec<String>,
     pub surface: BrepSurface,
     pub orientation: bool,
-    /// 🎚️ Native `Face::tol` (shell thickness, model units) — same "`<= 0.0` means unspecified"
-    /// convention as [`BrepVertex::tol`].
-    #[value(default)]
+    /// 🎚️ Native `Face::tol` shell thickness in model units, persisted explicitly.
     pub tol: f64,
 }
 
@@ -633,22 +625,22 @@ fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertex(v: &BrepVertex) -> String {
+pub(in super::super) fn enc_vertex(v: &BrepVertex) -> String {
     format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), v.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
+pub(in super::super) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point, tol] = parts.as_slice() else { return Err(format!("vertex: expected 3 fields, got {}", parts.len())) };
     Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_edge(e: &BrepEdge) -> String {
+pub(in super::super) fn enc_edge(e: &BrepEdge) -> String {
     format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), e.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_edge(s: &str) -> Result<BrepEdge, String> {
+pub(in super::super) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge: expected 5 fields, got {}", parts.len())) };
     Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: parse_f64(tol)? })
@@ -666,11 +658,11 @@ fn dec_loop(s: &str) -> Result<BrepLoop, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face(f: &BrepFace) -> String {
+pub(in super::super) fn enc_face(f: &BrepFace) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation), f.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face(s: &str) -> Result<BrepFace, String> {
+pub(in super::super) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face: expected 6 fields, got {}", parts.len())) };
     Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })

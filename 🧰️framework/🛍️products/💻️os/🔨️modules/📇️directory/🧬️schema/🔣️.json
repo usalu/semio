@@ -3466,6 +3466,7 @@
       "required": [
         "schema",
         "requestId",
+        "expectedCatalogGenerationId",
         "kindId",
         "name"
       ],
@@ -3479,6 +3480,10 @@
           "not": {
             "const": "00000000000000000000000000000000"
           }
+        },
+        "expectedCatalogGenerationId": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
         },
         "kindId": {
           "type": "string",
@@ -3561,6 +3566,7 @@
         "schema",
         "requestId",
         "spaceId",
+        "catalogGenerationId",
         "phase"
       ],
       "properties": {
@@ -3579,6 +3585,10 @@
           "minLength": 1,
           "maxLength": 256,
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "catalogGenerationId": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
         },
         "phase": {
           "enum": [
@@ -3997,6 +4007,7 @@
         "schema",
         "catalog",
         "cases",
+        "statusCases",
         "draftCases"
       ],
       "properties": {
@@ -4082,6 +4093,13 @@
               }
             }
           }
+        },
+        "statusCases": {
+          "const": [
+            { "generation": "current", "admitted": true },
+            { "generation": "rotated", "admitted": false },
+            { "generation": "missing", "admitted": false }
+          ]
         },
         "draftCases": {
           "type": "array",

@@ -2,7 +2,7 @@ use super::*;
 
 //#region 🧪️RootPermit
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 fn reserve(bytes: usize) -> Option<UiResidentPermit> {
     let mut permit = None;

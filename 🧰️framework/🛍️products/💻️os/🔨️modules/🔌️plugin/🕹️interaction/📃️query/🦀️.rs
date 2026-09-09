@@ -106,6 +106,11 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         !self.ready && !self.terminal_is_empty()
     }
 
+    /// 🐞️ `[DEBUG]` state summary — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+    pub(crate) fn debug_state(&self) -> String {
+        format!("ready={} closing={} retiring={} length={} terminal_page={}", self.ready, self.closing, self.retiring_page, self.length, self.terminal_page)
+    }
+
     pub(crate) fn cancel_authorized(&mut self, token: &LocalInteractionPageToken) -> bool {
         if self.closing || token.request_id != self.token.request_id || token.query_generation != self.token.query_generation || token.identity != self.token.identity {
             return false;

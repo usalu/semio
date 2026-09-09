@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn retained_window_input_preserves_owner_generation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let mut identities = std::collections::BTreeSet::new();
     let mut digests = std::collections::BTreeSet::new();
     for row in fixture["cases"].as_array().unwrap() {
@@ -12,6 +12,7 @@ fn retained_window_input_preserves_owner_generation() {
             window_id: row["windowId"].as_str().unwrap().into(),
             window_kind_id: if row["windowKindId"] == "canvas" { "canvas" } else { "world" },
             generation: row["generation"].as_u64().unwrap(),
+            document_generation: row["documentGeneration"].as_u64().unwrap(),
             snapshot: Arc::new(crate::app::NoTransient {}),
         };
         assert_eq!(snapshot.generation(), row["generation"].as_u64().unwrap());
@@ -19,9 +20,86 @@ fn retained_window_input_preserves_owner_generation() {
         assert_eq!(digest, crate::app::test_window_transient_context_identity(Some(&snapshot.clone())));
         assert_ne!(digest, crate::app::test_window_transient_context_identity(None));
         digests.insert(digest);
-        identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation()));
+        identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation(), snapshot.document_generation()));
     }
     assert_eq!(identities.len(), fixture["expectedUniqueOwners"].as_u64().unwrap() as usize);
     assert_eq!(digests.len(), identities.len());
     eprintln!("[DEBUG] retained window input keeps distinct concrete owner and generation tuples");
+}
+
+struct ReplacementWindow;
+
+impl WindowTransientOwner for ReplacementWindow {
+    const WINDOW_KIND_ID: &'static str = "canvas";
+    type State = crate::publication_fixture::PublicationTransient;
+    type Mutation = crate::publication_fixture::PublicationTransientMutation;
+
+    fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::State, Self::Mutation>> {
+        bounded_window_transient_preparation_factory::<Self>()
+    }
+
+    fn build_root_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<Self::State>> {
+        bounded_window_transient_root_retirement_factory::<Self>()
+    }
+
+    fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::State, Self::Mutation>>> {
+        bounded_window_transient_store_disposer::<Self>()
+    }
+}
+
+#[test]
+fn retained_window_input_replacement_rejects_old_authority_and_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let expected = &fixture["documentReplacement"];
+    let mut old = WindowTransientOwnerRegistry::default();
+    old.register::<ReplacementWindow>().unwrap();
+    let view = |id: &str| ViewModel {
+        window_id: Some(id.into()),
+        window_instances: ["canvas-left", "canvas-right"].map(|id| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: "canvas".into() }).into(),
+        ..Default::default()
+    };
+    let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, crate::publication_fixture::ChangePublicationTransient { revision }.into());
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+    for (id, revision) in expected["before"].as_object().unwrap() {
+        let authority = old.capture(Some(&view(id))).unwrap().unwrap();
+        let mut publication = old.begin(semio_framework_job::OperationId(1), &authority, mutation(id, revision.as_u64().unwrap())).unwrap();
+        for _ in 0..1024 {
+            if matches!(old.advance(publication.as_mut(), grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+                assert!(publication.acknowledge());
+                break;
+            }
+        }
+        publication.begin_close();
+        for _ in 0..1024 {
+            if publication.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete { break; }
+        }
+        assert!(publication.terminal_is_empty());
+        assert_eq!(old.capture(Some(&view(id))).unwrap().unwrap().snapshot.get::<ReplacementWindow>().unwrap().revision, revision.as_u64().unwrap());
+    }
+    let authority = old.capture(Some(&view("canvas-left"))).unwrap().unwrap();
+    let mut pending = old.begin(semio_framework_job::OperationId(2), &authority, mutation("canvas-left", 9)).unwrap();
+    let mut replacement = WindowTransientOwnerRegistry::for_document_generation(expected["documentGeneration"].as_u64().unwrap());
+    replacement.register::<ReplacementWindow>().unwrap();
+    assert_eq!(replacement.begin(semio_framework_job::OperationId(3), &authority, mutation("canvas-left", 9)).is_ok(), expected["oldPublicationAccepted"].as_bool().unwrap());
+    assert!(replacement.advance(pending.as_mut(), grant).is_err());
+    for _ in 0..1024 {
+        if pending.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete { break; }
+    }
+    assert!(pending.terminal_is_empty());
+    let actual: serde_json::Map<String, serde_json::Value> = expected["after"].as_object().unwrap().keys().map(|id| {
+        let snapshot = replacement.capture(Some(&view(id))).unwrap().unwrap().snapshot;
+        assert_eq!(snapshot.document_generation(), 1);
+        (id.clone(), serde_json::json!(snapshot.get::<ReplacementWindow>().unwrap().revision))
+    }).collect();
+    assert_eq!(serde_json::Value::Object(actual), expected["after"]);
+    drop(authority);
+    for registry in [&mut old, &mut replacement] {
+        assert_eq!(registry.close_step(0, 4096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert!(!registry.terminal_is_empty());
+        for _ in 0..2048 {
+            if registry.close_step(1, 4096).unwrap() == PluginCloseStep::Complete { break; }
+        }
+        assert!(registry.terminal_is_empty());
+    }
+    eprintln!("[DEBUG] document replacement resets both concrete windows, fences old publications, and retires every owner under one-item grants");
 }

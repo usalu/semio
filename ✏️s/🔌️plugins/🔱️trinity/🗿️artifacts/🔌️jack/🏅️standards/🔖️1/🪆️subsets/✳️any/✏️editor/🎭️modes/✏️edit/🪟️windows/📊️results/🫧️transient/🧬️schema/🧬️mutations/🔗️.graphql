@@ -1,0 +1,8 @@
+input ReplaceJackResultsWindowQueryResult {
+  executionId: String
+  result: JackQueryResult
+  error: String
+}
+input JackResultsWindowTransientMutation @oneOf {
+  replaceQueryResult: ReplaceJackResultsWindowQueryResult
+}

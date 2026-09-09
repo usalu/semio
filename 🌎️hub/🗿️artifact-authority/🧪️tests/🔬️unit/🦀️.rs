@@ -275,7 +275,7 @@ async fn candidate(control: &FakeControl) -> CheckpointCandidate {
 
 #[tokio::test]
 async fn canonical_authority_contract_matches_the_language_neutral_checkpoint_vector() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🏛️canonical-authority/🔣️.json")).expect("valid authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️canonical-authority/🔣️.json")).expect("valid authority fixture");
     let required = TrustedArtifactIdentity::from_descriptor(&descriptor());
     let authority = ValidatingCanonicalArtifactAuthority::new(catalog(required));
     let control = control();
@@ -377,7 +377,7 @@ async fn canonical_authority_contract_validates_input_and_output_and_failure_ret
 
 #[tokio::test]
 async fn plugin_host_catalog_resolves_only_the_exact_live_package_manifest_kind_schema_and_codec_hash() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
     register_document_codec(fixture_artifact_codec()).expect("register fixture codec");
     let graph = PluginGraph::new();
     graph.register(fixture_manifest()).await.expect("register fixture manifest");
@@ -421,7 +421,7 @@ async fn plugin_host_catalog_resolves_only_the_exact_live_package_manifest_kind_
 
 #[tokio::test]
 async fn publication_orchestrator_never_calls_the_publisher_before_both_exact_blob_readbacks() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
     assert_eq!(fixture["failureStages"].as_array().expect("failure stages").len(), 5);
     for fail_on in 1..=4 {
         let control = control();

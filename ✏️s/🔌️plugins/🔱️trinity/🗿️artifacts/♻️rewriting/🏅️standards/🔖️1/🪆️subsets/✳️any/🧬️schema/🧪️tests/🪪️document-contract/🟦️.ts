@@ -7,7 +7,7 @@ import mapSchema from "../../../../../../../../../../../../🧰️framework/🔨
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseRewritingDiff } from "../../🔺️diff/🟦️.ts";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
-import vectors from "./🔣️.json" with { type: "json" };
+import vectors from "./../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import { parseRewritingArtifact } from "../../🟦️.ts";
@@ -38,8 +38,9 @@ export function testRewritingDocumentContractOracle(): void {
     }
   }
   const validateDiff = ajv.compile(diffSchema);
-  const mutations = join(import.meta.dir, "../../🧬️mutations");
+  const mutations = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
   const paths = readdirSync(mutations, { recursive: true }).map((path) => String(path).replaceAll("\\", "/")).filter((path) => path.endsWith("/🔺️diff/🔣️.json"));
+  assert.ok(paths.length > 0, "Rewriting document contract must validate committed mutation diffs");
   for (const path of paths) {
     const input = JSON.parse(readFileSync(join(mutations, path), "utf8"));
     assert.equal(validateDiff(input), true, JSON.stringify(validateDiff.errors));

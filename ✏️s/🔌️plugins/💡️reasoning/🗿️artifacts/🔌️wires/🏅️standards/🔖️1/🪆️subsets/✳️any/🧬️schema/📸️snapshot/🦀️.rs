@@ -2,8 +2,7 @@
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): `content` composes
 //! stdio's neutral `s.stdio.semio.graph` subset (nodes/edges) instead of an inline `board_fixture`
-//! blob. `camera`/`meta` stay their own small persisted `DslValue` fields (view state / app config,
-//! never part of the neutral graph subset — see `crate`'s module doc).
+//! blob. `meta` remains document data while camera is owned by each concrete canvas window.
 //!
 //! Ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1 CORRECTION: the native
 //! codec (`impl store::ArtifactDsl`/`impl store::ArtifactPack for WiresSnapshot`, formerly here) now
@@ -27,8 +26,6 @@ pub struct WiresSnapshot {
     #[child(kind = "s.stdio.semio.graph")]
     pub content: WiresContentChild,
     #[state(artifact)]
-    pub camera: DslValue,
-    #[state(artifact)]
     pub meta: DslValue,
 }
 //#endregion 🔖️Snapshot
@@ -36,7 +33,7 @@ pub struct WiresSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`WiresSnapshot`] as this facet's own camelCase JSON projection — the comparison
 /// surface `📡️mutate-wires-1`'s scenarios are measured through, and the shape the committed
-/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
+/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. Unlike `dag.dag`'s, this projection carries the board
 /// INLINE inside `wiresFixture`, so a mutation's effect is visible in it directly rather than only
 /// through a content digest.
@@ -58,7 +55,7 @@ pub fn decode_wires_snapshot_json(text: &str) -> Result<WiresSnapshot, String> {
 /// this type's own `store::ArtifactDsl` impl (`../../🚪️io/📸️snapshot/📝️text/🦀️.rs`), whose
 /// trait and error type are both unnameable outside this crate, so `📡️mutate-wires-1`'s
 /// `identity-round-trip` scenario reaches the real committed artifact
-/// (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`) through this instead.
 pub fn parse_wires_dsl(text: &str) -> Result<WiresSnapshot, String> {
     <WiresSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }

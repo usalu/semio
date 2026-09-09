@@ -106,7 +106,7 @@ class TestScript extends BundleScript {
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../../🖥️host/🧹️retirement/📜️script.ts");
+    await import("../../../🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
     const fixture = JSON.parse(readFileSync(join(BROWSER_BRIDGE_DIR, "../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));

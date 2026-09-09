@@ -263,6 +263,7 @@ impl World3dBuildContext {
         }
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path."))]
     pub fn append_step(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
         if let Some(rejected) = self.rejected.take() {
             return Err(rejected);
@@ -2468,6 +2469,7 @@ pub struct WorldInteractionPlan {
     faulted: bool,
 }
 
+#[expect(clippy::large_enum_variant, reason = "Interaction transitions retain fixed action claims and cursor storage without a fresh allocation between admitted steps.")]
 enum WorldInteractionActive {
     Plan { plan: WorldInteractionPlan, retirement: Option<WorldInteractionAuthorityStep> },
     Pick { cursor: WorldRayPickCursor, retirement: Option<WorldInteractionAuthorityStep> },
@@ -3057,6 +3059,7 @@ impl WorldMarqueePickCursor {
         self.gesture.close_step()
     }
 
+    #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
     fn finish(self, state: &World3dState, generation: u64) -> Result<(WorldMarqueeGesture, WorldMarqueeResultPages), (Self, WorldInteractionStep)> {
         if !self.complete {
             return Err((self, WorldInteractionStep::Pending));
@@ -4470,6 +4473,7 @@ impl WorldGumballPickCursor {
         WorldInteractionStep::Pending
     }
 
+    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path."))]
     fn finish(mut self, state: &World3dState, generation: u64) -> Result<Option<WorldGumballGesture>, (Self, WorldInteractionStep)> {
         if !self.complete {
             return Err((self, WorldInteractionStep::Pending));
@@ -10651,6 +10655,7 @@ impl WorldAssetMetadataId {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "Request metadata uses fixed-capacity inline identifiers so copying a request kind does not allocate.")]
 pub enum WorldAssetRequestKind {
     Glb,
     ReferenceImage,
@@ -10947,6 +10952,7 @@ impl WorldAssetIoAuthority {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
     pub fn return_owner(&mut self, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
         let slot = usize::from(owner.token.slot);
         let Some(claim) = self.slots.get_mut(slot).and_then(Option::as_mut) else {
@@ -10996,6 +11002,7 @@ impl WorldAssetIoAuthority {
         claim.owner.take()
     }
 
+    #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
     pub fn finish(&mut self, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
         let slot = usize::from(owner.token.slot);
         let Some(claim) = self.slots.get(slot).and_then(Option::as_ref) else {
@@ -11080,6 +11087,7 @@ pub fn reserve_world3d_asset_response(state: &mut World3dState, owner: &mut Worl
     state.asset_io.reserve_response(owner, byte_credits)
 }
 
+#[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
 pub fn return_world3d_asset(state: &mut World3dState, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     state.asset_io.return_owner(owner)
 }
@@ -11099,6 +11107,7 @@ pub fn take_next_completed_world3d_asset_step(state: &mut World3dState) -> Optio
     state.asset_io.take_next_completed_step()
 }
 
+#[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
 pub fn finish_world3d_asset(state: &mut World3dState, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     state.asset_io.finish(owner)
 }

@@ -8,7 +8,8 @@
     "id",
     "start_vertex",
     "end_vertex",
-    "curve"
+    "curve",
+    "tol"
   ],
   "properties": {
     "id": {
@@ -22,6 +23,9 @@
     },
     "curve": {
       "$ref": "#/$defs/BrepCurve"
+    },
+    "tol": {
+      "type": "number"
     }
   },
   "$defs": {

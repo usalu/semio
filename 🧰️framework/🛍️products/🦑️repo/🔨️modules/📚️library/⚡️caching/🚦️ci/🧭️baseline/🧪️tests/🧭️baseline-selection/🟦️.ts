@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 /** 🧪️ Compares baseline selection with lodash and native Git ancestry without modifying history. */
 export async function testCiBaseline(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), lodash = require("lodash"), validator = new (require("ajv"))();
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧭️baseline-selection/🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
   const contextValid = validator.compile({ ...schema, $ref: "#/definitions/context" }), runValid = validator.compile({ ...schema, $ref: "#/definitions/run" }), selectionValid = validator.compile({ ...schema, $ref: "#/definitions/selection" });
   assert.equal(contextValid(fixture.context), true);
   const { selectCiBaseline } = await import("../../🟦️.ts");

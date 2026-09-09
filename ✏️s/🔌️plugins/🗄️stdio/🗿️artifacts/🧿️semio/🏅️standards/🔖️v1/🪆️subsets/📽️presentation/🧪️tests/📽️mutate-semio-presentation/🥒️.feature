@@ -21,7 +21,7 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   the recorded no-oracle decision it replaces is gone, because a reference now exists.
 
   **The deck under test is a real one, and its provenance is written down.**
-  `local://🎙️talk/🗣️.dsl.semio` and its binary twin were derived ONCE from the real committed PowerPoint
+  `shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio` and its binary twin were derived ONCE from the real committed PowerPoint
   deck `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🧫️fixtures/🎞️semio-talk.pptx` — a genuine 2020
   conference talk: one slide master, ELEVEN slide layouts, SEVEN slides, ninety-eight shapes, three
   embedded PNG parts and German text throughout, with real EMU geometry and real run styling. The
@@ -85,8 +85,8 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived talk deck
-    Given the real derived presentation artifact local://🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
+    And the committed mutation payload shared://📽️mutate-semio-presentation/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the deck parsed from it
     Then the independent implementation and the subject agree on the resulting deck
     Examples:
@@ -110,8 +110,8 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real derived talk deck
-    Given the real derived presentation artifact local://🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload local://🪞️no-mutation/🦠️mutation/🔣️.json
+    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
+    And the committed mutation payload shared://📽️mutate-semio-presentation/🪞️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the deck parsed from it
     Then the independent implementation and the subject agree on the resulting deck
 
@@ -119,8 +119,8 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real derived talk deck
-    Given the real derived presentation artifact local://🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
+    And the committed mutation payload shared://📽️mutate-semio-presentation/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the deck parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
     Examples:
@@ -144,8 +144,8 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real derived talk deck
-    Given the real derived presentation artifact local://🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload local://🪞️no-mutation/🦠️mutation/🔣️.json
+    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
+    And the committed mutation payload shared://📽️mutate-semio-presentation/🪞️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the deck parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
 
@@ -155,9 +155,9 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   Scenario Outline: Apply <id> to its committed specification vector over the committed deck artifact
     Given the committed specification fixtures for the <id> kind
       | role     | fixture                     |
-      | before   | local://<fixture>/⬅️before/🔣️.json   |
-      | mutation | local://<fixture>/🦠️mutation/🔣️.json |
-      | after    | local://<fixture>/➡️after/🔣️.json    |
+      | before   | shared://📽️mutate-semio-presentation/<fixture>/⬅️before/🔣️.json   |
+      | mutation | shared://📽️mutate-semio-presentation/<fixture>/🦠️mutation/🔣️.json |
+      | after    | shared://📽️mutate-semio-presentation/<fixture>/➡️after/🔣️.json    |
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -182,9 +182,9 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of both decks from the parsed documents
-    Given the real derived presentation artifact local://🎙️talk/🗣️.dsl.semio
-    And its committed binary twin local://🎒️.pack.semio
-    And the committed deck example asset://📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/📽️deck/🖼️assets/🎒️.pack.semio
+    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
+    And its committed binary twin shared://📽️mutate-semio-presentation/🎒️.pack.semio
+    And the committed deck example asset://📽️deck/🗣️.dsl.semio
+    And its committed binary twin asset://📽️deck/🎒️.pack.semio
     When each implementation parses both text artifacts, prints them back, decodes both binary twins and re-encodes them
     Then both reproduce all four committed files byte for byte and agree on the two decks and on the digests of what they emitted

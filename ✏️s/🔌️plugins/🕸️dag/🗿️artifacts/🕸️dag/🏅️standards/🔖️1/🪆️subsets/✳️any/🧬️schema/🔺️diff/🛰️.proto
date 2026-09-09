@@ -1,31 +1,7 @@
 syntax = "proto3";
 package semio.s.dag.dag.diff;
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message DagDiff {
-  // @state artifact
-  optional DagArtifact artifact = 1;
-  // @state artifact
-  optional string schema = 2;
-  // @state artifact
-  optional DagNodesDelta nodes = 3;
-  // @state artifact
-  optional DagEdgesDelta edges = 4;
-  // @state artifact
-  optional DagNodeSpecList set_nodes = 5;
-  // @state artifact
-  optional DagFixtureEdgeList set_edges = 6;
+  optional string schema = 1;
+  optional semio.os.store.ArtifactChild content = 2;
 }
-message DagStringList { repeated string values = 1; }
-message DagNodeSpecList { repeated DagNodeSpec values = 1; }
-message DagFixtureEdgeList { repeated DagFixtureEdge values = 1; }
-message DagNodesDelta { repeated DagNodeSpec added = 1; repeated string removed = 2; repeated DagNodePatchEntry patched = 3; repeated string reordered = 4; }
-message DagEdgesDelta { repeated DagFixtureEdge added = 1; repeated string removed = 2; repeated DagEdgePatchEntry patched = 3; repeated string reordered = 4; }
-message DagNodePatchEntry { string id = 1; DagNodePatch patch = 2; }
-message DagEdgePatchEntry { string id = 1; DagEdgePatch patch = 2; }
-message DagNodePatch { optional string name = 1; optional double x = 2; optional double y = 3; }
-message DagEdgePatch { optional string source = 1; optional string target = 2; }
-message DagNodeSpec { string id = 1; }
-message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }
-message DagCamera { double x = 1; double y = 2; double zoom = 3; }
-message DagArtifact {
-  string schema = 1; repeated DagNodeSpec nodes = 2; repeated DagFixtureEdge edges = 3;
-  repeated string selected_node_ids = 4; DagCamera camera = 5;}

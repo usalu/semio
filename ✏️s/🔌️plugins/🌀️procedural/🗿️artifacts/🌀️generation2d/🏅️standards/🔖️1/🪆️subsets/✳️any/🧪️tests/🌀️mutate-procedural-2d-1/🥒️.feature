@@ -76,31 +76,31 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                      | vector                                                                                      |
-      | create-widget           | 🌱️create-widget/🧪️tests/📝️inserts-note-c-at-index-2                                            |
-      | replace-widget          | 🔁️replace-widget/🧪️tests/✍️rewrites-the-note-b-body-in-place                                   |
-      | delete-widget           | 🗑️delete-widget/🧪️tests/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
-      | connect-synapse         | 🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-note-c-at-index-1                                  |
-      | replace-synapse         | 🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-onto-the-alt-port                                 |
-      | disconnect-synapse      | ✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-leaving-both-notes                              |
-      | move-widget             | 📍️move-widget/🧪️tests/📍️repositions-note-a-on-the-canvas                                       |
-      | clear-widget-layout     | 🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-layout-entry                                  |
-      | update-camera           | 🎛️set-camera/🧪️tests/📷️pans-and-zooms-the-graph-camera                                         |
-      | change-schema           | 🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema                                          |
-      | create-generation       | ➕create-generation/🧪️tests/🌱️appends-generation-2-and-selects-it                              |
-      | delete-generation       | ➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
-      | rename-generation       | 🏷️rename-generation/🧪️tests/🏷️retitles-generation-1                                           |
-      | change-generation-value | 🔢️change-generation-value/🧪️tests/📏️raises-the-height-answer-in-generation-1                   |
+      | create-widget           | 🌱️create-widget/📝️inserts-note-c-at-index-2                                            |
+      | replace-widget          | 🔁️replace-widget/✍️rewrites-the-note-b-body-in-place                                   |
+      | delete-widget           | 🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
+      | connect-synapse         | 🔗️connect-synapse/🔗️joins-note-b-to-note-c-at-index-1                                  |
+      | replace-synapse         | 🔄️replace-synapse/🔗️repoints-link-ab-onto-the-alt-port                                 |
+      | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
+      | move-widget             | 📍️move-widget/📍️repositions-note-a-on-the-canvas                                       |
+      | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops-the-note-a-layout-entry                                  |
+      | update-camera           | 🎛️set-camera/📷️pans-and-zooms-the-graph-camera                                         |
+      | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
+      | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
+      | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
+      | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1                                           |
+      | change-generation-value | 🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1                   |
 
   @id-inverse
   @level-exhaustive
@@ -110,36 +110,36 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                      | vector                                                                                      |
-      | create-widget           | 🌱️create-widget/🧪️tests/📝️inserts-note-c-at-index-2                                            |
-      | replace-widget          | 🔁️replace-widget/🧪️tests/✍️rewrites-the-note-b-body-in-place                                   |
-      | delete-widget           | 🗑️delete-widget/🧪️tests/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
-      | connect-synapse         | 🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-note-c-at-index-1                                  |
-      | replace-synapse         | 🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-onto-the-alt-port                                 |
-      | disconnect-synapse      | ✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-leaving-both-notes                              |
-      | move-widget             | 📍️move-widget/🧪️tests/📍️repositions-note-a-on-the-canvas                                       |
-      | clear-widget-layout     | 🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-layout-entry                                  |
-      | update-camera           | 🎛️set-camera/🧪️tests/📷️pans-and-zooms-the-graph-camera                                         |
-      | change-schema           | 🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema                                          |
-      | create-generation       | ➕create-generation/🧪️tests/🌱️appends-generation-2-and-selects-it                              |
-      | delete-generation       | ➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
-      | rename-generation       | 🏷️rename-generation/🧪️tests/🏷️retitles-generation-1                                           |
-      | change-generation-value | 🔢️change-generation-value/🧪️tests/📏️raises-the-height-answer-in-generation-1                   |
+      | create-widget           | 🌱️create-widget/📝️inserts-note-c-at-index-2                                            |
+      | replace-widget          | 🔁️replace-widget/✍️rewrites-the-note-b-body-in-place                                   |
+      | delete-widget           | 🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
+      | connect-synapse         | 🔗️connect-synapse/🔗️joins-note-b-to-note-c-at-index-1                                  |
+      | replace-synapse         | 🔄️replace-synapse/🔗️repoints-link-ab-onto-the-alt-port                                 |
+      | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
+      | move-widget             | 📍️move-widget/📍️repositions-note-a-on-the-canvas                                       |
+      | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops-the-note-a-layout-entry                                  |
+      | update-camera           | 🎛️set-camera/📷️pans-and-zooms-the-graph-camera                                         |
+      | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
+      | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
+      | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
+      | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1                                           |
+      | change-generation-value | 🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1                   |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-widget graph with its two-generation history
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

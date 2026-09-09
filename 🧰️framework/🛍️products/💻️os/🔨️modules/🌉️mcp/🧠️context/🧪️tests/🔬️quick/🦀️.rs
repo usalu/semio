@@ -1,11 +1,11 @@
 
 use super::*;
 use crate::catalog::compile;
-use crate::fixtures;
+use crate::testkit;
 use semio_framework::{Locale, Terminology};
 
 fn test_catalog() -> Catalog {
-    compile(&fixtures::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")
+    compile(&testkit::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")
 }
 
 #[test]

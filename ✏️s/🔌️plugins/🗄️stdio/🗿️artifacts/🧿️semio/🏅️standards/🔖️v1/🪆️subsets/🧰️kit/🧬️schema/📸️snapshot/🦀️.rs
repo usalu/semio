@@ -114,15 +114,18 @@ impl Default for SemioKitSnapshot {
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioKitSnapshot {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
+        let mut entries = vec![
             ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
             ("types".to_string(), dsl::ToValue::to_value(&self.types)),
             ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
             ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
             ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
-            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
             ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
-        ])
+        ];
+        if let Some(properties) = &self.properties {
+            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+        }
+        dsl::DslValue::object(entries)
     }
 }
 impl dsl::FromValue for SemioKitSnapshot {
@@ -132,12 +135,12 @@ impl dsl::FromValue for SemioKitSnapshot {
         let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
         Ok(Self {
             schema: dsl::FromValue::from_value(field("schema")?)?,
-            types: dsl::FromValue::from_value(field("types")?)?,
-            designs: dsl::FromValue::from_value(field("designs")?)?,
-            objects: dsl::from_dsl_value(field("objects")?).map_err(dsl::ValueError::new)?,
-            models: dsl::from_dsl_value(field("models")?).map_err(dsl::ValueError::new)?,
-            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
-            representations: dsl::from_dsl_value(field("representations")?).map_err(dsl::ValueError::new)?,
+            types: get("types").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
+            designs: get("designs").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
+            objects: get("objects").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            models: get("models").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            representations: get("representations").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
         })
     }
 }
@@ -692,7 +695,7 @@ pub fn encode_kit_snapshot_json(snapshot: &SemioKitSnapshot) -> String {
 /// 📝️ Parses `s.stdio.semio.kit` DSL text into a [`SemioKitSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `🧰️mutate-semio-kit`'s `identity-round-trip` scenario reaches the real committed
-/// artifact (`../../📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// artifact (`../../🖼️assets/🪑️furniture/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_kit_dsl(text: &str) -> Result<SemioKitSnapshot, String> {
     <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
@@ -714,7 +717,7 @@ pub fn encode_semio_kit_pack(snapshot: &SemioKitSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioKitSnapshot`] — the inverse of
-/// [`encode_semio_kit_pack`], reading `../../📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio`.
+/// [`encode_semio_kit_pack`], reading `../../🖼️assets/🪑️furniture/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_kit_pack(bytes: &[u8]) -> Result<SemioKitSnapshot, String> {
     <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

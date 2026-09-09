@@ -1,0 +1,21 @@
+{
+  "$schema": "./artifact-ephemeral-one-item-publication-v1.schema.json",
+  "version": 1,
+  "lanes": ["presence", "transient"],
+  "admissionCases": [
+    { "id": "empty", "workItems": 0, "retainedBytes": 0, "preparationFactory": true, "retirementFactory": true, "accepted": false },
+    { "id": "single", "workItems": 1, "retainedBytes": 1, "preparationFactory": true, "retirementFactory": true, "accepted": true },
+    { "id": "maximum", "workItems": 65536, "retainedBytes": 1048576, "preparationFactory": true, "retirementFactory": true, "accepted": true },
+    { "id": "maximum-plus-one-item", "workItems": 65537, "retainedBytes": 1048576, "preparationFactory": true, "retirementFactory": true, "accepted": false },
+    { "id": "maximum-plus-one-byte", "workItems": 65536, "retainedBytes": 1048577, "preparationFactory": true, "retirementFactory": true, "accepted": false },
+    { "id": "missing-preparation-factory", "workItems": 1, "retainedBytes": 1, "preparationFactory": false, "retirementFactory": true, "accepted": false },
+    { "id": "missing-retirement-factory", "workItems": 1, "retainedBytes": 1, "preparationFactory": true, "retirementFactory": false, "accepted": false }
+  ],
+  "lifecycleCases": [
+    { "id": "stale-generation", "baseGeneration": 7, "liveGeneration": 8, "expected": "fault" },
+    { "id": "cancel", "cancelBeforePublish": true, "expected": "complete-empty" },
+    { "id": "retry-ack", "attempts": 2, "acknowledged": true, "expected": "complete-empty" },
+    { "id": "interrupted-close", "retainedRoots": 2, "itemsPerTurn": 1, "expected": "complete-empty" },
+    { "id": "single-publication", "movePreparedRoot": true, "generationDelta": 1, "expected": "awaiting-ack" }
+  ]
+}

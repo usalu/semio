@@ -86,13 +86,13 @@ SURFACE_FIELDS = {
 #: 🌲️ The document every mutation row runs on: the real "hexagonal cut concrete forest" structure,
 #: 167 vertices / 270 B-spline edges / 127 loops / 127 planar faces / 12 shells / 12 solids, derived
 #: ONCE from the real committed Rhino BIM export by `🐍️derive-brep-fixture.py` in the ticket folder.
-FOREST_DSL = "local://🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio"
-FOREST_PACK = "local://🎒️.pack.semio"
+FOREST_DSL = "shared://🧊️mutate-semio-brep/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio"
+FOREST_PACK = "shared://🧊️mutate-semio-brep/🎒️.pack.semio"
 #: 🧊️ The tiny committed `✉️base` solid, kept for the BYTE half of the identity law: its two files
 #: were written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the forest pair — written by this implementation — cannot restate.
-SOLID_DSL = "asset://📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio"
-SOLID_PACK = "asset://📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio"
+SOLID_DSL = "asset://🧊️solid/🗣️.dsl.semio"
+SOLID_PACK = "asset://🧊️solid/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

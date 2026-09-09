@@ -107,7 +107,7 @@ fn owned_scene_neutral_vectors_match_native_serde_packet() {
             serializer.serialize_bytes(self.0)
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🎬️owned-scene/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🎬️owned-scene/🔣️.json")).unwrap();
     let cases = fixture["cases"].as_array().unwrap();
     assert_eq!(cases.len(), 19);
     for case in cases {
@@ -194,7 +194,7 @@ fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
             _ => false,
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🧾️typed-scene/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🧾️typed-scene/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 15);
     for case in fixture["cases"].as_array().unwrap() {
         assert!(admitted(case), "{case}");
@@ -205,7 +205,7 @@ fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
 }
 #[test]
 fn scene_pack_numeric_widths_do_not_wrap() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🔢️scene-numeric/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🔢️scene-numeric/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let bytes: Vec<u8> = case["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|digits| u8::from_str_radix(std::str::from_utf8(digits).unwrap(), 16).unwrap()).collect();
         let admitted = match case["type"].as_str().unwrap() {

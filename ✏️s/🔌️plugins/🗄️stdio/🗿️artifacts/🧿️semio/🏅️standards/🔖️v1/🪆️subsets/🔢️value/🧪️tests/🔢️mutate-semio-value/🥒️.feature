@@ -25,10 +25,10 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   anywhere in this artifact is the six-member demo graph, which is a fixture, not a data set. So the
   document this case mutates was derived ONCE — by `🐍️derive-value-fixture.py` in the ticket folder,
   and re-derived on every run by `payload-fidelity` — from the real committed
-  the source copy at `local://🔣️.json`, 424 392 bytes of
+  the source copy at `shared://🔢️mutate-semio-value/🔣️.json`, 424 392 bytes of
   `spatial.modelspace` building geometry across four sub-models, 468 vertices, 416 edges and 25
   solids. Its source is committed beside this case as
-  `local://🔣️.json`, and the derivation is a faithful
+  `shared://🔢️mutate-semio-value/🔣️.json`, and the derivation is a faithful
   transcription read by Python's own `json` module with `parse_int`/`parse_float` hooks, so every
   numeric SOURCE LEXEME — `4.44089209850063e-16` included — survives verbatim into `Int`/`Float`
   instead of being rounded through a native numeric type. One documented restructuring: each
@@ -79,7 +79,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real building model
-    Given the real building model local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
     When the <id> mutation is applied to the document parsed from it
       """
       <mutation>
@@ -100,7 +100,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real building model
-    Given the real building model local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
     When the no-mutation mutation is applied to the document parsed from it
       """
       {"mutation":"noMutation"}
@@ -111,7 +111,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real building model
-    Given the real building model local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
     When the <id> mutation is applied to the document parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -132,7 +132,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real building model
-    Given the real building model local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
     When the no-mutation mutation is applied to the document parsed from it and each side undoes it with its own computed inverse
       """
       {"mutation":"noMutation"}
@@ -150,22 +150,22 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
     Then each reaches the committed after-snapshot, each returns to the before-snapshot, and the two agree
     Examples:
       | id               | before                                                                                                                                                     | mutation                                                                                                                                                | after                                                                                                                                                     |
-      | no-mutation      | local://⬅️before/🔣️.json                                                                                                                                      | local://⏸️no-mutation.mutation.json                                                                                                                       | local://⬅️before/🔣️.json                                                                                                                                     |
-      | set-snapshot     | asset://🧬️schema/🧬️mutations/📸️set-snapshot/🧪️tests/🔄️retypes-a-map-member-and-repoints-a-graph-node/📸️snapshot/⬅️before/🔣️.json | asset://🧬️schema/🧬️mutations/📸️set-snapshot/🧪️tests/🔄️retypes-a-map-member-and-repoints-a-graph-node/🦠️mutation/🔣️.json | asset://🧬️schema/🧬️mutations/📸️set-snapshot/🧪️tests/🔄️retypes-a-map-member-and-repoints-a-graph-node/📸️snapshot/➡️after/🔣️.json |
-      | set-value        | local://⬅️before/🔣️.json                                                                                                                                      | local://🔁️set-value.mutation.json                                                                                                                         | local://🔢️set-value.after.json                                                                                                                              |
-      | set-map-entry    | local://⬅️before/🔣️.json                                                                                                                                      | local://🗝️set-map-entry.mutation.json                                                                                                                     | local://🔑️set-map-entry.after.json                                                                                                                          |
-      | remove-map-entry | local://⬅️before/🔣️.json                                                                                                                                      | local://✖️remove-map-entry.mutation.json                                                                                                                  | local://🧹️remove-map-entry.after.json                                                                                                                       |
-      | insert-list-item | local://⬅️before/🔣️.json                                                                                                                                      | local://➕️insert-list-item.mutation.json                                                                                                                  | local://📥️insert-list-item.after.json                                                                                                                       |
-      | remove-list-item | local://⬅️before/🔣️.json                                                                                                                                      | local://➖️remove-list-item.mutation.json                                                                                                                  | local://🕳️remove-list-item.after.json                                                                                                                       |
-      | set-node         | local://⬅️before/🔣️.json                                                                                                                                      | local://🧷️set-node.mutation.json                                                                                                                          | local://📌️set-node.after.json                                                                                                                               |
-      | remove-node      | local://⬅️before/🔣️.json                                                                                                                                      | local://✂️remove-node.mutation.json                                                                                                                       | local://🗑️remove-node.after.json                                                                                                                            |
+      | no-mutation      | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/⏸️no-mutation.mutation.json                                                                                                                       | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                     |
+      | set-snapshot     | shared://🧬️mutations/📸️set-snapshot/🔄️retypes-a-map-member-and-repoints-a-graph-node/📸️snapshot/⬅️before/🔣️.json | shared://🧬️mutations/📸️set-snapshot/🔄️retypes-a-map-member-and-repoints-a-graph-node/🦠️mutation/🔣️.json | shared://🧬️mutations/📸️set-snapshot/🔄️retypes-a-map-member-and-repoints-a-graph-node/📸️snapshot/➡️after/🔣️.json |
+      | set-value        | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/🔁️set-value.mutation.json                                                                                                                         | shared://🔢️mutate-semio-value/🔢️set-value.after.json                                                                                                                              |
+      | set-map-entry    | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/🗝️set-map-entry.mutation.json                                                                                                                     | shared://🔢️mutate-semio-value/🔑️set-map-entry.after.json                                                                                                                          |
+      | remove-map-entry | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/✖️remove-map-entry.mutation.json                                                                                                                  | shared://🔢️mutate-semio-value/🧹️remove-map-entry.after.json                                                                                                                       |
+      | insert-list-item | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/➕️insert-list-item.mutation.json                                                                                                                  | shared://🔢️mutate-semio-value/📥️insert-list-item.after.json                                                                                                                       |
+      | remove-list-item | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/➖️remove-list-item.mutation.json                                                                                                                  | shared://🔢️mutate-semio-value/🕳️remove-list-item.after.json                                                                                                                       |
+      | set-node         | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/🧷️set-node.mutation.json                                                                                                                          | shared://🔢️mutate-semio-value/📌️set-node.after.json                                                                                                                               |
+      | remove-node      | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/✂️remove-node.mutation.json                                                                                                                       | shared://🔢️mutate-semio-value/🗑️remove-node.after.json                                                                                                                            |
 
   @id-payload-fidelity
   @level-exhaustive
   @mode-differential
   Scenario: The derived building document still carries exactly what the real JSON carries
-    Given the real committed source local://🔣️.json
-    And the value document derived from it local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    Given the real committed source shared://🔢️mutate-semio-value/🔣️.json
+    And the value document derived from it shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
     When each implementation re-reads the source with its own RFC 8259 parser and rebuilds the document from it
     Then the rebuilt document equals the committed derived document and the two implementations agree on every member
 
@@ -173,9 +173,9 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo graph and of the real building model from the parsed documents
-    Given the real committed text artifact asset://📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio
-    And the real building model local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
-    And its binary twin local://🌲️hexagonal-cut-concrete-forest/🎒️.pack.semio
+    Given the real committed text artifact asset://🕸️graph/🗣️.dsl.semio
+    And its committed binary twin asset://🕸️graph/🎒️.pack.semio
+    And the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
+    And its binary twin shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🎒️.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on the documents and on the digests of what they emitted

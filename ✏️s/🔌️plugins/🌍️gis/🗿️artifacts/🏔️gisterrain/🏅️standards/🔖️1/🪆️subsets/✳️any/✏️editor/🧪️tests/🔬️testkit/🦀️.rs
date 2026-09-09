@@ -20,7 +20,11 @@ pub fn gis3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
 
 /// 🪟️ Targets the real Terrain window instance for render and command authority.
 pub fn main_window_view() -> ViewModel {
-    ViewModel { window_id: Some(modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()), window_instances: vec![ViewWindowInstance { id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(), window_kind_id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into() }], ..Default::default() }
+    ViewModel {
+        window_id: Some(modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()),
+        window_instances: vec![ViewWindowInstance { id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(), window_kind_id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into() }],
+        ..Default::default()
+    }
 }
 
 /// 🧹️ Drives a Terrain fixture to its exact terminal-empty ownership witness.

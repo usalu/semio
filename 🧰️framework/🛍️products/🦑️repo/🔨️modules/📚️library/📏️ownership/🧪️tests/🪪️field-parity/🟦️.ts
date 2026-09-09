@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import glob from "fast-glob";
 import { resolve } from "node:path";
-import fixture from "./🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🪪️field-parity/🔣️.json" with { type: "json" };
 import { policyExtractRustSchemaFields, policyExtractTypescriptSchemaFields, policySchemaFieldDifferences, policyArtifactSchemaBreaches, policyDiscoverArtifactSchemaOwners } from "../../../../../../../../📜️script.ts";
 
 /** 🪪️ Checks native field discovery against independent TypeScript AST and Ajv evaluators. */

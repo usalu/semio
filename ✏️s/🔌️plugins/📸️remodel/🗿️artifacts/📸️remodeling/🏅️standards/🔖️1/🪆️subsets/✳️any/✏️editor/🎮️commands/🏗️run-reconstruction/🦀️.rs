@@ -557,8 +557,8 @@ fn queue(payload: &AdvanceReconstruction) -> Effect {
     }
 }
 
-fn emit_step(job: ReconstructionJob, generation: u64, next: Option<AdvanceReconstruction>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
-    Emit { artifact_mutations: vec![replace_job(job)], coalesce_key: Some(format!("reconstruction:{generation}")), effects: next.as_ref().map(queue).into_iter().collect(), ui_scope: UiDirtyScope::Full, ..Default::default() }
+fn emit_step(job: ReconstructionJob, generation: u64, next: Option<&AdvanceReconstruction>) -> Emit<RemodelingMutation, RemodelingConfigMutation> {
+    Emit { artifact_mutations: vec![replace_job(job)], coalesce_key: Some(format!("reconstruction:{generation}")), effects: next.map(queue).into_iter().collect(), ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
 fn next_frame_cursor(scene: &RemodelingSnapshot, stream_index: u32, frame_index: u32) -> Result<(u32, u32), Fault> {
@@ -681,7 +681,7 @@ fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, re
         return Ok(emit_step(job, generation, None));
     }
     put_session(generation, session);
-    Ok(emit_step(job, generation, Some(next)))
+    Ok(emit_step(job, generation, Some(&next)))
 }
 
 fn packed_chunk_base64(values: &[f32]) -> String {
@@ -764,10 +764,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
             terminal.quality_observation_count = terminal.quality_observation_count.checked_add(chunk.observation_count).ok_or_else(|| Fault::from("quality observation count overflow").with_retryable(true))?;
             terminal.quality_point_indices.extend(chunk.point_indices);
             if chunk.complete {
-                terminal.watertight = match session.engine.terminal_watertight_report().as_ref() {
-                    Some(report) => Some(watertight_snapshot(report)),
-                    None => None,
-                };
+                terminal.watertight = session.engine.terminal_watertight_report().as_ref().map(watertight_snapshot);
                 let accepted_count = session.engine.frame_source().accepted_count();
                 let mut warnings = Vec::new();
                 if terminal.watertight.as_ref().is_some_and(|report| !report.is_watertight) {
@@ -947,7 +944,7 @@ pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactVie
         let job = ReconstructionJob { stage: ReconstructionStage::Ingesting, stage_cursor: session.tick, ..scene.job.clone() };
         let next = checkpoint(payload.generation, &session);
         put_session(payload.generation, session);
-        return Ok(emit_step(job, payload.generation, Some(next)));
+        return Ok(emit_step(job, payload.generation, Some(&next)));
     }
     if let Some(stream) = scene.streams.get(session.stream_index as usize) {
         if let Some(frame_ref) = stream.frames.get(session.frame_index as usize) {
@@ -963,7 +960,7 @@ pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactVie
         let job = ReconstructionJob { stage: ReconstructionStage::Ingesting, stage_cursor: session.tick, ..scene.job.clone() };
         let next = checkpoint(payload.generation, &session);
         put_session(payload.generation, session);
-        return Ok(emit_step(job, payload.generation, Some(next)));
+        return Ok(emit_step(job, payload.generation, Some(&next)));
     }
     let status = session.engine.advance(RECONSTRUCTION_STEP_BUDGET);
     session.tick = session.tick.saturating_add(1);
@@ -977,7 +974,7 @@ pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactVie
             let job = preview_job(payload.job_id.clone(), reconstruction_stage(stage), progress, session.tick, &session.engine);
             let next = checkpoint(payload.generation, &session);
             put_session(payload.generation, session);
-            Ok(emit_step(job, payload.generation, Some(next)))
+            Ok(emit_step(job, payload.generation, Some(&next)))
         }
         remodeling_engine::EngineStatus::Done if session.requested_stage.needs_terminal_products() => {
             session.terminal = Some(terminal_preparation(payload.generation, &session.artifact_authority));

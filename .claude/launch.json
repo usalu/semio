@@ -90,7 +90,7 @@
       "name": "terra-jco-spike-static",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️harness/📜️script.ts"
+        "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/📜️script.ts"
       ],
       "port": 8846
     },

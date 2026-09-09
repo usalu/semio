@@ -14,7 +14,7 @@ it judges and transliterates none of it.
 
 🗂️ SHAPE. `widgets`/`synapses`/`layout` are read from `../../../🧪️tests/🌊️mutate-flow-1/🧫️fixtures/🔣️.json`
 — this case's own committed, derived-once base graph (its own file records which committed per-kind
-leaf fixture each entry came from) — the SAME `local://🔣️.json` this feature's `Given` step declares,
+leaf fixture each entry came from) — the SAME `shared://🌊️mutate-flow-1/🔣️.json` this feature's `Given` step declares,
 so both implementations start from the identical committed bytes. The ten mutation payloads are
 transcribed VERBATIM from this feature's own committed `Examples` `params` column (committed,
 checked-in material, not invented here) because the framework does not declare per-kind
@@ -41,7 +41,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-BASE_URI = "local://🔣️.json"
+BASE_URI = "shared://🌊️mutate-flow-1/🔣️.json"
 
 #: 🧫️ Transcribed verbatim from this feature's `Examples` `params` column.
 PARAMS = {

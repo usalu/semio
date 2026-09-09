@@ -251,7 +251,7 @@ mod subject {
         Outcome::with_raw(projection.to_string().into_bytes(), projection)
     }
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("local://") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
+        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🎞️mutate-semio-animation/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
     }
     /// 🧫️ The committed specification vector, decoded into typed values: the before-snapshot the
     /// kind is applied to, the mutation payload itself, and the after-snapshot the applied result
@@ -271,7 +271,7 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Inputs
-    const WALK_DSL: &str = "asset://📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio";
+    const WALK_DSL: &str = "asset://🚶️walk/🗣️.dsl.semio";
 
     /// 🚶️ The real committed walk artifact, parsed by this repository's own DSL codec.
     fn artifact(ctx: &Context) -> Result<SemioAnimationSnapshot, String> {

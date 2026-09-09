@@ -2275,9 +2275,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("referenceMediaKindFromUrl", () => {
     it("infers image, svg, and pdf kinds from paths", () => {
-      expect(referenceMediaKindFromUrl("/infinite-fixture/🖼️sketch.png")).toBe("image");
-      expect(referenceMediaKindFromUrl("/infinite-fixture/icon.svg")).toBe("svg");
-      expect(referenceMediaKindFromUrl("/infinite-fixture/🗺️site.pdf")).toBe("pdf");
+      expect(referenceMediaKindFromUrl("/infinite-assets/✏️sketch/🖼️.png")).toBe("image");
+      expect(referenceMediaKindFromUrl("/infinite-assets/icon.svg")).toBe("svg");
+      expect(referenceMediaKindFromUrl("/infinite-assets/🗺️site.pdf")).toBe("pdf");
       expect(referenceMediaKindFromUrl("/unknown.bin")).toBeNull();
     });
   });
@@ -10967,7 +10967,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
       //#region 🏠️LocalInteractionCompositionTests
       it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
         const source = await import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
-        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../../🛂️manifest/🧪️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
+        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
         const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
         type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
         const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).compile<{ cases: Array<{ name: string; before: State; after: State; changes: Change[] }> }>({ $ref: `${schema.$id}#/$defs/TutorialLocalInteractionFixture` }); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();

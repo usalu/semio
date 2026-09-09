@@ -23,6 +23,11 @@ const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revis
 const nxPath = (path) => path.split("\\").join("/");
 const owned = (path, root) => root === "." || path === root || path.startsWith(`${root}/`);
 const matchesCommand = (name, commands) => commands.some((command) => name === command || name.startsWith(`${command}-`));
+const matchesUncached = (name, commands) => commands.some((command) => command === "format" ? name === "format" : name === command || name.startsWith(`${command}-`));
+const mutatingName = (name) => /write-baseline$|(?:^|-)(?:reset|clean|gc|prune|report|setup|fuzz)(?:-|$)/.test(name);
+const liveName = (name) => /(?:^|-)(?:e2e|live)(?:-|$)/.test(name);
+const verifyCommand = (target) => /(?:^|[\s"'])verify(?:[\s"']|$)/.test(target?.options?.command ?? "");
+const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /generator/.test(name) && !name.includes("generator-inputs");
 
 /** 🧶️ Models Bun's locked package locations without merging distinct dependency contexts. */
 function bunLockGraph(lock, patches = {}) {
@@ -344,7 +349,7 @@ function nativeCommandInputs(workspaceRoot) {
     ...[...javascript.files.filter((file) => !["package.json", "bun.lock"].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
     { json: "{workspaceRoot}/package.json", fields: ["name"] },
     { externalDependencies: ["@iarna/toml"] },
-    ...cargo.environment.filter((env) => !env.startsWith("SEMIO_")).map((env) => ({ env })),
+    ...cargo.environment.map((env) => ({ env })),
     ...[...javascript.commands, ...cargo.commands].map((runtime) => ({ runtime })),
     { runtime: 'node -p "process.platform.concat(process.arch)"' },
   ];
@@ -367,10 +372,9 @@ function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeComma
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
 function targetPolicy(name, target, policy = POLICY) {
   if (matchesCommand(name, policy.continuous)) return { ...target, cache: false, continuous: true };
-  if (matchesCommand(name, policy.uncached) || name === "test-exhaustive") return { ...target, cache: false };
-  if (/^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck$|format-check$)/.test(name)) return { inputs: ["default", "^default"], outputs: [], cache: true, ...target };
-  if (/^(build(?:-|$)|wasm$|native-build$|package$|extension-package$)/.test(name) && !target.outputs) return { ...target, cache: false };
-  return target;
+  if (matchesUncached(name, policy.uncached) || mutatingName(name) || liveName(name)) return { ...target, cache: false };
+  if (cacheableFamily(name) || verifyCommand(target)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
+  return { ...target, cache: target.cache !== false };
 }
 
 /** 🧾️ The tooling TOML boundary exposes only repository-owned plain records. */
@@ -635,7 +639,12 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
     }
     if (artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name)) policy.inputs = ["artifactSources", "artifactCommandSources"];
-    normalized[name] = root === "." || json.name === "@semio-tech/repo-test-domain" ? { ...policy, cache: policy.cache === false ? false : target.cache ?? false } : policy;
+    normalized[name] = policy;
+  }
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned" || contract.ownerPath !== root || !contract.checkTarget) continue;
+    const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1);
+    if (normalized[check]) normalized[check] = { ...normalized[check], cache: false };
   }
   return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
 }
@@ -796,7 +805,7 @@ function rootCommandTargets(script) {
   const inspect = (node) => {
     if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && ts.isStringLiteral(node.arguments[0])) {
       const name = node.arguments[0].text;
-      if (name !== "nx") targets[name] = { executor: DEFAULT_EXECUTOR, cache: false, options: { command: `bun ./📜️script.ts ${name}`, forwardAllArgs: true } };
+      if (name !== "nx") targets[name] = { executor: DEFAULT_EXECUTOR, options: { command: `bun ./📜️script.ts ${name}`, forwardAllArgs: true } };
       inspect(node.expression.expression);
     }
   };
@@ -967,4 +976,4 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, projectInputs, rootCommandTargets };

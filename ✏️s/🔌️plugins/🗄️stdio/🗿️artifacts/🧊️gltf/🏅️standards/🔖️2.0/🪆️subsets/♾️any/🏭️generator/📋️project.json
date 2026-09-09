@@ -2,18 +2,20 @@
   "name": "@semio-tech/fixture-generator-stdio-gltf-2-0-any",
   "targets": {
     "🏭️generator": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-list": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts list",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

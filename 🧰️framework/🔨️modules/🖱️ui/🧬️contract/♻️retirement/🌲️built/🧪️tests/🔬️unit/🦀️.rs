@@ -2,7 +2,7 @@ use super::*;
 use crate::{BuiltChildren, Component, TextProps};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn text_node(key: &str, value: &str) -> BuiltNode {

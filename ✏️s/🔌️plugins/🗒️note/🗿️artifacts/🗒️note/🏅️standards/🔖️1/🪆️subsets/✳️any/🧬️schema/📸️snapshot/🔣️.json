@@ -7,72 +7,63 @@
   "required": [
     "schema",
     "id",
-    "blocks",
-    "assets"
+    "blocks"
   ],
   "properties": {
     "schema": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/schema",
       "x-semio-state": "artifact"
     },
     "id": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/id",
       "x-semio-state": "artifact"
     },
     "title": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/title",
       "x-semio-state": "artifact"
     },
     "blocks": {
-      "type": "array",
-      "items": {
-        "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteBlockNode"
-      },
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/blocks",
       "x-semio-state": "artifact"
     },
     "gridVisible": {
-      "type": "boolean",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridVisible",
       "x-semio-state": "artifact"
     },
     "gridSpacing": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridSpacing",
       "x-semio-state": "artifact"
     },
     "gridSubdivisions": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridSubdivisions",
       "x-semio-state": "artifact"
     },
     "gridOpacity": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridOpacity",
       "x-semio-state": "artifact"
     },
     "snapEnabled": {
-      "type": "boolean",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/snapEnabled",
       "x-semio-state": "artifact"
     },
     "snapGridSpacing": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/snapGridSpacing",
       "x-semio-state": "artifact"
     },
     "pencilWidth": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/pencilWidth",
       "x-semio-state": "artifact"
     },
     "eraserRadius": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/eraserRadius",
       "x-semio-state": "artifact"
     },
     "assets": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteImageAsset"
-      },
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/assets",
+      "x-semio-state": "artifact"
+    },
+    "linkedArtifact": {
+      "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/linkedArtifact",
       "x-semio-state": "artifact"
     }
   }

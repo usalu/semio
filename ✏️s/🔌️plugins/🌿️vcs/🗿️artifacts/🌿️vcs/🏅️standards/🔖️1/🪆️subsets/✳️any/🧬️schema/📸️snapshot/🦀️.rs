@@ -42,7 +42,7 @@ impl Default for VcsSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`VcsSnapshot`] as this facet's own camelCase JSON projection — the comparison
 /// surface `🌿️mutate-vcs-1`'s scenarios are measured through, and the same shape the committed
-/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
+/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in.
 ///
 /// A thin `dsl::json` wrapper (this facet's own first-party `DslValue` JSON codec, used behind
@@ -62,7 +62,7 @@ pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
 /// 📝️ Parses `.vcs.dsl.semio` text into a [`VcsSnapshot`] — a named, non-async pass-through of this
 /// type's own `store::ArtifactDsl` impl (`../../🚪️io/📸️snapshot/📝️text/🦀️.rs`), whose trait
 /// and error type are both unnameable outside this crate, so `🌿️mutate-vcs-1`'s `identity-round-trip`
-/// scenario reaches the real committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`)
+/// scenario reaches the real committed artifact (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`)
 /// through this instead.
 pub fn parse_vcs_dsl(text: &str) -> Result<VcsSnapshot, String> {
     <VcsSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))

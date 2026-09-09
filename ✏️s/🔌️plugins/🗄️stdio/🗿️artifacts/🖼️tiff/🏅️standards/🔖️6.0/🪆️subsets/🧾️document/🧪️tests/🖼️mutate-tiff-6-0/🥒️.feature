@@ -4,7 +4,7 @@
 @mutations-tiff-6-0-document
 Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   The input is a real 500 DPI architectural floor-plan scan
-  (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`,
+  (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`,
   483 KB, 2275x2560), converted ONCE to TIFF 6.0 with the registered `image` 0.25 reference encoder
   (`image::codecs::tiff::TiffEncoder`) and committed as this artifact's own
   `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff`. Its second IFD is a genuinely real second
@@ -59,7 +59,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index": 1} |
       | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
       | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "local://🖼️.rgba"} |
+      | replace-pixels | {"pixelsFixture": "shared://🖼️mutate-tiff-6-0/🖼️.rgba"} |
 
   @id-inverse
   @level-exhaustive
@@ -79,7 +79,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index": 1} |
       | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
       | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "local://🖼️.rgba"} |
+      | replace-pixels | {"pixelsFixture": "shared://🖼️mutate-tiff-6-0/🖼️.rgba"} |
 
   @id-identity-round-trip
   @level-long

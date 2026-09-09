@@ -101,8 +101,8 @@ TAG_OF_ENTITY = {name: tag for tag, (name, _) in ENTITY_FIELDS.items()}
 DOCUMENT_SCHEMA = "stdio.semio.cad"
 DSL_PREAMBLE = "semio stdio.semio.cad.dsl v1"
 
-DRAWING_DSL = "asset://📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio"
-DRAWING_PACK = "asset://📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio"
+DRAWING_DSL = "asset://📐️drawing/🗣️.dsl.semio"
+DRAWING_PACK = "asset://📐️drawing/🎒️.pack.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -650,7 +650,7 @@ def drawing(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📐️mutate-semio-cad/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

@@ -6,7 +6,7 @@ import { join } from "node:path";
 /** 🐙️ Verifies paginated GitHub history, bounded transport and fail-closed fallback against schema and lodash. */
 export async function testGithubHistory(): Promise<void> {
   const require = createRequire(import.meta.url), ajv = new (require("ajv"))(), lodash = require("lodash");
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🐙️workflow-history/🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
   const requestValid = ajv.compile({ ...schema, $ref: "#/definitions/request" }), historyValid = ajv.compile({ ...schema, $ref: "#/definitions/history" });
   assert.equal(requestValid(fixture.request), true);
   const { githubValidationHistory, githubJsonTransport } = await import("../../🟦️.ts");

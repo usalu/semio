@@ -13,7 +13,7 @@ import * as discovery from "../../🔍️discovery/🟦️.ts";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🛫️preflight-reference-basis/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), "utf8"));
 const compilers = [
   { name: "Bun", compile: (value: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(value) },
   { name: "TypeScript", compile: (value: string) => ts.transpileModule(value, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText },
@@ -91,8 +91,8 @@ function environment(compiler: typeof compilers[number]) {
     report: (...args: unknown[]) => { progressRows.push(args); const callback = args[0]; if (typeof callback === "function") callback({ operation: args[1], phase: args[2], completed: args[3], total: args[4], path: args[5] }); },
     readdirSync: (value: string) => { const name = access(value); return [...nodes.keys()].filter((key) => posix.dirname(key) === name).map((key) => posix.basename(key)); },
   };
-  const parserSupport = declarations(["normalizeRelative", "sourceRelative", "emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "lineLocation", "embeddedArgumentTokens", "artifactRootForPath", "mutationStructuralPaths", "canonicalProjectionSuffix", "projectionKey", "projectedStructuralValue", "structuralProjectionToken", "structuralTokensInFragment", "SEGMENTER", "indexedLineContent", "indexedLineStarts", "OLD_MUTATION_TEST_PREFIX_SOURCE", "OLD_MUTATION_STRUCTURE_SOURCE", "jsonTokens"]);
-  const jsonTokens = new Function("posix", compile(compiler, parserSupport) + "\nreturn jsonTokens;")(posix);
+  const parserSupport = declarations(["lineLocation", "embeddedArgumentTokens", "indexedLineContent", "indexedLineStarts", "jsonTokens"]);
+  const jsonTokens = new Function(compile(compiler, parserSupport) + "\nreturn jsonTokens;")();
   dependencies.referenceTokensIncludingUnsupported = (name: string, content: string) => { parsed++; return /\.json$/u.test(name) ? jsonTokens(name, content, "json") : []; };
   const code = declarations(["sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "LEXICAL_OPAQUE_ROOTS", "isExcluded", "lstatOrNull", "generatorPathCompare", "sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "absolutePath", "HISTORICAL_TICKET_ROOT_PATTERN", "HISTORICAL_PROMPT_LOG_ROOT_PATTERN", "packageRootManifestBasenames", "historicalEvidenceBoundaryOwns", "historicalDocumentEvidence", "repositoryReferenceCandidatePaths", "referenceCoordinateRoots", "ancestorReferenceCoordinateRoot", "incomingReferenceLexicalAdmission", "referenceCandidatesWithProgress", "textualPath", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "resolveReferencePath", "resolveReferenceTokenPath", "preflightReferenceNodeWitness", "observePreflightReferenceNode", "capturePreflightReferenceBasis", "validatePreflightReferenceBasis", "lexicalTargetIncomingReferences"]);
   const api: Production = new Function(...Object.keys(dependencies), compile(compiler, code) + "\nreturn { capturePreflightReferenceBasis, validatePreflightReferenceBasis, lexicalTargetIncomingReferences };")(...Object.values(dependencies));
@@ -290,7 +290,7 @@ function physicalRun(name: string): string {
 
 /** 🧩️ Reuses only the authored embedded fixture function, never importing or executing the 62-case suite. */
 function physicalFixture(name: string) {
-  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", schemaRelative = library + "/🔣️taxonomy.json", suitePath = join(root, library, "🧪️tests/🟦️transaction-v2.ts");
+  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", schemaRelative = library + "/🔣️taxonomy.json", suitePath = join(root, library, "🧪️tests/🔄️transaction-v2/🟦️.ts");
   const suite = readFileSync(suitePath, "utf8"), tree = ts.createSourceFile(suitePath, suite, ts.ScriptTarget.Latest, true);
   const helpers = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "embeddedFixture");
   expect(helpers).toHaveLength(1);
@@ -384,7 +384,7 @@ for (const row of vector.physicalCases) test("physical preflight publication bou
   } finally {
     const output = join(fixture.owner, "📊️outcome");
     mkdirSync(output);
-    writeFileSync(join(output, "../🛫️preflight-reference-basis/🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
+    writeFileSync(join(output, "../../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
   }
 }, 15_000);
 
@@ -394,7 +394,7 @@ test("the dedicated preflight gate is registered through Nx and both ordered lau
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
   const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(router.match(/segments\[0\] === "preflight-reference-basis"/gu)).toHaveLength(1);
-  expect(router).toContain("🧪️tests/🟦️preflight-reference-basis.ts");
+  expect(router).toContain("🧪️tests/🛫️preflight-reference-basis/🟦️.ts");
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const rows = parseJsonc(readFileSync(join(root, path), "utf8")).configurations;
     const matches = rows.filter((entry: { name: string }) => entry.name === expected.launchName);

@@ -12,7 +12,7 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_artifact_lowpoly_lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
-    use semio_s_plugin_lowpoly::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
+    use semio_s_plugin_lowpoly::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
     use semio_s_plugin_lowpoly::editor::lowpoly::config::LowpolyConfig;
     use semio_s_plugin_lowpoly::editor::lowpoly::session::LowpolyScratch;
     use semio_s_plugin_lowpoly::editor::lowpoly::{ArtifactView, ConfigView, HistoryView, LowpolyCommand};
@@ -28,7 +28,7 @@ mod subject {
             "camera" => Some(LowpolyCommand::SetCamera(camera::set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 })),
             "chrome" => Some(LowpolyCommand::ToggleShowEdges(chrome::toggle_show_edges::ToggleShowEdges {})),
             "engagement" => Some(LowpolyCommand::EngagementInput(engagement::engagement_input::EngagementInput { value: "ext".into() })),
-            "fixture" => Some(LowpolyCommand::SetFixtureJson(fixture::set_fixture_json::SetFixtureJson { json: "{}".into() })),
+            "document" => Some(LowpolyCommand::ReplaceSnapshotJson(fixture::replace_snapshot_json::ReplaceSnapshotJson { json: "{}".into() })),
             "mesh-edit" => Some(LowpolyCommand::ToggleSmooth(mesh_edit::toggle_smooth::ToggleSmooth {})),
             "paint" => Some(LowpolyCommand::AddPaintLayer(paint::add_paint_layer::AddPaintLayer { object_id: None, name: Some("Detail".into()) })),
             "selection" => Some(LowpolyCommand::SetActiveObject(selection::set_active_object::SetActiveObject { object_id: "obj-1".into() })),

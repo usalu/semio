@@ -24,15 +24,15 @@ fn sweep_a() -> SemioBrepSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioBrepSnapshot {
     let mut s = SemioBrepSnapshot::default();
-    s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }];
+    s.vertices = vec![BrepVertex { tol: 2e-7, id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }];
     s.edges = vec![
-        BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }, axis: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, radius: 2.0 } },
+        BrepEdge { tol: 3e-7, id: "e1".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }, axis: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, radius: 2.0 } },
         BrepEdge { tol: 1e-7, id: "e-added".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
     ];
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }, BrepLoop { id: "l-added".into(), edges: vec![] }];
     s.faces = vec![
         BrepFace {
-            tol: 1e-7,
+            tol: 4e-7,
             id: "f1".into(),
             outer_loop: "l1-alt".into(),
             inner_loops: vec!["l-added".into()],
@@ -75,13 +75,13 @@ async fn field_sweep_every_field_present_in_diff() {
     let vertices = d.vertices.as_ref().expect("vertices diff present");
     assert_eq!(vertices.removed, vec!["v-removed".to_string()]);
     assert_eq!(vertices.added.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), vec!["v-added".to_string()]);
-    assert!(vertices.modified.iter().any(|m| m.key == "v1" && m.diff.point.is_some()));
+    assert!(vertices.modified.iter().any(|m| m.key == "v1" && m.diff.point.is_some() && m.diff.tol == Some(2e-7)));
 
     let edges = d.edges.as_ref().expect("edges diff present");
     assert_eq!(edges.removed, vec!["e-removed".to_string()]);
     assert_eq!(edges.added.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), vec!["e-added".to_string()]);
     let e1 = edges.modified.iter().find(|m| m.key == "e1").expect("e1 modified");
-    assert!(e1.diff.start_vertex.is_some() && e1.diff.end_vertex.is_some() && e1.diff.curve.is_some());
+    assert!(e1.diff.start_vertex.is_some() && e1.diff.end_vertex.is_some() && e1.diff.curve.is_some() && e1.diff.tol == Some(3e-7));
 
     let loops = d.loops.as_ref().expect("loops diff present");
     assert_eq!(loops.removed, vec!["l-removed".to_string()]);
@@ -92,7 +92,7 @@ async fn field_sweep_every_field_present_in_diff() {
     assert_eq!(faces.removed, vec!["f-removed".to_string()]);
     assert_eq!(faces.added.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["f-added".to_string()]);
     let f1 = faces.modified.iter().find(|m| m.key == "f1").expect("f1 modified");
-    assert!(f1.diff.outer_loop.is_some() && f1.diff.inner_loops.is_some() && f1.diff.surface.is_some() && f1.diff.orientation.is_some());
+    assert!(f1.diff.outer_loop.is_some() && f1.diff.inner_loops.is_some() && f1.diff.surface.is_some() && f1.diff.orientation.is_some() && f1.diff.tol == Some(4e-7));
 
     let shells = d.shells.as_ref().expect("shells diff present");
     assert_eq!(shells.removed, vec!["s-removed".to_string()]);
@@ -136,12 +136,13 @@ async fn absorb_law_add_then_setfield_patches_added_payload() {
     let mut d1 = SemioBrepDiff::default();
     d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3::default() }] });
     let mut d2 = SemioBrepDiff::default();
-    d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }) } }], added: vec![] });
+    d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }), tol: Some(2e-7) } }], added: vec![] });
     let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
     let result = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(result, sequential);
     assert_eq!(result.vertices[0].point, SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 });
+    assert_eq!(result.vertices[0].tol, 2e-7);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -149,7 +150,7 @@ async fn absorb_law_modify_then_remove_drops_pending_patch() {
     let mut base = SemioBrepSnapshot::default();
     base.vertices.push(BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3::default() });
     let mut d1 = SemioBrepDiff::default();
-    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }) } }], added: vec![] });
+    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }), tol: None } }], added: vec![] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec!["v1".into()], modified: vec![], added: vec![] });
     let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");

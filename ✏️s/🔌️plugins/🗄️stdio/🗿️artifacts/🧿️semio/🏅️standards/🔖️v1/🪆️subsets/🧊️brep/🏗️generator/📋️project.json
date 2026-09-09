@@ -2,18 +2,28 @@
   "name": "@semio-tech/fixture-generator-stdio-semio-v1-brep",
   "targets": {
     "🏭️generator": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "🏭️generator-manifests": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
+    },
+    "📏️tolerance-contract": {
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts tolerance-contract",
+        "forwardAllArgs": false
+      },
+      "outputs": []
     }
   }
 }

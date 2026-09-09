@@ -72,7 +72,7 @@ fn trinity_rewriting_rejected_page_close_retires_one_owner_per_grant() {
 }
 
 fn nakagin_graph() -> Graph {
-    let dsl = include_str!("../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+    let dsl = include_str!("../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
 }
 

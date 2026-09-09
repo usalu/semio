@@ -79,7 +79,7 @@ fn borrowed_generic_leaf_infers_static_metadata() {
 
 #[test]
 fn compiler_contract_vectors_have_complete_expected_outcomes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🤝️mutation-leaf-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf contract fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🤝️mutation-leaf-contract/🔣️.json")).expect("valid lower mutation leaf contract fixture");
     let cases = fixture["cases"].as_array().expect("compiler cases");
     assert_eq!(cases.len(), 3);
     assert!(cases.iter().any(|case| case["borrowedGeneric"] == true && case["expectedCompile"] == true));
@@ -90,7 +90,7 @@ fn compiler_contract_vectors_have_complete_expected_outcomes() {
 
 #[test]
 fn source_contract_rejects_every_workspace_token_byte_and_path_decoy() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧭️mutation-leaf-source-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf source fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️mutation-leaf-source-contract/🔣️.json")).expect("valid lower mutation leaf source fixture");
     let bytes = fixture["workspaceTokenMismatchBytes"].as_array().expect("workspace token byte vectors");
     assert_eq!(bytes.len(), 32);
     for byte in bytes {
@@ -125,7 +125,7 @@ fn source_contract_rejects_every_workspace_token_byte_and_path_decoy() {
 
 #[test]
 fn exact_domain_layout_preserves_full_identity_and_rejects_unregistered_pairs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🧫️fixtures/🧭️domains.json")).expect("shared exact-owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json")).expect("shared exact-owner fixture");
     let root: &'static str = Box::leak(fixture["mutationRoot"].as_str().unwrap().to_string().into_boxed_str());
     let owners: &'static [MutationDomainOperation] = Box::leak(
         fixture["domains"]

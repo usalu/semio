@@ -46,7 +46,7 @@ impl crate::value::FromValue for CausalAddOp {
 }
 const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mutation::MutationLeafDescriptor {
     schema_version: 1,
-    owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️fixtures/🧬️mutations/➕️causal-add",
+    owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧬️mutations/➕️causal-add",
     semantic_kind: "causal-add",
     display_name: "Causal Add",
     emoji: "➕️",
@@ -134,7 +134,7 @@ fn retire_dag_shell(dag: &mut MutationDag) {
 #[test]
 fn causal_add_fixture_has_exact_required_descriptor() {
     use crate::mutation::Mutation;
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
     assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
     assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
     assert_eq!(serde_json::Value::from(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor())), expected);

@@ -132,7 +132,7 @@ fn catalog_kind_item(entry: &dsl::DslValue, icon_id: &str) -> semio_framework_pl
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
     let budget = &mut RowBudget::new(page_rows());
-    let objects = budget.nested(SECTIONS - 1, |share| paged_section(&format!("{ROOT}.objects"), entries("objects"), share, |entry, share| object_kind_item(entry, share)))?;
+    let objects = budget.nested(SECTIONS - 1, |share| paged_section(&format!("{ROOT}.objects"), entries("objects"), share, object_kind_item))?;
     let vortices = budget.nested(SECTIONS - 2, |share| paged_section(&format!("{ROOT}.vortices"), entries("vortices"), share, |entry, _| catalog_kind_item(entry, "circle-dot")))?;
     let cables = budget.nested(SECTIONS - 3, |share| paged_section(&format!("{ROOT}.cables"), entries("cables"), share, |entry, _| catalog_kind_item(entry, "plug")))?;
     let attractions = budget.nested(SECTIONS - 4, |share| paged_section(&format!("{ROOT}.attractions"), entries("attractions"), share, |entry, _| catalog_kind_item(entry, "link")))?;

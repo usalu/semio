@@ -19,7 +19,7 @@ use dsl::DslValue;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every
 /// "metabolism" example call site (`setActiveExample`, `.example` manifest registration, tests).
-pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 //#region 🔖️TextPrimitives
 /// 🧪️ Real hex-encoded text primitives — one `key=<hex>` line per field (`📓️migration-recipe.md`
@@ -66,17 +66,16 @@ fn to_text_error(message: String) -> store::TextError {
 }
 
 /// 📄️ The real structured body: `wires=<hex>` / `nodes=[<hex>...]` / `edges=[<hex>...]` /
-/// `camera=<hex>` / `meta=<hex>` — five lines, each independently hex-decodable.
+/// `meta=<hex>` — four lines, each independently hex-decodable.
 fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
     let scene = wires_working_scene(snapshot);
-    format!("wires={}\nnodes={}\nedges={}\ncamera={}\nmeta={}", enc_dsl(&snapshot.wires_fixture), enc_dsl_list(&scene.nodes), enc_dsl_list(&scene.edges), enc_dsl(&snapshot.camera), enc_dsl(&snapshot.meta),)
+    format!("wires={}\nnodes={}\nedges={}\nmeta={}", enc_dsl(&snapshot.wires_fixture), enc_dsl_list(&scene.nodes), enc_dsl_list(&scene.edges), enc_dsl(&snapshot.meta))
 }
 
 fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextError> {
     let mut wires_fixture = None;
     let mut nodes = Vec::new();
     let mut edges = Vec::new();
-    let mut camera = None;
     let mut meta = None;
     for line in body.lines() {
         let line = line.trim();
@@ -89,8 +88,6 @@ fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextErr
             nodes = dec_dsl_list(rest).map_err(to_text_error)?;
         } else if let Some(rest) = line.strip_prefix("edges=") {
             edges = dec_dsl_list(rest).map_err(to_text_error)?;
-        } else if let Some(rest) = line.strip_prefix("camera=") {
-            camera = Some(dec_dsl(rest).map_err(to_text_error)?);
         } else if let Some(rest) = line.strip_prefix("meta=") {
             meta = Some(dec_dsl(rest).map_err(to_text_error)?);
         } else {
@@ -98,7 +95,7 @@ fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextErr
         }
     }
     let content = crate::wires_content_child_with_owner(nodes, edges);
-    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, camera: camera.unwrap_or_else(crate::empty_camera), meta: meta.unwrap_or(DslValue::Null) })
+    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, meta: meta.unwrap_or(DslValue::Null) })
 }
 //#endregion 🔖️TextPrimitives
 

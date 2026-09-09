@@ -7,7 +7,7 @@
 //!
 //! **Where a vector lives is the FEATURE's answer, not this file's.** Every scenario carries a doc
 //! string naming its `(before, mutation, after)` triple as `asset://` (or, for
-//! `commit-reconstruction`, `local://`) URIs, and they are resolved through the test context at RUN
+//! `commit-reconstruction`, `shared://`) URIs, and they are resolved through the test context at RUN
 //! time. Nothing here transcribes a fixture path: the 2026-09-05 repo-wide path-shortening pass
 //! renamed every case directory under this subset and left 107 compile-time `include_str!` literals
 //! addressing names that no longer existed, which is exactly the drift runtime resolution cannot

@@ -38,6 +38,6 @@ impl crate::os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for SetN {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🛂️validated-🔢️set-n/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

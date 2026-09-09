@@ -1,12 +1,12 @@
-# 🧬️ Din18599 snapshot schema — artifact-lane fields only.
-
+# 🪪️ Din18599Snapshot uses the canonical Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type Din18599Snapshot {
   useClass: String! @state(class: ARTIFACT)
   heatedAreaM2: Float! @state(class: ARTIFACT)
   occupants: Int! @state(class: ARTIFACT)
   hT: Float! @state(class: ARTIFACT)
   hV: Float! @state(class: ARTIFACT)
-  climate: String! @state(class: ARTIFACT)
+  climate: ArtifactChild! @state(class: ARTIFACT)
   internalGainsWM2: Float! @state(class: ARTIFACT)
   solarGainsKwh: Float! @state(class: ARTIFACT)
   systemLossesKwh: Float! @state(class: ARTIFACT)

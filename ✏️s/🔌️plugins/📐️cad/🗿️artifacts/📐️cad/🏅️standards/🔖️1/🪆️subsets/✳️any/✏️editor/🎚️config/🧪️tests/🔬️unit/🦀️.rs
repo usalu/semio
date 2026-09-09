@@ -41,13 +41,20 @@ async fn cad_sun_config_round_trips_through_world_sun_config() {
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral config mutation layout fixture");
     let base = CadConfig::default();
-    let next = CadConfig { selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
+    let next = CadConfig { selected_node_ids: serde_json::from_value(fixture["selectedNodeIds"].clone()).expect("neutral selection"), ..CadConfig::default() };
     let operation = CadConfigMutation::Snapshot { config: next.clone() };
     let forward = operation.diff(&base).diff().clone();
     assert_eq!(forward, next);
     let backwards = operation.inverse(&base);
     assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
+    assert_eq!(serde_json::to_value(&forward.selected_node_ids).expect("selection JSON oracle"), fixture["selectedNodeIds"]);
+    let bytes = protocol::OpBinary::encode_op(&operation).expect("config mutation binary");
+    assert_eq!(<CadConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("config mutation binary round trip"), operation);
+    let inline_bytes = size_of::<CadConfigMutation>();
+    eprintln!("[DEBUG] CAD config mutation inline bytes={inline_bytes}");
+    assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "CAD config mutation exceeds its neutral inline budget");
     let restored = backwards[0].diff(&forward).diff().clone();
     assert_eq!(restored, base);
     store::os_store::test_support::assert_op_line_round_trip(&operation);

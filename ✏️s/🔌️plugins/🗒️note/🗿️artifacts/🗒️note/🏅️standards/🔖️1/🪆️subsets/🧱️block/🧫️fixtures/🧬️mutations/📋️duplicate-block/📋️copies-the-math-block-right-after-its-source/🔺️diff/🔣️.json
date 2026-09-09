@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [
+      {
+        "parentId": null,
+        "index": 4,
+        "block": {
+          "kind": "math",
+          "id": "blk-math-copy",
+          "name": "Formula copy",
+          "x": 0,
+          "y": 400,
+          "width": 200,
+          "height": 80,
+          "rotation": 0,
+          "visible": true,
+          "locked": false,
+          "tex": "E = mc^2",
+          "displayMode": true
+        }
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
+}

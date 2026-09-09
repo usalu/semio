@@ -1,0 +1,25 @@
+{
+  "edges": {
+    "added": [
+      {
+        "id": "e5",
+        "startVertex": "v1",
+        "endVertex": "v3",
+        "curve": {
+          "kind": "line",
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "direction": {
+            "x": 1,
+            "y": 1,
+            "z": 0
+          }
+        },
+        "tol": 3e-7
+      }
+    ]
+  }
+}

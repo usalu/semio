@@ -11,7 +11,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import cases from "../../🧪️tests/🧬️schema-invariants/🔣️.json";
+import cases from "../../🧫️fixtures/🧬️schema-invariants/🔣️.json";
 import protocolSchema from "../../🧬️schema/🔣️.json";
 import {
   type SchemaBoundFixture,
@@ -784,7 +784,7 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
   test("a schema:// fixture resolves to the catalog's file, pinned by digest", () => {
     const root = resolutionRepo();
     try {
-      const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" };
+      const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "p" };
       const { fixtures, missing } = resolveFixtures(root, discovered, ["schema://s.writer.writer/Artifact"]);
       expect(missing).toEqual([]);
       expect(fixtures[0]!.scope).toBe("schema");
@@ -798,7 +798,7 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
   test("an unresolvable schema:// fixture is missing, never silently defaulted", () => {
     const root = resolutionRepo();
     try {
-      const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" };
+      const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "p" };
       const { fixtures, missing, diagnostics } = resolveFixtures(root, discovered, ["schema://s.writer.absent/Artifact"]);
       expect(fixtures).toEqual([]);
       expect(missing).toEqual(["schema://s.writer.absent/Artifact"]);

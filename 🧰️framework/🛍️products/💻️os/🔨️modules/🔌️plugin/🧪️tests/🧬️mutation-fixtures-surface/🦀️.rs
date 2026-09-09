@@ -6,7 +6,7 @@ pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
-    NoPresenceMutation, PluginApp, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
+    NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
 use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
@@ -176,11 +176,44 @@ impl ArtifactViewer for SurfaceViewerFixture {
     type TransientMutation = crate::app::NoTransientMutation;
     type Command = SurfaceViewerCommand;
 
+    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if instance_id == u32::MAX {
+            return Ok(PluginCloseStep::Pending { released_items: maximum_items.min(1), released_bytes: maximum_bytes.min(7) });
+        }
+        Ok(PluginCloseStep::Complete)
+    }
+
+    fn mounted_job_close_step(instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if instance_id == u32::MAX {
+            return Ok(PluginCloseStep::Blocked { reason: "surface viewer lifecycle witness" });
+        }
+        Ok(PluginCloseStep::Complete)
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        instance_id != u32::MAX
+    }
+
+    fn config_schema() -> &'static str {
+        "semio.testkit-surface.viewer-config/v1"
+    }
+
+    fn command_id(_command: &Self::Command) -> &'static str {
+        "surface-viewer-noop"
+    }
+
     fn initial_snapshot() -> SurfaceSnapshot {
         SurfaceSnapshot::default()
     }
 
-    fn handle(_command: &SurfaceViewerCommand, _doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &crate::app::InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+    fn handle(
+        _command: &SurfaceViewerCommand,
+        _doc: &ArtifactView<'_, SurfaceSnapshot>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &crate::app::InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -192,6 +225,16 @@ impl ArtifactViewer for SurfaceViewerFixture {
 #[semio_framework_async_macros::async_test]
 async fn viewer_never_mutates_the_document_or_draft_store() {
     assert_viewer_never_mutates::<SurfaceViewerFixture>().await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn bounded_viewer_fixture_preserves_declared_lifecycle_hooks() {
+    type Fixture = crate::app::testkit::BoundedViewerFixture<SurfaceViewerFixture>;
+    assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, 3, 11).expect("maintenance hook"), PluginCloseStep::Pending { released_items: 1, released_bytes: 7 }));
+    assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, 3, 11).expect("close hook"), PluginCloseStep::Blocked { reason: "surface viewer lifecycle witness" }));
+    assert!(!<Fixture as ArtifactViewer>::mounted_jobs_terminal_is_empty(u32::MAX));
+    assert_eq!(<Fixture as ArtifactViewer>::config_schema(), "semio.testkit-surface.viewer-config/v1");
+    assert_eq!(<Fixture as ArtifactViewer>::command_id(&SurfaceViewerCommand::Noop), "surface-viewer-noop");
 }
 
 #[semio_framework_async_macros::async_test]

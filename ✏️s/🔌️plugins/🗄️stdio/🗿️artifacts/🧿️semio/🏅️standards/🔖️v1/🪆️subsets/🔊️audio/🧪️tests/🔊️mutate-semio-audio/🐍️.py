@@ -70,12 +70,12 @@ DSL_PREAMBLE = "semio stdio.semio.audio.dsl v1"
 #: "Bauen mit Bestand" recording — 8 000 real 16-bit PCM samples at the file's own 8 000 Hz — carrying
 #: the real ID3v2.3 tags of the same recording's committed mp3. Derived ONCE by
 #: `🐍️derive-audio-fixture.py` in the ticket folder.
-RECORDING_DSL = "local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio"
+RECORDING_DSL = "shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio"
 #: 🎵️ The tiny committed tone, kept for the BYTE half of the identity law and for the tie to the
 #: committed specification vectors: its file was written by the RUST codec, so this implementation
 #: reproducing it is a cross-language byte agreement the recording — written by this implementation —
 #: cannot restate.
-TONE_DSL = "asset://📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio"
+TONE_DSL = "asset://🎵️tone/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -307,7 +307,7 @@ def tone(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://🔊️mutate-semio-audio/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

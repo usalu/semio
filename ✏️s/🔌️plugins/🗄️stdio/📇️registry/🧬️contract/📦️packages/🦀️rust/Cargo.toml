@@ -23,3 +23,4 @@ semio-framework-value-derive = { path = "../../../../../../../🧰️framework/�
 
 [dev-dependencies]
 base64 = "0.22.1"
+serde_json.workspace = true

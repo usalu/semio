@@ -6,7 +6,7 @@ use protocol::Mutation;
 /// `remove-page` must raise, leave the document untouched, and offer no undo.
 #[test]
 fn missing_page_refuses_without_inverse_or_state_change() {
-    let mutation: PdfMutation = dsl::json::from_json_str(include_str!("../🔄️round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")).expect("committed remove-page payload decodes");
+    let mutation: PdfMutation = dsl::json::from_json_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-page/🔄️round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")).expect("committed remove-page payload decodes");
     let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
     let mut state = base.clone();
     assert!(!mutation.diff(&state).apply_to(&mut state).messages().is_empty(), "remove-page: an unaddressable page must be refused");

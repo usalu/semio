@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
-import fixture from "./🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🔣️json-projection/🔣️.json" with { type: "json" };
 import { parseDslValue } from "../../🧬️schema/🟦️.ts";
 
 /** 🌱️ Validates the shared JSON projection against Ajv without accepting hidden runtime state. */

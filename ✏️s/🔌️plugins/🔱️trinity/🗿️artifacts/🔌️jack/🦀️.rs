@@ -747,9 +747,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// debt D1 — deleted repo-wide only once every plugin has migrated, not this pass — `🗒️note`/`🖍️draw`
 /// precedent, `📓️terra-fleet-trinity-recipe-report.md`): the real en/de localized names
 /// (`"Jack"`/`"Buchse"`) still live only on these `ArtifactCapability` rows.
-/// `crate::editor::jack::config::schema::register_app_schema()` is the one exception, kept alive via
-/// the plugin root's own narrowed `.setup()`: it registers the `TrinityJackPlayApp` CONFIG/PRESENCE
-/// schema, an app-scope concern neither the old nor the new declaration type has a field for.
+/// Jack query source and execution output now register through their exact window owners.
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
@@ -926,7 +924,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-node-id-the-14a6d5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-node-id-the-scene-already-holds/🦀️.rs"]
                             mod tests_rejects_a_node_id_the_scene_already_holds;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/📝️text/🦀️.rs"]
                             pub mod text;
@@ -943,7 +941,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-0964d8/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-node-the-scene-never-had/🦀️.rs"]
                             mod tests_rejects_deleting_a_node_the_scene_never_had;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/📝️text/🦀️.rs"]
                             pub mod text;
@@ -960,7 +958,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🧪️tests/🚫️rejects-an-edge-3b7777/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🧪️tests/🚫️rejects-an-edge-whose-endpoints-are-absent/🦀️.rs"]
                             mod tests_rejects_an_edge_whose_endpoints_are_absent;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/📝️text/🦀️.rs"]
                             pub mod text;
@@ -977,7 +975,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/🚫️rejects-cutting-an-0cb007/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/🚫️rejects-cutting-an-edge-the-scene-never-had/🦀️.rs"]
                             mod tests_rejects_cutting_an_edge_the_scene_never_had;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/📝️text/🦀️.rs"]
                             pub mod text;
@@ -994,7 +992,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/✏️keeps-the-name-a-node-d2f59b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/✏️keeps-the-name-a-node-already-carries/🦀️.rs"]
                             mod tests_keeps_the_name_a_node_already_carries;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/📝️text/🦀️.rs"]
                             pub mod text;
@@ -1011,7 +1009,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/📍️keeps-a-node-at-the-815499/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/📍️keeps-a-node-at-the-point-it-already-occupies/🦀️.rs"]
                             mod tests_keeps_a_node_at_the_point_it_already_occupies;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/📝️text/🦀️.rs"]
                             pub mod text;
@@ -1028,7 +1026,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/🏷️keeps-a-node-ea762c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/🏷️keeps-a-node-property-at-the-value-it-already-holds/🦀️.rs"]
                             mod tests_keeps_a_node_property_at_the_value_it_already_holds;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/📝️text/🦀️.rs"]
                             pub mod text;
@@ -1045,7 +1043,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/🧹️keeps-an-edge-c65f2a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/🧹️keeps-an-edge-without-the-property-it-never-had/🦀️.rs"]
                             mod tests_keeps_an_edge_without_the_property_it_never_had;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/📝️text/🦀️.rs"]
                             pub mod text;
@@ -1270,18 +1268,11 @@ pub mod editor {
             }
         }
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🦀️.rs"]
         pub mod window_config;
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config/🦀️.rs"]
+        pub mod query_window_config;
 
         #[path = "."]
         pub mod transient {
@@ -1296,10 +1287,6 @@ pub mod editor {
             mod component;
             pub use component::*;
         }
-
-        #[cfg(target_arch = "wasm32")]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
-        pub mod wasm;
 
         #[path = "."]
         pub mod commands {

@@ -5,7 +5,7 @@ use crate::lexer::{lex, tokenize, Token, TokenClass};
 use crate::{Camera, Manifest};
 
 fn mini_graph() -> Graph {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).unwrap();
     let graph = &fixture["graph"];
     let nodes = dsl::FromValue::from_value(dsl::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = dsl::FromValue::from_value(dsl::DslValue::from(graph["edges"].clone())).unwrap();
@@ -185,7 +185,7 @@ async fn lex_not_equal() {
 
 #[semio_framework_async_macros::async_test]
 async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let graph = if case["inlineManifest"] == true {
             let mut snapshot = mini_graph().to_fixture();
@@ -247,7 +247,7 @@ async fn query_ownership_artifact_contract_exposes_document_state_only() {
 
 #[test]
 fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let policy = &fixture["retainedExecution"];
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
@@ -305,7 +305,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> String {
 
 #[test]
 fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let property_bytes = fixture["retainedExecution"]["entityAdmission"]["oversizedPropertyBytes"].as_u64().expect("oversized property bytes") as usize;
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
@@ -322,7 +322,7 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
 
 #[test]
 fn query_ownership_output_admission_rejects_oversized_table_before_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let policy = &fixture["retainedExecution"]["outputAdmission"];
     let row_count = policy["rowCount"].as_u64().expect("row count") as usize;
     let cell_bytes = policy["cellBytes"].as_u64().expect("cell bytes") as usize;

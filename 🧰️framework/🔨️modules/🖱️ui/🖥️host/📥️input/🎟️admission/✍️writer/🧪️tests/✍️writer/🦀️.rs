@@ -3,7 +3,7 @@
 use super::input_writer::{InputByteBuffer, InputWriteGrant, InputWriteKind};
 use super::input_root_tests::{allocations_end, allocations_start};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
 fn grant(work_bytes: usize, physical_bytes: usize) -> InputWriteGrant { InputWriteGrant { items: 1, work_bytes, physical_bytes } }
 fn full() -> InputWriteGrant { grant(32_768, 32_768) }
 fn hex(value: &str) -> Vec<u8> { value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect() }

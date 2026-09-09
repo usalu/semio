@@ -56,3 +56,49 @@ command-ingress/lifecycle keeps the turn hot); needs the next component rebuild.
 4. Peer churn: the 3d editor is uncompilable since 07:28 (`cannot find value config` ×4 at
    `✏️editor/🦀️.rs:2995-3060`, kind-weight work; the ownership peer's uncommitted edit) — the release
    component cannot be rebuilt until it heals.
+
+## 08:55 rebuild #3 (W-M sections + reactor trace) — root cause of the more-work spin, measured
+
+Sections now arrive: `windowMeasuresByWindowId` = 10 measures for each of `puzzle3d-main`,
+`puzzle3d-main-top`, `puzzle3d-main-perspective`; `toolMeasuresByToolId.fill` = `puzzle3d-fill-count`,
+`puzzle3d-play-distribution`; engagements for all three windows. Boot actions still fail after 4096
+continuations, and the reactor trace (worker `eprintln`, read via the console buffer) says why:
+
+```
+[DEBUG] reactor more-work streak=4096 seen=4215 executor_deadline=false close_cleanup=false
+        typed_operation=true reconcile=false resumes=false executor_pending=false command_ingress=false lifecycle=false
+[DEBUG] typed-operation publication turn=4096 operations=["47:Worker:true:true"] latest_wins_empty=true
+        effects=0 events=0 ui=0 query=started=true page_sent=true … inner=ready=true length=256 terminal_page=false
+[DEBUG] cooperative-maintenance … pool=CooperativePoolSnapshot { pump_calls: 4096, selections: 514,
+        no_selection: 3582, selected_by_lane: [3, 0, 0, 511, 0, 0], queued_by_lane: [0, 0, 0, 1, 0, 0] … }
+```
+
+- The only hot source is `typed_operation`: tool operation 47 (the boot `setActiveExample` retained job)
+  sits in stage `Worker` for the whole 4096-turn budget. The local-interaction query is *not* the spin
+  (page ready, waiting for the host ACK, `has_pending_work` false).
+- `selected_by_lane[Interactive] = 3`: the process pool executed THREE interactive job steps in 4096
+  reactor turns. On wasm the pool has no threads; a step submitted by `MountedWorkerJobSession::pump_one`
+  runs only when `WorkerPool::pump` is called, and the only pump was `pump_runtime_live_cooperative_turn`
+  — one pump per cooperative-maintenance job (lane 3, 511 runs), each of which calls
+  `maintenance_step` once, whose stage 0 of 21 is the sole `drive_worker_step` site. Net cadence: one
+  worker step per ~170 turns.
+- Fix (framework): `🔌️plugin/🦀️.rs` `advance_typed_operation_publication_one` now drives a
+  Worker-stage operation for a bounded slice (`drive_typed_operation_worker`, ≤256 pumps / 4 ms) and
+  `⚛️reactor/🔄️turn/🦀️.rs` pumps the process pool inside every turn on wasm
+  (`pump_process_worker_pool`, ≤64 pumps / 2 ms, folded into `more_work`). Rebuild #4 queued.
+
+## 09:05-09:40 rebuilds #4-#6 (worker pump, W-B batching, fault-body retention, maintenance stage trace)
+
+- The 4096-continuation spin is gone: boot actions now settle in 1-17 s instead of exhausting the budget.
+- Rebuild #4 surfaced the hidden job fault as `typed-operation cancelled before its next publication unit`
+  (the lease cancellation masked the body) → `terminal_fault` retention on the mounted operation.
+- Rebuilds #5/#6 (consistent tree): the actor traps at ~17-23 s with
+  `plugin.internal.interactive-ceiling: runtime live cleanup faulted for instance 1: the turn overran the
+  interactive step ceiling (elapsed 8401-10201us, ceiling 8000us)`. The per-stage trace names the
+  offender: `[DEBUG] maintenance stage=14 elapsed_us=8401` = `drive_store_replacement_jobs` — one unit
+  of the boot example's whole-document store replacement exceeds the 8 ms law on the release wasm, and
+  the cooperative-maintenance verdict (`runtime_live_cleanup_publish_turn`) is instance-fatal.
+  Wave W-R2 (`📓️2026-09-09-wave-R2-store-replacement-step-budget.md`) slices that unit.
+- Concern for the framework owner: a single overrun of any maintenance unit kills the instance
+  (`RuntimeMaintenanceStatus::Fault(InteractiveCeiling)` → reactor turn error → actor trapped); a
+  quarantine of the offending job would keep the app alive.

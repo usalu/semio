@@ -12,7 +12,7 @@ Feature: Parse the real committed equation document, print it back and cross it 
   `payload = OCTET+`, whose header production declares `"schema" SP "stdio.json"` against an artifact
   whose own first line says otherwise.
 
-  📄️ The real committed document is `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`, whose
+  📄️ The real committed document is `asset://🎬️demo/🗣️.dsl.semio`, whose
   `equation` field is the default single-term integer expression `0` at label 0 with `nextLabel` 1,
   and whose three composed child handles all carry the same real content key
   `equation-scene-ed395b82221de2b2` — the one committed document where the composition is
@@ -22,6 +22,6 @@ Feature: Parse the real committed equation document, print it back and cross it 
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed equation document, print it back and cross it against its binary encoding
-    Given the real committed document asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed document asset://🎬️demo/🗣️.dsl.semio
     When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
     Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires

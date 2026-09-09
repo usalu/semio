@@ -4,8 +4,8 @@ use super::*;
 
 #[test]
 fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_actor_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
-    let source: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
+    let source: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap();
     assert_eq!(fixture["limits"]["commandBytes"], COMMAND_MAX_BYTES);
     assert_eq!(fixture["limits"]["textBytes"], TEXT_MAX_BYTES);
     assert_eq!(fixture["limits"]["dependencyCount"], DEPENDENCY_MAX_COUNT);

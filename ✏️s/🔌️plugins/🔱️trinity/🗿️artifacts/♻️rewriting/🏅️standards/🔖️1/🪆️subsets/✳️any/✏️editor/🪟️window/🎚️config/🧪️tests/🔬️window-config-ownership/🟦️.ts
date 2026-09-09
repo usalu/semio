@@ -5,14 +5,14 @@ import { applyPatch } from "fast-json-patch";
 
 /** 🧪️ Independent JSON Patch reference for exact-window configuration ownership. */
 export function testRewritingWindowConfigOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  assert(!existsSync(new URL("../../../../🎚️config/🧬️schema/🔣️.json", import.meta.url)), "Rewriting must not declare an app configuration owner");
+  const fixture = JSON.parse(readFileSync(new URL("./../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
+  assert(!existsSync(new URL("../../../../🎚️config/🧬️schema/../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url)), "Rewriting must not declare an app configuration owner");
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addKeyword("x-semio-state");
   ajv.addKeyword("x-semio-owner");
   const validate = ajv.compile(schema);
-  const validateMutation = ajv.compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8")));
+  const validateMutation = ajv.compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8")));
   let windows = Object.fromEntries([fixture.leftWindowId, fixture.rightWindowId].map((id: string) => [id, structuredClone(fixture.base)]));
   const generations: Record<string, number> = Object.fromEntries(Object.keys(windows).map((id) => [id, 0]));
   for (const row of fixture.cases) {

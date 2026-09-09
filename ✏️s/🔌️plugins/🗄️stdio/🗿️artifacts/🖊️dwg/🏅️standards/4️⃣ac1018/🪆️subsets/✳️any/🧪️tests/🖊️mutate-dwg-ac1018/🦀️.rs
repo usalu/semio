@@ -48,7 +48,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-version-info"];
 //#region 🔖️Input
 /// 🖊️ The only real, non-stub DWG committed to this repository. It is stamped `AC1024`; see the
 /// module header for what that costs this case and what it does not.
-const INPUT: &str = "asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg";
+const INPUT: &str = "asset://🏛️architectural/🏛️architectural.dwg";
 
 /// 🧫️ Copies the immutable committed drawing into the work directory and returns the mutable copy's
 /// bytes; the committed file is never written to.

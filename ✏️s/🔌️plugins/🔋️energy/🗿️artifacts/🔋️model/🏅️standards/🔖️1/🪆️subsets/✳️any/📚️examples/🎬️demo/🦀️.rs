@@ -2,7 +2,7 @@
 //!
 //! The demo carries a REAL building: ANSI/ASHRAE 140 §5.2 case 600, the standard's own base case.
 //! It used to be an id/label pair with no model behind it at all, which left the committed
-//! `🖼️assets/🗣️.dsl.semio` without a `model=` line and therefore unparseable by this subset's own
+//! `../../🖼️assets/🎬️demo/🗣️.dsl.semio` without a `model=` line and therefore unparseable by this subset's own
 //! `ArtifactDsl` codec — the identity round-trip law had nothing to round-trip.
 
 /// @emoji 🪪 Example id.

@@ -3,7 +3,7 @@
 #[cfg(test)]
 use protocol::Mutation;
 
-/// 🖱️ The last pointer position and node held by one canvas drag.
+/// 🖱️ The frozen viewport and total pointer span held by one canvas drag.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "reasoning.wirescanvastransient")]
@@ -11,8 +11,11 @@ use protocol::Mutation;
 #[dsl(layout = "lines")]
 pub struct WiresCanvasTransient {
     pub drag_node_id: Option<String>,
+    pub drag_start_x: f64,
+    pub drag_start_y: f64,
     pub drag_last_x: f64,
     pub drag_last_y: f64,
+    pub drag_zoom: f64,
 }
 
 //#region 🔖️ArtifactCodec
@@ -61,7 +64,7 @@ impl store::ArtifactPack for WiresCanvasTransient {
 
 impl Default for WiresCanvasTransient {
     fn default() -> Self {
-        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0 }
+        Self { drag_node_id: None, drag_start_x: 0.0, drag_start_y: 0.0, drag_last_x: 0.0, drag_last_y: 0.0, drag_zoom: 1.0 }
     }
 }
 

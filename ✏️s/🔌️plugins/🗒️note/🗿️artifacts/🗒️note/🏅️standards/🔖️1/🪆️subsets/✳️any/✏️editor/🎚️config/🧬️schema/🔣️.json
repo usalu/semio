@@ -4,41 +4,6 @@
   "title": "NoteConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "engagementInput",
-    "camera"
-  ],
-  "properties": {
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "camera": {
-      "$ref": "#/$defs/NoteCamera",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "NoteCamera": {
-      "title": "NoteCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "zoom": {
-          "type": "number"
-        }
-      }
-    }
-  }
+  "required": [],
+  "properties": {}
 }

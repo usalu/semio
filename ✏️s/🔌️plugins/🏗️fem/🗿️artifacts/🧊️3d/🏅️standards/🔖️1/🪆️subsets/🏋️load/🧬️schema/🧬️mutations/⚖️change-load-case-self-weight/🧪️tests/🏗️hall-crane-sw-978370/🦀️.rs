@@ -16,11 +16,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall-crane-sw-978370/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall-crane-sw-978370/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall-crane-sw-978370/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall-crane-sw-978370/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall-crane-sw-978370/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

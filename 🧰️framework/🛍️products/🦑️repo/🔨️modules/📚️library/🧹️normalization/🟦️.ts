@@ -717,7 +717,7 @@ interface SemanticPathProjectionContract {
   readonly destinationSegments: readonly SemanticProjectionDestinationSegment[];
   readonly descendantContractId: string;
   readonly catalogContractId: string;
-  readonly rationaleRule: "artifact-mutation-test-projection-v1" | "artifact-example-model-catalog-projection-v1" | "artifact-editor-command-projection-v1";
+  readonly rationaleRule: "artifact-example-model-catalog-projection-v1" | "artifact-editor-command-projection-v1";
 }
 
 interface SemanticPathProjectionReferenceConsumerContract {
@@ -732,10 +732,16 @@ interface SemanticPathProjectionReferenceConsumerContract {
 }
 
 interface MutationCatalogProjectionContractIds {
-  readonly projectionContractId: string;
+  readonly contractKind: "canonical-mutation-case-pair";
+  readonly contractId: "canonical-mutation-case-pair-v1";
+  readonly sourceOwnerKindId: string;
   readonly projectedMemberKindId: string;
-  readonly descendantContractId: string;
+  readonly implementationSegments: readonly SemanticProjectionSourceSegment[];
+  readonly fixtureSegments: readonly SemanticProjectionSourceSegment[];
+  readonly implementationDescendantContractId: string;
+  readonly fixtureDescendantContractId: string;
   readonly catalogContractId: string;
+  readonly coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle";
 }
 
 type GeneratorOwnership = "owned" | "external";
@@ -860,8 +866,8 @@ interface LoadedTaxonomy {
 }
 
 const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-sentinel-cases.json";
-const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️ticket-important-exact-mutations.json";
+const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json";
+const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/💉️ticket-important-exact-mutations/🔣️.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
@@ -1319,7 +1325,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   const semanticPathProjectionContracts: Record<string, SemanticPathProjectionContract> = {};
   for (const [id, value] of Object.entries(projectionRows)) {
     const spec = record(value, `semanticPathProjectionContracts.${id}`);
-    if (!Array.isArray(spec.sourceSegments) || !Array.isArray(spec.destinationSegments) || !["artifact-mutation-test-projection-v1", "artifact-example-model-catalog-projection-v1", "artifact-editor-command-projection-v1"].includes(String(spec.rationaleRule))) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} is invalid`);
+    if (!Array.isArray(spec.sourceSegments) || !Array.isArray(spec.destinationSegments) || !["artifact-example-model-catalog-projection-v1", "artifact-editor-command-projection-v1"].includes(String(spec.rationaleRule))) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} is invalid`);
     const sourceOwnerKindId = requiredString(spec.sourceOwnerKindId, `semanticPathProjectionContracts.${id}.sourceOwnerKindId`);
     const destinationOwnerKindId = requiredString(spec.destinationOwnerKindId, `semanticPathProjectionContracts.${id}.destinationOwnerKindId`);
     if (!semanticDirectoryMemberKinds[sourceOwnerKindId] || !semanticDirectoryMemberKinds[destinationOwnerKindId]) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} owner kind is invalid`);
@@ -1334,18 +1340,18 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     const sourceSegments = spec.sourceSegments.map((segment, index) => parseProjectionSegment(segment, `semanticPathProjectionContracts.${id}.sourceSegments[${index}]`, false) as SemanticProjectionSourceSegment);
     const destinationSegments = spec.destinationSegments.map((segment, index) => parseProjectionSegment(segment, `semanticPathProjectionContracts.${id}.destinationSegments[${index}]`, true) as SemanticProjectionDestinationSegment);
     const captures = sourceSegments.flatMap((segment) => "capture" in segment ? [segment.capture] : []);
-    const expectedCaptures: readonly SemanticProjectionCaptureField[] = rationaleRule === "artifact-mutation-test-projection-v1" ? ["standardVersion", "subsetId", "mutationId", "scenarioId"] : rationaleRule === "artifact-editor-command-projection-v1" ? ["standardVersion", "subsetId", "commandDirectoryName"] : ["standardVersion", "subsetId"];
+    const expectedCaptures: readonly SemanticProjectionCaptureField[] = rationaleRule === "artifact-editor-command-projection-v1" ? ["standardVersion", "subsetId", "commandDirectoryName"] : ["standardVersion", "subsetId"];
     if (canonicalJson(captures) !== canonicalJson(expectedCaptures)) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid captures for ${rationaleRule}`);
     const descendant = semanticDescendantContracts[descendantContractId];
     const catalog = semanticPathProjectionCatalogContracts[catalogContractId];
-    if (rationaleRule === "artifact-mutation-test-projection-v1" ? "contractKind" in descendant || "contractKind" in catalog : rationaleRule === "artifact-example-model-catalog-projection-v1" ? !("contractKind" in descendant && descendant.contractKind === "catalog" && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") : "contractKind" in descendant || !("contractKind" in catalog && catalog.contractKind === "exact-owner-vectors")) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} references incompatible descendant/catalog authorities`);
+    if (rationaleRule === "artifact-example-model-catalog-projection-v1" ? !("contractKind" in descendant && descendant.contractKind === "catalog" && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") : "contractKind" in descendant || !("contractKind" in catalog && catalog.contractKind === "exact-owner-vectors")) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} references incompatible descendant/catalog authorities`);
     const descendantNodes = "contractKind" in descendant ? [] : [...descendant.requiredNodes, ...descendant.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)];
     const sourceNamedNodes = descendantNodes.filter((node): node is SemanticDescendantKindNode & { readonly sourceFilename: string } => "kindId" in node && node.sourceFilename !== undefined);
     if (rationaleRule === "artifact-editor-command-projection-v1" ? sourceNamedNodes.length !== 3 || descendantNodes.filter((node) => "kindId" in node && node.nodeType === "file" && node.kindId === "rust-source").length !== 3 : sourceNamedNodes.length !== 0) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid source-filename descendant authority`);
     semanticPathProjectionContracts[id] = { sourceOwnerKindId, ...(sourceArtifactMemberName ? { sourceArtifactMemberName } : {}), sourceSegments, profileRendererId, destinationOwnerKindId, destinationSegments, descendantContractId, catalogContractId, rationaleRule };
   }
   if (Object.keys(semanticPathProjectionContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionContracts must not be empty");
-  for (const [id, spec] of Object.entries(semanticProjectedMemberKinds)) if (!semanticPathProjectionContracts[spec.projectionContractId]) throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id} references unknown projection contract ${spec.projectionContractId}`);
+  for (const [id, spec] of Object.entries(semanticProjectedMemberKinds)) if (!semanticPathProjectionContracts[spec.projectionContractId] && spec.projectionContractId !== "canonical-mutation-case-pair-v1") throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id} references unknown projection contract ${spec.projectionContractId}`);
   const semanticOwnedFileProjectionContracts: Record<string, SemanticOwnedFileProjectionContract> = {};
   for (const [id, value] of Object.entries(ownedFileProjectionRows)) {
     const name = `semanticOwnedFileProjectionContracts.${id}`;
@@ -1472,13 +1478,20 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     semanticPathProjectionReferenceConsumerContracts[id] = { projectionContractId, consumerIdentity, ownership: "external", sourcePathPattern, sourcePathIdentities: [...sourcePathIdentities], adapters: [...adapters], supportedForms: [...supportedForms], staleMarkers: [...staleMarkers] };
   }
   if (Object.keys(semanticPathProjectionReferenceConsumerContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionReferenceConsumerContracts must not be empty");
+  if (mutationCatalogProjectionRow.contractKind !== "canonical-mutation-case-pair" || mutationCatalogProjectionRow.contractId !== "canonical-mutation-case-pair-v1" || mutationCatalogProjectionRow.coverage !== "every-catalog-vector-has-one-implementation-and-one-fixture-bundle" || !Array.isArray(mutationCatalogProjectionRow.implementationSegments) || !Array.isArray(mutationCatalogProjectionRow.fixtureSegments)) throw new Error("Taxonomy v7 mutationCatalogProjection must be the canonical mutation case pair contract");
   const mutationCatalogProjection: MutationCatalogProjectionContractIds = {
-    projectionContractId: requiredString(mutationCatalogProjectionRow.projectionContractId, "mutationCatalogProjection.projectionContractId"),
+    contractKind: "canonical-mutation-case-pair",
+    contractId: "canonical-mutation-case-pair-v1",
+    sourceOwnerKindId: requiredString(mutationCatalogProjectionRow.sourceOwnerKindId, "mutationCatalogProjection.sourceOwnerKindId"),
     projectedMemberKindId: requiredString(mutationCatalogProjectionRow.projectedMemberKindId, "mutationCatalogProjection.projectedMemberKindId"),
-    descendantContractId: requiredString(mutationCatalogProjectionRow.descendantContractId, "mutationCatalogProjection.descendantContractId"),
+    implementationSegments: mutationCatalogProjectionRow.implementationSegments.map((value, index) => parseProjectionSegment(value, `mutationCatalogProjection.implementationSegments[${index}]`, false) as SemanticProjectionSourceSegment),
+    fixtureSegments: mutationCatalogProjectionRow.fixtureSegments.map((value, index) => parseProjectionSegment(value, `mutationCatalogProjection.fixtureSegments[${index}]`, false) as SemanticProjectionSourceSegment),
+    implementationDescendantContractId: requiredString(mutationCatalogProjectionRow.implementationDescendantContractId, "mutationCatalogProjection.implementationDescendantContractId"),
+    fixtureDescendantContractId: requiredString(mutationCatalogProjectionRow.fixtureDescendantContractId, "mutationCatalogProjection.fixtureDescendantContractId"),
     catalogContractId: requiredString(mutationCatalogProjectionRow.catalogContractId, "mutationCatalogProjection.catalogContractId"),
+    coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle",
   };
-  if (!semanticPathProjectionContracts[mutationCatalogProjection.projectionContractId] || !semanticProjectedMemberKinds[mutationCatalogProjection.projectedMemberKindId] || !semanticDescendantContracts[mutationCatalogProjection.descendantContractId] || !semanticPathProjectionCatalogContracts[mutationCatalogProjection.catalogContractId]) throw new Error("Taxonomy v7 mutationCatalogProjection references unknown projection registries");
+  if (!semanticDirectoryMemberKinds[mutationCatalogProjection.sourceOwnerKindId] || !semanticProjectedMemberKinds[mutationCatalogProjection.projectedMemberKindId] || !semanticDescendantContracts[mutationCatalogProjection.implementationDescendantContractId] || !semanticDescendantContracts[mutationCatalogProjection.fixtureDescendantContractId] || !semanticPathProjectionCatalogContracts[mutationCatalogProjection.catalogContractId]) throw new Error("Taxonomy v7 mutationCatalogProjection references unknown canonical pair registries");
 
   const generatorContracts: Record<string, GeneratorContractSpec> = {};
   const generatorRoots: { readonly id: string; readonly path: string }[] = [];
@@ -3608,7 +3621,7 @@ interface ReferenceToken {
   readonly targetValues?: readonly string[];
   readonly physicalTargets?: readonly string[];
   readonly physicalInterpretation?: "rust-finite-manifest-targets";
-  readonly rewriteKind?: "rust-mod" | "rust-path-join" | "python-entrypoint" | "artifact-uri" | "projection-prose" | "structural-projection" | "path-prefix" | "artifact-catalog-glob" | "artifact-catalog-prose" | "exact-owner-reference";
+  readonly rewriteKind?: "rust-mod" | "rust-path-join" | "python-entrypoint" | "path-prefix" | "artifact-catalog-glob" | "artifact-catalog-prose" | "exact-owner-reference";
   readonly rewriteData?: Readonly<Record<string, string>>;
   readonly unsupportedReason?: string;
 }
@@ -3691,19 +3704,6 @@ function embeddedArgumentTokens(content: string, value: string, valueStart: numb
   return [...new Map(rows.map((entry) => [`${entry.start}\u0000${entry.end}\u0000${entry.value}`, entry])).values()].sort((left, right) => left.start - right.start || left.value.localeCompare(right.value));
 }
 
-interface MutationStructuralPath {
-  readonly value: string;
-  readonly start: number;
-  readonly standard: string;
-  readonly subset: string;
-  readonly mutation: string;
-  readonly scenario: string;
-  readonly suffix: string;
-}
-
-const MUTATION_SOURCE_TEST_PREFIX = "🏅️standards/🔖️([^/\\s\"'`|]+)\\/🪆️subsets/✳️([^/\\s\"'`|]+)\\/🧬️schema/🧬️mutations\\/([^/\\s\"'`|]+(?:/[^/\\s\"'`|]+)?)\\/🧪️tests\\/";
-const MUTATION_SOURCE_STRUCTURE = `${MUTATION_SOURCE_TEST_PREFIX}([^/\\s\"'\u0060|]+)(\\/[^\\s\"'\u0060|)>}\\]]+)?`;
-
 function artifactRootForPath(path: string): string | null {
   const segments = normalizeRelative(path).split("/");
   const index = segments.findIndex((segment) => emojiFold(segment) === emojiFold("🗿️artifacts"));
@@ -3712,83 +3712,9 @@ function artifactRootForPath(path: string): string | null {
   return standards > 0 ? segments.slice(0, standards).join("/") : null;
 }
 
-function mutationStructuralPaths(content: string, fragmentStart = 0): readonly MutationStructuralPath[] {
-  const rows: MutationStructuralPath[] = [];
-  const pattern = new RegExp(MUTATION_SOURCE_STRUCTURE, "gu");
-  for (const match of content.matchAll(pattern)) {
-    if (match.index === undefined) continue;
-    rows.push({ value: match[0], start: fragmentStart + match.index, standard: match[1], subset: match[2], mutation: match[3], scenario: match[4], suffix: match[5] ?? "" });
-  }
-  return rows;
-}
-
-function canonicalProjectionSuffix(suffix: string): string {
-  const segments = suffix.split("/");
-  const name = segments.at(-1) ?? "";
-  const leading = splitLeadingEmoji(name);
-  if (leading.emoji && /^component\.[a-z0-9.]+$/u.test(leading.rest)) segments[segments.length - 1] = `${leading.emoji}.${leading.rest.slice("component.".length)}`;
-  return segments.join("/");
-}
-
-function projectionKey(artifactRoot: string, standard: string, subset: string): string {
-  return `${artifactRoot}\u0000${standard}\u0000${subset}`;
-}
-
-/** 🧭️ Limits structural fallback to complete, exact active owners; physical references use their destination map. */
-function mutationReferenceProjectionState(token: ReferenceToken, target: string | null, activeKeys: ReadonlySet<string>, scope?: string): "active" | "inactive" | "unproven" {
-  if (target !== null) return "inactive";
-  const owner = token.rewriteData?.artifactRoot, profile = token.rewriteData?.projectionProfile;
-  if (!owner || !profile) return "inactive";
-  const active = profile === "*" ? [...activeKeys].some((key) => key.startsWith(`${owner}\u0000`)) : activeKeys.has(`${owner}\u0000${profile}`);
-  if (!active) return "inactive";
-  if (token.targetValues?.length) return "unproven";
-  const parts = profile.split("\u0000");
-  if (profile !== "*" && (parts.length !== 2 || parts.some((part) => !part || part.includes("/")))) return "unproven";
-  const required = profile === "*" ? owner : `${owner}/🏅️standards/🔖️${parts[0]}/🪆️subsets/✳️${parts[1]}/🧬️schema/🧬️mutations`;
-  return !scope || required === scope || required.startsWith(`${scope}/`) ? "active" : "unproven";
-}
-
-function projectedStructuralValue(row: MutationStructuralPath): string {
-  const scenario = splitLeadingEmoji(row.scenario).emoji ? row.scenario : `🧪️${row.scenario}`;
-  return `🪆️tests${row.standard}-${row.subset}/${row.mutation}/${scenario}${canonicalProjectionSuffix(row.suffix)}`.normalize("NFC");
-}
-
-function structuralProjectionToken(content: string, row: MutationStructuralPath, adapter: TaxonomyReferenceAdapter, label: string, artifactRoot: string | null, prefix = ""): ReferenceToken {
-  const value = `${prefix}${row.value}`;
-  const start = row.start - prefix.length;
-  const target = artifactRoot && !/[<>]/u.test(row.value) ? `${artifactRoot}/${row.value}` : undefined;
-  return {
-    adapter,
-    structuredLocation: label.startsWith("/") ? `${label}@${start}` : lineLocation(content, start, label),
-    start,
-    end: start + value.length,
-    value,
-    targetValues: target ? [target] : undefined,
-    rewriteKind: prefix === "asset://" ? "artifact-uri" : "projection-prose",
-    rewriteData: {
-      newValue: `${prefix}${projectedStructuralValue(row)}`,
-      projectionKey: artifactRoot ? projectionKey(artifactRoot, row.standard, row.subset) : "",
-      projectionProfile: `${row.standard}\u0000${row.subset}`,
-      artifactRoot: artifactRoot ?? "",
-    },
-  };
-}
-
-function structuralTokensInFragment(content: string, fragment: string, fragmentStart: number, adapter: TaxonomyReferenceAdapter, label: string, artifactRoot: string | null): readonly ReferenceToken[] {
-  const rows: ReferenceToken[] = [];
-  for (const structural of mutationStructuralPaths(fragment, fragmentStart)) {
-    const localStart = structural.start - fragmentStart;
-    const before = fragment.slice(0, localStart);
-    const prefix = before.endsWith("asset://") ? "asset://" : before.match(/(?:(?:\.\.\/|\.\/)+)$/u)?.[0] ?? "";
-    rows.push(structuralProjectionToken(content, structural, adapter, prefix === "asset://" && adapter === "gherkin" ? "gherkin" : label, artifactRoot, prefix));
-  }
-  return rows;
-}
-
 function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
   let ordinal = 0;
-  let artifactRoot: string | null | undefined;
   const embeddedArgv = /(?:^|\/)(?:launch(?:\.seed)?\.jsonc?|tasks\.json|project\.json|package\.json)$/iu.test(path);
   for (const match of content.matchAll(/"((?:\\.|[^"\\])*)"/g)) {
     if (match.index === undefined) continue;
@@ -3810,11 +3736,6 @@ function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): R
     const workspaceFile = !key && raw === value ? value.match(/^\{workspaceRoot\}\/([^*]+)$/u) : null;
     if (workspaceFile) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value, targetValues: [workspaceFile[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: "" } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/[^*]+$/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection file reference has no proven decoded-to-raw offset map" });
-    if (!key && raw === value) {
-      if (artifactRoot === undefined) artifactRoot = artifactRootForPath(path);
-      rows.push(...structuralTokensInFragment(content, raw, start, adapter, `/@value[${Math.max(0, ordinal - 1)}]/prose`, artifactRoot));
-    }
-    if (!key && raw !== value && mutationStructuralPaths(value).length > 0) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/prose@${start}`, start, end: start + raw.length, value: raw, unsupportedReason: "Escaped JSON projection prose has no proven decoded-to-raw offset map" });
     if (!key && embeddedArgv) rows.push(...embeddedArgumentTokens(content, raw, start, adapter, "embedded-argv"));
   }
   return rows;
@@ -3884,7 +3805,6 @@ function rustTokens(path: string, content: string, index?: ReferencePathIndex): 
     if (match.index === undefined) continue;
     const fragment = match[1];
     const start = match.index + match[0].indexOf(fragment);
-    rows.push(...structuralTokensInFragment(content, fragment, start, "rust", "rust-comment", artifactRootForPath(path)));
     for (const quoted of fragment.matchAll(/`([^`]+)`/gu)) {
       if (quoted.index === undefined) continue;
       const raw = quoted[1], rawStart = start + quoted.index + quoted[0].indexOf(raw);
@@ -3903,20 +3823,8 @@ function rustTokens(path: string, content: string, index?: ReferencePathIndex): 
   return rows;
 }
 
-function pythonTokens(path: string, content: string): ReferenceToken[] {
+function pythonTokens(_path: string, content: string): ReferenceToken[] {
   const rows = regexTokens(content, "python", "python-reference", [/^\s*from\s+([\w.]+)\s+import\s+/gmu, /^\s*import\s+([\w.]+)(?:\s+as\s+\w+)?\s*$/gmu, /\b(?:open|Path|joinpath|files|read_text|read_bytes)\s*\(\s*["']([^"']+)["']/gu, /__file__[^\r\n]*?\/\s*["']([^"']+)["']/gu]);
-  for (const match of content.matchAll(/^\s*([A-Z][A-Z0-9_]*VECTOR_ROOT|VECTOR_ROOT)\s*=\s*["'](asset:\/\/🏅️standards\/🔖️([^/"']+)\/🪆️subsets\/✳️([^/"']+)\/🧬️schema\/🧬️mutations)["']/gmu)) {
-    if (match.index === undefined) continue;
-    const value = match[2];
-    const start = match.index + match[0].indexOf(value);
-    rows.push({ adapter: "python", structuredLocation: lineLocation(content, start, `python-string:${match[1]}`), start, end: start + value.length, value, rewriteKind: "structural-projection", rewriteData: { newValue: `asset://🧪️tests/🪆️${match[3]}-${match[4]}`, projectionKey: "", projectionProfile: `${match[3]}\u0000${match[4]}`, artifactRoot: artifactRootForPath(path) ?? "" } });
-  }
-  for (const match of content.matchAll(/^\s*(stem)\s*=\s*["'](%s\/%s\/🧪️tests\/%s)["']\s*%/gmu)) {
-    if (match.index === undefined) continue;
-    const value = match[2];
-    const start = match.index + match[0].indexOf(value);
-    rows.push({ adapter: "python", structuredLocation: lineLocation(content, start, `python-format:${match[1]}`), start, end: start + value.length, value, rewriteKind: "structural-projection", rewriteData: { newValue: "%s/%s/🧪️%s", projectionKey: "", projectionProfile: "*", artifactRoot: artifactRootForPath(path) ?? "" } });
-  }
   return rows;
 }
 
@@ -3946,8 +3854,8 @@ function gherkinDescriptionInlineCodeSpans(content: string): readonly Readonly<{
   return rows;
 }
 
-function gherkinTokens(path: string, content: string): readonly ReferenceToken[] {
-  const rows = [...structuralTokensInFragment(content, content, 0, "gherkin", "gherkin-description", artifactRootForPath(path))];
+function gherkinTokens(_path: string, content: string): readonly ReferenceToken[] {
+  const rows: ReferenceToken[] = [];
   for (const span of gherkinDescriptionInlineCodeSpans(content)) {
     if (rows.some((token) => token.start <= span.start && token.end >= span.end)) continue;
     const value = content.slice(span.start, span.end);
@@ -4953,17 +4861,7 @@ function rewriteReferenceToken(referencePath: string, sourceReferencePath: strin
     const targetValue = token.targetValues?.[0] ?? token.value;
     return `${rewriteReferenceValue(referencePath, targetValue, oldTarget, newTarget, sourceReferencePath)}${token.rewriteData?.suffix ?? ""}`;
   }
-  if (token.rewriteKind === "artifact-uri") {
-    const artifactRoot = token.rewriteData?.artifactRoot;
-    if (!artifactRoot || !newTarget.startsWith(`${artifactRoot}/`)) throw new Error(`Artifact URI target escapes its captured owner: ${newTarget}`);
-    return `asset://${newTarget.slice(artifactRoot.length + 1)}`;
-  }
   if (token.rewriteKind === "path-prefix") return `${token.rewriteData?.prefix ?? ""}${newTarget}${token.rewriteData?.suffix ?? ""}`;
-  if (token.rewriteKind === "projection-prose" && token.value.startsWith("🏅️standards/")) {
-    const artifactRoot = token.rewriteData?.artifactRoot;
-    if (!artifactRoot || !newTarget.startsWith(`${artifactRoot}/`)) throw new Error(`Projection prose target escapes its captured owner: ${newTarget}`);
-    return newTarget.slice(artifactRoot.length + 1);
-  }
   return rewriteReferenceValue(referencePath, token.value, oldTarget, newTarget, sourceReferencePath, repoRoot);
 }
 
@@ -5200,7 +5098,6 @@ function artifactStructuralReferenceRewrite(referencePath: string, token: Refere
 
 function externalProjectionReferenceEntries(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], contexts: readonly ArtifactReferenceProjection[], taxonomy: LoadedTaxonomy): readonly TaxonomyInventoryEntry[] {
   const active = new Set(contexts.map((context) => context.id));
-  if (moves.some((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")) active.add(taxonomy.schema.mutationCatalogProjection.projectionContractId);
   const admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const rows: TaxonomyInventoryEntry[] = [];
   for (const path of Object.values(taxonomy.schema.semanticPathProjectionReferenceConsumerContracts)
@@ -5474,13 +5371,6 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   const accountedIncoming = new Set<string>();
   const artifactContexts = artifactReferenceProjections(inventory, moves, taxonomy);
   for (const context of artifactContexts) for (const problem of context.authorityProblems) unresolved.push(violation("projection-reference-authority-invalid", context.sourceRoot, `${context.id}: ${problem}`));
-  const activeProjectionKeys = new Set<string>();
-  for (const move of moves.filter((entry) => entry.rationaleRule === "artifact-mutation-test-projection-v1")) {
-    const structural = mutationStructuralPaths(move.sourcePath)[0];
-    const artifactRoot = artifactRootForPath(move.sourcePath);
-    if (!structural || !artifactRoot) continue;
-    activeProjectionKeys.add(projectionKey(artifactRoot, structural.standard, structural.subset));
-  }
   const generatedOwnerSources = new Set(ownerCatalog?.cases.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
   for (const removal of removals) if (removal.authority.kind === "nested-cargo-generated-source") {
     const authority = removal.authority, catalogContract = taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
@@ -5530,18 +5420,12 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
         unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${artifactRewrite.problem}`));
         continue;
       }
-      const projectionState = mutationReferenceProjectionState(token, oldTarget, activeProjectionKeys, inventory.scope);
-      if (projectionState === "unproven") {
-        unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: Structural projection requires an exact physical target or complete declared artifact-profile scope`));
-        continue;
-      }
-      const projectionActive = projectionState === "active";
       const artifactProjectionActive = artifactContexts.length > 0 && (token.rewriteKind === "path-prefix" || token.rewriteKind === "artifact-catalog-glob" || token.rewriteKind === "artifact-catalog-prose");
-      if (token.unsupportedReason && (projectionActive || artifactProjectionActive)) {
+      if (token.unsupportedReason && artifactProjectionActive) {
         unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${token.unsupportedReason}`));
         continue;
       }
-      if ((!oldTarget || !destination) && !(projectionActive && token.rewriteData?.newValue) && artifactRewrite?.newValue === undefined) continue;
+      if ((!oldTarget || !destination) && artifactRewrite?.newValue === undefined) continue;
       if (frozenEvidence !== null) {
         unresolved.push(violation("frozen-coordinate-evidence-unowned", entry.sourcePath, `${token.structuredLocation} is outside the exact digest-bound coordinate authority`));
         continue;
@@ -5670,7 +5554,7 @@ function ancestorDirectoryKindIds(path: string, kinds: ReadonlyMap<string, strin
   return rows;
 }
 
-//#region 🧭️Artifact Mutation Projection
+//#region 🧭️Canonical Mutation Case Pair
 function mutationDomainOwnerLocation(path: string, taxonomy: LoadedTaxonomy): { root: string; relativePath: string; identity: string } | null {
   for (const root of Object.keys(taxonomy.discoverySchema.mutationDomainOwners)) {
     if (!path.startsWith(`${root}/`)) continue;
@@ -5723,27 +5607,27 @@ function projectionSourceAt(
   taxonomy: LoadedTaxonomy,
 ): MutationProjectionSource | null {
   const ids = taxonomy.schema.mutationCatalogProjection;
-  const contract = taxonomy.schema.semanticPathProjectionContracts[ids.projectionContractId];
+  const contract = ids;
   const domainOwner = mutationDomainOwnerLocation(path, taxonomy);
   if (!domainOwner && Object.keys(taxonomy.discoverySchema.mutationDomainOwners).some((root) => path.startsWith(`${root}/`))) return null;
   const physicalSegments = path.split("/"), domainIndex = domainOwner ? domainOwner.root.split("/").length : null;
   const segments = physicalSegments.filter((_segment, index) => index !== domainIndex);
   const physicalPrefix = (length: number): string => physicalSegments.slice(0, length + (domainIndex !== null && length > domainIndex ? 1 : 0)).join("/");
-  if (segments.length <= contract.sourceSegments.length) return null;
-  const start = segments.length - contract.sourceSegments.length;
+  if (segments.length <= contract.implementationSegments.length) return null;
+  const start = segments.length - contract.implementationSegments.length;
   const artifactRoot = physicalPrefix(start);
   const ownerRegistry = taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId];
   const ownerMatches = ownerRegistry.memberNames.filter((name) => emojiFold(name) === emojiFold(basename(artifactRoot)));
   if (ownerMatches.length !== 1 && !(scope && (artifactRoot === scope || artifactRoot.startsWith(`${scope}/`)))) return null;
   const captures = new Map<SemanticProjectionCaptureField, string>();
-  for (let index = 0; index < contract.sourceSegments.length; index++) {
-    const segment = contract.sourceSegments[index];
+  for (let index = 0; index < contract.implementationSegments.length; index++) {
+    const segment = contract.implementationSegments[index];
     const currentPath = physicalPrefix(start + index + 1);
     const current = entries.get(currentPath);
     if (!current || current.nodeKind !== "directory") return null;
     const canonicalName = basename(current.normalizedPath);
     if ("literal" in segment) {
-      if (canonicalName !== segment.literal || kinds.get(currentPath) !== segment.kindId) return null;
+      if (!("kindId" in segment) || canonicalName !== segment.literal || kinds.get(currentPath) !== segment.kindId) return null;
       continue;
     }
     if ("projectedMemberKindId" in segment) {
@@ -5770,7 +5654,7 @@ function projectionSourceAt(
   const mutationId = captures.get("mutationId");
   const sourceScenarioId = captures.get("scenarioId");
   if (!standardVersion || !subsetId || !mutationId || !sourceScenarioId) return null;
-  const source = contract.sourceSegments.map((_segment, index) => physicalPrefix(start + index + 1));
+  const source = contract.implementationSegments.map((_segment, index) => physicalPrefix(start + index + 1));
   return {
     artifactRoot,
     artifactId: splitLeadingEmoji(basename(artifactRoot)).rest || basename(artifactRoot),
@@ -5853,9 +5737,10 @@ function projectionCatalogsForMutationSource(repoRoot: string, entries: Readonly
   });
 }
 
-function mutationDescendantContract(taxonomy: LoadedTaxonomy): SemanticKindDescendantContract {
-  const contract = taxonomy.schema.semanticDescendantContracts[taxonomy.schema.mutationCatalogProjection.descendantContractId];
-  if (!contract || "contractKind" in contract || [...contract.requiredNodes, ...contract.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)].some((node) => !("kindId" in node))) throw new Error("Mutation projection must reference one physical-kind exact descendant contract");
+function mutationDescendantContract(taxonomy: LoadedTaxonomy, role: "implementation" | "fixture"): SemanticKindDescendantContract {
+  const ids = taxonomy.schema.mutationCatalogProjection;
+  const contract = taxonomy.schema.semanticDescendantContracts[role === "implementation" ? ids.implementationDescendantContractId : ids.fixtureDescendantContractId];
+  if (!contract || "contractKind" in contract || [...contract.requiredNodes, ...contract.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)].some((node) => !("kindId" in node))) throw new Error(`Mutation ${role} must reference one physical-kind exact descendant contract`);
   return contract as SemanticKindDescendantContract;
 }
 
@@ -5885,7 +5770,7 @@ function canonicalProjectedMutationOwner(name: string, identity: string, subsetR
   return owner && basename(owner) === name ? owner : null;
 }
 
-function projectionBundleProblem(source: MutationProjectionSource, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticDescendantContract, taxonomy: LoadedTaxonomy): string | null {
+function projectionBundleProblem(source: MutationProjectionSource, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticKindDescendantContract, taxonomy: LoadedTaxonomy): string | null {
   const root = entries.get(source.scenarioRoot);
   if (!root) return "scenario root is absent";
   const actual = [...entries.values()].filter((entry) => entry.sourcePath === source.scenarioRoot || entry.sourcePath.startsWith(`${source.scenarioRoot}/`));
@@ -5918,29 +5803,7 @@ function setProjectedPath(entry: MutableInventoryEntry, destination: string, tax
   entry.violations = [...entry.violations.filter((row) => !superseded.has(row.code)), ...pathPolicyViolations(entry.normalizedPath, taxonomy)];
 }
 
-function mutationProjectionRationale(sourcePath: string, destinationPath: string, taxonomy: LoadedTaxonomy): "artifact-mutation-test-projection-v1" | "artifact-mutation-source-canonicalization-v1" | null {
-  const structural = mutationStructuralPaths(sourcePath)[0];
-  const artifactRoot = artifactRootForPath(sourcePath);
-  if (!artifactRoot) return null;
-  const relativeDestination = destinationPath.startsWith(`${artifactRoot}/`) ? destinationPath.slice(artifactRoot.length + 1).split("/") : [];
-  if (structural && relativeDestination[0] === "🧪️tests") {
-    const sourceOwner = `${artifactRoot}/🏅️standards/🔖️${structural.standard}/🪆️subsets/✳️${structural.subset}`;
-    const catalogOwners = [sourceOwner, ...Object.entries(taxonomy.discoverySchema.mutationCatalogSourceOwners).filter(([, source]) => source === sourceOwner).map(([owner]) => owner)];
-    const admittedProfile = catalogOwners.some((owner) => mutationCatalogSourceOwner(owner, taxonomy.discoverySchema) === sourceOwner && relativeDestination[1] === `🪆️${structural.standard}-${splitLeadingEmoji(basename(owner)).rest}`);
-    const root = `${sourceOwner}/🧬️schema/🧬️mutations`;
-    const registered = Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, root), depth = registered ? 2 : 1;
-    const owner = relativeDestination.slice(2, 2 + depth).join("/"), scenario = relativeDestination[2 + depth] ?? "";
-    const identity = mutationOwnerIdentity(root, structural.mutation, taxonomy.discoverySchema);
-    const validOwner = registered ? identity !== null && mutationOwnerRelativePath(root, identity, taxonomy.discoverySchema) === owner : !structural.mutation.includes("/") && canonicalProjectedMemberName(owner, taxonomy) === owner;
-    if (admittedProfile && validOwner && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(splitLeadingEmoji(scenario).rest) && pathEmojiStatuteFindings([{ path: scenario, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0) return "artifact-mutation-test-projection-v1";
-  }
-  const relativeSource = sourcePath.slice(artifactRoot.length + 1).split("/");
-  const prefix = ["🏅️standards", relativeSource[1], "🪆️subsets", relativeSource[3], "🧬️schema", "🧬️mutations"];
-  if (relativeSource.length > 7 && prefix.every((segment, index) => relativeSource[index] === segment) && prefix.every((segment, index) => relativeDestination[index] === segment) && relativeSource[6] !== relativeDestination[6] && canonicalProjectedMemberName(relativeDestination[6] ?? "", taxonomy) === relativeDestination[6]) return "artifact-mutation-source-canonicalization-v1";
-  return null;
-}
-
-function projectMutationTestBundles(
+function normalizeMutationCasePairs(
   repoRoot: string,
   scope: string | undefined,
   entries: Map<string, MutableInventoryEntry>,
@@ -5948,20 +5811,11 @@ function projectMutationTestBundles(
   taxonomy: LoadedTaxonomy,
 ): void {
   const ids = taxonomy.schema.mutationCatalogProjection;
-  const projection = taxonomy.schema.semanticPathProjectionContracts[ids.projectionContractId];
-  const descendant = mutationDescendantContract(taxonomy);
-  const renderer = taxonomy.schema.semanticPathProjectionProfileRenderers[projection.profileRendererId];
+  const implementationContract = mutationDescendantContract(taxonomy, "implementation");
+  const fixtureContract = mutationDescendantContract(taxonomy, "fixture");
   const sources = [...entries.values()].filter((entry) => entry.nodeKind === "directory").map((entry) => projectionSourceAt(entry.sourcePath, scope, entries, kinds, taxonomy)).filter((entry): entry is MutationProjectionSource => entry !== null).sort((left, right) => left.scenarioRoot.localeCompare(right.scenarioRoot));
   const bySubset = new Map<string, MutationProjectionSource[]>();
   for (const source of sources) bySubset.set(source.subsetRoot, [...(bySubset.get(source.subsetRoot) ?? []), source]);
-  const profileOwners = new Map<string, Set<string>>();
-  for (const source of sources) {
-    const profile = renderer.template.replace("{standardVersion}", source.standardVersion).replace("{subsetId}", source.subsetId);
-    const key = `${source.artifactRoot}\u0000${emojiFold(profile).toLocaleLowerCase("und")}`;
-    const owners = profileOwners.get(key) ?? new Set<string>();
-    owners.add(`${source.artifactId}\u0000${source.standardVersion}\u0000${source.subsetId}`);
-    profileOwners.set(key, owners);
-  }
   for (const [subsetRoot, subsetSources] of [...bySubset.entries()].sort(([left], [right]) => left.localeCompare(right))) {
     const catalogs = projectionCatalogsForMutationSource(repoRoot, entries, subsetRoot, taxonomy);
     const invalid = catalogs.filter((catalog) => catalog.error);
@@ -5970,14 +5824,6 @@ function projectMutationTestBundles(
       continue;
     }
     const catalog = { vectors: catalogs.flatMap((entry) => entry.vectors) };
-    for (const owner of catalogs) {
-      const subsetId = splitLeadingEmoji(basename(owner.owner)).rest;
-      const profile = renderer.template.replace("{standardVersion}", subsetSources[0]!.standardVersion).replace("{subsetId}", subsetId);
-      const key = `${subsetSources[0]!.artifactRoot}\u0000${emojiFold(profile).toLocaleLowerCase("und")}`;
-      const owners = profileOwners.get(key) ?? new Set<string>();
-      owners.add(`${subsetSources[0]!.artifactId}\u0000${subsetSources[0]!.standardVersion}\u0000${subsetId}`);
-      profileOwners.set(key, owners);
-    }
     const vectorsByMutation = new Map<string, MutationProjectionVector[]>();
     for (const vector of catalog.vectors) {
       const key = vector.mutationId;
@@ -6018,27 +5864,23 @@ function projectMutationTestBundles(
           entries.get(source.scenarioRoot)?.violations.push(violation("projection-catalog-duplicate", source.scenarioRoot, `Vector ${vectorKey.replaceAll("\u0000", "/")} owns more than one physical bundle`));
           continue;
         }
-        const problem = projectionBundleProblem(source, entries, kinds, descendant, taxonomy);
-        if (problem) {
-          entries.get(source.scenarioRoot)?.violations.push(violation("projection-bundle-invalid", source.scenarioRoot, problem));
+        const implementationProblem = projectionBundleProblem(source, entries, kinds, implementationContract, taxonomy);
+        if (implementationProblem) {
+          entries.get(source.scenarioRoot)?.violations.push(violation("mutation-implementation-invalid", source.scenarioRoot, implementationProblem));
           continue;
         }
-        const subsetId = vector.catalogOwner ? splitLeadingEmoji(basename(vector.catalogOwner)).rest : source.subsetId;
-        const profile = renderer.template.replace("{standardVersion}", source.standardVersion).replace("{subsetId}", subsetId).normalize("NFC");
-        const profileKey = `${source.artifactRoot}\u0000${emojiFold(profile).toLocaleLowerCase("und")}`;
-        if ((profileOwners.get(profileKey)?.size ?? 0) !== 1) {
-          entries.get(source.scenarioRoot)?.violations.push(violation("projection-profile-collision", source.scenarioRoot, `Profile ${profile} is not a unique standard/subset rendering`));
+        const implementationRoot = `${subsetRoot}/🧬️schema/🧬️mutations/${mutationName}/🧪️tests/${vector.scenarioDirectoryName}`.normalize("NFC");
+        const sourceMutationRelativePath = source.mutationRoot.slice(`${subsetRoot}/🧬️schema/🧬️mutations/`.length);
+        const fixtureSourceRoot = `${subsetRoot}/🧫️fixtures/🧬️mutations/${sourceMutationRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC");
+        const fixtureRoot = `${subsetRoot}/🧫️fixtures/🧬️mutations/${mutationName}/${vector.scenarioDirectoryName}`.normalize("NFC");
+        const fixtureSource = { ...source, scenarioRoot: fixtureSourceRoot };
+        const fixtureProblem = projectionBundleProblem(fixtureSource, entries, kinds, fixtureContract, taxonomy);
+        if (fixtureProblem) {
+          entries.get(source.scenarioRoot)?.violations.push(violation("mutation-fixture-invalid", fixtureRoot, fixtureProblem));
           continue;
         }
-        const destinationSegments = projection.destinationSegments.map((segment) => {
-          if ("literal" in segment) return segment.literal;
-          if ("render" in segment) return profile;
-          if ("projectedMemberKindId" in segment) return mutationName;
-          return vector.scenarioDirectoryName;
-        });
-        const destinationRoot = `${source.artifactRoot}/${destinationSegments.join("/")}`.normalize("NFC");
-        if (Buffer.byteLength(destinationRoot, "utf8") + descendant.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes) {
-          entries.get(source.scenarioRoot)?.violations.push(violation("projection-path-budget", source.scenarioRoot, `Projected scenario plus reserved descendant suffix exceeds ${taxonomy.schema.collisionPolicy.maxPathBytes} bytes`));
+        if (Buffer.byteLength(implementationRoot, "utf8") + implementationContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes || Buffer.byteLength(fixtureRoot, "utf8") + fixtureContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes) {
+          entries.get(source.scenarioRoot)?.violations.push(violation("mutation-pair-path-budget", source.scenarioRoot, `Canonical mutation pair plus reserved descendant suffix exceeds ${taxonomy.schema.collisionPolicy.maxPathBytes} bytes`));
           continue;
         }
         consumed.add(vectorKey);
@@ -6048,7 +5890,15 @@ function projectMutationTestBundles(
         for (const entry of entries.values()) {
           if (entry.sourcePath !== source.scenarioRoot && !entry.sourcePath.startsWith(`${source.scenarioRoot}/`)) continue;
           const suffix = entry.normalizedPath === initialRoot ? "" : entry.normalizedPath.slice(initialRoot.length + 1);
-          setProjectedPath(entry, suffix ? `${destinationRoot}/${suffix}` : destinationRoot, taxonomy);
+          setProjectedPath(entry, suffix ? `${implementationRoot}/${suffix}` : implementationRoot, taxonomy);
+        }
+        const fixture = entries.get(fixtureSourceRoot)!;
+        fixture.violations = fixture.violations.filter((row) => row.code !== "directory-kind-unresolved");
+        const initialFixtureRoot = fixture.normalizedPath;
+        for (const entry of entries.values()) {
+          if (entry.sourcePath !== fixtureSourceRoot && !entry.sourcePath.startsWith(`${fixtureSourceRoot}/`)) continue;
+          const suffix = entry.normalizedPath === initialFixtureRoot ? "" : entry.normalizedPath.slice(initialFixtureRoot.length + 1);
+          setProjectedPath(entry, suffix ? `${fixtureRoot}/${suffix}` : fixtureRoot, taxonomy);
         }
         if (!canonicalizedMutationRoots.has(source.mutationRoot)) {
           const mutation = entries.get(source.mutationRoot);
@@ -6074,83 +5924,27 @@ function projectMutationTestBundles(
   }
 }
 
-function validateProjectedMutationTestBundles(
-  repoRoot: string,
+function validateMutationCasePairs(
+  _repoRoot: string,
   scope: string | undefined,
   entries: Map<string, MutableInventoryEntry>,
-  kinds: ReadonlyMap<string, string>,
+  _kinds: ReadonlyMap<string, string>,
   taxonomy: LoadedTaxonomy,
 ): void {
-  const ids = taxonomy.schema.mutationCatalogProjection;
-  const projection = taxonomy.schema.semanticPathProjectionContracts[ids.projectionContractId];
-  const descendant = mutationDescendantContract(taxonomy);
-  const renderer = taxonomy.schema.semanticPathProjectionProfileRenderers[projection.profileRendererId];
   const expected = new Set<string>();
-  const profileDepths = new Map<string, number>();
-  const catalogs = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && basename(dirname(entry.sourcePath)) === (taxonomy.discoverySchema.testContributionDirectoryOverrides[dirname(dirname(entry.sourcePath))] ?? "🔮️oracle") && basename(entry.normalizedPath) === "🔣️.json").sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
-  for (const catalogEntry of catalogs) {
-    const subsetRoot = dirname(dirname(catalogEntry.sourcePath));
-    const segments = subsetRoot.split("/");
-    if (segments.length < 5) continue;
-    const artifactRoot = segments.slice(0, -4).join("/");
-    const [standardsName, standardDirectoryName, subsetsName, subsetDirectoryName] = segments.slice(-4);
-    if (standardsName !== "🏅️standards" || subsetsName !== "🪆️subsets") continue;
-    const ownerRegistry = taxonomy.schema.semanticDirectoryMemberKinds[projection.sourceOwnerKindId];
-    const ownerMatches = ownerRegistry.memberNames.filter((name) => emojiFold(name) === emojiFold(basename(artifactRoot)));
-    if (ownerMatches.length !== 1 && !(scope && (artifactRoot === scope || artifactRoot.startsWith(`${scope}/`)))) continue;
-    const standardVersion = projectionDirectorySlug(standardDirectoryName, "standard", taxonomy);
-    const subsetId = projectionDirectorySlug(subsetDirectoryName, "subset", taxonomy);
-    if (!standardVersion || !subsetId) continue;
-    const catalog = projectionCatalogVectors(absolutePath(repoRoot, catalogEntry.sourcePath), { standardDirectoryName, subsetDirectoryName });
-    if (catalog.error) {
-      catalogEntry.violations.push(violation("projection-catalog-invalid", catalogEntry.sourcePath, catalog.error));
-      continue;
-    }
-    const profile = renderer.template.replace("{standardVersion}", standardVersion).replace("{subsetId}", subsetId).normalize("NFC");
-    const sourceOwner = mutationCatalogSourceOwner(subsetRoot, taxonomy.discoverySchema);
-    if (sourceOwner === null) {
-      catalogEntry.violations.push(violation("projection-catalog-invalid", catalogEntry.sourcePath, "Catalog source ownership is invalid"));
-      continue;
-    }
-    profileDepths.set(`${artifactRoot}/🧪️tests/${profile}`, Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, `${sourceOwner}/🧬️schema/🧬️mutations`) ? 3 : 2);
-    for (const vector of catalog.vectors) {
-      const ownerRelativePath = canonicalProjectedMutationOwner(vector.mutationDirectoryName, vector.mutationId, subsetRoot, taxonomy);
-      if (!ownerRelativePath) {
-        catalogEntry.violations.push(violation("projection-member-unresolved", catalogEntry.sourcePath, `Mutation member ${vector.mutationDirectoryName} has no unique canonical registry identity`));
-        continue;
-      }
-      const mutationDirectoryName = basename(ownerRelativePath);
-      const mutationRoot = `${artifactRoot}/🧪️tests/${profile}/${ownerRelativePath}`;
-      const scenarioRoot = `${mutationRoot}/${vector.scenarioDirectoryName}`;
-      expected.add(scenarioRoot);
-      const root = entries.get(scenarioRoot);
-      if (!root) continue;
-      const source: MutationProjectionSource = { artifactRoot, artifactId: splitLeadingEmoji(basename(artifactRoot)).rest || basename(artifactRoot), standardVersion, standardDirectoryName, subsetId, subsetDirectoryName, mutationId: vector.mutationId, mutationDirectoryName, sourceScenarioId: vector.scenarioId, sourceScenarioDirectoryName: vector.scenarioDirectoryName, subsetRoot, mutationRoot, scenarioRoot };
-      const problem = projectionBundleProblem(source, entries, kinds, descendant, taxonomy);
-      if (problem) {
-        root.violations.push(violation("projection-bundle-invalid", scenarioRoot, problem));
-        continue;
-      }
-      root.violations = root.violations.filter((row) => row.code !== "directory-kind-unresolved");
-      const initialRoot = root.normalizedPath;
-      for (const entry of entries.values()) {
-        if (entry.sourcePath !== scenarioRoot && !entry.sourcePath.startsWith(`${scenarioRoot}/`)) continue;
-        const suffix = entry.normalizedPath === initialRoot ? "" : entry.normalizedPath.slice(initialRoot.length + 1);
-        setProjectedPath(entry, suffix ? `${scenarioRoot}/${suffix}` : scenarioRoot, taxonomy);
-      }
-      const mutation = entries.get(mutationRoot);
-      if (mutation) {
-        mutation.violations = mutation.violations.filter((row) => row.code !== "directory-kind-unresolved");
-        setProjectedPath(mutation, mutationRoot, taxonomy);
-      }
-    }
+  const implementations = [...entries.values()].filter((entry) => entry.nodeKind === "directory").map((entry) => projectionSourceAt(entry.sourcePath, scope, entries, _kinds, taxonomy)).filter((entry): entry is MutationProjectionSource => entry !== null);
+  for (const source of implementations) {
+    const ownerRelativePath = source.mutationRoot.slice(`${source.subsetRoot}/🧬️schema/🧬️mutations/`.length);
+    expected.add(`${source.subsetRoot}/🧫️fixtures/🧬️mutations/${ownerRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC"));
   }
   for (const entry of entries.values()) {
-    if (entry.nodeKind !== "directory" || expected.has(entry.sourcePath)) continue;
-    if ([...profileDepths].some(([profile, depth]) => entry.sourcePath.startsWith(`${profile}/`) && entry.sourcePath.slice(profile.length + 1).split("/").length === depth)) entry.violations.push(violation("projection-destination-unregistered", entry.sourcePath, "Projected scenario has no exact catalog vector identity"));
+    if (entry.nodeKind !== "directory") continue;
+    if (/\/🧪️tests\/🪆️[^/]+\/[^/]+\/🧪️[^/]+$/u.test(entry.sourcePath)) entry.violations.push(violation("mutation-projected-storage-forbidden", entry.sourcePath, "Mutation cases must use the subset-owned canonical implementation and fixture roots"));
+    const looksLikeFixtureScenario = entry.sourcePath.includes("/🧫️fixtures/🧬️mutations/") && entries.has(`${entry.sourcePath}/🦠️mutation`) && entries.has(`${entry.sourcePath}/📸️snapshot`) && entries.has(`${entry.sourcePath}/🔺️diff`) && entries.has(`${entry.sourcePath}/🎯️outcome`);
+    if (looksLikeFixtureScenario && !expected.has(entry.sourcePath)) entry.violations.push(violation("mutation-fixture-unpaired", entry.sourcePath, "Fixture bundle has no canonical implementation case"));
   }
 }
-//#endregion 🧭️Artifact Mutation Projection
+//#endregion 🧭️Canonical Mutation Case Pair
 
 //#region 🛤️Artifact Catalog Projection
 type ArtifactProjectionRationale = "artifact-example-model-catalog-projection-v1" | "artifact-editor-command-projection-v1";
@@ -6849,9 +6643,9 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   projectTicketDocumentFiles(repoRoot, entries, fixedDirectoryContractByPath, taxonomy);
   projectTicketImportantFiles(repoRoot, entries, fixedDirectoryContractByPath, taxonomy);
   validateTicketImportantDirectories(repoRoot, entries, directoryKindByPath, fixedDirectoryContractByPath);
-  projectMutationTestBundles(repoRoot, scope, entries, directoryKindByPath, taxonomy);
+  normalizeMutationCasePairs(repoRoot, scope, entries, directoryKindByPath, taxonomy);
   validateMutationPayloadSchemas(repoRoot, entries, taxonomy);
-  validateProjectedMutationTestBundles(repoRoot, scope, entries, directoryKindByPath, taxonomy);
+  validateMutationCasePairs(repoRoot, scope, entries, directoryKindByPath, taxonomy);
   projectArtifactCatalogs(repoRoot, entries, taxonomy);
   projectNestedCargoPackages(repoRoot, entries, taxonomy, prunableSourceParents);
   const childrenByParent = new Map<string, MutableInventoryEntry[]>();
@@ -7891,7 +7685,7 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
       sourcePath: entry.sourcePath,
       destinationPath: entry.normalizedPath,
       sourcePreimage,
-      rationaleRule: emptyFacet?.disposition === "project" && emptyFacet.destinationPath === entry.normalizedPath ? emptyFacet.contractId : ownerMappings.get(entry.sourcePath) === entry.normalizedPath ? "readme-license-owner-projection-v1" : packageMappings.get(entry.sourcePath) === entry.normalizedPath ? "nested-cargo-package-projection-v1" : basename(entry.sourcePath) === "ticket.md" && entry.normalizedPath === `${dirname(entry.sourcePath)}/📝️.md` ? "ticket-document-primary-markdown-v1" : exactTicketImportant?.disposition === "move" ? "ticket-important-presence-owned-markdown-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📌️important/📝️.md") ? "ticket-important-markdown-projection-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📓️important/📝️.md") ? "ticket-important-history-markdown-v1" : artifactCatalogProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? mutationProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? (entry.semanticStem ? "semantic-stem-resolution" : entry.fixedContractId ? "fixed-contract-preservation" : "canonical-kind-name"),
+      rationaleRule: emptyFacet?.disposition === "project" && emptyFacet.destinationPath === entry.normalizedPath ? emptyFacet.contractId : ownerMappings.get(entry.sourcePath) === entry.normalizedPath ? "readme-license-owner-projection-v1" : packageMappings.get(entry.sourcePath) === entry.normalizedPath ? "nested-cargo-package-projection-v1" : basename(entry.sourcePath) === "ticket.md" && entry.normalizedPath === `${dirname(entry.sourcePath)}/📝️.md` ? "ticket-document-primary-markdown-v1" : exactTicketImportant?.disposition === "move" ? "ticket-important-presence-owned-markdown-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📌️important/📝️.md") ? "ticket-important-markdown-projection-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📓️important/📝️.md") ? "ticket-important-history-markdown-v1" : artifactCatalogProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? (entry.semanticStem ? "semantic-stem-resolution" : entry.fixedContractId ? "fixed-contract-preservation" : "canonical-kind-name"),
       ownerId: entry.ownerId,
       collisionGroup: groupBySource.get(entry.sourcePath),
       referenceEdits: [],
@@ -10298,23 +10092,8 @@ function artifactStaleGroups(paths: Iterable<string>, taxonomy: LoadedTaxonomy):
   return [...rows.values()].sort((left, right) => generatorPathCompare(left.ownerRoot, right.ownerRoot) || left.id.localeCompare(right.id));
 }
 
-function canonicalMutationProjectionPresent(paths: Iterable<string>, taxonomy: LoadedTaxonomy): boolean {
-  const projection = taxonomy.schema.semanticPathProjectionContracts[taxonomy.schema.mutationCatalogProjection.projectionContractId];
-  const renderer = taxonomy.schema.semanticPathProjectionProfileRenderers[projection.profileRendererId];
-  const tests = canonicalDirectoryName(taxonomy, "tests", "tests");
-  for (const path of paths) {
-    const segments = path.split("/");
-    for (let index = 0; index + 1 < segments.length; index++) if (segments[index] === tests && matchDirectoryKind(segments[index + 1], taxonomy, "tests").kind?.id === renderer.directoryKindId) return true;
-  }
-  return false;
-}
-
-function staleProjectionContentViolations(path: string, content: string, groups: readonly ArtifactStaleGroup[], taxonomy: LoadedTaxonomy, mutationActive: boolean): readonly TaxonomyViolation[] {
+function staleProjectionContentViolations(path: string, content: string, groups: readonly ArtifactStaleGroup[], taxonomy: LoadedTaxonomy): readonly TaxonomyViolation[] {
   const rows: TaxonomyViolation[] = [];
-  if (mutationActive) {
-    const pattern = new RegExp(MUTATION_SOURCE_TEST_PREFIX, "gu");
-    for (const match of content.matchAll(pattern)) if (match.index !== undefined) rows.push(violation("projection-old-token-stale", path, `Old artifact mutation test hierarchy remains at raw offset ${match.index}`));
-  }
   const consumers = Object.values(taxonomy.schema.semanticPathProjectionReferenceConsumerContracts);
   for (const group of groups) {
     const internal = path === group.ownerRoot || path.startsWith(`${group.ownerRoot}/`);
@@ -10327,7 +10106,6 @@ function staleProjectionContentViolations(path: string, content: string, groups:
 
 function activeProjectionContractIds(plan: TaxonomyPlan, taxonomy: LoadedTaxonomy): ReadonlySet<string> {
   const ids = new Set<string>();
-  if (plan.moves.some((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")) ids.add(taxonomy.schema.mutationCatalogProjection.projectionContractId);
   for (const { id, contract } of artifactProjectionContracts(taxonomy)) if (plan.moves.some((move) => move.rationaleRule === contract.rationaleRule)) ids.add(id);
   return ids;
 }
@@ -10364,7 +10142,6 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
   if (inventory) {
     const moveBySource = new Map(plan.moves.map((move) => [move.sourcePath, move.destinationPath]));
     const finalPaths = inventory.entries.map((entry) => moveBySource.get(entry.sourcePath) ?? entry.normalizedPath);
-    const mutationActive = plan.moves.some((move) => move.rationaleRule === "artifact-mutation-test-projection-v1") || canonicalMutationProjectionPresent(finalPaths, taxonomy);
     const groups = artifactStaleGroups(finalPaths, taxonomy);
     const rows: TaxonomyViolation[] = [];
     for (const entry of inventory.entries.filter((candidate) => candidate.nodeKind === "file" && textualPath(candidate.sourcePath))) {
@@ -10378,7 +10155,7 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
         if (isTransactionRepositoryAuthorityError(error)) throw error;
         continue;
       }
-      rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
+      rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy));
     }
     const admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
     for (const path of declaredProjectionConsumerPaths(plan, taxonomy, inventory).filter((candidate) => !admitted.has(candidate))) {
@@ -10389,15 +10166,14 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
         let content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolute));
         const edits = plan.edits.filter((edit) => edit.path === path);
         if (edits.length > 0) content = applyEditsToContent(content, edits);
-        rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
+        rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy));
       } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; }
     }
     return stableViolations(rows);
   }
   const paths = new Set(planVerificationCandidatePaths(repoRoot, plan, taxonomy, ticketDir));
-  const mutationActive = plan.moves.some((move) => move.rationaleRule === "artifact-mutation-test-projection-v1") || canonicalMutationProjectionPresent(paths, taxonomy);
   const groups = artifactStaleGroups(paths, taxonomy);
-  if (!mutationActive && groups.length === 0) return [];
+  if (groups.length === 0) return [];
   const rows: TaxonomyViolation[] = [];
   for (const path of [...paths].filter(textualPath).sort(generatorPathCompare)) {
     if (isExcluded(path, taxonomy)) continue;
@@ -10406,52 +10182,9 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
     if (!stat?.isFile() || stat.size > 16 * 1024 * 1024) continue;
     try {
       const content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolute));
-      rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
+      rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy));
     } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; }
   }
-  return stableViolations(rows);
-}
-
-function projectionPostApplyViolations(repoRoot: string, plan: TaxonomyPlan, taxonomy: LoadedTaxonomy): readonly TaxonomyViolation[] {
-  const moves = plan.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1");
-  if (moves.length === 0) return [];
-  const ids = taxonomy.schema.mutationCatalogProjection;
-  const descendant = mutationDescendantContract(taxonomy);
-  const groups = new Map<string, TaxonomyMove[]>();
-  for (const move of moves) {
-    const artifactRoot = artifactRootForPath(move.sourcePath);
-    if (!artifactRoot || !move.destinationPath.startsWith(`${artifactRoot}/`)) continue;
-    const relativeSegments = move.destinationPath.slice(artifactRoot.length + 1).split("/");
-    if (relativeSegments.length < 5) continue;
-    const scenarioRoot = `${artifactRoot}/${relativeSegments.slice(0, 4).join("/")}`;
-    groups.set(scenarioRoot, [...(groups.get(scenarioRoot) ?? []), move]);
-  }
-  const rows: TaxonomyViolation[] = [];
-  const expectedRequired = descendant.requiredNodes.map((node) => `${node.nodeType}\u0000${projectionDescendantPath(node, taxonomy)}`);
-  for (const [scenarioRoot, group] of [...groups.entries()].sort(([left], [right]) => left.localeCompare(right))) {
-    if (group.length !== 6) {
-      rows.push(violation("projection-apply-move-count", scenarioRoot, `Projected scenario has ${group.length} file moves, expected 6`));
-      continue;
-    }
-    for (const move of group) if (lstatOrNull(absolutePath(repoRoot, move.sourcePath))) rows.push(violation("projection-source-file-stale", move.sourcePath, "Projected source file remains after staged move installation"));
-    const actual = new Set<string>();
-    const walk = (path: string): void => {
-      if (isExcluded(path, taxonomy)) throw new Error(`Projection destination crosses opaque path ${path}`);
-      const stat = lstatOrNull(absolutePath(repoRoot, path));
-      if (!stat) return;
-      const relativePath = path === scenarioRoot ? "" : path.slice(scenarioRoot.length + 1);
-      if (stat.isSymbolicLink()) {
-        rows.push(violation("projection-bundle-symlink", path, "Projected bundle contains a symlink"));
-        return;
-      }
-      actual.add(`${stat.isDirectory() ? "directory" : "file"}\u0000${relativePath}`);
-      if (stat.isDirectory()) for (const name of readdirSync(absolutePath(repoRoot, path)).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)))) walk(`${path}/${name}`);
-    };
-    walk(scenarioRoot);
-    const alternatives = descendant.exclusiveAlternatives.map((alternative) => alternative.nodes.map((node) => `${node.nodeType}\u0000${projectionDescendantPath(node, taxonomy)}`).filter((key) => actual.has(key)));
-    if (actual.size !== descendant.realizedNodeCount || expectedRequired.some((key) => !actual.has(key)) || alternatives.some((matches) => matches.length !== 1)) rows.push(violation("projection-apply-bundle-invalid", scenarioRoot, `Projected destination does not realize the exact ${descendant.realizedNodeCount}-node descendant contract`));
-  }
-  if (groups.size * 6 !== moves.length) rows.push(violation("projection-apply-group-unresolved", moves[0].sourcePath, `${moves.length - groups.size * 6} projection move(s) do not resolve to an exact artifact scenario root`));
   return stableViolations(rows);
 }
 
@@ -11753,7 +11486,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     persistJournal(repoRoot, journalPath, journal);
     injectFailure(options, "before-verify");
     const prunableSourceParents = emptySourceParents(repoRoot, plan, ticketRoot);
-    const projectionState = [...projectionPostApplyViolations(repoRoot, plan, taxonomy), ...artifactProjectionPostApplyViolations(repoRoot, plan, taxonomy, new Set(prunableSourceParents))];
+    const projectionState = artifactProjectionPostApplyViolations(repoRoot, plan, taxonomy, new Set(prunableSourceParents));
     if (projectionState.length > 0) throw new Error(`Projection verification failed: ${projectionState[0].code} at ${projectionState[0].path}`);
     const staleProjectionTokens = projectionStaleViolations(repoRoot, plan, taxonomy, undefined, options.explicitTicketDir);
     if (staleProjectionTokens.length > 0) throw new Error(`Projection verification found ${staleProjectionTokens.length} stale old-hierarchy token(s): ${staleProjectionTokens[0].path}`);

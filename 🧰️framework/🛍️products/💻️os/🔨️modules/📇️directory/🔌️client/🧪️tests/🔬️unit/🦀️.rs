@@ -245,7 +245,7 @@ fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocke
 /// same relation the retained `DocumentSocketAuthorityV1` uses.
 #[test]
 fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let decode_fields =
         |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ()) };
     let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");

@@ -323,7 +323,7 @@ fn decode_constructions(root: &Object, model: &mut Model, material_names: &[Stri
             match material_names.iter().position(|material| material == layer) {
                 Some(position) => ids.push(EntityId(MATERIAL_BASE + position as u32)),
                 None => {
-                    diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass or WindowMaterial:SimpleGlazingSystem")))
+                    diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass or WindowMaterial:SimpleGlazingSystem")));
                 }
             }
         }

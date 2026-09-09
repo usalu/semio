@@ -72,13 +72,13 @@ LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
 #: Kurokawa's Nakagin Capsule Tower — 181 nodes, 179 edges, 364 ports and 366 typed properties —
 #: derived ONCE from the real committed IFC 4 file with IfcOpenShell 0.8.4 by
 #: `🐍️derive-graph-fixture.py` in the ticket folder.
-TOWER_DSL = "local://🏢️nakagin-capsule-tower/🗣️.dsl.semio"
-TOWER_PACK = "local://🎒️.pack.semio"
+TOWER_DSL = "shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio"
+TOWER_PACK = "shared://🌳️mutate-semio-graph/🎒️.pack.semio"
 #: 🕸️ The tiny committed wires graph, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
-WIRES_DSL = "asset://📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio"
-WIRES_PACK = "asset://📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio"
+WIRES_DSL = "asset://🕸️wires/🗣️.dsl.semio"
+WIRES_PACK = "asset://🕸️wires/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

@@ -1,8 +1,8 @@
-# 🧬️ En1990 snapshot schema — artifact-lane fields only.
-
+# 🪪️ En1990Snapshot uses the canonical Store child identity.
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type En1990Snapshot {
   gK: Float! @state(class: ARTIFACT)
-  qK: [qKItem!]! @state(class: ARTIFACT)
+  qK: ArtifactChild! @state(class: ARTIFACT)
   resistanceKn: Float! @state(class: ARTIFACT)
   consequenceClass: Int! @state(class: ARTIFACT)
   annex: String! @state(class: ARTIFACT)

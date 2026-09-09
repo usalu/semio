@@ -4,7 +4,7 @@ use super::ViewModel;
 
 #[semio_framework_async_macros::async_test]
 async fn window_view_context_uses_the_addressed_instance() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-view-context/🔣️.json")).unwrap();
     let view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     for key in ["locale", "terminology"] {
         let mut missing = fixture["view"].clone();

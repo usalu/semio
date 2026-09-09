@@ -11,7 +11,7 @@ import { ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREV
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../📇️registry/📦️deployment/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
-export const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛂️actor-exports/🔣️.json"), "utf8")) as Record<string, string[]>;
+export const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(SCRIPT_ROOT, "../../🧫️fixtures/🛂️actor-exports/🔣️.json"), "utf8")) as Record<string, string[]>;
 
 /** 🛂️ Both package roles must expose the complete actor world before publication. */
 export function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {

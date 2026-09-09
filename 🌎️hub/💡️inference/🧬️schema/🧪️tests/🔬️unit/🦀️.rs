@@ -111,14 +111,14 @@ fn structural(module: &serde_json::Value, export: &str) -> semio_framework_schem
 #[test]
 fn hub_inference_fixtures_validate_through_the_owned_draft_07_validator() {
     let module = module();
-    let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture");
-    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
-    let undo: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
-    let frozen: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("frozen binding fixture");
-    let proposal: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
-    let proof: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).expect("wal proof fixture");
-    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
-    let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
+    let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture");
+    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
+    let undo: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
+    let frozen: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("frozen binding fixture");
+    let proposal: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
+    let proof: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).expect("wal proof fixture");
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
+    let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
     let accepted: [(&str, &serde_json::Value); 15] = [
         ("InferenceIdentityV1", &ledger["identity"]),
         ("InferenceRequestV1", &ledger["identity"]["request"]),
@@ -152,7 +152,7 @@ fn hub_inference_fixtures_validate_through_the_owned_draft_07_validator() {
 #[test]
 fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
     let module = module();
-    let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture");
+    let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture");
     let identity: InferenceIdentityV1 = serde_json::from_value(ledger["identity"].clone()).expect("identity decodes");
     identity.validate().expect("identity validates");
     assert_eq!(encoded(&identity), declared(&module, "InferenceIdentityV1", "required"));
@@ -160,22 +160,22 @@ fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
     assert_eq!(encoded(&identity.binding), declared(&module, "InferenceBindingIdentityV1", "required"));
     assert_eq!(encoded(&identity.binding.parent_dialect), declared(&module, "InferenceParentDialectV1", "required"));
 
-    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
+    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
     let request = InferenceApprovalRequestV1::decode(&serde_json::to_vec(&approval["request"]).expect("bytes")).expect("approval decodes");
     assert_eq!(encoded(&request), declared(&module, "InferenceApprovalRequestV1", "required"));
 
-    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
     let request = InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&reconcile["request"]).expect("bytes")).expect("reconcile request decodes");
     assert_eq!(encoded(&request), declared(&module, "InferenceJobReconcileRequestV1", "required"));
 
     #[cfg(feature = "test-support")]
     {
-        let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
+        let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
         let frame: GisInferenceCheckpointControlFrameV1 = serde_json::from_value(checkpoint["frames"][0]["frame"].clone()).expect("checkpoint frame decodes");
         assert_eq!(encoded(&frame), declared(&module, "GisInferenceCheckpointControlFrameV1", "required"));
     }
 
-    let undo: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
+    let undo: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
     let undo_request: GisMapApprovalUndoRequestV1 = serde_json::from_value(undo["request"].clone()).expect("undo request decodes");
     assert!(undo_request.validate(), "undo request validates");
     assert_eq!(encoded(&undo_request), declared(&module, "GisMapApprovalUndoRequestV1", "required"));
@@ -192,7 +192,7 @@ fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
 /// 🚧️ Every hostile fixture row the module rejects is declared as a contract-stage expectation.
 #[test]
 fn hub_inference_approval_hostiles_declare_their_rejection_stage() {
-    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
+    let approval: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✅️inference-approval-v1/🔣️.json")).expect("approval fixture");
     let hostiles = approval["hostile"].as_array().expect("hostile rows");
     assert_eq!(hostiles.len(), 14);
     for hostile in hostiles {

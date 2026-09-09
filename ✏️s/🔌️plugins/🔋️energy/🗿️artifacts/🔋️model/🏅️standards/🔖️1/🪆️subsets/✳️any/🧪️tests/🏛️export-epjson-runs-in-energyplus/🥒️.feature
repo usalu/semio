@@ -60,7 +60,7 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
   @level-quick
   @mode-differential
   Scenario Outline: Case <case>'s exported epJSON validates against EnergyPlus's own schema
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
     When the subject exports it as epJSON and a third-party JSON Schema validator checks those exact bytes against Energy+.schema.epJSON
     Then there are no schema violations and both implementations read the same object types, zones, surfaces, apertures and envelope numbers out of the document
     Examples:
@@ -80,7 +80,7 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
   @level-quick
   @mode-differential
   Scenario Outline: Case <case>'s export reports every thing it could not carry
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
     When the subject exports it as epJSON and lists what the covered object subset could not represent
     Then nothing the model states is missing from the document without a structured diagnostic naming it
     Examples:
@@ -92,9 +92,9 @@ Feature: The epJSON this subset writes is a real EnergyPlus document, and Energy
   @level-long
   @mode-differential
   Scenario Outline: EnergyPlus run on case <case>'s exported epJSON reproduces the committed reference
-    Given the committed case model asset://🧫️fixtures/🏛️bestest-<case>/🔋️model.json
-    And the committed annual weather asset://🧫️fixtures/🌦️denver-tmy/🌦️.epw
-    And the committed EnergyPlus reference asset://🧫️fixtures/🏛️bestest-<case>/🔮️energyplus.json
+    Given the committed case model shared://🏛️bestest-<case>/🔋️model.json
+    And the committed annual weather shared://🌦️denver-tmy/🌦️.epw
+    And the committed EnergyPlus reference shared://🏛️bestest-<case>/🔮️energyplus.json
     When the subject exports it as epJSON and EnergyPlus 25.2.0 simulates those exact bytes directly, with no translator
     Then the annual energies, free-float temperatures and the building EnergyPlus reports back agree with the committed reference within the declared tolerance
     Examples:

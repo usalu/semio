@@ -8,11 +8,11 @@
 use crate::{En1999Diff, En1999Mutation, En1999Snapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🎯️outcome/🔣️.json");
 
 fn before() -> En1999Snapshot {
     serde_json::from_str(BEFORE).expect("change-sheet-b-mm/widens-sheet-to-320-mm: before snapshot decodes")

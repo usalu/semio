@@ -26,13 +26,13 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   reference implements were read off the committed vectors instead, which agree with one another on
   every field.
 
-  The artifact is real. `local://🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
+  The artifact is real. `shared://🏋️mutate-fem2d-1-load/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
   7.6 m, derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem2d-frame.py`
   from the artifact's own committed demo model, with seven unreferenced spares appended so every
   `delete-` and `replace-` verb this vocabulary declares has an unambiguous trailing target — see
-  `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for the full derivation
+  `../../../🌐️any/🔄️round-trips-the-committed-document/🥒️.feature` for the full derivation
   provenance. No `create-` verb in this vocabulary carries an index, so the inverse of a delete is
   exact only for a trailing record; that limit is a property of the closed schema, not of an
   implementation, and both implementations share it.
@@ -57,7 +57,7 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived timber portal frame
-    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    Given the real derived model shared://🏋️mutate-fem2d-1-load/🏗️timber-portal-frame.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -77,7 +77,7 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived frame and land back on it
-    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    Given the real derived model shared://🏋️mutate-fem2d-1-load/🏗️timber-portal-frame.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -97,9 +97,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
@@ -116,9 +116,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> steel-frame specification vector through both implementations
-    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
@@ -135,10 +135,10 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   @level-exhaustive
   @mode-differential
   Scenario Outline: Refuse the committed <id> vector in both implementations, for the same reason
-    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
     When the committed mutation is applied to the committed before-model
     Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
     Examples:

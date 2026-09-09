@@ -281,7 +281,7 @@ pub(crate) trait ErasedWindowConfigPublication: Send {
 
 struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     window_id: String,
-    publication: store::ArtifactStoreOneItemPublication<O::State, O::Mutation>,
+    publication: store::ArtifactStoreBatchPublication<O::State, O::Mutation>,
 }
 
 impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPublication<O> {
@@ -327,20 +327,8 @@ struct WindowConfigPartition<O: WindowConfigOwner> {
 
 trait ErasedWindowConfigStoreOwner: Send {
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>>;
-    fn dispatch<'a>(
-        &'a mut self,
-        actor: &'a str,
-        mutation: WindowConfigMutation,
-        description: Option<String>,
-        coalesce_key: Option<String>,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
-    fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        actor: String,
-        authority: &WindowConfigAuthority,
-        mutation: WindowConfigMutation,
-    ) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault>;
+    fn dispatch<'a>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, description: Option<String>, coalesce_key: Option<String>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
+    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
@@ -386,19 +374,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn dispatch<'a>(
-        &'a mut self,
-        actor: &'a str,
-        mutation: WindowConfigMutation,
-        description: Option<String>,
-        coalesce_key: Option<String>,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>> {
+    fn dispatch<'a>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, description: Option<String>, coalesce_key: Option<String>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>> {
         Box::pin(async move {
             let window_id = mutation.window_id;
-            let typed = mutation
-                .mutation
-                .downcast::<O::Mutation>()
-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
+            let typed = mutation.mutation.downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
             let partition = self.partition(&window_id).await?;
             partition.store.set_local_actor_id(Some(actor.to_string())).map_err(|error| error.into_fault())?;
             let command = match coalesce_key {
@@ -410,26 +389,14 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        actor: String,
-        authority: &WindowConfigAuthority,
-        mutation: WindowConfigMutation,
-    ) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
+    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
         let window_id = mutation.window_id;
-        let typed = mutation
-            .mutation
-            .downcast::<O::Mutation>()
-            .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
-        let partition = self
-            .partitions
-            .get(&window_id)
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "captured window config partition is absent"))?;
+        let typed = mutation.mutation.downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
+        let partition = self.partitions.get(&window_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "captured window config partition is absent"))?;
         let factory = O::build_one_item_preparation_factory();
         let publication = partition
             .store
-            .begin_apply_one(operation, authority.generation, authority.revision, actor, *typed, None, store::HistoryLane::Document, Some(factory.as_ref()))
+            .begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], None, store::HistoryLane::Document, Some(&factory))
             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.admission"), rejected.reason))?;
         Ok(Box::new(TypedWindowConfigPublication::<O> { window_id, publication }))
     }
@@ -443,24 +410,15 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             .get_mut(&publication.window_id)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "window config publication lost its exact partition"))?
             .store
-            .advance_apply_one(&mut publication.publication, grant)
+            .advance_apply_batch(&mut publication.publication, grant)
             .map_err(|error| error.into_fault())
     }
 
     fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault> {
-        let partition = self
-            .partitions
-            .get(&authority.window_id)
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "window config authority lost its exact partition"))?;
+        let partition = self.partitions.get(&authority.window_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "window config authority lost its exact partition"))?;
         authority.generation = partition.store.generation();
         authority.revision = partition.store.content_revision_now();
-        authority.snapshot = WindowConfigSnapshot {
-            window_id: authority.window_id.clone(),
-            window_kind_id: O::WINDOW_KIND_ID,
-            generation: authority.generation,
-            revision: authority.revision,
-            snapshot: partition.store.snapshot_root(),
-        };
+        authority.snapshot = WindowConfigSnapshot { window_id: authority.window_id.clone(), window_kind_id: O::WINDOW_KIND_ID, generation: authority.generation, revision: authority.revision, snapshot: partition.store.snapshot_root() };
         Ok(())
     }
 
@@ -516,7 +474,6 @@ pub struct WindowConfigOwnerRegistry {
     owners: BTreeMap<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
 }
 
-
 impl WindowConfigOwnerRegistry {
     pub fn register<O: WindowConfigOwner>(&mut self) -> Result<(), Fault> {
         if O::WINDOW_KIND_ID.is_empty() || O::SCHEMA.is_empty() || self.owners.contains_key(O::WINDOW_KIND_ID) {
@@ -542,14 +499,7 @@ impl WindowConfigOwnerRegistry {
         owner.capture(window_id).await.map(Some)
     }
 
-    pub(crate) async fn dispatch(
-        &mut self,
-        authority: &WindowConfigAuthority,
-        actor: &str,
-        mutation: WindowConfigMutation,
-        description: Option<String>,
-        coalesce_key: Option<String>,
-    ) -> Result<(), Fault> {
+    pub(crate) async fn dispatch(&mut self, authority: &WindowConfigAuthority, actor: &str, mutation: WindowConfigMutation, description: Option<String>, coalesce_key: Option<String>) -> Result<(), Fault> {
         self.validate_address(authority, &mutation)?;
         self.owners
             .get_mut(authority.window_kind_id.as_str())
@@ -558,13 +508,7 @@ impl WindowConfigOwnerRegistry {
             .await
     }
 
-    pub(crate) fn begin(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        actor: String,
-        authority: &WindowConfigAuthority,
-        mutation: WindowConfigMutation,
-    ) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
+    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
         self.validate_address(authority, &mutation)?;
         self.owners
             .get_mut(authority.window_kind_id.as_str())
@@ -573,17 +517,11 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
-        self.owners
-            .get_mut(publication.window_kind_id())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?
-            .advance(publication, grant)
+        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, grant)
     }
 
     pub(crate) fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault> {
-        self.owners
-            .get_mut(authority.window_kind_id.as_str())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config authority lost its registered concrete window owner"))?
-            .refresh(authority)
+        self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config authority lost its registered concrete window owner"))?.refresh(authority)
     }
 
     pub async fn packs(&self) -> Result<Vec<WindowConfigPack>, Fault> {
@@ -595,11 +533,7 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub async fn load(&mut self, pack: WindowConfigPack) -> Result<(), Fault> {
-        self.owners
-            .get_mut(pack.window_kind_id.as_str())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config pack has no registered concrete window owner"))?
-            .load(&pack.window_id, pack.files)
-            .await
+        self.owners.get_mut(pack.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config pack has no registered concrete window owner"))?.load(&pack.window_id, pack.files).await
     }
 
     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {

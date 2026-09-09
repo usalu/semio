@@ -1,7 +1,6 @@
 //! 🖌️ `open-vortex-suggestions` command.
 
 use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
-use crate::editor::puzzle3d::sync_precompute_session;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use dsl::os_pack::json::Value;
 
@@ -20,8 +19,10 @@ pub fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Va
     let window_id = args.and_then(|value| value.get("windowId")).and_then(|value| value.as_str()).filter(|id| !id.is_empty()).unwrap_or(ctx.window_id).to_string();
     ctx.scene.runtime.suggestion_menu = Some(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id: full_id.clone() });
     // 🧊️ Drop any stale empty/pending cache for this vortex, then refresh so the popup does not open
-    // on a previous "No placement" result while meshes/candidates are ready.
+    // on a previous "No placement" result while meshes/candidates are ready. The session is ALREADY
+    // synced: `openVortexSuggestions` is in `puzzle3d_action_uses_precompute`, so `Puzzle3dActionPrologue`
+    // spent its own bounded sync turns on this very scene before dispatching here — a second sync cost a
+    // measured 3.5 ms of pure re-conversion on the 180-object Nakagin document, per popup.
     ctx.app.precompute.borrow_mut().invalidate_brush_target(&full_id);
-    sync_precompute_session(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
     ctx.app.precompute.borrow_mut().refresh_brush_candidates(&full_id);
 }

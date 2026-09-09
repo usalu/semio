@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::Vdi3805Snapshot;
 
 /// 📜️ Bundled reference-catalogue example (`.semio` envelope + DSL body).
-pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses VDI 3805 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Vdi3805Snapshot, store::TextError> {

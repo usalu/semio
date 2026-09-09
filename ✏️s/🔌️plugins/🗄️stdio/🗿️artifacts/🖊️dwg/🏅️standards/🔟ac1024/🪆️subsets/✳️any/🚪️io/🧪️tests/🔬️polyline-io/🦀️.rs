@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn artifact_polyline_io_round_trips_layers_vertices_and_closure() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/📏️polyline-io/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📏️polyline-io/🔣️.json")).unwrap();
     let paths: Vec<(String, Vec<[f64; 2]>, bool)> =
         fixture["polylines"].as_array().unwrap().iter().map(|path| (path["layer"].as_str().unwrap().into(), serde_json::from_value(path["vertices"].clone()).unwrap(), path["closed"].as_bool().unwrap())).collect();
     let bytes = polylines_to_dwg_bytes(paths.iter().map(|(layer, vertices, closed)| (layer.as_str(), vertices.as_slice(), *closed))).unwrap();

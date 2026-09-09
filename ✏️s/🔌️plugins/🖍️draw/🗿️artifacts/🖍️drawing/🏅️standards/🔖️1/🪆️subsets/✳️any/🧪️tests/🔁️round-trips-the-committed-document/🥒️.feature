@@ -18,6 +18,6 @@ Feature: Parse and reprint the real committed example without passing bytes thro
   @level-long
   @mode-round-trip
   Scenario: Parse and reprint the real committed example without passing bytes through
-    Given the real committed example asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed example asset://🎬️demo/🗣️.dsl.semio
     When it is parsed, printed back to DSL and parsed again through round_trip_drawing_dsl
     Then both parses agree on one document, and the reprinted text reproduces the committed example byte for byte

@@ -20,6 +20,6 @@ pub fn diff(payload: &ChangeBlockInkWidth, base: &NoteSnapshot) -> protocol::Mut
     if let crate::NoteBlockNode::Ink { stroke_width, .. } = &mut updated {
         *stroke_width = payload.new_stroke_width;
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

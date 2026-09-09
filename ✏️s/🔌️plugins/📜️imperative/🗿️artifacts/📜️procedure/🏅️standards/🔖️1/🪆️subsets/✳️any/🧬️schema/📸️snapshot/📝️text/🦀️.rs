@@ -141,7 +141,7 @@ pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
 
 //#region 🔖️Api
 /// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL.
-pub const PROCEDURE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const PROCEDURE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.imperative` DSL text into an `ProcedureSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<ProcedureSnapshot, store::TextError> {

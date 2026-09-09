@@ -16,10 +16,10 @@ use crate::schema::mutations::move_node_child;
 use crate::GltfSnapshot;
 
 const CASE: &str = "move-node-child/refuses-a-move-whose-destination-is-the-childs-current-slot";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌿️node-child/🚚️move/🔬️t045/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌿️node-child/🚚️move/🔬️t045/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌿️node-child/🚚️move/🔬️t045/🧬️operation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌿️node-child/🚚️move/🔬️t045/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

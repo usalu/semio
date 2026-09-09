@@ -297,7 +297,7 @@ impl MutationDiff<En1992Snapshot> for En1992Diff {
 
 //#region 🔖️Helpers
 pub fn diff_set_snapshot(snapshot: &En1992Snapshot) -> En1992Diff {
-    En1992Diff { artifact: Some(Box::new(En1992Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+    En1992Diff { artifact: Some(Box::new(En1992Artifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 

@@ -3,9 +3,15 @@ export interface WiresCanvasTransient {
   /** @state transient */
   dragNodeId?: string;
   /** @state transient */
+  dragStartX: number;
+  /** @state transient */
+  dragStartY: number;
+  /** @state transient */
   dragLastX: number;
   /** @state transient */
   dragLastY: number;
+  /** @state transient */
+  dragZoom: number;
   /** @state transient */
 }
 
@@ -60,7 +66,10 @@ export function parseWiresCanvasTransient(value: unknown, at = "$"): WiresCanvas
   const row = reasoningWiresCanvasTransientGuardObject(value, at);
   return {
     dragNodeId: row["dragNodeId"] === undefined ? undefined : reasoningWiresCanvasTransientGuardString(row["dragNodeId"], `${at}.dragNodeId`),
+    dragStartX: reasoningWiresCanvasTransientGuardNumber(row["dragStartX"], `${at}.dragStartX`),
+    dragStartY: reasoningWiresCanvasTransientGuardNumber(row["dragStartY"], `${at}.dragStartY`),
     dragLastX: reasoningWiresCanvasTransientGuardNumber(row["dragLastX"], `${at}.dragLastX`),
     dragLastY: reasoningWiresCanvasTransientGuardNumber(row["dragLastY"], `${at}.dragLastY`),
+    dragZoom: reasoningWiresCanvasTransientGuardNumber(row["dragZoom"], `${at}.dragZoom`, { minimum: Number.MIN_VALUE }),
   };
 }

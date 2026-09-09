@@ -13,7 +13,7 @@ impl std::task::Wake for CountWake {
 
 #[test]
 fn worker_deferred_wake_matches_neutral_capacity_generation_and_shutdown_drain() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).expect("strict deferred-wake fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("strict deferred-wake fixture");
     assert_eq!(fixture["capacity"]["totalWaiters"].as_u64().unwrap() as usize, WORKER_DEFERRED_WAKE_CAPACITY);
     let registry = WorkerDeferredWakeRegistry::new();
     let counter = Arc::new(CountWake(AtomicUsize::new(0)));

@@ -87,7 +87,7 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "deps"

@@ -64,54 +64,54 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                                    | vector                                                                       |
-      | rename-object-kind                    | ✏️rename-object-kind/🧪️tests/✏️renames-object-kind-to-pod                      |
-      | change-object-kind-label              | 🏷️change-object-kind-label/🧪️tests/🔤️relabels-object-kind                      |
-      | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️tests/🔀️switches-variant-to-b                   |
-      | change-object-kind-description        | 📃️change-object-kind-description/🧪️tests/💬️rewrites-object-kind-description    |
-      | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️tests/🖼️repoints-object-kind-icon                  |
-      | change-object-kind-unit               | 📐change-object-kind-unit/🧪️tests/📏️switches-unit-to-centimeter                 |
-      | create-representation                 | 🧱create-representation/🧪️tests/🏗️appends-frame-representation                  |
-      | delete-representation                 | 🗑️delete-representation/🧪️tests/🚫️removes-shell-representation                  |
-      | rename-representation                 | ✒️rename-representation/🧪️tests/✏️renames-shell-to-hull                         |
-      | change-representation-mesh-url        | 🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-mesh-url              |
-      | change-representation-lod             | 🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-to-lod2                    |
-      | change-representation-description     | 📜change-representation-description/🧪️tests/🐚️rewrites-shell-description        |
-      | add-representation-tag                | 🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-structural                     |
-      | remove-representation-tag             | 🚫remove-representation-tag/🧪️tests/🚫️untags-shell-printable                    |
-      | add-representation-attribute          | 🧩add-representation-attribute/🧪️tests/🐚️adds-color-attribute-to-shell          |
-      | remove-representation-attribute       | ➖remove-representation-attribute/🧪️tests/🐚️drops-finish-attribute-from-shell   |
-      | create-vortex-kind                    | 🌱create-vortex-kind/🧪️tests/💨️appends-vent-vortex-kind                         |
-      | delete-vortex-kind                    | ❌delete-vortex-kind/🧪️tests/🚫️removes-hatch-vortex-kind                        |
-      | rename-vortex-kind                    | 🖋️rename-vortex-kind/🧪️tests/✏️renames-door-to-portal                           |
-      | change-vortex-kind-label              | 🎫change-vortex-kind-label/🧪️tests/🔤️relabels-door-vortex-kind                  |
-      | change-vortex-kind-color              | 🎨change-vortex-kind-color/🧪️tests/⚫️recolors-door-vortex-kind                  |
-      | change-vortex-kind-default-cable-kind | 🔌change-vortex-kind-default-cable-kind/🧪️tests/🔌️swaps-door-default-cable-kind |
-      | create-vortex                         | 🌀create-vortex/🧪️tests/🌀️appends-rear-vortex                                   |
-      | delete-vortex                         | 🕳️delete-vortex/🧪️tests/🚫️removes-front-vortex                                  |
-      | move-vortex                           | 📍move-vortex/🧪️tests/📍️repositions-front-vortex                                |
-      | resize-vortex                         | 📏resize-vortex/🧪️tests/📏️widens-front-vortex                                   |
-      | change-vortex-vortex-kind             | 🧷change-vortex-vortex-kind/🧪️tests/🕳️rekinds-front-vortex-as-hatch             |
-      | change-vortex-label                   | 🪧change-vortex-label/🧪️tests/🔤️relabels-front-vortex                           |
-      | add-compatibility-rule                | ➕add-compatibility-rule/🧪️tests/🔗️allows-door-to-hatch                         |
-      | remove-compatibility-rule             | ✂️remove-compatibility-rule/🧪️tests/✂️revokes-door-to-door                      |
-      | add-attribute                         | 🔩add-attribute/🧪️tests/⚖️adds-weight-attribute                                 |
-      | remove-attribute                      | 🚷remove-attribute/🧪️tests/➖️drops-material-attribute                           |
-      | add-author                            | 👤add-author/🧪️tests/✏️credits-bo                                               |
-      | remove-author                         | 🙅remove-author/🧪️tests/✏️uncredits-ada                                         |
-      | move-camera3d                         | 🎥move-camera3d/🧪️tests/🪐️orbits-camera                                         |
-      | scale-camera3d                        | 🔍scale-camera3d/🧪️tests/🔭️zooms-camera-out                                     |
-      | change-meta-description               | 💬change-meta-description/🧪️tests/📝️rewrites-session-notes                      |
+      | rename-object-kind                    | ✏️rename-object-kind/🧪️renames-object-kind-to-pod                      |
+      | change-object-kind-label              | 🏷️change-object-kind-label/🧪️relabels-object-kind                      |
+      | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️switches-variant-to-b                   |
+      | change-object-kind-description        | 📃️change-object-kind-description/🧪️rewrites-object-kind-description    |
+      | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️repoints-object-kind-icon                  |
+      | change-object-kind-unit               | 📐change-object-kind-unit/🧪️switches-unit-to-centimeter                 |
+      | create-representation                 | 🧱create-representation/🧪️appends-frame-representation                  |
+      | delete-representation                 | 🗑️delete-representation/🧪️removes-shell-representation                  |
+      | rename-representation                 | ✒️rename-representation/🧪️renames-shell-to-hull                         |
+      | change-representation-mesh-url        | 🌐change-representation-mesh-url/🧪️repoints-shell-mesh-url              |
+      | change-representation-lod             | 🏔️change-representation-lod/🧪️promotes-shell-to-lod2                    |
+      | change-representation-description     | 📜change-representation-description/🧪️rewrites-shell-description        |
+      | add-representation-tag                | 🔖add-representation-tag/🧪️tags-shell-as-structural                     |
+      | remove-representation-tag             | 🚫remove-representation-tag/🧪️untags-shell-printable                    |
+      | add-representation-attribute          | 🧩add-representation-attribute/🧪️adds-color-attribute-to-shell          |
+      | remove-representation-attribute       | ➖remove-representation-attribute/🧪️drops-finish-attribute-from-shell   |
+      | create-vortex-kind                    | 🌱create-vortex-kind/🧪️appends-vent-vortex-kind                         |
+      | delete-vortex-kind                    | ❌delete-vortex-kind/🧪️removes-hatch-vortex-kind                        |
+      | rename-vortex-kind                    | 🖋️rename-vortex-kind/🧪️renames-door-to-portal                           |
+      | change-vortex-kind-label              | 🎫change-vortex-kind-label/🧪️relabels-door-vortex-kind                  |
+      | change-vortex-kind-color              | 🎨change-vortex-kind-color/🧪️recolors-door-vortex-kind                  |
+      | change-vortex-kind-default-cable-kind | 🔌change-vortex-kind-default-cable-kind/🧪️swaps-door-default-cable-kind |
+      | create-vortex                         | 🌀create-vortex/🧪️appends-rear-vortex                                   |
+      | delete-vortex                         | 🕳️delete-vortex/🧪️removes-front-vortex                                  |
+      | move-vortex                           | 📍move-vortex/🧪️repositions-front-vortex                                |
+      | resize-vortex                         | 📏resize-vortex/🧪️widens-front-vortex                                   |
+      | change-vortex-vortex-kind             | 🧷change-vortex-vortex-kind/🧪️rekinds-front-vortex-as-hatch             |
+      | change-vortex-label                   | 🪧change-vortex-label/🧪️relabels-front-vortex                           |
+      | add-compatibility-rule                | ➕add-compatibility-rule/🧪️allows-door-to-hatch                         |
+      | remove-compatibility-rule             | ✂️remove-compatibility-rule/🧪️revokes-door-to-door                      |
+      | add-attribute                         | 🔩add-attribute/🧪️adds-weight-attribute                                 |
+      | remove-attribute                      | 🚷remove-attribute/🧪️drops-material-attribute                           |
+      | add-author                            | 👤add-author/🧪️credits-bo                                               |
+      | remove-author                         | 🙅remove-author/🧪️uncredits-ada                                         |
+      | move-camera3d                         | 🎥move-camera3d/🧪️orbits-camera                                         |
+      | scale-camera3d                        | 🔍scale-camera3d/🧪️zooms-camera-out                                     |
+      | change-meta-description               | 💬change-meta-description/🧪️rewrites-session-notes                      |
 
   @id-inverse
   @level-exhaustive
@@ -121,59 +121,59 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                                    | vector                                                                       |
-      | rename-object-kind                    | ✏️rename-object-kind/🧪️tests/✏️renames-object-kind-to-pod                      |
-      | change-object-kind-label              | 🏷️change-object-kind-label/🧪️tests/🔤️relabels-object-kind                      |
-      | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️tests/🔀️switches-variant-to-b                   |
-      | change-object-kind-description        | 📃️change-object-kind-description/🧪️tests/💬️rewrites-object-kind-description    |
-      | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️tests/🖼️repoints-object-kind-icon                  |
-      | change-object-kind-unit               | 📐change-object-kind-unit/🧪️tests/📏️switches-unit-to-centimeter                 |
-      | create-representation                 | 🧱create-representation/🧪️tests/🏗️appends-frame-representation                  |
-      | delete-representation                 | 🗑️delete-representation/🧪️tests/🚫️removes-shell-representation                  |
-      | rename-representation                 | ✒️rename-representation/🧪️tests/✏️renames-shell-to-hull                         |
-      | change-representation-mesh-url        | 🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-mesh-url              |
-      | change-representation-lod             | 🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-to-lod2                    |
-      | change-representation-description     | 📜change-representation-description/🧪️tests/🐚️rewrites-shell-description        |
-      | add-representation-tag                | 🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-structural                     |
-      | remove-representation-tag             | 🚫remove-representation-tag/🧪️tests/🚫️untags-shell-printable                    |
-      | add-representation-attribute          | 🧩add-representation-attribute/🧪️tests/🐚️adds-color-attribute-to-shell          |
-      | remove-representation-attribute       | ➖remove-representation-attribute/🧪️tests/🐚️drops-finish-attribute-from-shell   |
-      | create-vortex-kind                    | 🌱create-vortex-kind/🧪️tests/💨️appends-vent-vortex-kind                         |
-      | delete-vortex-kind                    | ❌delete-vortex-kind/🧪️tests/🚫️removes-hatch-vortex-kind                        |
-      | rename-vortex-kind                    | 🖋️rename-vortex-kind/🧪️tests/✏️renames-door-to-portal                           |
-      | change-vortex-kind-label              | 🎫change-vortex-kind-label/🧪️tests/🔤️relabels-door-vortex-kind                  |
-      | change-vortex-kind-color              | 🎨change-vortex-kind-color/🧪️tests/⚫️recolors-door-vortex-kind                  |
-      | change-vortex-kind-default-cable-kind | 🔌change-vortex-kind-default-cable-kind/🧪️tests/🔌️swaps-door-default-cable-kind |
-      | create-vortex                         | 🌀create-vortex/🧪️tests/🌀️appends-rear-vortex                                   |
-      | delete-vortex                         | 🕳️delete-vortex/🧪️tests/🚫️removes-front-vortex                                  |
-      | move-vortex                           | 📍move-vortex/🧪️tests/📍️repositions-front-vortex                                |
-      | resize-vortex                         | 📏resize-vortex/🧪️tests/📏️widens-front-vortex                                   |
-      | change-vortex-vortex-kind             | 🧷change-vortex-vortex-kind/🧪️tests/🕳️rekinds-front-vortex-as-hatch             |
-      | change-vortex-label                   | 🪧change-vortex-label/🧪️tests/🔤️relabels-front-vortex                           |
-      | add-compatibility-rule                | ➕add-compatibility-rule/🧪️tests/🔗️allows-door-to-hatch                         |
-      | remove-compatibility-rule             | ✂️remove-compatibility-rule/🧪️tests/✂️revokes-door-to-door                      |
-      | add-attribute                         | 🔩add-attribute/🧪️tests/⚖️adds-weight-attribute                                 |
-      | remove-attribute                      | 🚷remove-attribute/🧪️tests/➖️drops-material-attribute                           |
-      | add-author                            | 👤add-author/🧪️tests/✏️credits-bo                                               |
-      | remove-author                         | 🙅remove-author/🧪️tests/✏️uncredits-ada                                         |
-      | move-camera3d                         | 🎥move-camera3d/🧪️tests/🪐️orbits-camera                                         |
-      | scale-camera3d                        | 🔍scale-camera3d/🧪️tests/🔭️zooms-camera-out                                     |
-      | change-meta-description               | 💬change-meta-description/🧪️tests/📝️rewrites-session-notes                      |
+      | rename-object-kind                    | ✏️rename-object-kind/🧪️renames-object-kind-to-pod                      |
+      | change-object-kind-label              | 🏷️change-object-kind-label/🧪️relabels-object-kind                      |
+      | change-object-kind-variant            | 🔀️change-object-kind-variant/🧪️switches-variant-to-b                   |
+      | change-object-kind-description        | 📃️change-object-kind-description/🧪️rewrites-object-kind-description    |
+      | change-object-kind-icon               | 🖼️change-object-kind-icon/🧪️repoints-object-kind-icon                  |
+      | change-object-kind-unit               | 📐change-object-kind-unit/🧪️switches-unit-to-centimeter                 |
+      | create-representation                 | 🧱create-representation/🧪️appends-frame-representation                  |
+      | delete-representation                 | 🗑️delete-representation/🧪️removes-shell-representation                  |
+      | rename-representation                 | ✒️rename-representation/🧪️renames-shell-to-hull                         |
+      | change-representation-mesh-url        | 🌐change-representation-mesh-url/🧪️repoints-shell-mesh-url              |
+      | change-representation-lod             | 🏔️change-representation-lod/🧪️promotes-shell-to-lod2                    |
+      | change-representation-description     | 📜change-representation-description/🧪️rewrites-shell-description        |
+      | add-representation-tag                | 🔖add-representation-tag/🧪️tags-shell-as-structural                     |
+      | remove-representation-tag             | 🚫remove-representation-tag/🧪️untags-shell-printable                    |
+      | add-representation-attribute          | 🧩add-representation-attribute/🧪️adds-color-attribute-to-shell          |
+      | remove-representation-attribute       | ➖remove-representation-attribute/🧪️drops-finish-attribute-from-shell   |
+      | create-vortex-kind                    | 🌱create-vortex-kind/🧪️appends-vent-vortex-kind                         |
+      | delete-vortex-kind                    | ❌delete-vortex-kind/🧪️removes-hatch-vortex-kind                        |
+      | rename-vortex-kind                    | 🖋️rename-vortex-kind/🧪️renames-door-to-portal                           |
+      | change-vortex-kind-label              | 🎫change-vortex-kind-label/🧪️relabels-door-vortex-kind                  |
+      | change-vortex-kind-color              | 🎨change-vortex-kind-color/🧪️recolors-door-vortex-kind                  |
+      | change-vortex-kind-default-cable-kind | 🔌change-vortex-kind-default-cable-kind/🧪️swaps-door-default-cable-kind |
+      | create-vortex                         | 🌀create-vortex/🧪️appends-rear-vortex                                   |
+      | delete-vortex                         | 🕳️delete-vortex/🧪️removes-front-vortex                                  |
+      | move-vortex                           | 📍move-vortex/🧪️repositions-front-vortex                                |
+      | resize-vortex                         | 📏resize-vortex/🧪️widens-front-vortex                                   |
+      | change-vortex-vortex-kind             | 🧷change-vortex-vortex-kind/🧪️rekinds-front-vortex-as-hatch             |
+      | change-vortex-label                   | 🪧change-vortex-label/🧪️relabels-front-vortex                           |
+      | add-compatibility-rule                | ➕add-compatibility-rule/🧪️allows-door-to-hatch                         |
+      | remove-compatibility-rule             | ✂️remove-compatibility-rule/🧪️revokes-door-to-door                      |
+      | add-attribute                         | 🔩add-attribute/🧪️adds-weight-attribute                                 |
+      | remove-attribute                      | 🚷remove-attribute/🧪️drops-material-attribute                           |
+      | add-author                            | 👤add-author/🧪️credits-bo                                               |
+      | remove-author                         | 🙅remove-author/🧪️uncredits-ada                                         |
+      | move-camera3d                         | 🎥move-camera3d/🧪️orbits-camera                                         |
+      | scale-camera3d                        | 🔍scale-camera3d/🧪️zooms-camera-out                                     |
+      | change-meta-description               | 💬change-meta-description/🧪️rewrites-session-notes                      |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the object-kind definition with its catalogue child and local extras
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/✏️rename-object-kind/🧪️tests/✏️renames-object-kind-to-pod/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/✏️rename-object-kind/🧪️renames-object-kind-to-pod/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

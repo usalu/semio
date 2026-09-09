@@ -63,11 +63,11 @@ DSL_PREAMBLE = "semio stdio.semio.video.dsl v1"
 #: 🎬️ The document every mutation row runs on: two real streams of the real "Bauen mit Bestand"
 #: recording — eight real MJPEG frames of the committed AVI and twenty-four real MPEG-1 Layer III
 #: frames of the committed mp3 — derived ONCE by `🐍️derive-video-fixture.py` in the ticket folder.
-RECORDING_DSL = "local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio"
+RECORDING_DSL = "shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio"
 #: 🎥️ The tiny committed clip, kept for the BYTE half of the identity law and for the tie to the
 #: committed specification vectors: its file was written by the RUST codec, so this implementation
 #: reproducing it is a cross-language byte agreement the recording cannot restate.
-CLIP_DSL = "asset://📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio"
+CLIP_DSL = "asset://🎥️clip/🗣️.dsl.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -331,7 +331,7 @@ def clip(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://🎥️mutate-semio-video/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

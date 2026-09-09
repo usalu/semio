@@ -12,7 +12,7 @@ Feature: Apply every concrete PDF 1.4 ANY mutation to a real document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> on the real document
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -30,7 +30,7 @@ Feature: Apply every concrete PDF 1.4 ANY mutation to a real document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real document
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -48,6 +48,6 @@ Feature: Apply every concrete PDF 1.4 ANY mutation to a real document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the document is fully decoded and re-encoded from its model
     Then the oracle and the subject agree on the semantic projection

@@ -14,11 +14,11 @@ start op
 # comment for why.
 op = create-vertex | delete-vertex | create-edge | delete-edge | create-face | delete-face | create-shell | delete-shell | create-solid | delete-solid | replace-curve | replace-surface | move-vertex
 
-create-vertex = "create-vertex" "id" "=" hex "point" "=" point3
+create-vertex = "create-vertex" "id" "=" hex "point" "=" point3 "tol" "=" number
 delete-vertex = "delete-vertex" "id" "=" hex
-create-edge = "create-edge" "id" "=" hex "start" "=" hex "end" "=" hex "curve" "=" curve
+create-edge = "create-edge" "id" "=" hex "start" "=" hex "end" "=" hex "curve" "=" curve "tol" "=" number
 delete-edge = "delete-edge" "id" "=" hex
-create-face = "create-face" "id" "=" hex "outer" "=" hex "inner" "=" hex-list "surface" "=" surface "orientation" "=" bool
+create-face = "create-face" "id" "=" hex "outer" "=" hex "inner" "=" hex-list "surface" "=" surface "orientation" "=" bool "tol" "=" number
 delete-face = "delete-face" "id" "=" hex
 create-shell = "create-shell" "id" "=" hex "faces" "=" shell-face-list
 delete-shell = "delete-shell" "id" "=" hex

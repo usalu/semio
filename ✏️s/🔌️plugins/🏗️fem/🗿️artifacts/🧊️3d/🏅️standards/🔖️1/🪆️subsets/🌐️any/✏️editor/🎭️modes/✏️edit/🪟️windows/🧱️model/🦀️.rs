@@ -23,7 +23,7 @@ pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     crate::app_surface::world_3d_surface(
         FEM3D_BODY_MODEL,
-        semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
+        &semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     )
 }
 
@@ -38,7 +38,7 @@ pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::live_visu
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
     eprintln!("[DEBUG] fem3d model window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
-    crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, scene)
+    crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene)
 }
 
 // #region 🧪️Tests

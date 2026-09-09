@@ -1,164 +1,73 @@
-/** 🧬️ Note diff schema — sparse field delta. */
-
+/** 🔺️ Sparse Note document changes reuse the authored block, image and link contracts. */
+import { parseNoteArtifact, parseNoteBlockNode, parseNoteImageAsset, parseNoteRecord, noteDocumentFields, noteString, noteNullable, noteArray, noteMap, type NoteValueParser, type NoteArtifact, type NoteBlockNode, type NoteImageAsset, type ArtifactLink } from "../🟦️.ts";
+export type { NoteArtifact, NoteBlockNode, NoteImageAsset, ArtifactLink } from "../🟦️.ts";
 export interface NoteDiff {
-  /** @state artifact */
-  artifact?: NoteArtifact;
-  /** @state artifact */
-  schema?: string;
-  /** @state artifact */
-  id?: string;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
+  artifact?: NoteArtifact | null;
+  /** 🧬️ @state artifact */
+  schema?: string | null;
+  /** 🧬️ @state artifact */
+  id?: string | null;
+  /** 🧬️ @state artifact */
   title?: string | null;
-  /** @state artifact */
-  blocks?: NoteBlocksDelta;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
+  blocks?: NoteBlocksDelta | null;
+  /** 🧬️ @state artifact */
   gridVisible?: boolean | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   gridSpacing?: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   gridSubdivisions?: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   gridOpacity?: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   snapEnabled?: boolean | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   snapGridSpacing?: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   pencilWidth?: number | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   eraserRadius?: number | null;
-  /** @state artifact */
-  assets?: NoteAssetsDelta;
+  /** 🧬️ @state artifact */
+  assets?: NoteAssetsDelta | null;
+  /** 🧬️ @state artifact */
+  linkedArtifact?: ArtifactLink | null;
+}
+export interface NoteAddedBlockEntry { parentId: string | null; index: number | null; block: NoteBlockNode }
+export interface NoteBlockPatch { blockJson?: string | null }
+export interface NoteBlockPatchEntry { id: string; patch: NoteBlockPatch }
+export interface NoteBlocksDelta { added: NoteAddedBlockEntry[]; removed: string[]; patched: NoteBlockPatchEntry[]; reordered?: string[] | null }
+export interface NoteAssetsDelta { entries: Record<string, NoteImageAsset | null> }
+
+const index: NoteValueParser = (value, at) => { if (typeof value !== "number" || !Number.isInteger(value) || value < 0) throw new Error(`${at}: expected an unsigned index`); return value; };
+
+/** ➕️ Parses identified insertion position and the complete added block. */
+export function parseNoteAddedBlockEntry(value: unknown, at = "$"): NoteAddedBlockEntry {
+  return parseNoteRecord(value, { parentId: noteNullable(noteString), index: noteNullable(index), block: parseNoteBlockNode }, ["parentId", "index", "block"], at) as unknown as NoteAddedBlockEntry;
 }
 
-export interface NoteArtifact {
-  schema: string;
-  id: string;
-  title?: string;
-  blocks: NoteBlockNode[];
-  gridVisible?: boolean;
-  gridSpacing?: number;
-  gridSubdivisions?: number;
-  gridOpacity?: number;
-  snapEnabled?: boolean;
-  snapGridSpacing?: number;
-  pencilWidth?: number;
-  eraserRadius?: number;
-  assets: Record<string, NoteImageAsset>;
-}
-
-export interface NoteAssetsDelta {
-  entries: Record<string, NoteImageAsset | null>;
-}
-
-export interface NoteStringList {
-  values: string[];
-}
-
-export interface NoteBlocksDelta {
-  added: NoteBlockNode[];
-  removed: string[];
-  patched: NoteBlockPatchEntry[];
-  reordered?: string[];
-}
-
-export interface NoteBlockPatchEntry {
-  id: string;
-  patch: NoteBlockPatch;
-}
-
-export interface NoteBlockPatch {
-  blockJson?: string;
-}
-
-export interface NoteBlockNode {
-  kind: string;
-  [key: string]: unknown;
-}
-
-export interface NoteImageAsset {
-  mime: string;
-  data: string;
-  width?: number;
-  height?: number;
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class noteNoteDiffGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const noteNoteDiffGuardReject = (at: string, why: string): never => {
-  throw new noteNoteDiffGuardRefusal(at, why);
-};
-
-type noteNoteDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type noteNoteDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type noteNoteDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const noteNoteDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : noteNoteDiffGuardReject(at, "value is not an object");
-export const noteNoteDiffGuardArray = (value: unknown, at: string, bounds: noteNoteDiffGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return noteNoteDiffGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) noteNoteDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) noteNoteDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const noteNoteDiffGuardString = (value: unknown, at: string, bounds: noteNoteDiffGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return noteNoteDiffGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) noteNoteDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) noteNoteDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) noteNoteDiffGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const noteNoteDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : noteNoteDiffGuardReject(at, "value is not a boolean"));
-export const noteNoteDiffGuardNumber = (value: unknown, at: string, bounds: noteNoteDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return noteNoteDiffGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) noteNoteDiffGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) noteNoteDiffGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const noteNoteDiffGuardInteger = (value: unknown, at: string, bounds: noteNoteDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? noteNoteDiffGuardNumber(value, at, bounds) : noteNoteDiffGuardReject(at, "value is not an integer");
-export const noteNoteDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : noteNoteDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const noteNoteDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : noteNoteDiffGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseNoteAssetsDelta(value: unknown, at = "$"): NoteAssetsDelta {
-  const row = noteNoteDiffGuardObject(value, at);
-  return {
-    entries: noteNoteDiffGuardObject(row["entries"], `${at}.entries`),
-  };
-}
-
-export function parseNoteStringList(value: unknown, at = "$"): NoteStringList {
-  const row = noteNoteDiffGuardObject(value, at);
-  return {
-    values: noteNoteDiffGuardArray(row["values"], `${at}.values`).map((item, index) => noteNoteDiffGuardString(item, `${at}.values[${index}]`)),
-  };
-}
-
-export function parseNoteBlockPatchEntry(value: unknown, at = "$"): NoteBlockPatchEntry {
-  const row = noteNoteDiffGuardObject(value, at);
-  return {
-    id: noteNoteDiffGuardString(row["id"], `${at}.id`),
-    patch: parseNoteBlockPatch(row["patch"], `${at}.patch`),
-  };
-}
-
+/** 🩹️ Preserves the native block patch transport. */
 export function parseNoteBlockPatch(value: unknown, at = "$"): NoteBlockPatch {
-  const row = noteNoteDiffGuardObject(value, at);
-  return {
-    blockJson: row["blockJson"] === undefined ? undefined : noteNoteDiffGuardString(row["blockJson"], `${at}.blockJson`),
-  };
+  return parseNoteRecord(value, { blockJson: noteNullable(noteString) }, [], at) as unknown as NoteBlockPatch;
 }
 
-export function parseNoteArtifact(value: unknown, at = "$"): NoteArtifact {
-  return noteNoteDiffGuardObject(value, `${at}`);
+/** 🪪️ Associates a sparse patch with its block identity. */
+export function parseNoteBlockPatchEntry(value: unknown, at = "$"): NoteBlockPatchEntry {
+  return parseNoteRecord(value, { id: noteString, patch: parseNoteBlockPatch }, ["id", "patch"], at) as unknown as NoteBlockPatchEntry;
+}
+
+/** 🗂️ Parses the native identified block collection delta. */
+export function parseNoteBlocksDelta(value: unknown, at = "$"): NoteBlocksDelta {
+  return parseNoteRecord(value, { added: noteArray(parseNoteAddedBlockEntry), removed: noteArray(noteString), patched: noteArray(parseNoteBlockPatchEntry), reordered: noteNullable(noteArray(noteString)) }, ["added", "removed", "patched"], at) as unknown as NoteBlocksDelta;
+}
+
+/** 🖼️ Parses image replacements and removals through the shared asset field owner. */
+export function parseNoteAssetsDelta(value: unknown, at = "$"): NoteAssetsDelta {
+  return parseNoteRecord(value, { entries: noteMap(noteNullable(parseNoteImageAsset)) }, ["entries"], at) as unknown as NoteAssetsDelta;
+}
+
+/** 🧾️ Parses only current document fields, preserving explicit nullable operations. */
+export function parseNoteDiff(value: unknown, at = "$"): NoteDiff {
+  const fields = Object.fromEntries(Object.entries(noteDocumentFields).map(([key, parse]) => [key, noteNullable(parse)]));
+  return parseNoteRecord(value, { ...fields, artifact: noteNullable(parseNoteArtifact), blocks: noteNullable(parseNoteBlocksDelta), assets: noteNullable(parseNoteAssetsDelta) }, [], at) as unknown as NoteDiff;
 }

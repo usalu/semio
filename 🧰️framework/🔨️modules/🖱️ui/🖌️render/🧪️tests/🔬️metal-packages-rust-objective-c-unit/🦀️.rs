@@ -31,7 +31,7 @@ fn owned_runtime_preserves_empty_single_max_max_plus_one_and_hostile_contract() 
             align_of::<Owned<NSString>>(),
             size_of::<Option<Owned<NSString>>>()
         );
-        assert_eq!(fixture, include_str!("../../🎯️targets/🍎️metal/📦️packages/🦀️rust/🧫️fixtures/🔣️.json"));
+        assert_eq!(fixture, include_str!("../../🧫️fixtures/🍎️metal/🔣️.json"));
         println!("empty=ok single=ok max=4096 maxPlusOne=rejected hostileNull=rejected retainDelta=1 restored=true pool=drained");
     });
 }

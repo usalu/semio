@@ -77,6 +77,7 @@ impl ShardLoop {
         allocation.is_some_and(|allocation| self.current_allocation(allocation.actor.0) == Some(allocation))
     }
 
+    #[expect(clippy::result_large_err, reason = "Registration refusal returns the exact live guest instance so the caller can retire its admitted runtime resources.")]
     pub fn register(&mut self, actor: ActorId, instance: GuestInstance) -> Result<ShardActorAllocation, ShardRegistrationRejected> {
         if instance.actor != actor {
             return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::WrongActor });

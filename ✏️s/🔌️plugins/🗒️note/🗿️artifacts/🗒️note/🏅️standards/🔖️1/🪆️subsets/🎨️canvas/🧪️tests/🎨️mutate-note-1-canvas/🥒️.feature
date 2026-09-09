@@ -19,10 +19,10 @@ Feature: Apply every typed note document canvas mutation twice — once in Rust,
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -30,19 +30,19 @@ Feature: Apply every typed note document canvas mutation twice — once in Rust,
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                       | vector                                                       |
-      | change-grid-visible      | 👁️change-grid-visible/🧪️tests/🙈️hides-the-grid                 |
-      | change-grid-spacing      | 📏️change-grid-spacing/🧪️tests/📏️widens-grid-spacing            |
-      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🧪️tests/🔢️doubles-grid-subdivisions |
-      | change-grid-opacity      | 🌫️change-grid-opacity/🧪️tests/🌫️raises-grid-opacity            |
-      | change-snap-enabled      | 🧲️change-snap-enabled/🧪️tests/🧲️enables-snap                   |
-      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/🧪️tests/📐️halves-snap-grid-spacing  |
+      | change-grid-visible      | 👁️change-grid-visible/🙈️hides-the-grid                 |
+      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens-grid-spacing            |
+      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles-grid-subdivisions |
+      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises-grid-opacity            |
+      | change-snap-enabled      | 🧲️change-snap-enabled/🧲️enables-snap                   |
+      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves-snap-grid-spacing  |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -50,9 +50,9 @@ Feature: Apply every typed note document canvas mutation twice — once in Rust,
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                       | vector                                                       |
-      | change-grid-visible      | 👁️change-grid-visible/🧪️tests/🙈️hides-the-grid                 |
-      | change-grid-spacing      | 📏️change-grid-spacing/🧪️tests/📏️widens-grid-spacing            |
-      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🧪️tests/🔢️doubles-grid-subdivisions |
-      | change-grid-opacity      | 🌫️change-grid-opacity/🧪️tests/🌫️raises-grid-opacity            |
-      | change-snap-enabled      | 🧲️change-snap-enabled/🧪️tests/🧲️enables-snap                   |
-      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/🧪️tests/📐️halves-snap-grid-spacing  |
+      | change-grid-visible      | 👁️change-grid-visible/🙈️hides-the-grid                 |
+      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens-grid-spacing            |
+      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles-grid-subdivisions |
+      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises-grid-opacity            |
+      | change-snap-enabled      | 🧲️change-snap-enabled/🧲️enables-snap                   |
+      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves-snap-grid-spacing  |

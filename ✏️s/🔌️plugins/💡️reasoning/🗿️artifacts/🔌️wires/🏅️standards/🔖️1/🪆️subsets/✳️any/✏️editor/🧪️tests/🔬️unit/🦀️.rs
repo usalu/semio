@@ -237,13 +237,15 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history() {
     use store::ArtifactPack;
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
+    let expected: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
-    let before = serde_json::to_value(&source).unwrap();
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else { panic!("reset must load a document"); };
+    let before = serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap();
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {
+        panic!("reset must load a document");
+    };
     let decoded = <crate::WiresSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
-    assert_eq!(serde_json::to_value(decoded).unwrap(), before);
-    assert_eq!(serde_json::to_value(&source).unwrap(), before);
+    assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
+    assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
     let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "changes": history.changes.len(), "checkpoints": history.checkpoints.len(), "alternatives": history.alternatives.len(), "conflicts": history.conflicts.len() });
     assert_eq!(actual, expected);

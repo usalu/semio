@@ -58,5 +58,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, LossyMutation> for SetN {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🪤️lossy-🔢️set-n/🦀️.rs"]
 mod tests;

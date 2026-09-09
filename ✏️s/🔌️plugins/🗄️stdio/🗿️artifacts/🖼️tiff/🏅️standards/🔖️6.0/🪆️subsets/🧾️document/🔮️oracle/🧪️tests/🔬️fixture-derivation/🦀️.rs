@@ -31,9 +31,9 @@ fn find_repo_root(start: &std::path::Path) -> std::path::PathBuf {
 fn derive_real_world_fixture() {
     let repo_root = find_repo_root(std::path::Path::new(env!("CARGO_MANIFEST_DIR")));
     let mut jpeg_path = repo_root.clone();
-    jpeg_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg");
+    jpeg_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg");
     let mut png_path = repo_root.clone();
-    png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.png");
+    png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png");
     let mut out_path = repo_root.clone();
     out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff");
 
@@ -97,7 +97,7 @@ fn derive_real_world_fixture() {
     let tiny_hex: String = tiny_rgb.as_raw().iter().map(|b| format!("{b:02x}")).collect();
     eprintln!("inline 8x8 real thumbnail hex (insert-ifd pixels): {tiny_hex}");
 
-    // A committed `local://` binary fixture for `replace-pixels`: the SAME real photo's own
+    // A committed `shared://` binary fixture for `replace-pixels`: the SAME real photo's own
     // pixels, horizontally flipped (still 100% real content, but a genuinely different,
     // provable raster) — full IFD 0 resolution, so it can only reasonably live as a binary
     // fixture, not inline JSON hex.
@@ -114,6 +114,6 @@ fn derive_real_world_fixture() {
     std::fs::create_dir_all(&case_fixture_dir).expect("create case fixtures dir");
     let mut flipped_path = case_fixture_dir.clone();
     flipped_path.push("🖼️.rgba");
-    std::fs::write(&flipped_path, &flipped_rgba).expect("write local:// replace-pixels fixture");
+    std::fs::write(&flipped_path, &flipped_rgba).expect("write shared:// replace-pixels fixture");
     eprintln!("wrote {} ({} bytes, {w}x{h} RGBA8)", flipped_path.display(), flipped_rgba.len());
 }

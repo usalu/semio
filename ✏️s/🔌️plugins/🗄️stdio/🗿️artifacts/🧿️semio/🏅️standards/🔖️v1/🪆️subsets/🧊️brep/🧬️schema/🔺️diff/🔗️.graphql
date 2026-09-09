@@ -1,11 +1,11 @@
 # 🔺️ SemioBrepDiff facet mirror — see the `🦀️.rs` sibling for the real source of truth.
 
 type NamedModifiedVertex { key: String!, diff: BrepVertexDiff! }
-type BrepVertexDiff { point: SemioPoint3 }
+type BrepVertexDiff { point: SemioPoint3, tol: Float }
 type BrepVerticesDiff { removed: [String!]!, modified: [NamedModifiedVertex!]!, added: [BrepVertex!]! }
 
 type NamedModifiedEdge { key: String!, diff: BrepEdgeDiff! }
-type BrepEdgeDiff { startVertex: String, endVertex: String, curve: BrepCurve }
+type BrepEdgeDiff { startVertex: String, endVertex: String, curve: BrepCurve, tol: Float }
 type BrepEdgesDiff { removed: [String!]!, modified: [NamedModifiedEdge!]!, added: [BrepEdge!]! }
 
 type NamedModifiedLoop { key: String!, diff: BrepLoopDiff! }
@@ -13,7 +13,7 @@ type BrepLoopDiff { edges: [BrepLoopEdge!] }
 type BrepLoopsDiff { removed: [String!]!, modified: [NamedModifiedLoop!]!, added: [BrepLoop!]! }
 
 type NamedModifiedFace { key: String!, diff: BrepFaceDiff! }
-type BrepFaceDiff { outerLoop: String, innerLoops: [String!], surface: BrepSurface, orientation: Boolean }
+type BrepFaceDiff { outerLoop: String, innerLoops: [String!], surface: BrepSurface, orientation: Boolean, tol: Float }
 type BrepFacesDiff { removed: [String!]!, modified: [NamedModifiedFace!]!, added: [BrepFace!]! }
 
 type NamedModifiedShell { key: String!, diff: BrepShellDiff! }

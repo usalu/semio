@@ -1942,6 +1942,65 @@
         }
       }
     },
+    "PluginRuntimeTypedOperationRoutingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "receiver",
+        "ownedOperation",
+        "foreignOperation",
+        "firstSequence",
+        "faultSequence",
+        "fault",
+        "capacity",
+        "overflow",
+        "unattributedCode",
+        "evictionCode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.plugin.typed-operation-routing/v1"
+        },
+        "receiver": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ownedOperation": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "foreignOperation": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "firstSequence": {
+          "const": 0
+        },
+        "faultSequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fault": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "overflow": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unattributedCode": {
+          "const": "interactive-job.unattributed-result-fault"
+        },
+        "evictionCode": {
+          "const": "interactive-job.parked-result-capacity"
+        }
+      }
+    },
     "PluginRuntimeChannelCloseV1": {
       "type": "object",
       "additionalProperties": false,

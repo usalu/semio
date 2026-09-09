@@ -1,7 +1,7 @@
 //! 🗺️ Web-Mercator / slippy-tile oracle test for `tiled_map::projection` and `tiled_map::tiles`.
 //!
 //! Reads the SAME frozen fixture as the sibling Python oracle adapter
-//! (`../../🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🧫️fixtures/🔣️.json`), whose `projection`,
+//! (`../../🗺️tiled-map/🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json`), whose `projection`,
 //! `tileNumbering` and `tileBounds` arrays were computed independently by the `mercantile` third-party
 //! library (pure Python, zero runtime deps) from the published EPSG:3857 / OSM slippy-tile spec. This
 //! file asserts this repository's Rust implementation reproduces the same numbers, discharging
@@ -32,9 +32,8 @@ fn fixture() -> Value {
         "..",
         "..",
         "🗺️tiled-map",
-        "🧪️tests",
-        "🕸️web-mercator-tile-oracle",
         "🧫️fixtures",
+        "🕸️web-mercator-tile-oracle",
         "🔣️.json",
     ]
     .iter()

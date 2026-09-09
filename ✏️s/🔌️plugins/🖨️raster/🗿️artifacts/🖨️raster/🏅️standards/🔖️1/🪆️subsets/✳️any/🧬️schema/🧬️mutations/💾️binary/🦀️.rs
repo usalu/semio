@@ -864,6 +864,7 @@ fn decode_raster_mutation_pack(bytes: &[u8]) -> Result<RasterMutation, ()> {
 
 macro_rules! raster_owned_field_authority {
     ($state:ident, $authority:ident, $value:ty, $authority_trait:ident, $target_trait:ident, $publish:ident, $decode:path, $factory:expr, $kind:literal) => {
+        #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
         enum $state {
             AwaitToken,
             Decode(store::OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>),
@@ -1242,8 +1243,8 @@ impl RasterMapKeyCursor {
         Self { index: 0 }
     }
 
-    fn next<'a, T>(&self, values: &'a RasterOwnedMap<T>) -> Result<Option<(&'a String, &'a T)>, &'static str> {
-        Ok(values.entry_at(self.index))
+    fn next<'a, T>(&self, values: &'a RasterOwnedMap<T>) -> Option<(&'a String, &'a T)> {
+        values.entry_at(self.index)
     }
 
     fn advance(&mut self, _key: &str) -> Result<(), &'static str> {
@@ -1422,9 +1423,9 @@ impl RasterLayerBoundsAuthority {
             6 => {
                 if let RasterLayerNode::Adjustment { params, .. } = layer {
                     if let Some(value) = self.parameter_value.as_mut() {
-                        let (_, source) = self.parameter_key.next(params)?.ok_or("raster-store.preflight-parameter-source")?;
+                        let (_, source) = self.parameter_key.next(params).ok_or("raster-store.preflight-parameter-source")?;
                         if value.step(source, totals, cx)? {
-                            let (key, _) = self.parameter_key.next(params)?.ok_or("raster-store.preflight-parameter-key")?;
+                            let (key, _) = self.parameter_key.next(params).ok_or("raster-store.preflight-parameter-key")?;
                             if !raster_reserve_unit(cx) {
                                 return Ok(false);
                             }
@@ -1433,7 +1434,7 @@ impl RasterLayerBoundsAuthority {
                         }
                         return Ok(false);
                     }
-                    if let Some((key, _)) = self.parameter_key.next(params)? {
+                    if let Some((key, _)) = self.parameter_key.next(params) {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -1865,9 +1866,9 @@ impl RasterLayerCloneAuthority {
             4 => {
                 if let (RasterLayerNode::Adjustment { params: source, .. }, RasterLayerNode::Adjustment { params: target, .. }) = (source, target) {
                     if let Some(authority) = self.parameter_value.as_mut() {
-                        let (_, source_value) = self.parameter_key.next(source)?.ok_or("raster-store.clone-parameter-source")?;
+                        let (_, source_value) = self.parameter_key.next(source).ok_or("raster-store.clone-parameter-source")?;
                         if authority.step(source_value, &mut self.totals, cx)? {
-                            let (source_key, _) = self.parameter_key.next(source)?.ok_or("raster-store.clone-parameter-advance")?;
+                            let (source_key, _) = self.parameter_key.next(source).ok_or("raster-store.clone-parameter-advance")?;
                             let pending_key = self.pending_parameter_key.as_ref().ok_or("raster-store.clone-parameter-key")?;
                             if target.page_required_for_insert(pending_key) {
                                 if !raster_reserve_unit(cx) {
@@ -1901,7 +1902,7 @@ impl RasterLayerCloneAuthority {
                         }
                         return Ok(false);
                     }
-                    if let Some((key, value)) = self.parameter_key.next(source)? {
+                    if let Some((key, value)) = self.parameter_key.next(source) {
                         if self.pending_parameter_key.is_none() {
                             if !raster_reserve_unit(cx) {
                                 return Ok(false);
@@ -2092,7 +2093,7 @@ impl RasterSnapshotBoundsAuthority {
                 self.phase = 7;
             }
             7 => {
-                let Some((key, child)) = self.asset_key.next(&source.assets)? else {
+                let Some((key, child)) = self.asset_key.next(&source.assets) else {
                     self.terminal = true;
                     return Ok(true);
                 };
@@ -2226,7 +2227,7 @@ impl RasterSnapshotCloneAuthority {
             }
             5 => {
                 if self.pending_asset.is_none() {
-                    let Some((key, _)) = self.asset_key.next(&source.assets)? else {
+                    let Some((key, _)) = self.asset_key.next(&source.assets) else {
                         self.phase = 6;
                         return Ok(false);
                     };

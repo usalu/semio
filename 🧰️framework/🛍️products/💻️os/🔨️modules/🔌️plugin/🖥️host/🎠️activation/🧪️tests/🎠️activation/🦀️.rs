@@ -6,7 +6,7 @@ use semio_framework_async::{ProcessKind, WorkerPool, WorkerPoolConfig};
 
 #[semio_framework_async_macros::async_test]
 async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mock = Arc::new(MockGuestRuntime::new().await);
         let runtime = Arc::new(GuestRuntimes::Mock(Arc::clone(&mock)));

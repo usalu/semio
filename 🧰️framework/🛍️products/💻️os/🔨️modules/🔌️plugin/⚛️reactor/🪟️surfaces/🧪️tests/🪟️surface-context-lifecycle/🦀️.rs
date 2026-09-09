@@ -4,7 +4,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn surface_context_retains_host_preferences_and_window_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     let mut contexts = SurfaceContexts::default();
     let mut oracle = serde_json::Map::new();
@@ -68,4 +68,37 @@ fn surface_context_capacity_reuses_closed_windows_without_partial_updates() {
     contexts.insert("panel".into(), "properties".into(), view).unwrap();
     assert_eq!(contexts.len(), 1);
     assert!(contexts.get("panel").unwrap().view_state.window_id.is_none());
+}
+
+/// 🧩️ A reserved section surface keeps the FULL host view it was mounted with — no window/panel
+/// narrowing, and no dependence on which sibling surface mounted last — and no window closing ever
+/// prunes it, because a section is keyed by no window at all.
+#[test]
+fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows() {
+    let mut contexts = SurfaceContexts::default();
+    let view = ViewModel { window_instances: vec![semio_framework::ViewWindowInstance { id: "left".into(), window_kind_id: "graph".into() }], window_id: Some("left".into()), active_tool_id: Some("fill".into()), ..Default::default() };
+    contexts.insert("7:left".into(), "graph".into(), view.for_window_instance("left").unwrap()).unwrap();
+    for section in UiRefreshSection::ALL {
+        contexts.insert(format!("7:{}", section.body_key()), section.body_key().into(), view.clone()).unwrap();
+    }
+    contexts.insert("7:panel".into(), "properties".into(), view.for_panel()).unwrap();
+    for section in UiRefreshSection::ALL {
+        let context = contexts.get(&format!("7:{}", section.body_key())).unwrap();
+        assert_eq!(context.body_key, section.body_key());
+        assert_eq!(context.view_state.window_id.as_deref(), Some("left"));
+        assert_eq!(context.view_state.active_tool_id.as_deref(), Some("fill"));
+        assert_eq!(context.view_state.window_instances.len(), 1);
+    }
+    let mut closed = view.clone();
+    closed.window_instances.clear();
+    contexts.update_view(&closed);
+    assert!(contexts.get("7:left").is_none());
+    for section in UiRefreshSection::ALL {
+        assert!(contexts.get(&format!("7:{}", section.body_key())).is_some());
+        contexts.remove(&format!("7:{}", section.body_key()));
+    }
+    assert!(contexts.section_view.is_none());
+    contexts.remove("7:panel");
+    assert_eq!(contexts.len(), 0);
+    eprintln!("[DEBUG] reserved section surfaces retained the unnarrowed host view across sibling mounts and window closure");
 }

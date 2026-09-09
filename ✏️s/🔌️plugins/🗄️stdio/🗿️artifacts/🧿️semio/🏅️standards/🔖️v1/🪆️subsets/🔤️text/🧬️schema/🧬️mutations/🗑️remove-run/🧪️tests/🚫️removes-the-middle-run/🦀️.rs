@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes-the-middle-run/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes-the-middle-run/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes-the-middle-run/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes-the-middle-run/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes-the-middle-run/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTextSnapshot {
     dsl::json::from_json_str(BEFORE).expect("remove-run before snapshot decodes")

@@ -6,7 +6,7 @@ use protocol::{Mutation, MutationDiff};
 /// 🗂️ Each persisted map edit preserves null and removal as distinct operations.
 #[semio_framework_async_macros::async_test]
 async fn rewriting_map_ownership_transport_preserves_entry_presence() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️map-ownership/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut current = RewritingSnapshot { parameter_bindings: pack::from_json_str(&row["before"].to_string()).unwrap(), ..Default::default() };
         for input in row["mutations"].as_array().unwrap() {
@@ -28,7 +28,7 @@ async fn rewriting_map_ownership_transport_preserves_entry_presence() {
 /// 🪢 Coalesced map edits retain successful sequential application over the original base.
 #[semio_framework_async_macros::async_test]
 async fn rewriting_map_ownership_absorb_preserves_sequential_application() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️map-ownership/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base = RewritingSnapshot { parameter_bindings: pack::from_json_str(&row["before"].to_string()).unwrap(), ..Default::default() };
         let mut current = base.clone();

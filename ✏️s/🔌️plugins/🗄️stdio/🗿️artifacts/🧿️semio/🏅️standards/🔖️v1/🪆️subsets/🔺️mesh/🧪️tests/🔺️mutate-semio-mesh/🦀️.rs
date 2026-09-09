@@ -74,9 +74,9 @@ mod subject {
     //#region 🔖️Input
     /// 🔺️ The real derived model — 271 meshes and 459 primitives read once out of the committed
     /// Metabolism `🧊️base.glb` and written out through the independent TypeScript implementation.
-    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
+    const ARTIFACT_DSL: &str = "shared://🔺️mutate-semio-mesh/🗣️.dsl.semio";
     /// 🎒️ The same model in its binary envelope, written by a separate codec from the DSL text.
-    const ARTIFACT_PACK: &str = "local://🎒️.pack.semio";
+    const ARTIFACT_PACK: &str = "shared://🔺️mutate-semio-mesh/🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
@@ -100,7 +100,7 @@ mod subject {
 
     /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
     fn payload(ctx: &Context) -> Result<SemioMeshMutation, String> {
-        let uri = step_uris(ctx, "local://").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
+        let uri = step_uris(ctx, "shared://🔺️mutate-semio-mesh/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
         let text = String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))?;
         decode_semio_mesh_mutation_json(&text).map_err(|error| format!("{}: the mutation payload must decode: {error}", ctx.scenario.id))
     }

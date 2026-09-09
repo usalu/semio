@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import jsonPatch from "fast-json-patch";
-import fixture from "./🔣️.json" with { type: "json" };
+import fixture from "./../../🧫️fixtures/🗂️map-ownership/🔣️.json" with { type: "json" };
 
 /** 🗂️ Independently validates null-valued entry and sequential map-change fixtures. */
 export function testRewritingMapOwnershipOracle(): void {

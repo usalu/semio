@@ -18,9 +18,9 @@ import {
 class MediaProjectionScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("media-projection-check accepts only --oracle-only");
-    const base = join(this.root, "../../🧪️tests/🕸️media-projection");
-    const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
-    const projection = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
+    const owner = join(this.root, "../..");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🕸️media-projection/🔣️.json"), "utf8"));
+    const projection = JSON.parse(readFileSync(join(owner, "🧬️schema/🕸️media-projection/🔣️.json"), "utf8")) as { $id: string };
     const validate = new Ajv({ strict: true, allErrors: true }).addSchema(projection).getSchema(`${projection.$id}#/$defs/WorkflowMediaContractProjectionV1`)!;
     assert.equal(fixture.schema, "semio.workflow.media-contract-presentation/v1");
     assert.equal(fixture.cases.length, 4);
@@ -56,7 +56,7 @@ class PersistenceContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("persistence-contract-check accepts only --oracle-only");
     const base = join(this.root, "../../💾️persistence");
-    const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addSchema(schema);
@@ -145,7 +145,7 @@ class DocumentRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("document-retirement-check accepts only --oracle-only");
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement");
-    const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let grants = 0;
@@ -183,7 +183,7 @@ class MemberOpenProtocolScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-open-protocol-check accepts only --oracle-only");
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open");
-    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true, allErrors: true });
     const validate = ajv.compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -249,7 +249,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
     if (segments.length) throw new Error("member-history-identity-source accepts no arguments");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
@@ -340,7 +340,7 @@ class MemberHistoryInputScript extends BundleScript {
     const { blake3Hex } = await import("../../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const history = Buffer.from(fixture.historyHex, "hex"); const hash = (bytes: Buffer) => Buffer.from(blake3Hex(bytes), "hex");
@@ -440,7 +440,7 @@ class MemberHistoryIdScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-id-check accepts only --oracle-only");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); const ids = new Set<string>(); let accepted = 0;
     const decode = (row: { dictionary: string | null; resolvedIndex?: number }, bytes: Buffer) => {
@@ -530,7 +530,7 @@ class MemberHistoryRecordScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-record-check accepts only --oracle-only");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); let accepted = 0; const ids = new Set<string>();
     const fail = (reason: string): never => { throw new Error(reason); };
@@ -585,7 +585,7 @@ class MemberHistoryRecordScript extends BundleScript {
     const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
     console.log(`[DEBUG] dictionary payload cursor oracle: ${accepted} accepted / ${fixture.cases.length - accepted} denied exact wires ×3 grants; exact ordered Begin/base/count and Entry/ranges, UTF8 scratch0..4, event fences, canonicalLEB, pinned retirement; no input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    assert(source.includes('include_str!("🧫️fixture/🔣️.json")'), "native payload cursor must consume its exact neutral fixture");
+    assert(source.includes('include_str!("🧫️fixtures/🔣️.json")'), "native payload cursor must consume its exact neutral fixture");
     assert(source.includes('fixture["events"][name]') && source.includes("assert_eq!(events, expected_events"), "native payload cursor must compare every exact ordered neutral event trace");
     const laws = ["retained_dictionary_delta_matches_neutral_text_ranges_without_publication", "retained_dictionary_delta_rejects_tail_and_preserves_partial_utf8_until_close"];
     for (const law of laws) assert(source.includes(`fn ${law}`));
@@ -629,7 +629,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
     const { blake3Hex } = await import("../../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
@@ -883,7 +883,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const nativeLaws = readFileSync(join(owner, "🧪️tests/🦀️.rs"), "utf8");
     for (const law of ["member_history_dictionary_is_atomic_and_bounded_by_neutral_records", "member_history_dictionary_retains_every_denied_owner_until_exact_close"]) assert(nativeLaws.includes(`fn ${law}`));
-    assert(nativeLaws.includes('include_str!("../🧫️fixture/🔣️.json")') && nativeLaws.includes('fixture["recordRetirement"]'), "owner native laws must consume the exact fixture including scratch retirement");
+    assert(nativeLaws.includes('include_str!("../🧫️fixtures/🔣️.json")') && nativeLaws.includes('fixture["recordRetirement"]'), "owner native laws must consume the exact fixture including scratch retirement");
     assert(nativeLaws.includes('fixture["ownerRetirement"]'), "native owner must cover retained wire-copy, lookup-copy and tagged-ID scratch");
     assert(source.includes("RetainedSprVerification::new") && source.includes("observe_record_header()") && source.includes("id.is_complete()") && source.includes("copy_verified_history_chunk"), "owner must reuse the exact retained framing/ID/input contracts");
     assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id/🦀️.rs"), "utf8").includes("fn is_complete("), "record owner requires a non-poisoning tagged-ID completion query");
@@ -898,14 +898,14 @@ class MemberFactoryIdentityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-factory-identity-check accepts only --oracle-only");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const semioSource = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
     const semioTable = semioSource.slice(semioSource.indexOf("pub enum SemioMembers {"), semioSource.indexOf("/// 🏭️ Mints a typed Semio child"));
     const declarations = [...semioTable.matchAll(/\w+\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\) =>/g)].map(match => match.slice(1));
     assert.equal(declarations.length, 18); assert.deepEqual(declarations, fixture.declarations, "neutral rows must be exactly the owning closed factory declaration, never parallel authority");
-    const inputFixture = JSON.parse(readFileSync(join(owner, "../🧫️fixture/🔣️.json"), "utf8"));
+    const inputFixture = JSON.parse(readFileSync(join(owner, "../🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(Buffer.from(inputFixture.historyHex, "hex").length + 2, fixture.inputBytes);
     const validText = (value: string) => value.length > 0 && Buffer.byteLength(value) <= fixture.limits.fieldBytes && !/\p{Cc}/u.test(value);
     const validKind = /^s\.[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -1046,10 +1046,10 @@ class PublicMemberOpenHandoffScript extends BundleScript {
 
   protected proveSource(): void {
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🚪️member-open");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
-    const selectedFixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧫️fixture/🔣️.json"), "utf8"));
+    const selectedFixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(selectedFixture.declarations.length, fixture.requiredFactoryOperations);
     assert.deepEqual(selectedFixture.declarations.find((row: string[]) => row.slice(0, 3).every((value, index) => value === fixture.input.dialect[index])), fixture.selected);
     const deniedSchema = structuredClone(fixture); deniedSchema.input.schema = "stdio.semio"; assert(!validate(deniedSchema), "caller cannot provide selected schema");

@@ -19,10 +19,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::Fem2dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace-region/👻️dangling-mat-7ef81b/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace-region/👻️dangling-mat-7ef81b/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace-region/👻️dangling-mat-7ef81b/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace-region/👻️dangling-mat-7ef81b/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

@@ -18,6 +18,7 @@ use protocol::Mutation;
 #[dsl(extension = "vcscfg")]
 #[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct VcsDemoConfig {}
 
 //#region 🔖️ArtifactCodec
@@ -64,11 +65,7 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-impl Default for VcsDemoConfig {
-    fn default() -> Self {
-        Self {}
-    }
-}
+
 
 store::impl_whole_record_config!(VcsDemoConfig);
 //#endregion 🔖️Config

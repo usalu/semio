@@ -376,7 +376,7 @@ async fn backbone_delta_fanout_coalesces_a_burst_for_the_same_uri() {
     let registry = BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities)).await;
     let topic = Topic("backbone.delta.studio-42".to_string());
     let actor = semio_framework_actor::ActorId(1);
-    events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string(), max_items: 100, max_bytes: 1_000_000 }).await;
+    events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string(), max_items: 100, max_bytes: 1_000_000 });
     registry.fanout_delta("studio-42", b"delta-1".to_vec()).await;
     registry.fanout_delta("studio-42", b"delta-2".to_vec()).await;
     let drained = events.drain(&topic, actor).await;

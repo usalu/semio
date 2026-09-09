@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "timeoutMs",
+    "initializationTimeoutMs",
+    "bootstrapTimeoutMs",
+    "maximumPending",
+    "close",
+    "cases",
+    "accepted"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.directory.browser-broker-client-fixtures.v1"
+    },
+    "timeoutMs": {
+      "const": 2000
+    },
+    "initializationTimeoutMs": {
+      "const": 90000
+    },
+    "bootstrapTimeoutMs": {
+      "const": 120000
+    },
+    "maximumPending": {
+      "const": 64
+    },
+    "close": {
+      "const": {
+        "request": { "kind": "close" },
+        "clearsProof": true,
+        "rejectsPending": true,
+        "cases": [
+          { "id": "before-read", "readStarted": false },
+          { "id": "during-read", "readStarted": true }
+        ]
+      }
+    },
+    "cases": {
+      "const": [
+        "acknowledged",
+        "slow-initialization",
+        "refused",
+        "malformed-ack",
+        "response-before-ack",
+        "timeout",
+        "cancel-before-ack",
+        "close-before-response"
+      ]
+    },
+    "accepted": {
+      "const": {
+        "status": 200,
+        "body": "{}"
+      }
+    }
+  }
+}

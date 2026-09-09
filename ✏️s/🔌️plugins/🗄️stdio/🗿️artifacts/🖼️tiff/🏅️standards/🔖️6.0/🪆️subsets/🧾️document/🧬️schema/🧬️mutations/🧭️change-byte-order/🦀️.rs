@@ -47,7 +47,7 @@ pub fn contribute(base: &TiffSnapshot, byte_order: TiffByteOrder) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-byte-order payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🧭️change-byte-order/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-byte-order payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

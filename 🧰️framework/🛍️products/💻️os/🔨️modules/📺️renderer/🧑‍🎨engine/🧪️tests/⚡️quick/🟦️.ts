@@ -4,7 +4,7 @@ import React from "react";
 import { describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { rendererResidentLedger } from "../../💾️resident/🟦️.ts";
-import residentFixture from "../../💾️resident/🧪️fixture/🔣️.json";
+import residentFixture from "../../💾️resident/🧫️fixtures/🔣️.json";
 import {
   BootstrapStatusNotice,
   reduceBootstrapUiState,

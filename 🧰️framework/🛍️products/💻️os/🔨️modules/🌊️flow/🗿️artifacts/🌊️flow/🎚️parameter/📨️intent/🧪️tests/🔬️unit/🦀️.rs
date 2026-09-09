@@ -4,7 +4,7 @@ use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 
 #[test]
 fn graph_parameter_intent_matches_strict_typed_schema() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
         let payload: SetGraphParameter = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(row)).unwrap();
         payload.validate().unwrap();
@@ -31,7 +31,7 @@ fn graph_parameter_intent_rejects_non_finite_before_retained_admission() {
 
 #[test]
 fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let text = fixture.get("longWidgetId").unwrap();
     let law = fixture.get("retirement").unwrap();
     for maximum in [1, 4096] {

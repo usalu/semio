@@ -1,0 +1,16 @@
+{
+  "schema": "dag.fixture",
+  "nodeIds": [
+    "slider",
+    "mode",
+    "scale",
+    "combine",
+    "screen"
+  ],
+  "edgeIds": [
+    "e1",
+    "e2",
+    "e3",
+    "e4"
+  ]
+}

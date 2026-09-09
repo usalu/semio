@@ -92,8 +92,8 @@ pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_
     semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    render_canvas_scene(document, &cfg.camera, active_utility, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
+pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
 }
 //#endregion 🔖️Render
 

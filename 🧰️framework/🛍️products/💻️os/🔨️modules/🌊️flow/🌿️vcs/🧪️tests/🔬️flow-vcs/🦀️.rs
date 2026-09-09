@@ -884,7 +884,7 @@ fn publish_and_close(session: &mut FlowRetainedVcs, handle: FlowVcsHandle) -> Fl
 //#region 📍️OrderedLayoutLaws
 #[test]
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔣️.json")).unwrap();
+    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = Arc::new(<FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap());
     let mut readers = [std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))), std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot))];
     for reader in &mut readers {
@@ -922,7 +922,7 @@ fn close_layout_session(session: &mut FlowRetainedVcs) {
 
 #[test]
 fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔣️.json")).unwrap();
+    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut expected = fixture["initial"]["layout"].clone();
     let mut session = FlowRetainedVcs::new(crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
     for edit in fixture["edits"].as_array().unwrap() {
@@ -950,7 +950,7 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
 
 #[test]
 fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exactly() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔣️.json")).unwrap();
+    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for edit in fixture["edits"].as_array().unwrap() {
         for boundary in 0..64 {
             let mut session = FlowRetainedVcs::new(crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
@@ -1024,7 +1024,7 @@ fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
 
 #[test]
 fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_oracle_after_ack_close() {
-    let source = include_str!("../../🪞️fixtures/🔮️oracle/🔣️.json");
+    let source = include_str!("../../🧫️fixtures/🔮️oracle/🔣️.json");
     let expected = SerdeJsonFlowOracle.expected_operations(source);
     let independently_evaluated = SerdeJsonFlowOracle.evaluate_operations(source);
     assert_eq!(independently_evaluated, expected);
@@ -1048,9 +1048,9 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
 
 #[test]
 fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
-    let owners: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🫴️owners/🔣️.json")).expect("owner fixture");
+    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
+    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
+    let owners: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🫴️owners/🔣️.json")).expect("owner fixture");
     let operations = oracle.get("operations").and_then(crate::os_pack::json::Value::as_array).expect("operation ledger");
     assert_eq!(operations.len(), FLOW_VCS_FEATURES.len());
     for (operation, feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
@@ -1111,8 +1111,8 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
 
 #[test]
 fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_one_results() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
+    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
+    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
     for vector in lifecycle.get("byteVectors").and_then(crate::os_pack::json::Value::as_array).expect("byte vectors") {
         let protocol = vector.get("protocol").expect("byte protocol");
         let input = protocol.get("operation").expect("byte operation");
@@ -1155,8 +1155,8 @@ fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_on
 
 #[test]
 fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_results() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
+    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
+    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
     let valid_grant = flow_hostile_named_grant(&lifecycle, "valid");
 
     for vector in lifecycle.get("authorityVectors").and_then(crate::os_pack::json::Value::as_array).expect("authority vectors") {
@@ -1256,8 +1256,8 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
 
 #[test]
 fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_states() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🪞️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
+    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔮️oracle/🔣️.json")).expect("oracle fixture");
+    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
     for boundary in lifecycle.get("transferControlLedger").and_then(crate::os_pack::json::Value::as_array).expect("transfer control ledger") {
         let protocol = boundary.get("protocol").expect("transfer protocol");
         let target = protocol.get("target").expect("transfer target");

@@ -342,7 +342,7 @@ pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot
 /// 📝️ Parses `s.stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📊️mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
-/// artifact (`../../📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// artifact (`../../🖼️assets/📃️sheet/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_table_dsl(text: &str) -> Result<SemioTableSnapshot, String> {
     <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
@@ -364,7 +364,7 @@ pub fn encode_semio_table_pack(snapshot: &SemioTableSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioTableSnapshot`] — the inverse of
-/// [`encode_semio_table_pack`], reading `../../📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio`.
+/// [`encode_semio_table_pack`], reading `../../🖼️assets/📃️sheet/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_table_pack(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
     <SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

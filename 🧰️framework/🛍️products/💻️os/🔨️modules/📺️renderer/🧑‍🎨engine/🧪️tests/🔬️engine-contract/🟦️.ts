@@ -1,6 +1,7 @@
 import { act as reactAct, createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
+import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
 import { Layout, UIDialog, createTutorialClock, uiI18n } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
@@ -47,13 +48,13 @@ import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/�
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
-import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️fixtures/⚖️action-semantics.json";
-import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️fixtures/🎞️tutorial-document-track.json";
+import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
+import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
 import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
-import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/👥️presence-overlay.json";
+import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/👥️presence-overlay.json";
 import uiContractSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
@@ -660,6 +661,7 @@ describe("Space artifact creation host owner", () => {
     requestId,
     name: "Shared Map",
     spaceId: "space-a",
+    expectedCatalogGenerationId: catalogAuthority.catalogGenerationId,
     kindId: "s.gis.gismap",
     runtimeKey: "hub:space-a:index",
     clientInstanceId: "client-a",
@@ -674,6 +676,7 @@ describe("Space artifact creation host owner", () => {
       kind: "space-artifact-create",
       requestId,
       spaceId: "space-a",
+      expectedCatalogGenerationId: catalogAuthority.catalogGenerationId,
       kindId: "s.gis.gismap",
       name: "Shared Map",
     });
@@ -706,6 +709,25 @@ describe("Space artifact creation host owner", () => {
     console.log("[DEBUG] Shell creation catalog authority: neutral=8 admitted=1 generation-and-mount-fences=7");
   });
 
+  it("binds creation acceptance and ready status to the selected catalog generation", () => {
+    expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);
+    const request = spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority);
+    const captured = { ...owner, expectedCatalogGenerationId: catalogAuthority.catalogGenerationId };
+    const statuses = artifactCreationCatalogAuthorityFixture.statusCases.map(row => {
+      const message = {
+        kind: "space-artifact-creation-status" as const,
+        requestId,
+        spaceId: owner.spaceId,
+        ...(row.generation === "missing" ? {} : { catalogGenerationId: row.generation === "current" ? catalogAuthority.catalogGenerationId : "4".repeat(64) }),
+        phase: "ready" as const,
+        ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+      };
+      return spaceArtifactCreationOwnerAcceptsStatus(captured, message as Extract<BackboneWorkerResponse, { kind: "space-artifact-creation-status" }>);
+    });
+    expect({ requestGeneration: (request as unknown as Record<string, unknown>)?.expectedCatalogGenerationId, statuses }).toEqual({ requestGeneration: catalogAuthority.catalogGenerationId, statuses: artifactCreationCatalogAuthorityFixture.statusCases.map(row => row.admitted) });
+    console.log("[DEBUG] Shell creation request and ready statuses preserve the selected catalog generation");
+  });
+
   it("retires only staged artifact-kind fields on catalog revision", () => {
     const definitions = artifactCreationCatalogAuthorityFixture.draftCases.map((row) => ({ ownerId: row.id, args: [{ id: "value", artifactKind: row.format === "artifactKind" }] }));
     const staged = Object.fromEntries(artifactCreationCatalogAuthorityFixture.draftCases.map((row) => [row.id, { value: row.format }]));
@@ -718,6 +740,7 @@ describe("Space artifact creation host owner", () => {
       kind: "space-artifact-creation-status" as const,
       requestId,
       spaceId: "space-a",
+      catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
       ready: {
         documentId: `artifact-${"2".repeat(32)}`,
@@ -737,7 +760,7 @@ describe("Space artifact creation host owner", () => {
       spaceId: "space-a",
       schema: "s.gis.gismap",
     });
-    expect(spaceArtifactCreationReadyOpening({ kind: "space-artifact-creation-status", requestId, spaceId: "space-a", phase: "preparing" })).toBeNull();
+    expect(spaceArtifactCreationReadyOpening({ kind: "space-artifact-creation-status", requestId, spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "preparing" })).toBeNull();
   });
 
   it("publishes only a committed current target and releases every private rejected target once", async () => {
@@ -780,8 +803,8 @@ describe("Space artifact creation host owner", () => {
     let state = reduceArtifactCreationProgressUiV1({}, { kind: "issued", owner: progressOwner });
     state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: sibling });
     const unchanged = state;
-    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", phase: "failed" } })).toBe(unchanged);
-    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", phase: "failed" } })).toBe(unchanged);
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
     state = reduceArtifactCreationProgressUiV1(state, { kind: "cancel-requested", requestId, spaceId: "space-a" });
     expect(state[requestId]).toMatchObject({ phase: "accepted", cancelRequested: true });
     expect(state[sibling.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
@@ -820,7 +843,7 @@ describe("Space artifact creation host owner", () => {
     expect(reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement })).toBe(full);
     state = reduceArtifactCreationProgressUiV1(state, {
       kind: "status",
-      message: { kind: "space-artifact-creation-status", requestId: owners[0]!.requestId, spaceId: owner.spaceId, phase: "failed" },
+      message: { kind: "space-artifact-creation-status", requestId: owners[0]!.requestId, spaceId: owner.spaceId, catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" },
     });
     state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement });
     expect(Object.keys(state)).toHaveLength(ARTIFACT_CREATION_PROGRESS_CAPACITY);

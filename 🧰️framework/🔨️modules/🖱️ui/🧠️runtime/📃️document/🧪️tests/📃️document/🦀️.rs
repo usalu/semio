@@ -2,7 +2,7 @@ use super::*;
 
 //#region 🧪️CanonicalRootLaws
 fn document_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64) -> SurfaceReconciler {

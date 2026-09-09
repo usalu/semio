@@ -223,6 +223,69 @@ async fn set_camera_is_session_only_and_never_undoable() {
     assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
 }
 
+#[semio_framework_async_macros::async_test]
+async fn exact_overview_window_cameras_isolate_render_and_reload_through_registered_app() {
+    let mut app = Box::new(app_with_registry());
+    let mut reopened = Box::new(app_with_registry());
+    let window_a = "puzzle2d-overview-a";
+    let window_b = "puzzle2d-overview-b";
+    let view_a = window_view(overview::WINDOW_KIND_ID, window_a);
+    let view_b = window_view(overview::WINDOW_KIND_ID, window_b);
+    let document_before = fixture_of(&app);
+    let app_config_before = app.config_pack().await.expect("app config before window publications");
+    let result_a = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": 18.0, "y": -4.0, "zoom": 2.0 } })), Some(window_a)).expect("setCamera a");
+    let result_b = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": -9.0, "y": 6.0, "zoom": 0.5 } })), Some(window_b)).expect("setCamera b");
+    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
+    assert_eq!(fixture_of(&app), document_before);
+    let app_config_after = app.config_pack().await.expect("app config after window publications");
+    assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
+    let rendered_a = render_window(&mut app, overview::BODY_KEY, window_a);
+    let rendered_b = render_window(&mut app, overview::BODY_KEY, window_b);
+    assert_eq!(rendered_camera(&rendered_a), (18.0, -4.0, 2.0));
+    assert_eq!(rendered_camera(&rendered_b), (-9.0, 6.0, 0.5));
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(1));
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b generation"), Some(1));
+    let packs = app.window_config_packs().await.expect("two exact window packs");
+    assert_eq!(packs.len(), 2);
+    for pack in packs {
+        reopened.load_window_config_pack(pack).await.expect("reload exact Puzzle 2D window pack");
+    }
+    assert_eq!(rendered_camera(&render_window(&mut reopened, overview::BODY_KEY, window_a)), (18.0, -4.0, 2.0));
+    assert_eq!(rendered_camera(&render_window(&mut reopened, overview::BODY_KEY, window_b)), (-9.0, 6.0, 0.5));
+    close_app(&mut reopened);
+    close_app(&mut app);
+    eprintln!("[DEBUG] two Puzzle 2D overview windows published and rendered independent cameras, preserved document and app config, reloaded both persisted partitions, and closed their registered apps");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn exact_overview_window_transient_isolates_abort_and_resets_on_reload() {
+    let mut app = Box::new(app_with_registry());
+    let mut reopened = Box::new(app_with_registry());
+    let window_a = "puzzle2d-transient-a";
+    let window_b = "puzzle2d-transient-b";
+    let view_a = window_view(overview::WINDOW_KIND_ID, window_a);
+    let view_b = window_view(overview::WINDOW_KIND_ID, window_b);
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
+    let transient_a = app.window_transient_snapshot(&view_a).expect("window a transient").expect("window a owner");
+    let transient_b = app.window_transient_snapshot(&view_b).expect("window b transient").expect("window b owner");
+    assert_eq!(transient_a.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some("fill"));
+    assert_eq!(transient_b.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    dispatch(&mut app, "engagementAbort", Some(&json!({ "pane": overview::WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
+    let aborted = app.window_transient_snapshot(&view_a).expect("aborted transient").expect("aborted owner");
+    assert_eq!(aborted.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
+    let submitted = dispatch(&mut app, "engagementSubmit", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
+    assert!(submitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id, .. } if window_id == window_a)));
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
+    let reset = reopened.window_transient_snapshot(&view_a).expect("reopened transient").expect("reopened owner");
+    assert_eq!(reset.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
+    assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
+    close_app(&mut reopened);
+    close_app(&mut app);
+    eprintln!("[DEBUG] Puzzle 2D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached terminal-empty close");
+}
+
 /// 🐢️ Regression test for a perf-round-2 bug: `parse_fixture_v1` always `clear_scene()`s then
 /// rebuilds, so every edge looked "new" and got re-`push_event`'d as `edgeCreate` — which
 /// `apply_host_events` then replayed into the fixture on the *next* action, duplicating every edge

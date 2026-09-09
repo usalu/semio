@@ -114,7 +114,7 @@ pub fn inverse_dag_mutation_steps(mutation: &DagMutation, base: &DagSnapshot) ->
 /// verb in this vocabulary with NO rejection branch on an empty scene, so its committed
 /// `mutation.duplicate-id` vector is only reachable once the id it collides with is actually
 /// present — which is precisely what
-/// `🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs::before` does with
+/// `🌱create-node/🚫️rejects-a-duplicate-node-id/🦀️.rs::before` does with
 /// its exact child owner. Exposed here because seeding from the committed payload is what keeps the
 /// vector free of any transcription: the seeded node IS the mutation JSON's own `node`.
 pub fn seed_dag_working_scene_with(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> bool {

@@ -32,7 +32,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   `semio-image-python-pillow-independent`; the recorded no-oracle decision it replaces is gone,
   because a reference now exists.
 
-  **The document under test is real, and its provenance is written down.** `local://🗣️.dsl.semio`
+  **The document under test is real, and its provenance is written down.** `shared://🖼️mutate-semio-image/🗣️.dsl.semio`
   and its binary twin were derived ONCE from the real committed animated GIF
   `🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️color-animated-text.gif` — 194x84, GIF89a, 16 frames at
   130 ms, NETSCAPE2.0 looping, palette-indexed — by decoding its first three frames with Pillow at
@@ -74,8 +74,8 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived animation
-    Given the real derived image artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
+    And the committed mutation payload shared://🖼️mutate-semio-image/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the animation parsed from it
     Then the independent implementation and the subject agree on the resulting snapshot and on what Pillow says its planes are
     Examples:
@@ -97,8 +97,8 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real derived animation
-    Given the real derived image artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://⏸️no-mutation/🦠️mutation/🔣️.json
+    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
+    And the committed mutation payload shared://🖼️mutate-semio-image/⏸️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the animation parsed from it
     Then the independent implementation and the subject agree on the resulting snapshot and on what Pillow says its planes are
 
@@ -106,8 +106,8 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real derived animation
-    Given the real derived image artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
+    And the committed mutation payload shared://🖼️mutate-semio-image/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the animation parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the animation and agree on the mutated and the restored snapshot
     Examples:
@@ -129,8 +129,8 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real derived animation
-    Given the real derived image artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://⏸️no-mutation/🦠️mutation/🔣️.json
+    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
+    And the committed mutation payload shared://🖼️mutate-semio-image/⏸️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the animation parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the animation and agree on the mutated and the restored snapshot
 
@@ -138,9 +138,9 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -162,7 +162,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-exhaustive
   @mode-differential
   Scenario: no-mutation leaves the committed three-frame vector exactly as it stands
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/🔀️move-frame/🧪️tests/⏮️moves-the-last-frame-to-the-front/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🔀️move-frame/⏮️moves-the-last-frame-to-the-front/📸️snapshot/⬅️before/🔣️.json
     When both implementations apply the nullary mutation to it
       """
       {"mutation": "noMutation"}
@@ -173,7 +173,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived animation from the parsed document
-    Given the real derived image artifact local://🗣️.dsl.semio
-    And its committed binary twin local://🎒️.pack.semio
+    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
+    And its committed binary twin shared://🖼️mutate-semio-image/🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte, agree on the animation and on the digests of what they emitted, and agree with Pillow about the planes

@@ -5,7 +5,7 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/*.rs",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🧱️binary-gate.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🔣️first-party-codecs.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
       "{projectRoot}/**/*"
@@ -65,7 +65,7 @@
     },
     "canonical-pair-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-check"
@@ -81,7 +81,7 @@
     },
     "inference-discovery-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-discovery-check"
@@ -97,7 +97,7 @@
     },
     "hub-live-catalog-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-live-catalog-check"
@@ -105,7 +105,7 @@
     },
     "hub-live-catalog-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-live-catalog-native-check"
@@ -121,7 +121,7 @@
     },
     "canonical-checkpoint-resource-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-check"
@@ -129,7 +129,7 @@
     },
     "canonical-checkpoint-resource-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
@@ -137,25 +137,27 @@
     },
     "schema-mirror": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "dependsOn": [
         "build"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-mirror"
-      }
+      },
+      "outputs": []
     },
     "schema-mirror-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "dependsOn": [
         "build"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-mirror --check"
-      }
+      },
+      "outputs": []
     },
     "dev": {
       "executor": "nx:run-commands",

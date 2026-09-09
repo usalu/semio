@@ -620,7 +620,7 @@ pub struct DagFixtureEdge {
 
 impl Default for DagFixture {
     fn default() -> Self {
-        let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"))
+        let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(crate::DAG_DEMO_TEXT)
             .expect("bundled DAG demo DSL is valid DagSnapshot text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }

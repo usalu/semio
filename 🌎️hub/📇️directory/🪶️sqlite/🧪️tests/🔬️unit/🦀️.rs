@@ -198,7 +198,7 @@ async fn sync_session_lifecycle() {
 // `hex()` oracle and describe the cross-space authorization boundary shared by every backend.
 #[test]
 fn share_token_vectors_match_sqlite_hex_oracle() {
-    let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../../../🧪️tests/🔑️share-token-vectors.json")).expect("share-token vectors");
+    let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️share-token-vectors/🔣️.json")).expect("share-token vectors");
     let oracle = Connection::open_in_memory().expect("sqlite oracle");
     for vector in vectors.encoding {
         let actual = crate::directory::encode_capability_bytes(&vector.bytes);
@@ -214,7 +214,7 @@ async fn share_token_lifecycle_and_scope() {
     let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
     directory.seed().await.expect("seed");
     let mut clock = HubClock::new();
-    let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../../../🧪️tests/🔑️share-token-vectors.json")).expect("share-token vectors");
+    let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️share-token-vectors/🔣️.json")).expect("share-token vectors");
     let grant_scope = DocumentScope::new(vectors.scope.grant.space_id, vectors.scope.grant.document_id);
     let allowed_scope = DocumentScope::new(vectors.scope.allowed.space_id, vectors.scope.allowed.document_id);
     let denied_scope = DocumentScope::new(vectors.scope.denied.space_id, vectors.scope.denied.document_id);
@@ -239,7 +239,7 @@ async fn share_token_lifecycle_and_scope() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn share_issuance_atomically_requires_the_persisted_scope_and_preserves_archived_spectator_read() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🔐️share-issuance-atomicity/🔣️.json")).expect("share issuance fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔐️share-issuance-atomicity/🔣️.json")).expect("share issuance fixture");
     assert_eq!(fixture["cases"].as_array().expect("share cases").len(), 7);
     assert_eq!(fixture["sourceHostiles"].as_array().expect("share hostiles").len(), 7);
     let directory = SqliteDirectory::connect(":memory:").await.expect("connect");

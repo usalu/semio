@@ -27,7 +27,7 @@ const KINDS: &[&str] = &["set-mark-info", "remove-mark-info", "set-struct-tree-r
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "asset://📚️examples/🧬️conformance-seed/🖼️assets/🧬️conformance-seed.pdf";
+const INPUT: &str = "asset://🧬️conformance-seed/🧬️conformance-seed.pdf";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

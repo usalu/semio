@@ -245,7 +245,7 @@ async fn run_node_record_dsl_pack_round_trips_nested_tables() {
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_package_cases_match_serde_json() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
     assert_eq!(fixture["package"], env!("CARGO_PKG_NAME"));
     for case in fixture["cases"].as_array().expect("cases") {
         let mut document = empty_run_document().await;

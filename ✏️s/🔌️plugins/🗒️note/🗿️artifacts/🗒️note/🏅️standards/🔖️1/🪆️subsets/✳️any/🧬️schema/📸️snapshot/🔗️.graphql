@@ -1,5 +1,6 @@
-# 🧬️ Note snapshot schema.
-
+# import NoteBlockNode, NoteImageAssetEntry from "../🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 type NoteSnapshot {
   schema: String!
   id: String!
@@ -13,21 +14,6 @@ type NoteSnapshot {
   snapGridSpacing: Float
   pencilWidth: Float
   eraserRadius: Float
-  assets: [NoteImageAssetEntry!]!
-}
-
-type NoteBlockNode {
-  kind: String!
-}
-
-type NoteImageAssetEntry {
-  key: String!
-  value: NoteImageAsset!
-}
-
-type NoteImageAsset {
-  mime: String!
-  data: String!
-  width: Float
-  height: Float
+  assets: [NoteImageAssetEntry!]
+  linkedArtifact: ArtifactLink
 }

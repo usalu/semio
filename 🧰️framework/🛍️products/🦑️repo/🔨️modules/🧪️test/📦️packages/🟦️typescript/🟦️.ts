@@ -87,6 +87,8 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   pathExclusions: Readonly<Record<string, TestPathExclusion>>;
   testsDirName: string;
   testFixturesDirName: string;
+  testFixtureLegacyDirectoryNames: readonly string[];
+  exampleAssetsDirName: string;
   testFeatureFileKindId: string;
   testCaseSlugPattern: string;
   testAdapterFileKinds: Readonly<Record<string, string>>;
@@ -125,7 +127,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionDirectoryOverrides", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionDirectoryOverrides", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy");
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
@@ -499,7 +501,6 @@ export type DiscoveredCase = Readonly<{
   featurePath: string;
   adapters: Readonly<Partial<Record<Implementation, string>>>;
   sharedFixtureDir: string | null;
-  localFixtureDir: string | null;
   projectName: string;
 }>;
 
@@ -574,7 +575,6 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
         if (existsSync(adapterPath)) adapters[impl] = relative(repoRoot, adapterPath).split(sep).join("/");
       }
       const sharedFixtureDir = join(ownerAbs, taxonomy.testFixturesDirName);
-      const localFixtureDir = join(caseDir, taxonomy.testFixturesDirName);
       found.push({
         owner: ownerRel,
         ownerName: basename(ownerAbs),
@@ -583,7 +583,6 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
         featurePath: relative(repoRoot, featurePath).split(sep).join("/"),
         adapters,
         sharedFixtureDir: existsSync(sharedFixtureDir) ? relative(repoRoot, sharedFixtureDir).split(sep).join("/") : null,
-        localFixtureDir: existsSync(localFixtureDir) ? relative(repoRoot, localFixtureDir).split(sep).join("/") : null,
         projectName: testProjectName(ownerRel, entry),
       });
     }
@@ -992,7 +991,7 @@ export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, i
 
 //#region 🧫️Fixtures
 /** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
-export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "local" | "asset" | "schema"; name: string; path: string; digest: string }>;
+export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "asset" | "schema"; name: string; path: string; digest: string }>;
 
 const FIXTURE_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
 
@@ -1004,22 +1003,14 @@ export function fixtureUrisIn(feature: ParsedFeature): string[] {
   return [...uris].sort();
 }
 
-/**
- * 🧫️ Resolves fixture URIs against the owner and case fixture directories. Resolution is explicit:
- * a `local://` name never shadows a `shared://` one, so adding a case-local file can never silently
- * change what an existing scenario reads.
- *
- * `asset://` resolves against the OWNER ROOT rather than a fixture directory. Real-world artifacts
- * are already committed where the domain keeps them (examples, assets), and they are large; copying
- * a multi-megabyte document into a fixtures directory would duplicate history for no gain. The path
- * escape guard and the plan-time digest pin are identical for all three schemes.
- */
+/** 🧭️ Resolves testing data under owner fixtures, static data under owner assets, and contracts by schema export. */
 export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { fixtures: ResolvedFixture[]; missing: string[]; diagnostics: SchemaDiagnostic[] } {
   const fixtures: ResolvedFixture[] = [];
   const missing: string[] = [];
   const diagnostics: SchemaDiagnostic[] = [];
+  const taxonomy = testTaxonomy(repoRoot);
   for (const uri of uris) {
-    const [scheme, name] = uri.split("://") as ["shared" | "local" | "asset" | "schema", string];
+    const [scheme, name] = uri.split("://") as [string, string];
     // 🧬️A `schema://` reference is a CONTRACT reference, not a file in this case's fixture directory:
     // it resolves through the derived catalog, so a fixture names the export it is an example of and
     // can never acquire a contract by having one placed next to it.
@@ -1030,14 +1021,13 @@ export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, ur
       else fixtures.push({ uri, scope: "schema", name, path: resolved.path, digest: resolved.digest });
       continue;
     }
-    const baseRel = scheme === "shared" ? discovered.sharedFixtureDir : scheme === "asset" ? discovered.owner : discovered.localFixtureDir;
-    if (baseRel === null) {
+    if ((scheme !== "shared" && scheme !== "asset") || !name || name.includes("\\") || name.split("/").some(part => !part || part === "." || part === "..")) {
       missing.push(uri);
       continue;
     }
-    const abs = join(repoRoot, baseRel, name);
-    const guard = resolve(join(repoRoot, baseRel));
-    if (!resolve(abs).startsWith(guard + sep) || !existsSync(abs)) {
+    const baseRel = posix.join(discovered.owner, scheme === "shared" ? taxonomy.testFixturesDirName : taxonomy.exampleAssetsDirName);
+    const abs = join(repoRoot, baseRel, name), guard = resolve(repoRoot, baseRel);
+    if (!resolve(abs).startsWith(guard + sep) || !existsSync(abs) || !lstatSync(abs).isFile() || realpathSync(abs) !== resolve(abs) || realpathSync(guard) !== guard) {
       missing.push(uri);
       continue;
     }
@@ -1424,10 +1414,8 @@ function breach(kind: TestingBreachKind, id: string, scope: string, summary: str
   return { id, kind, scope, summary, reason, solution, priority };
 }
 
-const SOURCE_VECTOR_DIRECTORIES = ["🦠️mutation", "📸️snapshot", "📸️snapshot/⬅️before", "📸️snapshot/➡️after", "🔺️diff", "🎯️outcome"] as const;
-const PROJECTED_VECTOR_DIRECTORIES = SOURCE_VECTOR_DIRECTORIES;
-const SOURCE_VECTOR_FILES = ["🦀️.rs", "🦠️mutation/🔣️.json", "📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json", "🎯️outcome/🔣️.json"] as const;
-const PROJECTED_VECTOR_FILES = ["🦀️.rs", "🦠️mutation/🔣️.json", "📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json", "🎯️outcome/🔣️.json"] as const;
+const MUTATION_FIXTURE_DIRECTORIES = ["🦠️mutation", "📸️snapshot", "📸️snapshot/⬅️before", "📸️snapshot/➡️after", "🔺️diff", "🎯️outcome"] as const;
+const MUTATION_FIXTURE_FILES = ["🦠️mutation/🔣️.json", "📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json", "🎯️outcome/🔣️.json"] as const;
 
 function childDirectories(abs: string): string[] {
   if (!existsSync(abs)) return [];
@@ -1451,112 +1439,53 @@ function vectorBundleNodes(abs: string): string[] {
   return nodes.sort();
 }
 
-function expectedVectorBundle(abs: string, state: "source" | "projected"): string[] | null {
-  const directories = state === "source" ? SOURCE_VECTOR_DIRECTORIES : PROJECTED_VECTOR_DIRECTORIES;
-  const files = state === "source" ? SOURCE_VECTOR_FILES : PROJECTED_VECTOR_FILES;
-  const jsonDiff = state === "source" ? "🔺️diff/🔣️.json" : "🔺️diff/🔣️.json";
-  const absentDiff = state === "source" ? "🔺️diff/🚫️.absent" : "🔺️diff/🚫️.absent";
-  const variants = [jsonDiff, absentDiff].filter((rel) => existsSync(join(abs, rel)) && lstatSync(join(abs, rel)).isFile());
-  if (variants.length !== 1) return null;
-  return [...directories.map((rel) => `${rel}/`), ...files, variants[0]].sort();
+/** 🧫️ Describes a closed example bundle with exactly one diff representation. */
+function expectedVectorBundle(abs: string): string[] | null {
+  const variants = ["🔺️diff/🔣️.json", "🔺️diff/🚫️.absent"].filter(path => existsSync(join(abs, path)) && lstatSync(join(abs, path)).isFile());
+  return variants.length === 1 ? [...MUTATION_FIXTURE_DIRECTORIES.map(path => `${path}/`), ...MUTATION_FIXTURE_FILES, variants[0]!].sort() : null;
 }
 
-function bundleBreach(scope: string, state: "source" | "projected"): BreachRecord | null {
-  const expected = expectedVectorBundle(scope, state);
-  const actual = vectorBundleNodes(scope);
+/** 📦️ Validates data-only mutation evidence independently of its executable test case. */
+function bundleBreach(scope: string): BreachRecord | null {
+  const expected = expectedVectorBundle(scope), actual = vectorBundleNodes(scope);
   if (expected !== null && JSON.stringify(actual) === JSON.stringify(expected)) return null;
-  return breach("testing/contract", "mutation-vector-bundle-invalid", scope, `Physical mutation vector is not the exact ${state} 13-node bundle`, "Projection is safe only when every source or projected scenario has the closed fixture shape and exactly one diff alternative.", "Restore the registered Rust, mutation, snapshot, diff and outcome leaves with no extra children or symlinks.");
+  return breach("testing/contract", "mutation-vector-bundle-invalid", scope, "Mutation fixture does not have the closed data-only bundle shape", "Mutation, snapshots, diff and outcome are examples; implementations belong in a separate canonical test case.", "Restore the exact fixture leaves with one diff alternative and no source, extra children or symlinks.");
 }
 
-/**
- * 🧬️ Audits every registered physical vector against either its complete source bundle or complete
- * projected bundle. Runtime mutation kinds are deliberately not consulted: they describe dispatch
- * capability, while vectors describe checked-in physical evidence.
- */
-export function mutationVectorRegistryBreaches(repoRoot: string, registry: OracleRegistry, taxonomy: MutationCatalogAuthority = testTaxonomy(repoRoot)): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const representedSource = new Set<string>(), representedProjected = new Set<string>();
-  const sweepRoots: { sourceMutationRoot: string; projectedProfileRoot: string; grouped: boolean }[] = [];
-  for (const contribution of registry.contributions) {
-    for (const catalog of contribution.mutationCatalogs) {
-      const profileProblems = mutationCatalogProblems(catalog, contribution.owner, taxonomy);
-      for (const problem of profileProblems) breaches.push(breach("testing/contract", "mutation-vector-catalog-invalid", contribution.manifestPath, problem, "The physical vector registry is a strict owner-scoped contract.", "Correct the catalog record without aliases or optional legacy fields."));
-      if (profileProblems.length > 0) continue;
-      const markerIndex = contribution.owner.indexOf(PROFILE_MARKER);
-      const sourceOwner = mutationCatalogSourceOwner(contribution.owner, taxonomy)!;
-      const relativeMutationRoot = `${sourceOwner}/🧬️schema/🧬️mutations`;
-      const sourceMutationRoot = join(repoRoot, relativeMutationRoot);
-      const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, relativeMutationRoot);
-      const projectedProfileRoot =
-        markerIndex < 0
-          ? join(repoRoot, contribution.owner, "🧪️tests", "🪆️")
-          : join(repoRoot, contribution.owner.slice(0, markerIndex), "🧪️tests", `🪆️${(catalog.standardDirectoryName ?? "").slice("🔖️".length)}-${(catalog.subsetDirectoryName ?? "").slice("✳️".length)}`);
-      sweepRoots.push({ sourceMutationRoot, projectedProfileRoot, grouped });
-
-      for (const vector of catalog.vectors) {
-        const registeredOwner = grouped ? mutationOwnerRelativePath(relativeMutationRoot, vector.mutationId, taxonomy)! : null;
-        const sourceTests = join(sourceMutationRoot, registeredOwner ?? vector.sourceMutationDirectoryName, "🧪️tests");
-        const projectedMutation = join(projectedProfileRoot, registeredOwner ?? vector.mutationDirectoryName);
-        const sourceScenarios = childDirectories(sourceTests);
-        const projectedScenarios = childDirectories(projectedMutation);
-        for (const scenario of vector.scenarios) {
-          const sourceAbs = join(sourceTests, scenario.directoryName);
-          const projectedAbs = join(projectedMutation, scenario.directoryName);
-          const sourceKey = relative(repoRoot, sourceAbs).split(sep).join("/");
-          const projectedKey = relative(repoRoot, projectedAbs).split(sep).join("/");
-          const sourceExists = sourceScenarios.includes(scenario.directoryName);
-          const projectedExists = projectedScenarios.includes(scenario.directoryName);
-          if (representedSource.has(sourceKey) || representedProjected.has(projectedKey)) breaches.push(breach("testing/contract", "mutation-vector-duplicate-owner", contribution.manifestPath, `Vector ${sourceKey} is claimed by more than one catalog`, "Every physical bundle has one exact catalog owner.", "Remove duplicate ownership declarations without changing the physical evidence."));
-          if (sourceExists && projectedExists) {
-            representedSource.add(sourceKey);
-            representedProjected.add(projectedKey);
-            breaches.push(breach("testing/contract", "mutation-vector-mixed-state", contribution.manifestPath, `Vector ${sourceKey} exists in both source and projected storage`, "A projection is transactional; duplicate physical ownership makes references and rollback ambiguous.", "Complete or roll back the projection transaction."));
-            continue;
-          }
-          if (sourceExists) {
-            representedSource.add(sourceKey);
-            const finding = bundleBreach(sourceAbs, "source");
-            if (finding) breaches.push(finding);
-            continue;
-          }
-          if (projectedExists) {
-            representedProjected.add(projectedKey);
-            const finding = bundleBreach(projectedAbs, "projected");
-            if (finding) breaches.push(finding);
-            continue;
-          }
-          if (vector.scenarios.length === 1 && sourceScenarios.length === 1 && projectedScenarios.length === 0) {
-            const actual = sourceScenarios[0];
-            const actualPath = relative(repoRoot, join(sourceTests, actual)).split(sep).join("/");
-            representedSource.add(actualPath);
-            breaches.push(breach("testing/contract", "mutation-vector-source-id-mismatch", actualPath, `Source scenario ${actual} does not match declared directory ${scenario.directoryName}`, "Scenario IDs and handpicked physical directory names are distinct explicit fields.", "Repair the exact physical name and its incoming references together."));
-            const finding = bundleBreach(join(sourceTests, actual), "source");
-            if (finding) breaches.push(finding);
-            continue;
-          }
-          breaches.push(breach("testing/contract", "mutation-vector-missing", contribution.manifestPath, `Registered vector ${sourceKey} has neither a source nor projected bundle`, "Every registered physical identity must resolve exactly once.", "Restore the source bundle or complete the projection transaction."));
+/** 🧬️ Audits each registered mutation's canonical implementation case and separately owned fixture bundle. */
+export function mutationVectorRegistryBreaches(repoRoot: string, registry: OracleRegistry, taxonomy: TestTaxonomy = testTaxonomy(repoRoot)): BreachRecord[] {
+  const implementationNames = new Set(testImplementationFilenames(taxonomy));
+  const breaches: BreachRecord[] = [], represented = new Set<string>(), sweeps = new Map<string, { sourceRoot: string; fixtureRoot: string; grouped: boolean }>();
+  for (const contribution of registry.contributions) for (const catalog of contribution.mutationCatalogs) {
+    const problems = mutationCatalogProblems(catalog, contribution.owner, taxonomy);
+    for (const problem of problems) breaches.push(breach("testing/contract", "mutation-vector-catalog-invalid", contribution.manifestPath, problem, "Every mutation example and test has one exact semantic owner.", "Correct the catalog's current identities and paths."));
+    if (problems.length) continue;
+    const sourceOwner = mutationCatalogSourceOwner(contribution.owner, taxonomy)!;
+    const relativeRoot = `${sourceOwner}/🧬️schema/🧬️mutations`, sourceRoot = join(repoRoot, relativeRoot), fixtureRoot = join(repoRoot, sourceOwner, "🧫️fixtures", "🧬️mutations");
+    const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, relativeRoot);
+    sweeps.set(sourceRoot, { sourceRoot, fixtureRoot, grouped });
+    for (const vector of catalog.vectors) {
+      const owner = grouped ? mutationOwnerRelativePath(relativeRoot, vector.mutationId, taxonomy)! : vector.sourceMutationDirectoryName;
+      for (const scenario of vector.scenarios) {
+        const casePath = join(sourceRoot, owner, "🧪️tests", scenario.directoryName), fixturePath = join(fixtureRoot, owner, scenario.directoryName);
+        const key = relative(repoRoot, casePath).split(sep).join("/");
+        if (represented.has(key)) breaches.push(breach("testing/contract", "mutation-vector-duplicate-owner", contribution.manifestPath, `Mutation test ${key} is claimed by more than one catalog`, "Each test and fixture pair has one catalog owner.", "Remove the duplicate declaration."));
+        represented.add(key);
+        const implementations = existsSync(casePath) && lstatSync(casePath).isDirectory() ? readdirSync(casePath, { withFileTypes: true }).filter(entry => entry.isFile() && implementationNames.has(entry.name)) : [];
+        if (!implementations.length || !existsSync(fixturePath)) {
+          breaches.push(breach("testing/contract", "mutation-vector-missing", contribution.manifestPath, `Mutation ${key} requires both its canonical implementation and ${relative(repoRoot, fixturePath).split(sep).join("/")}`, "Fixture data and executable tests are separate, required parts of the same evidence.", "Restore the missing canonical case or owner fixture bundle."));
         }
-      }
-
-    }
-
-  }
-  for (const root of new Map(sweepRoots.map((entry) => [entry.sourceMutationRoot, entry])).values()) {
-    const mutationOwners = childDirectories(root.sourceMutationRoot).flatMap((name) => root.grouped ? childDirectories(join(root.sourceMutationRoot, name)).map((operation) => `${name}/${operation}`) : [name]);
-    for (const mutationDirectoryName of mutationOwners) {
-      const tests = join(root.sourceMutationRoot, mutationDirectoryName, "🧪️tests");
-      for (const scenario of childDirectories(tests)) {
-        const key = relative(repoRoot, join(tests, scenario)).split(sep).join("/");
-        if (!representedSource.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Physical source vector ${key} is not registered`, "Unregistered physical evidence cannot be projected or verified deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
+        if (existsSync(fixturePath)) { const finding = bundleBreach(fixturePath); if (finding) breaches.push(finding); }
       }
     }
   }
-  for (const root of new Map(sweepRoots.map((entry) => [entry.projectedProfileRoot, entry])).values()) {
-    const mutationOwners = childDirectories(root.projectedProfileRoot).flatMap((name) => root.grouped ? childDirectories(join(root.projectedProfileRoot, name)).map((operation) => `${name}/${operation}`) : [name]);
-    for (const mutationDirectoryName of mutationOwners) {
-      for (const scenario of childDirectories(join(root.projectedProfileRoot, mutationDirectoryName))) {
-        const key = relative(repoRoot, join(root.projectedProfileRoot, mutationDirectoryName, scenario)).split(sep).join("/");
-        if (!representedProjected.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Physical projected vector ${key} is not registered`, "Unregistered physical evidence cannot be verified or rolled back deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
+  for (const { sourceRoot, fixtureRoot, grouped } of sweeps.values()) {
+    const owners = (root: string): string[] => childDirectories(root).flatMap(name => grouped ? childDirectories(join(root, name)).map(operation => `${name}/${operation}`) : [name]);
+    for (const owner of new Set([...owners(sourceRoot), ...owners(fixtureRoot)])) {
+      const cases = join(sourceRoot, owner, "🧪️tests");
+      for (const scenario of new Set([...childDirectories(cases), ...childDirectories(join(fixtureRoot, owner))])) {
+        const key = relative(repoRoot, join(cases, scenario)).split(sep).join("/");
+        if (!represented.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Mutation test or fixture ${key} is not registered`, "Every physical example and executable case has an explicit catalog identity.", "Declare its current mutation and scenario identity."));
       }
     }
   }
@@ -1706,18 +1635,12 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
 
   const uris = fixtureUrisIn(feature);
   for (const uri of resolveFixtures(repoRoot, discovered, uris).missing) {
-    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? discovered.owner : `${discovered.caseDir}/${taxonomy.testFixturesDirName}`}.`));
-  }
-
-  const referenced = new Set(uris.map((uri) => uri.split("://")[1]));
-  for (const file of fixtureFilesUnder(repoRoot, discovered.localFixtureDir)) {
-    const name = file.slice(`${discovered.localFixtureDir}/`.length);
-    if (!referenced.has(name)) breaches.push(breach("testing/fixture", "orphan-fixture", file, `Case-local fixture ${name} is referenced by no scenario`, "An unreferenced case-local fixture is either dead weight or evidence of a scenario that was silently deleted.", `Reference it as local://${name}, or delete it.`, "medium"));
+    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? `${discovered.owner}/${taxonomy.exampleAssetsDirName}` : `${discovered.owner}/${taxonomy.testFixturesDirName}`}.`));
   }
 
   for (const entry of readdirSync(join(repoRoot, discovered.caseDir), { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (entry.name !== taxonomy.testFixturesDirName) breaches.push(breach("testing/taxonomy", "unknown-case-child", `${discovered.caseDir}/${entry.name}`, `Unexpected directory ${entry.name} inside a test case`, `A case holds exactly one ${testFeatureFilename(taxonomy)}, its adapters and an optional ${taxonomy.testFixturesDirName}.`, "Move the directory to its owner, or delete it."));
+      breaches.push(breach("testing/taxonomy", "unknown-case-child", `${discovered.caseDir}/${entry.name}`, `Unexpected directory ${entry.name} inside a test case`, `A case holds exactly one ${testFeatureFilename(taxonomy)} and its adapters. Fixture examples belong under the owner’s ${taxonomy.testFixturesDirName}.`, "Move the directory to its owner, or delete it."));
       continue;
     }
     if (entry.name === testFeatureFilename(taxonomy)) continue;
@@ -1729,7 +1652,7 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
 }
 
 
-export const TEST_LAYOUT_FINDING_CODES = ["legacy-test-directory", "legacy-test-filename", "test-implementation-depth", "test-implementation-filename", "test-case-name", "test-owner-delivery-scope", "inline-test-body", "inline-self-test-declaration", "invalid-test-module-wiring"] as const;
+export const TEST_LAYOUT_FINDING_CODES = ["legacy-test-directory", "legacy-test-filename", "test-implementation-depth", "test-implementation-filename", "test-case-name", "test-owner-delivery-scope", "inline-test-body", "inline-self-test-declaration", "invalid-test-module-wiring", "fixture-in-test-case", "fixture-owner-delivery-scope", "test-data-in-case", "production-fixture-dependency", "legacy-fixture-directory"] as const;
 export type TestLayoutFindingCode = (typeof TEST_LAYOUT_FINDING_CODES)[number];
 export type TestLayoutFinding = Readonly<{ code: TestLayoutFindingCode; path: string; line: number | null; detail: string }>;
 export type TestLayoutSource = Readonly<{ path: string; source: string }>;
@@ -1773,6 +1696,19 @@ export function assessTestImplementationPath(path: string, taxonomy: TestTaxonom
   if (!canonicalTestCaseName(segments[index + 1]!, taxonomy)) return { canonical: false, finding: { code: "test-case-name", path, line: null, detail: "The test case directory must use one canonical emoji followed by a kebab-case name." } };
   if (!testImplementationFilenames(taxonomy).includes(segments.at(-1)!)) return { canonical: false, finding: { code: "test-implementation-filename", path, line: null, detail: `The implementation filename must be one of ${testImplementationFilenames(taxonomy).join(", ")}.` } };
   return { canonical: true, finding: null };
+}
+
+/** 🧫️ Checks physical fixture ownership and excludes example trees from executable-test interpretation. */
+function fixtureLayoutFindings(path: string, taxonomy: TestTaxonomy): TestLayoutFinding[] {
+  const segments = path.split("/"), fixtures = segments.indexOf(taxonomy.testFixturesDirName), tests = segments.indexOf(taxonomy.testsDirName), findings: TestLayoutFinding[] = [];
+  if (fixtures >= 0) {
+    if (tests >= 0 && tests < fixtures) findings.push({ code: "fixture-in-test-case", path, line: null, detail: "Fixture examples belong under their semantic owner, outside every test case." });
+    if (segments.slice(0, fixtures).some(segment => taxonomy.testDeliveryScopeDirectoryNames.includes(segment))) findings.push({ code: "fixture-owner-delivery-scope", path, line: null, detail: "Fixtures require a language-neutral semantic owner outside package, target, and implementation delivery folders." });
+    if (tests < 0 || fixtures < tests) return findings;
+  }
+  if (segments.slice(0, -1).some((segment, index) => taxonomy.testFixtureLegacyDirectoryNames.includes(segment) && !(tests >= 0 && index === tests + 1))) findings.push({ code: "legacy-fixture-directory", path, line: null, detail: `Fixture examples must use the canonical ${taxonomy.testFixturesDirName} directory. Test implementations and executable support must use their own semantic scopes.` });
+  if (tests >= 0 && !testSourceExtension(segments.at(-1)!, taxonomy) && segments.at(-1) !== testFeatureFilename(taxonomy)) findings.push({ code: "test-data-in-case", path, line: null, detail: "Test folders contain executable implementations and feature contracts; example inputs and expected outputs belong in owner fixtures." });
+  return findings;
 }
 
 /** 🎭️ Masks C-family comments and literals while preserving offsets, newlines, and literal delimiters. */
@@ -1904,6 +1840,111 @@ function rustTestSignals(path: string, source: string, taxonomy: TestTaxonomy, a
     if (testWiring && (!rustAttributesRequireTest(match[1]!) || !declared || !canonicalTestImport(path, declared, taxonomy, availablePaths))) found.push({ code: "invalid-test-module-wiring", line: line(match.index!), detail: "Rust test includes must use a test-only #[cfg] gate and target an existing canonical test implementation." });
   }
   return found;
+}
+
+/** 🛡️ Proves an enclosing Rust item is disabled in every build without cfg(test). */
+function rustOffsetRequiresTest(masked: string, offset: number): boolean {
+  const stack = [{ start: 0, test: false }];
+  for (const match of masked.slice(0, offset).matchAll(/[{};]/gu)) {
+    const current = stack.at(-1)!;
+    if (match[0] === "{") stack.push({ start: match.index! + 1, test: current.test || rustAttributesRequireTest(masked.slice(current.start, match.index)) });
+    else if (match[0] === "}") { if (stack.length > 1) stack.pop(); stack.at(-1)!.start = match.index! + 1; }
+    else current.start = match.index! + 1;
+  }
+  const current = stack.at(-1)!;
+  return current.test || rustAttributesRequireTest(masked.slice(current.start, offset));
+}
+
+/** 🚧️ Resolves actual language import/include edges before treating fixture source files as opaque examples. */
+function fixtureSourceDependencies(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestLayoutFinding[] {
+  if (assessTestImplementationPath(path, taxonomy).canonical || path.split("/").includes(taxonomy.testFixturesDirName)) return [];
+  const findings: TestLayoutFinding[] = [];
+  const add = (declared: string, offset: number, ancestors: readonly string[] = []): void => {
+    const absolute = posix.resolve("/repo", posix.dirname(path), ...ancestors, declared);
+    if (!absolute.startsWith("/repo/")) return;
+    const target = posix.relative("/repo", absolute);
+    if (!target.split("/").includes(taxonomy.testFixturesDirName)) return;
+    const resolved = [target, ...[".ts", ".tsx", ".js", ".mjs", ".rs", ".json"].map(extension => target + extension)].find(candidate => availablePaths.has(candidate));
+    if (resolved) findings.push({ code: "production-fixture-dependency", path, line: source.slice(0, offset).split("\n").length, detail: `Non-test source resolves a dependency on fixture ${resolved}. Move executable support out of fixtures or place this read in a canonical test implementation.` });
+  };
+  if (path.endsWith(".rs")) {
+    const masked = maskCStyleSource(source, true);
+    for (const match of masked.matchAll(/\binclude(?:_str|_bytes)?!\s*\(\s*"[^"]*"\s*\)/gu)) {
+      if (rustOffsetRequiresTest(masked, match.index!)) continue;
+      const declared = /"([^"]*)"/u.exec(source.slice(match.index!, match.index! + match[0].length))?.[1];
+      if (declared) add(declared, match.index!);
+    }
+    for (const match of masked.matchAll(/((?:#\s*\[[^\]]*\]\s*)+)(?:pub(?:\([^)]*\))?\s+)?mod\s+[A-Za-z_][A-Za-z0-9_]*\s*;/gu)) {
+      if (rustOffsetRequiresTest(masked, match.index!) || rustAttributesRequireTest(match[1]!)) continue;
+      const declared = rustPathAttribute(source, match[1]!, match.index!);
+      if (declared) add(declared, match.index!, rustInlineModuleAncestors(source, masked, match.index!));
+    }
+  } else if (/\.[cm]?[jt]sx?$/u.test(path)) {
+    const root = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, /[jt]sx$/u.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    const bound = javascriptTestBindings(root, new Set(), new Set(), new Set(), new Set());
+    const readers = new Set(["readFile", "readFileSync", "createReadStream"]);
+    const fileBinding = javascriptTestBindings(root, new Set(["node:fs", "fs", "node:fs/promises", "fs/promises"]), new Set(), readers, new Set());
+    const moduleUrl = (node: ts.Expression | undefined): boolean => node !== undefined && ts.isPropertyAccessExpression(node) && node.name.text === "url" && ts.isMetaProperty(node.expression) && node.expression.keywordToken === ts.SyntaxKind.ImportKeyword;
+    const readTarget = (node: ts.Expression | undefined): string | undefined => {
+      if (!node || !ts.isNewExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== "URL" || bound(node.expression) !== undefined || !moduleUrl(node.arguments?.[1])) return;
+      const path = node.arguments?.[0];
+      return path && ts.isStringLiteralLike(path) ? path.text : undefined;
+    };
+    const visit = (node: ts.Node): void => {
+      if (ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly && ts.isStringLiteralLike(node.moduleSpecifier) && node.moduleSpecifier.text.startsWith(".")) add(node.moduleSpecifier.text, node.getStart(root));
+      if (ts.isExportDeclaration(node) && !node.isTypeOnly && node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier) && node.moduleSpecifier.text.startsWith(".")) add(node.moduleSpecifier.text, node.getStart(root));
+      if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword || ts.isIdentifier(node.expression) && node.expression.text === "require" && bound(node.expression) === undefined)) {
+        const target = node.arguments[0];
+        if (target && ts.isStringLiteralLike(target) && target.text.startsWith(".")) add(target.text, node.getStart(root));
+      }
+      if (ts.isCallExpression(node)) {
+        const call = node.expression;
+        const fileReader = ts.isIdentifier(call) && fileBinding(call) === 1 || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || call.expression.text === "Bun" && bound(call.expression) === undefined && call.name.text === "file");
+        const target = fileReader ? readTarget(node.arguments[0]) : undefined;
+        if (target) add(target, node.getStart(root));
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(root);
+  }
+  return findings;
+}
+
+/** 📦️ Resolves package entry points, Cargo build nodes, and declared static asset roots. */
+function fixtureManifestDependencies(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestLayoutFinding[] {
+  const name = posix.basename(path);
+  if (!["Cargo.toml", "package.json"].includes(name) || path.split("/").includes(taxonomy.testFixturesDirName)) return [];
+  const record = (value: unknown): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  let manifest: Record<string, unknown>;
+  try { manifest = record(name === "Cargo.toml" ? Bun.TOML.parse(source) : JSON.parse(source)); } catch { return []; }
+  const targets = new Set<string>();
+  const add = (value: unknown, repoRelative = false): void => {
+    if (typeof value !== "string") return;
+    const target = posix.relative("/repo", posix.resolve("/repo", repoRelative ? "." : posix.dirname(path), value));
+    if (target.startsWith("../") || !target.split("/").includes(taxonomy.testFixturesDirName)) return;
+    if (availablePaths.has(target) || [...availablePaths].some(candidate => candidate.startsWith(target + "/"))) targets.add(target);
+  };
+  const leaves = (value: unknown): unknown[] => typeof value === "string" ? [value] : Array.isArray(value) ? value.flatMap(leaves) : Object.values(record(value)).flatMap(leaves);
+  if (name === "Cargo.toml") {
+    const workspace = record(manifest.workspace);
+    for (const pattern of Array.isArray(workspace.members) ? workspace.members : []) {
+      if (typeof pattern !== "string") continue;
+      const target = posix.relative("/repo", posix.resolve("/repo", posix.dirname(path), pattern, "Cargo.toml"));
+      const matcher = new Bun.Glob(target);
+      for (const candidate of availablePaths) if (candidate.endsWith("/Cargo.toml") && candidate.split("/").includes(taxonomy.testFixturesDirName) && matcher.match(candidate)) add(posix.dirname(candidate), true);
+    }
+    for (const table of [manifest, workspace, ...Object.values(record(manifest.target)).map(record)]) {
+      for (const key of ["dependencies", "dev-dependencies", "build-dependencies"]) for (const dependency of Object.values(record(table[key]))) add(record(dependency).path);
+    }
+    const semio = record(record(record(manifest.package).metadata).semio);
+    for (const asset of Array.isArray(semio.assets) ? semio.assets : []) if (record(asset).kind === "static-dir") add(record(asset).root, true);
+    for (const target of [manifest.lib, ...["bin", "test", "bench", "example"].flatMap(key => Array.isArray(manifest[key]) ? manifest[key] as unknown[] : [])]) add(record(target).path);
+    add(record(manifest.package).build);
+  } else {
+    for (const key of ["main", "module", "types", "typings", "bin", "exports", "browser"]) for (const target of leaves(manifest[key])) add(target);
+    for (const key of ["dependencies", "devDependencies", "optionalDependencies"]) for (const value of Object.values(record(manifest[key]))) if (typeof value === "string" && value.startsWith("file:")) add(value.slice(5));
+  }
+  return [...targets].sort().map(target => ({ code: "production-fixture-dependency", path, line: null, detail: `Package configuration resolves executable support or shipped static data from fixture ${target}. Executable support belongs outside fixtures; shipped static data belongs under ${taxonomy.exampleAssetsDirName}.` }));
 }
 
 /** 🌳️ Resolves JavaScript value bindings through lexical scopes before classifying harness calls. */
@@ -2042,7 +2083,12 @@ function conventionalTestSignals(path: string, source: string, extension: string
 /** 🧫️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
 function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource, availablePaths: ReadonlySet<string>, legacyPatterns: readonly Readonly<{ id: string; pattern: RegExp }>[]): TestLayoutFinding[] {
   const findings: TestLayoutFinding[] = [], path = entry.path.split("\\").join("/"), segments = path.split("/"), name = segments.at(-1)!, extension = testSourceExtension(name, taxonomy);
+  findings.push(...fixtureLayoutFindings(path, taxonomy));
+  const fixtureIndex = segments.indexOf(taxonomy.testFixturesDirName), testIndex = segments.indexOf(taxonomy.testsDirName);
+  if (fixtureIndex >= 0 && (testIndex < 0 || fixtureIndex < testIndex)) return findings;
+  findings.push(...fixtureManifestDependencies(path, entry.source, taxonomy, availablePaths));
   if (!extension) return findings;
+  findings.push(...fixtureSourceDependencies(path, entry.source, taxonomy, availablePaths));
   const legacyDirectory = segments.slice(0, -1).find((segment) => taxonomy.testLegacyDirectoryNames.includes(segment));
   if (legacyDirectory) findings.push({ code: "legacy-test-directory", path, line: null, detail: `Legacy test directory ${legacyDirectory} is forbidden; use ${taxonomy.testsDirName}/<test-name>/<implementation>.` });
   const legacyFilename = legacyPatterns.find((entry) => entry.pattern.test(name));
@@ -2083,7 +2129,7 @@ async function discoverTestLayoutSources(repoRoot: string, taxonomy: TestTaxonom
       const path = join(directory, entry.name), rel = relative(repoRoot, path).split(sep).join("/");
       if (entry.isDirectory()) {
         if (!SKIP_DIR_NAMES.has(entry.name) && !isExcludedTestPath(repoRoot, rel)) stack.push(path);
-      } else if (entry.isFile() && testSourceExtension(entry.name, taxonomy)) files.push(rel);
+      } else if (entry.isFile()) files.push(rel);
     }
     options.progress?.({ phase: "discover", completed: files.length, total: 0 });
   }
@@ -2104,7 +2150,7 @@ export async function scanTestLayout(repoRoot: string, options: TestLayoutScanOp
       const path = files[index]!;
       try {
         let source: string;
-        try { source = await readFileAsync(join(repoRoot, path), "utf8"); }
+        try { source = (testSourceExtension(basename(path), taxonomy) || ["Cargo.toml", "package.json"].includes(basename(path))) && !path.split("/").includes(taxonomy.testFixturesDirName) ? await readFileAsync(join(repoRoot, path), "utf8") : ""; }
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; source = await readFileAsync(join(repoRoot, path), "utf8"); }
         options.signal?.throwIfAborted();
         findings[index] = inspectTestLayoutSource(taxonomy, { path, source }, availablePaths, legacyPatterns);

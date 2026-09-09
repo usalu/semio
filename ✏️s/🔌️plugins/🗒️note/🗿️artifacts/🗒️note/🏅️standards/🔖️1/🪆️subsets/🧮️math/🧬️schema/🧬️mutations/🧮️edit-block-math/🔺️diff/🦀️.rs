@@ -20,6 +20,6 @@ pub fn diff(payload: &EditBlockMath, base: &NoteSnapshot) -> protocol::MutationO
     if let crate::NoteBlockNode::Math { tex, .. } = &mut updated {
         *tex = payload.new_tex.clone();
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

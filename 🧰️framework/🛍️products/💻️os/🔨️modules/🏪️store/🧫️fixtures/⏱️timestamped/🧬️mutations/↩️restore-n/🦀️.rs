@@ -32,5 +32,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for RestoreN
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-⏱️timestamped-↩️restore-n/🦀️.rs"]
 mod tests;

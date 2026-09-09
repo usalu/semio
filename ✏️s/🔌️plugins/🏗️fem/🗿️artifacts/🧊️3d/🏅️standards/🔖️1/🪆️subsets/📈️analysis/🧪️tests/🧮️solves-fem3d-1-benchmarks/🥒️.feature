@@ -33,13 +33,13 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   significant figures — a millionfold margin over the `1e-12`-scale disagreement two direct
   double-precision factorisations of one linear system actually show. The FULL displacement, reaction
   and member-force field is asserted numerically by the subject against
-  `local://📊️expected.results.json`, which this case's Python reference produced with PyNite and which
+  `shared://🧮️solves-fem3d-1-benchmarks/📊️expected.results.json`, which this case's Python reference produced with PyNite and which
   is committed beside these models. Each side additionally asserts, in role and before projecting:
   the reference holds itself to the closed forms this feature states and to global equilibrium on
   every case and every combination; the subject holds itself to the committed reference within the
   tolerances stated here.
 
-  THE LINE-ELEMENT PROJECTION. `local://🧊️steel-frame.snapshot.json` — the shared model every fem3d
+  THE LINE-ELEMENT PROJECTION. `shared://🧮️solves-fem3d-1-benchmarks/🧊️steel-frame.snapshot.json` — the shared model every fem3d
   mutation subset case uses — also carries a meshed `FemSolid`, and a frame solver has no
   tetrahedron. Every scenario here is therefore declared over the model's LINE-ELEMENT sub-document:
   the same document with `solids` emptied and every `area` load dropped. Both implementations apply
@@ -51,7 +51,7 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   the mutation subsets are algebra fixtures, and their line-element sub-model is a MECHANISM: the one
   frame they hold hangs off a node whose only other stiffness comes from the solid's tetrahedra, so
   no frame solver — this repository's included — can read them. Solving them would report "singular"
-  on both sides and prove nothing. This case therefore commits `local://🦠️mutation-base.snapshot.json`,
+  on both sides and prove nothing. This case therefore commits `shared://🧮️solves-fem3d-1-benchmarks/🦠️mutation-base.snapshot.json`,
   a portal frame that actually stands up and carries the same spares the mutation corpus needs, plus
   one after-model per kind. The typed payload relating each pair is stated in the Examples table
   below, in the vocabulary's own grammar; the subject reaches its after-model through PRODUCTION
@@ -70,8 +70,8 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   @level-exhaustive
   @mode-differential
   Scenario Outline: Solve <id> whole — every load case and every combination
-    Given the committed model local://<fixture>
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem3d-1-benchmarks/<fixture>
+    And the committed reference shared://🧮️solves-fem3d-1-benchmarks/📊️expected.results.json
     When both implementations solve its line-element sub-model for every load case and combination
     Then they agree on every reduced answer, and the subject is within 1e-6 relative of the reference's full displacement, reaction and member-force field
     Examples:
@@ -84,8 +84,8 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   @level-exhaustive
   @mode-differential
   Scenario Outline: Solve <id>, where the answer is also known in closed form
-    Given the committed model local://<fixture>
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem3d-1-benchmarks/<fixture>
+    And the committed reference shared://🧮️solves-fem3d-1-benchmarks/📊️expected.results.json
     When both implementations solve it
     Then they agree on every reduced answer, and each lands on <closed-form> in role
     Examples:
@@ -99,9 +99,9 @@ Feature: Solve real fem3d structures, and every typed edit to one, against an in
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a frame that stands up, then solve what it became
-    Given the committed model local://🦠️mutation-base.snapshot.json
-    And the committed after-model local://🦠️mutation-after-<id>.snapshot.json
-    And the committed reference local://📊️expected.results.json
+    Given the committed model shared://🧮️solves-fem3d-1-benchmarks/🦠️mutation-base.snapshot.json
+    And the committed after-model shared://🧮️solves-fem3d-1-benchmarks/🦠️mutation-after-<id>.snapshot.json
+    And the committed reference shared://🧮️solves-fem3d-1-benchmarks/📊️expected.results.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>

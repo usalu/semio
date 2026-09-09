@@ -30,7 +30,7 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
   `blendMode` and `transform` — `group` adds `mask` and `children`, `pixel` adds `mask`, `width`,
   `height` and `imageKey`, and `adjustment` adds `adjustmentKind` and `params` and carries no mask.
 
-  The artifact is real. `local://🔣️.snapshot.json` was derived ONCE by
+  The artifact is real. `shared://🖨️mutate-raster-1/🔣️.snapshot.json` was derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-raster-board.py`,
   and every node in it is copied from a committed file. The document's `schema`, `id` and `title`,
   its 1024×1024 `backdrop` pixel layer bound to the `semio-emblem` image key, its `brighten`
@@ -67,7 +67,7 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived Semio demo board
-    Given the real derived board local://🔣️.snapshot.json
+    Given the real derived board shared://🖨️mutate-raster-1/🔣️.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -92,7 +92,7 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived board and land back on it
-    Given the real derived board local://🔣️.snapshot.json
+    Given the real derived board shared://🖨️mutate-raster-1/🔣️.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>
@@ -117,9 +117,9 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-document
       """
       {"verdict": "<verdict>"}
@@ -144,7 +144,7 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
   @level-long
   @mode-round-trip
   Scenario: Read the real derived board in both languages, and hold the committed carrier to its own laws in Rust
-    Given the real derived board local://🔣️.snapshot.json
-    And the artifact's own committed carrier asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real derived board shared://🖨️mutate-raster-1/🔣️.snapshot.json
+    And the artifact's own committed carrier asset://🎬️demo/🗣️.dsl.semio
     When each implementation reads the derived board, and the Rust additionally parses the committed carrier, prints it back and parses it again
     Then both languages read the same document, and the Rust printing is an ArtifactDsl fixpoint

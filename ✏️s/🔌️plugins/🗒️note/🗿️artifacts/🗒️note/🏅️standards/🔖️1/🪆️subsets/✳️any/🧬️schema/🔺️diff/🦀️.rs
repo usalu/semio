@@ -391,8 +391,8 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 /// 🩹 Sparse single-block whole-value patch — shared by every `change-block-*`/`rename-block`/
 /// `move-block`/`resize-block`/`edit-block-*`/table-row-column mutation leaf: each computes the
 /// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
-pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
-    NoteDiff { blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&block)) } }], ..Default::default() }), ..Default::default() }
+pub fn note_block_patch_diff(id: &str, block: &NoteBlockNode) -> NoteDiff {
+    NoteDiff { blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(block)) } }], ..Default::default() }), ..Default::default() }
 }
 
 /// ➕ Sparse single-block insertion at `(parent_id, index)` — shared by `create-block`,

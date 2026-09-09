@@ -46,7 +46,7 @@ impl DrawingArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: DrawingSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, artboard: snapshot.artboard, ..Self::default() }
+        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, artboard: snapshot.artboard }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

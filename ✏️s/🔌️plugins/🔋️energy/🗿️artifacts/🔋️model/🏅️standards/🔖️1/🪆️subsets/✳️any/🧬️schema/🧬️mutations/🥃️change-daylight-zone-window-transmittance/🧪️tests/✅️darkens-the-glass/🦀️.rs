@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -28,7 +28,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 
 fn case() -> Case {
     Case {
-        kind: "change-daylight-zone-window-transmittance", directory: "🥃️change-daylight-zone-window-transmittance/🧪️tests/✅️darkens-the-glass", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
+        kind: "change-daylight-zone-window-transmittance", directory: "🥃️change-daylight-zone-window-transmittance/✅️darkens-the-glass", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario
     }
 }
 

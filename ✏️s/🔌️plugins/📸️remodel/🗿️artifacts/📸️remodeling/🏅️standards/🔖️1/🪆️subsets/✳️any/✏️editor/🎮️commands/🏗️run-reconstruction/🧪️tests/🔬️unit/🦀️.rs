@@ -5,6 +5,22 @@ use crate::editor::remodeling::RemodelingPlayApp;
 use semio_framework_plugin::testkit::meta;
 use semio_framework_plugin::{ArtifactEditor, InvocationResult, PluginApp};
 
+#[test]
+fn raster_asset_progress_layout_matches_neutral_budget() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral raster progress layout fixture");
+    let payload: crate::mutations::CreateAsset = serde_json::from_value(fixture["mutation"].clone()).expect("independent asset JSON decoder");
+    let progress = RasterAssetProgress::Mutation(create_asset(payload.key, payload.asset).into());
+    let mutation: &RemodelingMutation = match &progress {
+        RasterAssetProgress::Mutation(mutation) => mutation,
+        _ => panic!("asset mutation progress"),
+    };
+    let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(mutation)).expect("first-party mutation JSON");
+    assert_eq!(actual, fixture["mutation"]);
+    let inline_bytes = size_of::<RasterAssetProgress>();
+    eprintln!("[DEBUG] Raster asset progress inline bytes={inline_bytes}");
+    assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "raster progress exceeds its neutral inline budget");
+}
+
 fn test_session(job_id: &str, requested_stage: RequestedStage) -> ReconstructionSession {
     ReconstructionSession {
         job_id: job_id.into(),

@@ -60,10 +60,10 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_form_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -71,23 +71,23 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                      | vector                                                                               | scene                                                                                                                                                              |
-      | create-step             | 🌱create-step/🧪️tests/rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | delete-step             | 🗑️delete-step/🧪️tests/rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | reorder-step            | 🔀reorder-step/🧪️tests/no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
-      | rename-step             | ✏️rename-step/🧪️tests/no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | change-step-description | 📝change-step-description/🧪️tests/no-ops-when-clearing-an-already-absent-description  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | create-block            | ➕create-block/🧪️tests/rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
-      | delete-block            | ➖delete-block/🧪️tests/rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | move-block-to-step      | 📦move-block-to-step/🧪️tests/no-ops-when-the-block-stays-at-its-index-in-its-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
-      | replace-block           | 🔁replace-block/🧪️tests/no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
-      | change-form-title       | 🏷️change-form-title/🧪️tests/titles-an-untitled-survey                                | []                                                                                                                                                                 |
+      | create-step             | 🌱create-step/🧪️rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | delete-step             | 🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | reorder-step            | 🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
+      | rename-step             | ✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | change-step-description | 📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | create-block            | ➕create-block/🧪️rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
+      | delete-block            | ➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | move-block-to-step      | 📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
+      | replace-block           | 🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
+      | change-form-title       | 🏷️change-form-title/🧪️titles-an-untitled-survey                                | []                                                                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_form_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>", "scene": <scene>}
@@ -95,21 +95,21 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                      | vector                                                                               | scene                                                                                                                                                              |
-      | create-step             | 🌱create-step/🧪️tests/rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | delete-step             | 🗑️delete-step/🧪️tests/rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | reorder-step            | 🔀reorder-step/🧪️tests/no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
-      | rename-step             | ✏️rename-step/🧪️tests/no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | change-step-description | 📝change-step-description/🧪️tests/no-ops-when-clearing-an-already-absent-description  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | create-block            | ➕create-block/🧪️tests/rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
-      | delete-block            | ➖delete-block/🧪️tests/rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | move-block-to-step      | 📦move-block-to-step/🧪️tests/no-ops-when-the-block-stays-at-its-index-in-its-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
-      | replace-block           | 🔁replace-block/🧪️tests/no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
-      | change-form-title       | 🏷️change-form-title/🧪️tests/titles-an-untitled-survey                                | []                                                                                                                                                                 |
+      | create-step             | 🌱create-step/🧪️rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | delete-step             | 🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | reorder-step            | 🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
+      | rename-step             | ✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | change-step-description | 📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | create-block            | ➕create-block/🧪️rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
+      | delete-block            | ➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | move-block-to-step      | 📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
+      | replace-block           | 🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
+      | change-form-title       | 🏷️change-form-title/🧪️titles-an-untitled-survey                                | []                                                                                                                                                                 |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed example document and print it back without losing or copying anything
-    Given the real committed artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed to a FormsSnapshot, printed back to `.forms` DSL and parsed again
     Then both parses agree on the same document and the printed text reproduces the committed bytes exactly

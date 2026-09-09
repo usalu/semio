@@ -1,0 +1,25 @@
+{
+  "owner": "Store canonical JSON admission over an immutable framework Value source",
+  "representation": "Objects must have unique keys. Raw DslValue preserves duplicate entries and cannot directly implement the canonical JSON trait.",
+  "limits": {
+    "maximumDepth": 64,
+    "maximumProcessedBytesPerStep": 256,
+    "maximumStructuralItemsPerStep": 1,
+    "maximumRetainedBytes": "Requested numeric key-index capacity is checked before reservation; actual reported capacity is checked before admitting the empty table. Allocator-private memory, fixed traversal metadata, and source ownership are excluded.",
+    "maximumWorkItems": "Caller supplied operation ceiling"
+  },
+  "grant": {
+    "zeroItemsOrBytes": "Active admission reports blocked without mutation when either allowance is zero; close reports blocked without mutation only when structural allowance is zero.",
+    "byteWork": "Hash or compare at most minimum(maximumBytes,256) raw UTF-8 bytes; split codepoints are valid because bytes are never reinterpreted",
+    "allocation": "One checked numeric-table reservation is one structural item; slots initialize individually and never reallocate",
+    "close": "One numeric slot, empty allocation, traversal frame, or exact source transfer per positive structural allowance; no byte allowance is consumed."
+  },
+  "lifecycle": "Admission owns the source until success transfers a validated immutable wrapper, or bounded close clears the numeric table and returns the identical source. Wrapper exposes only borrowed indexed JSON and consuming source transfer.",
+  "duplicates": "Reject before a canonical wrapper exists; no hashes or persisted bytes may be published from rejected input.",
+  "closeReceipt": [
+    "blocked",
+    "progress with structuralItems and checkpoint",
+    "returned with source, structuralItems and checkpoint",
+    "complete only after source transfer"
+  ]
+}

@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::Process3dSnapshot;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
-pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 🗄️ The drilled-plate example fixture — regenerated (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
 /// wave 4's fixture-regeneration technique: real `process_working_scene_to_snapshot` + `print_dsl()`

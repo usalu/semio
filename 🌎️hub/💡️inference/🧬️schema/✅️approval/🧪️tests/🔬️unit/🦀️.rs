@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn inference_approval_request_accepts_only_job_digest_and_exact_body_bound() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/✅️inference-approval-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/✅️inference-approval-v1/🔣️.json")).unwrap();
     let request = &fixture["request"];
     let bytes = serde_json::to_vec(request).unwrap();
     let decoded = InferenceApprovalRequestV1::decode(&bytes).unwrap();

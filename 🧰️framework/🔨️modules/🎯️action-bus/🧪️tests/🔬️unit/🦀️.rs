@@ -366,7 +366,7 @@ fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_byt
         assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
     }
     dispatch.job.begin_close();
-    let fixture = dsl::os_pack::json::parse(include_str!("../../🧹️wire-retirement/🧪️fixture/🔣️.json")).unwrap();
+    let fixture = dsl::os_pack::json::parse(include_str!("../../🧹️wire-retirement/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["shortClose"];
     let mut released = 0;
     for row in law["steps"].as_array().unwrap() {

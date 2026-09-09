@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.trinity.jack.editor_window.config.mutations;
+message SetQuery { string value = 1; }
+message JackEditorWindowConfigMutation { oneof mutation { SetQuery set_query = 1; } }

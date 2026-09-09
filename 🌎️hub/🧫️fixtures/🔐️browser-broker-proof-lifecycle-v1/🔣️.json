@@ -1,0 +1,23 @@
+{
+  "schema": "semio.hub.browser-broker-proof-lifecycle-fixture/v1",
+  "limits": {
+    "bootstrapMaximumMs": 120000,
+    "activeMaximumMs": 15000
+  },
+  "delayedBootstrap": {
+    "activeProofTtlMs": 50,
+    "bootstrapProofTtlMs": 500,
+    "delayMs": 75
+  },
+  "bootstrapExpiry": {
+    "activeProofTtlMs": 50,
+    "bootstrapProofTtlMs": 40,
+    "delayMs": 75
+  },
+  "expected": {
+    "unarmed": 401,
+    "admitted": 200,
+    "expired": 401,
+    "replayed": 401
+  }
+}

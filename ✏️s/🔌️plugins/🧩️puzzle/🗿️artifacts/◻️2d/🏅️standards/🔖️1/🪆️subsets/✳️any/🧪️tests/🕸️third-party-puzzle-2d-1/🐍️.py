@@ -34,7 +34,7 @@ library state the answer:
   document moved at all.
 
 **Vectors are discovered, never listed.** The committed scenario set under
-``🧬️schema/🧬️mutations/<leaf>/🧪️tests/`` grows and is renamed; a hard-coded Examples table went stale
+``🧬️schema/🧬️mutations/<leaf>/`` grows and is renamed; a hard-coded Examples table went stale
 for four of twenty-six rows before this file was written. The one fixture this case declares is the
 mutation vocabulary's own ``🔣️.json``; every vector beneath its directory is found at run time, so a
 scenario added tomorrow is checked without touching this file.
@@ -66,7 +66,7 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-VECTOR_ROOT_URI = "asset://🧬️schema/🧬️mutations/🔣️.json"
+VECTOR_ROOT_URI = "shared://🧬️mutations/🔣️.json"
 """🧫️ The declared fixture. Its DIRECTORY is the mutation vocabulary, and every committed vector is
 found beneath it at run time."""
 

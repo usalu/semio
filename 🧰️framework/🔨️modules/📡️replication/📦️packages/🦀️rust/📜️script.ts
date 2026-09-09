@@ -21,13 +21,13 @@ class BuildScript extends BundleScript {
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../../🌱️value/🗂️ordered/🧫️fixtures/📜️script.ts");
+    await import("../../../🌱️value/🗂️ordered/🧪️tests/🧪️source-contract/🟦️.ts");
   }
 }
 
 class LocalInteractionSourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../📡️wire/🏠️local-interaction/🧫️fixtures/📜️script.ts");
+    await import("../../📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts");
   }
 }
 
@@ -95,7 +95,7 @@ export class RetainedVerificationScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const { blake3Hex } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const owner = join(this.root, "../../📐️format/🔎️verification");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(schema);
     assert(validate(fixture), ajv.errorsText(validate.errors));
@@ -204,7 +204,7 @@ class RetainedRecordObservationScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const { blake3Hex } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const owner = join(this.root, "../../📐️format/🔎️verification/🧾️record");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); const ids = new Set<string>(); let observed = 0;
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
@@ -235,7 +235,7 @@ class RetainedRecordObservationScript extends BundleScript {
     console.log(`[DEBUG] retained SPR observation oracle: ${fixture.cases.length} exact rows, ${observed} scalar observations; compressed raw-length/empty payload/clear/error/cancel; zero commit or input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const law = "retained_record_observation_uses_the_existing_framing_state_without_authority";
-    assert(source.includes('include_str!("🧫️fixture/🔣️.json")') && source.includes(`fn ${law}(`));
+    assert(source.includes('include_str!("🧫️fixtures/🔣️.json")') && source.includes(`fn ${law}(`));
     assert(source.includes("impl RetainedSprVerification") && !source.includes("fn push("), "metadata must observe the existing scanner, not parse a second framing grammar");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod record;"), "retained record observation remains unmounted");

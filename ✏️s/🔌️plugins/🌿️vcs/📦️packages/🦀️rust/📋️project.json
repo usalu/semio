@@ -7,7 +7,7 @@
   "targets": {
     "native-openable-identity-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-openable-identity-check",
@@ -16,7 +16,7 @@
     },
     "native-codec-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-codec-check",

@@ -5,7 +5,7 @@ use super::*;
 /// language can be checked against the same table.
 #[test]
 fn matches_rfc4648_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️rfc4648-base64-vectors.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️rfc4648-base64-vectors.json")).expect("fixture JSON");
     for case in fixture["cases"].as_array().expect("cases array") {
         let input = case["input_utf8"].as_str().expect("input_utf8");
         let expected = case["encoded"].as_str().expect("encoded");

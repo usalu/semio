@@ -129,7 +129,7 @@ impl En1992Artifact {
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::En1992Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: &crate::En1992Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             m_ed_knm: snapshot.m_ed_knm,
@@ -169,7 +169,7 @@ impl En1992Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::En1992Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: &crate::En1992Snapshot) {
         *self = Self::from_snapshot(snapshot);
     }
 }

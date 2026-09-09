@@ -20,9 +20,9 @@ Feature: Apply every typed SEQUENCE step mutation through the shared envelope-le
   in `../🔮️oracle/🔣️.json`) as `🪜️step`'s own case, for the identical reason: `s.sequence.sequence`
   is semio-native, so no third-party reader or writer exists for the aggregate wrapper either.
 
-  📄️ The base document is real and committed. `local://🗣️.dsl.semio` is parsed by production's own
+  📄️ The base document is real and committed. `shared://🪜️mutate-sequence-1-any-step/🗣️.dsl.semio` is parsed by production's own
   `parse_dsl` and supplies the document skeleton every scenario starts from; the composed content
-  child (steps and edges) is seeded from `local://🎬️base-scene.json`, a local copy of the identical
+  child (steps and edges) is seeded from `shared://🪜️mutate-sequence-1-any-step/🎬️base-scene.json`, a local copy of the identical
   fixture `🪜️step`'s own case already carries.
 
   ⚖️ The projection is `(schema, steps, edges)` read back through `sequence_working_scene`, exactly as
@@ -32,8 +32,8 @@ Feature: Apply every typed SEQUENCE step mutation through the shared envelope-le
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> through the shared aggregate dispatch and observe it move
-    Given the real committed sequence artifact local://🗣️.dsl.semio
-    And its composed content child seeded from local://🎬️base-scene.json
+    Given the real committed sequence artifact shared://🪜️mutate-sequence-1-any-step/🗣️.dsl.semio
+    And its composed content child seeded from shared://🪜️mutate-sequence-1-any-step/🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
       {"kind": "<id>", "params": <params>}
@@ -52,8 +52,8 @@ Feature: Apply every typed SEQUENCE step mutation through the shared envelope-le
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the shared aggregate document exactly
-    Given the real committed sequence artifact local://🗣️.dsl.semio
-    And its composed content child seeded from local://🎬️base-scene.json
+    Given the real committed sequence artifact shared://🪜️mutate-sequence-1-any-step/🗣️.dsl.semio
+    And its composed content child seeded from shared://🪜️mutate-sequence-1-any-step/🎬️base-scene.json
     When the <id> mutation is applied through apply_sequence_mutation
       """
       {"kind": "<id>", "params": <params>}

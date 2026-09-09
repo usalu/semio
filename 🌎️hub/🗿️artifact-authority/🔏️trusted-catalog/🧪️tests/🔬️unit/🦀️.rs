@@ -2,7 +2,7 @@ use super::*;
 use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
 #[cfg(feature = "native-artifact-execution")]
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleCodecV1, TrustedBundleComponentV1};
+use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundleProfileOpenTargetV1};
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
 use directory::os_store::{ArtifactPackFiles, ArtifactTextFiles, VcsError, document_codec};
 use std::io::Write;
@@ -201,11 +201,11 @@ impl Drop for FixtureDirectory {
 }
 
 fn fixture_json() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
 }
 
 fn synthetic_browser_actor(component: &str, descriptor: &str, path: &str) -> serde_json::Value {
-    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     let mut actor = fixture["closed"].take();
     actor["sourceComponentSha256"] = component.into();
     actor["sourceDescriptorByteSha256"] = descriptor.into();
@@ -486,7 +486,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
             serde_json::json!({ "artifactKind": identity.artifact_kind, "artifactSchema": identity.schema, "packSchemaHash": hex_lower(&identity.pack_schema_hash) })
         })
         .collect();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("neutral frozen binding corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("neutral frozen binding corpus");
     let binding = &corpus["binding"];
     let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
     let mut target = serde_json::json!({
@@ -549,7 +549,7 @@ impl NativeCodecProviderSourceV1 for RecordingLinkedProvider {
 #[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     let mut fixture = prepared_gis_binding_fixture(false, false).await;
     for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
         let native = receipt.into_codec().unwrap();
@@ -744,7 +744,7 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
         }
         fn report(&self, _progress: AuthorityProgress) {}
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧪️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     let providers = NativeCodecProviderSetV1::linked();
@@ -804,7 +804,7 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
 
 #[tokio::test]
 async fn selected_native_provider_descriptor_and_cancellation_fences_precede_publication() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for case in cases["descriptorPreviewCases"].as_array().unwrap() {
         let mut invalid = prepared_fixture();
         let source = FixtureProviderSource::new(invalid.make_two_codec_bindings());
@@ -1009,7 +1009,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
     eprintln!("[DEBUG] trusted open catalog retained verified editor/viewer parent dialect;3 field changes alter generation");
     assert!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#viewer"), true).is_none());
     assert!(catalog.resolve_document_open(&descriptor, Some("foreign"), false).is_none());
-    let roles: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️identity-roles/🔣️.json")).unwrap();
+    let roles: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️identity-roles/🔣️.json")).unwrap();
     for case in roles["cases"].as_array().unwrap() {
         let mut candidate = descriptor.clone();
         let mut surface = "s.fixture.document@1/*#editor".to_owned();
@@ -1047,7 +1047,7 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
             self.control.report(progress);
         }
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     for law in corpus["loadCases"].as_array().unwrap() {
         let mut fixture = prepared_fixture();
         let path = fixture.root.join(fixture.bundle["packages"][0]["browserActor"]["path"].as_str().unwrap());
@@ -1198,7 +1198,7 @@ async fn trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe() 
 
 #[test]
 fn trusted_catalog_relative_paths_match_the_neutral_no_link_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🛡️opened-root/🔣️.json")).expect("opened-root corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛡️opened-root/🔣️.json")).expect("opened-root corpus");
     let rows = corpus["relativePaths"].as_array().expect("relative path rows");
     assert_eq!(rows.len(), 15);
     for row in rows {
@@ -1333,7 +1333,7 @@ fn bundle_rejects_incomplete_duplicate_conflicting_and_escaping_declarations() {
 
 #[test]
 fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
-    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for row in dependency_fixture["encodingCases"].as_array().unwrap() {
         let identities: Vec<TrustedBundleIdentityV1> = serde_json::from_value(row["identities"].clone()).unwrap();
         let mut encoded = Vec::new();

@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("seismic-rc-frame", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🏢️seismic-rc-frame/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

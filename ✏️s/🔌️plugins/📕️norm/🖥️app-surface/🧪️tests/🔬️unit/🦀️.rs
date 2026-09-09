@@ -54,6 +54,26 @@ async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
+    let mut report = CheckReport::default();
+    for _ in 0..2 {
+        report.push(crate::document::CheckResult::from_utilization(
+            crate::document::ClauseId::new("demo", "§1", "1.1"),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.5),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
+            "same check",
+            crate::document::AnnexChoice::De,
+        ));
+    }
+    let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&report).expect("node assembly") }).expect("distinct row identities");
+    let projected: serde_json::Value = serde_json::from_str(&json).expect("third-party projection oracle");
+    let rows = projected["children"].as_array().expect("report rows");
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["key"], "norm-report-check-0");
+    assert_eq!(rows[1]["key"], "norm-report-check-1");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn long_unicode_document_text_is_admitted_in_exact_utf8_chunks() {
     let source = format!("start-{}-end", "ä".repeat(ui::UI_TEXT_MAX_BYTES));
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_text_chunks(&source).expect("chunked node assembly") }).expect("chunked projection");

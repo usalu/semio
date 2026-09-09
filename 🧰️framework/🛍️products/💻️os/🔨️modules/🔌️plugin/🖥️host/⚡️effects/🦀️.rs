@@ -154,7 +154,8 @@ impl CapabilityRevocationRegistry {
     /// registered list for `capability` so a later revoke of the same (already-revoked) id is a
     /// harmless no-op.
     pub async fn revoke(&self, capability: CapabilityTokenId) {
-        if let Some(tokens) = self.0.lock().expect("CapabilityRevocationRegistry mutex poisoned").remove(&capability) {
+        let tokens = self.0.lock().expect("CapabilityRevocationRegistry mutex poisoned").remove(&capability);
+        if let Some(tokens) = tokens {
             for token in tokens {
                 token.cancel().await;
             }
@@ -236,7 +237,7 @@ pub const COMPLETION_MAILBOX_CAP: u32 = 512;
 /// rationale, sized well above any real completion payload.
 pub const COMPLETION_MAILBOX_MAX_BYTES: u64 = 1_000_000;
 
-async fn completion_topic(actor: u64) -> Topic {
+fn completion_topic(actor: u64) -> Topic {
     Topic(format!("__effect_completions__:{actor}"))
 }
 
@@ -285,10 +286,10 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
         Self { actors, events, injector, subscribed: Mutex::new(std::collections::HashSet::new()) }
     }
 
-    async fn ensure_subscribed(&self, actor: u64) {
+    fn ensure_subscribed(&self, actor: u64) {
         let mut subscribed = self.subscribed.lock().expect("EnvelopeCompletionSink subscribed mutex poisoned");
         if subscribed.insert(actor) {
-            self.events.subscribe(completion_topic(actor).await, semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { max_items: COMPLETION_MAILBOX_CAP, max_bytes: COMPLETION_MAILBOX_MAX_BYTES }).await;
+            self.events.subscribe(completion_topic(actor), semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { max_items: COMPLETION_MAILBOX_CAP, max_bytes: COMPLETION_MAILBOX_MAX_BYTES });
         }
     }
 
@@ -303,7 +304,7 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
         if !scope.cancel.is_live().await {
             return;
         }
-        let topic = completion_topic(actor).await;
+        let topic = completion_topic(actor);
         // 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; the codemod's
         // insert-await pass had this awaited twice inside the loop below (E0382). Awaited once here.
         let current_generation = self.actors.generation_of(actor).await;
@@ -333,8 +334,8 @@ impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
             if self.actors.generation_of(actor).await != Some(generation) {
                 return;
             }
-            self.ensure_subscribed(actor).await;
-            let topic = completion_topic(actor).await;
+            self.ensure_subscribed(actor);
+            let topic = completion_topic(actor);
             let _outcome: PublishOutcome = self.events.send_message(&topic, semio_framework_actor::ActorId(actor), encode_mailbox_entry(lane, &event_bytes).await).await;
             self.flush(actor).await;
         });
@@ -906,7 +907,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
     /// ceiling.
     pub async fn quarantine_package(&self, package: &PackageId) -> ScopeDrainReport {
         let report = self.services.runtime.cancel_scope(&ScopeOwner::Package(package.0.clone()), 250).await;
-        self.metrics.record_drain(DrainOwner::Package, report.clone());
+        self.metrics.record_drain(DrainOwner::Package, report);
         report
     }
 
@@ -942,10 +943,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                         dispatch.package.clone(),
                         addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await,
                         *req,
-                        method.clone(),
-                        url.clone(),
-                        headers.clone(),
-                        body.clone(),
+                        ServiceHttpRequest { method: method.clone(), url: url.clone(), headers: headers.clone(), body: body.clone().unwrap_or_default() },
                     )
                     .await;
                     report.dispatched += 1;
@@ -979,7 +977,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                     report.dispatched += 1;
                 }
                 Effect::Subscribe { topic } => {
-                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, ChannelPolicy::LatestWins { max_bytes: 1_000_000 }).await;
+                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, ChannelPolicy::LatestWins { max_bytes: 1_000_000 });
                     report.dispatched += 1;
                 }
                 Effect::Unsubscribe { topic } => {
@@ -988,7 +986,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                 }
                 Effect::BlobWrite { req, media_type, bytes } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobWrite { media_type: media_type.clone(), bytes: bytes.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobWrite { media_type: *media_type, bytes: bytes.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::BlobLoad { req, hash } => {
@@ -1044,7 +1042,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
         report
     }
 
-    async fn dispatch_http(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, actor_id: RuntimeActorId, req: RequestId, method: String, url: String, headers: Vec<(String, String)>, body: Option<Vec<u8>>) {
+    async fn dispatch_http(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, actor_id: RuntimeActorId, req: RequestId, request: ServiceHttpRequest) {
         let runtime = self.services.runtime.clone();
         let http = self.services.http.clone();
         let sink = self.sink.clone();
@@ -1059,7 +1057,6 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                 emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "http request cancelled before dispatch").await;
                 return;
             }
-            let request = ServiceHttpRequest { method, url, headers, body: body.unwrap_or_default() };
             match http.request(runtime.as_ref(), &scope_for_task, ctx_for_task.clone(), package, actor_id, request).await {
                 Ok(response) => emit_completed_ok(&sink, &ctx_for_task, req, encode_http_response(&response).await).await,
                 Err(HttpPoolError::Compute(ComputeError::DeadlineExceeded)) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "http request exceeded its deadline").await,

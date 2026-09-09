@@ -78,7 +78,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real Nakagin Capsule Tower port graph
-    Given the real capsule tower graph local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    Given the real capsule tower graph shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the graph parsed from it
       """
       <mutation>
@@ -102,7 +102,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real Nakagin Capsule Tower port graph
-    Given the real capsule tower graph local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    Given the real capsule tower graph shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio
     When the <id> mutation is applied to the graph parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -126,9 +126,9 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -149,9 +149,9 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed wires graph and of the real capsule tower graph
-    Given the real committed graph artifact asset://📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio
-    And the real capsule tower graph local://🏢️nakagin-capsule-tower/🗣️.dsl.semio
-    And its binary twin local://🎒️.pack.semio
+    Given the real committed graph artifact asset://🕸️wires/🗣️.dsl.semio
+    And its committed binary twin asset://🕸️wires/🎒️.pack.semio
+    And the real capsule tower graph shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio
+    And its binary twin shared://🌳️mutate-semio-graph/🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both graphs and on the digests of what they emitted

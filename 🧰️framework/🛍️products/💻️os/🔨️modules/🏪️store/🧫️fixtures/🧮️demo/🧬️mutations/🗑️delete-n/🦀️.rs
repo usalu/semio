@@ -29,5 +29,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for DeleteN {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🧮️demo-🗑️delete-n/🦀️.rs"]
 mod tests;

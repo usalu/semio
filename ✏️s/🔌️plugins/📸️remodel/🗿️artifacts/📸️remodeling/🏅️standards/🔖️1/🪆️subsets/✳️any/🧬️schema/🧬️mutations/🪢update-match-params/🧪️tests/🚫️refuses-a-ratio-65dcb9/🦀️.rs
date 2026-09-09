@@ -10,10 +10,10 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢update-match-params/🚫️refuses-a-ratio-65dcb9/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢update-match-params/🚫️refuses-a-ratio-65dcb9/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢update-match-params/🚫️refuses-a-ratio-65dcb9/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢update-match-params/🚫️refuses-a-ratio-65dcb9/🎯️outcome/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")
@@ -65,7 +65,7 @@ async fn declared_refusal_holds() {
 /// repository's own statement that there is no delta to commit, not a forgotten file.
 #[semio_framework_async_macros::async_test]
 async fn no_diff_is_committed() {
-    assert!(include_str!("🔺️diff/🚫️.absent").is_empty(), "update-match-params/refuses-a-ratio-65dcb9: the absent-diff marker must stay empty");
+    assert!(include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢update-match-params/🚫️refuses-a-ratio-65dcb9/🔺️diff/🚫️.absent").is_empty(), "update-match-params/refuses-a-ratio-65dcb9: the absent-diff marker must stay empty");
 }
 
 /// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed

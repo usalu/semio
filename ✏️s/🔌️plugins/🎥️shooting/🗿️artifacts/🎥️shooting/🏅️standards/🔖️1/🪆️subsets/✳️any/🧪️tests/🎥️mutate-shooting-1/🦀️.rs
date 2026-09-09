@@ -59,11 +59,11 @@ const KINDS: &[&str] = &[
 
 /// 📸️ The one before-snapshot all thirty-one of this vocabulary's committed leaf fixtures share, read
 /// where the domain already keeps it rather than copied into a thirty-second place.
-const BASE_SNAPSHOT: &str = "asset://🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json";
+const BASE_SNAPSHOT: &str = "shared://🧬️mutations/✏️rename-asset/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json";
 
 /// 📄️ The plugin's own committed real DSL artifact — the only input that can carry evidence about
 /// the handcrafted block/table text grammar.
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

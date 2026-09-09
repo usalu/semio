@@ -16,11 +16,11 @@ use crate::schema::mutations::create_texture::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "create-texture/inserts-an-empty-texture-ahead-of-the-albedo-texture";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🌱️create/🎨️inserts-an-empty-736467/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🌱️create/🎨️inserts-an-empty-736467/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🌱️create/🎨️inserts-an-empty-736467/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🌱️create/🎨️inserts-an-empty-736467/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎨️texture/🌱️create/🎨️inserts-an-empty-736467/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

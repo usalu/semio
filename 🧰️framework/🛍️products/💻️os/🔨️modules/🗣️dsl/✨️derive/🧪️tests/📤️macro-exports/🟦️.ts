@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 
 //#region 🧬️ExportRoster
-const fixture = await Bun.file(new URL("./🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../../🧫️fixtures/📤️macro-exports/🔣️.json", import.meta.url)).json();
 const document = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
 const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(document);

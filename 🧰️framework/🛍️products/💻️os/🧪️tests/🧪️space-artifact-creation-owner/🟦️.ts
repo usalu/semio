@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
+  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, acceptBrowserSessionAuthority, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
   const testSeams = dependencies.testSeams as {
     directoryAdministration: typeof directoryAdministration;
     directoryClient: typeof directoryClient;
@@ -13,6 +13,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     localBrowserBrokerProofExpiresAtMs: typeof localBrowserBrokerProofExpiresAtMs;
     localBrowserBrokerQueued: typeof localBrowserBrokerQueued;
     readonly browserSessionAuthority: unknown;
+    readonly browserSessionOperationFence: object;
+    acceptBrowserSessionAuthority(response: unknown, admission: object): Promise<unknown>;
+    captureBrowserSessionOperationFence(): unknown;
     attachLocalBrokerPort(port: MessagePort): void;
     detachLocalBrokerPort(): void;
     socketGrantTestIssue: typeof socketGrantTestIssue;
@@ -24,7 +27,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
-    const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
     vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     for (const kind of fixture.routes) {
@@ -54,6 +57,283 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   type ActorInstanceLifetime = any;
+  vitest.it("binds acknowledged Shell session reads through the actual worker broker", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { default: Ajv } = await import("ajv");
+    const { default: equal } = await import("fast-deep-equal");
+    const { BrowserBrokerPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
+    const directory = "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/";
+    const corpus = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    const authorities = corpus.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
+    const originalFetch = globalThis.fetch;
+    const channel = new MessageChannel();
+    const calls: Array<{ path: string; hasProof: boolean; hasSuccessor: boolean }> = [];
+    clearLocalBrowserBrokerProof();
+    testSeams.attachLocalBrokerPort(channel.port2);
+    const client = new BrowserBrokerPortClientV1(channel.port1, "4".repeat(64));
+    try {
+      for (const authority of authorities) {
+        vitest.expect(validate(authority)).toBe(true);
+        const body = JSON.stringify(authority);
+        globalThis.fetch = vitest.vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+          const headers = new Headers(init?.headers);
+          calls.push({ path: String(input), hasProof: /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker") ?? ""), hasSuccessor: /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker-next") ?? "") });
+          return new Response(body, { status: 200, headers: { "x-semio-browser-broker-advanced": "1", "content-length": String(new TextEncoder().encode(body).byteLength) } });
+        }) as typeof fetch;
+        const response = await client.me();
+        vitest.expect(equal(response, { status: 200, body })).toBe(true);
+        vitest.expect(equal(testSeams.browserSessionAuthority, authority)).toBe(true);
+      }
+      vitest.expect(equal(calls, authorities.map(() => ({ path: "/_semio/hub/auth/sessions/me", hasProof: true, hasSuccessor: true })))).toBe(true);
+      console.log("[DEBUG] acknowledged Shell session reads installed only canonical worker broker authority");
+    } finally {
+      client.close();
+      testSeams.detachLocalBrokerPort();
+      channel.port1.close();
+      channel.port2.close();
+      clearLocalBrowserBrokerProof();
+      globalThis.fetch = originalFetch;
+    }
+  });
+  vitest.it("requires an acknowledged private broker port before Shell session requests", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { setImmediate: immediate } = await import("node:timers/promises");
+    const { default: Ajv } = await import("ajv");
+    const { default: equal } = await import("fast-deep-equal");
+    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/";
+    const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
+    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const { BrowserBrokerPortClientV1, BROWSER_BROKER_CLIENT_TIMEOUT_MS, BROWSER_BROKER_CLIENT_INITIALIZATION_TIMEOUT_MS, BROWSER_BROKER_CLIENT_MAX_PENDING } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
+    vitest.expect(equal([BROWSER_BROKER_CLIENT_TIMEOUT_MS, BROWSER_BROKER_CLIENT_MAX_PENDING], [fixture.timeoutMs, fixture.maximumPending])).toBe(true);
+    vitest.expect(BROWSER_BROKER_CLIENT_INITIALIZATION_TIMEOUT_MS).toBe(fixture.initializationTimeoutMs);
+    vitest.expect(fixture.initializationTimeoutMs + fixture.timeoutMs * 2).toBeLessThan(fixture.bootstrapTimeoutMs);
+    vitest.vi.useFakeTimers();
+    try {
+      for (const row of fixture.cases) {
+        const channel = new MessageChannel();
+        const requests: Array<Record<string, any>> = [];
+        let initialized!: () => void;
+        const initialization = new Promise<void>((resolve) => { initialized = resolve; });
+        let requested!: () => void;
+        const request = new Promise<void>((resolve) => { requested = resolve; });
+        channel.port2.onmessage = (event: MessageEvent<Record<string, any>>) => {
+          requests.push(event.data);
+          if (event.data.kind === "initialize") initialized();
+          if (event.data.kind === "request") {
+            requested();
+            if (row !== "close-before-response") channel.port2.postMessage({ kind: "response", requestId: event.data.requestId, ...fixture.accepted });
+          }
+        };
+        channel.port2.start();
+        const client = new BrowserBrokerPortClientV1(channel.port1, "4".repeat(64));
+        const abort = new AbortController();
+        const response = client.me(abort.signal).then((value) => ({ kind: "accepted", value }), () => ({ kind: "refused" }));
+        try {
+          await initialization;
+          vitest.expect(requests.filter((value) => value.kind === "request")).toHaveLength(0);
+          if (row === "slow-initialization") await vitest.vi.advanceTimersByTimeAsync(fixture.timeoutMs + 1);
+          if (row === "cancel-before-ack") abort.abort();
+          if (row === "response-before-ack") channel.port2.postMessage({ kind: "response", requestId: "1".repeat(36), ...fixture.accepted });
+          else if (row !== "timeout") channel.port2.postMessage(row === "malformed-ack" ? { kind: "initialized", ok: true, authority: "overpost" } : { kind: "initialized", ok: row !== "refused" });
+          await immediate();
+          if (row === "timeout" || row === "malformed-ack") await vitest.vi.advanceTimersByTimeAsync(fixture.initializationTimeoutMs);
+          if (row === "close-before-response") {
+            await request;
+            client.close();
+            const pending = requests.find((value) => value.kind === "request")!;
+            channel.port2.postMessage({ kind: "response", requestId: pending.requestId, ...fixture.accepted });
+          }
+          const result = await response;
+          vitest.expect(equal(result, row === "acknowledged" || row === "slow-initialization" ? { kind: "accepted", value: fixture.accepted } : { kind: "refused" })).toBe(true);
+          vitest.expect(requests.filter((value) => value.kind === "request")).toHaveLength(Number(row === "acknowledged" || row === "slow-initialization" || row === "close-before-response"));
+          console.log("[DEBUG] private broker acknowledgement " + row + " matched the neutral request boundary");
+        } finally {
+          client.close();
+          channel.port1.close();
+          channel.port2.close();
+        }
+      }
+    } finally {
+      vitest.vi.useRealTimers();
+    }
+  });
+  vitest.it("closes the private broker proof before or during a session-authority read", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { setImmediate: immediate } = await import("node:timers/promises");
+    const { default: Ajv } = await import("ajv");
+    const { default: equal } = await import("fast-deep-equal");
+    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/";
+    const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
+    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const { BrowserBrokerPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
+    const originalFetch = globalThis.fetch;
+    try {
+      for (const row of fixture.close.cases) {
+        clearLocalBrowserBrokerProof();
+        const channel = new MessageChannel();
+        testSeams.attachLocalBrokerPort(channel.port2);
+        let readStarted = false;
+        let requestSignal: AbortSignal | undefined;
+        let resolveStarted!: () => void;
+        const started = new Promise<void>((resolve) => { resolveStarted = resolve; });
+        globalThis.fetch = vitest.vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+          readStarted = true;
+          requestSignal = init?.signal ?? undefined;
+          resolveStarted();
+          return new Promise<Response>((_resolve, reject) => requestSignal?.addEventListener("abort", () => reject(new Error("cancelled")), { once: true }));
+        }) as typeof fetch;
+        const client = new BrowserBrokerPortClientV1(channel.port1, row.id === "before-read" ? "8".repeat(64) : "9".repeat(64));
+        try {
+          if (row.id === "before-read") {
+            client.close();
+            await vitest.expect(client.me()).rejects.toThrow("browser broker unavailable");
+          } else {
+            await immediate();
+            const pending = client.me();
+            await started;
+            client.close();
+            await vitest.expect(pending).rejects.toThrow("browser broker closed");
+          }
+          await immediate();
+          await immediate();
+          vitest.expect(equal({ id: row.id, readStarted }, row)).toBe(true);
+          vitest.expect(testSeams.localBrowserBrokerProofExpiresAtMs).toBe(0);
+          if (row.readStarted) vitest.expect(requestSignal?.aborted).toBe(true);
+        } finally {
+          client.close();
+          testSeams.detachLocalBrokerPort();
+          channel.port1.close();
+          channel.port2.close();
+        }
+      }
+      console.log("[DEBUG] session authority cancellation cleared the exact private broker proof before and during reads");
+    } finally {
+      clearLocalBrowserBrokerProof();
+      globalThis.fetch = originalFetch;
+    }
+  });
+  vitest.it("refreshes Shell session authority serially and cancels stale callbacks", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { default: Ajv } = await import("ajv");
+    const { default: equal } = await import("fast-deep-equal");
+    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/";
+    const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
+    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts");
+    const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+    const first = corpus.rows[0].value;
+    const second = corpus.rows[1].value;
+    for (const row of fixture.actionAdmission) {
+      const current = row.id === "missing" ? null : row.id === "different-binding" ? second : row.id === "different-generation" ? { ...first, authorizationGeneration: first.authorizationGeneration + 1 } : row.id === "expired" ? { ...first, expiresAt: Date.now() } : { ...first };
+      vitest.expect(directorySessionAuthorityIsCurrentV1(first, current)).toBe(row.accepted);
+      vitest.expect(directorySessionAuthorityIsCurrentV1(null, current)).toBe(false);
+    }
+    vitest.expect(DIRECTORY_SESSION_REFRESH_INTERVAL_MS).toBe(fixture.intervalMs);
+    vitest.expect(equal(DIRECTORY_SESSION_AUTHORITY_TEXT_V1, fixture.presentation.text)).toBe(true);
+    for (const locale of fixture.presentation.locales) vitest.expect(equal(directorySessionAuthorityTextV1(locale), fixture.presentation.text[locale])).toBe(true);
+    vitest.expect(() => directorySessionAuthorityTextV1("fr")).toThrow("directory.session-authority.locale-unsupported");
+    vitest.expect(fixture.intervalMs * 2).toBeLessThan(fixture.proofTtlMs);
+    vitest.vi.useFakeTimers();
+    const owners: Array<{ close(): void }> = [];
+    try {
+      const seen: unknown[] = [];
+      const responses = [first, first, second];
+      let calls = 0;
+      let active = 0;
+      let maximum = 0;
+      let release: (() => void) | undefined;
+      const firstGate = new Promise<void>((resolve) => { release = resolve; });
+      const owner = startDirectorySessionRefreshV1({
+        read: async () => {
+          active += 1;
+          maximum = Math.max(maximum, active);
+          const value = responses[calls++];
+          if (calls === 1) await firstGate;
+          active -= 1;
+          return { status: 200, body: JSON.stringify(value) };
+        },
+        onAuthority: (value) => { seen.push(value); },
+        onUnavailable: () => { throw new Error("unexpected authority retirement"); },
+      });
+      owners.push(owner);
+      const joined = owner.refresh();
+      const alsoJoined = owner.refresh();
+      await vitest.vi.advanceTimersByTimeAsync(fixture.intervalMs);
+      vitest.expect(calls).toBe(1);
+      release!();
+      await Promise.all([joined, alsoJoined]);
+      await vitest.vi.advanceTimersByTimeAsync(fixture.intervalMs);
+      await vitest.vi.advanceTimersByTimeAsync(fixture.intervalMs);
+      vitest.expect(equal(seen, responses)).toBe(true);
+      vitest.expect(maximum).toBe(fixture.maximumConcurrentRequests);
+      owner.close();
+      await vitest.vi.advanceTimersByTimeAsync(fixture.proofTtlMs);
+      vitest.expect(calls).toBe(3);
+      for (const refusal of fixture.refusals) {
+        const accepted: unknown[] = [];
+        let refused = 0;
+        let reads = 0;
+        const failed = startDirectorySessionRefreshV1({
+          read: async () => {
+            reads += 1;
+            if (refusal === "transport") throw new Error("offline");
+            const status = refusal === "http-401" ? 401 : refusal === "http-428" ? 428 : refusal === "non-200" ? 201 : 200;
+            const body = refusal === "invalid-body" ? "{}" : JSON.stringify(refusal === "expired" ? { ...first, expiresAt: Date.now() } : first);
+            return { status, body };
+          },
+          onAuthority: (value) => { accepted.push(value); },
+          onUnavailable: () => { refused += 1; },
+        });
+        owners.push(failed);
+        await failed.refresh();
+        await vitest.vi.advanceTimersByTimeAsync(fixture.proofTtlMs);
+        await failed.refresh();
+        vitest.expect(equal({ accepted, refused, reads }, { accepted: [], refused: 1, reads: 1 + fixture.unavailableRetries })).toBe(true);
+      }
+      for (const cancellation of fixture.cancellation) {
+        const parent = new AbortController();
+        let releaseRead: (() => void) | undefined;
+        let readStarted!: () => void;
+        const started = new Promise<void>((resolve) => { readStarted = resolve; });
+        let requestSignal: AbortSignal | undefined;
+        let accepted = 0;
+        let refused = 0;
+        let calls = 0;
+        const gate = new Promise<void>((resolve) => { releaseRead = resolve; });
+        const cancelled = startDirectorySessionRefreshV1({
+          signal: parent.signal,
+          read: async (signal) => {
+            calls += 1;
+            requestSignal = signal;
+            readStarted();
+            if (cancellation === "during-request") await gate;
+            return { status: 200, body: JSON.stringify(first) };
+          },
+          onAuthority: () => { accepted += 1; },
+          onUnavailable: () => { refused += 1; },
+        });
+        owners.push(cancelled);
+        const pending = cancelled.refresh();
+        if (cancellation === "during-request") await started;
+        if (cancellation === "during-delay") await pending;
+        parent.abort();
+        releaseRead!();
+        await pending;
+        await vitest.vi.advanceTimersByTimeAsync(fixture.proofTtlMs);
+        vitest.expect(requestSignal?.aborted).toBe(cancellation === "before-request" ? undefined : true);
+        vitest.expect(equal({ calls, accepted, refused }, { calls: Number(cancellation !== "before-request"), accepted: Number(cancellation === "during-delay"), refused: 0 })).toBe(true);
+      }
+      console.log("[DEBUG] Shell session refresh matched the neutral serial, refusal and cancellation corpus");
+    } finally {
+      for (const owner of owners) owner.close();
+      vitest.vi.useRealTimers();
+    }
+  });
   type ArtifactActorConfig = any;
   type ArtifactEvent = any;
   type ArtifactPresencePeer = any;
@@ -572,7 +852,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         state.currentPack = new Uint8Array([9]);
         state.currentSpr = new Uint8Array([8]);
         if (row.name.startsWith("lease-")) {
-          const leaseFixture = JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
+          const leaseFixture = JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
             fields = structuredClone(leaseFixture.manifest),
             frontier = bootstrap.baseline_frontier;
           fields.scope = { spaceId: binding.spaceId, documentId: config.documentId };
@@ -1939,7 +2219,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     }
 
-    function inferenceHarness(options: { readonly lease: "none" | "viewer" | "editor" }) {
+    async function inferenceHarness(options: { readonly lease: "none" | "viewer" | "editor"; readonly authority?: "verified" | "none" }) {
       const posted: BackboneWorkerResponse[] = [];
       const original = testSeams.workerPostTestSink;
       testSeams.workerPostTestSink = (message) => posted.push(message);
@@ -1967,6 +2247,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
       clearLocalBrowserBrokerProof();
       installLocalBrowserBrokerProof("b".repeat(64));
+      if (options.authority !== "none") {
+        const { readFileSync } = await import("node:fs");
+        const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+        const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+        bodies.push(JSON.stringify(authority));
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+        requests.length = 0;
+        bodies.length = 0;
+        statuses.length = 0;
+        gates.length = 0;
+        proofs.length = 0;
+      }
       // 🧷️ No socket-grant issuer and no installed target means `openArtifact` opens no hub socket
       // at all, so this harness exercises the inference port's own four calls and nothing else.
       const originalIssue = testSeams.socketGrantTestIssue;
@@ -2041,8 +2333,57 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log("[DEBUG] browser inference consumed exact Hub nullable-hash receipt and event page");
     });
 
+    it("requires verified session authority and never adopts a successor proof for retained inference", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
+      const valid = new Ajv({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+      expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
+      expect(equal(fixture.retainedClosing.authorityFence.cases, ["absent-authority-refused", "sealed-request-proof-replacement"])).toBe(true);
+
+      const absent = await inferenceHarness({ lease: "editor", authority: "none" });
+      try {
+        const scope = { spaceId: SPACE, documentId: DOCUMENT };
+        const fence = testSeams.browserSessionOperationFence;
+        handleTsRequest({ kind: "inference-open", operationEpoch: 81, scope });
+        expect(absent.posted.at(-1)).toEqual({ kind: "inference-port-opened", operationEpoch: 81, scope, outcome: "refused", code: fixture.retainedClosing.authorityFence.openingCode });
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 81, requestId: fixture.retainedClosing.requestId });
+        expect(absent.requests).toEqual(fixture.retainedClosing.authorityFence.successorRoutes);
+        clearLocalBrowserBrokerProof();
+        expect(installLocalBrowserBrokerProof(fixture.retainedClosing.successorProof)).toBe(true);
+        expect(testSeams.browserSessionOperationFence).not.toBe(fence);
+        expect(absent.requests).toEqual(fixture.retainedClosing.authorityFence.successorRoutes);
+      } finally {
+        absent.release();
+      }
+
+      const retained = await inferenceHarness({ lease: "editor" });
+      try {
+        const scope = { spaceId: SPACE, documentId: DOCUMENT };
+        handleTsRequest({ kind: "inference-open", operationEpoch: 82, scope });
+        retained.bodies.push("{");
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 82, requestId: fixture.retainedClosing.requestId });
+        await settleInferenceTurns();
+        const operation = testSeams.inferencePort;
+        expect(operation?.status.phase).toBe(fixture.retainedClosing.unknownPhase);
+        const requestCount = retained.requests.length;
+        clearLocalBrowserBrokerProof();
+        expect(installLocalBrowserBrokerProof(fixture.retainedClosing.successorProof)).toBe(true);
+        await driveInferencePort(82);
+        expect(retained.requests).toHaveLength(requestCount);
+        handleTsRequest({ kind: "inference-open", operationEpoch: 83, scope });
+        expect(retained.posted.at(-1)).toMatchObject({ kind: "inference-port-opened", outcome: "refused", code: fixture.retainedClosing.authorityFence.blockedOpeningCode });
+        expect(testSeams.inferencePort).toBe(operation);
+      } finally {
+        retained.release();
+      }
+      console.log("[DEBUG] inference authority fence rejected pre-/me admission and retained an indeterminate original request across proof replacement");
+    });
+
     it("refuses to start at all without a verified live execution-target lease", async () => {
-      const harness = inferenceHarness({ lease: "none" });
+      const harness = await inferenceHarness({ lease: "none" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 1, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         await Promise.resolve();
@@ -2058,7 +2399,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("refuses a verified viewer-only lease, because a proposal it could never approve must not start", async () => {
-      const harness = inferenceHarness({ lease: "viewer" });
+      const harness = await inferenceHarness({ lease: "viewer" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 2, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         await Promise.resolve();
@@ -2071,7 +2412,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("publishes no phase beyond submitting until an exact server receipt lands, and never mutates the document", async () => {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 3, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         harness.statuses.push(200);
@@ -2095,7 +2436,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).cancelBeforeReceipt;
       for (const kind of fixture.intents) {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       const projection = () => { const { phase, jobId, cancelRequested } = harness.ports().at(-1)!; return { phase, jobId, cancelRequested }; };
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: fixture.operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
@@ -2119,7 +2460,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
       for (const scenario of fixture.cases) {
-        const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
         const sessionEpoch = testSeams.directorySessionEpoch;
         try {
           const scope = { spaceId: SPACE, documentId: DOCUMENT };
@@ -2189,7 +2530,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
       for (const scenario of fixture.approvalClose) {
-        const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
         try {
           const operationEpoch = fixture.operationEpoch + 2;
           handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
@@ -2235,7 +2576,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       const epoch = testSeams.directorySessionEpoch;
       try {
         let release: () => void = () => undefined;
@@ -2252,7 +2593,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await rejected;
         harness.bodies.push("{}");
         await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
-        expect(equal(harness.proofs, ["b".repeat(64), fixture.successorProof])).toBe(true);
+        expect(harness.proofs).toHaveLength(2);
+        expect(harness.proofs[0]).toMatch(/^[0-9a-f]{64}$/u);
+        expect(equal(harness.proofs[1], fixture.successorProof)).toBe(true);
         console.log("[DEBUG] old inference response preserved successor broker proof");
       } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
     });
@@ -2280,7 +2623,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = fixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
       const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       const channel = new MessageChannel();
       testSeams.attachLocalBrokerPort(channel.port1);
       const me = async (value: unknown): Promise<{ status: number; body: string }> => {
@@ -2317,6 +2660,49 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
     });
 
+    it("correlates every Directory bootstrap page with the verified broker session authority", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { createHash } = await import("node:crypto");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+      const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
+      for (const scenario of retained.directoryPageBinding) {
+      const harness = await inferenceHarness({ lease: "editor" });
+        const channel = new MessageChannel();
+        testSeams.attachLocalBrokerPort(channel.port1);
+        try {
+          harness.bodies.push(JSON.stringify(authority));
+          const ready = new Promise<{ status: number }>((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error("session authority RPC timed out")), 3000);
+            channel.port2.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+          });
+          channel.port2.postMessage({ kind: "request", operation: "me", requestId: crypto.randomUUID() });
+          expect((await ready).status).toBe(200);
+          const epoch = testSeams.directorySessionEpoch;
+          const page = { schema: "semio.directory.event-page.v1", sessionBindingSha256: scenario === "foreign-binding" ? "b".repeat(64) : authority.sessionBindingSha256, authorizationGeneration: authority.authorizationGeneration + (scenario === "foreign-generation" ? 1 : 0), afterSeqExclusive: 0, throughSeqInclusive: 0, hasMore: false, events: [] };
+          const receiptSha256 = createHash("sha256").update(JSON.stringify(page)).digest("hex");
+          harness.bodies.push(JSON.stringify({ ...page, receiptSha256 }));
+          handleTsRequest({ kind: "directory-bootstrap-open", baseUrl: "http://hub.test", after: 0, bootstrapEpoch: 23 });
+          for (let turn = 0; !harness.posted.some((message: BackboneWorkerResponse) => message.kind === "directory-event-page" || message.kind === "directory-bootstrap-failed") && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+          const pages = harness.posted.filter((message: BackboneWorkerResponse) => message.kind === "directory-event-page");
+          if (scenario === "same-authority") {
+            expect(pages).toHaveLength(1);
+            expect(equal(testSeams.browserSessionAuthority, authority)).toBe(true);
+            expect(testSeams.directorySessionEpoch).toBe(epoch);
+            expect(artifactState(DOCUMENT, SPACE)).toBeDefined();
+          } else {
+            expect(pages).toHaveLength(0);
+            expect(testSeams.browserSessionAuthority).toBeNull();
+            expect(testSeams.directorySessionEpoch).toBe(epoch + 1);
+            expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
+            expect(harness.posted.some((message: BackboneWorkerResponse) => message.kind === "directory-bootstrap-failed" && message.code === "unauthorized" && !message.retryable)).toBe(true);
+          }
+          console.log(`[DEBUG] Directory bootstrap ${scenario} matched the authenticated authority before presentation`);
+        } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+      }
+    });
+
     it("retires unverified session responses without letting old bodies overwrite replacement authority", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
@@ -2324,7 +2710,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const value = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
       const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
       for (const scenario of retained.authorityRetirement) {
-        const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
         testSeams.attachLocalBrokerPort(channel.port1);
         const read = async (body: unknown): Promise<{ status: number; body: string }> => {
@@ -2380,7 +2766,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
       const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       const prior = new MessageChannel(), successor = new MessageChannel();
       const body = JSON.stringify(authority);
       let release: () => void = () => undefined;
@@ -2410,7 +2796,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       let release: () => void = () => undefined;
       try {
         harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
@@ -2429,7 +2815,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(equal(harness.requests.length, 1)).toBe(true);
         harness.bodies.push("{}");
         await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
-        expect(equal(harness.proofs, ["b".repeat(64), fixture.successorProof])).toBe(true);
+        expect(harness.proofs).toHaveLength(2);
+        expect(harness.proofs[0]).toMatch(/^[0-9a-f]{64}$/u);
+        expect(equal(harness.proofs[1], fixture.successorProof)).toBe(true);
         console.log("[DEBUG] replacement broker admission denied old queued work and preserved its fresh proof");
       } finally { release(); harness.release(); }
     });
@@ -2439,7 +2827,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
       for (const scenario of fixture.queuedRetirement) {
-        const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
         const epoch = testSeams.directorySessionEpoch;
         try {
           const operationEpoch = fixture.operationEpoch + 3;
@@ -2476,7 +2864,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("records a Cancel click as requested and reaches cancelled only on the server's own answer", async () => {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 4, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         harness.statuses.push(200);
@@ -2500,7 +2888,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("reports a stale base as a hard terminal that no later answer can move", async () => {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 5, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         harness.statuses.push(200);
@@ -2522,7 +2910,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("approves exactly the offered hash once and applies only on a committed receipt", async () => {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 6, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         harness.statuses.push(200);
@@ -2565,7 +2953,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       ];
       for (const [index, preview] of substituted.entries()) {
         const operationEpoch = 8 + index;
-        const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
         try {
           handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
           harness.statuses.push(200);
@@ -2586,7 +2974,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("maps a published route rejection onto the closed failure vocabulary", async () => {
-      const harness = inferenceHarness({ lease: "editor" });
+      const harness = await inferenceHarness({ lease: "editor" });
       try {
         handleTsRequest({ kind: "inference-open", operationEpoch: 7, scope: { spaceId: SPACE, documentId: DOCUMENT } });
         harness.statuses.push(503);
@@ -3031,7 +3419,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
       const { readFile } = await import("node:fs/promises");
-      return JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
+      return JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
     }
 
     function executionTargetBytes(hexText: string): Uint8Array {
@@ -3059,12 +3447,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       release: () => void;
     };
 
-    function executionTargetHarness(fixture: ExecutionTargetLeaseFixture, respond: (url: string, requests: { url: string; method: string; body: string }[]) => Response | Promise<Response>): ExecutionTargetHarness {
+    async function acceptCurrentTestBrowserSessionAuthority(proof: string): Promise<void> {
+      const authorityFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authority = authorityFixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+      const body = JSON.stringify(authority);
+      const priorFetch = globalThis.fetch;
+      clearLocalBrowserBrokerProof();
+      expect(installLocalBrowserBrokerProof(proof)).toBe(true);
+      globalThis.fetch = async () => new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength), "x-semio-browser-broker-advanced": "1" } });
+      try {
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, accept: testSeams.acceptBrowserSessionAuthority });
+      } finally {
+        globalThis.fetch = priorFetch;
+      }
+    }
+
+    async function executionTargetHarness(fixture: ExecutionTargetLeaseFixture, respond: (url: string, requests: { url: string; method: string; body: string }[]) => Response | Promise<Response>): Promise<ExecutionTargetHarness> {
       const requests: { url: string; method: string; body: string }[] = [];
       const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
       const originalFetch = globalThis.fetch;
       testSeams.socketGrantTestIssue = null;
       testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
+      await acceptCurrentTestBrowserSessionAuthority("a".repeat(64));
       openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
@@ -3075,8 +3479,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       state.config = { ...state.config, bindings: [binding] };
       state.runtimeKey = documentRuntimeKeyForConfig(state.config);
       artifacts.set(state.runtimeKey, state);
-      clearLocalBrowserBrokerProof();
-      installLocalBrowserBrokerProof("a".repeat(64));
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
         const url = String(input);
         requests.push({ url, method: String(init?.method ?? "GET"), body: String(init?.body ?? "") });
@@ -3256,7 +3658,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const descriptor = executionTargetBytes(fixture.descriptorHex);
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
       const grant = { ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 };
-      const harness = executionTargetHarness(fixture, (url) => {
+      const harness = await executionTargetHarness(fixture, (url) => {
         if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
         if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
         if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
@@ -3320,7 +3722,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             browserActor: { ...(manifest.browserActor as Record<string, unknown>), sourceDescriptorByteSha256: descriptorSha256 },
           };
         }
-        const harness = executionTargetHarness(fixture, (url, requests) => {
+        const harness = await executionTargetHarness(fixture, (url, requests) => {
           if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
           if (url.endsWith("/execution-target/manifest")) {
             if (vector.kind === "cancel" && vector.stage === "manifest") requests.length > 0 && harnessAbort();
@@ -3516,7 +3918,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             state.config = { ...state.config, bindings: [changedBinding] };
           }
         };
-        const harness = executionTargetHarness(fixture, (url) => {
+        const harness = await executionTargetHarness(fixture, (url) => {
           const headers: Record<string, string> = { "x-semio-browser-broker-advanced": "1" };
           const pendingStage = row.name.replace("-pending-abort", "");
           if (row.name.includes("-pending-abort") && url.endsWith("/" + pendingStage)) {
@@ -4025,8 +4427,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("browser document actor transfers one verified cold pair only after lifecycle ACK and exact page receipts", async () => {
       const fixture = await executionTargetLeaseFixture();
-      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", source.url), "utf8"));
-      const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const Ajv = (await import("ajv")).default;
       const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
       expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
@@ -4071,7 +4473,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { createBrowserActorUiIntentRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
       const { decodeBrowserActorHostEffectsV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
       const windowKindId = fixture.manifest.surface.windowKindId;
-      const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
+      const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧫️fixtures/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
       const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }] };
       const bodyKey = leaseBodyKey(guest);
       function leaseBodyKey(descriptor: Record<string, any>): string {
@@ -4340,6 +4742,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           this.port?.close();
         }
       }
+      clearLocalBrowserBrokerProof();
+      installLocalBrowserBrokerProof("d".repeat(64));
+      const authorityFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+      const authority = authorityFixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
+      const authorityBody = JSON.stringify(authority);
+      globalThis.fetch = async () => new Response(authorityBody, { status: 200, headers: { "content-length": String(new TextEncoder().encode(authorityBody).byteLength), "x-semio-browser-broker-advanced": "1" } });
+      await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+      const sessionFence = testSeams.captureBrowserSessionOperationFence();
+      expect(sessionFence).not.toBeNull();
+      globalThis.fetch = async (input) => {
+        expect(String(input).endsWith("/execution-target/browser-actor")).toBe(true);
+        return executionTargetBodyResponse(actorBytes);
+      };
       const documentId = "cold-browser-pair";
       openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
       const state = artifactState(documentId)!;
@@ -4434,12 +4849,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         });
       };
       (globalThis as unknown as { Worker: unknown }).Worker = ColdPairWorker;
-      clearLocalBrowserBrokerProof();
-      installLocalBrowserBrokerProof("d".repeat(64));
-      globalThis.fetch = async (input) => {
-        expect(String(input).endsWith("/execution-target/browser-actor")).toBe(true);
-        return executionTargetBodyResponse(actorBytes);
-      };
       let owner: VerifiedColdDocumentPair | null = null;
       let reservation: Awaited<ReturnType<typeof reserveDocumentBrowserActorChild>> = null;
       try {
@@ -4487,6 +4896,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           scope: { spaceId: binding.spaceId, documentId },
           abort: new AbortController(),
           sessionEpoch: testSeams.directorySessionEpoch,
+          sessionFence,
           clientInstanceId: state.openClientInstanceId,
           leaseFields: lease.fields(),
           request: null,
@@ -4690,8 +5100,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         reservation!.bindApprovalUndoIfMounted();
         const submittingOwner = testSeams.inferenceApprovalUndoOwner!;
         expect(submittingOwner.phase).toBe("available");
-        clearLocalBrowserBrokerProof();
-        expect(installLocalBrowserBrokerProof("e".repeat(64))).toBe(true);
         const answerUndo: { resolve: ((response: Response) => void) | null } = { resolve: null };
         globalThis.fetch = async (input) => {
           expect(String(input).endsWith("/inference/gis-map/approval-undos")).toBe(true);
@@ -4798,7 +5206,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const component = executionTargetBytes(fixture.componentHex);
       const descriptor = executionTargetBytes(fixture.descriptorHex);
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
-      const harness = executionTargetHarness(fixture, (url) => {
+      const harness = await executionTargetHarness(fixture, (url) => {
         if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
         if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
         if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
@@ -4841,14 +5249,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalFetch = globalThis.fetch;
       FakeHubWebSocket.instances = [];
       testSeams.socketGrantTestIssue = null;
-      openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
-      const state = artifactState(fixture.intent.scope.documentId)!;
-      state.openClientInstanceId = fixture.intent.clientInstanceId;
-      const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
-      artifacts.delete(state.runtimeKey);
-      state.config = { ...state.config, bindings: [binding] };
-      state.runtimeKey = documentRuntimeKeyForConfig(state.config);
-      artifacts.set(state.runtimeKey, state);
+      const openOwner = async (proof: string): Promise<Readonly<{ state: ArtifactState; binding: Extract<PersistenceBinding, { kind: "hub" }> }>> => {
+        await acceptCurrentTestBrowserSessionAuthority(proof);
+        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
+        const state = artifactState(fixture.intent.scope.documentId)!;
+        state.openClientInstanceId = fixture.intent.clientInstanceId;
+        const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
+        artifacts.delete(state.runtimeKey);
+        state.config = { ...state.config, bindings: [binding] };
+        state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+        artifacts.set(state.runtimeKey, state);
+        return { state, binding };
+      };
+      let { state, binding } = await openOwner("a".repeat(64));
       try {
         const rejection = <T>(promise: Promise<T>): Promise<Error> =>
           promise.then(
@@ -4879,8 +5292,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(mismatch.message).not.toContain(hostileReceipt);
         expect(effects).toBe(1);
 
-        clearLocalBrowserBrokerProof();
-        installLocalBrowserBrokerProof("b".repeat(64));
+        ({ state, binding } = await openOwner("b".repeat(64)));
         effects = 0;
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
@@ -4890,8 +5302,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(oversized.message).toBe("document open: invalid plan");
         expect(effects).toBe(1);
 
-        clearLocalBrowserBrokerProof();
-        installLocalBrowserBrokerProof("c".repeat(64));
+        ({ state, binding } = await openOwner("c".repeat(64)));
         effects = 0;
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;

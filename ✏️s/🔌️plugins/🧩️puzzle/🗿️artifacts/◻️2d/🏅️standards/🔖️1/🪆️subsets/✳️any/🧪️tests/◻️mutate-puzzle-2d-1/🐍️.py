@@ -473,7 +473,7 @@ def uri_in(ctx, needle):
     """🧫️ The one declared fixture URI of this scenario's steps containing `needle`."""
     for step in ctx.scenario["steps"]:
         for token in step["text"].split():
-            if token.startswith(("asset://", "local://", "shared://")) and needle in token:
+            if token.startswith(("asset://", "shared://")) and needle in token:
                 return token
     raise AssertionError("scenario %s declares no fixture URI containing %r" % (ctx.scenario["id"], needle))
 

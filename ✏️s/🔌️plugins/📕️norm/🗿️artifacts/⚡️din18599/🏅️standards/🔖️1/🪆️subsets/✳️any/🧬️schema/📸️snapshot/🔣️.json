@@ -22,55 +22,53 @@
   "properties": {
     "useClass": {
       "type": "string",
+      "enum": [
+        "Residential",
+        "Office",
+        "School"
+      ],
       "x-semio-state": "artifact"
     },
     "heatedAreaM2": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "occupants": {
       "type": "integer",
-      "format": "uint32",
+      "minimum": 0,
+      "maximum": 4294967295,
       "x-semio-state": "artifact"
     },
     "hT": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "hV": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "climate": {
-      "$ref": "#/$defs/Din18599MonthlyClimate",
+      "$ref": "https://semio.tech/schema/os/store/child.json",
       "x-semio-state": "artifact"
     },
     "internalGainsWM2": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "solarGainsKwh": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "systemLossesKwh": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "renewableKwh": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "annualLimitKwh": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
     "energyCarrier": {
@@ -79,7 +77,6 @@
     },
     "referenceQPKwh": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     }
   }

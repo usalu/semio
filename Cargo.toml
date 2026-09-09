@@ -186,7 +186,7 @@ members = [
     "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🧪️testkit/⚖️scale/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
@@ -358,7 +358,7 @@ semio-s-artifact-stdio-epw = { path = "✏️s/🔌️plugins/🗄️stdio/🗿�
 semio-s-artifact-stdio-tsv = { path = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-html = { path = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust" }
 semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
-semio-framework-os-scale-fixture = { path = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust" }
+semio-framework-os-scale-fixture = { path = "🧰️framework/🛍️products/💻️os/🧪️testkit/⚖️scale/📦️packages/🦀️rust" }
 semio-framework-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
 # explicit requirement string already used somewhere in the 630 manifests (matches what

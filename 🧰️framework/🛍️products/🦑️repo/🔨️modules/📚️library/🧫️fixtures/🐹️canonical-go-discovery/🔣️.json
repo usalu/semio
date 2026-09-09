@@ -1,0 +1,43 @@
+{
+  "contract": "canonical-go-test-discovery-v1",
+  "layout": {
+    "testsDirectory": "🧪️tests",
+    "implementationFilename": "🐹️.go",
+    "opaqueDirectoryNames": ["🧫️fixtures"]
+  },
+  "module": "example.com/semio/canonical-go-tests",
+  "cases": [
+    {
+      "owner": ".",
+      "case": "🧮️private-addition",
+      "package": "proof",
+      "production": "func add(left, right int) int { return left + right }",
+      "test": "func TestPrivateAddition(t *testing.T) { if add(2, 3) != 5 { t.Fatal(\"addition\") } }"
+    },
+    {
+      "owner": "internal/text",
+      "case": "🔠️private-uppercase",
+      "package": "text",
+      "production": "func upper(value string) string { return strings.ToUpper(value) }",
+      "productionImports": ["strings"],
+      "test": "func TestPrivateUppercase(t *testing.T) { if upper(\"go\") != \"GO\" { t.Fatal(\"uppercase\") } }"
+    }
+  ],
+  "opaqueCases": [
+    {
+      "owner": "🧫️fixtures/opaque-go-repository",
+      "case": "🧪️must-not-run",
+      "package": "fixture",
+      "production": "func fixtureValue() int { return 1 }",
+      "test": "func TestFixtureMustStayOpaque(t *testing.T) { t.Fatal(\"fixture repository executed\") }"
+    }
+  ],
+  "expectedPackages": [
+    ".",
+    "./internal/text"
+  ],
+  "expectedTests": [
+    "TestPrivateAddition",
+    "TestPrivateUppercase"
+  ]
+}

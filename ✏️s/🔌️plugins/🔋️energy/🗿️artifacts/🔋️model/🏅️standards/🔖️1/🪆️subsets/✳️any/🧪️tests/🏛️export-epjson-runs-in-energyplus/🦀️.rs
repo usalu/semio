@@ -50,7 +50,7 @@ mod subject {
     const ROUTE_SCHEMA: &str = "semio.energy.epjson-route/1";
 
     fn model_asset(case: &str) -> String {
-        format!("asset://🧫️fixtures/🏛️bestest-{case}/🔋️model.json")
+        format!("shared://🏛️bestest-{case}/🔋️model.json")
     }
 
     /// 📥️ The committed case model, or an error naming exactly what is absent.

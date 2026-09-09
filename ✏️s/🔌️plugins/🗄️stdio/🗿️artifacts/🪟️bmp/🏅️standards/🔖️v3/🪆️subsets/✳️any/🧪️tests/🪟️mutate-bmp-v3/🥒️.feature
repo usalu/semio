@@ -5,7 +5,7 @@
 Feature: Apply every typed BMP v3 mutation to a real-world document
   The input is a real 2334x2560, 8-bit indexed architectural floor plan (rathaus-ahlen-grundriss),
   not a synthetic gradient. It is derived ONCE from
-  🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.png (PNG IHDR
+  🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png (PNG IHDR
   color type 3/PLTE indexed, 233-entry palette): the independent `png` 0.18 decoder recovers its
   genuine index buffer and palette table, and the `image` 0.25 reference encoder's palette-aware
   `BmpEncoder::encode_with_palette` writes them back as an 8-bit indexed BITMAPINFOHEADER BMP v3 —

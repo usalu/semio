@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 /** 🧪️ Compares native component optimization with Binaryen's independent JavaScript distribution. */
 export async function testPluginCoreOptimization(workspace: string, output: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), require = createRequire(import.meta.url);
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕸️native-optimization/🔣️.json"), "utf8")), require = createRequire(import.meta.url);
   const { optimizePluginCoreModulesAsync } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
   mkdirSync(output, { recursive: true }); const root = mkdtempSync(join(output, "component-optimizer-"));
   try {

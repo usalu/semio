@@ -5,7 +5,7 @@ export type InferencePortClosedV1 = InferencePortOpeningOwnerV1 & { readonly kin
 export type InferencePortOpeningResultV1 = InferencePortOpeningOwnerV1 & {
   readonly kind: "inference-port-opened";
   readonly outcome: "opened" | "refused" | "indeterminate";
-  readonly code: null | "inference.capacity" | "inference.invalid" | "inference.lease-unverified" | "inference.transport";
+  readonly code: null | "inference.capacity" | "inference.denied" | "inference.invalid" | "inference.lease-unverified" | "inference.transport";
 };
 
 function exact(value: unknown, fields: readonly string[]): Readonly<Record<string, unknown>> {
@@ -44,7 +44,7 @@ export function parseInferencePortClosedV1(value: unknown): InferencePortClosedV
 export function parseInferencePortOpeningResultV1(value: unknown): InferencePortOpeningResultV1 {
   const record = exact(value, ["kind", "operationEpoch", "scope", "outcome", "code"]);
   if (record.kind !== "inference-port-opened" || (record.outcome !== "opened" && record.outcome !== "refused" && record.outcome !== "indeterminate")) throw new Error("inference-opening: invalid disposition");
-  const codes: Readonly<Record<InferencePortOpeningResultV1["outcome"], readonly unknown[]>> = { opened: [null], refused: ["inference.capacity", "inference.invalid", "inference.lease-unverified"], indeterminate: ["inference.transport"] };
+  const codes: Readonly<Record<InferencePortOpeningResultV1["outcome"], readonly unknown[]>> = { opened: [null], refused: ["inference.capacity", "inference.denied", "inference.invalid", "inference.lease-unverified"], indeterminate: ["inference.transport"] };
   if (!codes[record.outcome].includes(record.code)) throw new Error("inference-opening: invalid code");
   return { kind: "inference-port-opened", ...owner(record), outcome: record.outcome, code: record.code as InferencePortOpeningResultV1["code"] };
 }

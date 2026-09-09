@@ -6,17 +6,17 @@ import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
 import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import optionsFixture from "./☑️options.json";
-import optionsOracle from "./🛂️schema/☑️options.json";
+import optionsFixture from "../../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json";
+import optionsOracle from "../../🧬️schema/🫙️artifact-empty-facet-authority/☑️options.json";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
-const goldenPath = join(libraryRoot, "📦️packages/🟦️typescript/🧫️fixtures/🫙️artifact-empty-facet-authority/🔣️.json");
+const goldenPath = join(libraryRoot, "🧫️fixtures/🫙️artifact-empty-facet-authority/🔣️.json");
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString()) as Readonly<{
   schemaVersion: number; contractId: string; sourceRoot: string; sourceFilename: string; destinationFilename: string;
   cases: readonly Readonly<{ id: string; owner: string; form: string | null; root?: string; filename?: string; fileKindId?: string }>[];
 }>;
-const oracleBytes = readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8");
+const oracleBytes = readFileSync(join(import.meta.dir, "../../🧬️schema/🫙️artifact-empty-facet-authority/🔣️.json"), "utf8");
 const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
@@ -53,7 +53,7 @@ test("retains the original nineteen-case empty-facet input with independent JSON
 test("current-options facets require their registered identity and complete owner chain", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(optionsOracle);
   const errors: ParseError[] = [];
-  expect(parse(readFileSync(join(import.meta.dir, "☑️options.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(optionsFixture);
+  expect(parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(optionsFixture);
   expect(errors).toEqual([]);
   expect(new Set(optionsFixture.cases.map((row) => row.id)).size).toBe(8);
   const implementations = [semanticArtifactEmptyFacetProjectionAuthority, ...independentlyCompiledAuthorities()];
@@ -93,8 +93,8 @@ test("keeps exact structural ownership distinct from a basename-only match", () 
 });
 
 test("registers the empty-facet authority through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../🫙️artifact-empty-facet-authority/🛂️schema/🔣️.json"), "utf8")));
+  const directory = join(import.meta.dir, "../../🧫️fixtures/🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🫙️artifact-empty-facet-authority/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, source: "../🫙️artifact-empty-facet-authority/🟦️.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

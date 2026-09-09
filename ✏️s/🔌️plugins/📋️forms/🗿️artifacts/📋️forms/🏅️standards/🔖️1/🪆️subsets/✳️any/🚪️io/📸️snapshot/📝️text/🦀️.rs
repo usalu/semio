@@ -133,7 +133,7 @@ impl store::ArtifactDsl for FormsSnapshot {
 //#endregion 🔖️HandcraftedArtifactDsl
 
 /// 📄️ The building-component fixture, handcrafted in the `.forms` DSL.
-pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📄️ The `default` (Contact) fixture — a minimal single-step form, handcrafted in the shared
 /// `playbook` kernel's own step/block DSL grammar (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM:

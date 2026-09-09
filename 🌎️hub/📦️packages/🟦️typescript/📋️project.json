@@ -2,48 +2,55 @@
   "name": "os-hub-ts",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs"
+    ]
   },
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-long": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "dependsOn": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

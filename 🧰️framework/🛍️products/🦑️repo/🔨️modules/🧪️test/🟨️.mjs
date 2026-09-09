@@ -77,7 +77,6 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
   const featureFilename = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
   const inputs = [
     `{workspaceRoot}/${caseRel}/${featureFilename}`,
-    `{workspaceRoot}/${caseRel}/${vocabulary.testFixturesDirName}/**/*`,
     ...(existsSync(join(workspaceRoot, sharedFixtures)) ? [`{workspaceRoot}/${sharedFixtures}/**/*`] : []),
     ...adapters.map((adapter) => `{workspaceRoot}/${adapter}`),
     `{workspaceRoot}/${locationPath(vocabulary, vocabulary.testOracleRegistryLocation)}`,
@@ -90,8 +89,8 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     "sharedGlobals",
   ];
   // 🧭️ A change to the owner's own sources must invalidate the case, or a subject regression would
-  // be served from cache as a pass. Fixture directories are excluded here because the two globs
-  // above already cover them: a real-world fixture is megabytes, and Nx hashes file CONTENT, so
+  // be served from cache as a pass. Fixture directories are excluded here because the owner fixture glob
+  // above already covers them: a real-world fixture is megabytes, and Nx hashes file CONTENT, so
   // counting it twice per target doubles the hashing cost of every case that owns one.
   inputs.push(`{workspaceRoot}/${ownerRel}/**/*`);
   inputs.push(`!{workspaceRoot}/${ownerRel}/**/${vocabulary.testFixturesDirName}/**/*`);

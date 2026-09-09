@@ -3,8 +3,8 @@ export function createPluginRunnerTests(dependencies: Record<string, any>, sourc
 
   /** 🧪️ Pins exact forwarding against the neutral fixture and Node's independent separator parser. */
   function pluginTestRunnerSelfTests(): number {
-    const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧪️fixture/🔣️.json", source.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧬️schema/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🏃️runner/🔣️.json", source.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🏃️runner/🔣️.json", source.url), "utf8"));
     const runnerAjv = new Ajv({ strict: true, allErrors: true });
     runnerAjv.addSchema(schema);
     const validate = runnerAjv.getSchema(`${schema.$id}#/$defs/TestRunnerForwardingV1`)!;

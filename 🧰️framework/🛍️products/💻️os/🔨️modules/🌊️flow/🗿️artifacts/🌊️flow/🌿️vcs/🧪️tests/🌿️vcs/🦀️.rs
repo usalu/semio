@@ -4,7 +4,7 @@ use crate::os_spr::{Mutation, MutationLeaf, OpBinary, OpText};
 use crate::os_dsl::{DslValue, FromValue, ToValue};
 
 //#region 🧪️FixtureOwnership
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).expect("neutral Flow cases") }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
 fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
@@ -272,7 +272,7 @@ fn actual_nested_first_party_shapes() {
 
 #[test]
 fn diff_json_contract_matches_third_party_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔺️diff/🧪️tests/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔺️diff/🧫️fixtures/🔣️.json")).unwrap();
     for row in vectors["valid"].as_array().unwrap() {
         let diff = FlowDiff::from_value(DslValue::from(&row["value"])).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
         assert_eq!(third_party_json(&diff), row["value"]);

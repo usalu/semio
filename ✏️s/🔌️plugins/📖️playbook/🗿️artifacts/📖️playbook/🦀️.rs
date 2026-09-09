@@ -504,7 +504,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🧪️tests/🧩️rejects-moving-a-6803e6/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🧪️tests/🧪️rejects-moving-a-block-into-a-missing-step/🦀️.rs"]
                             mod tests_rejects_moving_a_block_into_a_missing_step;
                         }
                         #[path = "."]
@@ -517,7 +517,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🧪️tests/🚪️no-ops-when-the-6b416f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🧪️tests/🧪️no-ops-when-the-step-is-already-at-that-index/🦀️.rs"]
                             mod tests_no_ops_when_the_step_is_already_at_that_index;
                         }
                         #[path = "."]
@@ -530,7 +530,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🧪️tests/🧩️rejects-adding-a-c362ef/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🧪️tests/🧪️rejects-adding-a-block-to-a-missing-step/🦀️.rs"]
                             mod tests_rejects_adding_a_block_to_a_missing_step;
                         }
                         #[path = "."]
@@ -543,7 +543,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🧪️tests/📋️no-ops-on-a-ed3a7d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🧪️tests/🧪️no-ops-on-a-duplicate-step-id/🦀️.rs"]
                             mod tests_no_ops_on_a_duplicate_step_id;
                         }
                         #[path = "."]
@@ -556,7 +556,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🧪️tests/🧩️rejects-removing-9847b3/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🧪️tests/🧪️rejects-removing-a-block-missing-from-its-step/🦀️.rs"]
                             mod tests_rejects_removing_a_block_missing_from_its_step;
                         }
                         #[path = "."]
@@ -569,7 +569,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🧪️tests/🚫️rejects-removing-2c29fb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🧪️tests/🧪️rejects-removing-a-missing-step/🦀️.rs"]
                             mod tests_rejects_removing_a_missing_step;
                         }
                         #[path = "."]
@@ -582,7 +582,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🧪️tests/🔀️changes-the-3364ef/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🧪️tests/🧪️changes-the-playbook-title/🦀️.rs"]
                             mod tests_changes_the_playbook_title;
                         }
                         #[path = "."]
@@ -595,7 +595,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🧪️tests/🧩️no-ops-when-the-2296e7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🧪️tests/🧪️no-ops-when-the-block-is-already-identical/🦀️.rs"]
                             mod tests_no_ops_when_the_block_is_already_identical;
                         }
                         #[path = "."]
@@ -608,7 +608,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🧪️tests/📖️no-ops-when-the-05f86d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🧪️tests/🧪️no-ops-when-the-header-is-already-current/🦀️.rs"]
                             mod tests_no_ops_when_the_header_is_already_current;
                         }
                     }

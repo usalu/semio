@@ -15,10 +15,10 @@ use crate::schema::mutations::move_scene_root_node;
 use crate::GltfSnapshot;
 
 const CASE: &str = "move-scene-root-node/refuses-to-move-a-node-that-is-not-a-root-of-the-scene";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🚚️move/🛑️refuses-to-move-ba235e/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🚚️move/🛑️refuses-to-move-ba235e/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🚚️move/🛑️refuses-to-move-ba235e/🧬️operation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🚚️move/🛑️refuses-to-move-ba235e/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

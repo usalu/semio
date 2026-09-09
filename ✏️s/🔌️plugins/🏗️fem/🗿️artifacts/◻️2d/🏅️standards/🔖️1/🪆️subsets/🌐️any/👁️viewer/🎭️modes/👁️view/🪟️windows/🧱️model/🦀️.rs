@@ -103,7 +103,7 @@ pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<B
         }));
     }
     let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 //#endregion 🔖️Render
 

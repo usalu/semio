@@ -8,8 +8,6 @@ export interface WiresSnapshot {
   /** @state artifact */
   content: ArtifactChild;
   /** @state artifact */
-  camera: DslValue;
-  /** @state artifact */
   meta: DslValue;
 }
 
@@ -17,9 +15,9 @@ export interface WiresSnapshot {
 export function parseWiresSnapshot(value: unknown, at = "$" ): WiresSnapshot {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: document must be an object`);
   const row = value as Record<string, unknown>;
-  const keys = ["wiresFixture", "content", "camera", "meta"];
+  const keys = ["wiresFixture", "content", "meta"];
   if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: document fields do not match its schema`);
-  return { wiresFixture: parseDslValue(row.wiresFixture), content: parseArtifactChild(row.content), camera: parseDslValue(row.camera), meta: parseDslValue(row.meta) };
+  return { wiresFixture: parseDslValue(row.wiresFixture), content: parseArtifactChild(row.content), meta: parseDslValue(row.meta) };
 }
 
 export interface WiresStringList { values: string[] }

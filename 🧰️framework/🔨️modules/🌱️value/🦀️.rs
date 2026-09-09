@@ -109,6 +109,15 @@ pub enum DslValue {
     Object(Vec<(String, DslValue)>),
 }
 
+/// 🪪️ Immutable framework value selected from one retained domain owner.
+pub trait DslValueSource {
+    fn value(&self) -> &DslValue;
+}
+
+impl DslValueSource for std::sync::Arc<DslValue> {
+    fn value(&self) -> &DslValue { self.as_ref() }
+}
+
 impl DslValue {
     pub fn null() -> Self {
         Self::Null

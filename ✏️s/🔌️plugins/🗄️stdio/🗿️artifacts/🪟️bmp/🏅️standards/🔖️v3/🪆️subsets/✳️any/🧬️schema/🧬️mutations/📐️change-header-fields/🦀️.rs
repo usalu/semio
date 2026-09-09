@@ -84,7 +84,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ChangeHeaderFieldsMuta
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header-fields payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-header-fields/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header-fields payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

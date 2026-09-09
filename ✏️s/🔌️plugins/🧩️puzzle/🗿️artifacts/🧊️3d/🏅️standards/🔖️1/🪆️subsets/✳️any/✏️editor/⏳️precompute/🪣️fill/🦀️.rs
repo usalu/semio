@@ -6,20 +6,20 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is interactive fill-tool session state,
 //! so it lives with the app, not the artifact.
 
-use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, Fixture, FixtureObject, KindCompatEntry, ObjectKind, SceneConfig,
-    VortexKindCatalog, VortexProps, WorldVolumeProps,
-};
 use crate::editor::puzzle3d::precompute::brush::{
     brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
-    CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec, Pose3d,
-    DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
+    CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
+    Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::editor::puzzle3d::precompute::FILL_COUNT_MAX;
+use crate::standards::v1::subsets::any::schema::{
+    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, Fixture, FixtureObject, KindCompatEntry, ObjectKind, SceneConfig,
+    VortexKindCatalog, VortexProps, WorldVolumeProps,
+};
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -244,6 +244,13 @@ impl std::fmt::Write for FillPreviewJsonUnit {
     }
 }
 
+struct FillPreviewQuotedField {
+    prefix: &'static [u8],
+    source: FillPreviewString,
+    optional: bool,
+    advance: bool,
+}
+
 fn preview_json_float(unit: &mut FillPreviewJsonUnit, value: f64) -> Result<(), ()> {
     if !value.is_finite() {
         return Err(());
@@ -310,7 +317,8 @@ impl FillPreviewJsonPass {
         }
     }
 
-    fn quoted(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, prefix: &'static [u8], source: FillPreviewString, optional: bool, advance: bool) -> Result<FillPreviewJsonUnit, ()> {
+    fn quoted(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, field: FillPreviewQuotedField) -> Result<FillPreviewJsonUnit, ()> {
+        let FillPreviewQuotedField { prefix, source, optional, advance } = field;
         let value = self.string(preview, color, status_label, source);
         match self.string_phase {
             0 => {
@@ -359,14 +367,14 @@ impl FillPreviewJsonPass {
                 self.subfield = 1;
                 FillPreviewJsonUnit::bytes(b",\"candidateGhost\":{")
             }
-            1 => self.quoted(preview, color, status_label, b"\"targetVortexFullId\":", FillPreviewString::GhostTarget, false, false),
-            2 => self.quoted(preview, color, status_label, b",\"objectKindId\":", FillPreviewString::GhostKind, false, false),
+            1 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::GhostTarget, optional: false, advance: false }),
+            2 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::GhostKind, optional: false, advance: false }),
             3 => {
                 self.subfield = 4;
                 let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.candidate_ghost;
                 FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))
             }
-            4 => self.quoted(preview, color, status_label, b",\"meshUrl\":", FillPreviewString::GhostMesh, false, false),
+            4 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::GhostMesh, optional: false, advance: false }),
             5 => {
                 self.subfield = 6;
                 preview_json_vec3(",\"origin\":", ghost.origin)
@@ -397,7 +405,7 @@ impl FillPreviewJsonPass {
         }
         let prefix = if self.item == 0 { b"".as_slice() } else { b",".as_slice() };
         let item = self.item;
-        let unit = self.quoted(preview, color, status_label, prefix, FillPreviewString::CandidatePage(item), true, false)?;
+        let unit = self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix, source: FillPreviewString::CandidatePage(item), optional: true, advance: false })?;
         if self.string_phase == 0 {
             self.item += 1;
         }
@@ -411,14 +419,14 @@ impl FillPreviewJsonPass {
                 self.field = if ghost.is_some() { 1 } else { 9 };
                 FillPreviewJsonUnit::bytes(b"{")?
             }
-            1 => self.quoted(preview, color, status_label, b"\"targetVortexFullId\":", FillPreviewString::RootTarget, false, true)?,
-            2 => self.quoted(preview, color, status_label, b",\"objectKindId\":", FillPreviewString::RootKind, false, true)?,
+            1 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::RootTarget, optional: false, advance: true })?,
+            2 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::RootKind, optional: false, advance: true })?,
             3 => {
                 self.advance_field();
                 let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.root;
                 FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))?
             }
-            4 => self.quoted(preview, color, status_label, b",\"meshUrl\":", FillPreviewString::RootMesh, false, true)?,
+            4 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::RootMesh, optional: false, advance: true })?,
             5 => {
                 self.advance_field();
                 preview_json_vec3(",\"origin\":", ghost.ok_or(())?.origin)?
@@ -427,7 +435,7 @@ impl FillPreviewJsonPass {
                 self.advance_field();
                 preview_json_quat(",\"orientation\":", ghost.ok_or(())?.orientation)?
             }
-            7 => self.quoted(preview, color, status_label, b",\"color\":", FillPreviewString::Color, false, true)?,
+            7 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"color\":", source: FillPreviewString::Color, optional: false, advance: true })?,
             8 => {
                 self.advance_field();
                 FillPreviewJsonUnit::bytes(b",\"opacity\":0.35")?
@@ -456,12 +464,12 @@ impl FillPreviewJsonPass {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"generation\":{}", preview.generation))?
             }
-            15 => self.quoted(preview, color, status_label, b",\"stage\":", FillPreviewString::Stage, false, true)?,
-            16 => self.quoted(preview, color, status_label, b",\"statusLabel\":", FillPreviewString::StatusLabel, false, true)?,
-            17 => self.quoted(preview, color, status_label, b",\"targetVortexFullId\":", FillPreviewString::Target, true, true)?,
-            18 => self.quoted(preview, color, status_label, b",\"candidateObjectKindId\":", FillPreviewString::Candidate, true, true)?,
+            15 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stage\":", source: FillPreviewString::Stage, optional: false, advance: true })?,
+            16 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"statusLabel\":", source: FillPreviewString::StatusLabel, optional: false, advance: true })?,
+            17 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"targetVortexFullId\":", source: FillPreviewString::Target, optional: true, advance: true })?,
+            18 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"candidateObjectKindId\":", source: FillPreviewString::Candidate, optional: true, advance: true })?,
             19 => self.candidate_ghost(preview, color, status_label)?,
-            20 => self.quoted(preview, color, status_label, b",\"currentPairObjectId\":", FillPreviewString::CurrentPair, true, true)?,
+            20 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"currentPairObjectId\":", source: FillPreviewString::CurrentPair, optional: true, advance: true })?,
             21 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"collisionCount\":{}", preview.collision_count))?
@@ -486,7 +494,7 @@ impl FillPreviewJsonPass {
                 self.advance_field();
                 FillPreviewJsonUnit::bytes(if preview.truncated { b",\"truncated\":true" } else { b",\"truncated\":false" })?
             }
-            27 => self.quoted(preview, color, status_label, b",\"rejectionReason\":", FillPreviewString::Rejection, true, true)?,
+            27 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"rejectionReason\":", source: FillPreviewString::Rejection, optional: true, advance: true })?,
             28 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"targetCursor\":{}", preview.target_cursor))?
@@ -858,6 +866,7 @@ fn weighted_pick(weights: &mut [f64], tree: &mut [f64], remaining: usize, rng_st
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FillJobStage {
+    DiscardTail,
     PrepareFixture,
     PrepareCatalogs,
     PrepareMeshes,
@@ -1057,6 +1066,9 @@ pub(crate) struct FillBuilder {
     preparation_cursor: usize,
     preparation_inner_cursor: usize,
     preparation_spatial: Option<CollisionIndexMutation>,
+    /// 🎚️ Live withdrawal of ONE unapplied placement during a weight-only replan — the same
+    /// resumable index mutation shape as `preparation_spatial`, so the discard never scans.
+    tail_removal: Option<CollisionIndexRemoval>,
     preparation_capacity_refusal: Option<PreparationCapacityRefusal>,
     pub(crate) applied_count: usize,
     pub(crate) sequence: Vec<BrushPlacePayload>,
@@ -1130,7 +1142,7 @@ pub(crate) struct FillBuilder {
     last_rejection: Option<String>,
     fixed_rejection: Option<FillRetiredOwner>,
     collection_over_capacity: bool,
-    transition_count: u64,
+    pub(crate) transition_count: u64,
     rejected_count: u64,
     close_field: u8,
     close_current: Option<FillRetiredOwner>,
@@ -1194,7 +1206,6 @@ pub(crate) struct FillBuilderOwnerCensusCursor {
     spatial: CollisionIndexOwnerCensusCursor,
     credit: FillBuilderOwnerCredit,
 }
-
 
 #[derive(Clone, Copy)]
 enum FillOwnerCensusUnit {
@@ -2812,9 +2823,7 @@ impl FillBuilderRetirementCursor {
                 None => false,
             },
             21 => retire_fixed_collection_backing(fill),
-            22 => {
-                !fill.spatial_index.retire_one_owner()
-            }
+            22 => !fill.spatial_index.retire_one_owner(),
             23 if fill.collection_over_capacity => {
                 fill.collection_over_capacity = false;
                 true
@@ -2838,10 +2847,19 @@ impl FillBuilderRetirementCursor {
                 }
                 None => false,
             },
-            26 if fill.preparation_roots.take().is_some() => true,
-            26 => false,
-            27 if fill.preparation_capacity_refusal.take().is_some() => true,
+            26 => match fill.tail_removal.as_mut() {
+                Some(removal) => {
+                    if removal.retire_one_owner() {
+                        fill.tail_removal.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            27 if fill.preparation_roots.take().is_some() => true,
             27 => false,
+            28 if fill.preparation_capacity_refusal.take().is_some() => true,
+            28 => false,
             _ => {
                 if !fill.terminal_owners_empty() {
                     return false;
@@ -2970,6 +2988,7 @@ impl FillBuilder {
             && self.pending_attraction.is_none()
             && self.pending_spatial.is_none()
             && self.preparation_spatial.is_none()
+            && self.tail_removal.is_none()
             && self.preparation_roots.is_none()
             && self.preparation_capacity_refusal.is_none()
             && self.last_rejection.is_none()
@@ -2999,6 +3018,7 @@ impl FillBuilder {
             preparation_cursor: 0,
             preparation_inner_cursor: 0,
             preparation_spatial: None,
+            tail_removal: None,
             preparation_capacity_refusal,
             applied_count: 0,
             sequence: Vec::new(),
@@ -3098,6 +3118,16 @@ impl FillBuilder {
             close_field: 0,
             close_current: None,
             closing: false,
+        }
+    }
+
+    /// 🧊️ Fixture the fill projection layers its applied prefix on. Until preparation releases them,
+    /// the authority is the still-owned preparation roots — the fixed `base` page is only partially
+    /// copied, and projecting from it would hand the document a fixture with its own objects missing.
+    pub(crate) fn base_fixture(&self) -> Fixture {
+        match self.preparation_roots.as_ref() {
+            Some(roots) => roots.scene.fixture.clone(),
+            None => self.base.snapshot(),
         }
     }
 
@@ -3216,10 +3246,19 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            26 if self.preparation_roots.take().is_some() => true,
-            26 => false,
-            27 if self.preparation_capacity_refusal.take().is_some() => true,
+            26 => match self.tail_removal.as_mut() {
+                Some(removal) => {
+                    if removal.retire_one_owner() {
+                        self.tail_removal.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            27 if self.preparation_roots.take().is_some() => true,
             27 => false,
+            28 if self.preparation_capacity_refusal.take().is_some() => true,
+            28 => false,
             _ => return self.terminal_owners_empty() && self.close_current.is_none(),
         };
         self.close_current = current;
@@ -3243,6 +3282,71 @@ impl FillBuilder {
 
     fn fixture_view(&self) -> FillFixtureView<'_> {
         FillFixtureView { base: &self.base, appended: &self.appended_objects }
+    }
+
+    /// 🎚️ Weight-only replan: the applied prefix, the prepared base/catalog/mesh pages and the
+    /// spatial index all stay; only the unapplied planning tail is withdrawn — one placement per
+    /// turn through [`FillJobStage::DiscardTail`] — before the planner rewinds to target selection
+    /// under the new distribution. Rebuilding the whole builder instead is what dropped every
+    /// already-applied fill object the moment a distribution slider moved.
+    pub(crate) fn begin_soft_replan(&mut self, object_weights: &std::collections::BTreeMap<String, f64>, vortex_weights: &std::collections::BTreeMap<String, f64>) {
+        self.weights = RetainedBrushKindWeights::new();
+        for (id, weight) in object_weights {
+            let _ = self.weights.object_weights.try_insert(id.clone(), *weight);
+        }
+        for (id, weight) in vortex_weights {
+            let _ = self.weights.vortex_weights.try_insert(id.clone(), *weight);
+        }
+        self.applied_count = self.applied_count.min(self.sequence.len());
+        self.stalled = false;
+        self.last_rejection = None;
+        self.preview.rejection_reason = None;
+        self.stage = FillJobStage::DiscardTail;
+    }
+
+    /// ♻️ One unapplied placement per turn: withdraw its spatial owner, drop its lookup and placement
+    /// rows, then pop the plan row itself. Reaching the applied prefix rewinds the planner.
+    fn discard_tail_one(&mut self) {
+        let owner = self.collision_owner();
+        if let Some(removal) = self.tail_removal.as_mut() {
+            match self.spatial_index.step_removal(removal, owner) {
+                CollisionMutationStep::Pending => {}
+                CollisionMutationStep::Complete => self.tail_removal = None,
+                CollisionMutationStep::Rejected(rejected) => {
+                    self.fixed_rejection = Some(FillRetiredOwner::Spatial(rejected));
+                    self.collection_over_capacity = true;
+                }
+                CollisionMutationStep::Stale => self.stalled = true,
+            }
+            return;
+        }
+        if self.appended_objects.len() <= self.applied_count {
+            self.targets.clear();
+            self.target_cursor = 0;
+            self.target_rotation = 0;
+            self.target_prepare_phase = TargetPreparePhase::Reset;
+            self.reset_candidate_preparation();
+            self.reset_candidate();
+            self.reset_collision(true);
+            self.reset_acceptance();
+            self.preview.accepted_count = self.sequence.len();
+            self.stage = FillJobStage::PrepareTargets;
+            return;
+        }
+        let Some(object) = self.appended_objects.pop() else {
+            self.stage = FillJobStage::PrepareTargets;
+            return;
+        };
+        self.sequence.pop();
+        self.appended_attractions.pop();
+        if let Some((id, index)) = self.placed_lookup.remove_entry(object.id.as_str()) {
+            if index + 1 == self.placed.len() {
+                self.placed.pop();
+            }
+            drop(id);
+        }
+        self.tail_removal = self.spatial_index.begin_removal(owner, object.id.clone());
+        drop(object);
     }
 
     pub(crate) fn prepare_one(&mut self) {
@@ -4144,6 +4248,7 @@ impl FillBuilder {
 
     fn stage_label(&self) -> &'static str {
         match self.stage {
+            FillJobStage::DiscardTail => "discard-tail",
             FillJobStage::PrepareFixture => "prepare-fixture",
             FillJobStage::PrepareCatalogs => "prepare-catalogs",
             FillJobStage::PrepareMeshes => "prepare-meshes",
@@ -4193,6 +4298,10 @@ impl InteractiveJob for FillBuilder {
         context.set_stage(self.stage_label());
         let stage = self.stage;
         let outcome = match stage {
+            FillJobStage::DiscardTail => {
+                self.discard_tail_one();
+                None
+            }
             FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
                 self.prepare_one();
                 None
@@ -4235,7 +4344,8 @@ impl InteractiveJob for FillBuilder {
         if stage == self.stage
             && matches!(
                 stage,
-                FillJobStage::PrepareFixture
+                FillJobStage::DiscardTail
+                    | FillJobStage::PrepareFixture
                     | FillJobStage::PrepareCatalogs
                     | FillJobStage::PrepareMeshes
                     | FillJobStage::PrepareEntries

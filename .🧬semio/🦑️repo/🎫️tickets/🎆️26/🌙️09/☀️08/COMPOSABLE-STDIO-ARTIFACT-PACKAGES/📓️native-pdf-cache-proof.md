@@ -99,3 +99,29 @@ The coordinator refreshed the full production-root oracle against the ordinary p
 Invocation6 terminated with exact exit1 during the disk-full event. Native fingerprint writes, Nx SQLite and the private `run.json` write reported filesystem exhaustion; no current success/cache receipt is accepted. A fresh full filename/size/SHA-256 inventory proved the published PDF output remains exactly equal to invocation4 (200 files). The process audit found no surviving PDF-owned Cargo/Bun build; unrelated broad clippy commands mention PDF among their package selections and were preserved.
 
 Invocation7 uses the same private cache/workspace and warmed Cargo target, with jobs2 and incremental compilation disabled. Raw output is `pdf-native-cache-7-resource-recovery.txt`. No PDF or JPG source marker and no output move has been performed. The acceptance sequence remains successful current publication, unchanged local hit, exact restoration, own-source invalidation, unrelated-JPG reuse and restored-output-only consumer execution.
+
+## Population 7 Recovered Terminal Evidence
+
+After the usage interruption, every prior process handle was missing and a fresh full process inventory showed no surviving native build. The completed PDF raw log reports successful native compilation and staging of 199 deliverables; its private completed `run.json` confirms all four tasks status0. PDF task hash is `7195935323700449431`, cache-miss; ordinary Nx elapsed40m18s including queue. The captured current owner-checked inventory has 200 files including marker, totaling575,334,356 bytes. Receipts: `pdf-native-cache-7-run.json`, `pdf-native-baseline-7-inventory.json`.
+
+Invocation8 repeats the ordinary target on current sources in the same private cache/workspace. Because shared source changes continued during population7, it must establish current reuse before source-mutation tests. No source marker/output move has yet occurred.
+
+## Population 8 And Shared Helper Baseline
+
+Invocation8 completed with exact exit0, Cargo5m36 and ordinary Nx5m40, including queue. All four targets passed with zero cache hits. PDF task hash3875210145897375986 published199 deliverables plus its marker (200files,575,666,898bytes). Receipts: `pdf-native-cache-8-run.json`, `pdf-native-baseline-8-inventory.json`, `pdf-native-cache-8-current-reuse.txt`. A declared common test-helper signature changed between task hashing and compilation while repairing real Flow/Norm fixture failures. Invocation9 therefore refreshes that legitimate input baseline; it is active with a PDF cache miss. No PDF/JPG source markers or output moves have occurred.
+
+## Invocation 9 Shared IO Compile Failure
+
+Invocation9 terminated with exact exit1 after19m00s including queue. It failed in shared IO route ranking: seven E0277 diagnostics at IO lines2164,2209,2256 pass synchronous u8 fidelity ranks to `resolve_ready<F: Future>`. The GIS executor owns current-source inspection and removal of stale wrappers where applicable; no PDF package diagnostic occurred. The completed failed task receipt is `pdf-native-cache-9-run.json`, full diagnostics `pdf-native-cache-9-settled-helper-inputs.txt`. No source marker/output move occurred. Current publication remains the previous successful baseline unless a fresh owner/inventory check proves otherwise.
+
+The GIS executor verified the imported fidelity/confidence rank methods are synchronous and removed only the three stale Future-wrapper expressions (three changed lines, all seven diagnostics). Invocation10 repeats ordinary PDF Nx build after this repair settled, in the same warmed Cargo target and private cache/workspace. No PDF/JPG source marker/output move has occurred.
+
+## Population 10 and Graph Recovery
+
+Invocation 10 passed all four ordinary Nx tasks with no cache hits and PDF task hash `15383820945192969713`. Its published closure contains 199 deliverables plus the owner marker (200 files), totaling 576,026,115 bytes. Native work took 23m19s; Nx took 23m27s including queue time. Invocation 11 failed during graph construction before native work, because a relocated JSON fixture import was stale. It did not move or alter published output. The import was subsequently corrected by another agent. Invocation 12 uses the supported `NX_NO_CLOUD=true` flag with the same private local cache to avoid remote onboarding waits; its result is pending.
+
+Invocation 12 passed with PDF hash `2796437571782912483`, a cache miss, 200 staged files, and 575,985,277 bytes. Its task interval was 08:44:15–08:51:27 UTC (7m12s). The graph now succeeds. Sequential unchanged-source repeats 13/14 are underway; they perform an ownership-verified output backup and local restoration only after observing a real local hit. The independent PDF/JPG source-isolation script has been prepared but has not yet mutated a source or moved an output.
+
+## Comparable Input Census
+
+The invocation13 private Nx file-map snapshot contains 83672 files; 23802 entries differ from invocation10 in the same Nx-native hash format. Critical shared changes include `Cargo.lock`, `Cargo.toml`, `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`. A separate direct SHA-256 workspace census used a different inventory/hash algorithm and is retained only as a separate diagnostic; it must not be compared directly with the Nx-native decimal hashes. The incompatible draft comparison was replaced with the actual Nx file-map comparison. This evidence classifies shared input drift, not a completed cache-isolation pass.

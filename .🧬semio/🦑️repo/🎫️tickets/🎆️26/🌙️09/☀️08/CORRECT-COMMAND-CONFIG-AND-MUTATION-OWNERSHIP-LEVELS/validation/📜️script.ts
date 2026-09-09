@@ -2,7 +2,6 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { VerifyScript } from "../../../../../../../../📜️script.ts";
 import { runCargo, runVitest } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const root = fileURLToPath(new URL("../../../../../../../../", import.meta.url));
@@ -60,6 +59,12 @@ if (args[0] === "window-view" && args[1] === "test") {
 } else if (args[0] === "jack-window-config" && args[1] === "oracle") {
   const { testJackGraphWindowConfigOracle } = await import(`${root}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts`);
   testJackGraphWindowConfigOracle();
+} else if (args[0] === "jack-document-contract") {
+  const { testJackDocumentContract } = await import(`${root}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts`);
+  testJackDocumentContract();
+} else if (args[0] === "dag-document-contract") {
+  const { testDagDocumentContractOracle } = await import(`${root}/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts`);
+  testDagDocumentContractOracle();
 } else if (args[0] === "jack-window-config" && args[1] === "native") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "jack_graph_window_config_", "--", "--nocapture"], `${root}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust`);
 } else if (args[0] === "writer-window-state" && args[1] === "oracle") {
@@ -74,6 +79,13 @@ if (args[0] === "window-view" && args[1] === "test") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "equation_graph_window_config_", "--", "--nocapture"], `${root}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust`);
 } else if (args[0] === "equation-window-config" && args[1] === "check") {
   await runCargo(["check", "--manifest-path", "Cargo.toml", "--tests"], `${root}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust`);
+} else if (args[0] === "dag-demo-ownership") {
+  await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-infinite-dag", "--lib", "--", "--nocapture"], root);
+} else if (args[0] === "retained-window-input") {
+  const { testRetainedWindowInputOracle } = await import(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts`);
+  testRetainedWindowInputOracle();
+  if (args[1] !== "oracle") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "retained_window_input", "--", "--nocapture"], root);
 } else {
+  const { VerifyScript } = await import("../../../../../../../../📜️script.ts");
   await new VerifyScript(root, root).run(args);
 }

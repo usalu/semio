@@ -26,7 +26,7 @@ fn language_neutral_direct_vectors_match_independent_lopdf() {
     use crate::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
     use semio_repo_test_host::parse_json;
     let vectors =
-        [include_str!("../../../🧬️schema/🧬️mutations/📐️set-page-size/🧪️tests/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧬️schema/🧬️mutations/📉️collapse-page-size/🧪️tests/🔄️round-trips-the-concrete-inverse/🔣️.json")];
+        [include_str!("../../../🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json")];
     for text in vectors {
         let fixture = parse_json(text).unwrap();
         let to_page = |p: &Json| OraclePage {

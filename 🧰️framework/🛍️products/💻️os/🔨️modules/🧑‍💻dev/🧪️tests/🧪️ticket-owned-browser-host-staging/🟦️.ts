@@ -38,7 +38,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const validate = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserHostStagingV1`)!;
       const validateMaterialization = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserGisMaterializationV1`)!;
       const validateProvenanceFixture = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserGisProvenanceFixtureV1`)!;
-      const provenanceFixture = JSON.parse(readFileSync(join(contractRoot, "🧪️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json"), "utf8"));
+      const provenanceFixture = JSON.parse(readFileSync(join(contractRoot, "🧫️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json"), "utf8"));
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       expect(validateProvenanceFixture(provenanceFixture), JSON.stringify(validateProvenanceFixture.errors)).toBe(true);
       expect(parseTestBrowserHostStagingReceiptV1(fixture)).toEqual(fixture);
@@ -593,7 +593,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
       const { execFileSync } = await import("node:child_process");
       const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixture/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures/🔣️.json"), "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
       const inputs = vectors.map((row: { length: number }, index: number) => {
         const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
@@ -631,7 +631,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixture/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixtures/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -696,7 +696,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -886,7 +886,7 @@ export const describe = {};`);
 
     itLong("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
       const request = fixture.vectors.find((row) => row.value.kind === "close")!;
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
@@ -998,7 +998,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
 
     itLong("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures/⏳️async-results.json");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏳️async-results.json");
       const generated = execFileSync("node", ["--input-type=module", "--eval", `
         import { parse, transpile } from "@bytecodealliance/jco";
         import { readFileSync } from "node:fs";

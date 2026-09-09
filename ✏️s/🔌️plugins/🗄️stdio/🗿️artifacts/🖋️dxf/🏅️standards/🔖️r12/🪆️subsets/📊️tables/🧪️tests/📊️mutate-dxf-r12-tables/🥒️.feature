@@ -9,7 +9,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real document
-    Given the real input document asset://📚️examples/🚏️bus-shelter/🖼️assets/🖊️.dxf
+    Given the real input document asset://🚏️bus-shelter/🖊️.dxf
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -31,7 +31,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document asset://📚️examples/🚏️bus-shelter/🖼️assets/🖊️.dxf
+    Given the real input document asset://🚏️bus-shelter/🖊️.dxf
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}

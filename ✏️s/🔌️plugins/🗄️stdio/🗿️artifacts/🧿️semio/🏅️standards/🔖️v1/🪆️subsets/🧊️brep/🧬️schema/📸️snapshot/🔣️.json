@@ -616,7 +616,7 @@
         },
         "tol": {
           "type": "number",
-          "description": "native Vertex::tol; <= 0.0 means unspecified"
+          "description": "native Vertex::tol containment radius in model units, persisted explicitly"
         }
       },
       "required": [

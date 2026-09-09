@@ -84,7 +84,7 @@ async fn png_export_writes_a_real_png_signature() {
 /// codec, so a drift between this plugin's Rust path (composite → stdio `SemioImageToBmp` →
 /// stdio `encode_bmp`) and an independent second implementation fails in BOTH languages instead
 /// of going unnoticed.
-const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../🧫️fixtures/🌈️gradient-5x3.json")];
+const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../../🧫️fixtures/🌈️gradient-5x3.json")];
 
 fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
     use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonValue};

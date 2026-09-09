@@ -7,7 +7,7 @@
   "targets": {
     "component-cold-map-patch-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts component-cold-map-patch-check",
@@ -16,7 +16,7 @@
     },
     "component-cold-map-patch-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
@@ -25,7 +25,7 @@
     },
     "durable-three-store-assembly-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts durable-three-store-assembly-check",
@@ -34,7 +34,7 @@
     },
     "durable-three-store-assembly-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts durable-three-store-assembly-native-check",
@@ -43,7 +43,7 @@
     },
     "map-create-region-group-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts map-create-region-group-check",
@@ -52,7 +52,7 @@
     },
     "map-create-region-group-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts map-create-region-group-native-check",
@@ -61,7 +61,7 @@
     },
     "native-codec-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-codec-check",

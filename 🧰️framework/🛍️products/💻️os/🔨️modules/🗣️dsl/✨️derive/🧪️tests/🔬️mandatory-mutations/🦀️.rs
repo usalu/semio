@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn expanded_aggregate_matches_neutral_contract_and_syn_ast() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧬️mandatory-mutations/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mandatory-mutations/🔣️.json")).unwrap();
     let leaf_fixture = mutation_source_authority_tests::fixture();
     let (workspace, cwd, leaf) = mutation_source_authority_tests::materialize("valid", &leaf_fixture);
     let source = leaf.parent().unwrap().parent().unwrap().join("🦀️.rs");

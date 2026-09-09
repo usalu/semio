@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/jack/results-window/transient/schema.json",
+  "title": "JackResultsWindowTransient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["queryExecutionId", "result", "queryError"],
+  "properties": {
+    "queryExecutionId": { "type": ["string", "null"], "x-semio-state": "transient", "x-semio-owner": "window" },
+    "result": { "type": ["object", "null"], "x-semio-state": "transient", "x-semio-owner": "window" },
+    "queryError": { "type": ["string", "null"], "x-semio-state": "transient", "x-semio-owner": "window" }
+  }
+}

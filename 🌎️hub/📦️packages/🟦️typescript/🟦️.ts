@@ -36,7 +36,7 @@ function hubSchemaModuleDirectories(repoRoot: string): readonly string[] {
     const relative = pending.pop()!;
     for (const entry of readdirSync(join(repoRoot, relative), { withFileTypes: true })) {
       if (!entry.isDirectory() || entry.name === "node_modules" || entry.name === "target") continue;
-      if (entry.name === "🧬️schema") found.push(`${relative}/${entry.name}`);
+      if (entry.name === "🧬️schema" && existsSync(join(repoRoot, relative, entry.name, "🔣️.json"))) found.push(`${relative}/${entry.name}`);
       else pending.push(`${relative}/${entry.name}`);
     }
   }

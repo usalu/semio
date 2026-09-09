@@ -19,10 +19,10 @@ Feature: Apply every typed note document asset mutation twice — once in Rust, 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -30,16 +30,16 @@ Feature: Apply every typed note document asset mutation twice — once in Rust, 
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                    | vector                                                     |
-      | create-asset          | 🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset           |
-      | replace-asset-payload | 🔁️replace-asset-payload/🧪️tests/🔁️swaps-logo-payload-for-svg |
-      | delete-asset          | 🗑️delete-asset/🧪️tests/🗑️removes-the-logo-asset              |
+      | create-asset          | 🆕️create-asset/➕️adds-a-second-image-asset           |
+      | replace-asset-payload | 🔁️replace-asset-payload/🔁️swaps-logo-payload-for-svg |
+      | delete-asset          | 🗑️delete-asset/🗑️removes-the-logo-asset              |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -47,6 +47,6 @@ Feature: Apply every typed note document asset mutation twice — once in Rust, 
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                    | vector                                                     |
-      | create-asset          | 🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset           |
-      | replace-asset-payload | 🔁️replace-asset-payload/🧪️tests/🔁️swaps-logo-payload-for-svg |
-      | delete-asset          | 🗑️delete-asset/🧪️tests/🗑️removes-the-logo-asset              |
+      | create-asset          | 🆕️create-asset/➕️adds-a-second-image-asset           |
+      | replace-asset-payload | 🔁️replace-asset-payload/🔁️swaps-logo-payload-for-svg |
+      | delete-asset          | 🗑️delete-asset/🗑️removes-the-logo-asset              |

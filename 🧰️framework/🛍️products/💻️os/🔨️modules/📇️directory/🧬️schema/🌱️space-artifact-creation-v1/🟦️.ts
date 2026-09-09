@@ -12,6 +12,7 @@ export const SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 = "semio.hub.space-artifac
 export type SpaceArtifactCreateV1 = Readonly<{
   schema: typeof SPACE_ARTIFACT_CREATE_SCHEMA_V1;
   requestId: string;
+  expectedCatalogGenerationId: string;
   kindId: string;
   name: string;
 }>;
@@ -35,6 +36,7 @@ export type SpaceArtifactCreationStatusV1 = Readonly<{
   schema: typeof SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1;
   requestId: string;
   spaceId: string;
+  catalogGenerationId: string;
   phase: SpaceArtifactCreationPhaseV1;
   ready?: SpaceArtifactCreationReadyV1;
 }>;
@@ -112,20 +114,21 @@ function creationKind(value: unknown): SpaceArtifactCreationKindV1 | null {
 }
 
 /** 📥️ Seals the only client-supplied creation fields. */
-export function sealSpaceArtifactCreateV1(value: Readonly<{ requestId: string; kindId: string; name: string }>): SpaceArtifactCreateV1 {
+export function sealSpaceArtifactCreateV1(value: Readonly<{ requestId: string; expectedCatalogGenerationId: string; kindId: string; name: string }>): SpaceArtifactCreateV1 {
   const parsedRequestId = requestId(value.requestId),
+    expectedCatalogGenerationId = digest(value.expectedCatalogGenerationId),
     parsedKindId = identity(value.kindId),
     parsedName = name(value.name);
-  if (parsedRequestId === null || parsedKindId === null || parsedName === null) throw new Error("space artifact creation: invalid intent");
-  return { schema: SPACE_ARTIFACT_CREATE_SCHEMA_V1, requestId: parsedRequestId, kindId: parsedKindId, name: parsedName };
+  if (parsedRequestId === null || expectedCatalogGenerationId === null || parsedKindId === null || parsedName === null) throw new Error("space artifact creation: invalid intent");
+  return { schema: SPACE_ARTIFACT_CREATE_SCHEMA_V1, requestId: parsedRequestId, expectedCatalogGenerationId, kindId: parsedKindId, name: parsedName };
 }
 
 /** 🧾️ Parses a canonical client request without admitting extra authority fields. */
 export function parseSpaceArtifactCreateJsonV1(source: string): SpaceArtifactCreateV1 {
   if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_MAX_BYTES) throw new Error("space artifact creation: capacity");
   const row = record(JSON.parse(source));
-  if (row === null || !exactFields(row, ["schema", "requestId", "kindId", "name"]) || row.schema !== SPACE_ARTIFACT_CREATE_SCHEMA_V1) throw new Error("space artifact creation: invalid fields");
-  const result = sealSpaceArtifactCreateV1({ requestId: String(row.requestId), kindId: String(row.kindId), name: String(row.name) });
+  if (row === null || !exactFields(row, ["schema", "requestId", "expectedCatalogGenerationId", "kindId", "name"]) || row.schema !== SPACE_ARTIFACT_CREATE_SCHEMA_V1) throw new Error("space artifact creation: invalid fields");
+  const result = sealSpaceArtifactCreateV1({ requestId: String(row.requestId), expectedCatalogGenerationId: String(row.expectedCatalogGenerationId), kindId: String(row.kindId), name: String(row.name) });
   if (JSON.stringify(result) !== source) throw new Error("space artifact creation: noncanonical");
   return result;
 }
@@ -139,11 +142,12 @@ export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArt
   const phase = phases.includes(row.phase as SpaceArtifactCreationPhaseV1) ? (row.phase as SpaceArtifactCreationPhaseV1) : null,
     parsedRequestId = requestId(row.requestId),
     spaceId = identity(row.spaceId),
+    catalogGenerationId = digest(row.catalogGenerationId),
     parsedReady = row.ready === undefined ? undefined : ready(row.ready);
-  if (row.schema !== SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 || parsedRequestId === null || spaceId === null || phase === null) throw new Error("space artifact creation status: invalid owner");
-  if (!exactFields(row, phase === "ready" ? ["schema", "requestId", "spaceId", "phase", "ready"] : ["schema", "requestId", "spaceId", "phase"])) throw new Error("space artifact creation status: invalid fields");
+  if (row.schema !== SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 || parsedRequestId === null || spaceId === null || catalogGenerationId === null || phase === null) throw new Error("space artifact creation status: invalid owner");
+  if (!exactFields(row, phase === "ready" ? ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", "ready"] : ["schema", "requestId", "spaceId", "catalogGenerationId", "phase"])) throw new Error("space artifact creation status: invalid fields");
   if ((phase === "ready") !== (parsedReady !== undefined && parsedReady !== null)) throw new Error("space artifact creation status: invalid ready");
-  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, phase, ready: parsedReady! } : { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, phase };
+  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase, ready: parsedReady! } : { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase };
   if (JSON.stringify(result) !== source) throw new Error("space artifact creation status: noncanonical");
   return result;
 }

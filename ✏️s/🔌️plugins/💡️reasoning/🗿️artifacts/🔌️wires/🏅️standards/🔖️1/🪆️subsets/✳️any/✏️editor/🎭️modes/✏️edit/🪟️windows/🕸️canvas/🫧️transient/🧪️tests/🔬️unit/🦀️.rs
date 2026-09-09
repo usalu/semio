@@ -3,9 +3,11 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document_positions() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
-    use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
-    fn manifest() -> App { App { definition: create_wires_app(), examples: Vec::new() } }
+    use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
+    use semio_framework_plugin::{testkit, ActionMeta, App, Canvas2dScene, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+    fn manifest() -> App {
+        App { definition: create_wires_app(), examples: Vec::new() }
+    }
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = testkit::new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(manifest).await;
     app.bind_instance_id(1).await;
@@ -15,11 +17,19 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
         let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
         let files = store::print_document_pack(&envelope).await;
-        let mut retirement = store::retire_document_envelope(envelope, std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()), std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()));
+        let mut retirement = store::retire_document_envelope(
+            envelope,
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+        );
         for _ in 0..100_000 {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) { break; }
+            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
+                break;
+            }
         }
-        if !retirement.terminal_is_empty() { return Err("seed envelope did not finish bounded retirement".into()); }
+        if !retirement.terminal_is_empty() {
+            return Err("seed envelope did not finish bounded retirement".into());
+        }
         let files = files.map_err(|error| format!("{error:?}"))?;
         app.load_document_pack(&files).await.map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -48,17 +58,54 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
             for (index, id) in ["left", "right"].into_iter().enumerate() {
                 let window = view.for_window_instance(id).ok_or("window instance absent")?;
                 let transient = app.window_transient_snapshot(&window).map_err(|error| format!("{error:?}"))?.ok_or("window transient absent")?;
-                if Some(transient.generation()) != row["generations"][index].as_u64() { return Err(format!("gesture generation crossed window boundary: {id}")); }
+                if Some(transient.generation()) != row["generations"][index].as_u64() {
+                    return Err(format!("gesture generation crossed window boundary: {id}"));
+                }
+                let state = transient.get::<WiresCanvasTransientOwner>().ok_or("typed window transient absent")?;
+                let preview = &row["previews"][id];
+                if preview.is_null() {
+                    if state.drag_node_id.is_some() {
+                        return Err(format!("gesture preview remained captured in {id}"));
+                    }
+                } else if state.drag_node_id.as_deref() != vectors["node"].as_str() {
+                    return Err(format!("gesture preview lost its captured node in {id}"));
+                }
+                let tree = app.render(WIRES_PLAY_BODY_COMPOSITE, None, &window).await.map_err(|error| format!("{error:?}"))?;
+                let projection = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                let scene = testkit::decode_fixture_scene::<Canvas2dScene>(&projection).map_err(str::to_string)?;
+                let layers: serde_json::Value = serde_json::from_str(&scene.layers_json).map_err(|error| error.to_string())?;
+                let rendered = layers
+                    .as_array()
+                    .and_then(|layers| layers.iter().find(|layer| layer["id"].as_str() == vectors["node"].as_str()))
+                    .ok_or("rendered gesture node absent")?;
+                let expected = if preview.is_null() { &row["position"] } else { preview };
+                let actual = serde_json::json!([rendered["x"].as_f64().ok_or("rendered x absent")?, rendered["y"].as_f64().ok_or("rendered y absent")?]);
+                if actual != *expected {
+                    return Err(format!("gesture preview crossed document/window ownership in {id}: {actual} != {expected}"));
+                }
             }
         }
+        app.dispatch_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..testkit::meta("gesture-undo") })
+            .await
+            .map_err(|error| format!("{error:?}"))?;
+        let undone = app.snapshot().map_err(|error| format!("{error:?}"))?;
+        let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&undone, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
+        if crate::schema::node_position(&node) != (0.0, 0.0) {
+            return Err("one undo did not reverse the entire released drag".into());
+        }
         let after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
-        if config.pack != after.pack || config.spr != after.spr { return Err("gesture persisted window state in app config".into()); }
+        if config.pack != after.pack || config.spr != after.spr {
+            return Err("gesture persisted window state in app config".into());
+        }
         Ok(())
-    }.await;
-    if let Err(error) = &result { eprintln!("[DEBUG] Wires pointer move runtime failure before close: {error}"); }
+    }
+    .await;
+    if let Err(error) = &result {
+        eprintln!("[DEBUG] Wires pointer move runtime failure before close: {error}");
+    }
     testkit::close_registered_fixture_app(&mut app);
     result.expect("captured-canvas document gesture");
-    eprintln!("[DEBUG] Wires pointer move: five neutral gesture steps preserve exact canvas generations and durable positions");
+    eprintln!("[DEBUG] Wires pointer move: five neutral gesture steps isolate exact canvas previews, publish once, and undo in one step");
 }
 
 //#region 🔖️ConfigTests
@@ -66,7 +113,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
 /// 🔁️ B1 dsl/pack round-trip law for `WiresCanvasTransient` — a non-default fixture exercising every field.
 #[semio_framework_async_macros::async_test]
 async fn wires_window_transient_dsl_pack_round_trip() {
-    let config = WiresCanvasTransient { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25 };
+    let config = WiresCanvasTransient { drag_node_id: Some("node-1".into()), drag_start_x: 1.5, drag_start_y: 2.5, drag_last_x: 12.5, drag_last_y: -7.25, drag_zoom: 2.0 };
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
 //#endregion 🔖️ConfigTests
@@ -74,8 +121,8 @@ async fn wires_window_transient_dsl_pack_round_trip() {
 //#region 🔖️ConfigOperationTests
 #[semio_framework_async_macros::async_test]
 async fn window_transient_drag_op_text_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 }));
-    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }));
+    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-1".into()), start_x: 1.5, start_y: 2.5, last_x: 12.5, last_y: -7.25, zoom: 2.0 }));
+    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: None, start_x: 0.0, start_y: 0.0, last_x: 0.0, last_y: 0.0, zoom: 1.0 }));
 }
 
 /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
@@ -83,10 +130,10 @@ async fn window_transient_drag_op_text_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn window_transient_backwards_restores_the_same_field_from_base() {
     let base = WiresCanvasTransient { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
-    let forward = WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 });
+    let forward = WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-2".into()), start_x: 3.0, start_y: 4.0, last_x: 5.0, last_y: 6.0, zoom: 2.0 });
     let inverse = forward.inverse(&base);
-    assert_eq!(inverse, vec![WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y })]);
-    assert_eq!(forward.diff(&base).diff().clone(), WiresCanvasTransient { drag_node_id: Some("node-2".into()), drag_last_x: 5.0, drag_last_y: 6.0, ..base });
+    assert_eq!(inverse, vec![WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: base.drag_node_id.clone(), start_x: base.drag_start_x, start_y: base.drag_start_y, last_x: base.drag_last_x, last_y: base.drag_last_y, zoom: base.drag_zoom })]);
+    assert_eq!(forward.diff(&base).diff().clone(), WiresCanvasTransient { drag_node_id: Some("node-2".into()), drag_start_x: 3.0, drag_start_y: 4.0, drag_last_x: 5.0, drag_last_y: 6.0, drag_zoom: 2.0 });
 }
 //#endregion 🔖️ConfigOperationTests
 

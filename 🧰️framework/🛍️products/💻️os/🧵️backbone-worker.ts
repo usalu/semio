@@ -503,6 +503,7 @@ let localBrowserBrokerProof: Uint8Array | undefined;
 let localBrowserBrokerOwner: object = {};
 let localBrowserBrokerAdmission: object = {};
 let browserSessionAuthority: DirectorySessionAuthorityV1 | null = null;
+let browserSessionOperationFence: object = {};
 let localBrowserBrokerProofExpiresAtMs = 0;
 let localBrowserBrokerQueue: Promise<void> = Promise.resolve();
 let localBrowserBrokerQueued = 0;
@@ -533,17 +534,36 @@ function clearLocalBrowserBrokerProof(): void {
   retireBrowserSessionAuthority();
 }
 
+type BrowserSessionOperationFenceV1 = Readonly<{ token: object; sessionBindingSha256: string; authorizationGeneration: number }>;
+
+function captureBrowserSessionOperationFence(): BrowserSessionOperationFenceV1 | null {
+  const authority = browserSessionAuthority;
+  const observedAtMs = Date.now();
+  if (authority === null || localBrowserBrokerProof === undefined || observedAtMs >= localBrowserBrokerProofExpiresAtMs || observedAtMs >= authority.expiresAt) return null;
+  return Object.freeze({ token: browserSessionOperationFence, sessionBindingSha256: authority.sessionBindingSha256, authorizationGeneration: authority.authorizationGeneration });
+}
+
+function sameBrowserSessionOperationFence(fence: BrowserSessionOperationFenceV1): boolean {
+  const authority = browserSessionAuthority;
+  return fence.token === browserSessionOperationFence
+    && authority !== null
+    && Date.now() < authority.expiresAt
+    && authority.sessionBindingSha256 === fence.sessionBindingSha256
+    && authority.authorizationGeneration === fence.authorizationGeneration;
+}
+
 /** 🪪️ Retires authenticated work without forgetting an already submitted inference request. */
 function retireBrowserSessionAuthority(): void {
-  if (browserSessionAuthority === null) return;
+  const hadAuthority = browserSessionAuthority !== null;
   browserSessionAuthority = null;
-  directorySessionEpoch += 1;
+  browserSessionOperationFence = {};
+  if (hadAuthority) directorySessionEpoch += 1;
   closeDirectory();
   if (inferencePort !== null) {
     inferencePort.closeRequested = true;
     terminateInferencePort(inferencePort, "inference.transport");
   }
-  if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
+  if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndoForAuthority(inferenceApprovalUndoOwner);
   for (const [runtimeKey, state] of artifacts) {
     const binding = hubBinding(state.config);
     if (binding === null) continue;
@@ -677,6 +697,10 @@ function attachLocalBrokerPort(port: MessagePort): void {
     if (message.kind === "initialize") {
       const response: BrowserBrokerPortResponseV1 = { kind: "initialized", ok: installLocalBrowserBrokerProof(message.proof) };
       port.postMessage(response);
+      return;
+    }
+    if (message.kind === "close") {
+      detachLocalBrokerPort();
       return;
     }
     if (message.kind === "cancel") {
@@ -2539,8 +2563,9 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
   try {
     plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse, openControl), Date.now());
   } catch {
+    const cancelled = state.docAbort.signal.aborted;
     clearLocalBrowserBrokerProof();
-    throw new Error(state.docAbort.signal.aborted ? "document open: cancelled" : "document open: invalid plan");
+    throw new Error(cancelled ? "document open: cancelled" : "document open: invalid plan");
   }
   assertOwner();
   dropDocumentExecutionTargetLease(state);
@@ -4118,8 +4143,8 @@ async function openSpaceArtifactCreationCatalog(spaceId: string, clientInstanceI
 }
 
 function spaceArtifactCreationStatus(operation: SpaceArtifactCreationOperationV1, status: HubSpaceArtifactCreationStatusV1): Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> {
-  if (status.requestId !== operation.request.requestId || status.spaceId !== operation.request.spaceId || (status.ready !== undefined && status.ready.kindId !== operation.request.kindId)) throw new Error("space artifact creation: owner mismatch");
-  return { kind: "space-artifact-creation-status", requestId: status.requestId, spaceId: status.spaceId, phase: status.phase, ...(status.ready === undefined ? {} : { ready: status.ready }) };
+  if (status.requestId !== operation.request.requestId || status.spaceId !== operation.request.spaceId || status.catalogGenerationId !== operation.request.expectedCatalogGenerationId || (status.ready !== undefined && status.ready.kindId !== operation.request.kindId)) throw new Error("space artifact creation: owner mismatch");
+  return { kind: "space-artifact-creation-status", requestId: status.requestId, spaceId: status.spaceId, catalogGenerationId: status.catalogGenerationId, phase: status.phase, ...(status.ready === undefined ? {} : { ready: status.ready }) };
 }
 
 function spaceArtifactCreationCurrent(operation: SpaceArtifactCreationOperationV1): boolean {
@@ -4216,12 +4241,12 @@ async function driveSpaceArtifactCreation(operation: SpaceArtifactCreationOperat
 function submitSpaceArtifactCreation(request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>): void {
   const existing = spaceArtifactCreationOperations.get(request.requestId);
   if (existing !== undefined) {
-    if (existing.request.spaceId === request.spaceId && existing.request.kindId === request.kindId && existing.request.name === request.name) post(existing.latest);
-    else post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "failed" });
+    if (existing.request.spaceId === request.spaceId && existing.request.expectedCatalogGenerationId === request.expectedCatalogGenerationId && existing.request.kindId === request.kindId && existing.request.name === request.name) post(existing.latest);
+    else post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, catalogGenerationId: request.expectedCatalogGenerationId, phase: "failed" });
     return;
   }
   if (spaceArtifactCreationOperations.size >= SPACE_ARTIFACT_CREATION_CAPACITY) {
-    post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "failed" });
+    post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, catalogGenerationId: request.expectedCatalogGenerationId, phase: "failed" });
     return;
   }
   const operation: SpaceArtifactCreationOperationV1 = {
@@ -4231,7 +4256,7 @@ function submitSpaceArtifactCreation(request: Extract<BackboneWorkerRequest, { r
     deadlineAtMs: Date.now() + SPACE_ARTIFACT_CREATION_DEADLINE_MS,
     cancelRequested: false,
     cancelSent: false,
-    latest: { kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "accepted" },
+    latest: { kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, catalogGenerationId: request.expectedCatalogGenerationId, phase: "accepted" },
   };
   spaceArtifactCreationOperations.set(request.requestId, operation);
   post(operation.latest);
@@ -4354,6 +4379,18 @@ async function fetchDirectoryBootstrapPage(owner: DirectoryBootstrapOwner): Prom
   try {
     const page = await owner.client.eventPage(owner.machine.after(), { signal: owner.abort.signal });
     if (directoryBootstrap !== owner || owner.abort.signal.aborted) return;
+    const authority = browserSessionAuthority;
+    if (
+      authority === null ||
+      authority.expiresAt <= Date.now() ||
+      page.sessionBindingSha256 !== authority.sessionBindingSha256 ||
+      page.authorizationGeneration !== authority.authorizationGeneration
+    ) {
+      post({ kind: "directory-bootstrap-failed", bootstrapEpoch: owner.machine.bootstrapEpoch, code: "unauthorized", retryable: false });
+      clearLocalBrowserBrokerProof();
+      closeDirectory();
+      return;
+    }
     owner.machine.present(page);
     post({
       kind: "directory-event-page",
@@ -4896,6 +4933,7 @@ type InferenceOperationV1 = {
   readonly scope: DocumentScope;
   readonly abort: AbortController;
   readonly sessionEpoch: number;
+  readonly sessionFence: BrowserSessionOperationFenceV1;
   readonly clientInstanceId: string;
   readonly leaseFields: DocumentExecutionTargetLeaseFieldsV1;
   request: Readonly<GisMapInferenceJobRequestV1> | null;
@@ -4929,6 +4967,7 @@ type InferenceApprovalUndoOwnerV1 = {
   readonly scope: DocumentScope;
   readonly clientInstanceId: string;
   readonly sessionEpoch: number;
+  readonly sessionFence: BrowserSessionOperationFenceV1;
   readonly receipt: GisMapInferenceApprovalReceiptV1;
   readonly idempotencyKey: string;
   readonly sourceCatalogGenerationId: string;
@@ -4956,6 +4995,18 @@ function mintInferenceApprovalUndoIdempotencyKeyV1(): string {
 
 function approvalUndoStatus(owner: InferenceApprovalUndoOwnerV1, status: GisMapApprovalHistoryStatusV1): void {
   post({ kind: "inference-history-status", historyEpoch: owner.historyEpoch, clientInstanceId: owner.clientInstanceId, scope: owner.scope, status });
+}
+
+function retireInferenceApprovalUndoForAuthority(owner: InferenceApprovalUndoOwnerV1): void {
+  if (owner.phase !== "submitting" && owner.phase !== "failed") {
+    retireInferenceApprovalUndo(owner);
+    return;
+  }
+  if (owner.phase === "failed" && !owner.retryable) return;
+  owner.abort.abort(new Error("gis map approval undo authority retired"));
+  owner.phase = "failed";
+  owner.retryable = false;
+  approvalUndoStatus(owner, { phase: "failed", canUndo: false, code: "inference.transport" });
 }
 
 function sameApprovalUndoFrontierV1(owner: InferenceApprovalUndoOwnerV1, pair: VerifiedColdDocumentPair): boolean {
@@ -5000,6 +5051,10 @@ function retireInferenceApprovalUndo(owner: InferenceApprovalUndoOwnerV1, notify
 function reissueInferenceApprovalUndoForRebootstrap(state: ArtifactState): void {
   const owner = inferenceApprovalUndoOwner;
   if (owner === null || owner.scope.spaceId !== artifactScope(state)?.spaceId || owner.scope.documentId !== state.config.documentId || owner.clientInstanceId !== state.openClientInstanceId) return;
+  if (!sameBrowserSessionOperationFence(owner.sessionFence)) {
+    retireInferenceApprovalUndoForAuthority(owner);
+    return;
+  }
   inferenceApprovalUndoOwner = null;
   owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));
   approvalUndoStatus(owner, { phase: "unavailable", canUndo: false, code: null });
@@ -5009,6 +5064,7 @@ function reissueInferenceApprovalUndoForRebootstrap(state: ArtifactState): void 
     scope: structuredClone(owner.scope),
     clientInstanceId: owner.clientInstanceId,
     sessionEpoch: owner.sessionEpoch,
+    sessionFence: owner.sessionFence,
     receipt: structuredClone(owner.receipt),
     idempotencyKey: owner.idempotencyKey,
     sourceCatalogGenerationId: owner.sourceCatalogGenerationId,
@@ -5030,6 +5086,10 @@ function bindInferenceApprovalUndoToMountedPair(state: ArtifactState, reservatio
   const owner = inferenceApprovalUndoOwner;
   const lease = state.executionTargetLease;
   if (owner === null || owner.phase !== "awaiting-mount" || lease === null || state.browserActorReservation !== reservation || state.verifiedColdPair !== pair) return;
+  if (!sameBrowserSessionOperationFence(owner.sessionFence)) {
+    retireInferenceApprovalUndo(owner);
+    return;
+  }
   const scope = artifactScope(state);
   if (!scope || scope.spaceId !== owner.scope.spaceId || scope.documentId !== owner.scope.documentId || state.openClientInstanceId !== owner.clientInstanceId) return;
   if (!sameApprovalUndoFrontierV1(owner, pair)) {
@@ -5069,16 +5129,20 @@ function bindInferenceApprovalUndoToMountedPair(state: ArtifactState, reservatio
 
 function retainInferenceApprovalUndo(operation: InferenceOperationV1, receipt: GisMapInferenceApprovalReceiptV1): void {
   const state = artifactState(operation.scope.documentId, operation.scope.spaceId);
-  if (state === undefined || state.closed || state.openClientInstanceId !== operation.clientInstanceId || operation.sessionEpoch !== directorySessionEpoch) return;
+  if (state === undefined || state.closed || state.openClientInstanceId !== operation.clientInstanceId || operation.sessionEpoch !== directorySessionEpoch || !sameBrowserSessionOperationFence(operation.sessionFence)) return;
   const fields = operation.leaseFields;
   if (!receipt.applied || receipt.undo.expectedCurrent.documentId !== operation.scope.documentId || operation.clientInstanceId.length === 0 || fields.browserActor.kind !== "closed-browser-actor") throw new Error("gis map approval undo: invalid source owner");
-  if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
+  if (inferenceApprovalUndoOwner !== null) {
+    if (inferenceApprovalUndoOwner.phase === "failed" && !inferenceApprovalUndoOwner.retryable) throw new Error("gis map approval undo: capacity");
+    retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
+  }
   if (inferenceApprovalUndoEpoch >= Number.MAX_SAFE_INTEGER) throw new Error("gis map approval undo: epoch exhausted");
   const owner: InferenceApprovalUndoOwnerV1 = {
     historyEpoch: ++inferenceApprovalUndoEpoch,
     scope: structuredClone(operation.scope),
     clientInstanceId: operation.clientInstanceId,
     sessionEpoch: operation.sessionEpoch,
+    sessionFence: operation.sessionFence,
     receipt: structuredClone(receipt),
     idempotencyKey: mintInferenceApprovalUndoIdempotencyKeyV1(),
     sourceCatalogGenerationId: fields.catalog.generationId,
@@ -5136,7 +5200,7 @@ function inferenceJobPath(scope: DocumentScope, suffix: string): string {
 async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: string, init: { readonly method: "GET" | "POST"; readonly body?: string }): Promise<FetchTimeoutResponse> {
   const path = inferenceJobPath(operation.scope, suffix);
   if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/reconcile|\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
-  if (operation.sessionEpoch !== directorySessionEpoch) throw new Error("gis map inference: original session unavailable");
+  if (operation.sessionEpoch !== directorySessionEpoch || !sameBrowserSessionOperationFence(operation.sessionFence)) throw new Error("gis map inference: original session unavailable");
   if ((suffix === "/jobs" || suffix.endsWith("/approval")) && !inferenceLeaseVerified(operation.scope)) throw new Error("gis map inference: document closed");
   return browserBrokerFetch(
     `/_semio/hub${path}`,
@@ -5147,15 +5211,15 @@ async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: str
     {
       timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS,
       signal: operation.abort.signal,
-      admit: () => operation.sessionEpoch === directorySessionEpoch && !operation.closed && ((suffix !== "/jobs" && !suffix.endsWith("/approval")) || inferenceLeaseVerified(operation.scope)),
-      retain: () => operation.sessionEpoch === directorySessionEpoch && !operation.closed,
+      admit: () => operation.sessionEpoch === directorySessionEpoch && sameBrowserSessionOperationFence(operation.sessionFence) && !operation.closed && ((suffix !== "/jobs" && !suffix.endsWith("/approval")) || inferenceLeaseVerified(operation.scope)),
+      retain: () => operation.sessionEpoch === directorySessionEpoch && sameBrowserSessionOperationFence(operation.sessionFence) && !operation.closed,
     },
   );
 }
 
 async function inferenceApprovalUndoBrokerFetch(owner: InferenceApprovalUndoOwnerV1, body: string): Promise<FetchTimeoutResponse> {
   const state = artifactState(owner.scope.documentId, owner.scope.spaceId);
-  if (state === undefined || state.closed || state.openClientInstanceId !== owner.clientInstanceId || state.docAbort.signal.aborted) throw new Error("gis map approval undo: document closed");
+  if (state === undefined || state.closed || state.openClientInstanceId !== owner.clientInstanceId || state.docAbort.signal.aborted || !sameBrowserSessionOperationFence(owner.sessionFence)) throw new Error("gis map approval undo: document closed");
   return browserBrokerFetch(
     `/_semio/hub${inferenceJobPath(owner.scope, "/approval-undos")}`,
     { method: "POST", headers: { "content-type": "application/json" }, body },
@@ -5164,9 +5228,9 @@ async function inferenceApprovalUndoBrokerFetch(owner: InferenceApprovalUndoOwne
       signal: owner.abort.signal,
       admit: () => {
         const current = artifactState(owner.scope.documentId, owner.scope.spaceId);
-        return inferenceApprovalUndoOwner === owner && owner.sessionEpoch === directorySessionEpoch && current !== undefined && sameApprovalUndoMountV1(current, owner);
+        return inferenceApprovalUndoOwner === owner && owner.sessionEpoch === directorySessionEpoch && sameBrowserSessionOperationFence(owner.sessionFence) && current !== undefined && sameApprovalUndoMountV1(current, owner);
       },
-      retain: () => owner.sessionEpoch === directorySessionEpoch,
+      retain: () => owner.sessionEpoch === directorySessionEpoch && sameBrowserSessionOperationFence(owner.sessionFence),
     },
   );
 }
@@ -5184,6 +5248,10 @@ async function readInferenceJson(response: FetchTimeoutResponse): Promise<unknow
 function liveInferencePort(operationEpoch: number): InferenceOperationV1 | null {
   const operation = inferencePort;
   if (operation === null || operation.closed || operation.operationEpoch !== operationEpoch) return null;
+  if (operation.sessionEpoch !== directorySessionEpoch || !sameBrowserSessionOperationFence(operation.sessionFence)) {
+    terminateInferencePort(operation, "inference.transport");
+    return null;
+  }
   if (!inferenceLeaseVerified(operation.scope)) {
     operation.closeRequested = true;
     advanceInferencePort(operation, { kind: "cancel" });
@@ -5203,7 +5271,7 @@ function terminateInferencePort(operation: InferenceOperationV1, code: GisMapInf
   }
   operation.reconcileRequired = true;
   advanceInferencePort(operation, { kind: "indeterminate", code: code === "inference.cancelled" ? "inference.transport" : code });
-  if (operation.turns < INFERENCE_MAX_POLL_TURNS && operation.sessionEpoch === directorySessionEpoch) scheduleInferencePoll(operation);
+  if (operation.turns < INFERENCE_MAX_POLL_TURNS && operation.sessionEpoch === directorySessionEpoch && sameBrowserSessionOperationFence(operation.sessionFence)) scheduleInferencePoll(operation);
 }
 
 function inferenceCodeFromRejection(error: unknown, aborted: boolean): GisMapInferencePortCodeV1 {
@@ -5227,8 +5295,13 @@ function openInferencePort(operationEpoch: number, scope: DocumentScope): void {
     post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "refused", code: "inference.lease-unverified" });
     return;
   }
+  const sessionFence = captureBrowserSessionOperationFence();
+  if (sessionFence === null) {
+    post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "refused", code: "inference.denied" });
+    return;
+  }
   const state = artifactState(scope.documentId, scope.spaceId)!;
-  const operation: InferenceOperationV1 = { operationEpoch, scope: Object.freeze({ ...scope }), abort: new AbortController(), sessionEpoch: directorySessionEpoch, clientInstanceId: state.openClientInstanceId, leaseFields: structuredClone(state.executionTargetLease!.fields()), request: null, closeRequested: false, reconcileRequired: false, status: idleGisMapInferencePortStatusV1(), turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
+  const operation: InferenceOperationV1 = { operationEpoch, scope: Object.freeze({ ...scope }), abort: new AbortController(), sessionEpoch: directorySessionEpoch, sessionFence, clientInstanceId: state.openClientInstanceId, leaseFields: structuredClone(state.executionTargetLease!.fields()), request: null, closeRequested: false, reconcileRequired: false, status: idleGisMapInferencePortStatusV1(), turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
   inferencePort = operation;
   post({ kind: "inference-port-opened", operationEpoch, scope, outcome: "opened", code: null });
   postInferencePortStatus(operation);
@@ -5280,7 +5353,7 @@ async function reconcileInferenceJob(operation: InferenceOperationV1): Promise<v
     const response = await inferenceBrokerFetch(operation, "/jobs/reconcile", { method: "POST", body: JSON.stringify(request) });
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const result = parseInferenceJobReconcileResultV1(await readInferenceJson(response));
-    if (inferencePort !== operation || operation.closed) return;
+    if (liveInferencePort(operation.operationEpoch) !== operation) return;
     if (result.requestId !== operation.request.requestId) throw new Error("gis map inference: different request");
     const job = result.job;
     if (!result.found || job === null) {
@@ -5457,6 +5530,10 @@ async function approveInferenceProposal(operationEpoch: number): Promise<void> {
 async function undoInferenceApproval(historyEpoch: number, clientInstanceId: string, scope: DocumentScope): Promise<void> {
   const owner = inferenceApprovalUndoOwner;
   if (owner === null || owner.historyEpoch !== historyEpoch || owner.clientInstanceId !== clientInstanceId || owner.scope.spaceId !== scope.spaceId || owner.scope.documentId !== scope.documentId || (owner.phase !== "available" && !(owner.phase === "failed" && owner.retryable))) return;
+  if (!sameBrowserSessionOperationFence(owner.sessionFence)) {
+    retireInferenceApprovalUndoForAuthority(owner);
+    return;
+  }
   const state = artifactState(scope.documentId, scope.spaceId);
   if (state === undefined || !sameApprovalUndoMountV1(state, owner)) {
     retireInferenceApprovalUndo(owner);
@@ -5469,7 +5546,7 @@ async function undoInferenceApproval(historyEpoch: number, clientInstanceId: str
     const response = await inferenceApprovalUndoBrokerFetch(owner, JSON.stringify(request));
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const receipt: GisMapApprovalUndoReceiptV1 = parseGisMapApprovalUndoReceiptV1(await readInferenceJson(response));
-    if (inferenceApprovalUndoOwner !== owner) return;
+    if (inferenceApprovalUndoOwner !== owner || !sameBrowserSessionOperationFence(owner.sessionFence)) return;
     const currentState = artifactState(owner.scope.documentId, owner.scope.spaceId);
     if (currentState === undefined || !sameApprovalUndoMountV1(currentState, owner)) {
       retireInferenceApprovalUndo(owner);
@@ -5483,10 +5560,11 @@ async function undoInferenceApproval(historyEpoch: number, clientInstanceId: str
     if (inferenceApprovalUndoOwner !== owner || owner.abort.signal.aborted) return;
     const status = error instanceof DirectoryHttpError ? error.status : undefined;
     const code = status === undefined ? "inference.transport" : gisMapInferenceCodeFromStatusV1(status);
+    const sameSession = sameBrowserSessionOperationFence(owner.sessionFence);
     owner.phase = "failed";
-    owner.retryable = status === undefined || status === 429 || status === 503;
+    owner.retryable = sameSession && (status === undefined || status === 429 || status === 503);
     approvalUndoStatus(owner, { phase: "failed", canUndo: owner.retryable, code });
-    if (!owner.retryable) {
+    if (!owner.retryable && sameSession) {
       inferenceApprovalUndoOwner = null;
       owner.abort.abort(new Error("gis map approval undo rejected"));
     }
@@ -6027,6 +6105,9 @@ if (import.meta.vitest) {
     get localBrowserBrokerQueued() { return localBrowserBrokerQueued; },
     set localBrowserBrokerQueued(value: typeof localBrowserBrokerQueued) { localBrowserBrokerQueued = value; },
     get browserSessionAuthority() { return browserSessionAuthority; },
+    get browserSessionOperationFence() { return browserSessionOperationFence; },
+    acceptBrowserSessionAuthority,
+    captureBrowserSessionOperationFence,
     attachLocalBrokerPort,
     detachLocalBrokerPort,
     get socketGrantTestIssue() { return socketGrantTestIssue; },

@@ -1,10 +1,9 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `reorganize`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::standards::v1::subsets::any::schema::mutations::move_node;
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::{JackSnapshot, Node};
-use semio_framework_plugin::Emit;
+use semio_framework_plugin::{Emit, NoConfigMutation};
 
 fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {
     let scene = crate::jack_working_scene(fixture);
@@ -48,7 +47,7 @@ fn reposition_operations(before: &[Node], after: &[Node]) -> Vec<TrinityGraphMut
         .collect()
 }
 
-pub(crate) fn reorganize(fixture: &JackSnapshot) -> Emit<TrinityGraphMutation, JackConfigMutation> {
+pub(crate) fn reorganize(fixture: &JackSnapshot) -> Emit<TrinityGraphMutation, NoConfigMutation> {
     match force_layout_nodes(fixture) {
         Some(after) => Emit { artifact_mutations: reposition_operations(&fixture.nodes(), &after), ..Default::default() },
         None => Emit::default(),

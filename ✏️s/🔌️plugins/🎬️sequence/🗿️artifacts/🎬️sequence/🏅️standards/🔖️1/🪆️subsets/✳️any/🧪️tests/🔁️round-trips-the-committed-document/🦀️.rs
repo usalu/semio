@@ -11,7 +11,7 @@
 use semio_repo_test_host::Adapter;
 
 /// 📄️ This subset's own committed real sequence artifact.
-const SEQUENCE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const SEQUENCE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 #[cfg(feature = "sut")]
 mod subject {

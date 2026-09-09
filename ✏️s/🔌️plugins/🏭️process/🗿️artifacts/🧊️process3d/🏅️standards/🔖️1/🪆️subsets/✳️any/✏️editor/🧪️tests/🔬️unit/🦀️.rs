@@ -89,9 +89,7 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::testkit::Proces
         handle.generation.0,
         handle.generation.0,
         handle.generation.0,
-        8_192,
-        crate::spr::PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
-        crate::spr::PROCESS3D_MOUNTED_CONTROL_CREDITS,
+        crate::spr::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::spr::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::spr::PROCESS3D_MOUNTED_CONTROL_CREDITS },
     )
     .expect("Process3d production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {

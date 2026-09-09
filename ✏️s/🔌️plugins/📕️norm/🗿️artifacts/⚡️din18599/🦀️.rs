@@ -145,25 +145,7 @@ pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition
 
-/// 📋️ Inputs for annual energy balancing.
-// BalancingInputs remains the nested persistent payload type; snapshot is Din18599Snapshot.
-
-// 📌️ Deviation from the original monolith: `BalancingInputs::reference_residential(..)` (the
-// physically-computed reference-building constructor, needing `din4108`'s relocated
-// `total_resistance`/`u_value_from_resistance` and `din16798`'s relocated
-// `residential_ventilation_rate`) moved to
-// `crate::standards::v1::subsets::any::schema::reference_residential` — an
-// inherent impl here would need those crates, but inherent impls must live in the crate that
-// defines the type (orphan rule), and `rs` must not depend on `schema`'s compliance helpers (the
-// reverse of every other constitutional dependency edge). `Default` has the same orphan-rule
-// constraint, so — matching the plain-literal `Default` style `din4108`/`din16798` already use —
-// this is the numeric result of `reference_residential(ClimateZoneDe::Zone2, 100.0)`, precomputed
-// once and inlined; use
-// `crate::standards::v1::subsets::any::schema::reference_residential`
-// directly for a live-computed reference building.
-
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-
+/// 📋️ Annual energy balancing inputs stored in the persisted snapshot.
 pub type BalancingInputs = Din18599Snapshot;
 //#endregion 🔖️Types
 

@@ -155,6 +155,7 @@ fn space_index_retained_extent(command: &SpaceIndexCommand, _snapshot: &SSpaceSn
     SPACE_INDEX_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(SPACE_INDEX_RETAINED_WORK_ITEMS)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn space_index_retained_reduce(
     command: &SpaceIndexCommand,
     snapshot: &SSpaceSnapshot,

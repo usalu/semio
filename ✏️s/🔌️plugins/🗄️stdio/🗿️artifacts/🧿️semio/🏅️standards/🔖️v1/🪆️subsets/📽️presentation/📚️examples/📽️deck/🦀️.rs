@@ -12,7 +12,7 @@ pub const ID: &str = "deck";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn label() -> LocalizedLabel { LocalizedLabel::native("Deck", "Deck") }
 pub const ICON: &str = "presentation";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
+pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/📽️deck/🗣️.dsl.semio");
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 

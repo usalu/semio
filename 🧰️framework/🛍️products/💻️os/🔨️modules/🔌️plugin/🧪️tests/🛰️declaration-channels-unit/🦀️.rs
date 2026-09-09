@@ -3,7 +3,7 @@ use protocol::{FromValue, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText
 use std::fmt::Debug;
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
 }
 fn i32_value(value: &serde_json::Value) -> i32 {
     i32::try_from(value.as_i64().expect("integer")).expect("i32")

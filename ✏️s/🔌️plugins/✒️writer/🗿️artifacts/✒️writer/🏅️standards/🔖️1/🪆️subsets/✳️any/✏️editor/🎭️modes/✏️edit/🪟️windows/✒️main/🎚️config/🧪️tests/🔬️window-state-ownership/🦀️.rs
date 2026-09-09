@@ -67,7 +67,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     Ok((config_receipts, transient_receipts))
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json")).unwrap();
                 let left_id = fixture["leftWindowId"].as_str().unwrap();
                 let right_id = fixture["rightWindowId"].as_str().unwrap();
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
@@ -170,7 +170,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
 
 #[test]
 fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json")).unwrap();
     let base_config: WriterMainWindowConfig = pack::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
     let base_transient: WriterMainWindowTransient = pack::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
     let ids = [fixture["leftWindowId"].as_str().unwrap(), fixture["rightWindowId"].as_str().unwrap()];

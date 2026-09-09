@@ -11,37 +11,42 @@
       }
     },
     "test": {
-      "cache": false,
+      "cache": true,
       "dependsOn": [
         "workspace:deps-wasm-opt"
       ],
       "options": {
         "command": "bun ./📜️script.ts test"
-      }
+      },
+      "outputs": []
     },
     "policy-check": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts policy-check"
-      }
+      },
+      "outputs": []
     },
     "graph-check": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts graph-check"
-      }
+      },
+      "outputs": []
     },
     "artifact-check": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-check"
-      }
+      },
+      "outputs": []
     },
     "artifact-package-contract": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-package-contract"
-      }
+      },
+      "outputs": []
     },
     "audit": {
       "cache": false,
@@ -68,7 +73,7 @@
       }
     },
     "cache-verify": {
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts cache-verify"
       }
@@ -85,7 +90,7 @@
     },
     "toolchain": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "command": "bun ./🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts fingerprint"

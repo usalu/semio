@@ -15,11 +15,11 @@ use crate::schema::mutations::move_morph_target::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "move-morph-target/swaps-the-two-morph-targets";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧬️morph-target/🚚️move/🚚️swaps-the-two-1f4aeb/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧬️morph-target/🚚️move/🚚️swaps-the-two-1f4aeb/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧬️morph-target/🚚️move/🚚️swaps-the-two-1f4aeb/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧬️morph-target/🚚️move/🚚️swaps-the-two-1f4aeb/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧬️morph-target/🚚️move/🚚️swaps-the-two-1f4aeb/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

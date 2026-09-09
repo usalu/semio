@@ -1,6 +1,6 @@
 #[test]
     fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases() {
-        let fixture: Value = serde_json::from_str(include_str!("../🕸️media-projection/🧪️fixture/🔣️.json")).expect("neutral media presentation fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕸️media-projection/🔣️.json")).expect("neutral media presentation fixture");
         let cases = fixture["cases"].as_array().expect("four vectors");
         assert_eq!(cases.len(), 4);
         for row in cases {

@@ -19,17 +19,30 @@ export type OwnedResolvedBuildConfig = {
   readonly build: { readonly outDir: string; readonly write?: boolean };
 };
 
+export type OwnedBuildEnvironment = { readonly command: "build" | "serve"; readonly mode: string };
+export type OwnedBuildServerHookResult = void | (() => void);
+export type OwnedBuildHtmlTag = {
+  readonly tag: string;
+  readonly attrs?: Readonly<Record<string, string | boolean | undefined>>;
+  readonly children?: string | readonly OwnedBuildHtmlTag[];
+  readonly injectTo?: "head" | "head-prepend" | "body" | "body-prepend";
+};
+export type OwnedBuildHtmlContext = { readonly path: string; readonly filename: string; readonly server?: OwnedBuildServer };
+export type OwnedBuildHtmlResult = void | string | readonly OwnedBuildHtmlTag[] | { readonly html?: string; readonly tags: readonly OwnedBuildHtmlTag[] };
+export type OwnedBuildHtmlHook = (html: string, context: OwnedBuildHtmlContext) => OwnedBuildHtmlResult | Promise<OwnedBuildHtmlResult>;
+
 export type OwnedBuildPlugin = {
   readonly name: string;
   readonly enforce?: "pre" | "post";
   readonly apply?: "build" | "serve";
   resolveId?(id: string, importer?: string): string | undefined | null | Promise<string | undefined | null>;
   load?(id: string): string | undefined | null | Promise<string | undefined | null>;
-  configureServer?(server: OwnedBuildServer): void;
-  configurePreviewServer?(server: OwnedBuildServer): void;
+  config?(config: OwnedBuildConfig, environment: OwnedBuildEnvironment): void | OwnedBuildConfig | Promise<void | OwnedBuildConfig>;
+  configureServer?(server: OwnedBuildServer): OwnedBuildServerHookResult | Promise<OwnedBuildServerHookResult>;
+  configurePreviewServer?(server: OwnedBuildServer): OwnedBuildServerHookResult | Promise<OwnedBuildServerHookResult>;
   configResolved?(config: OwnedResolvedBuildConfig): void;
   closeBundle?(): void | Promise<void>;
-  transformIndexHtml?: unknown;
+  readonly transformIndexHtml?: OwnedBuildHtmlHook | { readonly order?: "pre" | "post"; readonly handler: OwnedBuildHtmlHook };
 };
 
 export type OwnedBuildOptions = {

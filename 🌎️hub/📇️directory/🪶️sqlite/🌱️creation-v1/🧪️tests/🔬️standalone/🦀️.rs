@@ -1,10 +1,10 @@
 //! 🧪️ Neutral genesis transaction cuts run against real SQLite writers and independent row reads.
 
 use super::*;
-use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage};
-use crate::artifact_authority::creation::{artifact_creation_command_digest_v1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS};
-use crate::artifact_authority::{checkpoint_id_encoding_v1, ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext};
-use crate::directory::{published_artifact_checkpoint, DirectoryService, HubDirectories};
+use crate::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
+use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
+use crate::directory::{DirectoryService, HubDirectories, published_artifact_checkpoint};
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use semio_framework_hash::Sha256;
 
@@ -410,7 +410,10 @@ async fn genesis_neutral_transactions_are_atomic_replayable_and_authorized() {
             assert_eq!(f.sqlite().artifact_creation_terminate_uncommitted(&f.intent, now_ms() as u64).await.unwrap(), terminal);
         }
     }
-    println!("[DEBUG] SQLite genesis: neutral transactions={} rollback cuts=7 index binding cuts=2 authority refusals=6 exact receipt/replay/rebuild=4 ack-loss ordered broadcast=1 forced replay epochs=2 revoked recovery=6; socket reconnect, physical CAS staging and real factory not executed", fixture["cases"].as_array().unwrap().len());
+    println!(
+        "[DEBUG] SQLite genesis: neutral transactions={} rollback cuts=7 index binding cuts=2 authority refusals=6 exact receipt/replay/rebuild=4 ack-loss ordered broadcast=1 forced replay epochs=2 revoked recovery=6; socket reconnect, physical CAS staging and real factory not executed",
+        fixture["cases"].as_array().unwrap().len()
+    );
 }
 
 #[tokio::test]

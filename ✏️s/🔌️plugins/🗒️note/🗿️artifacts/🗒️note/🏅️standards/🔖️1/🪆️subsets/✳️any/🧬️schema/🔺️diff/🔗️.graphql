@@ -1,27 +1,12 @@
-# 🧬️ Note diff schema.
-
+# import NoteArtifact, NoteBlockNode, NoteImageAsset from "../🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 type NoteDiff {
-  artifact: NoteArtifact @state(class: ARTIFACT)
-  schema: String @state(class: ARTIFACT)
-  id: String @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  blocks: NoteBlocksDelta @state(class: ARTIFACT)
-  gridVisible: Boolean @state(class: ARTIFACT)
-  gridSpacing: Float @state(class: ARTIFACT)
-  gridSubdivisions: Float @state(class: ARTIFACT)
-  gridOpacity: Float @state(class: ARTIFACT)
-  snapEnabled: Boolean @state(class: ARTIFACT)
-  snapGridSpacing: Float @state(class: ARTIFACT)
-  pencilWidth: Float @state(class: ARTIFACT)
-  eraserRadius: Float @state(class: ARTIFACT)
-  assets: NoteAssetsDelta @state(class: ARTIFACT)
-}
-
-type NoteArtifact {
-  schema: String!
-  id: String!
+  artifact: NoteArtifact
+  schema: String
+  id: String
   title: String
-  blocks: [NoteBlockNode!]!
+  blocks: NoteBlocksDelta
   gridVisible: Boolean
   gridSpacing: Float
   gridSubdivisions: Float
@@ -30,50 +15,12 @@ type NoteArtifact {
   snapGridSpacing: Float
   pencilWidth: Float
   eraserRadius: Float
-  assets: [NoteImageAssetEntry!]!
+  assets: NoteAssetsDelta
+  linkedArtifact: ArtifactLink
 }
-
-type NoteAssetsDelta {
-  entries: [NoteImageAssetDiffEntry!]!
-}
-
-type NoteStringList {
-  values: [String!]!
-}
-
-type NoteBlocksDelta {
-  added: [NoteBlockNode!]!
-  removed: [String!]!
-  patched: [NoteBlockPatchEntry!]!
-  reordered: [String!]
-}
-
-type NoteBlockPatchEntry {
-  id: String!
-  patch: NoteBlockPatch!
-}
-
-type NoteBlockPatch {
-  blockJson: String
-}
-
-type NoteBlockNode {
-  kind: String!
-}
-
-type NoteImageAssetEntry {
-  key: String!
-  value: NoteImageAsset!
-}
-
-type NoteImageAssetDiffEntry {
-  key: String!
-  value: NoteImageAsset
-}
-
-type NoteImageAsset {
-  mime: String!
-  data: String!
-  width: Float
-  height: Float
-}
+type NoteAddedBlockEntry { parentId: String index: Int block: NoteBlockNode! }
+type NoteBlockPatch { blockJson: String }
+type NoteBlockPatchEntry { id: String! patch: NoteBlockPatch! }
+type NoteBlocksDelta { added: [NoteAddedBlockEntry!]! removed: [String!]! patched: [NoteBlockPatchEntry!]! reordered: [String!] }
+type NoteAssetDeltaEntry { key: String! value: NoteImageAsset }
+type NoteAssetsDelta { entries: [NoteAssetDeltaEntry!]! }

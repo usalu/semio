@@ -16,11 +16,11 @@ use crate::diff::GisMapDiff;
 use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
 use crate::GisMapSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds-tram-route-after-ferry/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds-tram-route-after-ferry/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds-tram-route-after-ferry/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds-tram-route-after-ferry/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛣️create-route/🚋️adds-tram-route-after-ferry/🎯️outcome/🔣️.json");
 
 /// 🗺️ Decodes the committed snapshot with its stable child identities.
 fn before() -> GisMapSnapshot {

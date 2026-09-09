@@ -3,20 +3,13 @@
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note.config")]
-pub struct NoteConfig {
-    #[state(config)]
-    pub engagement_input: String,
-    #[state(config)]
-    pub camera: NoteCamera,
-}
+pub struct NoteConfig {}
 
-//region 📎 App-schema descriptor
-/// 📎 `s.note.note`'s config+presence schema descriptor — returned, not self-registered; `ArtifactEditor::app_schema`
-/// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for registration.
 pub fn app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
     framework_schema::AppSchemaDescriptor {
         id: "s.note.note",
@@ -30,9 +23,3 @@ pub fn app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
         },
     }
 }
-//endregion 📎 App-schema descriptor
-
-//#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::NoteCamera;
-//#endregion 🔁️Re-exports

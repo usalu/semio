@@ -20,7 +20,7 @@
   "targets": {
     "public-member-open-handoff-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts public-member-open-handoff-check",
         "cwd": "{projectRoot}",
@@ -38,7 +38,7 @@
     },
     "member-factory-identity-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-factory-identity-check",
         "cwd": "{projectRoot}",
@@ -47,7 +47,7 @@
     },
     "member-history-record-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-record-check",
         "cwd": "{projectRoot}",
@@ -56,7 +56,7 @@
     },
     "member-history-foundation-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-foundation-check",
         "cwd": "{projectRoot}",
@@ -65,7 +65,7 @@
     },
     "member-history-dictionary-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-dictionary-check",
         "cwd": "{projectRoot}",
@@ -74,7 +74,7 @@
     },
     "member-history-id-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-id-check",
         "cwd": "{projectRoot}",
@@ -83,7 +83,7 @@
     },
     "member-history-input-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-input-check",
         "cwd": "{projectRoot}",
@@ -101,7 +101,7 @@
     },
     "member-open-protocol-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-open-protocol-check",
         "cwd": "{projectRoot}",
@@ -110,7 +110,7 @@
     },
     "document-retirement-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-retirement-check",
         "cwd": "{projectRoot}",
@@ -119,7 +119,7 @@
     },
     "persistence-contract-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts persistence-contract-check",
         "cwd": "{projectRoot}",
@@ -128,7 +128,7 @@
     },
     "media-projection-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts media-projection-check",
         "cwd": "{projectRoot}",

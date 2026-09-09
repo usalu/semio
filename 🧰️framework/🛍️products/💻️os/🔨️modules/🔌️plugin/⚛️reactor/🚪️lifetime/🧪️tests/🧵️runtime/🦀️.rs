@@ -65,7 +65,7 @@ async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::Plugin
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixture/🧵️production.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️production.json")).unwrap();
     let instance = fixture["open"]["instance_id"].as_u64().unwrap() as u32;
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());

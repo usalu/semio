@@ -130,7 +130,12 @@ type AdminLiveJourneyFixture = {
   readonly operation: { readonly kind: "rebuild-directory-projections"; readonly requestId: string };
 };
 
-type LocalBrowserRelay = { readonly url: string; readonly secret: Buffer; stop: () => Promise<void> };
+type LocalBrowserRelay = { readonly url: string; readonly secret: Buffer; takeBrowserBootstrapProof: () => Buffer; stop: () => Promise<void> };
+type LocalBrowserRelayOptions = {
+  readonly activeProofTtlMs?: number;
+  readonly bootstrapProofTtlMs?: number;
+  readonly binding?: { readonly port: number; readonly secret: Buffer };
+};
 type LocalAdminRelay = { readonly url: string; stop: () => Promise<void> };
 
 type OrderedAppendBroadcastFixture = {
@@ -146,7 +151,7 @@ type OrderedAppendBroadcastFixture = {
 
 /** 📣️ Validates the neutral append/broadcast law and the exact single-writer production seam. */
 export function orderedDirectoryPublicationOracle(repoRoot: string): number {
-  const base = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🧪️fixtures/📣️ordered-append-broadcast-v1");
+  const base = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/📣️ordered-append-broadcast-v1");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8")) as OrderedAppendBroadcastFixture;
   const caseIds = ["concurrent-single-events", "paired-user-member-events", "append-failure", "empty-idempotent-decision"] as const;
   if (fixture.schema !== "semio.hub.directory.ordered-append-broadcast/v1" || fixture.maximumEventsPerDecision !== 2) throw new Error("ordered directory publication fixture envelope drift");
@@ -218,6 +223,7 @@ const EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT = 2;
 const EXECUTION_TARGET_RELAY_DEADLINE_MS = 9_000;
 const BROWSER_BROKER_PROOF_DOMAIN = "semio/browser-broker-proof/v1\0";
 const BROWSER_BROKER_PROOF_TTL_MS = 15_000;
+const BROWSER_BROKER_BOOTSTRAP_PROOF_TTL_MS = 120_000;
 const ADMIN_RELAY_BOOTSTRAP_PROOF_TTL_MS = 15_000;
 const ADMIN_RELAY_SESSION_TTL_MS = 30 * 60_000;
 const ADMIN_RELAY_COOKIE = "semio_admin_relay";
@@ -567,14 +573,18 @@ function matchesSecret(supplied: string | null, expected: Buffer): boolean {
   return matches;
 }
 
-function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: Record<string, any>, browserProof: Buffer, proofTtlMs = BROWSER_BROKER_PROOF_TTL_MS, binding?: { readonly port: number; readonly secret: Buffer }): LocalBrowserRelay {
-  if (!Number.isSafeInteger(proofTtlMs) || proofTtlMs <= 0 || proofTtlMs > BROWSER_BROKER_PROOF_TTL_MS) throw new Error("browser broker proof TTL invalid");
+function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: Record<string, any>, options: LocalBrowserRelayOptions = {}): LocalBrowserRelay {
+  const activeProofTtlMs = options.activeProofTtlMs ?? BROWSER_BROKER_PROOF_TTL_MS;
+  const bootstrapProofTtlMs = options.bootstrapProofTtlMs ?? BROWSER_BROKER_BOOTSTRAP_PROOF_TTL_MS;
+  if (!Number.isSafeInteger(activeProofTtlMs) || activeProofTtlMs <= 0 || activeProofTtlMs > BROWSER_BROKER_PROOF_TTL_MS) throw new Error("browser broker active proof TTL invalid");
+  if (!Number.isSafeInteger(bootstrapProofTtlMs) || bootstrapProofTtlMs <= 0 || bootstrapProofTtlMs > BROWSER_BROKER_BOOTSTRAP_PROOF_TTL_MS) throw new Error("browser broker bootstrap proof TTL invalid");
   if (envelope.schema !== "semio.hub.local-credential-envelope/v1" || envelope.clientClass !== "react-relay" || typeof envelope.capability !== "string" || !/^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/u.test(envelope.capability))
     throw new Error("react relay credential envelope binding mismatch");
-  const secret = binding?.secret ?? randomBytes(32);
-  let browserProofDigest = browserBrokerProofDigest(browserProof);
-  browserProof.fill(0);
-  let browserProofExpiresAtMs = Date.now() + proofTtlMs;
+  const secret = options.binding?.secret ?? randomBytes(32);
+  let browserProofDigest: Buffer | undefined;
+  let browserProofExpiresAtMs = 0;
+  let browserProofPhase: "unarmed" | "bootstrap" | "active" = "unarmed";
+  let bootstrapProofTaken = false;
   let capability = envelope.capability;
   envelope.capability = "";
   let inFlight = 0;
@@ -585,7 +595,7 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
   const idleWaiters = new Set<() => void>();
   const server = Bun.serve({
     hostname: "127.0.0.1",
-    port: binding?.port ?? 0,
+    port: options.binding?.port ?? 0,
     async fetch(request, relayServer): Promise<Response> {
       const supplied = request.headers.get("x-semio-local-relay");
       const origin = request.headers.get("origin");
@@ -642,7 +652,7 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > requestMaxBytes) return new Response("payload too large", { status: 413 });
       const currentProof = request.headers.get("x-semio-browser-broker");
       const nextProofDigest = request.headers.get("x-semio-browser-broker-next");
-      if (Date.now() > browserProofExpiresAtMs || currentProof === null || nextProofDigest === null || !/^[0-9a-f]{64}$/u.test(currentProof) || !/^[0-9a-f]{64}$/u.test(nextProofDigest)) {
+      if (browserProofPhase === "unarmed" || browserProofDigest === undefined || Date.now() > browserProofExpiresAtMs || currentProof === null || nextProofDigest === null || !/^[0-9a-f]{64}$/u.test(currentProof) || !/^[0-9a-f]{64}$/u.test(nextProofDigest)) {
         return new Response("unauthorized", { status: 401 });
       }
       const currentProofBytes = Buffer.from(currentProof, "hex");
@@ -655,7 +665,8 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       }
       browserProofDigest.fill(0);
       browserProofDigest = Buffer.from(nextProofDigest, "hex");
-      browserProofExpiresAtMs = Date.now() + proofTtlMs;
+      browserProofPhase = "active";
+      browserProofExpiresAtMs = Date.now() + activeProofTtlMs;
       inFlight += 1;
       if (executionTarget) executionTargetsInFlight += 1;
       const upstreamController = new AbortController();
@@ -700,12 +711,23 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
   return {
     url: `http://127.0.0.1:${server.port}`,
     secret,
+    takeBrowserBootstrapProof: () => {
+      if (stopping || !capability || bootstrapProofTaken || browserProofPhase !== "unarmed") throw new Error("browser broker bootstrap proof unavailable");
+      const proof = randomBytes(32);
+      browserProofDigest = browserBrokerProofDigest(proof);
+      browserProofExpiresAtMs = Date.now() + bootstrapProofTtlMs;
+      browserProofPhase = "bootstrap";
+      bootstrapProofTaken = true;
+      return proof;
+    },
     stop: () => {
       if (stopPromise) return stopPromise;
       stopping = true;
       capability = "";
       secret.fill(0);
-      browserProofDigest.fill(0);
+      browserProofDigest?.fill(0);
+      browserProofDigest = undefined;
+      browserProofPhase = "unarmed";
       browserProofExpiresAtMs = 0;
       for (const controller of upstreamControllers) controller.abort();
       stopPromise = (async () => {
@@ -2244,7 +2266,24 @@ self.onmessage = async event => {
   }
 }
 
-async function proveBrowserBrokerRelay(): Promise<void> {
+async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
+  const lifecycleFixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧫️fixtures/🔐️browser-broker-proof-lifecycle-v1/🔣️.json"), "utf8")) as {
+    readonly limits: { readonly bootstrapMaximumMs: number; readonly activeMaximumMs: number };
+    readonly delayedBootstrap: { readonly activeProofTtlMs: number; readonly bootstrapProofTtlMs: number; readonly delayMs: number };
+    readonly bootstrapExpiry: { readonly activeProofTtlMs: number; readonly bootstrapProofTtlMs: number; readonly delayMs: number };
+    readonly expected: { readonly unarmed: number; readonly admitted: number; readonly expired: number; readonly replayed: number };
+  };
+  const lifecycleOracle = new Ajv({ strict: true, allErrors: true }).compile(
+    JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧬️schema/🔐️browser-broker-proof-lifecycle-v1/🔣️.json"), "utf8")),
+  );
+  if (
+    !lifecycleOracle(lifecycleFixture) ||
+    lifecycleFixture.limits.bootstrapMaximumMs !== BROWSER_BROKER_BOOTSTRAP_PROOF_TTL_MS ||
+    lifecycleFixture.limits.activeMaximumMs !== BROWSER_BROKER_PROOF_TTL_MS ||
+    lifecycleFixture.delayedBootstrap.delayMs <= lifecycleFixture.delayedBootstrap.activeProofTtlMs ||
+    lifecycleFixture.delayedBootstrap.delayMs >= lifecycleFixture.delayedBootstrap.bootstrapProofTtlMs ||
+    lifecycleFixture.bootstrapExpiry.delayMs <= lifecycleFixture.bootstrapExpiry.bootstrapProofTtlMs
+  ) throw new Error(`browser broker lifecycle fixture invalid: ${JSON.stringify(lifecycleOracle.errors)}`);
   const uiOrigin = "http://127.0.0.1:6066";
   const upstreamState: BrowserBrokerOracleUpstream = { effects: 0, status: 200, hold: false };
   const upstreamServer = Bun.serve({
@@ -2262,36 +2301,57 @@ async function proveBrowserBrokerRelay(): Promise<void> {
   const hubOrigin = `http://127.0.0.1:${upstreamServer.port}`;
   let relay: LocalBrowserRelay | undefined;
   try {
-    const proof0 = randomBytes(32);
-    const proof0Hex = proof0.toString("hex");
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(proof0));
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope());
     const rawLocal = await browserBrokerOracleRequest(relay, uiOrigin);
-    if (rawLocal.status !== 401 || upstreamState.effects !== 0 || (await rawLocal.text()).includes(proof0Hex)) throw new Error("raw local caller crossed browser broker proof boundary");
+    if (rawLocal.status !== lifecycleFixture.expected.unarmed || upstreamState.effects !== 0) throw new Error("unarmed browser broker reached upstream");
     const shardAttempt = await runHostilePluginShard(relay, uiOrigin);
     if (shardAttempt.status !== 401 || shardAttempt.hasProof || shardAttempt.hasPort || shardAttempt.hash !== "" || upstreamState.effects !== 0) throw new Error("running same-origin plugin shard crossed private broker boundary");
+    const proof0 = relay.takeBrowserBootstrapProof();
+    const proof0Hex = proof0.toString("hex");
+    proof0.fill(0);
+    let duplicateTakeRejected = false;
+    try {
+      relay.takeBrowserBootstrapProof();
+    } catch {
+      duplicateTakeRejected = true;
+    }
+    if (!duplicateTakeRejected) throw new Error("browser broker issued duplicate bootstrap proof");
     const proof1 = randomBytes(32);
     const admitted = await browserBrokerOracleRequest(relay, uiOrigin, proof0Hex, proof1);
-    if (!admitted.ok || admitted.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("browser broker did not acknowledge an admitted ratchet");
+    if (admitted.status !== lifecycleFixture.expected.admitted || admitted.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("browser broker did not acknowledge an admitted ratchet");
     const replay = await browserBrokerOracleRequest(relay, uiOrigin, proof0Hex, randomBytes(32));
-    if (replay.status !== 401 || upstreamState.effects !== 1 || (await replay.text()).includes(proof0Hex)) throw new Error("browser broker accepted or reflected a replayed proof");
+    if (replay.status !== lifecycleFixture.expected.replayed || upstreamState.effects !== 1 || (await replay.text()).includes(proof0Hex)) throw new Error("browser broker accepted or reflected a replayed proof");
     await relay.stop();
 
     upstreamState.effects = 0;
-    const ttlProof = randomBytes(32);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), lifecycleFixture.delayedBootstrap);
+    await Bun.sleep(lifecycleFixture.delayedBootstrap.delayMs);
+    const ttlProof = relay.takeBrowserBootstrapProof();
     const ttlProofHex = ttlProof.toString("hex");
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(ttlProof), 250);
+    ttlProof.fill(0);
     const ttlNext = randomBytes(32);
     const ttlAdvanced = await browserBrokerOracleRequest(relay, uiOrigin, ttlProofHex, ttlNext);
-    if (!ttlAdvanced.ok || ttlAdvanced.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("TTL oracle did not advance the initial broker proof");
-    await Bun.sleep(300);
+    if (ttlAdvanced.status !== lifecycleFixture.expected.admitted || ttlAdvanced.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("delayed bootstrap did not advance the initial broker proof");
+    await Bun.sleep(lifecycleFixture.delayedBootstrap.delayMs);
     const expired = await browserBrokerOracleRequest(relay, uiOrigin, ttlNext.toString("hex"), randomBytes(32));
-    if (expired.status !== 401 || upstreamState.effects !== 1) throw new Error("expired rotated broker proof reached upstream");
+    if (expired.status !== lifecycleFixture.expected.expired || upstreamState.effects !== 1) throw new Error("expired rotated broker proof reached upstream");
     await relay.stop();
 
     upstreamState.effects = 0;
-    const rejectedProof = randomBytes(32);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), lifecycleFixture.bootstrapExpiry);
+    const expiredBootstrapProof = relay.takeBrowserBootstrapProof();
+    const expiredBootstrapProofHex = expiredBootstrapProof.toString("hex");
+    expiredBootstrapProof.fill(0);
+    await Bun.sleep(lifecycleFixture.bootstrapExpiry.delayMs);
+    const expiredBootstrap = await browserBrokerOracleRequest(relay, uiOrigin, expiredBootstrapProofHex, randomBytes(32));
+    if (expiredBootstrap.status !== lifecycleFixture.expected.expired || upstreamState.effects !== 0) throw new Error("expired bootstrap proof reached upstream");
+    await relay.stop();
+
+    upstreamState.effects = 0;
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope());
+    const rejectedProof = relay.takeBrowserBootstrapProof();
     const rejectedProofHex = rejectedProof.toString("hex");
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(rejectedProof));
+    rejectedProof.fill(0);
     upstreamState.status = 401;
     const rejectedNext = randomBytes(32);
     const rejected = await browserBrokerOracleRequest(relay, uiOrigin, rejectedProofHex, rejectedNext);
@@ -2303,9 +2363,10 @@ async function proveBrowserBrokerRelay(): Promise<void> {
     upstreamState.effects = 0;
     upstreamState.status = 200;
     upstreamState.hold = true;
-    const cancelProof = randomBytes(32);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope());
+    const cancelProof = relay.takeBrowserBootstrapProof();
     const cancelProofHex = cancelProof.toString("hex");
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(cancelProof));
+    cancelProof.fill(0);
     const abort = new AbortController();
     const cancelled = browserBrokerOracleRequest(relay, uiOrigin, cancelProofHex, randomBytes(32), "/_semio/hub/auth/sessions/me", abort.signal).catch(() => undefined);
     await waitForBrowserBrokerEffect(upstreamState, 1);
@@ -2523,7 +2584,6 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
       packSchemaHash: new Array(32).fill(current.expected.helloPackSchemaHashByte),
     }),
   );
-  const bootstrapProof = randomBytes(32);
   let proofHex = "";
   let relay: LocalBrowserRelay | undefined;
   let viteServer: { close(): Promise<void> } | undefined;
@@ -2540,7 +2600,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
   try {
     const uiPort = await freeLoopbackPort();
     const uiOrigin = `http://127.0.0.1:${uiPort}`;
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, bootstrapProof);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability });
     process.env.S_OS_PORT = String(uiPort);
     process.env.S_HUB_URL = hubOrigin;
     process.env.S_LOCAL_RELAY_URL = relay.url;
@@ -2570,9 +2630,10 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     const relayPort = Number(new URL(relay.url).port);
     const relaySecret = Buffer.from(relay.secret);
     await relay.stop();
-    const liveProof = randomBytes(32);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, { binding: { port: relayPort, secret: relaySecret } });
+    const liveProof = relay.takeBrowserBootstrapProof();
     proofHex = liveProof.toString("hex");
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, liveProof, BROWSER_BROKER_PROOF_TTL_MS, { port: relayPort, secret: relaySecret });
+    liveProof.fill(0);
     await page.evaluate(
       ({ workerUrl, proof, openWire }) => {
         const state = ((globalThis as any).__semio = { messages: [], errors: [], started: false });
@@ -2884,7 +2945,7 @@ async function adminLiveJourneyFixture(repoRoot: string): Promise<AdminLiveJourn
   if (fixture.schema !== "semio.hub.admin-live-journey/v1" || fixture.limits.responseBytes !== 65536) throw new Error("admin live journey envelope drift");
   if (fixture.limits.journeyMs < 1000 || fixture.limits.journeyMs > 60000 || fixture.limits.pollMs < 10 || fixture.limits.pollMs > 5000) throw new Error("admin live journey bounds drift");
   if (fixture.languages.length !== 2) throw new Error("admin live journey requires exactly two languages with no default");
-  const admissionRoot = join(repoRoot, "🌎️hub/🚀️local-bootstrap/🧪️fixtures/⏳️idle-admission-v1");
+  const admissionRoot = join(repoRoot, "🌎️hub/🚀️local-bootstrap/🧫️fixtures/⏳️idle-admission-v1");
   const admissionDocument = JSON.parse(readFileSync(join(admissionRoot, "🔣️.json"), "utf8")) as Record<string, unknown> & { hostile: readonly (HubFixtureExpectationV1 & { id: string; mutation: Record<string, unknown> })[] };
   const { hostile: admissionHostile, ...admissionContract } = admissionDocument;
   const admission = admissionContract as unknown as { exchangeDeadlineMs: number; idleBeforeAdmissionMs: number; frameHex: string; payloadHex: string };
@@ -3072,7 +3133,7 @@ class ArtifactCasCheckScript extends BundleScript {
 }
 
 async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "📇️directory", "🧫️fixtures", "🧪️fixtures", "🔌️scoped-socket-revocation-v1");
+  const root = join(repoRoot, "🌎️hub", "📇️directory", "🧫️fixtures", "🔌️scoped-socket-revocation-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const scopeContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketScopeV1");
   const messageContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketMessageRoutingV1");
@@ -3156,7 +3217,7 @@ class AdminDirectoryAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phase = segments[0] ?? "source";
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("admin-directory-authority-check accepts source or native");
-    const root = join(this.root, "🧪️fixtures/🏛️admin-directory-authority-v1");
+    const root = join(this.repoRoot, "🌎️hub/🧫️fixtures/🏛️admin-directory-authority-v1");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     if (fixture.schema !== "semio.hub.admin-directory-authority/v1") throw new Error("admin directory authority fixture schema drift");
     if (Object.keys(fixture).sort().join(",") !== "bindings,schema,shortActions,vectors") throw new Error("admin directory authority fixture envelope drift");
@@ -3711,7 +3772,7 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phase = segments[0] ?? "source";
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("directory-message-authority-check accepts source or native");
-    const root = join(this.root, "🧪️fixtures/🌐️directory-message-authority-v1");
+    const root = join(this.repoRoot, "🌎️hub/🧫️fixtures/🌐️directory-message-authority-v1");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     if (fixture.schema !== "semio.hub.directory-message-authority/v1") throw new Error("directory message authority fixture schema drift");
     if (Object.keys(fixture).sort().join(",") !== "messages,schema,vectors") throw new Error("directory message authority fixture envelope drift");
@@ -3906,7 +3967,7 @@ type NativeArtifactProviderFrontierFixture = {
 };
 
 async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<number> {
-  const fixtureRoot = join(repoRoot, "🌎️hub/🧪️fixtures/🧭️native-artifact-provider-frontier-v1");
+  const fixtureRoot = join(repoRoot, "🌎️hub/🧫️fixtures/🧭️native-artifact-provider-frontier-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as NativeArtifactProviderFrontierFixture;
   const headlessProfile = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeArtifactProviderHeadlessProfileV1");
   const providerIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSetIdentityV1");
@@ -3954,7 +4015,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
 }
 
 async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/🪪️execution-target-relay-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetRelayFixture;
   if (fixture.schema !== "semio.hub.execution-target-relay/v1") throw new Error("execution-target relay fixture schema drift");
   if (Object.keys(fixture).sort().join(",") !== "fences,intent,limits,responses,routes,schema") throw new Error("execution-target relay fixture envelope drift");
@@ -4023,8 +4084,8 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
       return new Response(new Uint8Array(responseBytes).fill(73), { headers: { "content-type": "application/octet-stream", "cache-control": "no-store" } });
     },
   });
-  let proof = randomBytes(32);
-  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(proof));
+  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope());
+  let proof = relay.takeBrowserBootstrapProof();
   const request = async (path: string, method = "POST", body = intentBody, signal?: AbortSignal): Promise<Response> => {
     const current = proof;
     proof = randomBytes(32);
@@ -4137,7 +4198,7 @@ type InferenceRelayFixture = {
 };
 
 async function proveInferenceRelay(repoRoot: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧪️fixtures/💡️inference-relay-v1/🔣️.json"), "utf8")) as InferenceRelayFixture;
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧫️fixtures/💡️inference-relay-v1/🔣️.json"), "utf8")) as InferenceRelayFixture;
   const schema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/💡️inference/🌐️relay/🔣️.json"), "utf8"));
   const oracle = new Ajv({ strict: true }).compile(schema);
   if (fixture.schema !== "semio.hub.inference-relay-fixture/v1" || fixture.routes.length < 29 || new Set(fixture.routes.map((row) => row.id)).size !== fixture.routes.length) throw new Error("inference relay fixture inventory drift");
@@ -4163,8 +4224,8 @@ async function proveInferenceRelay(repoRoot: string): Promise<number> {
       return new Response(body, { headers: { "content-type": "application/json" } });
     },
   });
-  let proof = randomBytes(32);
-  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(proof));
+  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope());
+  let proof = relay.takeBrowserBootstrapProof();
   const request = async (path: string, method: string, body = "{}", streamed = false): Promise<Response> => {
     const current = proof;
     const next = randomBytes(32);
@@ -4235,7 +4296,7 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("execution-target-relay-check accepts only --native");
     console.log("execution-target-provider-frontier: checks=" + (await proveNativeArtifactProviderFrontier(this.repoRoot)));
     console.log(`execution-target-relay-check: checks=${await proveExecutionTargetRelay(this.repoRoot)}`);
-    await proveBrowserBrokerRelay();
+    await proveBrowserBrokerRelay(this.repoRoot);
     console.log("execution-target-relay-check: existing browser proof-ratchet runtime regression clean");
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
@@ -4262,12 +4323,12 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
 
 class BrowserBrokerCheckScript extends BundleScript {
   async run(): Promise<void> {
-    await proveBrowserBrokerRelay();
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-quick", "--skip-nx-cache", "--", "--run", "-t", "browser broker proof ratchet|queues a directory command while the hub is unreachable"], {
+    await proveBrowserBrokerRelay(this.repoRoot);
+    runCmd("bun", ["x", "--no-install", "nx", "run", "@semio-tech/framework-os:test-quick", "--skip-nx-cache", "--", "--run", "-t", "browser broker proof ratchet"], {
       cwd: this.repoRoot,
       ...orchestratorBudgetOpts(),
     });
-    console.log("browser-broker-check: raw-local and shard denial, one-use ratchet, replay rejection, rotated TTL, upstream 401 epoch closure, cancel-after-send, and redaction passed");
+    console.log("browser-broker-check: unarmed denial, delayed one-use bootstrap, bootstrap and active expiry, replay rejection, shard denial, upstream 401 epoch closure, cancel-after-send, and redaction passed");
   }
 }
 
@@ -4801,7 +4862,7 @@ type NativeOpenableOwnerReceipt = Omit<NativeOpenableProjectionReceipt, "protoco
 
 /** 🧬 Proves the neutral provider projection independently from Rust codecs and loader parsers. */
 async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Promise<void> {
-  const fixtureRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🪪️v1");
+  const fixtureRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧫️fixtures/🪪️v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as any;
   const admitsOpenTarget = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableOpenTargetV1");
   const admitsAttestation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableAttestationV1");
@@ -4817,7 +4878,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/🧾️claim-authority");
   const surfaceRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/📇️native-catalog-surface");
   const builderRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder");
-  const builderFixture = JSON.parse(readFileSync(join(builderRoot, "🧪️fixtures/📇️topic-contributions/🔣️.json"), "utf8"));
+  const builderFixture = JSON.parse(readFileSync(join(builderRoot, "🧫️fixtures/📇️topic-contributions/🔣️.json"), "utf8"));
   const validateBuilder = hubSchemaExport(repoRoot, "schema://os.plugin.builder/TopicContributionsV1");
   if (!validateBuilder(builderFixture)) throw new Error("builder topic fixture violates its owning scope contract");
   if (!readFileSync(join(builderRoot, "🦀️.rs"), "utf8").includes("pub fn contributes_topic(")) throw new Error("plugin builder does not retain domain-neutral topic contributions before assembly");
@@ -5022,7 +5083,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
 
 /** 🌿 Independently evaluates the exact VCS selection, admission fences and unconsumed-binding profiles. */
 async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌿️vcs-v1");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧫️fixtures/🌿️vcs-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
   const admitsProfile = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecUnconsumedProfileV1");
@@ -5765,7 +5826,7 @@ function executionTargetLeaseInstall(
 }
 
 async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1");
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
   const validateFields = hubSchemaExport(repoRoot, "schema://os.directory/DocumentExecutionTargetLeaseFieldsV1");
   if (fixture.schema !== "semio.os.document-execution-target-lease-corpus/v1" || fixture.version !== 1) throw new Error("execution target lease corpus schema drift");
@@ -5988,7 +6049,7 @@ class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
 class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
   async run(): Promise<void> {
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child";
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error("child Worker fixture: " + JSON.stringify(validate.errors));
@@ -6782,7 +6843,7 @@ class SpacePublicBoundaryCheckScript extends BundleScript {
 
 /** 💡️ Independent schema, SHA-256, bounds and lifecycle reference over the neutral ledger corpus. */
 async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧾️inference-wal-proof-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🧾️inference-wal-proof-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateCommand = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandV1");
   const validateTarget = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceWalTargetV1");
@@ -6822,7 +6883,7 @@ async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
   integer(command.timestamp.logical);
   const canonical = Buffer.from(encoded);
   if (canonical.toString("hex") !== fixture.encodedHex || createHash("sha256").update(canonical).digest("hex") !== fixture.commandHash) throw new Error("independent protocol envelope/hash mismatch");
-  const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
+  const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
   if (
     ledger.outbox.commandHex !== fixture.encodedHex ||
     ledger.outbox.commandHash !== fixture.commandHash ||
@@ -6889,9 +6950,9 @@ async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
 }
 
 async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "⛓️inference-wal-chain-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "⛓️inference-wal-chain-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const proof = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧾️inference-wal-proof-v1", "🔣️.json"), "utf8"));
+  const proof = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🧾️inference-wal-proof-v1", "🔣️.json"), "utf8"));
   const validatePolicy = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceWalChainPolicyV1");
   if (!validatePolicy({ hashAlgorithm: fixture.hashAlgorithm, requiredFlags: fixture.requiredFlags, recordDigest: fixture.recordDigest, commitDigest: fixture.commitDigest }))
     throw new Error("WAL chain fixture policy is not a hub.inference/InferenceWalChainPolicyV1");
@@ -7079,7 +7140,7 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
 }
 
 async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🎯️inference-catalog-selection-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🎯️inference-catalog-selection-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateSelection = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCatalogSelectionV1");
   if (!validateSelection({ scope: fixture.scope, descriptor: fixture.descriptor, package: fixture.package, services: fixture.services }))
@@ -7125,7 +7186,7 @@ async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<
 
 /** ↩️ Pins witness-derived durable GIS approval undo and its tagged history dispatch. */
 async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "↩️gis-map-approval-undo-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "↩️gis-map-approval-undo-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateTarget = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapApprovalUndoTargetV1");
   const validateRequest = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapApprovalUndoRequestV1");
@@ -7199,10 +7260,10 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
 
 /** ⏯️ Pins the retained GIS inference worker lifecycle independently of the Rust runtime. */
 async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-retained-runtime-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🗺️gis-inference-retained-runtime-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const limits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceLimitsV1");
-  const canonicalLimits = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1", "🔣️.json"), "utf8")).limits;
+  const canonicalLimits = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🗳️gis-map-proposal-approval-v1", "🔣️.json"), "utf8")).limits;
   if (!limits(canonicalLimits)) throw new Error("retained GIS inference limits reference is not a hub.inference/InferenceLimitsV1");
   if (fixture.schema !== "semio.hub.gis-inference-retained-runtime/v1") throw new Error("retained GIS inference fixture envelope drifted");
   if (
@@ -7289,7 +7350,7 @@ async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promis
 
 /** 🗺️ Independently pins the whole GIS Map proposal/approval contract without any Rust codec. */
 async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "⏸️gis-inference-checkpoint-control-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "⏸️gis-inference-checkpoint-control-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateFrame = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlFrameV1");
   const validateDirection = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlDirectionV1");
@@ -7362,7 +7423,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   const checkpointControlCases = await proveGisInferenceCheckpointControlFixture(repoRoot);
   const retainedRuntimeCases = await proveGisInferenceRetainedRuntimeFixture(repoRoot);
   const durableUndoCases = await proveGisMapApprovalUndoFixture(repoRoot);
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateBinding = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceBindingIdentityV1");
   const validateLimits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceLimitsV1");
@@ -7513,7 +7574,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   }
   if (statuses.get("approval.commit-unavailable") !== 503) throw new Error("a missing composition transaction must fail closed with 503");
   for (const rejection of fixture.approvalRejections) if (!statuses.has(rejection.code)) throw new Error(`approval rejection ${rejection.name} uses an unpublished code`);
-  const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
+  const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
   const committer = fixture.committer;
   if (
     committer.capacity !== fixture.limits.documentGateCapacity ||
@@ -7661,7 +7722,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   const inferenceRegistration = hubBin.slice(hubBin.indexOf("let inference_runtime = match gis_map_binding.as_ref()"), hubBin.indexOf("let inference_ready = inference_runtime.is_some()"));
   if (!inferenceRegistration.includes("RetainedGisMapApprovalCommitterV1::new") || !inferenceRegistration.includes("GisMapApprovalCheckpointPublisherV1Impl") || inferenceRegistration.includes("UnavailableGisMapApprovalCommitterV1"))
     throw new Error("production GIS Map approval did not register its retained three-Store checkpoint committer");
-  const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
+  const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧫️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
   if (
     fixture.binding.digest !== frozen.expectedDigest ||
     fixture.binding.componentBlake3 !== frozen.binding.package.componentBlake3 ||
@@ -7778,7 +7839,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
 
 /** 🧊️ Independently pins every retained GIS Map catalog and executable binding fact. */
 async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🧊️gis-map-frozen-binding-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapFrozenBindingV1");
   if (fixture.schema !== "semio.hub.gis-map-frozen-binding-fixture/v1") throw new Error("frozen GIS Map binding fixture envelope drifted");
@@ -7841,7 +7902,7 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
 
 /** 🧭️ Proves request-id reconciliation is closed, reader-bound and expiry-independent. */
 async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧭️inference-job-reconcile-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🧭️inference-job-reconcile-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateRequest = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileRequestV1");
   const validateResult = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileResultV1");
@@ -7897,7 +7958,7 @@ async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void
 
 class GisInferenceLedgerOracleScript extends BundleScript {
   async run(): Promise<void> {
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧫️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
     const schemaRoot = join(this.repoRoot, "🌎️hub", "💡️inference", "🧬️schema");
     const validate = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceRequestV1");
     const validateIdentity = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceIdentityV1");
@@ -7912,7 +7973,7 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     if (!validate(fixture.identity.request)) throw new Error("invalid neutral inference intent");
     if (!validateIdentity(fixture.identity)) throw new Error("GIS ledger identity is not a hub.inference/InferenceIdentityV1");
     parseInferenceIdentityV1(fixture.identity);
-    const identityRoot = join(this.repoRoot, "🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1");
+    const identityRoot = join(this.repoRoot, "🌎️hub/🧫️fixtures/🖥️inference-server-identity-v1");
     const identityFixture = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
     if (identityFixture.schema !== "semio.hub.inference-server-identity-fixture/v1" || identityFixture.maximumBytes !== 96 || identityFixture.cases.length !== 11) throw new Error("server identity corpus envelope drifted");
     if (JSON.stringify(identityFixture.fields) !== JSON.stringify(["userId", "sessionId", "spaceId", "documentId", "headEditId"])) throw new Error("server identity corpus field set drifted");
@@ -8031,7 +8092,7 @@ class GisInferenceLedgerOracleScript extends BundleScript {
 
 /** ✅ Validates the closed approval intent independently of Rust and its transport authority. */
 async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/✅️inference-approval-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/✅️inference-approval-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceApprovalRequestV1");
   const { parseInferenceApprovalRequestV1 } = await import(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🟦️.ts"));
@@ -8067,7 +8128,7 @@ async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<v
 
 /** 🛂 Evaluates durable membership and immutable identity predicates through independent SQLite. */
 async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/🛂️inference-author-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/🛂️inference-author-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   if (fixture.schema !== "semio.hub.inference-author-fixture/v1" || fixture.cases.length !== 16 || new Set(fixture.cases.map((row: { operation: string }) => row.operation)).size !== 16) throw new Error("inference Author corpus envelope drifted");
   const { Database } = await import("bun:sqlite");
@@ -8158,7 +8219,7 @@ async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
 
 /** 🧷 Independently evaluates the exact GIS selection and admission fences. */
 async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌍️gis-v1");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧫️fixtures/🌍️gis-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
   if (fixture.schema !== "semio.hub.gis-native-provider-selection/v1" || fixture.cases.length !== 8 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("GIS provider selection envelope differs");
@@ -8178,7 +8239,7 @@ async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise
 
 /** 🪪️ Keeps descriptor SHA-256 authority distinct from component PackageRef BLAKE3. */
 async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🧪️fixtures", "🪪️identity-roles");
+  const root = join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🧫️fixtures", "🪪️identity-roles");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const assert = (await import("node:assert/strict")).default;
   const validateBundle = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleV1");
@@ -8414,7 +8475,7 @@ function trustedBootstrapPlanGenerationOutcome(issuedGenerationId: string, obser
 
 /** 🧬️ Independently validates the exact closed stdio+GIS profile and full-generation framing. */
 async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promise<void> {
-  const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures");
+  const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧫️fixtures");
   const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
   const integerShape = hubSchemaExport(repoRoot, "schema://framework.value.codec/CodecFixture");
   if (!integerShape(integerFixture)) throw new Error("exact integer fixture violates its owning scope contract");
@@ -8539,7 +8600,7 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
 async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleBrowserActorV1");
   assert.deepEqual(Object.keys(fixture), ["schema", "bodyHex", "encodingSha256", "noneEncodingSha256", "closed", "rawLengths", "loadCases", "cases"]);
   assert.equal(fixture.schema, "semio.hub.trusted-browser-actor-fixture.v1");
@@ -8623,7 +8684,7 @@ function moduleRustSource(root: string): string {
 async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
-  const fixtureRoot = join(root, "🧪️fixtures/🛡️opened-root");
+  const fixtureRoot = join(root, "🧫️fixtures/🛡️opened-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const validatePointer = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogCurrentPointerV1");
   const validateRelativePath = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogRelativePathV1");
@@ -8691,12 +8752,12 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
 
 /** 🌐️ Binds a browser proof to one retained trusted generation rather than a second build. */
 async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️retained-gis-browser");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const assert = (await import("node:assert/strict")).default;
   assert.deepEqual(Object.keys(fixture), ["schema", "bootstrapFixture", "contract", "cases", "nonclaims"]);
   assert.equal(fixture.schema, "semio.hub.retained-gis-browser/v1");
-  assert.equal(fixture.bootstrapFixture, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json");
+  assert.equal(fixture.bootstrapFixture, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json");
   assert.deepEqual(fixture.contract, {
     generation: "published-current-exact",
     actorPath: "packages/gis/browser/closed-actor.mjs",
@@ -8764,14 +8825,14 @@ async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<
 async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string): Promise<void> {
   const assert = (await import("node:assert/strict")).default;
   const equal = (await import("fast-deep-equal")).default;
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🤝️gis-map-collaboration");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🤝️gis-map-collaboration");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const pinned = {
     schema: "semio.hub.gis-map-collaboration/v1",
     prerequisites: {
-      bootstrapFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
-      browserFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser/🔣️.json",
-      approvalFixture: "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json",
+      bootstrapFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+      browserFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️retained-gis-browser/🔣️.json",
+      approvalFixture: "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json",
     },
     selection: {
       profileId: "local-stdio-gis-open-v1",
@@ -8929,7 +8990,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   await proveTrustedGenerationStageFixture(repoRoot);
   await proveTrustedPublicationFixture(repoRoot);
   await proveTrustedBootstrapCodecCaptureFixture(repoRoot);
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const { default: bootstrapAssert } = await import("node:assert/strict");
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
@@ -9087,7 +9148,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
 async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promise<void> {
   await (await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
   const { default: assert } = await import("node:assert/strict");
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
   assert.deepEqual(Object.keys(fixture), ["schema", "publicationFiles", "descriptorPreviewCases", "selectedClosure", "cases", "consumerCatalogCases", "atomicCases", "nativeCases", "rawCases", "encodingCases", "ordering"]);
@@ -9123,7 +9184,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   for (const row of [...fixture.rawCases, ...fixture.encodingCases]) assert.match(row.hex, /^(?:[0-9a-f]{2}){4,1024}$/u);
   assert.equal(fixture.ordering.input.length, 3);
   assert.equal(fixture.ordering.expected.length, 3);
-  const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures");
+  const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures");
   const kind = JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.json"), "utf8"));
   const validateKind = hubSchemaExport(repoRoot, "schema://framework.manifest/ArtifactKindFormatsFixture");
   assert(validateKind(kind), "artifact kind formats fixture violates its owning scope contract");
@@ -9360,7 +9421,7 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
 async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { writeFileSync, truncateSync } = await import("node:fs");
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧊️codec-source");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧊️codec-source");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   assert.deepEqual(Object.keys(fixture), ["schema", "maximumSourceBytes", "maximumTotalBytes", "cases"]);
   assert.equal(fixture.schema, "semio.hub.codec-source.v1");
@@ -9552,7 +9613,7 @@ function trustedBootstrapStageFixturePackages(fixture: any, actor: any, componen
 async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { symlinkSync, truncateSync, writeFileSync } = await import("node:fs");
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧱️generation-stage");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧱️generation-stage");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateProtocol = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleExecutionProtocolV1");
   assert.deepEqual(Object.keys(fixture), ["schema", "componentHex", "descriptors", "executionProtocol", "cases"]);
@@ -9670,7 +9731,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
 async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { writeFileSync } = await import("node:fs");
-  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/📤️publication");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   assert.deepEqual(Object.keys(fixture), ["schema", "generationId", "profileId", "cases", "commandCases", "receiptCases"]);
   assert.equal(fixture.schema, "semio.hub.trusted-publication/v1");
@@ -10848,7 +10909,7 @@ async function validateAndPublishTrustedStdioGisCandidate(repoRoot: string, hubR
 
 /** ✉️ Independent bounded canonical envelope oracle; it does not interpret GIS mutations. */
 async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "✉️inference-command-v1");
+  const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "✉️inference-command-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateLimits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandLimitsV1");
   const validateCommand = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandV1");
@@ -11717,9 +11778,7 @@ async function startGisMapShellPeerV1(options: {
   const uiPort = await freeLoopbackPort();
   const uiOrigin = "http://127.0.0.1:" + uiPort;
   const hubOrigin = "http://127.0.0.1:" + options.run.port;
-  const proof = randomBytes(32);
-  const proofHex = proof.toString("hex");
-  const relay = startLocalBrowserRelay(hubOrigin, uiOrigin, options.credentialEnvelope, proof);
+  const relay = startLocalBrowserRelay(hubOrigin, uiOrigin, options.credentialEnvelope);
   const peerDataRoot = mkdtempSync(join(options.artifactRoot, "shell-peer-" + options.profileId + "-"));
   if (process.platform !== "win32") chmodSync(peerDataRoot, 0o700);
   const devRoot = join(options.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
@@ -11777,6 +11836,9 @@ async function startGisMapShellPeerV1(options: {
       if (message.type() === "error") diagnostics.push("console:" + message.text());
     });
     page.on("pageerror", (error) => diagnostics.push("pageerror:" + error.message));
+    const proof = relay.takeBrowserBootstrapProof();
+    const proofHex = proof.toString("hex");
+    proof.fill(0);
     await page.goto(uiOrigin + "/#semio-broker=" + proofHex, { waitUntil: "domcontentloaded", timeout: 30_000 });
     await page.locator("[data-semio-os-ready]").waitFor({ state: "attached", timeout: 120_000 });
     await page.waitForFunction(
@@ -12553,9 +12615,7 @@ class DevScript extends BundleScript {
         const uiPort = Number(process.env.S_OS_PORT ?? 6066);
         const uiOrigin = `http://127.0.0.1:${uiPort}`;
         const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
-        const browserProof = randomBytes(32);
-        const browserProofHex = browserProof.toString("hex");
-        relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope, browserProof);
+        relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
         const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
         ui = spawn(process.execPath, [uiScript, "dev", "s"], {
           cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
@@ -12564,6 +12624,9 @@ class DevScript extends BundleScript {
           stdio: "inherit",
         });
         await waitForUiReadiness(uiOrigin, ui);
+        const browserProof = relay.takeBrowserBootstrapProof();
+        const browserProofHex = browserProof.toString("hex");
+        browserProof.fill(0);
         openExternalBrowser(`${uiOrigin}/#semio-broker=${browserProofHex}`);
         console.log(`[INFO] secure local OS profile starting at ${uiOrigin}`);
       }
@@ -12695,7 +12758,7 @@ ${finishGisMapProcessDocumentSocket.toString()}
 
 /** 🪢️ Validates the neutral shared-current workflow and its private owner boundaries. */
 async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/🤝️two-author-shell-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/🤝️two-author-shell-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const assert = await import("node:assert/strict");
   assert.equal(fixture.selection.executionProtocol, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, "two-author fixture must name the currently compiled AppChannel");
@@ -12993,7 +13056,7 @@ class TrustedStdioGisBootstrapScript extends BundleScript {
 
 class AdminBackendCheckScript extends BundleScript {
   async run(): Promise<void> {
-    runCmd("bun", [join(this.repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🎯️admin-intent-v1/🧪️oracle/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", [join(this.repoRoot, "🌎️hub/📇️directory/🧪️tests/🎯️admin-intent-v1/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     const exactLaw = (target: string[], suffix: string): string => {
       const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--all-features", ...target, suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout
@@ -13119,7 +13182,7 @@ type DirectoryEventPageRouteFixture = {
 };
 
 async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/📅️event-page-route-v1");
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/📅️event-page-route-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectoryEventPageRouteFixture;
   if (fixture.schema !== "semio.hub.directory-event-page-route/v1") throw new Error("directory event page route fixture schema drift");
   if (Object.keys(fixture).sort().join(",") !== "hostiles,limits,queryCases,schema,session,vectors") throw new Error("directory event page route fixture envelope drift");
@@ -14139,7 +14202,6 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
     },
   });
   const hubOrigin = `http://127.0.0.1:${authority.port}`;
-  const proof = randomBytes(32);
   const prior = {
     S_OS_PORT: process.env.S_OS_PORT,
     S_HUB_URL: process.env.S_HUB_URL,
@@ -14153,7 +14215,7 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
   try {
     const uiPort = await freeLoopbackPort();
     const uiOrigin = `http://127.0.0.1:${uiPort}`;
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, proof);
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability });
     process.env.S_OS_PORT = String(uiPort);
     process.env.S_HUB_URL = hubOrigin;
     process.env.S_LOCAL_RELAY_URL = relay.url;
@@ -14177,9 +14239,10 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
       }
       const binding = { port: Number(new URL(relay.url).port), secret: Buffer.from(relay.secret) };
       await relay.stop();
-      const currentProof = randomBytes(32);
+      relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, { binding });
+      const currentProof = relay.takeBrowserBootstrapProof();
       const proofHex = currentProof.toString("hex");
-      relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, currentProof, BROWSER_BROKER_PROOF_TTL_MS, binding);
+      currentProof.fill(0);
       return { proof: proofHex, ...browserConfig };
     };
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Scoped presence browser shell</title><script type="module">import { injectIntoGlobalHook } from "/@react-refresh"; injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;</script><script type="module" src="/@vite/client"></script></head><body><div id="root"></div><script type="module">const root = document.querySelector("#root"); try { const module = await import(${JSON.stringify(`/@fs${componentPath}`)}); const response = await fetch("/__scoped-presence/config"); if (!response.ok) throw new Error(\`config status \${response.status}\`); module.mountScopedPresenceBrowserShellV1(root, await response.json()); } catch (error) { root.textContent = \`[DEBUG] scoped-presence mount failed: \${error instanceof Error ? error.message : String(error)}\`; console.error(root.textContent); }</script></body></html>`;
@@ -14491,7 +14554,7 @@ type DirectoryCommandReceiptFixture = {
  * The repository's own TypeScript parser is exercised as a third implementation, never as the
  * oracle, and the hub/os fixture copies must stay byte-identical. */
 async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🧾️command-receipt-v1");
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🧾️command-receipt-v1");
   const source = readFileSync(join(root, "🔣️.json"), "utf8");
   const mirror = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), "utf8");
   if (source !== mirror) throw new Error("directory command receipt fixture drifted between the hub and os trees");
@@ -15191,7 +15254,7 @@ type DirectorySpaceAdministrationFixture = {
 };
 
 async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🏘️space-administration-page-v1");
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🏘️space-administration-page-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectorySpaceAdministrationFixture;
   if (fixture.schema !== "semio.hub.directory-space-administration-page/v1") throw new Error("space administration fixture schema drift");
   if (Object.keys(fixture).sort().join(",") !== "cursorCases,hostiles,invites,limits,members,schema,session,space,vectors") throw new Error("space administration fixture envelope drift");
@@ -15515,7 +15578,7 @@ class SpaceAdministrationCheckScript extends BundleScript {
 }
 
 async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/👥️presence-lease-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8")) as PresenceLeaseFixture;
   const presenceOperation = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceLeaseOperationV1");
   const presenceSummary = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceScopeSummaryV1");
@@ -15664,7 +15727,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
 
 /** 🪪️ Pins canonical admitted presence bytes independently with AJV and third-party LEB128. */
 async function provePresenceNormalizationFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1");
+  const root = join(repoRoot, "🌎️hub/🧫️fixtures/🪪️presence-normalization-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8"));
   const presenceAdmission = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceAdmissionV1");
   if (fixture.schema !== "semio.hub.presence-normalization/v1" || fixture.maximumEntryBytes !== 4096) throw new Error("presence normalization fixture schema/bound drift");
@@ -15825,7 +15888,7 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     const phase = segments[0] ?? "source";
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("admin-presence-target-recovery-check accepts source or native");
     const root = join(this.repoRoot, "🌎️hub/📦️packages/🦀️rust");
-    const fixtureRoot = join(root, "🧪️fixtures/🛂️admin-presence-target-recovery-v1");
+    const fixtureRoot = join(root, "🧫️fixtures/🛂️admin-presence-target-recovery-v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     if (fixture.schema !== "semio.hub.admin-presence-target-recovery/v1" || fixture.surfaceId !== "surface.test.editor") throw new Error("admin presence target recovery fixture schema drift");
     if (Object.keys(fixture).sort().join(",") !== "expected,members,remove,schema,scope,surfaceId") throw new Error("admin presence target recovery fixture envelope drift");
@@ -16468,7 +16531,7 @@ function spaceJourneyHostiles(fixture: DirectorySpaceJourneyFixture): readonly {
  * implementation of the descriptor admission law, and source fences proving every named route and
  * step is actually owned by the hub and driven by the process runner. */
 async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<{ fixture: DirectorySpaceJourneyFixture; checks: number }>> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🚻️space-journey-v1");
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🚻️space-journey-v1");
   const source = readFileSync(join(root, "🔣️.json"), "utf8");
   const fixture = JSON.parse(source) as DirectorySpaceJourneyFixture;
   if (fixture.schema !== "semio.hub.directory-space-journey/v1") throw new Error("space journey fixture schema drift");

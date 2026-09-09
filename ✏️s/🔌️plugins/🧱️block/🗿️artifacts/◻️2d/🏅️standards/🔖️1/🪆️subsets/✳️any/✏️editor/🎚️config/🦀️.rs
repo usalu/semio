@@ -15,6 +15,7 @@ use protocol::Mutation;
 #[dsl(extension = "block2dcfg")]
 #[dsl(id = "block2d.config")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct Block2dConfig {}
 
 //#region 🔖️ArtifactCodec
@@ -61,11 +62,7 @@ impl store::ArtifactPack for Block2dConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-impl Default for Block2dConfig {
-    fn default() -> Self {
-        Self {}
-    }
-}
+
 
 store::impl_whole_record_config!(Block2dConfig);
 //#endregion 🔖️Config

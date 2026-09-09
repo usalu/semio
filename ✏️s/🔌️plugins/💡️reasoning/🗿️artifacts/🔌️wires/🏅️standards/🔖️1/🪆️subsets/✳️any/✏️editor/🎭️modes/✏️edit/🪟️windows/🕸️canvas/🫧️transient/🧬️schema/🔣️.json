@@ -5,12 +5,23 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "dragStartX",
+    "dragStartY",
     "dragLastX",
-    "dragLastY"
+    "dragLastY",
+    "dragZoom"
   ],
   "properties": {
     "dragNodeId": {
       "type": "string",
+      "x-semio-state": "transient"
+    },
+    "dragStartX": {
+      "type": "number",
+      "x-semio-state": "transient"
+    },
+    "dragStartY": {
+      "type": "number",
       "x-semio-state": "transient"
     },
     "dragLastX": {
@@ -19,6 +30,11 @@
     },
     "dragLastY": {
       "type": "number",
+      "x-semio-state": "transient"
+    },
+    "dragZoom": {
+      "type": "number",
+      "exclusiveMinimum": 0,
       "x-semio-state": "transient"
     }
   }

@@ -9,7 +9,7 @@
 //!
 //! Every function below DELEGATES to an already-registered, already-oracle-qualified projector this
 //! crate carries for OTHER subsets, rather than re-implementing a DXF/XML/PDF reader a third time:
-//! `semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::project_dxf_r12` is the same qualifying
+//! `crate::artifacts::dxf::standards::v_r12::subsets::any::project_dxf_r12` is the same qualifying
 //! `dxf` 0.6 reader `s.stdio.dxf@r12/✳️any` registers under `dxf-crate-r12-mutate`; the DXF bytes
 //! `NoteIntoDxf` writes are ordinary DXF R12 (only ever containing `LINE` entities), so the reader
 //! that already qualifies against the full grammar reads this narrower subset of it for free.
@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// qualifying `dxf` reader `s.stdio.dxf@r12/✳️any` registers.
 #[cfg(feature = "oracles")]
 pub fn project_note_dxf(bytes: &[u8]) -> Result<Json, String> {
-    semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::project_dxf_r12(bytes)
+    crate::artifacts::dxf::standards::v_r12::subsets::any::project_dxf_r12(bytes)
 }
 
 /// 🎨️ Independent semantic projection of the SVG XML `NoteIntoSvg` wrote (via the real semio/drawing

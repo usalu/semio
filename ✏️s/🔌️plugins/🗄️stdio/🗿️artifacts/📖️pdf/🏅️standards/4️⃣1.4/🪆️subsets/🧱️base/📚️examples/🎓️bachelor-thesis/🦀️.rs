@@ -12,7 +12,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Bachelor Thesis", "Bachelorarbeit")
 }
 pub const ICON: &str = "file";
-pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/🎓️bachelor-thesis.pdf");
+pub const FIXTURE_BYTES: &[u8] = include_bytes!("../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decoded_summary_json() -> String {

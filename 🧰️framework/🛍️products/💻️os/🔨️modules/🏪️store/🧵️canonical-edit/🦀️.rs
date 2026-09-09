@@ -4,6 +4,7 @@ use super::*;
 
 #[path = "🌱️value/🦀️.rs"]
 mod value;
+pub use value::{ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep};
 
 #[path = "🧵️borrowed/🦀️.rs"]
 mod borrowed;

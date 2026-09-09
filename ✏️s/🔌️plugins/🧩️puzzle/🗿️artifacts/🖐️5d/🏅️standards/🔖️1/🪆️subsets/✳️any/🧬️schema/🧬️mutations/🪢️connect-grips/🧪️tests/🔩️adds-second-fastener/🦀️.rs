@@ -9,11 +9,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, inverse_puzzle5d_mutation};
 use crate::Puzzle5dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-grips/🔩️adds-second-fastener/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-grips/🔩️adds-second-fastener/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-grips/🔩️adds-second-fastener/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-grips/🔩️adds-second-fastener/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-grips/🔩️adds-second-fastener/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle5dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

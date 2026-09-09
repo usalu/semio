@@ -1035,7 +1035,7 @@
         "retainedClosing": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["requestId", "operationEpoch", "cases", "approvalClose", "queuedRetirement", "brokerReplacement", "authorityRetirement", "portReplacement", "successorProof", "unknownPhase", "terminalPhase", "reconcilePath", "closedKind"],
+          "required": ["requestId", "operationEpoch", "cases", "approvalClose", "queuedRetirement", "brokerReplacement", "authorityRetirement", "portReplacement", "directoryPageBinding", "authorityFence", "successorProof", "unknownPhase", "terminalPhase", "reconcilePath", "closedKind"],
           "properties": {
             "requestId": { "$ref": "#/$defs/GisMapInferencePortHex32" },
             "operationEpoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
@@ -1045,6 +1045,18 @@
             "brokerReplacement": { "const": "queued-old-request-denied" },
             "authorityRetirement": { "const": ["invalid-response", "http-401", "non-200", "old-body-after-proof-replacement"] },
             "portReplacement": { "const": "old-body-cannot-bind-successor-port" },
+            "directoryPageBinding": { "const": ["same-authority", "foreign-binding", "foreign-generation"] },
+            "authorityFence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cases", "openingCode", "blockedOpeningCode", "successorRoutes"],
+              "properties": {
+                "cases": { "const": ["absent-authority-refused", "sealed-request-proof-replacement"] },
+                "openingCode": { "const": "inference.denied" },
+                "blockedOpeningCode": { "const": "inference.capacity" },
+                "successorRoutes": { "const": [] }
+              }
+            },
             "successorProof": { "$ref": "#/$defs/GisMapInferencePortHex64" },
             "unknownPhase": { "const": "indeterminate" },
             "terminalPhase": { "const": "cancelled" },
@@ -1096,7 +1108,7 @@
           ],
           "properties": {
             "approvalFixture": {
-              "const": "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1"
+              "const": "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1"
             },
             "serverLifecycleKinds": {
               "type": "array",
@@ -1629,25 +1641,25 @@
           "const": "jcoprobe-guest"
         },
         "semanticOwnerRoot": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest"
         },
         "packageRoot": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust"
         },
         "cargoManifestPath": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml"
         },
         "cargoLockPath": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock"
         },
         "componentPath": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs"
         },
         "witPath": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit"
         },
         "adapterPath": {
-          "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
+          "const": "🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs"
         }
       }
     }

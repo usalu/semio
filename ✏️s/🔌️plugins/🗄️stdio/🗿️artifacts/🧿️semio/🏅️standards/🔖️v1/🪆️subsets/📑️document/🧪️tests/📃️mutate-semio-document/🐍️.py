@@ -92,8 +92,8 @@ PACK_TOKEN = "s.stdio.semio.document.pack v1"
 PACK_FORMAT = 1
 BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 
-MEMO_DSL = "asset://📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio"
-MEMO_PACK = "asset://📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio"
+MEMO_DSL = "asset://🗒️memo/🗣️.dsl.semio"
+MEMO_PACK = "asset://🗒️memo/🎒️.pack.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -748,7 +748,7 @@ def memo(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📃️mutate-semio-document/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

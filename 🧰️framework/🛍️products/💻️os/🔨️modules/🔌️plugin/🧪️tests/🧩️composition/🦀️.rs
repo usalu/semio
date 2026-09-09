@@ -123,7 +123,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_parent_snapshot_restore_matches_neutral_corpus() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧪️tests/🔣️.json"))).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧫️fixtures/🔣️.json"))).unwrap();
     for row in fixture["publicRestoreCases"].as_array().unwrap() {
         if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row).await; }
         else { assert_parent_restore_case::<false>(row).await; }

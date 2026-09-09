@@ -4,7 +4,7 @@ use semio_framework_hash::Sha256;
 
 #[test]
 fn trusted_browser_actor_metadata_and_generation_match_neutral_corpus() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     let source = DocumentBrowserActorSourceV1 { component_sha256: fixture["closed"]["sourceComponentSha256"].as_str().unwrap(), descriptor_byte_sha256: fixture["closed"]["sourceDescriptorByteSha256"].as_str().unwrap() };
     for law in fixture["cases"].as_array().unwrap() {
         let mut value = if law["kind"] == "none" { serde_json::json!({"kind":"none"}) } else { fixture["closed"].clone() };

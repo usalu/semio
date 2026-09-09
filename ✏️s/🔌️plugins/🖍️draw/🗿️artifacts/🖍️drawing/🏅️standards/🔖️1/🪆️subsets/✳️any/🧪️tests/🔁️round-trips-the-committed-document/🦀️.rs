@@ -14,7 +14,7 @@ use semio_repo_test_host::Adapter;
 /// 🗣️ The real committed example this artifact ships — the identity law's input, owned by this
 /// subset.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 
 #[cfg(feature = "sut")]
 mod subject {

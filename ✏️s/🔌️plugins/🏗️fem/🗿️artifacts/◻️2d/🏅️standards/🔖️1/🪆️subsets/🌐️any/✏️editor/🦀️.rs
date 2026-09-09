@@ -148,6 +148,7 @@ fn fem2d_retained_extent(command: &Fem2dCommand, snapshot: &Fem2dSnapshot, _inte
     fem2d_document_items(snapshot).filter(|items| *items <= FEM2D_MAXIMUM_DOCUMENT_ITEMS).map(|_| 1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn fem2d_retained_reduce(
     command: &Fem2dCommand,
     snapshot: &Fem2dSnapshot,

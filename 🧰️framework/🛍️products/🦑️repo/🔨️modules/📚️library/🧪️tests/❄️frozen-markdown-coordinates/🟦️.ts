@@ -8,8 +8,8 @@ import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../❄️frozen-markdown-coordinates/🔣️.json"), "utf8"));
-const historical = JSON.parse(readFileSync(join(import.meta.dir, "../❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const functions = () => {
@@ -28,7 +28,7 @@ function producerInputs(schema: discovery.Taxonomy) {
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(3);
   const source = declarations.map((node) => node.getText(tree)).join("\n"), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
-  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🔣️draw-source-scenario.json"), "utf8"));
+  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8"));
   const build = new Function("getWorkspaceRoot", "lstatSync", "readFileSync", "createHash", "join", "posix", "registryCompilerInputDependencies", "DRAW_SOURCE_SCENARIO", compiled + "\nreturn { read: artifactProjectionProducerInput, collect: artifactProjectionProducerInputs };")(() => root, lstatSync, readFileSync, createHash, join, posix, discovery.registryCompilerInputDependencies, scenario);
   return { ...build.collect(schema), read: build.read, sourceSha256: sha(source) } as { files: Record<string, { content: string; mode: number; sha256: string; origin: string }>; modules: unknown[]; read: (path: string) => { sha256: string; mode: number }; sourceSha256: string };
 }
@@ -153,7 +153,7 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   const current = plan();
   checkpoint("initial-plan");
   writeFileSync(join(owner, "📝️.md"), "# Historical Markdown Transaction\n\nThis isolated fixture retains all source and recovery evidence; no cleanup is performed.\n", { flag: "wx" });
-  writeFileSync(join(owner, "../❄️frozen-markdown-coordinates/🔣️.json"), normalization.canonicalJson(current) + "\n", { flag: "wx" });
+  writeFileSync(join(owner, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), normalization.canonicalJson(current) + "\n", { flag: "wx" });
   expect(current.unresolved).toEqual([]);
   expect(current.moves).toHaveLength(1);
   expect(current.regenerations).toHaveLength(0);

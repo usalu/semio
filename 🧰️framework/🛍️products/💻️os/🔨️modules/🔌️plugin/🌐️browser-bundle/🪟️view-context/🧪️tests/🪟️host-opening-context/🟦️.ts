@@ -5,7 +5,7 @@ import { parseBrowserActorViewStateRequest } from "../../🟦️.ts";
 import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "../../../../../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import viewSchema from "../../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
-import fixture from "./🔣️.json";
+import fixture from "../../🧫️fixtures/🪟️host-opening-context/🔣️.json";
 
 export function testBrowserActorHostContext(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(viewSchema).compile(schema);

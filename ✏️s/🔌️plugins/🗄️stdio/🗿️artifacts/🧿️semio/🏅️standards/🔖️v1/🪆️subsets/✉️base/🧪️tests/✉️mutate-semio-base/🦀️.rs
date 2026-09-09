@@ -48,8 +48,8 @@ const ENVELOPE_SCHEMA: &str = "stdio.semio";
 
 /// 🌐️ The envelope's OWN committed real artifact, in both of its committed encodings — the byte
 /// carriers `identity-round-trip` measures alongside the typed full-replace routing law.
-const DSL_ASSET: &str = "asset://📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio";
-const PACK_ASSET: &str = "asset://📚️examples/🌐️envelope/🖼️assets/🎒️.pack.semio";
+const DSL_ASSET: &str = "asset://🌐️envelope/🗣️.dsl.semio";
+const PACK_ASSET: &str = "asset://🌐️envelope/🎒️.pack.semio";
 
 /// 📄️ The committed `(before, mutation, after, diff)` specification vector for the two
 /// envelope-owned verbs. Its arm is the `value` subset.
@@ -165,19 +165,23 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{expected_routing, leaf_before_uri, leaf_mutation_uri, outcome_of, routing_json};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
+    use crate::standards::v1::subsets::base::schema::mutations::apply_animation as any_animation;
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusal_codes;
+    use crate::standards::v1::subsets::base::schema::mutations::{
+        apply_audio as any_audio, apply_brep as any_brep, apply_cad as any_cad, apply_document as any_document, apply_drawing as any_drawing, apply_flow as any_flow, apply_graph as any_graph, apply_image as any_image, apply_kit as any_kit,
+        apply_mesh as any_mesh, apply_model as any_model, apply_object as any_object, apply_presentation as any_presentation, apply_semio_mutation, apply_table as any_table, apply_text as any_text, apply_value as any_value, apply_video as any_video,
+        inverse_semio_mutation, semio_subset_tag, set_snapshot as any_set_snapshot, SemioMutation,
+    };
+    use crate::standards::v1::subsets::base::schema::snapshot::{decode_semio_envelope_pack, encode_semio_envelope_pack, parse_semio_envelope_dsl, print_semio_envelope_dsl};
+    use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use crate::standards::v1::subsets::base::schema::snapshot::{decode_semio_envelope_pack, encode_semio_envelope_pack, parse_semio_envelope_dsl, print_semio_envelope_dsl};
-    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusal_codes;
-    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-    use crate::standards::v1::subsets::base::schema::mutations::{
-        apply_semio_mutation, apply_audio as any_audio, apply_brep as any_brep, apply_cad as any_cad, apply_document as any_document, apply_drawing as any_drawing, apply_flow as any_flow, apply_graph as any_graph, apply_image as any_image, inverse_semio_mutation, apply_kit as any_kit, apply_mesh as any_mesh,
-        apply_model as any_model, apply_object as any_object, apply_presentation as any_presentation, semio_subset_tag, set_snapshot as any_set_snapshot, apply_table as any_table, apply_text as any_text, apply_value as any_value, apply_video as any_video, SemioMutation,
-    };
-    use crate::standards::v1::subsets::base::schema::mutations::apply_animation as any_animation;
-    use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 
-    use crate::standards::v1::subsets::animation::schema::{mutations::{insert_timeline, SemioAnimationMutation}, snapshot::AnimTimeline};
+    use crate::standards::v1::subsets::animation::schema::{
+        mutations::{insert_timeline, SemioAnimationMutation},
+        snapshot::AnimTimeline,
+    };
     use crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation;
     use crate::standards::v1::subsets::brep::schema::mutations::{create_vertex, SemioBrepMutation};
     use crate::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::CadLayer};
@@ -186,7 +190,10 @@ mod subject {
         mutations::{create_layer, SemioDrawingMutation},
         snapshot::DrawLayer,
     };
-    use crate::standards::v1::subsets::flow::schema::{mutations::{insert_node, SemioFlowMutation}, snapshot::FlowNode};
+    use crate::standards::v1::subsets::flow::schema::{
+        mutations::{insert_node, SemioFlowMutation},
+        snapshot::FlowNode,
+    };
     use crate::standards::v1::subsets::graph::schema::{
         mutations::{create_node, SemioGraphMutation},
         snapshot::GraphNodeId,
@@ -199,7 +206,10 @@ mod subject {
     };
     use crate::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SpatialNode};
     use crate::standards::v1::subsets::object::schema::mutations::{move_object, SemioObjectMutation};
-    use crate::standards::v1::subsets::presentation::schema::{mutations::{insert_slide, SemioPresentationMutation}, snapshot::Slide};
+    use crate::standards::v1::subsets::presentation::schema::{
+        mutations::{insert_slide, SemioPresentationMutation},
+        snapshot::Slide,
+    };
     use crate::standards::v1::subsets::table::schema::{
         mutations::{create_column, SemioTableMutation},
         snapshot::SemioTableCellKind,
@@ -247,18 +257,28 @@ mod subject {
     /// is evidence the envelope routed it all the way in rather than swallowing it.
     fn delegated(subset: &str) -> SemioMutation {
         match subset {
-            "brep" => SemioMutation::ApplyBrep(any_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v-probe".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }) }),
+            "brep" => SemioMutation::ApplyBrep(any_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v-probe".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7 }) }),
             "mesh" => SemioMutation::ApplyMesh(any_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m-probe".into(), ..Default::default() } }) }),
-            "model" => SemioMutation::ApplyModel(any_model::ApplyModel { mutation: SemioModelMutation::InsertSpatialNode(crate::standards::v1::subsets::model::schema::mutations::insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } }) }),
+            "model" => SemioMutation::ApplyModel(any_model::ApplyModel {
+                mutation: SemioModelMutation::InsertSpatialNode(crate::standards::v1::subsets::model::schema::mutations::insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } }),
+            }),
             "value" => SemioMutation::ApplyValue(any_value::ApplyValue { mutation: SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n-probe"), value: SemioValue::Str { value: "probe".into() } }) }),
-            "document" => SemioMutation::ApplyDocument(any_document::ApplyDocument { mutation: SemioDocumentMutation::InsertStyle(crate::standards::v1::subsets::document::schema::mutations::insert_style::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } }) }),
+            "document" => SemioMutation::ApplyDocument(any_document::ApplyDocument {
+                mutation: SemioDocumentMutation::InsertStyle(crate::standards::v1::subsets::document::schema::mutations::insert_style::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } }),
+            }),
             "cad" => SemioMutation::ApplyCad(any_cad::ApplyCad { mutation: SemioCadMutation::AddLayer(crate::standards::v1::subsets::cad::schema::mutations::add_layer::AddLayer { layer: CadLayer { name: "L-PROBE".into(), ..Default::default() } }) }),
             "drawing" => SemioMutation::ApplyDrawing(any_drawing::ApplyDrawing { mutation: SemioDrawingMutation::CreateLayer(create_layer::mutation::CreateLayer { index: 0, layer: DrawLayer { id: "dl-probe".into(), ..Default::default() } }) }),
             "image" => SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions(crate::standards::v1::subsets::image::schema::mutations::set_dimensions::SetDimensions { width: 4, height: 2 }) }),
-            "video" => SemioMutation::ApplyVideo(any_video::ApplyVideo { mutation: SemioVideoMutation::InsertStream(crate::standards::v1::subsets::video::schema::mutations::insert_stream::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } }) }),
+            "video" => SemioMutation::ApplyVideo(any_video::ApplyVideo {
+                mutation: SemioVideoMutation::InsertStream(crate::standards::v1::subsets::video::schema::mutations::insert_stream::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } }),
+            }),
             "audio" => SemioMutation::ApplyAudio(any_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate::SetSampleRate { sample_rate: 48_000 }) }),
-            "animation" => SemioMutation::ApplyAnimation(any_animation::ApplyAnimation { mutation: SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: 0, timeline: AnimTimeline { name: Some("probe".into()), ..Default::default() } }) }),
-            "presentation" => SemioMutation::ApplyPresentation(any_presentation::ApplyPresentation { mutation: SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 0, slide: Slide { id: "sl-probe".into(), ..Default::default() } }) }),
+            "animation" => SemioMutation::ApplyAnimation(any_animation::ApplyAnimation {
+                mutation: SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: 0, timeline: AnimTimeline { name: Some("probe".into()), ..Default::default() } }),
+            }),
+            "presentation" => {
+                SemioMutation::ApplyPresentation(any_presentation::ApplyPresentation { mutation: SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 0, slide: Slide { id: "sl-probe".into(), ..Default::default() } }) })
+            }
             "flow" => SemioMutation::ApplyFlow(any_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(insert_node::InsertNode { node: FlowNode { id: "fn-probe".into(), ..Default::default() } }) }),
             "text" => SemioMutation::ApplyText(any_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "probe".into(), marks: Vec::new() } }) }),
             "table" => SemioMutation::ApplyTable(any_table::ApplyTable { mutation: SemioTableMutation::CreateColumn(create_column::mutation::CreateColumn { name: "probe".into(), kind: SemioTableCellKind::Str, index: None }) }),
@@ -305,13 +325,7 @@ mod subject {
             "str" => SemioValue::Str { value: json.str("value") },
             "bytes" => SemioValue::Bytes { value: bytes_field(json, "value") },
             "list" => SemioValue::List { items: json.array("items").iter().map(decode_value).collect() },
-            "map" => SemioValue::Map {
-                entries: json
-                    .array("entries")
-                    .iter()
-                    .map(|entry| SemioValueEntry { key: entry.str("key"), value: decode_value(entry.get("value").expect("mutate-semio-base: a map entry must carry a value")) })
-                    .collect(),
-            },
+            "map" => SemioValue::Map { entries: json.array("entries").iter().map(|entry| SemioValueEntry { key: entry.str("key"), value: decode_value(entry.get("value").expect("mutate-semio-base: a map entry must carry a value")) }).collect() },
             "ref" => SemioValue::Ref { id: decode_id(json.get("id").expect("mutate-semio-base: a ref value must carry an id")) },
             other => panic!("mutate-semio-base: unknown value kind {other:?}"),
         }
@@ -338,7 +352,9 @@ mod subject {
     }
     fn decode_envelope_mutation(json: &Json) -> SemioMutation {
         match json.str("mutation").as_str() {
-            "setSnapshot" => SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: decode_envelope(json.get("payload").expect("mutate-semio-base: setSnapshot must carry a payload").get("snapshot").expect("mutate-semio-base: setSnapshot's payload must carry a snapshot")) }),
+            "setSnapshot" => SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot {
+                snapshot: decode_envelope(json.get("payload").expect("mutate-semio-base: setSnapshot must carry a payload").get("snapshot").expect("mutate-semio-base: setSnapshot's payload must carry a snapshot")),
+            }),
             other => panic!("mutate-semio-base: the committed leaf vector declares only the envelope-owned verb setSnapshot; no decoder for {other:?}"),
         }
     }
@@ -364,11 +380,7 @@ mod subject {
     /// than through `decode_envelope_mutation`, which no longer has an arm for it.
     fn envelope_verb(kind: &str, ctx: &Context) -> Result<(SemioSnapshot, SemioMutation), String> {
         let base = leaf_document(ctx)?;
-        let mutation = if kind == "no-mutation" {
-            SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: base.clone() })
-        } else {
-            decode_envelope_mutation(&ctx.fixture_json(&leaf_mutation_uri())?)
-        };
+        let mutation = if kind == "no-mutation" { SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: base.clone() }) } else { decode_envelope_mutation(&ctx.fixture_json(&leaf_mutation_uri())?) };
         Ok((base, mutation))
     }
 
@@ -426,7 +438,8 @@ mod subject {
     /// `mutation.target-missing`, leaving the document exactly as it stood.
     pub fn mismatch(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
-        let (routed, raised) = apply(&base, &SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions(crate::standards::v1::subsets::image::schema::mutations::set_dimensions::SetDimensions { width: 4, height: 2 }) }));
+        let (routed, raised) =
+            apply(&base, &SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions(crate::standards::v1::subsets::image::schema::mutations::set_dimensions::SetDimensions { width: 4, height: 2 }) }));
         checked("rejects-a-mismatched-arm", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 
@@ -460,11 +473,7 @@ mod subject {
         let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
         let unpacked = decode_semio_envelope_pack(&pack_bytes)?;
         if unpacked != parsed {
-            return Err(format!(
-                "identity-round-trip: the committed binary twin decodes to a different envelope than the committed text artifact\n     got: {}\nexpected: {}",
-                semio_subset_tag(&unpacked),
-                semio_subset_tag(&parsed)
-            ));
+            return Err(format!("identity-round-trip: the committed binary twin decodes to a different envelope than the committed text artifact\n     got: {}\nexpected: {}", semio_subset_tag(&unpacked), semio_subset_tag(&parsed)));
         }
         let repacked_bytes = encode_semio_envelope_pack(&parsed);
         carrier_is_exact(&repacked_bytes, &pack_bytes)?;

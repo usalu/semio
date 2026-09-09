@@ -204,11 +204,16 @@ impl InteractiveJob for SharedFillWorkerJob {
     }
 }
 
-type MountedFillWorker = semio_framework_job::MountedWorkerJobSession<SharedFillWorkerJob>;
+/// 🧵️ The fill planner is driven ON THE CALLER, never handed to a worker pool: one
+/// `FillBuilder::step` is a single bounded cursor unit, and a pooled submission costs a thread
+/// round-trip per unit that no interactive step (nor the single-threaded wasm guest, which has no
+/// pool at all) can wait for — measured at ≈4 000 idle `precompute_step_lane` calls per planner step
+/// before this became [`semio_framework_job::BatchJobSession`].
+type MountedFillWorker = semio_framework_job::BatchJobSession<SharedFillWorkerJob>;
 type RejectedFillWorker = semio_framework_job::WorkerJobSessionAdmissionRejected<SharedFillWorkerJob>;
 
 fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: CancelToken) -> Result<MountedFillWorker, RejectedFillWorker> {
-    semio_framework_job::MountedWorkerJobSession::try_new(
+    semio_framework_job::BatchJobSession::try_new(
         SharedFillWorkerJob::new(fill),
         semio_framework_job::BatchJobParams {
             operation: operation.operation,
@@ -240,11 +245,6 @@ fn retire_rejected_fill_worker(mut rejected: RejectedFillWorker) {
         rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     }
     debug_assert!(rejected.terminal_is_empty(), "rejected fill worker must reach terminal emptiness within its own declared close turns");
-}
-
-fn fill_worker_pool() -> semio_framework_async::WorkerPool {
-    let workers = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, workers))
 }
 
 struct FillEnvelopeAdmissionCursor {
@@ -363,6 +363,17 @@ struct FillEnvelopeMeasurementOwners {
     worker: MountedFillWorker,
 }
 
+struct FillEnvelopeMeasurementRequest {
+    job: u64,
+    operation: Operation,
+    fill: SharedFillBuilder,
+    worker: MountedFillWorker,
+    cancel: CancelToken,
+    steps_remaining: usize,
+    preview_sequence: u64,
+    observation: FillObservation,
+}
+
 struct FillEnvelopeRegistry {
     slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS],
     generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS],
@@ -399,17 +410,8 @@ fn decode_fill_envelope_token(bytes: &[u8]) -> Option<FillJobRequest> {
 }
 
 impl FillEnvelopeRegistry {
-    fn begin_measurement(
-        &mut self,
-        job: u64,
-        operation: Operation,
-        fill: SharedFillBuilder,
-        worker: MountedFillWorker,
-        cancel: CancelToken,
-        steps_remaining: usize,
-        preview_sequence: u64,
-        observation: FillObservation,
-    ) -> Result<FillJobRequest, FillEnvelopeMeasurementOwners> {
+    fn begin_measurement(&mut self, request: FillEnvelopeMeasurementRequest) -> Result<FillJobRequest, FillEnvelopeMeasurementOwners> {
+        let FillEnvelopeMeasurementRequest { job, operation, fill, worker, cancel, steps_remaining, preview_sequence, observation } = request;
         let candidates = [self.next_slot, (self.next_slot + 1) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 2) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 3) % FILL_ENVELOPE_MAX_OPERATIONS];
         let Some(slot) = candidates.into_iter().find(|slot| self.slots[*slot].is_none() && self.generations[*slot] != u64::MAX) else {
             return Err(FillEnvelopeMeasurementOwners { fill, worker });
@@ -496,7 +498,7 @@ impl FillEnvelopeRegistry {
                 return Err(fill);
             }
         };
-        let request = self.begin_measurement(job, operation, fill, worker, cancel, steps_remaining, preview_sequence, observation).map_err(|owners| owners.fill)?;
+        let request = self.begin_measurement(FillEnvelopeMeasurementRequest { job, operation, fill, worker, cancel, steps_remaining, preview_sequence, observation }).map_err(|owners| owners.fill)?;
         match self.finish_measurement(&request, requested_items, requested_bytes) {
             Some(token) => Ok((request, token)),
             None => {
@@ -663,9 +665,9 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
             authority.observation.done = true;
             return FillEnvelopeDrive::Stale;
         };
-        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background) {
-            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                let Some(outcome) = worker.take_checked_out_outcome() else {
+        match worker.step() {
+            Ok(_) => {
+                let Some(outcome) = worker.take_outcome() else {
                     authority.worker_terminal = true;
                     authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
                     authority.observation.done = true;
@@ -692,14 +694,6 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
                 }
                 authority.worker_outcome = Some(outcome);
             }
-            Ok(
-                semio_framework_job::WorkerJobPoll::Idle
-                | semio_framework_job::WorkerJobPoll::Submitted
-                | semio_framework_job::WorkerJobPoll::Rejected
-                | semio_framework_job::WorkerJobPoll::CheckedOut
-                | semio_framework_job::WorkerJobPoll::Closing
-                | semio_framework_job::WorkerJobPoll::TerminalEmpty,
-            ) => {}
             Err(_) => {
                 authority.worker_terminal = true;
                 authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
@@ -881,8 +875,17 @@ fn puzzle3d_deadline(duration_us: u64) -> Option<u64> {
     default_now_us()?.checked_add(duration_us)
 }
 
-/// 🪫️ Admission deadline for one precompute turn, including its first task.
-const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US: u64 = 2_000;
+/// 🪫️ Admission deadline for one precompute turn, including its first task. It has to fit INSIDE
+/// the retained step it is spent from, not equal it — and with room for the overshoot its own last
+/// task unit costs. Handed the whole 2 000 µs this artifact budgets per interactive step, one
+/// `refresh_brush_candidates` overshot it to a measured 2.04 ms on the 180-object Nakagin document:
+/// the entire step's budget, spent on one of its halves, and still over. Halved it still reached
+/// 1.54 ms, because the overshoot is one whole narrow-phase candidate (~0.5 ms there). A QUARTER
+/// leaves the dispatch turn three quarters of its own step for the rest of its work, which is the
+/// margin the measured laws in `✏️editor/🧪️tests/🔬️unit/🦀️.rs` need to hold. The lane redrives whatever
+/// this deadline leaves unfinished, so a smaller budget only ever costs turns, never results.
+/// Ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3.
+const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US: u64 = 500;
 //#endregion 🔖️Clock
 
 //#region 🥽️SharedBrushMeshes
@@ -939,8 +942,8 @@ fn brush_mesh_geometry_is_admissible(positions: &[f32], indices: &[u32]) -> bool
     let vertices = u32::try_from(positions.len() / 3).unwrap_or(u32::MAX);
     positions.len() >= 9
         && indices.len() >= 3
-        && positions.len() % 3 == 0
-        && indices.len() % 3 == 0
+        && positions.len().is_multiple_of(3)
+        && indices.len().is_multiple_of(3)
         && positions.len() <= FILL_WORKER_MAX_MESH_VALUES
         && indices.len() <= FILL_WORKER_MAX_MESH_VALUES
         && positions.iter().all(|value| value.is_finite())
@@ -990,7 +993,9 @@ pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 const BRUSH_INDEX_CELL_SIZE: f32 = 8.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default)]
 enum BrushIndexSyncStage {
+    #[default]
     Objects,
     CollectStale,
     Removals,
@@ -1009,18 +1014,18 @@ struct BrushIndexSync {
     removal: Option<CollisionIndexRemoval>,
 }
 
-impl Default for BrushIndexSyncStage {
-    fn default() -> Self {
-        Self::Objects
-    }
-}
+
 
 pub(crate) struct Puzzle3dCollision {
     pub(crate) scene: Option<Arc<SceneConfig>>,
-    /// 🧊️ Raw JSON of the last `set_scene` call, so a resync with byte-identical config (every action
-    /// re-syncs the session, see the app's `sync_precompute_session`) can skip `rebuild_queue` instead
-    /// of wiping `brush_cache`/`fill`/`queue` and restarting suggestion+fill precompute from zero.
-    scene_json: Option<String>,
+    /// 🧊️ The last scene this engine was synced FROM, so a resync with an identical config (every
+    /// action re-syncs the session, see the app's `sync_precompute_session`) can skip `rebuild_queue`
+    /// instead of wiping `brush_cache`/`fill`/`queue` and restarting suggestion+fill precompute from
+    /// zero. Held as the decoded value, never as its JSON text: normalizing a 180-object document to a
+    /// string to compare it cost 13 ms per round trip and three round trips per sync — 39 ms of the
+    /// 44 ms every command spent here, over the framework's whole 8 ms interactive step ceiling on its
+    /// own.
+    scene_synced: Option<Arc<SceneConfig>>,
     meshes: Arc<HashMap<String, CollisionBody>>,
     mesh_is_fallback: HashMap<String, bool>,
     mesh_sources: HashMap<String, FillWorkerMesh>,
@@ -1067,7 +1072,7 @@ impl Puzzle3dCollision {
     pub(crate) fn new() -> Self {
         Self {
             scene: None,
-            scene_json: None,
+            scene_synced: None,
             meshes: Arc::new(HashMap::new()),
             mesh_is_fallback: HashMap::new(),
             mesh_sources: HashMap::new(),
@@ -1287,8 +1292,22 @@ impl Puzzle3dCollision {
 
     /// 🎚️ Distribution-weight edits must not `rebuild_queue()` — applied fill objects stay, only the
     /// unapplied planning tail is discarded and re-enqueued for background `fillBuildTick` planning.
+    /// The live builder is replanned IN PLACE (see [`FillBuilder::begin_soft_replan`]); constructing a
+    /// fresh one instead threw away every applied placement the moment a slider moved.
     fn soft_replan_fill_tail(&mut self) {
-        self.start_fill_preparation(false);
+        let Some(scene) = self.scene.clone() else {
+            return;
+        };
+        let Some(owner) = self.fill.clone() else {
+            return;
+        };
+        let Ok(mut fill) = owner.try_lock() else {
+            return;
+        };
+        fill.begin_soft_replan(&scene.weights.object_weights, &scene.weights.vortex_weights);
+        self.fill_steps_remaining = fill.max_count.saturating_sub(fill.applied_count);
+        drop(fill);
+        self.re_enqueue_brush_targets();
     }
 
     fn refresh_fill_job(&mut self, _refresh_meshes: bool) {
@@ -1300,7 +1319,7 @@ impl Puzzle3dCollision {
             let scene = Arc::make_mut(scene);
             scene.weights.object_weights = object_weights;
             scene.weights.vortex_weights = vortex_weights;
-            self.scene_json = Some(dsl::os_pack::json::to_json_string(&*scene));
+            self.scene_synced = Some(Arc::new(scene.clone()));
         }
         self.brush_cache.clear();
         if self.fill.is_none() {
@@ -1333,7 +1352,14 @@ impl Puzzle3dCollision {
     }
 
     pub(crate) fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        let mut scene: SceneConfig = dsl::os_pack::json::from_json_str(json)?;
+        self.set_scene_config(dsl::os_pack::json::from_json_str(json)?);
+        Ok(())
+    }
+
+    /// 🧊️ The typed sync every caller actually takes: the app already holds a decoded `SceneConfig`,
+    /// so routing it through a JSON string and back is three whole-document round trips of pure loss.
+    pub(crate) fn set_scene_config(&mut self, scene: SceneConfig) {
+        let mut scene = scene;
         // 🪣️ After the fill slider materializes objects into the document, every incidental action
         // (hover, pick, mesh register sync, …) re-feeds that applied projection here. Treating it as a
         // brand-new scene used to `rebuild_queue()` and bake the filled objects into `fill.base`, after
@@ -1343,27 +1369,25 @@ impl Puzzle3dCollision {
             if let Some(fill) = self.fill.as_ref().and_then(|fill| fill.try_lock().ok()) {
                 Self::strip_fill_plan_from_fixture(&mut scene.fixture, &fill);
             }
-            let normalized = dsl::os_pack::json::to_json_string(&scene);
             if let Some(current) = &mut self.scene {
                 let current = Arc::make_mut(current);
                 current.overlap_budget = scene.overlap_budget;
                 current.seed = scene.seed;
-                current.weights = scene.weights;
-                current.kind_catalogs = scene.kind_catalogs;
-                current.kind_compatibility = scene.kind_compatibility;
-                current.host_rules = scene.host_rules;
+                current.weights = scene.weights.clone();
+                current.kind_catalogs = scene.kind_catalogs.clone();
+                current.kind_compatibility = scene.kind_compatibility.clone();
+                current.host_rules = scene.host_rules.clone();
             }
-            self.scene_json = Some(normalized);
-            return Ok(());
+            self.scene_synced = Some(Arc::new(scene));
+            return;
         }
-        let normalized = dsl::os_pack::json::to_json_string(&scene);
-        if self.scene_json.as_deref() == Some(normalized.as_str()) {
-            return Ok(());
+        if self.scene_synced.as_deref() == Some(&scene) {
+            return;
         }
-        self.scene = Some(Arc::new(scene));
-        self.scene_json = Some(normalized);
+        let scene = Arc::new(scene);
+        self.scene = Some(Arc::clone(&scene));
+        self.scene_synced = Some(scene);
         self.rebuild_queue();
-        Ok(())
     }
 
     /// 🥽️ Real geometry for one mesh identity, derived once per process through the content-addressed
@@ -1686,9 +1710,9 @@ impl Puzzle3dCollision {
                             }
                         }
                     } else if let Some(worker) = self.fill_worker.as_mut() {
-                        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background) {
-                            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                                let Some(outcome) = worker.take_checked_out_outcome() else {
+                        match worker.step() {
+                            Ok(_) => {
+                                let Some(outcome) = worker.take_outcome() else {
                                     self.fill_steps_remaining = 0;
                                     break;
                                 };
@@ -1699,8 +1723,7 @@ impl Puzzle3dCollision {
                                 }
                                 self.fill_worker_outcome = Some(outcome);
                             }
-                            Ok(semio_framework_job::WorkerJobPoll::Idle | semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => {}
-                            Ok(semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) | Err(_) => self.fill_steps_remaining = 0,
+                            Err(_) => self.fill_steps_remaining = 0,
                         }
                     } else {
                         self.fill_steps_remaining = 0;
@@ -1764,6 +1787,15 @@ impl Puzzle3dCollision {
         self.brush_queue.len() + self.fill_steps_remaining
     }
 
+    /// 📈️ Monotone witness of precompute work ACTUALLY completed — resolved suggestion targets,
+    /// reconciled broad-phase owners and planner transitions. Both lanes are cursorized, so a queue
+    /// length is no longer a progress measure: preparing one brush target moves it from the
+    /// preparation cursor INTO the queue, leaving `work_pending_for_test` unchanged or larger.
+    #[cfg(test)]
+    pub(crate) fn precompute_progress_for_test(&self) -> usize {
+        self.brush_cache.len() + self.brush_index.entry_len() + self.fill.as_ref().and_then(|fill| fill.try_lock().ok()).map_or(0, |fill| fill.transition_count as usize)
+    }
+
     #[cfg(test)]
     pub(crate) fn fill_steps_pending_for_test(&self) -> usize {
         self.fill_steps_remaining
@@ -1777,7 +1809,7 @@ impl Puzzle3dCollision {
         let mut fill = self.fill.as_ref()?.try_lock().ok()?;
         let count = count.min(fill.sequence.len());
         fill.applied_count = count;
-        let mut fixture = fill.base.snapshot();
+        let mut fixture = fill.base_fixture();
         // 🪣️ `revealIndex` is a live-viewport-only hint (see `compose_fill_display`) — never persist it
         // to the committed document projection.
         fixture.objects.extend(fill.appended_objects.iter().take(count).cloned().map(|mut object| {
@@ -1794,7 +1826,7 @@ impl Puzzle3dCollision {
     pub(crate) fn compose_fill_display(&self, count: usize) -> Option<Fixture> {
         let fill = self.fill.as_ref()?.try_lock().ok()?;
         let visible = count.min(fill.sequence.len());
-        let mut fixture = fill.base.snapshot();
+        let mut fixture = fill.base_fixture();
         fixture.objects.extend(fill.appended_objects.iter().take(visible).cloned());
         fixture.attractions.extend(fill.appended_attractions.iter().take(visible).cloned());
         Some(fixture)
@@ -1817,7 +1849,7 @@ impl Puzzle3dCollision {
     fn take_session(&mut self) -> Puzzle3dCollisionSession {
         Puzzle3dCollisionSession {
             scene: self.scene.take(),
-            scene_json: self.scene_json.take(),
+            scene_synced: self.scene_synced.take(),
             meshes: std::mem::replace(&mut self.meshes, Arc::new(HashMap::new())),
             mesh_is_fallback: std::mem::take(&mut self.mesh_is_fallback),
             mesh_sources: std::mem::take(&mut self.mesh_sources),
@@ -1836,7 +1868,7 @@ impl Puzzle3dCollision {
 
     fn install_session(&mut self, session: Puzzle3dCollisionSession) {
         self.scene = session.scene;
-        self.scene_json = session.scene_json;
+        self.scene_synced = session.scene_synced;
         self.meshes = session.meshes;
         self.mesh_is_fallback = session.mesh_is_fallback;
         self.mesh_sources = session.mesh_sources;
@@ -1859,7 +1891,7 @@ impl Puzzle3dCollision {
 /// deliberately absent, because `fill_envelope_registry` is its one authority.
 pub(crate) struct Puzzle3dCollisionSession {
     scene: Option<Arc<SceneConfig>>,
-    scene_json: Option<String>,
+    scene_synced: Option<Arc<SceneConfig>>,
     meshes: Arc<HashMap<String, CollisionBody>>,
     mesh_is_fallback: HashMap<String, bool>,
     mesh_sources: HashMap<String, FillWorkerMesh>,
@@ -1880,9 +1912,9 @@ impl Puzzle3dCollisionSession {
     /// process against a census instead of trusting a slot count.
     pub(crate) fn bytes(&self) -> usize {
         let meshes = self.mesh_sources.values().map(|mesh| mesh.url.len().saturating_add(mesh.positions.len().saturating_mul(4)).saturating_add(mesh.indices.len().saturating_mul(4))).fold(0_usize, usize::saturating_add);
-        self.scene_json
+        self.scene_synced
             .as_ref()
-            .map_or(0, String::len)
+            .map_or(0, |scene| scene.fixture.objects.len().saturating_mul(size_of::<crate::standards::v1::subsets::any::schema::FixtureObject>()))
             .saturating_add(meshes)
             .saturating_add(self.brush_placed.len().saturating_mul(size_of::<PlacedCollisionEntry>()))
             .saturating_add(self.brush_index.entry_len().saturating_mul(size_of::<CollisionAabb>()))
@@ -1950,8 +1982,20 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
+        self.install_scene(|engine| engine.set_scene(json))
+    }
+
+    /// 🧊️ Typed sync — see [`Puzzle3dCollision::set_scene_config`].
+    pub(crate) fn set_scene_config(&mut self, scene: SceneConfig) -> Result<(), Puzzle3dError> {
+        self.install_scene(|engine| {
+            engine.set_scene_config(scene);
+            Ok(())
+        })
+    }
+
+    fn install_scene(&mut self, install: impl FnOnce(&mut Puzzle3dCollision) -> Result<(), Puzzle3dError>) -> Result<(), Puzzle3dError> {
         self.supersede_admitted_fill();
-        let result = self.engine.set_scene(json);
+        let result = install(&mut self.engine);
         if result.is_ok() {
             if self.engine.fill.is_none() {
                 self.engine.rebuild_queue();
@@ -2184,7 +2228,7 @@ impl Puzzle3dPrecomputeSession {
                 self.engine.fill = Some(fill);
                 return None;
             };
-            let request = match registry.begin_measurement(job, operation, fill, worker, self.engine.fill_cancel.clone(), self.engine.fill_steps_remaining, self.engine.fill_preview_sequence, observation) {
+            let request = match registry.begin_measurement(FillEnvelopeMeasurementRequest { job, operation, fill, worker, cancel: self.engine.fill_cancel.clone(), steps_remaining: self.engine.fill_steps_remaining, preview_sequence: self.engine.fill_preview_sequence, observation }) {
                 Ok(request) => request,
                 Err(owners) => {
                     self.engine.fill_worker = Some(owners.worker);
@@ -2342,7 +2386,7 @@ impl Puzzle3dPrecomputeSession {
     fn compose_fill_projection(&self, count: usize, persisted: bool) -> Option<Fixture> {
         self.read_fill(|fill| {
             let visible = count.min(fill.sequence.len());
-            let mut fixture = fill.base.snapshot();
+            let mut fixture = fill.base_fixture();
             fixture.objects.extend(fill.appended_objects.iter().take(visible).cloned().map(|mut object| {
                 if persisted {
                     object.reveal_index = None;
@@ -2378,8 +2422,7 @@ impl Puzzle3dPrecomputeSession {
     pub fn dispatch(&mut self, command: Puzzle3dEngineCommand) -> Result<Puzzle3dEngineOutcome, Puzzle3dError> {
         match command {
             Puzzle3dEngineCommand::SetScene { scene } => {
-                let json = dsl::os_pack::json::to_json_string(&scene);
-                self.set_scene(&json)?;
+                self.set_scene_config(scene)?;
                 Ok(Puzzle3dEngineOutcome::Unit)
             }
             Puzzle3dEngineCommand::ApplyBrushPlacement { payload } => {

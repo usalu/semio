@@ -333,7 +333,7 @@ struct DocumentOpenPlanFixture {
 
 #[test]
 fn document_authority_json_integer_tokens_never_coerce() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🔣️.json")).expect("neutral exact integer corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🔁️codec/🧫️fixtures/🔣️.json")).expect("neutral exact integer corpus");
     let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
     let intent_json = crate::os_pack::json::to_json_string(&fixture.intent);
     assert!(intent_json.contains("\"version\":1"));

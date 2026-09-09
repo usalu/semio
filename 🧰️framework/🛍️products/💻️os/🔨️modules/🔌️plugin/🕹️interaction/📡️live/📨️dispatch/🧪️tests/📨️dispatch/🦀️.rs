@@ -275,7 +275,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -312,7 +312,7 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
     let mut old = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();

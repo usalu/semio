@@ -3,7 +3,7 @@ mod tests {
 
     #[test]
     fn owned_artifact_kind_formats_survive_host_registry_projection() {
-        let value: semio_framework::DslValue = dsl::os_pack::json::from_json_str(include_str!("../../../../../🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+        let value: semio_framework::DslValue = dsl::os_pack::json::from_json_str(include_str!("../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
         let spec: ArtifactKindSpec = semio_framework::from_dsl_value(value).unwrap();
         assert_eq!(spec.export_stdio_kinds, ["stdio.svg", "stdio.png"]);
         assert_eq!(spec.import_stdio_kinds, ["stdio.dwg", "stdio.svg"]);

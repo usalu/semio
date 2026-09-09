@@ -58,11 +58,13 @@ fn prepare_nonblocking<R: std::os::fd::AsRawFd>(reader: &R) -> io::Result<()> {
 }
 
 #[cfg(unix)]
+#[expect(clippy::unnecessary_wraps, reason = "The shared nonblocking pipe interface must propagate Windows availability errors.")]
 fn readable_bytes<R: std::os::fd::AsRawFd>(_reader: &R) -> io::Result<usize> {
     Ok(PIPE_READ_BYTES_PER_POLL)
 }
 
 #[cfg(windows)]
+#[expect(clippy::unnecessary_wraps, reason = "The shared nonblocking pipe interface must propagate Unix configuration errors.")]
 fn prepare_nonblocking<R: std::os::windows::io::AsRawHandle>(_reader: &R) -> io::Result<()> {
     Ok(())
 }
@@ -84,7 +86,7 @@ fn readable_bytes<R: std::os::windows::io::AsRawHandle>(reader: &R) -> io::Resul
 
 //#region 📦️Framing
 mod framing {
-    use super::{io, Read, VecDeque, Write, MAX_FRAME_BYTES, PIPE_FRAMES_PER_POLL};
+    use super::{MAX_FRAME_BYTES, PIPE_FRAMES_PER_POLL, Read, VecDeque, Write, io};
 
     pub const TAG_DATA: u8 = 0;
     pub const TAG_HEARTBEAT: u8 = 1;

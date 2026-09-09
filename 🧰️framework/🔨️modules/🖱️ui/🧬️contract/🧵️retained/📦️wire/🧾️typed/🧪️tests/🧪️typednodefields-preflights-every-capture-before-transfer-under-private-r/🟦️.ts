@@ -6,7 +6,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type RetainedUiTypedValues = any;
 
   const { it, expect } = vitest;
-      const { default: fixture } = await import("../../../🧪️fixtures/🏷️fields/🔣️.json");
+      const { default: fixture } = await import("../../../🧫️fixtures/🏷️fields/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayload<RetainedUiTypedValues[P]> {
     const builder = new Builder();

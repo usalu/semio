@@ -52,8 +52,8 @@ mod subject {
     /// "Bauen mit Bestand" recording — 8 000 real 16-bit PCM samples at the file's own 8 000 Hz —
     /// carrying the real ID3v2.3 tags of the same recording's committed mp3, derived ONCE by
     /// `🐍️derive-audio-fixture.py` in the ticket folder.
-    const RECORDING_DSL: &str = "local://🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio";
-    const TONE_DSL: &str = "asset://📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio";
+    const RECORDING_DSL: &str = "shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio";
+    const TONE_DSL: &str = "asset://🎵️tone/🗣️.dsl.semio";
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {
@@ -249,7 +249,7 @@ mod subject {
     /// existed rather than replaced by it.
     pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let vector = ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("local://") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)?;
+            let vector = ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🔊️mutate-semio-audio/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)?;
             let expected = snapshot_of(vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?)?;
             let mut current = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
             let mutation = mutation_of(&vector, &current)?;
@@ -292,7 +292,7 @@ mod subject {
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let (tone, tone_report) = carrier_once(ctx, TONE_DSL, "the committed tone")?;
-        let vector = ctx.fixture_json("local://⏸️no-mutation/🦠️mutation/🔣️.json")?;
+        let vector = ctx.fixture_json("shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json")?;
         let declared = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         if tone != declared {
             return Err(disagreement("identity-round-trip: the real committed tone artifact does not decode to the before-snapshot every specification vector starts from", &tone, &declared));

@@ -19,9 +19,9 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::DeleteSelection,
         TrinityJackCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
         TrinityJackCommand::Reorganize,
-        TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()) },
-        TrinityJackCommand::RunQuery { query: None },
-        TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into() },
+        TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()), results_window_id: "results".into() },
+        TrinityJackCommand::RunQuery { query: None, results_window_id: "results".into() },
+        TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into(), results_window_id: "results".into() },
         TrinityJackCommand::FormatDocument,
         TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() },
         TrinityJackCommand::SetViewport { viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
@@ -38,6 +38,16 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
     testkit::meta(actor)
+}
+
+fn query_windows() -> ViewModel {
+    ViewModel {
+        window_instances: vec![
+            semio_framework_plugin::ViewWindowInstance { id: "editor-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
+        ],
+        ..Default::default()
+    }
 }
 
 /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
@@ -171,9 +181,15 @@ async fn renders_jack_editor() {
 #[semio_framework_async_macros::async_test]
 async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     let mut app = new_app().await;
-    app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.expect("render");
-    let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).await.expect("run");
-    assert!(!result.mutations.is_empty(), "a SET query emits operations");
+    let view = query_windows();
+    let editor = view.for_window_instance("editor-main").unwrap();
+    app.dispatch_typed(
+        TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() },
+        &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("local") },
+    )
+    .await
+    .expect("run");
+    drive_query_ownership_operations(&mut app).await.expect("query completes");
     let projection = app.snapshot().expect("projection");
     // 🔬 `content` is now an opaque composed-child handle — `pack::to_json_string(&projection)`
     // no longer surfaces node property data directly (ticket
@@ -211,9 +227,15 @@ async fn editor_scene_has_tokens_and_diagnostics() {
 #[semio_framework_async_macros::async_test]
 async fn text_edit_updates_query_without_operations() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).await.expect("edit");
+    let view = query_windows();
+    let editor = view.for_window_instance("editor-main").unwrap();
+    let result = app
+        .dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") })
+        .await
+        .expect("edit");
     assert!(result.mutations.is_empty());
-    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+    drive_query_ownership_operations(&mut app).await.expect("edit completes");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &editor).await.expect("render");
     assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("MATCH (a:Piece) RETURN a.name"));
 }
 
@@ -271,7 +293,7 @@ async fn document_tree_de_locale_translates_labels() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_swaps_fixture_and_seeds_query() {
+async fn set_active_example_swaps_fixture_without_changing_editor_query() {
     let mut app = new_app().await;
     let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).await.expect("set active example");
     // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
@@ -281,8 +303,8 @@ async fn set_active_example_swaps_fixture_and_seeds_query() {
     // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
     // the field that actually carries the swap.
     assert!(!result.requested_effects.is_empty());
-    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
-    assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("RETURN a, r, b"));
+    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &query_windows().for_window_instance("editor-main").unwrap()).await.expect("render");
+    assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains(TRINITY_JACK_DEFAULT_QUERY));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -346,18 +368,26 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
         let before = app.ephemeral_snapshot().await.transient_generation;
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
         let expected_name = document.nodes().into_iter().find(|node| node.kind == "Piece").ok_or_else(|| "query runtime fixture has no Piece".to_string())?.name;
-        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()) }, &meta("query-owner")).await.map_err(|error| format!("{error:?}"))?;
-        if drive_query_ownership_operations(&mut app).await? != (1, 0) {
-            return Err("query operation did not produce one app transient receipt".into());
+        let view = query_windows();
+        let editor = view.for_window_instance("editor-main").ok_or("missing editor window")?;
+        let results = view.for_window_instance("results-main").ok_or("missing results window")?;
+        app.dispatch_typed(
+            TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()), results_window_id: "results-main".into() },
+            &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("query-owner") },
+        )
+        .await
+        .map_err(|error| format!("{error:?}"))?;
+        if drive_query_ownership_operations(&mut app).await? != (0, 1, 1) {
+            return Err("query operation did not produce one editor-config and one results-transient receipt".into());
         }
         if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
             return Err("read query modified the document".into());
         }
-        let generation = app.ephemeral_snapshot().await.transient_generation;
-        if generation != before + 1 {
-            return Err("query result did not publish exactly once to the transient store".into());
+        let generation = app.window_transient_generation(&results).map_err(|error| format!("{error:?}"))?.ok_or("missing results transient generation")?;
+        if generation != 1 || app.ephemeral_snapshot().await.transient_generation != before {
+            return Err("query result did not publish exactly once to only the results-window transient".into());
         }
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.map_err(|error| format!("{error:?}"))?;
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &results).await.map_err(|error| format!("{error:?}"))?;
         let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
         if !rendered.contains(&expected_name) {
             return Err("query result table did not contain the document's matching Piece".into());
@@ -368,12 +398,13 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
     testkit::close_registered_fixture_app(&mut app);
     let (generation, rendered) = outcome.expect("owned query runtime");
     assert!(rendered.contains("table"));
-    eprintln!("[DEBUG] query result reached transient generation {generation}, rendered as a table, preserved the document, and retired the app");
+    eprintln!("[DEBUG] query result reached results-window transient generation {generation}, rendered as a table, preserved the document, and retired the app");
 }
 
-async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>) -> Result<(u64, u64), String> {
+async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>) -> Result<(u64, u64, u64), String> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     let mut transient_receipts = 0;
+    let mut window_config_receipts = 0;
     let mut window_transient_receipts = 0;
     while app.has_pending_typed_operations() {
         if std::time::Instant::now() >= deadline {
@@ -384,6 +415,7 @@ async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<Tri
         if let Some(page) = app.take_typed_operation_result_page(1) {
             let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
             transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Transient);
+            window_config_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig);
             window_transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient);
             app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
             if let Some(fault) = fault {
@@ -395,73 +427,103 @@ async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<Tri
         app.take_typed_operation_ui_scope();
         std::thread::yield_now();
     }
-    Ok((transient_receipts, window_transient_receipts))
-}
-
-fn rendered_selection(value: &serde_json::Value) -> Option<serde_json::Value> {
-    match value {
-        serde_json::Value::Object(fields) => fields.get("selectionJson").and_then(serde_json::Value::as_str).and_then(|text| serde_json::from_str(text).ok()).or_else(|| fields.values().find_map(rendered_selection)),
-        serde_json::Value::Array(items) => items.iter().find_map(rendered_selection),
-        _ => None,
-    }
+    Ok((transient_receipts, window_config_receipts, window_transient_receipts))
 }
 
 #[semio_framework_async_macros::async_test]
-async fn query_ownership_window_carets_and_query_publish_independently() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🔣️.json")).unwrap();
-    let case = &fixture["interleaving"];
+async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pairs_and_reloads_only_authored_sources() {
     let mut app = new_app().await;
-    let outcome: Result<(), String> = async {
-        let document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
-        let generation = app.ephemeral_snapshot().await.transient_generation;
-        let selections = case["selections"].as_array().ok_or("missing selection fixture")?;
-        let view = ViewModel {
-            window_instances: selections.iter().map(|selection| semio_framework::ViewWindowInstance { id: selection["windowId"].as_str().unwrap().into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() }).collect(),
-            ..Default::default()
-        };
-        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some(case["query"].as_str().unwrap().into()) }, &meta("query-owner")).await.map_err(|error| format!("{error:?}"))?;
-        for selection in selections {
-            let context = view.for_window_instance(selection["windowId"].as_str().unwrap()).ok_or("missing concrete editor window")?;
-            let command = TrinityJackCommand::TextSelect { start: selection["start"].as_u64().unwrap(), end: selection["end"].as_u64().unwrap() };
-            app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state: Some(context), ..meta("query-owner") }).await.map_err(|error| format!("{error:?}"))?;
-        }
-        let (app_receipts, window_receipts) = drive_query_ownership_operations(&mut app).await?;
-        if app_receipts != case["expected"]["appTransientPublications"].as_u64().unwrap() {
-            return Err(format!("expected app transient receipts, received {app_receipts}"));
-        }
-        if window_receipts != case["expected"]["windowTransientPublications"].as_u64().unwrap() {
-            return Err(format!("expected window transient receipts, received {window_receipts}"));
-        }
-        let app_generation = app.ephemeral_snapshot().await.transient_generation;
-        if app_generation != generation + app_receipts || app_generation != case["expected"]["appTransientGeneration"].as_u64().unwrap() {
-            return Err("app transient generation does not match acknowledged publications".into());
-        }
-        if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
-            return Err("query or caret publication modified document content".into());
-        }
-        for selection in selections {
-            let context = view.for_window_instance(selection["windowId"].as_str().unwrap()).unwrap();
-            let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &context).await.map_err(|error| format!("{error:?}"))?;
-            let json = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
-            let tree: serde_json::Value = serde_json::from_str(&json).map_err(|error| error.to_string())?;
-            let expected = serde_json::json!({ "start": selection["start"], "end": selection["end"] });
-            if rendered_selection(&tree) != Some(expected) {
-                return Err(format!("concrete window {} lost its own caret selection", selection["windowId"]));
-            }
-            let generation = app.window_transient_generation(&context).map_err(|error| format!("{error:?}"))?.ok_or("missing concrete window transient generation")?;
-            if generation != case["expected"]["windowTransientGenerationById"][selection["windowId"].as_str().unwrap()].as_u64().unwrap() {
-                return Err(format!("concrete window {} has generation {generation}", selection["windowId"]));
-            }
-        }
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &view.for_panel()).await.map_err(|error| format!("{error:?}"))?;
-        let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
-        if !rendered.contains("table") {
-            return Err("interleaved query did not produce the shared result table".into());
-        }
-        Ok(())
+    let view = ViewModel {
+        window_instances: vec![
+            semio_framework_plugin::ViewWindowInstance { id: "editor-left".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "editor-right".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
+        ],
+        ..Default::default()
+    };
+    let editor_left = view.for_window_instance("editor-left").unwrap();
+    let editor_right = view.for_window_instance("editor-right").unwrap();
+    let results_left = view.for_window_instance("results-left").unwrap();
+    let results_right = view.for_window_instance("results-right").unwrap();
+    let left_query = "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name";
+    let right_query = "MATCH (a:Piece) WHERE a.name != 'b' RETURN a.name";
+    let document_before = app.snapshot().expect("document").clone();
+    let app_config_before = app.config_pack().await.expect("app config pack");
+    let denied = app
+        .dispatch_typed(
+            TrinityJackCommand::RunQuery { query: Some(left_query.into()), results_window_id: "editor-right".into() },
+            &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") },
+        )
+        .await;
+    assert!(denied.is_err(), "an attached editor cannot be promoted to results mutation authority by command payload");
+
+    for (context, query) in [(&editor_left, left_query), (&editor_right, right_query)] {
+        app.dispatch_typed(
+            TrinityJackCommand::TextEdit { text: query.into() },
+            &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") },
+        )
+        .await
+        .expect("addressed query edit");
     }
-    .await;
+    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("query edits"), (0, 2, 0));
+
+    for (context, target) in [(&editor_left, "results-left"), (&editor_right, "results-right")] {
+        app.dispatch_typed(
+            TrinityJackCommand::RunQuery { query: None, results_window_id: target.into() },
+            &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") },
+        )
+        .await
+        .expect("paired query");
+    }
+    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("paired queries"), (0, 2, 2));
+    assert_eq!(app.snapshot().expect("document after queries"), &document_before);
+    let app_config_after = app.config_pack().await.expect("app config after");
+    assert_eq!(app_config_after.pack, app_config_before.pack);
+    assert_eq!(app_config_after.spr, app_config_before.spr);
+    assert_eq!(app.ephemeral_snapshot().await.transient_generation, 0);
+    assert_eq!(app.window_config_generation(&editor_left).await.expect("left query generation"), Some(2));
+    assert_eq!(app.window_config_generation(&editor_right).await.expect("right query generation"), Some(2));
+    assert_eq!(app.window_transient_generation(&results_left).expect("left result generation"), Some(1));
+    assert_eq!(app.window_transient_generation(&results_right).expect("right result generation"), Some(1));
+
+    let left_snapshot = app.window_transient_snapshot(&results_left).expect("left result snapshot").expect("left result owner");
+    let right_snapshot = app.window_transient_snapshot(&results_right).expect("right result snapshot").expect("right result owner");
+    let left_state = left_snapshot.get::<JackResultsWindowTransientOwner>().expect("left result state");
+    let right_state = right_snapshot.get::<JackResultsWindowTransientOwner>().expect("right result state");
+    assert!(left_state.query_error.is_none() && right_state.query_error.is_none());
+    assert_ne!(left_state.result, right_state.result, "concurrent executions must keep distinct result payloads");
+    drop(left_snapshot);
+    drop(right_snapshot);
+
+    for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("editor render");
+        let rendered = testkit::project_and_retire_fixture_tree(tree).expect("editor projection");
+        assert!(rendered.contains(expected));
+    }
+    for context in [&results_left, &results_right] {
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, context).await.expect("result render");
+        assert!(testkit::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
+    }
+
+    let packs = app.window_config_packs().await.expect("persisted window configs");
+    assert_eq!(packs.len(), 2, "only two authored editor query configs were instantiated");
     testkit::close_registered_fixture_app(&mut app);
-    outcome.expect("query and concrete-window caret ownership must publish independently");
-    eprintln!("[DEBUG] query result and two concrete-window carets published independently, preserved document content, and rendered each selection");
+
+    let mut reopened = new_app().await;
+    for pack in packs {
+        reopened.load_window_config_pack(pack).await.expect("reload editor query config");
+    }
+    for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
+        let tree = reopened.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("reloaded editor render");
+        assert!(testkit::project_and_retire_fixture_tree(tree).expect("reloaded editor projection").contains(expected));
+    }
+    for context in [&results_left, &results_right] {
+        assert_eq!(reopened.window_transient_generation(context).expect("fresh result generation"), Some(0));
+        let snapshot = reopened.window_transient_snapshot(context).expect("fresh result snapshot").expect("fresh results owner");
+        let state = snapshot.get::<JackResultsWindowTransientOwner>().expect("fresh results state");
+        assert!(state.query_execution_id.is_none() && state.result.is_none() && state.query_error.is_none());
+    }
+    testkit::close_registered_fixture_app(&mut reopened);
+    eprintln!("[DEBUG] two editor/result pairs kept query source and output isolated; reload restored only the authored editor configs and reset both results transients");
 }

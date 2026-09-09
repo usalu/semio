@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "owner": "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "mutation": "🪄️change-value",
+  "scenario": "🧪️changes-the-value",
+  "files": {
+    "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🧪️changes-the-value/🦀️.rs": "pub fn sample() {}\n",
+    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦠️mutation/🔣️.json": "{}\n",
+    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/⬅️before/🔣️.json": "{}\n",
+    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/➡️after/🔣️.json": "{}\n",
+    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🔺️diff/🔣️.json": "{}\n",
+    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json": "{}\n"
+  },
+  "cases": [
+    {
+      "id": "canonical-fixture-implementation-pair",
+      "remove": [],
+      "add": {},
+      "valid": true
+    },
+    {
+      "id": "missing-fixture-outcome",
+      "remove": [
+        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json"
+      ],
+      "add": {},
+      "valid": false
+    },
+    {
+      "id": "missing-canonical-implementation",
+      "remove": [
+        "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🧪️changes-the-value/🦀️.rs"
+      ],
+      "add": {},
+      "valid": false
+    },
+    {
+      "id": "implementation-inside-fixture",
+      "remove": [
+        "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🧪️changes-the-value/🦀️.rs"
+      ],
+      "add": {
+        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦀️.rs": "pub fn sample() {}\n"
+      },
+      "valid": false
+    },
+    {
+      "id": "extra-fixture-member",
+      "remove": [],
+      "add": {
+        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/extra.json": "{}"
+      },
+      "valid": false
+    }
+  ]
+}

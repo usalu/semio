@@ -15,11 +15,11 @@ use crate::schema::mutations::reorder_buffer_views::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-buffer-views/flips-the-two-windows-and-remaps-both-accessors";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪟️buffer-view/🔀️reorder/🔀️flips-the-two-a73017/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪟️buffer-view/🔀️reorder/🔀️flips-the-two-a73017/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪟️buffer-view/🔀️reorder/🔀️flips-the-two-a73017/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪟️buffer-view/🔀️reorder/🔀️flips-the-two-a73017/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪟️buffer-view/🔀️reorder/🔀️flips-the-two-a73017/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

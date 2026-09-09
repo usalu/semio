@@ -3442,7 +3442,7 @@ impl SubspaceIterationJob {
         }
     }
 
-    fn advance_orthogonalize(&mut self) -> Result<(), ()> {
+    fn advance_orthogonalize(&mut self) {
         let n = self.state.n;
         let m = self.state.m;
         let work = &mut self.state.work;
@@ -3450,7 +3450,7 @@ impl SubspaceIterationJob {
             work.phase = 1;
             self.reset_cursor(SubspaceStage::ApplyOperatorColumnRow);
             self.state.work.phase = 1;
-            return Ok(());
+            return;
         }
         if work.second < work.first {
             if work.phase == 0 {
@@ -3473,16 +3473,15 @@ impl SubspaceIterationJob {
                     work.second += 1;
                 }
             }
-            return Ok(());
+            return;
         }
         work.stage = SubspaceStage::NormalizeColumnElement;
         work.phase = 0;
         work.third = 0;
         work.scalar = 0.0;
-        Ok(())
     }
 
-    fn advance_normalize(&mut self) -> Result<(), ()> {
+    fn advance_normalize(&mut self) {
         let n = self.state.n;
         let work = &mut self.state.work;
         if work.phase == 0 {
@@ -3494,13 +3493,13 @@ impl SubspaceIterationJob {
                     work.third = 0;
                     work.scalar = 0.0;
                     work.phase = 2;
-                    return Ok(());
+                    return;
                 }
                 work.coefficient = work.scalar.max(1e-300).sqrt().recip();
                 work.third = 0;
                 work.phase = 1;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 2 {
             let value = self.state.x.get(work.third, work.first);
@@ -3512,13 +3511,13 @@ impl SubspaceIterationJob {
                 work.third = 0;
                 work.phase = 3;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 3 {
             if work.second == n {
                 work.second = 0;
                 work.phase = 4;
-                return Ok(());
+                return;
             }
             let entries = &self.state.k_factor.l_cols[work.second];
             if work.third < entries.len() {
@@ -3530,7 +3529,7 @@ impl SubspaceIterationJob {
                 work.second += 1;
                 work.third = 0;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 4 {
             let value = work.b_basis.get(work.second, work.first) * self.state.k_factor.d[work.second];
@@ -3542,7 +3541,7 @@ impl SubspaceIterationJob {
                 work.third = 0;
                 work.phase = 5;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 5 {
             if work.second == n {
@@ -3550,7 +3549,7 @@ impl SubspaceIterationJob {
                 work.third = 0;
                 work.coefficient = 0.0;
                 work.phase = 6;
-                return Ok(());
+                return;
             }
             let entries = &self.state.k_factor.l_cols[work.second];
             if work.third < entries.len() {
@@ -3562,14 +3561,14 @@ impl SubspaceIterationJob {
                 work.second += 1;
                 work.third = 0;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 6 {
             if work.second == work.first {
                 work.third = 0;
                 work.scalar = 0.0;
                 work.phase = 8;
-                return Ok(());
+                return;
             }
             work.coefficient += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.second);
             work.third += 1;
@@ -3577,7 +3576,7 @@ impl SubspaceIterationJob {
                 work.third = 0;
                 work.phase = 7;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 7 {
             let coefficient = work.coefficient;
@@ -3590,7 +3589,7 @@ impl SubspaceIterationJob {
                 work.coefficient = 0.0;
                 work.phase = 6;
             }
-            return Ok(());
+            return;
         }
         if work.phase == 8 {
             work.scalar += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.first);
@@ -3600,7 +3599,7 @@ impl SubspaceIterationJob {
                 work.third = 0;
                 work.phase = 1;
             }
-            return Ok(());
+            return;
         }
         let scale = work.coefficient;
         let row = work.third;
@@ -3616,7 +3615,6 @@ impl SubspaceIterationJob {
             work.coefficient = 0.0;
             work.stage = SubspaceStage::OrthogonalizePairElement;
         }
-        Ok(())
     }
 
     fn advance_projected(&mut self) {
@@ -4610,8 +4608,14 @@ impl InteractiveJob for SubspaceIterationJob {
                 self.advance_factor_backward();
                 Ok(())
             }
-            SubspaceStage::OrthogonalizePairElement => self.advance_orthogonalize(),
-            SubspaceStage::NormalizeColumnElement => self.advance_normalize(),
+            SubspaceStage::OrthogonalizePairElement => {
+                self.advance_orthogonalize();
+                Ok(())
+            },
+            SubspaceStage::NormalizeColumnElement => {
+                self.advance_normalize();
+                Ok(())
+            },
             SubspaceStage::ProjectedMatrixCellEntry => {
                 self.advance_projected();
                 Ok(())

@@ -1,0 +1,30 @@
+{
+  "schema": "semio.directory.browser-broker-client-fixtures.v1",
+  "timeoutMs": 2000,
+  "initializationTimeoutMs": 90000,
+  "bootstrapTimeoutMs": 120000,
+  "maximumPending": 64,
+  "close": {
+    "request": { "kind": "close" },
+    "clearsProof": true,
+    "rejectsPending": true,
+    "cases": [
+      { "id": "before-read", "readStarted": false },
+      { "id": "during-read", "readStarted": true }
+    ]
+  },
+  "cases": [
+    "acknowledged",
+    "slow-initialization",
+    "refused",
+    "malformed-ack",
+    "response-before-ack",
+    "timeout",
+    "cancel-before-ack",
+    "close-before-response"
+  ],
+  "accepted": {
+    "status": 200,
+    "body": "{}"
+  }
+}

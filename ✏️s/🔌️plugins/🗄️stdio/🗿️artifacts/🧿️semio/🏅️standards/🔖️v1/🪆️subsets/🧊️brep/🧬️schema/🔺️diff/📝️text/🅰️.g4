@@ -18,10 +18,10 @@ modified: HEX ':' itemDiff;
 item: vertex | edge | brepLoop | face | shell | solid;
 itemDiff: vertexDiff | edgeDiff | loopDiff | faceDiff | shellDiff | solidDiff;
 
-vertexDiff: '[' optionPoint3 ']';
-edgeDiff: '[' optionHex ',' optionHex ',' optionCurve ']';
+vertexDiff: '[' optionPoint3 ',' optionNumber ']';
+edgeDiff: '[' optionHex ',' optionHex ',' optionCurve ',' optionNumber ']';
 loopDiff: '[' optionLoopEdgeList ']';
-faceDiff: '[' optionHex ',' optionHexList ',' optionSurface ',' optionBool ']';
+faceDiff: '[' optionHex ',' optionHexList ',' optionSurface ',' optionBool ',' optionNumber ']';
 shellDiff: '[' optionShellFaceList ']';
 solidDiff: '[' optionSolidShellList ']';
 
@@ -30,15 +30,16 @@ optionHex: '[0]' | '[1,' HEX ']';
 optionCurve: '[0]' | '[1,' curve ']';
 optionSurface: '[0]' | '[1,' surface ']';
 optionBool: '[0]' | '[1,' bool ']';
+optionNumber: '[0]' | '[1,' number ']';
 optionHexList: '[0]' | '[1,' hexList ']';
 optionLoopEdgeList: '[0]' | '[1,' loopEdgeList ']';
 optionShellFaceList: '[0]' | '[1,' shellFaceList ']';
 optionSolidShellList: '[0]' | '[1,' solidShellList ']';
 
-vertex: '[' HEX ',' point3 ']';
-edge: '[' HEX ',' HEX ',' HEX ',' curve ']';
+vertex: '[' HEX ',' point3 ',' number ']';
+edge: '[' HEX ',' HEX ',' HEX ',' curve ',' number ']';
 brepLoop: '[' HEX ',' loopEdgeList ']';
-face: '[' HEX ',' HEX ',' hexList ',' surface ',' bool ']';
+face: '[' HEX ',' HEX ',' hexList ',' surface ',' bool ',' number ']';
 shell: '[' HEX ',' shellFaceList ']';
 solid: '[' HEX ',' solidShellList ']';
 

@@ -13,7 +13,7 @@ Feature: Decode and re-encode the real committed sequence artifact
   whose own first line says otherwise, so a second implementation would be refused by clause exactly
   as `mutate-note-1`'s and `mutate-draw-1`'s siblings are.
 
-  📄️ `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is this codec's OWN committed output — a
+  📄️ `asset://🎬️demo/🗣️.dsl.semio` is this codec's OWN committed output — a
   semio-native envelope no foreign writer ever produced — so reproducing it exactly is the correct
   answer and any drift between the committed artifact and the printer is the defect this scenario
   exists to catch.
@@ -22,7 +22,7 @@ Feature: Decode and re-encode the real committed sequence artifact
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed sequence artifact
-    Given the real committed sequence artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed sequence artifact asset://🎬️demo/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

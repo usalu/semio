@@ -218,17 +218,15 @@ impl DrawingInstanceOperationOwner {
         Self { operations: semio_framework_job::FixedOperationRegistry::new(64 * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false }
     }
 
-    fn dispatch(
-        &mut self,
-        key: semio_framework_job::FixedOperationKey,
-        base_revision: [u8; 32],
-        command: &DrawingCommand,
-        snapshot: &DrawingSnapshot,
-        config: &DrawingConfig,
-        active_utility_id: &str,
-        history: &semio_framework_plugin::HistoryView,
-        operation: semio_framework_plugin::AppOperationContext,
-    ) -> Result<Option<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>>, Fault> {
+    fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>>, Fault> {
+        let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
+        let base_revision = payload.operation_context.canonical_base_revision;
+        let command = &payload.command;
+        let snapshot = payload.snapshot.as_ref();
+        let config = payload.config.as_ref();
+        let active_utility_id = payload.active_utility_id.as_str();
+        let history = payload.history.as_ref();
+        let operation = payload.operation_context.clone();
         if self.closing {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.closing"), "the Drawing gesture operation owner is closing"));
         }
@@ -598,10 +596,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
-            let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
-            let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| {
-                owner.dispatch(key, payload.operation_context.canonical_base_revision, &payload.command, &payload.snapshot, &payload.config, &payload.active_utility_id, &payload.history, payload.operation_context.clone())
-            });
+            let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload));
             let emit = match emit {
                 Ok(Some(emit)) => Ok(emit),
                 Ok(None) => {
@@ -821,6 +816,7 @@ fn drawing_bounded_extent(command: &DrawingCommand, snapshot: &DrawingSnapshot, 
 /// 🔁️ The bounded reducer runs the SAME `DrawingCommand::dispatch` the ordinary `ArtifactEditor::handle`
 /// route runs, seeded with the same framework-owned selection — migration is wiring, never a rewrite
 /// of a command body.
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn drawing_bounded_reduce(
     command: &DrawingCommand,
     snapshot: &DrawingSnapshot,

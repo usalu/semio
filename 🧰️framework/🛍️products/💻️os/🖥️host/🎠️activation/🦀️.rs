@@ -33,7 +33,7 @@ impl NativeKernelRuntime {
     pub async fn new(guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
         let shard_count = shard_count.max(1);
         let kernel = Kernel::new(ShardKind::Native, shard_count, exclusive_reserve, grants_per_tick).await;
-        let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = Arc::new(semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores)));
         let outcomes = OutcomeSink::new();
         let mut shards = Vec::with_capacity(shard_count as usize);
@@ -108,7 +108,7 @@ impl NativeKernelRuntime {
         for grant in &decision.run {
             let shard_index = grant.shard.0 as usize;
             let Some(shard) = self.shards.get(shard_index) else { continue };
-            let lane = grant.envelopes.first().map(|envelope| envelope.lane).unwrap_or(Lane::Maintenance);
+            let lane = grant.envelopes.first().map_or(Lane::Maintenance, |envelope| envelope.lane);
             let mut bytes = Vec::new();
             ShardFrame::Grant { actor: grant.actor, budget: budget_for(grant.actor), envelopes: grant.envelopes.clone() }.pack_encode(&mut bytes).await;
             shard.send_frame(bytes, lane).await;

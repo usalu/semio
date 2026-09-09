@@ -14,7 +14,7 @@ pub fn diff(payload: &super::ReplaceCurve, base: &SemioBrepSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Edge \"{}\" already has this curve.", payload.edge_id));
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
-        edges: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.edge_id.clone(), diff: BrepEdgeDiff { start_vertex: None, end_vertex: None, curve: Some(payload.new_curve.clone()) } }], added: vec![] }),
+        edges: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.edge_id.clone(), diff: BrepEdgeDiff { start_vertex: None, end_vertex: None, curve: Some(payload.new_curve.clone()), tol: None } }], added: vec![] }),
         ..Default::default()
     })
 }

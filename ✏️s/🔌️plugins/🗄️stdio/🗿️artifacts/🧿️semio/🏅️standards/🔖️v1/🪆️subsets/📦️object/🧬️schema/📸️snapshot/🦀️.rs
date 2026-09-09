@@ -55,13 +55,17 @@ impl Default for SemioObjectSnapshot {
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioObjectSnapshot {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
-            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-            ("transform".to_string(), dsl::ToValue::to_value(&self.transform)),
-            ("brep".to_string(), dsl::to_dsl_value(&self.brep).expect("ArtifactChild serializes")),
-            ("mesh".to_string(), dsl::to_dsl_value(&self.mesh).expect("ArtifactChild serializes")),
-            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
-        ])
+        let mut entries = vec![("schema".to_string(), dsl::ToValue::to_value(&self.schema)), ("transform".to_string(), dsl::ToValue::to_value(&self.transform))];
+        if let Some(brep) = &self.brep {
+            entries.push(("brep".to_string(), dsl::to_dsl_value(brep).expect("ArtifactChild serializes")));
+        }
+        if let Some(mesh) = &self.mesh {
+            entries.push(("mesh".to_string(), dsl::to_dsl_value(mesh).expect("ArtifactChild serializes")));
+        }
+        if let Some(properties) = &self.properties {
+            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+        }
+        dsl::DslValue::object(entries)
     }
 }
 impl dsl::FromValue for SemioObjectSnapshot {
@@ -72,9 +76,9 @@ impl dsl::FromValue for SemioObjectSnapshot {
         Ok(Self {
             schema: dsl::FromValue::from_value(field("schema")?)?,
             transform: dsl::FromValue::from_value(field("transform")?)?,
-            brep: dsl::from_dsl_value(field("brep")?).map_err(dsl::ValueError::new)?,
-            mesh: dsl::from_dsl_value(field("mesh")?).map_err(dsl::ValueError::new)?,
-            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+            brep: get("brep").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            mesh: get("mesh").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
         })
     }
 }
@@ -356,7 +360,7 @@ pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapsh
 /// 📝️ Parses `s.stdio.semio.object` DSL text into a [`SemioObjectSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📦️mutate-semio-object`'s `identity-round-trip` scenario reaches the real committed
-/// artifact (`../../📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// artifact (`../../🖼️assets/📦️crate/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_object_dsl(text: &str) -> Result<SemioObjectSnapshot, String> {
     <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
@@ -378,7 +382,7 @@ pub fn encode_semio_object_pack(snapshot: &SemioObjectSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioObjectSnapshot`] — the inverse of
-/// [`encode_semio_object_pack`], reading `../../📚️examples/📦️crate/🖼️assets/🎒️.pack.semio`.
+/// [`encode_semio_object_pack`], reading `../../🖼️assets/📦️crate/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_pack(bytes: &[u8]) -> Result<SemioObjectSnapshot, String> {
     <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

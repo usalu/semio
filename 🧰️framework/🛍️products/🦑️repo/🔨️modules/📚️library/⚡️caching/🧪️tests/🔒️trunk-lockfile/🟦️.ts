@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
   for (const path of fixture.configs) {
     const source = readFileSync(join(workspace, path), "utf8"), parsed = Bun.TOML.parse(source) as { build: Record<string, unknown>; hooks?: { stage: string; command: string; command_arguments: string[] }[] };
     assert.deepEqual(parsed, require("smol-toml").parse(source));
@@ -43,7 +43,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
 
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
 export async function testNativeTrunkLockfile(workspace: string, generated: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
   const config = Bun.TOML.parse(readFileSync(join(workspace, fixture.configs[0]), "utf8")) as any;
   const hook = config.hooks.find((value: any) => value.stage === fixture.hook.stage);
   const args = [...hook.command_arguments];

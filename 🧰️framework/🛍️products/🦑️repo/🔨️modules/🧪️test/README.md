@@ -158,7 +158,9 @@ for each ecosystem's own import syntax (`import x` / `from x import` for Python,
 * A missing tool fails setup. A timeout fails the case. There is no quarantine list, no known-broken
   allowlist and no mechanism anywhere that turns a failure into a skip.
 * Fixtures are immutable. A scenario that needs to mutate one copies it into the case work directory
-  first. `local://` never shadows `shared://`.
+  first. `shared://` resolves under the semantic owner’s `🧫️fixtures`; `asset://` resolves
+  under its `🖼️assets`. Test-case directories contain only their feature and implementations.
+  Production code must use assets and must never depend on testing fixtures.
 * Comparison belongs to an owned profile, never to an adapter.
 * Generated hosts and outputs live only under `.🧬semio/🦑️repo/⚡️cache/tests/`, carry an ownership
   marker, and are safe to delete. A committed generated wrapper is a taxonomy breach.

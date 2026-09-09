@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
     let projection: GisMapFrozenBindingV1 = serde_json::from_value(fixture["binding"].clone()).unwrap();
     let native = semio_s_artifact_gis_gismap::gis_map_inference_service();
     assert_eq!(validate_gis_map_binding_projection(&projection, native), Ok(()));
@@ -31,7 +31,7 @@ fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
 
 #[test]
 fn inference_catalog_projection_requires_exact_scope_package_and_declared_service() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🎯️inference-catalog-selection-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎯️inference-catalog-selection-v1/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut row = fixture.clone();
         let path = case["path"].as_array().unwrap();

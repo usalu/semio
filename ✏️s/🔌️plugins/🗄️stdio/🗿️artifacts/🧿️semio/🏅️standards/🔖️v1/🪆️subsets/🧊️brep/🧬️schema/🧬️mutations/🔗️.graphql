@@ -36,4 +36,5 @@ type SemioBrepMutation {
   orientation: Boolean
   faces: [BrepShellFace!]
   shells: [BrepSolidShell!]
+  tol: Float
 }

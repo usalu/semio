@@ -29,6 +29,6 @@ pub fn diff(payload: &ResizeBlock, base: &NoteSnapshot) -> protocol::MutationOut
             *height = payload.new_height;
         }
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

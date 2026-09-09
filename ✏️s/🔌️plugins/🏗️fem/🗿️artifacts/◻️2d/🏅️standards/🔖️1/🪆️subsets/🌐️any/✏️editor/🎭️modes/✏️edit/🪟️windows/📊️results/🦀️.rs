@@ -21,7 +21,7 @@ pub const BODY_KEY: &str = "fem2d.play.results";
 /// 🌡️ A filled-triangle Canvas2d path layer (`segments` + `fill`, evenodd) for a contour cell —
 /// see `framework/renderer/react/components/canvas-2d-host.tsx`'s `buildScenePath`/`drawSceneNode`
 /// for the exact JSON shape this mirrors.
-fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
+fn filled_triangle_layer(id: &str, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     dsl::json!({
         "id": id,
@@ -39,7 +39,7 @@ fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f
 /// 🌡️ A filled polygon Canvas2d path layer (arbitrary vertex count) — the marching-triangle contour
 /// bands need this (a clipped triangle can come out as a quad), unlike `filled_triangle_layer`'s
 /// fixed 3-point shape.
-fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
+fn filled_polygon_layer(id: &str, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (i, &(x, y)) in points.iter().enumerate() {
@@ -97,8 +97,8 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
     let mut layers = Vec::with_capacity(VON_MISES_BANDS.len() + 2);
     for (i, color) in VON_MISES_BANDS.iter().enumerate() {
         let y = 20.0 + i as f64 * 14.0;
-        layers.push(filled_triangle_layer(format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
-        layers.push(filled_triangle_layer(format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
+        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
+        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
     }
     layers.push(dsl::json!({
         "id": "legend-label-min",
@@ -221,7 +221,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
                 }
                 if poly.len() >= 3 {
                     let screen_points: Vec<(f64, f64)> = poly.iter().map(|(p, _)| *p).collect();
-                    layers.push(filled_polygon_layer(format!("contour-{tri_index}-{band}"), &screen_points, VON_MISES_BANDS[band], 0.85));
+                    layers.push(filled_polygon_layer(&format!("contour-{tri_index}-{band}"), &screen_points, VON_MISES_BANDS[band], 0.85));
                 }
             }
         }
@@ -230,7 +230,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
     //#endregion 🔖️StressContour
 
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -250,7 +250,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> s
         "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -274,7 +274,7 @@ fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usi
         "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 //#endregion 🔖️Render
 

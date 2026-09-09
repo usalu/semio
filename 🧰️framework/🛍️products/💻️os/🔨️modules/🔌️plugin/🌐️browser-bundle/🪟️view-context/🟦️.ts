@@ -1,6 +1,6 @@
 /** 🪟️ Ephemeral host view for one live document opening, independent of document config. */
 import { parseResolvedPluginViewState, type ResolvedPluginViewState } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import type { DocumentScope } from "../../📇️directory/🧬️schema/🟦️.ts";
+import type { DocumentScope } from "../../../📇️directory/🧬️schema/🟦️.ts";
 
 export type BrowserActorViewStateRequest = {
   readonly kind: "browser-actor-view-state";

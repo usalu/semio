@@ -251,6 +251,7 @@ fn sourcing_curation_bounded_extent(command: &SourcingCurationCommand, _snapshot
     SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn sourcing_curation_retained_reduce(
     command: &SourcingCurationCommand,
     snapshot: &CurationSnapshot,

@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 
 /** 🐳️ Checks the environment-only Docker context with YAML and Docker's documented double-star exclusion semantics. */
 export function testDevcontainerContext(workspace: string): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🐳️devcontainer-context/🔣️.json"), "utf8"));
   const compose = require("yaml").parse(readFileSync(join(workspace, fixture.compose), "utf8")), build = compose.services[fixture.service].build;
   assert.equal(build.context, fixture.context); assert.equal(build.dockerfile, fixture.dockerfile);
   const context = resolve(workspace, dirname(fixture.compose), build.context);

@@ -748,7 +748,6 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 let _ = patches.defer(surface);
             }),
         }
-
     }
     let reconcile_work = PATCHES
         .with(|patches| -> Result<bool, &'static str> {
@@ -792,6 +791,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
     // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
     let more_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(8)));
+    let more_work = more_work || pump_process_worker_pool();
     for effect in REGISTRY.with(|registry| registry.drain()) {
         push_admitted_effect(&mut effects, 0, effect);
     }
@@ -882,6 +882,36 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         }
     })
 }
+
+/// 🏃️ Runs queued process-pool job steps inside this turn on wasm, where the pool has no threads and
+/// a step submitted by a mounted worker session (retained commands, framework reserved routes) only
+/// executes when the pool is pumped. Before this the only pump was the cooperative-maintenance cadence,
+/// so every submitted step waited ~170 reactor turns (measured 2026-09-09). Bounded by
+/// [`PROCESS_POOL_PUMPS_PER_TURN`] and [`PROCESS_POOL_WALL_MS`]; returns whether pool work remains.
+fn pump_process_worker_pool() -> bool {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
+        let mut pumps = 0;
+        while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
+            let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
+            pool.pump(now_ms);
+            pumps += 1;
+        }
+        pool.has_pending_work()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    false
+}
+
+/// 🏃️ Upper bound on process-pool pumps per reactor turn on wasm.
+#[cfg(target_arch = "wasm32")]
+const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
+/// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.
+#[cfg(target_arch = "wasm32")]
+const PROCESS_POOL_WALL_MS: u64 = 2;
 
 fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)

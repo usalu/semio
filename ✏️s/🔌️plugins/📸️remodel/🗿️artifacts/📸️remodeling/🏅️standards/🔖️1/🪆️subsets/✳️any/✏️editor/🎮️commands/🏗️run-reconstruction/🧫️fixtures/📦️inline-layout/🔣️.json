@@ -1,0 +1,13 @@
+{
+  "maximumInlineBytes": 128,
+  "mutation": {
+    "mutation": "createAsset",
+    "key": "raster-layout-vector",
+    "asset": {
+      "mime": "application/vnd.semio.asset-chunk",
+      "data": "AAECAw==",
+      "width": 0,
+      "height": 0
+    }
+  }
+}

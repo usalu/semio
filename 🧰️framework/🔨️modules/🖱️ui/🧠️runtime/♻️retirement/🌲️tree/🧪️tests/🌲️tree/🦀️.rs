@@ -9,8 +9,8 @@ impl Drop for HandbackReservations {
     }
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
-fn built_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../🧬️contract/♻️retirement/🌲️built/🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
+fn built_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../🧬️contract/♻️retirement/🌲️built/🧫️fixtures/🔣️.json")).unwrap() }
 
 fn text_node(key: &str, value: &str) -> crate::TreeNode {
     ui_contract::BuiltNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(value).unwrap(), emphasize: None, data_attributes: Default::default() })).unwrap()

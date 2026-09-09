@@ -71,7 +71,7 @@ impl store::ArtifactPack for RewritingSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`RewritingSnapshot`] as this facet's own camelCase JSON projection — the comparison
 /// surface `mutate-rewriting-1`'s scenarios are measured through, and the shape the committed
-/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
+/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. The three authored bodies travel as opaque JSON STRINGS,
 /// so the projection is JSON containing JSON — which is exactly the shape a transcribed Rust
 /// literal gets wrong silently.
@@ -94,7 +94,7 @@ pub fn decode_rewriting_snapshot_json(text: &str) -> Result<RewritingSnapshot, S
 /// of this type's own handcrafted `store::ArtifactDsl` impl above, whose trait and error type are
 /// both unnameable outside this crate, so `mutate-rewriting-1`'s `identity-round-trip` scenario
 /// reaches the real committed artifact
-/// (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`) through this instead.
+/// (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`) through this instead.
 pub fn parse_rewriting_dsl(text: &str) -> Result<RewritingSnapshot, String> {
     <RewritingSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }

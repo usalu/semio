@@ -18,6 +18,6 @@ pub fn diff(payload: &InsertTableRow, base: &NoteSnapshot) -> protocol::Mutation
         let width = columns.len();
         rows.push((0..width).map(|_| crate::NoteTableCell { content: String::new() }).collect());
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

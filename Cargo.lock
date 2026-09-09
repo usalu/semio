@@ -6405,6 +6405,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
@@ -7237,6 +7238,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
@@ -7497,6 +7499,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value-derive",
+ "serde_json",
 ]
 
 [[package]]

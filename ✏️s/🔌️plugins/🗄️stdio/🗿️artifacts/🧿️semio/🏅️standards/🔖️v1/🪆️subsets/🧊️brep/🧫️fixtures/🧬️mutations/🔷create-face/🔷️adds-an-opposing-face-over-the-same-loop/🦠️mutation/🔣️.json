@@ -1,0 +1,22 @@
+{
+  "CreateFace": {
+    "id": "f2",
+    "outer_loop": "l1",
+    "inner_loops": [],
+    "surface": {
+      "kind": "plane",
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "normal": {
+        "x": 0,
+        "y": 0,
+        "z": -1
+      }
+    },
+    "orientation": false,
+    "tol": 4e-7
+  }
+}

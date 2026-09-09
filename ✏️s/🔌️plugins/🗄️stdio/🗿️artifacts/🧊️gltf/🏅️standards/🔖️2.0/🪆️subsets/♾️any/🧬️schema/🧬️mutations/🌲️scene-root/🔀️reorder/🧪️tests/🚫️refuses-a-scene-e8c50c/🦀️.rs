@@ -15,10 +15,10 @@ use crate::schema::mutations::reorder_scene_root_nodes;
 use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-scene-root-nodes/refuses-a-scene-index-past-the-end-of-the-scene-list";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🔀️reorder/🚫️refuses-a-scene-e8c50c/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🔀️reorder/🚫️refuses-a-scene-e8c50c/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🔀️reorder/🚫️refuses-a-scene-e8c50c/🧬️operation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌲️scene-root/🔀️reorder/🚫️refuses-a-scene-e8c50c/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

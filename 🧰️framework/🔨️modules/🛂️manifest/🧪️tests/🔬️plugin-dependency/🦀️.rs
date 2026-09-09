@@ -121,7 +121,7 @@ async fn resolve_load_order_toposorts_a_diamond() {
         manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]).await,
         manifest("base", "1.0.0", vec![]).await,
     ];
-    let order = resolve_load_order(&manifests).await.unwrap();
+    let order = resolve_load_order(&manifests).unwrap();
     assert_eq!(order, vec!["base", "left", "right", "top"]);
 }
 
@@ -130,21 +130,21 @@ async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
     let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await];
     let mut shuffled = forward.clone();
     shuffled.reverse();
-    assert_eq!(resolve_load_order(&forward).await.unwrap(), resolve_load_order(&shuffled).await.unwrap());
-    assert_eq!(resolve_load_order(&forward).await.unwrap(), vec!["a", "b", "c"]);
+    assert_eq!(resolve_load_order(&forward).unwrap(), resolve_load_order(&shuffled).unwrap());
+    assert_eq!(resolve_load_order(&forward).unwrap(), vec!["a", "b", "c"]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_reports_missing_dependency() {
     let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)]).await];
-    let error = resolve_load_order(&manifests).await.unwrap_err();
+    let error = resolve_load_order(&manifests).unwrap_err();
     assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_reports_version_mismatch() {
     let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]).await, manifest("b", "1.0.0", vec![]).await];
-    let error = resolve_load_order(&manifests).await.unwrap_err();
+    let error = resolve_load_order(&manifests).unwrap_err();
     assert_eq!(error, DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() });
 }
 
@@ -155,7 +155,7 @@ async fn resolve_load_order_names_every_member_of_a_cycle() {
         manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]).await,
         manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
     ];
-    let error = resolve_load_order(&manifests).await.unwrap_err();
+    let error = resolve_load_order(&manifests).unwrap_err();
     match error {
         DependencyGraphError::Cycle { members } => {
             let mut sorted = members.clone();
@@ -169,7 +169,7 @@ async fn resolve_load_order_names_every_member_of_a_cycle() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
-    assert_eq!(resolve_load_order(&[]).await.unwrap(), Vec::<String>::new());
+    assert_eq!(resolve_load_order(&[]).unwrap(), Vec::<String>::new());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -180,9 +180,9 @@ async fn dependents_returns_direct_dependents_sorted() {
         manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
         manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]).await,
     ];
-    assert_eq!(dependents(&manifests, "a").await, vec!["b".to_string(), "c".to_string()]);
-    assert_eq!(dependents(&manifests, "b").await, vec!["d".to_string()]);
-    assert!(dependents(&manifests, "d").await.is_empty());
+    assert_eq!(dependents(&manifests, "a"), vec!["b".to_string(), "c".to_string()]);
+    assert_eq!(dependents(&manifests, "b"), vec!["d".to_string()]);
+    assert!(dependents(&manifests, "d").is_empty());
 }
 //#endregion 🔖️DependencyGraphTests
 

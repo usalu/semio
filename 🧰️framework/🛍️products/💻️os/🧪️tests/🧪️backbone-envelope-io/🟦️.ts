@@ -1684,7 +1684,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
       expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
       const { InferencePortOpeningMailboxV1, parseInferencePortClosedV1, parseInferencePortOpeningResultV1 } = await import("../../🔨️modules/💡️inference/🚪️opening/🟦️.ts");
@@ -1726,7 +1726,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
       const valid = new Ajv({ strict: true }).compile(schema);
       expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
@@ -1812,7 +1812,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("settles only the exact live browser intent mailbox and retires pending work", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const { BrowserActorActionMailboxV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
       const { actionSequence: _sequence, ...owner } = fixture.request;
       const intent = { ...fixture.uiIntent, seq: BigInt(fixture.uiIntent.seq) };
@@ -1875,7 +1875,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
       const valid = new Ajv({ strict: true }).compile(schema);
       expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
@@ -1898,7 +1898,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("admits only exact direct browser intent owners on the private worker wire", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const request = { ...fixture.request, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
       const response = { ...fixture.acknowledged, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
       expect(equal(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), request)).toBe(true);
@@ -2058,7 +2058,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       const event: BackboneWorkerResponse = { kind: "event", documentId: "same-document", clientInstanceId, scope: { spaceId: "space-a", documentId: "same-document" }, event: { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "live", peerCount: 1 } } };
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(event))).toEqual(event);
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const offer = parseBrowserActorUiPatchOfferV1(fixture.offer);
       const result = parseBrowserActorUiPatchResultV1(fixture.acknowledged);
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse({ ...offer, clientInstanceId }))).toEqual({ ...offer, clientInstanceId });

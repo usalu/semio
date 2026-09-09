@@ -11,7 +11,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Architectural Example", "Architekturbeispiel")
 }
 pub const ICON: &str = "file";
-pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/🏛️architectural.dwg");
+pub const FIXTURE_BYTES: &[u8] = include_bytes!("../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decoded_summary_json() -> String {

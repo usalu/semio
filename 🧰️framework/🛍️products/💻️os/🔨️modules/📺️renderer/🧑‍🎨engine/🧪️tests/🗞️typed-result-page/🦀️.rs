@@ -2,7 +2,7 @@ use super::{TypedOperationResultPage, TypedOperationResultToken};
 
 #[test]
 fn renderer_result_lane_vectors_decode_and_reject_unknown_tags() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
     let token = TypedOperationResultToken { receiver: 1, operation: 2, generation: 3, sequence: 4, attempt: 5 };
     let mut wire = Vec::from(TypedOperationResultPage::PAGE_MAGIC);
     wire.extend_from_slice(&token.receiver.to_le_bytes());

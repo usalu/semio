@@ -13,6 +13,7 @@ pub struct CreateFace {
     pub inner_loops: Vec<String>,
     pub surface: BrepSurface,
     pub orientation: bool,
+    pub tol: f64,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateFace {

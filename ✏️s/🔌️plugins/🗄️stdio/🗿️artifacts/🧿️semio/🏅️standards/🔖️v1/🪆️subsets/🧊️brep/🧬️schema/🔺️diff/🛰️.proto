@@ -4,7 +4,10 @@ package semio.s_stdio_semio_brep.diff;
 
 import "../📸️snapshot/🛰️.proto";
 
-message BrepVertexDiff { optional semio.s_stdio_semio_brep.snapshot.SemioPoint3 point = 1; }
+message BrepVertexDiff {
+  optional semio.s_stdio_semio_brep.snapshot.SemioPoint3 point = 1;
+  optional double tol = 2;
+}
 message NamedModifiedVertex { string key = 1; BrepVertexDiff diff = 2; }
 message BrepVerticesDiff {
   repeated string removed = 1;
@@ -16,6 +19,7 @@ message BrepEdgeDiff {
   optional string start_vertex = 1;
   optional string end_vertex = 2;
   optional semio.s_stdio_semio_brep.snapshot.BrepCurve curve = 3;
+  optional double tol = 4;
 }
 message NamedModifiedEdge { string key = 1; BrepEdgeDiff diff = 2; }
 message BrepEdgesDiff {
@@ -37,6 +41,7 @@ message BrepFaceDiff {
   repeated string inner_loops = 2;
   optional semio.s_stdio_semio_brep.snapshot.BrepSurface surface = 3;
   optional bool orientation = 4;
+  optional double tol = 5;
 }
 message NamedModifiedFace { string key = 1; BrepFaceDiff diff = 2; }
 message BrepFacesDiff {

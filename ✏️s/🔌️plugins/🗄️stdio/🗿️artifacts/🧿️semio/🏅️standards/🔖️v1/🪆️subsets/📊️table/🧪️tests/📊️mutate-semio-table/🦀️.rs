@@ -57,13 +57,13 @@ mod subject {
     //#region 🔖️Input
     /// 📃️ The three-row demo sheet, in both encodings the domain commits for it — small, but the
     /// only `s.stdio.semio.table` bytes in this artifact a codec other than the Python one wrote.
-    const SHEET_DSL: &str = "asset://📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio";
-    const SHEET_PACK: &str = "asset://📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio";
+    const SHEET_DSL: &str = "asset://📃️sheet/🗣️.dsl.semio";
+    const SHEET_PACK: &str = "asset://📃️sheet/🎒️.pack.semio";
     /// 📊️ The real 50×12 survey table and its binary twin, derived once from the committed CSV
     /// beside them and re-derived on every run by `payload-fidelity`.
-    const SURVEY_CSV: &str = "local://♻️reuse-marketplaces/📊️.csv";
-    const SURVEY_DSL: &str = "local://📝️reuse-marketplaces.dsl.semio";
-    const SURVEY_PACK: &str = "local://📦️reuse-marketplaces.pack.semio";
+    const SURVEY_CSV: &str = "shared://📊️mutate-semio-table/♻️reuse-marketplaces/📊️.csv";
+    const SURVEY_DSL: &str = "shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio";
+    const SURVEY_PACK: &str = "shared://📊️mutate-semio-table/📦️reuse-marketplaces.pack.semio";
 
     fn utf8(bytes: Vec<u8>, what: &str) -> Result<String, String> {
         String::from_utf8(bytes).map_err(|error| format!("{what} is not UTF-8: {error}"))

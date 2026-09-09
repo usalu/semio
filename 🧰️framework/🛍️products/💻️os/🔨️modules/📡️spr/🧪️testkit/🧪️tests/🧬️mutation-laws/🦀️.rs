@@ -68,7 +68,7 @@ mod tests {
     use crate::os_spr::{Mutation, MutationLeaf, OpText};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("law fixture")
+        serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).expect("law fixture")
     }
 
     pub(crate) fn assert_leaf<T>(index: usize, wrap: fn(T) -> CounterMutation, descriptor: &str)

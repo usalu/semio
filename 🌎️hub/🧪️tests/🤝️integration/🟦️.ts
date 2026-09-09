@@ -39,7 +39,7 @@ function scopeExport(root: string, scope: string): (exportId: string) => (value:
 describe("canonical checkpoint pair neutral contract", () => {
   it("validates the schema and independently proves hashes, framing, order, terminal, and ETag", async () => {
     const root = getWorkspaceRoot();
-    const fixtureRoot = join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🪢️canonical-pair");
+    const fixtureRoot = join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧫️fixtures", "🪢️canonical-pair");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const lagExport = scopeExport(root, "hub.lag-rebootstrap");
     const validateSelection = lagExport("CanonicalCheckpointPairSelectionV1");
@@ -134,7 +134,7 @@ describe("hub harness quick contract", () => {
   it("validates local bootstrap, one-shot credential, and readiness schemas with independent HMAC", () => {
     const root = getWorkspaceRoot();
     const contractRoot = join(root, "🌎️hub", "🚀️local-bootstrap");
-    const fixture = JSON.parse(readFileSync(join(contractRoot, "🧪️fixtures", "🚇️pipe-v1", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(contractRoot, "🧫️fixtures", "🚇️pipe-v1", "🔣️.json"), "utf8"));
     const localBootstrapExport = scopeExport(root, "hub.local-bootstrap");
     const validatePipe = localBootstrapExport("LocalBootstrapPipeV1");
     const validateReadiness = localBootstrapExport("LocalBootstrapReadinessV1");
@@ -198,7 +198,7 @@ describe("hub harness quick contract", () => {
 
   it("validates typed auth capabilities and independently recomputes the socket grant with AJV and WebCrypto", async () => {
     const root = getWorkspaceRoot();
-    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧪️fixtures", "🔑️capability-v1", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧫️fixtures", "🔑️capability-v1", "🔣️.json"), "utf8"));
     const authExport = scopeExport(root, "hub.auth");
     const validate = authExport("AuthCapabilityVectorsV1");
     expect(validate(fixture), "validate rejected its own fixture").toBe(true);
@@ -267,7 +267,7 @@ describe("hub harness quick contract", () => {
   it("validates the neutral immutable trusted-catalog bundle with AJV and Node crypto", () => {
     const root = getWorkspaceRoot();
     const catalogRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog");
-    const fixture = JSON.parse(readFileSync(join(catalogRoot, "🧪️fixtures", "👥️two-package", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(catalogRoot, "🧫️fixtures", "👥️two-package", "🔣️.json"), "utf8"));
     const validate = scopeExport(root, "hub.artifact-authority.trusted-catalog")("TrustedBundleV1");
     expect(validate(fixture.bundle), "validate rejected its own fixture").toBe(true);
     expect(fixture.bundle.packages[0].pluginId).not.toBe(fixture.bundle.packages[0].packageId);
@@ -372,7 +372,7 @@ describe("hub harness quick contract", () => {
 
   it("validates the neutral checkpoint event, identity, and exact caps with AJV and Node crypto", () => {
     const root = getWorkspaceRoot();
-    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "📇️directory", "🧪️tests", "📸️artifact-checkpoint-projection.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "📇️directory", "🧫️fixtures", "📸️artifact-checkpoint-projection", "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: false, discriminator: true });
     ajv.addSchema(schema);
@@ -443,7 +443,7 @@ describe("hub harness quick contract", () => {
   });
 
   it("recomputes the language-neutral authority adapter SHA-256 vector with Node crypto", () => {
-    const path = join(getWorkspaceRoot(), "🌎️hub", "🗿️artifact-authority", "🧪️fixtures", "🔌️authority-adapter", "🔣️.json");
+    const path = join(getWorkspaceRoot(), "🌎️hub", "🗿️artifact-authority", "🧫️fixtures", "🔌️authority-adapter", "🔣️.json");
     const fixture = JSON.parse(readFileSync(path, "utf8")) as {
       identity: { pluginId: string; packageId: string };
       pack: number[];
@@ -465,7 +465,7 @@ describe("hub harness quick contract", () => {
 
   it("validates and independently derives every artifact chunk-CAS boundary with AJV and WebCrypto", async () => {
     const root = getWorkspaceRoot();
-    const fixtureRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🧪️fixtures", "🧱️artifact-chunk-cas");
+    const fixtureRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🧫️fixtures", "🧱️artifact-chunk-cas");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const authorityExport = scopeExport(root, "hub.artifact-authority");
     const validateManifestPlan = authorityExport("ArtifactCasManifestPlanV1");
@@ -719,7 +719,7 @@ describe("hub harness quick contract", () => {
 
   it("validates and independently encodes the typed lag rebootstrap control", () => {
     const root = getWorkspaceRoot();
-    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🛟️lag-rebootstrap", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧫️fixtures", "🛟️lag-rebootstrap", "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: false, discriminator: true });
     ajv.addSchema(schema);

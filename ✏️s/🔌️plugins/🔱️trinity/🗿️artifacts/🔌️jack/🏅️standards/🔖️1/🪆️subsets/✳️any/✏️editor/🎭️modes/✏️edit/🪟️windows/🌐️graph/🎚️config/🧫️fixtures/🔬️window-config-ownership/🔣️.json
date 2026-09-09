@@ -1,0 +1,120 @@
+{
+  "windowKindId": "trinity-jack-graph",
+  "leftWindowId": "graph-left",
+  "rightWindowId": "graph-right",
+  "base": {
+    "camera": null,
+    "lodMode": "automatic"
+  },
+  "cases": [
+    {
+      "windowId": "graph-left",
+      "mutation": {
+        "kind": "set-camera",
+        "camera": {
+          "x": 10,
+          "y": 20,
+          "zoom": 2
+        }
+      },
+      "expected": {
+        "graph-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "graph-right": {
+          "camera": null,
+          "lodMode": "automatic"
+        }
+      }
+    },
+    {
+      "windowId": "graph-right",
+      "mutation": {
+        "kind": "set-lod-mode",
+        "value": "compact"
+      },
+      "expected": {
+        "graph-left": {
+          "camera": {
+            "x": 10,
+            "y": 20,
+            "zoom": 2
+          },
+          "lodMode": "automatic"
+        },
+        "graph-right": {
+          "camera": null,
+          "lodMode": "compact"
+        }
+      }
+    }
+  ],
+  "expectedWindowGenerations": {
+    "graph-left": 1,
+    "graph-right": 1
+  },
+  "queryOwnership": {
+    "appConfig": {},
+    "editorBase": {
+      "jackQuery": "MATCH (a:Piece) RETURN a.name"
+    },
+    "resultsBase": {
+      "queryExecutionId": null,
+      "result": null,
+      "queryError": null
+    },
+    "pairs": [
+      {
+        "editorWindowId": "editor-left",
+        "resultsWindowId": "results-left",
+        "queryMutation": {
+          "kind": "set-query",
+          "value": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
+        },
+        "resultMutation": {
+          "kind": "replace-query-result",
+          "executionId": "41",
+          "result": {
+            "kind": "table",
+            "columns": ["a.name"],
+            "rows": [["b"]],
+            "graphFixture": null
+          },
+          "error": null
+        }
+      },
+      {
+        "editorWindowId": "editor-right",
+        "resultsWindowId": "results-right",
+        "queryMutation": {
+          "kind": "set-query",
+          "value": "MATCH (a:Piece) WHERE a.name != 'b' RETURN a.name"
+        },
+        "resultMutation": {
+          "kind": "replace-query-result",
+          "executionId": "42",
+          "result": {
+            "kind": "table",
+            "columns": ["a.name"],
+            "rows": [["t_f0_b_c0"]],
+            "graphFixture": null
+          },
+          "error": null
+        }
+      }
+    ],
+    "expectedEditorGenerations": {
+      "editor-left": 1,
+      "editor-right": 1
+    },
+    "expectedResultsGenerations": {
+      "results-left": 1,
+      "results-right": 1
+    }
+  }
+}

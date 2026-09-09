@@ -22,7 +22,7 @@ Feature: Recover the text layer of a real PDF 1.4 document
   @level-quick
   @mode-conformance
   Scenario: The declared pages carry the text the document prints
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the reference implementation extracts the text layer of each declared page
       | page | contains                         |
       | 1    | Ueli Saluz                       |
@@ -39,6 +39,6 @@ Feature: Recover the text layer of a real PDF 1.4 document
   @level-quick
   @mode-property
   Scenario: Every page of the document yields a non-empty text layer
-    Given the real input document asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf
+    Given the real input document asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf
     When the reference implementation extracts the text layer of every page in turn
     Then the page count matches the document's own page tree and no page comes back empty

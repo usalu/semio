@@ -35,24 +35,24 @@ const UNOBSERVABLE: &[&str] = &["duplicate-layer"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "create-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-0b0435/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-0b0435/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-0b0435/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-at-the-root/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-at-the-root/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-at-the-root/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-41e1e0/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-41e1e0/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-41e1e0/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-with-its-child/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-with-its-child/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-with-its-child/📸️snapshot/➡️after/🔣️.json"),
         ),
         "duplicate-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-c88127/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-c88127/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-c88127/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-missing-source-layer/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-missing-source-layer/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-missing-source-layer/📸️snapshot/➡️after/🔣️.json"),
         ),
         "reorder-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-d7c515/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-d7c515/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-d7c515/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-above-shape-b/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-above-shape-b/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-above-shape-b/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-structure: {other:?} is not a declared kind of this subset"),
     }

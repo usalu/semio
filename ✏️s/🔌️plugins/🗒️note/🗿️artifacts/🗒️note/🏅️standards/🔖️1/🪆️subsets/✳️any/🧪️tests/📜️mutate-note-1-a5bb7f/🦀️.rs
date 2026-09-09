@@ -12,7 +12,7 @@
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector,
 //! COPIED (not referenced) into this case's own `🧫️fixtures/` — the escape guard blocks a
 //! `✳️any`-owned case from reaching sideways into `📜️document`'s own physical leaves the way
-//! `asset://` requires, so this reads through `local://` instead, still fixture-backed and digest-
+//! `asset://` requires, so this reads through `shared://📜️mutate-note-1-a5bb7f/` instead, still fixture-backed and digest-
 //! pinned. Nothing is transcribed into this file: the mapping from kind to vector is data in the
 //! feature's own `Examples` table, and the only literal this adapter carries is the kind list the
 //! production module's `kinds_match_the_enum_and_the_catalog` keeps honest.
@@ -35,7 +35,7 @@ const GUARD_VECTORS: &[&str] = &[
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted — this case's own
-/// `🧫️fixtures/`, which is what `local://` resolves against.
+/// `🧫️fixtures/`, which is what `shared://📜️mutate-note-1-a5bb7f/` resolves against.
 const VECTORS: &str = "local:/";
 //#endregion 🔖️Kinds
 

@@ -43,7 +43,7 @@ fn binary_codec_round_trip() {
 }
 #[test]
 fn neutral_snapshot_and_diff_schema_vectors_match_serde() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️job-test-mutations/🧪️tests/🔣️.json")).expect("neutral vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🔣️.json")).expect("neutral vectors");
     for row in vectors["schemaCases"].as_array().expect("schema cases") {
         let accepted = match row["target"].as_str().expect("schema target") {
             "snapshot" => serde_json::from_value::<JobTestSnapshot>(row["value"].clone()).is_ok(),
@@ -56,7 +56,7 @@ fn neutral_snapshot_and_diff_schema_vectors_match_serde() {
 
 #[test]
 fn neutral_checked_diff_boundaries_have_typed_rejections() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️job-test-mutations/🧪️tests/🔣️.json")).expect("neutral vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🔣️.json")).expect("neutral vectors");
     for row in vectors["apply"].as_array().expect("apply cases") {
         let base = JobTestSnapshot { value: serde_json::from_value(row["base"].clone()).expect("base") };
         let diff = JobTestDiff { deltas: serde_json::from_value(row["deltas"].clone()).expect("deltas") };
@@ -73,7 +73,7 @@ fn neutral_checked_diff_boundaries_have_typed_rejections() {
 
 #[test]
 fn absorb_preserves_order_and_intermediate_rejection() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️job-test-mutations/🧪️tests/🔣️.json")).expect("neutral vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🔣️.json")).expect("neutral vectors");
     for row in vectors["composition"].as_array().expect("composition cases") {
         let base = JobTestSnapshot { value: serde_json::from_value(row["base"].clone()).expect("base") };
         let first = JobTestDiff { deltas: serde_json::from_value(row["left"].clone()).expect("left") };

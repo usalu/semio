@@ -16,11 +16,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::Fem2dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades-the-roof-fb20eb/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades-the-roof-fb20eb/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades-the-roof-fb20eb/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades-the-roof-fb20eb/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades-the-roof-fb20eb/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

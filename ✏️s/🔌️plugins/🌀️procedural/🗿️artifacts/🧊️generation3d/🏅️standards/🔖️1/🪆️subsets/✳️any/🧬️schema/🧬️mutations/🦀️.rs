@@ -60,7 +60,7 @@ pub mod create_widget {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🌱️create-widget/🧪️tests/📝️inserts-node-c-92255f/🦀️.rs"]
+    #[path = "🌱️create-widget/🧪️tests/📝️inserts-node-c-at-index-2/🦀️.rs"]
     mod tests_inserts_node_c_at_index_2;
 }
 
@@ -74,7 +74,7 @@ pub mod connect_synapse {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔗️connect-synapse/🧪️tests/🔌️wires-node-b-to-c90f7f/🦀️.rs"]
+    #[path = "🔗️connect-synapse/🧪️tests/🔌️wires-node-b-to-node-c-at-index-1/🦀️.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
 }
 
@@ -88,7 +88,7 @@ pub mod create_generation {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "➕create-generation/🧪️tests/🌱️appends-generatio-5c9205/🦀️.rs"]
+    #[path = "➕create-generation/🧪️tests/🌱️appends-generation-2-and-moves-the-selection/🦀️.rs"]
     mod tests_appends_generation_2_and_moves_the_selection;
 }
 
@@ -102,7 +102,7 @@ pub mod delete_generation {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🗑️delete-generation/🧪️tests/🔬️t007/🦀️.rs"]
+    #[path = "🗑️delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
@@ -116,7 +116,7 @@ pub mod rename_generation {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🏷️rename-generation/🧪️tests/🏷️retitles-f090d2/🦀️.rs"]
+    #[path = "🏷️rename-generation/🧪️tests/🏷️retitles-generation-1-via-new-name/🦀️.rs"]
     mod tests_retitles_generation_1_via_new_name;
 }
 
@@ -130,7 +130,7 @@ pub mod change_generation_value {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔧️change-generation-value/🧪️tests/🔬️t006/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🧪️tests/🏢️raises-the-storeys-answer-in-generation-1/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
 //#endregion 🔖️NewLeaves

@@ -283,7 +283,7 @@ impl store::ArtifactPack for JackSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {

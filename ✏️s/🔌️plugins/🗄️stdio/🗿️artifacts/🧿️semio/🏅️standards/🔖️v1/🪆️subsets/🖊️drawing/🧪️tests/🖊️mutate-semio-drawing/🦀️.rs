@@ -11,7 +11,7 @@
 //! repository's own answer on both sides of that comparison, which is the precise failure the
 //! platform exists to prevent.
 //!
-//! **The drawing under test is a real one.** `local://🗣️.dsl.semio` and its binary twin were
+//! **The drawing under test is a real one.** `shared://🖊️mutate-semio-drawing/🗣️.dsl.semio` and its binary twin were
 //! derived ONCE from two real committed SVG documents —
 //! `🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg` and `…/🎨️svg/🧫️fixtures/qr-code.svg` — by an independent
 //! Python SVG reader built on `xml.etree` plus a path-data scanner written from the SVG 1.1 §8.3
@@ -78,9 +78,9 @@ mod subject {
     //#region 🔖️Input
     /// 🖍️ The real derived drawing — the committed `mouse.svg` and `qr-code.svg` read once by an
     /// independent SVG reader and written out through the independent Python implementation.
-    const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
+    const ARTIFACT_DSL: &str = "shared://🖊️mutate-semio-drawing/🗣️.dsl.semio";
     /// 🎒️ The same drawing in its binary envelope, written by a separate codec from the DSL text.
-    const ARTIFACT_PACK: &str = "local://🎒️.pack.semio";
+    const ARTIFACT_PACK: &str = "shared://🖊️mutate-semio-drawing/🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
@@ -107,7 +107,7 @@ mod subject {
 
     /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
     fn payload(ctx: &Context) -> Result<SemioDrawingMutation, String> {
-        let uri = step_uris(ctx, "local://").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
+        let uri = step_uris(ctx, "shared://🖊️mutate-semio-drawing/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
         decode_semio_drawing_mutation_json(&fixture_text(ctx, &uri)?).map_err(|error| format!("{}: the mutation payload must decode: {error}", ctx.scenario.id))
     }
 

@@ -2161,7 +2161,7 @@ pub mod io_mechanism {
     }
 
     async fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
-        let min_fidelity = route.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().unwrap_or(0);
+        let min_fidelity = route.iter().map(|entry| entry.fidelity.rank()).min().unwrap_or(0);
         let joined = route.iter().map(|entry| ArtifactDialect::from(entry.into).to_coordinate()).collect::<Vec<_>>().join(",");
         (std::cmp::Reverse(min_fidelity), route.len(), joined)
     }
@@ -2206,7 +2206,7 @@ pub mod io_mechanism {
         }
         ranked.sort_by(|a, b| a.0.cmp(&b.0));
         let best = ranked.into_iter().next().expect("candidates checked non-empty above").1;
-        let fidelity = rank_to_fidelity(best.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().expect("a route has at least one hop")).await;
+        let fidelity = rank_to_fidelity(best.iter().map(|entry| entry.fidelity.rank()).min().expect("a route has at least one hop")).await;
         let mut hops = Vec::with_capacity(best.len());
         for entry in &best {
             hops.push(descriptor_of(entry));
@@ -2253,7 +2253,7 @@ pub mod io_mechanism {
             .filter_map(|entry| entry.sniff.map(|sniff| (ArtifactDialect::from(entry.into), sniff(payload))))
             .filter(|(_, confidence)| *confidence != Confidence::None)
             .collect();
-        found.sort_by(|a, b| super::resolve_ready(b.1.rank()).cmp(&super::resolve_ready(a.1.rank())).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
+        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
         found
     }
 

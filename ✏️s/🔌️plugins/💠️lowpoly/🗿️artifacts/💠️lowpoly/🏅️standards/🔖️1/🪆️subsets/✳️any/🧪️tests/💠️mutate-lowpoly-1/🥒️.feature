@@ -69,34 +69,34 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                            | vector                                                                       |
-      | create-object                 | 🌱️create-object/🧪️tests/⛵️inserts-obj-mast-between-hull-and-fin                |
-      | delete-object                 | 💀️delete-object/🧪️tests/🚫️removes-obj-fin-without-touching-the-order           |
-      | reorder-objects               | 🔀️reorder-objects/🧪️tests/🔀️moves-obj-fin-in-front-of-obj-hull                 |
-      | rename-object                 | 🏷️rename-object/🧪️tests/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🧪️tests/🟢️turns-on-smooth-shading-for-obj-hull  |
-      | move-object                   | ↗️move-object/🧪️tests/📍️translates-obj-hull-along-x-and-z                      |
-      | rotate-object                 | 🔄️rotate-object/🧪️tests/🔄️yaws-obj-hull-about-the-y-axis                       |
-      | scale-object                  | 📐️scale-object/🧪️tests/📐️halves-obj-hull-uniformly                             |
-      | create-mesh                   | 🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
-      | delete-mesh                   | 🧨delete-mesh/🧪️tests/✂️detaches-the-mesh-child-handle-from-obj-hull            |
-      | insert-paint-layer            | ➕️insert-paint-layer/🧪️tests/🪜️stacks-a-detail-layer-above-the-base-layer      |
-      | remove-paint-layer            | ➖️remove-paint-layer/🧪️tests/➖️drops-the-detail-layer-at-index-1               |
-      | rename-paint-layer            | 🔖️rename-paint-layer/🧪️tests/🏷️retitles-the-base-layer-to-undercoat            |
-      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🧪️tests/🙈️hides-the-base-layer                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🧪️tests/🌫️fades-the-base-layer-to-half            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/🧪️tests/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🧪️tests/🖌️paints-red-over-the-second-half-of-the-base-layer |
+      | create-object                 | 🌱️create-object/⛵️inserts-obj-mast-between-hull-and-fin                |
+      | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
+      | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
+      | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull  |
+      | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
+      | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
+      | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
+      | create-mesh                   | 🕸️create-mesh/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
+      | delete-mesh                   | 🧨delete-mesh/✂️detaches-the-mesh-child-handle-from-obj-hull            |
+      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks-a-detail-layer-above-the-base-layer      |
+      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1               |
+      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat            |
+      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-the-second-half-of-the-base-layer |
 
   @id-inverse
   @level-exhaustive
@@ -106,39 +106,39 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                            | vector                                                                       |
-      | create-object                 | 🌱️create-object/🧪️tests/⛵️inserts-obj-mast-between-hull-and-fin                |
-      | delete-object                 | 💀️delete-object/🧪️tests/🚫️removes-obj-fin-without-touching-the-order           |
-      | reorder-objects               | 🔀️reorder-objects/🧪️tests/🔀️moves-obj-fin-in-front-of-obj-hull                 |
-      | rename-object                 | 🏷️rename-object/🧪️tests/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🧪️tests/🟢️turns-on-smooth-shading-for-obj-hull  |
-      | move-object                   | ↗️move-object/🧪️tests/📍️translates-obj-hull-along-x-and-z                      |
-      | rotate-object                 | 🔄️rotate-object/🧪️tests/🔄️yaws-obj-hull-about-the-y-axis                       |
-      | scale-object                  | 📐️scale-object/🧪️tests/📐️halves-obj-hull-uniformly                             |
-      | create-mesh                   | 🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
-      | delete-mesh                   | 🧨delete-mesh/🧪️tests/✂️detaches-the-mesh-child-handle-from-obj-hull            |
-      | insert-paint-layer            | ➕️insert-paint-layer/🧪️tests/🪜️stacks-a-detail-layer-above-the-base-layer      |
-      | remove-paint-layer            | ➖️remove-paint-layer/🧪️tests/➖️drops-the-detail-layer-at-index-1               |
-      | rename-paint-layer            | 🔖️rename-paint-layer/🧪️tests/🏷️retitles-the-base-layer-to-undercoat            |
-      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🧪️tests/🙈️hides-the-base-layer                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🧪️tests/🌫️fades-the-base-layer-to-half            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/🧪️tests/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🧪️tests/🖌️paints-red-over-the-second-half-of-the-base-layer |
+      | create-object                 | 🌱️create-object/⛵️inserts-obj-mast-between-hull-and-fin                |
+      | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
+      | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
+      | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull  |
+      | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
+      | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
+      | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
+      | create-mesh                   | 🕸️create-mesh/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
+      | delete-mesh                   | 🧨delete-mesh/✂️detaches-the-mesh-child-handle-from-obj-hull            |
+      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks-a-detail-layer-above-the-base-layer      |
+      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1               |
+      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat            |
+      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-the-second-half-of-the-base-layer |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-object lowpoly document that carries stacked paint layers
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/➖️remove-paint-layer/🧪️tests/➖️drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

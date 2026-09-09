@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JackResultsWindowTransientMutation",
+  "oneOf": [{
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "executionId", "result", "error"],
+    "properties": {
+      "kind": { "const": "replace-query-result" },
+      "executionId": { "type": ["string", "null"] },
+      "result": { "type": ["object", "null"] },
+      "error": { "type": ["string", "null"] }
+    }
+  }]
+}

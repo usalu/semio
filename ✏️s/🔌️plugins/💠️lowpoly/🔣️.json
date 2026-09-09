@@ -2400,7 +2400,7 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "setFixtureJson",
+                "id": "replaceSnapshotJson",
                 "inPalette": true,
                 "kind": "mutation",
                 "label": {
@@ -5064,7 +5064,7 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "setFixtureJson",
+                "id": "replaceSnapshotJson",
                 "inPalette": true,
                 "kind": "mutation",
                 "label": {

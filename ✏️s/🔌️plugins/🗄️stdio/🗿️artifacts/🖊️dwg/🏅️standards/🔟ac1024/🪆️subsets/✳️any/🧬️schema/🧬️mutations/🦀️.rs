@@ -121,6 +121,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✏️retitles-the-4a2963/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✏️retitles-the-summary-and-records-the-last-editor/🦀️.rs"]
 mod set_snapshot_retitles_the_summary_and_records_the_last_editor;
 //#endregion 🧪️FixtureCases

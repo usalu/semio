@@ -6,7 +6,7 @@
 //! document and `CadMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, replayed
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/<fixture>/`, replayed
 //! through the platform, plus two metamorphic laws asserted IN ROLE.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner
@@ -259,7 +259,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "asset://🧬️schema/🧬️mutations/📎replace-references/🧪️tests/swaps-the-shape-reference-list/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/📎replace-references/swaps-the-shape-reference-list/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

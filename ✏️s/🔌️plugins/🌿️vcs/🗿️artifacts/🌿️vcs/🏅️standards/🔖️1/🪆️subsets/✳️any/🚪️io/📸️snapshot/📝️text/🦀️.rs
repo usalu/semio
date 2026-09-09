@@ -38,7 +38,7 @@ impl store::ArtifactDsl for VcsSnapshot {
 //#region 🔖️Example
 /// 📄️ The `demo` example checkpoint, handcrafted in the `.vcsdemo` DSL — a mid-review structural
 /// change with a non-zero counter, freeform notes, an in-progress status, and a few tags.
-pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.vcsdemo` DSL text into a `VcsSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<VcsSnapshot, store::TextError> {

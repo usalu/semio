@@ -79,7 +79,7 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> and read the R2004 stamp back
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -95,7 +95,7 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   @level-exhaustive
   @mode-conformance
   Scenario: Apply no-mutation and read the R2004 stamp back
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the no-mutation mutation is applied with its parameters
       """
       {"kind": "no-mutation", "params": {}}
@@ -107,7 +107,7 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> brings the original stamp back
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -123,7 +123,7 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   @level-exhaustive
   @mode-property
   Scenario: Undoing no-mutation brings the original stamp back
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the no-mutation mutation is applied with its parameters
       """
       {"kind": "no-mutation", "params": {}}
@@ -135,7 +135,7 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the preamble, reporting the stamp the file really carries
-    Given the real input drawing asset://📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
     When the preamble region is zeroed and rewritten from the parsed fields alone
     Then the preamble projection is unchanged, asserted in role
     And the re-encoded bytes reproduce the input exactly, asserted in role

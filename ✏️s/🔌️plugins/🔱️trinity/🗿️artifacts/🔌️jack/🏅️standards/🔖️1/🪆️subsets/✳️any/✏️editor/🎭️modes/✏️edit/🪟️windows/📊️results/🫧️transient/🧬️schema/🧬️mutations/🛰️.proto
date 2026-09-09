@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.trinity.jack.results_window.transient.mutations;
+message ReplaceQueryResult {
+  optional string execution_id = 1;
+  optional bytes query_result_pack = 2;
+  optional string error = 3;
+}
+message JackResultsWindowTransientMutation {
+  oneof mutation { ReplaceQueryResult replace_query_result = 1; }
+}

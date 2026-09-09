@@ -35,7 +35,7 @@ enum UnitEnumOracle { First, SecondOne }
 
 #[test]
 fn empty_and_unit_enum_decoding_matches_neutral_cases_and_serde() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️empty-enum.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️empty-enum.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let wire = case["value"].as_str().unwrap();
         let empty = EmptyEnum::from_value(DslValue::String(wire.into())).is_ok();

@@ -20,21 +20,21 @@ opt-field     = "[0]" / ("[1," field-value "]")
 ; per-collection item / diff-value shapes (bracket-wrapped, comma-separated, SAME field order as
 ; the sibling 🦀️.rs -- the authoritative source; opt-field is this collection's tri-state
 ; "changed to value" slot)
-vertex        = "[" hexkey "," point3 "]"
-vertex-diff   = "[" opt-field "]"                                   ; point
-edge          = "[" hexkey "," hexkey "," hexkey "," curve "]"
-edge-diff     = "[" opt-field "," opt-field "," opt-field "]"       ; startVertex,endVertex,curve
+vertex        = "[" hexkey "," point3 "," number "]"
+vertex-diff   = "[" opt-field "," opt-field "]"                     ; point,tol
+edge          = "[" hexkey "," hexkey "," hexkey "," curve "," number "]"
+edge-diff     = "[" opt-field "," opt-field "," opt-field "," opt-field "]" ; startVertex,endVertex,curve,tol
 brep-loop     = "[" hexkey "," loop-edge-list "]"
 loop-diff     = "[" opt-field "]"                                   ; edges
-face          = "[" hexkey "," hexkey "," string-list "," surface "," bool "]"
-face-diff     = "[" opt-field "," opt-field "," opt-field "," opt-field "]"  ; outerLoop,innerLoops,surface,orientation
+face          = "[" hexkey "," hexkey "," string-list "," surface "," bool "," number "]"
+face-diff     = "[" opt-field "," opt-field "," opt-field "," opt-field "," opt-field "]" ; outerLoop,innerLoops,surface,orientation,tol
 shell         = "[" hexkey "," shell-face-list "]"
 shell-diff    = "[" opt-field "]"                                   ; faces
 solid         = "[" hexkey "," solid-shell-list "]"
 solid-diff    = "[" opt-field "]"                                   ; shells
 item-value    = vertex / edge / brep-loop / face / shell / solid
 diff-value    = vertex-diff / edge-diff / loop-diff / face-diff / shell-diff / solid-diff
-field-value   = point3 / hexkey / curve / surface / bool / string-list / loop-edge-list / shell-face-list / solid-shell-list
+field-value   = point3 / hexkey / curve / surface / bool / number / string-list / loop-edge-list / shell-face-list / solid-shell-list
 
 loop-edge-list   = "[" [loop-edge *("," loop-edge)] "]"
 loop-edge        = "[" hexkey "," bool "]"                          ; edge,orientation

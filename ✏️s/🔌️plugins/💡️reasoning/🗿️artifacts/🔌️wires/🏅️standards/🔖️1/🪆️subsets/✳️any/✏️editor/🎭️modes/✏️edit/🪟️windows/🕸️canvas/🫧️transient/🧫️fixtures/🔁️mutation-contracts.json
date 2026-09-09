@@ -1,8 +1,11 @@
 {
   "base": {
     "dragNodeId": "node-1",
+    "dragStartX": -1.5,
+    "dragStartY": 2.25,
     "dragLastX": 0.25,
-    "dragLastY": -0.75
+    "dragLastY": -0.75,
+    "dragZoom": 1.5
   },
   "cases": [
     {
@@ -10,14 +13,20 @@
       "mutation": {
         "SetDrag": {
           "nodeId": "node-2",
+          "startX": 4.5,
+          "startY": -3.25,
           "lastX": 12.5,
-          "lastY": -7.25
+          "lastY": -7.25,
+          "zoom": 2.0
         }
       },
       "expected": {
         "dragNodeId": "node-2",
+        "dragStartX": 4.5,
+        "dragStartY": -3.25,
         "dragLastX": 12.5,
-        "dragLastY": -7.25
+        "dragLastY": -7.25,
+        "dragZoom": 2.0
       }
     }
   ]

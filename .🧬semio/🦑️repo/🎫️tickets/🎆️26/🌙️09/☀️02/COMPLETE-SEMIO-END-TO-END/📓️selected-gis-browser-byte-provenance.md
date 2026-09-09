@@ -34,4 +34,9 @@ Registered target `@semio-tech/framework-os-dev:browser-host-staging-check` fina
 
 Registered Hub target `os-hub:trusted-stdio-gis-bundle-check -- --two-author-source` session `72486` is green: 17 composition laws, 10 hostiles, five current-coordinate identities, and the existing independent witness-socket retirement oracle. Evidence is `🗑️generated/selected-gis-provenance/hub-source.log`.
 
+After the 2026-09-09 task-session reset, both registered targets were rerun against the then-current shared source with a fresh private Nx workspace-data directory:
+
+- staging session `88130`: one selected test passed, 88 unrelated tests skipped, exit 0; `🗑️generated/selected-gis-provenance/revalidate-staging.log`;
+- Hub source session `43848`: 17 composition laws and 10 hostiles, exit 0; `🗑️generated/selected-gis-provenance/revalidate-hub-source.log`.
+
 No Cargo, Vite server, Chromium, or two-peer process was started by this packet. It closes the source/runtime provenance proof but does not qualify current browser substitution or the full mounted two-Author journey.

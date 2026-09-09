@@ -47,7 +47,7 @@ pub fn contribute(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-srgb-intent payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🖌️change-srgb-intent/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-srgb-intent payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

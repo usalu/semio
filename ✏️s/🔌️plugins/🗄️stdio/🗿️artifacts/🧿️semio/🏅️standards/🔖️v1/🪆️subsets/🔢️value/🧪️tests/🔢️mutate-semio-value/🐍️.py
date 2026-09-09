@@ -29,7 +29,7 @@ Nothing here imports, links, wraps or transliterates the Rust subject. Every fun
 against the documents above; where the two implementations disagree the disagreement is a finding,
 not something to tune away.
 
-🧫️ **Provenance of the complex artifact.** `local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio` and
+🧫️ **Provenance of the complex artifact.** `shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio` and
 its binary twin were derived ONCE, by `🐍️derive-value-fixture.py` in this ticket's folder, from the
 real committed model
 `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🧫️fixtures/🔣️.json`
@@ -518,7 +518,7 @@ def value_of_json(node) -> dict:
 
 def derive_document_from_json(raw: bytes) -> dict:
     """🌲️ The real committed building model as a `stdio.semio.value` document — the ONE derivation
-    that produced `local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio`, re-run by `payload-fidelity`
+    that produced `shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio`, re-run by `payload-fidelity`
     so the fixture can never drift from the source.
 
     It is a faithful transcription with one documented restructuring: each of the source's four
@@ -553,11 +553,11 @@ def derive_document_from_json(raw: bytes) -> dict:
 
 
 # region 🔖️Scenario input
-GRAPH_DSL = "asset://📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio"
-GRAPH_PACK = "asset://📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio"
-FOREST_JSON = "local://🔣️.json"
-FOREST_DSL = "local://🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio"
-FOREST_PACK = "local://🌲️hexagonal-cut-concrete-forest/🎒️.pack.semio"
+GRAPH_DSL = "asset://🕸️graph/🗣️.dsl.semio"
+GRAPH_PACK = "asset://🕸️graph/🎒️.pack.semio"
+FOREST_JSON = "shared://🔢️mutate-semio-value/🔣️.json"
+FOREST_DSL = "shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio"
+FOREST_PACK = "shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🎒️.pack.semio"
 
 
 def doc_string(ctx: Context) -> str:
@@ -576,7 +576,7 @@ def step_fixtures(ctx: Context) -> list:
         text = step.get("text", "")
         at = 0
         while at < len(text):
-            marks = [(text.find(scheme, at), scheme) for scheme in ("local://", "asset://", "shared://")]
+            marks = [(text.find(scheme, at), scheme) for scheme in ("shared://🔢️mutate-semio-value/", "asset://", "shared://")]
             marks = [(where, scheme) for where, scheme in marks if where != -1]
             if not marks:
                 break

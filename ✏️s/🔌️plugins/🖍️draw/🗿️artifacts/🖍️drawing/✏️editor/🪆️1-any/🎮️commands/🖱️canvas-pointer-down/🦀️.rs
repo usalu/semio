@@ -1013,7 +1013,7 @@ fn trace_progress(job: &TracePointerJob) -> DrawingConfigMutation {
     DrawingConfigMutation::SetTracePointerProgress { generation: job.generation, completed_work: job.completed_work as u64, pending_work: job.work.len() as u64 }
 }
 
-fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Option<Effect> {
+fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Effect {
     let continuation = CanvasPointerDown {
         app_instance_id: Some(job.app_instance_id),
         parent_document_id: Some(job.document_id.clone()),
@@ -1027,12 +1027,12 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Op
         ..payload.clone()
     };
     let args = Some(ToValue::to_value(&continuation));
-    Some(Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 })
+    Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 }
 }
 
 fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, document: &DrawingSnapshot) -> Emit<DrawingMutation, DrawingConfigMutation> {
     if !job.advance(document) {
-        let Some(effect) = queue_trace_pointer(payload, &job) else { return Emit::default() };
+        let effect = queue_trace_pointer(payload, &job);
         let progress = trace_progress(&job);
         let _ = session.retain_trace_pointer(job);
         return Emit { config_mutations: vec![progress], effects: vec![effect], ..Default::default() };

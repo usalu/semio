@@ -35,6 +35,6 @@ impl crate::os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for RestoreN {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🛂️validated-↩️restore-n/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

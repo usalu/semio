@@ -13,17 +13,14 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "drawing.presence")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct DrawingPresence {
     pub engagement_input: String,
     #[dsl(block)]
     pub camera: DrawingCamera,
 }
 
-impl Default for DrawingPresence {
-    fn default() -> Self {
-        Self { engagement_input: String::new(), camera: DrawingCamera::default() }
-    }
-}
+
 
 impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
     fn apply(&self, _base: &DrawingPresence) -> protocol::MutationApplyResult<DrawingPresence> {

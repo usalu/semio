@@ -335,6 +335,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✏️renames-the-solid-ff032b/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/🦀️.rs"]
 mod set_snapshot_renames_the_solid_and_closes_the_wedge_with_a_third_facet;
 //#endregion 🧪️FixtureCases

@@ -1470,7 +1470,7 @@ mod quick;
 
 //#region 🧪️InferenceJobTests
 /// 🧪️ The MCP-side laws for the hub inference bridge. They read the SAME neutral fixture the hub's
-/// own Rust laws and Bun/AJV oracle read (`🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1`), so a
+/// own Rust laws and Bun/AJV oracle read (`🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1`), so a
 /// hub-side change to the closed vocabulary, limits or lifecycle fails here loudly instead of
 /// drifting. Nothing here starts a hub, a model, a renderer or a second process.
 #[cfg(test)]

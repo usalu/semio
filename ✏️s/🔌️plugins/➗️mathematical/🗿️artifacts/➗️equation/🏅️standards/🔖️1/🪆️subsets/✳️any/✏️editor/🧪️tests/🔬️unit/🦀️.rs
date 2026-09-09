@@ -49,16 +49,16 @@ fn retained_schema_contract_and_factory_identity_are_exact() {
 #[semio_framework_async_macros::async_test]
 async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
     let command = EquationCommand::SetDirected(set_directed::SetDirected { directed: false });
-    let maximum_nodes = crate::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES, 0), EquationGeometry::default());
-    let excessive_nodes = crate::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES + 1, 0), EquationGeometry::default());
+    let maximum_nodes = crate::equation_snapshot_with_state(&graph_with_shape(EQUATION_MAX_NODES, 0), &EquationGeometry::default());
+    let excessive_nodes = crate::equation_snapshot_with_state(&graph_with_shape(EQUATION_MAX_NODES + 1, 0), &EquationGeometry::default());
     assert!(equation_command_extent(&command, &maximum_nodes).is_some());
     assert!(equation_command_extent(&command, &excessive_nodes).is_none());
-    let maximum_edges = crate::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES), EquationGeometry::default());
-    let excessive_edges = crate::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES + 1), EquationGeometry::default());
+    let maximum_edges = crate::equation_snapshot_with_state(&graph_with_shape(2, EQUATION_MAX_EDGES), &EquationGeometry::default());
+    let excessive_edges = crate::equation_snapshot_with_state(&graph_with_shape(2, EQUATION_MAX_EDGES + 1), &EquationGeometry::default());
     assert!(equation_command_extent(&command, &maximum_edges).is_some());
     assert!(equation_command_extent(&command, &excessive_edges).is_none());
 
-    let snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
+    let snapshot = crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default());
     let point = crate::EquationPoint { x: 1.0, y: 2.0 };
     let maximum_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point.clone(); EQUATION_MAX_POINTS] } });
     let excessive_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point; EQUATION_MAX_POINTS + 1] } });
@@ -86,7 +86,7 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
 #[semio_framework_async_macros::async_test]
 async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() {
     let graph = graph_with_shape(8, 12);
-    let snapshot = crate::equation_snapshot_with_state(graph, EquationGeometry::default());
+    let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
         operations_json: json::to_string(&json::array([
             json::object([("operation".to_string(), Value::from("move")), ("nodeId".to_string(), Value::from("n7")), ("x".to_string(), Value::from(41.0)), ("y".to_string(), Value::from(42.0))]),
@@ -148,7 +148,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
 #[semio_framework_async_macros::async_test]
 async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     let graph = graph_with_shape(EQUATION_MAX_NODES, EQUATION_MAX_EDGES);
-    let snapshot = crate::equation_snapshot_with_state(graph, EquationGeometry::default());
+    let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let ids = (0..EQUATION_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
     let mut operations = vec![json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str()))))])];
     operations.resize(EQUATION_MAX_EDIT_OPERATIONS, json::object([]));

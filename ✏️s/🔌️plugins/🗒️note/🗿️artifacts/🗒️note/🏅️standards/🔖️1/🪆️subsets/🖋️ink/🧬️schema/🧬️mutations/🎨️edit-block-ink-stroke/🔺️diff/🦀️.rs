@@ -24,6 +24,6 @@ pub fn diff(payload: &EditBlockInkStroke, base: &NoteSnapshot) -> protocol::Muta
         *width = payload.new_width;
         *height = payload.new_height;
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

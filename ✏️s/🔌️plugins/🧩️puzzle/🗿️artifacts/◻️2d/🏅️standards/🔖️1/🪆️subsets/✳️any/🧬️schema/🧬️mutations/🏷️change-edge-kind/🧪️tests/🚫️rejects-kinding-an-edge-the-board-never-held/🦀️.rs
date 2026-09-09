@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🎯️outcome/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🔺️diff/🚫️.absent");
 
 fn before() -> Puzzle2dSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

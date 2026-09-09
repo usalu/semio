@@ -1135,7 +1135,7 @@ async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
 
 #[semio_framework_async_macros::async_test]
 async fn tutorial_document_track_language_neutral_serde_parity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎞️tutorial-document-track.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️tutorial-document-track.json")).unwrap();
     let mut def = minimal_tutorial().await;
     def.tracks.document = serde_json::from_value(fixture["document"].clone()).unwrap();
     assert_eq!(serde_json::to_value(&def.tracks.document).unwrap(), fixture["document"]);
@@ -1461,7 +1461,7 @@ fn action_semantics_defaults_match_language_neutral_fixture() {
         kind: ActionKind,
         semantics: ActionSemantics,
     }
-    let cases: Vec<Case> = serde_json::from_str(include_str!("../../🧪️fixtures/⚖️action-semantics.json")).unwrap();
+    let cases: Vec<Case> = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️action-semantics.json")).unwrap();
     assert_eq!(cases.len(), 6);
     for case in cases {
         assert_eq!(ActionSemantics::for_kind(case.kind), case.semantics);

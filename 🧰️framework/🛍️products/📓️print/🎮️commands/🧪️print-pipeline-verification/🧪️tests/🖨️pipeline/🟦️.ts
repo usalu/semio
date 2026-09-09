@@ -45,7 +45,7 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   await verifyPrintBundleContract();
   verifyPrintToolchainManifest();
   verifyPrintFontStaging();
-  const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
+  const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
   assert.equal(new Set(Object.values(galleryIdentities).map((name) => name.split("viz-")[0]!.replaceAll("\uFE0F", ""))).size, 81);
   const stylesheet = renderPrintLatexTokenStylesheet(loadPrintDesignTokens());
@@ -66,7 +66,7 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass[theme=dark]{article}"));
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass{article}"));
 
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️merge-contract.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
   const templates = registeredPrintTemplates();
   for (const template of [...templates, ...visualizationTemplates()]) {
     const source = readFileSync(join(productRoot, template.texPath), "utf8");
@@ -148,8 +148,8 @@ async function verifyPrintPdfs(templates: readonly { id: string; texPath: string
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
   (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const expected = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️pdf-consumption.json"), "utf8"));
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️merge-contract.json"), "utf8"));
+  const expected = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️pdf-consumption.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
   let count = 0;
   for (const template of templates) for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
     const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(printDocumentOutputDirectory(template.id), name))) }).promise;

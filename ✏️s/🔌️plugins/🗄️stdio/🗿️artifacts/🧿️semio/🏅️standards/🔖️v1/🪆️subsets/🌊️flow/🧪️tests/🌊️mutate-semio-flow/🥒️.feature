@@ -70,7 +70,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real 180-node capsule network
-    Given the real capsule network local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
     When the <id> mutation is applied to the flow parsed from it
       """
       <mutation>
@@ -95,7 +95,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario: Apply no-mutation to the real 180-node capsule network
-    Given the real capsule network local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
     When the no-mutation mutation is applied to the flow parsed from it
       """
       {"mutation":"noMutation"}
@@ -106,7 +106,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real 180-node capsule network
-    Given the real capsule network local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
     When the <id> mutation is applied to the flow parsed from it and each side undoes it with its own computed inverse
       """
       <mutation>
@@ -131,7 +131,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario: Undoing no-mutation restores the real 180-node capsule network
-    Given the real capsule network local://📝️nakagin-capsule-tower.dsl.semio
+    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
     When the no-mutation mutation is applied to the flow parsed from it and each side undoes it with its own computed inverse
       """
       {"mutation":"noMutation"}
@@ -142,7 +142,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo pipeline
-    Given the committed specification vector local://<fixture>/🦠️mutation/🔣️.json whose before-snapshot is the real pipeline artifact decoded
+    Given the committed specification vector shared://🌊️mutate-semio-flow/<fixture>/🦠️mutation/🔣️.json whose before-snapshot is the real pipeline artifact decoded
     When both implementations apply the vector's mutation to its before-snapshot and undo it again
     Then each reaches the vector's after-snapshot, each returns to its before-snapshot, and the two agree
     Examples:
@@ -165,9 +165,9 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-long
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo pipeline and of the real capsule network from the parsed documents
-    Given the real committed text artifact asset://📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio
-    And its committed binary twin asset://📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio
-    And the real capsule network local://📝️nakagin-capsule-tower.dsl.semio
-    And its binary twin local://📦️nakagin-capsule-tower.pack.semio
+    Given the real committed text artifact asset://🌊️pipeline/🗣️.dsl.semio
+    And its committed binary twin asset://🌊️pipeline/🎒️.pack.semio
+    And the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
+    And its binary twin shared://🌊️mutate-semio-flow/📦️nakagin-capsule-tower.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on the documents and on the digests of what they emitted

@@ -18,12 +18,12 @@ export interface DocumentContractOracle {
   validDocuments: readonly { input: unknown; output: unknown }[];
   invalidDocuments: readonly unknown[];
   invalidDiffs?: readonly unknown[];
-  mutations: string;
+  mutationRoots: readonly string[];
   committed: { snapshots: number; diffs: number };
 }
 
 /** 🧬️ Validates production parsers independently with Ajv and the owner's committed native inputs. */
-export function testDocumentContractOracle(spec: DocumentContractOracle): void {
+export function assertDocumentContractOracle(spec: DocumentContractOracle): void {
   const ajv = new Ajv({ strict: false, allErrors: true, validateFormats: false });
   for (const schema of spec.dependencies) ajv.addSchema(schema);
   ajv.addSchema(spec.artifact.schema);
@@ -43,13 +43,13 @@ export function testDocumentContractOracle(spec: DocumentContractOracle): void {
     assert.equal(validateDiff(input), false);
     assert.throws(() => spec.diff.parse(input));
   }
-  const paths = readdirSync(spec.mutations, { recursive: true }).map((path) => String(path).replaceAll("\\", "/"));
+  const paths = spec.mutationRoots.flatMap((root) => readdirSync(root, { recursive: true }).map((path) => ({ path: String(path).replaceAll("\\", "/"), file: join(root, String(path)) })));
   let snapshots = 0, diffs = 0;
-  for (const path of paths) {
+  for (const { path, file } of paths) {
     const isSnapshot = path.endsWith("/📸️snapshot/⬅️before/🔣️.json") || path.endsWith("/📸️snapshot/➡️after/🔣️.json");
     const isDiff = path.endsWith("/🔺️diff/🔣️.json");
     if (!isSnapshot && !isDiff) continue;
-    const input = JSON.parse(readFileSync(join(spec.mutations, path), "utf8"));
+    const input = JSON.parse(readFileSync(file, "utf8"));
     assert.equal((isSnapshot ? validateSnapshot : validateDiff)(input), true, path);
     assert.deepEqual((isSnapshot ? spec.snapshot : spec.diff).parse(input), input, path);
     if (isSnapshot) snapshots++; else diffs++;

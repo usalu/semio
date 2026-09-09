@@ -1,5 +1,5 @@
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: Record<string, any>, source: { directory: string; url: string }): Promise<void> {
-  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, typedOperationAcknowledgements, typedOperationResult, uiRefreshBodyKeys, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, yieldPluginUiContinuation } = dependencies;
+  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("shared context-menu ViewModel", () => {
     it("sends the same current locale and terminology to two mounted surfaces while preserving each window", async () => {
@@ -49,15 +49,71 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       console.info("[DEBUG] concrete render surfaces received packed locale, terminology, and per-window utility context");
     });
   });
+  describe("reserved refresh sections", () => {
+    it("mounts one retained surface per requested section, keyed by the neutral fixture's reserved body key, carrying the unnarrowed view", async () => {
+      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const viewState = {
+        locale: "de",
+        terminology: "reuse",
+        windowId: "first",
+        activeToolId: "fill",
+        windowInstances: [{ id: "first", windowKindId: "canvas" }, { id: "second", windowKindId: "canvas" }],
+        activeUtilityByWindowId: { first: "inspect" },
+      };
+      const request = { viewState, windows: [], panels: [], engagements: {}, measures: { hash: "abc" }, tools: {} };
+      expect(uiRefreshSectionTargets(request).map((section: { key: string; bodyKey: string }) => [section.key, section.bodyKey]))
+        .toEqual(reserved.sections.map((section: { key: string; bodyKey: string }) => [section.key, section.bodyKey]));
+      const events = uiRefreshSurfaceEvents(9, request);
+      expect(events.map((event: { payload: { surface: { surface: string }; bodyKey: string } }) => [event.payload.surface.surface, event.payload.bodyKey]))
+        .toEqual(reserved.sections.map((section: { bodyKey: string }) => [section.bodyKey, section.bodyKey]));
+      for (const event of events) expect(decodePackValue((event as { payload: { viewState: Uint8Array } }).payload.viewState)).toMatchObject(viewState);
+      expect(uiRefreshSectionTargets({ viewState })).toEqual([]);
+      expect(uiRefreshBodyKeys(request)).toEqual([]);
+      console.info("[DEBUG] section surfaces mounted with reserved body keys and the full window/tool view state");
+    });
+
+    it("projects a section's chunked text carrier back into the shell's own measures map", async () => {
+      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const measures = { "puzzle3d-main-top": [{ kind: "slider", id: "puzzle3d-fill-count", value: 12, min: 1, max: 64, step: 1, onChange: { controller: "fill", action: "setCount" } }] };
+      const payload = JSON.stringify(measures);
+      const chunks = [payload.slice(0, 17), payload.slice(17)];
+      const measuresSection = reserved.sections.find((section: { key: string }) => section.key === "measures")!;
+      const leaf = (id: number, value: string): UiNodeRecord => ({
+        id, key: `c${id - 1}`, component: { type: "text", value, emphasize: null, dataAttributes: null },
+        layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+        transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [],
+      });
+      const root: UiNodeRecord = {
+        id: 0, key: measuresSection.bodyKey,
+        component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+        layout: { kind: "stack", axis: "vertical", gap: "none", padding: { start: "none", end: "none", top: "none", bottom: "none" }, align: "stretch", justify: "start", wrap: false },
+        style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+        transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [1, 2],
+      };
+      const { surface, desynced } = applyUiPatchToRetained(null, {
+        surface: measuresSection.bodyKey, revision: 1, baseRevision: 0,
+        ops: [{ type: "upsert", ...leaf(1, chunks[0]) }, { type: "upsert", ...leaf(2, chunks[1]) }, { type: "upsert", ...root }, { type: "setRoot", id: 0 }],
+      });
+      expect(desynced).toBe(false);
+      expect(sectionValueFromBuiltNode(measuresSection.bodyKey, retainedSurfaceToBuiltNode(surface!))).toEqual(measures);
+      expect(() => sectionValueFromBuiltNode("framework.section.tools", retainedSurfaceToBuiltNode(surface!))).toThrow("plugin-ui.section-root-mismatch");
+      const retained = new Map<string, RetainedSurface>([[retainedSurfaceId(7, measuresSection.bodyKey), surface!]]);
+      const response = retainedUiRefreshResponse(7, { viewState: {}, measures: {}, tools: {} }, retained);
+      expect(response.measures).toMatchObject({ key: "measures", value: measures });
+      expect(response.measures?.hash).not.toBe("");
+      expect(response.tools).toBeUndefined();
+      console.info("[DEBUG] measures section projected from its retained chunk carrier into the shell refresh cache shape");
+    });
+  });
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
-      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️fixture/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../💾️resident/🟦️.ts")).href;
+      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧫️fixtures/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../💾️resident/🟦️.ts")).href;
       const childSource = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
       const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", childSource, moduleUrl], { encoding: "utf8", timeout: 10000 }));
       expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
     });
   
     it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-      const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️fixture/🔣️.json");
+      const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧫️fixtures/🔣️.json");
       const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       expect(new Ajv({ strict: true }).addSchema(resident).addSchema(rendererModule).getSchema(`${rendererModule.$id}#/$defs/RendererResidentPolicyV1`)!(fixture.capacity)).toBe(true);
       const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
@@ -1539,7 +1595,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           return { tag: "send-message", val: { target: { tag: "shell", val: String(receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), body, payload])) } };
         };
         expect(typedOperationResult(wire(10, "x".repeat(4_096)))?.payload.length).toBe(4_096);
-        for (const invalid of [wire(12, ""), wire(10, "x".repeat(4_097)), wire(10, "", 8)]) expect(() => typedOperationResult(invalid)).toThrow("authority");
+        for (const invalid of [wire(15, ""), wire(10, "x".repeat(4_097)), wire(10, "", 8)]) expect(() => typedOperationResult(invalid)).toThrow("authority");
         const truncated = wire(10, "x");
         (truncated.val as { payload: number[] }).payload.pop();
         expect(() => typedOperationResult(truncated)).toThrow("authority");
@@ -1569,6 +1625,74 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         });
       });
   
+      it("routes a foreign typed-operation fault page to its own call and never to the observing call", async () => {
+        const { Buffer } = await import("node:buffer");
+        const { default: Ajv } = await import("ajv");
+        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-routing.json");
+        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
+        const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeTypedOperationRoutingV1` };
+        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(routing)).toBe(true);
+        expect([TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_UNATTRIBUTED_FAULT, TYPED_OPERATION_PARK_EVICTION_FAULT]).toEqual([routing.capacity, routing.unattributedCode, routing.evictionCode]);
+        const page = (operation: string, sequence: number, lane: number, text: string) => {
+          const body = Buffer.alloc(30);
+          body.writeUInt32LE(routing.receiver, 0);
+          body.writeBigUInt64LE(BigInt(operation), 4);
+          body.writeBigUInt64LE(1n, 12);
+          body.writeUInt32LE(sequence, 20);
+          body[24] = 1;
+          body[25] = lane;
+          const payload = Buffer.from(text);
+          body.writeUInt32LE(payload.length, 26);
+          return { tag: "send-message", val: { target: { tag: "shell", val: String(routing.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), body, payload])) } };
+        };
+        const actorId = `routed-operation#${routing.receiver}`;
+        const faulted = { uiPatches: [], effects: [page(routing.foreignOperation, routing.faultSequence, 11, routing.fault)], nextWake: null, status: { tag: "idle" } };
+        const acknowledged: unknown[][] = [];
+        let observerSettled = false;
+        await expect(withTypedOperationCall(actorId, "owner", async (owner: any) => {
+          expect(consumeTypedOperationEffects([page(routing.foreignOperation, routing.firstSequence, 0, "first")], owner)).toEqual([]);
+          await withTypedOperationCall(actorId, "observer", async (observer: any) => {
+            await withFakeShardClient(async (_actor, events) => {
+              acknowledged.push([...events]);
+              return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+            }, async () => {
+              const settled = await settlePluginTurn(actorId, faulted, "Interactive", new Set(), undefined, true, undefined, observer);
+              expect(settled.effects).toEqual([]);
+            });
+          });
+          observerSettled = true;
+        })).rejects.toThrow(routing.fault);
+        expect(observerSettled).toBe(true);
+        expect(acknowledged).toEqual([typedOperationAcknowledgements(faulted)]);
+        teardownPluginActor(actorId);
+        console.info("[DEBUG] typed-operation routing: observer settled=%s acknowledgedTurns=%d", observerSettled, acknowledged.length);
+      });
+
+      it("bounds parked typed-operation faults at a fixed capacity and surfaces the evicted oldest", async () => {
+        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-routing.json");
+        const reported: { code: string; message: string }[] = [];
+        const router = new TypedOperationRouter((code: string, message: string) => reported.push({ code, message }));
+        const owner = router.open("owner");
+        const observer = router.open("observer");
+        const total = routing.capacity + routing.overflow;
+        for (let index = 0; index < total; index += 1) {
+          const operation = BigInt(routing.ownedOperation) + BigInt(index);
+          expect(router.observe(owner, operation, routing.firstSequence)).toBe(true);
+          expect(router.fault(observer, operation, routing.faultSequence, `${routing.fault} ${index}`)).toBe(false);
+        }
+        expect(reported.map((entry) => entry.code)).toEqual(Array.from({ length: routing.overflow }, () => routing.evictionCode));
+        const drained: string[] = [];
+        for (let fault = owner.takeFault(); fault !== null; fault = owner.takeFault()) drained.push(fault);
+        expect([drained.length, drained[0], drained.at(-1)]).toEqual([routing.capacity, `${routing.fault} ${routing.overflow}`, `${routing.fault} ${total - 1}`]);
+        const unowned = BigInt(routing.foreignOperation);
+        expect(router.fault(observer, unowned, routing.faultSequence, routing.fault)).toBe(false);
+        expect(reported.at(-1)).toEqual({ code: routing.unattributedCode, message: `${routing.fault} (operation ${unowned} sequence ${routing.faultSequence} observed by observer)` });
+        owner.close();
+        observer.close();
+        expect(reported.length).toBe(routing.overflow + 1);
+        console.info("[DEBUG] typed-operation park capacity: parked=%d evicted=%d unattributed=1", drained.length, routing.overflow);
+      });
+
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
         const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
@@ -1713,12 +1837,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("yields the browser event loop while a retained surface needs several continuation batches", async () => {
         let continuationCount = 0;
         let browserTaskObserved = false;
-        const browserTask = new Promise<void>((resolve) =>
-          setTimeout(() => {
-            browserTaskObserved = true;
-            resolve();
-          }, 0),
-        );
+        const browserTask = yieldPluginUiContinuation().then(() => {
+          browserTaskObserved = true;
+        });
         await withFakeShardClient(
           async () => {
             continuationCount += 1;

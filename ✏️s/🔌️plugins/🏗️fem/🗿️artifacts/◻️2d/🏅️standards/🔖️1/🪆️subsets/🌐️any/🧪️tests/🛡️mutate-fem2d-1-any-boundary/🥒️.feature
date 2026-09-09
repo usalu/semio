@@ -28,7 +28,7 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
   reference implements were read off the committed vectors instead, which agree with one another on
   every field.
 
-  The artifact is real. `local://🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
+  The artifact is real. `shared://🛡️mutate-fem2d-1-any-boundary/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
   7.6 m, derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem2d-frame.py`
@@ -51,7 +51,7 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived timber portal frame
-    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    Given the real derived model shared://🛡️mutate-fem2d-1-any-boundary/🏗️timber-portal-frame.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       <mutation>
@@ -67,7 +67,7 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived frame and land back on it
-    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    Given the real derived model shared://🛡️mutate-fem2d-1-any-boundary/🏗️timber-portal-frame.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       <mutation>

@@ -8,7 +8,6 @@
     "artifact",
     "wiresFixture",
     "content",
-    "camera",
     "meta"
   ],
   "properties": {
@@ -36,10 +35,6 @@
           "$ref": "https://semio.tech/schema/os/store/child.json"
         }
       ],
-      "x-semio-state": "artifact"
-    },
-    "camera": {
-      "$ref": "https://semio.tech/schema/framework/value/schema.json",
       "x-semio-state": "artifact"
     },
     "meta": {

@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "intervalMs",
+    "proofTtlMs",
+    "success",
+    "refusals",
+    "cancellation",
+    "maximumConcurrentRequests",
+    "actionAdmission",
+    "unavailableRetries",
+    "presentation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.directory.session-refresh-fixtures.v1"
+    },
+    "intervalMs": {
+      "const": 5000
+    },
+    "proofTtlMs": {
+      "const": 15000
+    },
+    "success": {
+      "const": [
+        "initial",
+        "same-authority",
+        "replacement"
+      ]
+    },
+    "refusals": {
+      "const": [
+        "http-401",
+        "http-428",
+        "non-200",
+        "invalid-body",
+        "expired",
+        "transport"
+      ]
+    },
+    "cancellation": {
+      "const": [
+        "before-request",
+        "during-request",
+        "during-delay"
+      ]
+    },
+    "maximumConcurrentRequests": {
+      "const": 1
+    },
+    "actionAdmission": {
+      "const": [
+        { "id": "missing", "accepted": false },
+        { "id": "same", "accepted": true },
+        { "id": "different-binding", "accepted": false },
+        { "id": "different-generation", "accepted": false },
+        { "id": "expired", "accepted": false }
+      ]
+    },
+    "unavailableRetries": {
+      "const": 0
+    },
+    "presentation": {
+      "const": {
+        "locales": ["en", "de"],
+        "states": [
+          { "kind": "pending", "role": "status", "live": "polite", "cancellable": true },
+          { "kind": "unavailable", "role": "alert", "live": "assertive", "cancellable": false }
+        ],
+        "text": {
+          "en": {
+            "pending": "Verifying shared access…",
+            "cancel": "Cancel shared access",
+            "unavailable": "Shared access is unavailable. Open a fresh authorized session from the secure launcher."
+          },
+          "de": {
+            "pending": "Gemeinsamen Zugriff prüfen…",
+            "cancel": "Prüfung abbrechen",
+            "unavailable": "Der gemeinsame Zugriff ist nicht verfügbar. Öffne über den sicheren Starter eine neu autorisierte Sitzung."
+          }
+        }
+      }
+    }
+  }
+}

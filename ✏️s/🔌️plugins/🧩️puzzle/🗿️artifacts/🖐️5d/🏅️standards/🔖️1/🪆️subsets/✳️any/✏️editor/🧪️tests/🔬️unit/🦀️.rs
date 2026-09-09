@@ -43,54 +43,6 @@ fn retained_import_media_has_no_live_synchronous_fallback() {
     assert!(hostile.contains("serde_json::from_str"));
 }
 
-fn precompute_routes_are_cursorized(source: &str) -> bool {
-    [
-        r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
-        "Puzzle5dPrecomputeCommandStage::Parts",
-        "Puzzle5dPrecomputeCommandStage::Grips",
-        "Puzzle5dPrecomputeCommandStage::Fasteners",
-        "Puzzle5dPrecomputeCommandStage::CatalogParts",
-        "Puzzle5dPrecomputeCommandStage::CatalogGrips",
-        "Puzzle5dPrecomputeCommandStage::Positions",
-        "Puzzle5dPrecomputeCommandStage::Indices",
-        "Puzzle5dPrecomputeCommandStage::FillCount",
-        "Puzzle5dPrecomputeCommandStage::BoardUtility",
-        "Puzzle5dPrecomputeCommandStage::WorldUtility",
-        "Puzzle5dPrecomputeCommandStage::Publish",
-    ]
-    .into_iter()
-    .all(|marker| source.contains(marker))
-        && !source.contains(r#""cycleBrushCandidate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""registerBrushMesh" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-}
-
-#[test]
-fn precompute_hostile_static_law_rejects_one_grant_reducers_and_missing_boundaries() {
-    let source = include_str!("../../🦀️.rs");
-    assert!(precompute_routes_are_cursorized(source));
-    let direct = source.replace(
-        r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
-        r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-    );
-    assert!(!precompute_routes_are_cursorized(&direct));
-    for marker in [
-        "Puzzle5dPrecomputeCommandStage::Parts",
-        "Puzzle5dPrecomputeCommandStage::Grips",
-        "Puzzle5dPrecomputeCommandStage::Fasteners",
-        "Puzzle5dPrecomputeCommandStage::CatalogParts",
-        "Puzzle5dPrecomputeCommandStage::CatalogGrips",
-        "Puzzle5dPrecomputeCommandStage::Positions",
-        "Puzzle5dPrecomputeCommandStage::Indices",
-        "Puzzle5dPrecomputeCommandStage::FillCount",
-        "Puzzle5dPrecomputeCommandStage::BoardUtility",
-        "Puzzle5dPrecomputeCommandStage::WorldUtility",
-        "Puzzle5dPrecomputeCommandStage::Publish",
-    ] {
-        assert!(!precompute_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained boundary was falsely accepted: {marker}");
-    }
-}
-
 fn complex_retained_route_is_cursorized(source: &str) -> bool {
     source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())")
         && source.contains("struct Puzzle5dBoardEventsWork")
@@ -136,71 +88,47 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
     }
 }
 
-fn scalar_config_routes_are_direct(source: &str) -> bool {
-    source.contains("struct Puzzle5dScalarConfigWork")
-        && source.contains(
-            r#""setCamera"
-            | "setCamera2d"
-            | "setCamera3d""#,
-        )
-        && source.contains(r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#)
-        && source.contains(
-            r#"| "engagementInput"
-            | "toggleSun""#,
-        )
-        && source.contains("Puzzle5dConfigMutation::SetCamera2d")
-        && source.contains("Puzzle5dConfigMutation::SetBrushCandidateIndex")
-        && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
-        && source.contains("Puzzle5dConfigMutation::SetGridFactor")
-        && source.contains("Puzzle5dConfigMutation::SetOverlapBudget")
-        && source.contains("Puzzle5dConfigMutation::SetSun")
-        && !source.contains(r#""setCamera" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+fn window_owner_routes_are_exact(source: &str) -> bool {
+    [
+        "struct Puzzle5dWindowCommandWork",
+        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))",
+        "fn bind_window_owners",
+        "config_from_snapshot(self.window_config.as_ref())",
+        "transient_from_snapshot(self.window_transient.as_ref())",
+        "window_config_mutations",
+        "window_transient",
+        "addressed_config(view, window_after)",
+        "addressed_transient(view, transient_after)",
+    ]
+    .into_iter()
+    .all(|marker| source.contains(marker))
+        && !source.contains("Puzzle5dConfigMutation::SetCamera2d")
+        && !source.contains("Puzzle5dConfigMutation::SetBrushCandidateIndex")
+        && !source.contains("Puzzle5dConfigMutation::SetEngagementInput")
+        && !source.contains("Puzzle5dConfigMutation::SetGridFactor")
+        && !source.contains("Puzzle5dConfigMutation::SetSun")
+        && !source.contains("Puzzle5dEngagementAbortWork")
+        && !source.contains("Puzzle5dEngagementSubmitWork")
+        && !source.contains("Puzzle5dPrecomputeCommandWork")
+        && !source.contains(r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" =>"#)
 }
 
 #[test]
-fn scalar_config_hostile_static_law_rejects_old_reducer_and_missing_exact_mutations() {
+fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_config_leaks() {
     let source = include_str!("../../🦀️.rs");
-    assert!(scalar_config_routes_are_direct(source));
+    assert!(window_owner_routes_are_exact(source));
     for marker in [
-        "struct Puzzle5dScalarConfigWork",
-        "Puzzle5dConfigMutation::SetCamera2d",
-        "Puzzle5dConfigMutation::SetBrushCandidateIndex",
-        "Puzzle5dConfigMutation::SetEngagementInput",
-        "Puzzle5dConfigMutation::SetGridFactor",
-        "Puzzle5dConfigMutation::SetOverlapBudget",
-        "Puzzle5dConfigMutation::SetSun",
+        "struct Puzzle5dWindowCommandWork",
+        "fn bind_window_owners",
+        "config_from_snapshot(self.window_config.as_ref())",
+        "transient_from_snapshot(self.window_transient.as_ref())",
+        "addressed_config(view, window_after)",
+        "addressed_transient(view, transient_after)",
     ] {
-        assert!(!scalar_config_routes_are_direct(&source.replacen(marker, "route-removed", 1)), "missing scalar route marker was falsely accepted: {marker}");
+        assert!(!window_owner_routes_are_exact(&source.replacen(marker, "route-removed", 1)), "missing exact window-owner boundary was falsely accepted: {marker}");
     }
-    let direct = source.replace(
-        r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#,
-        r#"| "setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-    );
-    assert!(!scalar_config_routes_are_direct(&direct), "hostile scalar old-reducer replacement must fail closed");
-}
-
-fn engagement_abort_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#)
-        && source.contains("Puzzle5dEngagementAbortStage::Input")
-        && source.contains("Puzzle5dEngagementAbortStage::BoardUtility")
-        && source.contains("Puzzle5dEngagementAbortStage::WorldUtility")
-        && source.contains("Puzzle5dEngagementAbortStage::Publish")
-        && source.contains("self.effects[0].take()")
-        && source.contains("self.effects[1].take()")
-        && !source.contains(r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-}
-
-#[test]
-fn engagement_abort_hostile_static_law_rejects_old_reducer_and_missing_transfer_boundaries() {
-    let source = include_str!("../../🦀️.rs");
-    assert!(engagement_abort_route_is_cursorized(source));
-    for marker in ["Puzzle5dEngagementAbortStage::Input", "Puzzle5dEngagementAbortStage::BoardUtility", "Puzzle5dEngagementAbortStage::WorldUtility", "Puzzle5dEngagementAbortStage::Publish", "self.effects[0].take()", "self.effects[1].take()"] {
-        assert!(!engagement_abort_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement abort marker was falsely accepted: {marker}");
-    }
-    let direct = source
-        .replace(r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#, r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
-    assert!(!engagement_abort_route_is_cursorized(&direct));
+    let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetCamera2d");
+    assert!(!window_owner_routes_are_exact(&leaked), "hostile app-config window leak must fail closed");
 }
 
 fn add_part_kind_route_is_cursorized(source: &str) -> bool {
@@ -251,14 +179,12 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 }
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#)
-        && source.contains("Puzzle5dEngagementSubmitStage::Parse")
-        && source.contains("Puzzle5dEngagementSubmitStage::BoardEffect")
-        && source.contains("Puzzle5dEngagementSubmitStage::WorldEffect")
-        && source.contains("Puzzle5dEngagementSubmitStage::Input")
-        && source.contains("Puzzle5dEngagementSubmitStage::Publish")
-        && source.contains("Effect::SetActiveUtility")
-        && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
+    source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["cycleBrushCandidate", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "zoomToSelection"]"#)
+        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))")
+        && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
+        && source.contains("addressed_transient(view, transient_after)")
+        && source.contains("EphemeralEmit { window_transient, ..Default::default() }")
+        && !source.contains("Puzzle5dConfigMutation::SetEngagementInput")
         && !source.contains(r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
 }
 
@@ -267,19 +193,14 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
     let source = include_str!("../../🦀️.rs");
     assert!(engagement_submit_route_is_cursorized(source));
     for marker in [
-        "Puzzle5dEngagementSubmitStage::Parse",
-        "Puzzle5dEngagementSubmitStage::BoardEffect",
-        "Puzzle5dEngagementSubmitStage::WorldEffect",
-        "Puzzle5dEngagementSubmitStage::Input",
-        "Puzzle5dEngagementSubmitStage::Publish",
+        "transient_from_snapshot(self.window_transient.as_ref())",
+        "addressed_transient(view, transient_after)",
+        "EphemeralEmit { window_transient, ..Default::default() }",
     ] {
         assert!(!engagement_submit_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement submit marker was falsely accepted: {marker}");
     }
-    let direct = source.replace(
-        r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#,
-        r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-    );
-    assert!(!engagement_submit_route_is_cursorized(&direct));
+    let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetEngagementInput");
+    assert!(!engagement_submit_route_is_cursorized(&leaked));
 }
 
 fn world_relocate_route_is_cursorized(source: &str) -> bool {
@@ -632,22 +553,66 @@ async fn set_active_utility_emits_no_ops_and_no_history_entry() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_camera_actions_write_runtime_and_emit_no_operations() {
-    // 📷️ Camera pose is session-only view state (`ActionKind::View`): `setCamera2d`/`setCamera3d`
-    // must mutate the app's runtime (visible via the rendered scene) without ever touching the
-    // VCS-tracked document or emitting an operation.
-    let mut app = app();
+async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_config_changes() {
+    let mut app = Box::new(app_with_registry());
+    let mut reopened = Box::new(app_with_registry());
+    let window_a = "puzzle5d-board-a";
+    let window_b = "puzzle5d-board-b";
+    let view_a = window_view(board2d::WINDOW_KIND_ID, window_a);
+    let view_b = window_view(board2d::WINDOW_KIND_ID, window_b);
     let before = projection_of(&app);
-    let camera2d_result = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None).expect("setCamera2d");
-    assert!(camera2d_result.mutations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
-    assert_eq!(projection_of(&app), before, "setCamera2d must not mutate the document");
-    let board = render_body(&mut app, board2d::BODY_KEY);
-    assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
-    let camera3d_result = dispatch(&mut app, "setCamera3d", Some(&dsl::json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None).expect("setCamera3d");
-    assert!(camera3d_result.mutations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
-    assert_eq!(projection_of(&app), before, "setCamera3d must not mutate the document");
-    let world = render_body(&mut app, world3d::BODY_KEY);
-    assert!(world.contains("42.5") && world.contains("7.5") && world.contains("1.5"), "the new 3D camera pose must be reflected in the rendered runtime state");
+    let app_config_before = app.config_pack().await.expect("app config before window publications");
+    let result_a = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), Some(window_a)).expect("setCamera2d a");
+    let result_b = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": -42.5, "y": 7.5, "zoom": 1.5 } })), Some(window_b)).expect("setCamera2d b");
+    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
+    assert_eq!(projection_of(&app), before);
+    let app_config_after = app.config_pack().await.expect("app config after window publications");
+    assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
+    let board_a = render_window(&mut app, board2d::BODY_KEY, window_a);
+    let board_b = render_window(&mut app, board2d::BODY_KEY, window_b);
+    assert!(board_a.contains("12.5") && board_a.contains("-6.5"));
+    assert!(board_b.contains("-42.5") && board_b.contains("7.5"));
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(1));
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b generation"), Some(1));
+    let packs = app.window_config_packs().await.expect("two exact window packs");
+    assert_eq!(packs.len(), 2);
+    for pack in packs {
+        reopened.load_window_config_pack(pack).await.expect("reload exact window pack");
+    }
+    assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_a), board_a);
+    assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_b), board_b);
+    close_app(&mut reopened);
+    close_app(&mut app);
+    eprintln!("[DEBUG] two Puzzle 5D board windows published and rendered independent cameras, preserved document and app config, reloaded both exact persisted partitions, and closed their registered apps");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn exact_window_transient_isolated_abort_and_reload_reset_through_registered_app() {
+    let mut app = Box::new(app_with_registry());
+    let mut reopened = Box::new(app_with_registry());
+    let window_a = "puzzle5d-transient-a";
+    let window_b = "puzzle5d-transient-b";
+    let view_a = window_view(board2d::WINDOW_KIND_ID, window_a);
+    let view_b = window_view(board2d::WINDOW_KIND_ID, window_b);
+    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
+    let transient_a = app.window_transient_snapshot(&view_a).expect("window a transient").expect("window a owner");
+    let transient_b = app.window_transient_snapshot(&view_b).expect("window b transient").expect("window b owner");
+    assert_eq!(transient_a.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some("fill"));
+    assert_eq!(transient_b.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    dispatch(&mut app, "engagementAbort", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
+    let aborted = app.window_transient_snapshot(&view_a).expect("aborted transient").expect("aborted owner");
+    assert_eq!(aborted.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
+    let submitted = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
+    assert!(submitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id, .. } if window_id == window_a)));
+    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
+    let reset = reopened.window_transient_snapshot(&view_a).expect("reopened transient").expect("reopened owner");
+    assert_eq!(reset.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
+    assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
+    assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
+    close_app(&mut reopened);
+    close_app(&mut app);
+    eprintln!("[DEBUG] Puzzle 5D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached close");
 }
 
 #[semio_framework_async_macros::async_test]

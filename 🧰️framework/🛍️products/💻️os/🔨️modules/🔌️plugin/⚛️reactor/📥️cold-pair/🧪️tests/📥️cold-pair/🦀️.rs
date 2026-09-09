@@ -70,7 +70,7 @@ fn close_all<const N: usize>(ingress: &mut ColdDocumentPairIngressRegistry<N>, l
 
 #[test]
 fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let pack = patterned(fixture["exact"]["packLength"].as_u64().unwrap() as usize, 31, 7);
     let spr = patterned(fixture["exact"]["sprLength"].as_u64().unwrap() as usize, 17, 11);
     assert_eq!(semio_framework_hash::Sha256::digest(&pack), hex32(fixture["exact"]["packSha256"].as_str().unwrap()));

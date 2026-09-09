@@ -22,14 +22,14 @@
 //! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s deleted
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
-use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, ShardDrive, ShardLoop, ShardOutcome, ShardTransports, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES};
+use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
 use crate::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{ActorId, Lane as ActorLane, ShardTransport, ThreadTransport};
 use semio_framework_async::{Job as PoolJob, Lane as PoolLane, WorkerPool, WorkerSubmitErrorKind};
 use std::collections::VecDeque;
 use std::future::Future;
-use std::pin::{pin, Pin};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
+use std::pin::{Pin, pin};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, Weak};
 use std::task::{Context, Poll, Wake, Waker};
 use std::time::{Duration, Instant};
@@ -389,7 +389,7 @@ impl ShardExecutor {
     }
 
     pub fn take_terminal_frame(self: &Arc<Self>) -> Option<Vec<u8>> {
-        let (frame, rearmed_epoch) = self.state.lock().unwrap_or_else(PoisonError::into_inner).shard.as_mut().map(ShardLoop::take_terminal_frame_and_rearm).unwrap_or((None, None));
+        let (frame, rearmed_epoch) = self.state.lock().unwrap_or_else(PoisonError::into_inner).shard.as_mut().map_or((None, None), ShardLoop::take_terminal_frame_and_rearm);
         if let Some(epoch) = rearmed_epoch {
             self.terminal_overflow_occupied.store(false, Ordering::Release);
             self.acknowledge_consumed_epoch(epoch);

@@ -52,7 +52,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real animation
-    Given the real input document asset://📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif
+    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -77,7 +77,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real animation
-    Given the real input document asset://📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif
+    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
     When the <id> mutation is applied and its computed inverse is applied back
       """
       {"kind": "<id>", "params": <params>}
@@ -102,6 +102,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real animation without passing bytes through
-    Given the real input document asset://📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif
+    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
     When the animation is decoded into a snapshot and re-encoded from that snapshot alone
     Then the output bytes differ from the input and the semantic projection is unchanged

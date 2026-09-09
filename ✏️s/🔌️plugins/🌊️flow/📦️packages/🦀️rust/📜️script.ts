@@ -22,13 +22,13 @@ class TestScript extends BundleScript {
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
   }
 }
 
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,
@@ -57,7 +57,7 @@ class ChildIdentityCheckScript extends BundleScript {
 
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,

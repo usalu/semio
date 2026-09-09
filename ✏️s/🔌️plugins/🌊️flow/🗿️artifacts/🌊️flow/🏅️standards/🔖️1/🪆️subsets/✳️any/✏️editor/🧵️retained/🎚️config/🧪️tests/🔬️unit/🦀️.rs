@@ -16,16 +16,17 @@ async fn max_semantic_config_publication_cancel_retry_and_close_use_real_grants(
                 store.install_member_store_owners_exact(store_owners());
                 let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
                 let generation = store.generation_now();
+                let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<FlowConfig, FlowConfigMutation>> = std::sync::Arc::new(PreparationFactory);
                 let mut publication = store
-                    .begin_apply_one(
+                    .begin_apply_batch(
                         semio_framework_job::OperationId(1),
                         generation,
                         store.content_revision_now(),
                         format!("flow-test-{}", row["unit"].as_str().unwrap()),
-                        FlowConfigMutation::SetCatalogueSections { sections_json: text },
+                        vec![FlowConfigMutation::SetCatalogueSections { sections_json: text }],
                         None,
                         store::HistoryLane::Document,
-                        Some(&PreparationFactory),
+                        Some(&factory),
                     )
                     .unwrap();
                 let mut last_bytes = 0;
@@ -36,7 +37,7 @@ async fn max_semantic_config_publication_cancel_retry_and_close_use_real_grants(
                         finished = true;
                         break;
                     }
-                    let result = store.advance_apply_one(&mut publication, grant).unwrap();
+                    let result = store.advance_apply_batch(&mut publication, grant).unwrap();
                     let bytes = publication.progress().completed_bytes;
                     assert!(bytes >= last_bytes && bytes - last_bytes <= maximum_bytes as u64);
                     last_bytes = bytes;

@@ -173,7 +173,7 @@ fn mesh_from_glb_rejects_bytes_without_valid_glb_container() {
 /// output (`✅️expected-single-triangle.json`, comparable by any implementation) via
 /// `pack::json`, not hardcoded twice.
 fn expected_single_triangle() -> (Vec<f32>, Vec<f32>, Vec<u32>) {
-    let text = include_str!("../🧊️gltf-codec/🧫️fixtures/✅️expected-single-triangle.json");
+    let text = include_str!("../../🧫️fixtures/🧊️gltf-codec/✅️expected-single-triangle.json");
     let value = json::parse(text).expect("expected fixture json parses");
     let floats = |key: &str| -> Vec<f32> { value.get(key).and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect() };
     let indices = value.get("indices").and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
@@ -182,7 +182,7 @@ fn expected_single_triangle() -> (Vec<f32>, Vec<f32>, Vec<u32>) {
 
 #[test]
 fn mesh_from_gltf_decodes_embedded_base64_buffer() {
-    let text = include_str!("../🧊️gltf-codec/🧫️fixtures/🔺️single-triangle-embedded.gltf");
+    let text = include_str!("../../🧫️fixtures/🧊️gltf-codec/🔺️single-triangle-embedded.gltf");
     let mesh = mesh_from_glb(text.as_bytes()).expect("decode embedded-buffer .gltf");
     let (positions, normals, indices) = expected_single_triangle();
     assert_eq!(mesh.positions, positions);
@@ -192,7 +192,7 @@ fn mesh_from_gltf_decodes_embedded_base64_buffer() {
 
 #[test]
 fn mesh_from_glb_decodes_embedded_bin_chunk() {
-    let bytes = include_bytes!("../🧊️gltf-codec/🧫️fixtures/🧊️single-triangle-embedded.glb");
+    let bytes = include_bytes!("../../🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
     let mesh = mesh_from_glb(bytes).expect("decode embedded-buffer .glb");
     let (positions, normals, indices) = expected_single_triangle();
     assert_eq!(mesh.positions, positions);
@@ -205,7 +205,7 @@ fn mesh_from_glb_decodes_embedded_bin_chunk() {
 /// contract — a clear typed error, never fabricated geometry.
 #[test]
 fn mesh_from_gltf_reports_a_clear_error_for_unresolved_external_buffer() {
-    let text = include_str!("../🧊️gltf-codec/🧫️fixtures/🔗️external-buffer.gltf");
+    let text = include_str!("../../🧫️fixtures/🧊️gltf-codec/🔗️external-buffer.gltf");
     let error = mesh_from_glb(text.as_bytes()).unwrap_err();
     assert!(error.contains("buffer 0 bytes unavailable"), "unexpected error: {error}");
 }

@@ -20,7 +20,6 @@ use crate::editor::puzzle3d::commands::{
     translate_selection, world_relocate,
 };
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime};
-use crate::editor::puzzle3d::window as window_ownership;
 use crate::editor::puzzle3d::modes::edit;
 use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main;
@@ -30,17 +29,18 @@ use crate::editor::puzzle3d::precompute::{Puzzle3dCollisionSession, Puzzle3dPrec
 use crate::editor::puzzle3d::presence;
 use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
+use crate::editor::puzzle3d::window as window_ownership;
 use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
 use crate::standards::v1::subsets::any::schema::Puzzle3dEngineCommand;
 use crate::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode,
-    ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition,
-    IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
-    SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
+    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
+    WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
 };
 use store::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
@@ -314,6 +314,82 @@ pub fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, activ
     Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
 }
 
+/// 🧾️ Materializes the transient scene straight off the snapshot's own TYPED authority, with no
+/// `Value` anywhere on the path. `Puzzle3dPlaySnapshot` keeps the persisted document as a typed
+/// `Puzzle3dSnapshot` and materializes its `serde_json` projection only for readers that ask; going
+/// through that projection cost a measured 4.4 ms per action on the 180-object Nakagin document
+/// (1.6 ms `serde_json::Value` → `DslValue` → `Value`, 2.8 ms back to `DslValue` → `Puzzle3dFixture`)
+/// for a translation between two structural twins. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3;
+/// `puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example` is the differential law.
+pub fn scene_from_snapshot(document: &Puzzle3dSnapshot, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
+    Puzzle3dScene { fixture: puzzle3d_fixture_from_snapshot(document), runtime, active_utility: active_utility.to_string() }
+}
+
+/// 🌉️ The persisted `Puzzle3dSnapshot` as this app's own structural-twin `Puzzle3dFixture`. The
+/// twin deliberately does not carry `anchor`, a vortex `label` or an attraction's diagram `x`/`y`, so
+/// those are dropped here exactly as the `Value` bridge dropped them (an unknown key is ignored by
+/// `FromValue`), and the two untyped catalog members are serialized once instead of per object.
+pub fn puzzle3d_fixture_from_snapshot(document: &Puzzle3dSnapshot) -> Puzzle3dFixture {
+    Puzzle3dFixture {
+        schema: document.schema.clone(),
+        domain: document.domain.clone(),
+        meta: Puzzle3dFixtureMeta { kind_catalogs: document.meta.kind_catalogs.as_ref().map(dsl::ToValue::to_value), kind_compatibility: Some(dsl::ToValue::to_value(&document.meta.kind_compatibility)) },
+        objects: document.objects.iter().map(fixture_object_from_snapshot).collect(),
+        attractions: document.attractions.iter().map(fixture_attraction_from_snapshot).collect(),
+        target_volumes: document.target_volumes.iter().map(fixture_target_volume_from_snapshot).collect(),
+        references: document.references.iter().map(fixture_reference_from_snapshot).collect(),
+    }
+}
+
+fn fixture_object_from_snapshot(object: &crate::Puzzle3dObject) -> Puzzle3dObject {
+    Puzzle3dObject {
+        id: object.id.clone(),
+        label: object.label.clone(),
+        object_kind: object.object_kind.clone(),
+        origin: object.origin,
+        orientation: object.orientation,
+        scale: object.scale.as_ref().map(dsl::ToValue::to_value),
+        mesh_url: object.mesh_url.clone(),
+        vortices: object.vortices.iter().map(fixture_vortex_from_snapshot).collect(),
+        hidden: object.hidden,
+        locked: object.locked,
+        reveal_index: None,
+    }
+}
+
+fn fixture_vortex_from_snapshot(vortex: &crate::Puzzle3dVortex) -> Puzzle3dVortex {
+    Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
+}
+
+fn fixture_attraction_from_snapshot(attraction: &crate::Puzzle3dAttraction) -> Puzzle3dAttraction {
+    Puzzle3dAttraction {
+        id: attraction.id.clone(),
+        attracting: attraction.attracting.clone(),
+        attracted: attraction.attracted.clone(),
+        gap: attraction.gap,
+        shift: attraction.shift,
+        rise: attraction.rise,
+        rotation: attraction.rotation,
+        turn: attraction.turn,
+        tilt: attraction.tilt,
+    }
+}
+
+fn fixture_target_volume_from_snapshot(volume: &crate::Puzzle3dTargetVolume) -> Puzzle3dTargetVolume {
+    Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.as_ref().map(dsl::ToValue::to_value), hidden: volume.hidden, locked: volume.locked }
+}
+
+fn fixture_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzzle3dReference {
+    Puzzle3dReference {
+        id: reference.id.clone(),
+        source: Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
+        origin: reference.origin,
+        width_world: reference.width_world,
+        locked: reference.locked,
+        hidden: reference.hidden,
+    }
+}
+
 struct Puzzle3dExampleOperations {
     before: Value,
     after: Puzzle3dFixture,
@@ -490,38 +566,56 @@ fn scale_value_mul(scale: &Option<dsl::DslValue>, sx: f64, sy: f64, sz: f64) -> 
     }
 }
 
-pub fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFixtureMeta) -> Option<String> {
-    if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
-        return Some(url.clone());
-    }
-    let kind_id = object.object_kind.as_deref()?;
-    let catalogs = meta.kind_catalogs.as_ref()?;
-    let objects = catalogs.get("objects")?.as_array()?;
-    for entry in objects {
-        if entry.get("id").and_then(|v| v.as_str()) == Some(kind_id) {
-            return entry.get("meshUrl").and_then(|v| v.as_str()).map(str::to_string);
+/// 🗂️ One document catalog's `objectKind id → meshUrl` rows, indexed in a single pass over the
+/// untyped catalog array. Resolving one object's mesh straight out of that array is a linear scan, so
+/// a caller that resolves a whole document pays O(objects × kinds) — a measured 7.4 ms of every
+/// `sync_precompute_session` turn on the 180-object Nakagin document (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END W-P3). Every whole-document caller builds this once instead.
+pub struct Puzzle3dKindMeshIndex<'a> {
+    by_kind: HashMap<&'a str, &'a str>,
+}
+
+impl<'a> Puzzle3dKindMeshIndex<'a> {
+    pub fn of(meta: &'a Puzzle3dFixtureMeta) -> Self {
+        let rows = meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")).and_then(dsl::DslValue::as_array).unwrap_or_default();
+        let mut by_kind = HashMap::with_capacity(rows.len());
+        for entry in rows {
+            let (Some(id), Some(url)) = (entry.get("id").and_then(dsl::DslValue::as_str), entry.get("meshUrl").and_then(dsl::DslValue::as_str)) else {
+                continue;
+            };
+            by_kind.insert(id, url);
         }
+        Self { by_kind }
     }
-    None
+
+    /// 🥽️ The mesh identity one object renders and collides with — its own `meshUrl` when it carries
+    /// a non-empty one, else its kind's catalog row.
+    pub fn resolve<'b>(&'b self, object: &'b Puzzle3dObject) -> Option<&'b str> {
+        if let Some(url) = object.mesh_url.as_deref().filter(|url| !url.is_empty()) {
+            return Some(url);
+        }
+        self.by_kind.get(object.object_kind.as_deref()?).copied()
+    }
+
+    fn catalog_urls(&self) -> impl Iterator<Item = &'a str> + '_ {
+        self.by_kind.values().copied()
+    }
+}
+
+pub fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFixtureMeta) -> Option<String> {
+    Puzzle3dKindMeshIndex::of(meta).resolve(object).map(str::to_string)
 }
 
 pub fn collect_mesh_urls(fixture: &Puzzle3dFixture) -> Vec<String> {
-    let mut urls = HashSet::new();
+    let index = Puzzle3dKindMeshIndex::of(&fixture.meta);
+    let mut urls: HashSet<&str> = HashSet::with_capacity(fixture.objects.len());
     for object in &fixture.objects {
-        if let Some(url) = resolve_object_mesh_url(object, &fixture.meta) {
+        if let Some(url) = index.resolve(object) {
             urls.insert(url);
         }
     }
-    if let Some(catalogs) = fixture.meta.kind_catalogs.as_ref() {
-        if let Some(objects) = catalogs.get("objects").and_then(|v| v.as_array()) {
-            for entry in objects {
-                if let Some(url) = entry.get("meshUrl").and_then(|v| v.as_str()) {
-                    urls.insert(url.to_string());
-                }
-            }
-        }
-    }
-    urls.into_iter().collect()
+    urls.extend(index.catalog_urls());
+    urls.into_iter().map(str::to_string).collect()
 }
 
 fn scale_array_to_dsl_value(scale: [f64; 3]) -> dsl::DslValue {
@@ -1110,15 +1204,91 @@ pub fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, selected_obj
 
 //#region 🔖️EngineBridge
 /// 🎯️ Bridges this app's own document model into `⚙️engine`'s `SceneConfig` wire shape — schema
-/// translation between two independently-evolved Rust types, not a wasm-bindgen boundary.
-/// 🌉️ Builds the `dsl::DslValue` tree directly (schema translation between two independently-evolved
-/// Rust types) instead of routing through this crate's own `json!`/`Value` (which has no automatic
-/// `From` for `ToValue`-derived types like `Puzzle3dObject`/`Puzzle3dFixtureMeta` — unlike
-/// `serde_json::json!`'s `$other:expr` arm, which serializes through `Serialize`, this one only
-/// does `Value::from` for primitives); `sync_precompute_session` feeds this straight into
-/// `SceneConfig::from_value`, skipping the JSON-text round trip the old `serde_json::json!(...)
-/// .to_string()` shape needed.
-fn scene_config_value(envelope: &Puzzle3dScene) -> dsl::DslValue {
+/// translation between two independently-evolved Rust types, not a wasm-bindgen boundary. Built
+/// TYPED, field by field: routing the whole document through a `dsl::DslValue` tree and back cost a
+/// measured 3.5 ms per sync on the 180-object Nakagin document (0.5 ms to build the tree, 3.0 ms to
+/// re-parse it), four times this artifact's own per-step budget, for a translation whose every field
+/// is a move or a copy. Only the two genuinely untyped members of `Puzzle3dFixtureMeta`
+/// (`kindCatalogs`/`kindCompatibility`, which this app's document model keeps as raw `DslValue`)
+/// still decode through `FromValue`, and a malformed one refuses the whole scene exactly as the
+/// all-`FromValue` shape did. `#[cfg(test)] scene_config_value` below is the differential oracle this
+/// is checked against.
+fn scene_config(envelope: &Puzzle3dScene) -> Option<crate::standards::v1::subsets::any::schema::SceneConfig> {
+    let meta = &envelope.fixture.meta;
+    let kind_catalogs = match meta.kind_catalogs.as_ref() {
+        None | Some(dsl::DslValue::Null) => None,
+        Some(catalogs) => Some(dsl::FromValue::from_value(catalogs.clone()).ok()?),
+    };
+    let kind_compatibility = match meta.kind_compatibility.as_ref() {
+        None => Vec::new(),
+        Some(entries) => dsl::FromValue::from_value(entries.clone()).ok()?,
+    };
+    Some(crate::standards::v1::subsets::any::schema::SceneConfig {
+        fixture: crate::standards::v1::subsets::any::schema::Fixture {
+            objects: envelope.fixture.objects.iter().map(engine_fixture_object).collect(),
+            attractions: envelope.fixture.attractions.iter().map(engine_attraction_props).collect(),
+            target_volumes: envelope.fixture.target_volumes.iter().map(engine_world_volume_props).collect(),
+        },
+        kind_catalogs,
+        kind_compatibility,
+        overlap_budget: envelope.runtime.overlap_budget,
+        seed: 1,
+        host_rules: crate::standards::v1::subsets::any::schema::BrushHostRules::default(),
+        weights: crate::standards::v1::subsets::any::schema::BrushKindWeights {
+            object_weights: envelope.runtime.object_kind_weights.iter().map(|(kind, weight)| (kind.clone(), *weight)).collect(),
+            vortex_weights: envelope.runtime.vortex_kind_weights.iter().map(|(kind, weight)| (kind.clone(), *weight)).collect(),
+        },
+    })
+}
+
+/// 🧱️ One document object as the engine sees it. `anchor` has no counterpart in this app's own
+/// document model, so it takes the same default the JSON bridge gave it.
+fn engine_fixture_object(object: &Puzzle3dObject) -> crate::standards::v1::subsets::any::schema::FixtureObject {
+    crate::standards::v1::subsets::any::schema::FixtureObject {
+        id: object.id.clone(),
+        object_kind: object.object_kind.clone(),
+        anchor: crate::Puzzle3dObjectAnchor::default(),
+        mesh_url: object.mesh_url.clone(),
+        origin: object.origin,
+        orientation: object.orientation,
+        scale: object.scale.clone(),
+        vortices: object.vortices.iter().map(engine_vortex_props).collect(),
+        reveal_index: object.reveal_index,
+    }
+}
+
+fn engine_vortex_props(vortex: &Puzzle3dVortex) -> crate::standards::v1::subsets::any::schema::VortexProps {
+    crate::standards::v1::subsets::any::schema::VortexProps { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), position: vortex.position, direction: vortex.direction }
+}
+
+/// 🔗️ One attraction as the engine sees it. `x`/`y` are diagram-only coordinates this app's own
+/// document model does not carry, so they take the same default the JSON bridge gave them.
+fn engine_attraction_props(attraction: &Puzzle3dAttraction) -> crate::standards::v1::subsets::any::schema::AttractionProps {
+    crate::standards::v1::subsets::any::schema::AttractionProps {
+        id: attraction.id.clone(),
+        attracting: attraction.attracting.clone(),
+        attracted: attraction.attracted.clone(),
+        gap: attraction.gap,
+        shift: attraction.shift,
+        rise: attraction.rise,
+        rotation: attraction.rotation,
+        turn: attraction.turn,
+        tilt: attraction.tilt,
+        x: 0.0,
+        y: 0.0,
+    }
+}
+
+fn engine_world_volume_props(volume: &Puzzle3dTargetVolume) -> crate::standards::v1::subsets::any::schema::WorldVolumeProps {
+    crate::standards::v1::subsets::any::schema::WorldVolumeProps { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone() }
+}
+
+/// 🌉️ The all-`DslValue` bridge `scene_config` replaced, retained as its differential oracle: the
+/// derived `ToValue`/`FromValue` machinery is an independent implementation of the same translation,
+/// so `puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example` can prove the typed
+/// construction agrees with it on every shipped document.
+#[cfg(test)]
+pub(crate) fn scene_config_value(envelope: &Puzzle3dScene) -> dsl::DslValue {
     dsl::DslValue::object([
         (
             "fixture".to_string(),
@@ -1145,22 +1315,48 @@ fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
     positions.iter().map(|value| value * scale).collect()
 }
 
-/// 🧊️ Pushes the current scene into the precompute session and seeds the box fallback for URLs with
-/// no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every resync.
-pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
-    if let Ok(scene) = dsl::FromValue::from_value(scene_config_value(envelope)) {
-        let _ = session.dispatch(Puzzle3dEngineCommand::SetScene { scene });
+/// 🧊️ Pushes the current scene into the precompute session. The engine compares the decoded scene
+/// structurally and no-operates on a resync, so this is the one call a caller makes per scene — and it
+/// is deliberately the LAST half of a sync: installing a mesh identity rebuilds the fill preparation
+/// and the brush queue against whatever scene is installed, so seeding first and pushing once costs one
+/// rebuild instead of one per mesh (a measured 0.6–4.4 ms each, twelve of them on Nakagin).
+pub fn sync_precompute_scene(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+    if let Some(scene) = scene_config(envelope) {
+        push_precompute_scene(session, scene);
     }
+}
+
+/// 🧊️ Installs an already-built engine scene. Split from `scene_config` so a staged caller pays the
+/// document-shaped translation (a measured 1.3 ms on Nakagin) and the engine's own scene install (0.8 ms,
+/// it rebuilds the fill preparation and re-arms the brush broad phase) in two separate bounded turns.
+pub fn push_precompute_scene(session: &mut Puzzle3dPrecomputeSession, scene: crate::standards::v1::subsets::any::schema::SceneConfig) {
+    let _ = session.dispatch(Puzzle3dEngineCommand::SetScene { scene });
+}
+
+/// 🥽️ Seeds the scaled box fallback for ONE mesh identity the session holds no geometry for yet, so
+/// a real GLB registered earlier via `registerBrushMesh` survives every resync. Answers whether it
+/// registered one, i.e. whether the caller should come back for the next; one registration costs a
+/// measured 0.6 ms and the 180-object Nakagin document carries twelve of them, so a staged caller
+/// spends one bounded turn on each instead of 8 ms on all of them at once.
+pub fn seed_one_precompute_mesh_fallback(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> bool {
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
     let fallback_positions = scaled_mesh_positions(&fallback.positions, PUZZLE3D_FALLBACK_MESH_SCALE);
     if !session.has_mesh(PUZZLE3D_FALLBACK_MESH_KIND) {
         session.register_mesh_fallback(PUZZLE3D_FALLBACK_MESH_KIND, &fallback_positions, &fallback.indices);
+        return true;
     }
-    for url in collect_mesh_urls(&envelope.fixture) {
-        if !session.has_mesh(&url) {
-            session.register_mesh_fallback(&url, &fallback_positions, &fallback.indices);
-        }
-    }
+    let Some(url) = collect_mesh_urls(&envelope.fixture).into_iter().find(|url| !session.has_mesh(url)) else {
+        return false;
+    };
+    session.register_mesh_fallback(&url, &fallback_positions, &fallback.indices);
+    true
+}
+
+/// 🧊️ The whole sync, for the callers that are not themselves step-bounded (render, the restored
+/// session, the brush lane driver): every owed mesh fallback, then the scene.
+pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+    while seed_one_precompute_mesh_fallback(session, envelope) {}
+    sync_precompute_scene(session, envelope);
 }
 
 fn restored_precompute_session(envelope: &Puzzle3dScene, checkpoint: &[u8]) -> Puzzle3dPrecomputeSession {
@@ -2533,44 +2729,148 @@ impl Puzzle3dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle3dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle3dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
+    ///
+    /// ⏱️ The three halves are [`Puzzle3dActionPrologue`]'s own steps, so a staged retained work can
+    /// spend one bounded turn on each instead of paying all of them in its single publish turn — see
+    /// that type. This one-call shape is what the unstaged call sites (render, tool measures, the
+    /// non-retained dispatch adapter) use, and is literally the three steps in a row.
     fn handle_action_impl(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &Puzzle3dCommand,
         window_id: Option<&str>,
         snapshot: &Puzzle3dPlaySnapshot,
         config: &Puzzle3dRuntime,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         interaction: &Puzzle3dInteractionSnapshot,
-    ) -> (Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, EphemeralEmit<EditorApp<Puzzle3dPlayApp>>) {
-        // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
-        // below): opens the declared "addObject" dialog over a glass veil.
-        if action == "openAddObjectDialog" {
-            return (Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default());
+    ) -> Puzzle3dActionEmission {
+        let action = command.action_id();
+        if let Some(shell) = puzzle3d_shell_only_emit(action) {
+            return shell;
         }
-        // 🧲️ Host-only gumball brackets: `World3dHost` owns the live drag and dispatches one absolute
-        // delta on drag end, so there is nothing for the app to open or close here.
-        if matches!(action, "transformBegin" | "transformEnd") {
+        let mut prologue = Puzzle3dActionPrologue::default();
+        prologue.scene_step(action, snapshot, config, view_state, window_id);
+        while prologue.sync_step(self, action, config, view_state, window_id) {}
+        prologue.dispatch_step(self, command, window_id, config, view_state, interaction)
+    }
+}
+
+/// 📬️ Persisted and ephemeral effects produced by one Puzzle 3D action.
+type Puzzle3dActionEmission = (Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, EphemeralEmit<EditorApp<Puzzle3dPlayApp>>);
+
+//#region 🧾️ActionPrologue
+/// 🧊️ The session sync's own three phases, in the order that costs ONE engine rebuild instead of
+/// one per mesh: seed every owed collision-mesh fallback, build the engine scene, push it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum Puzzle3dPrologueSyncStage {
+    #[default]
+    Meshes,
+    Build,
+    Push,
+    Done,
+}
+
+/// 🧾️ The prologue every puzzle3d action shares, split into the three halves a staged retained work
+/// spends bounded turns on: `scene_step` materializes the transient scene (and, only for a
+/// document-intent action, the `before` projection the semantic delta is taken against), `sync_step`
+/// pushes that scene into the precompute session across its own phases, and `dispatch_step` runs the
+/// action arm and assembles the `Emit`.
+///
+/// ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3. Run whole, this prologue measured 17.6 ms on the
+/// 180-object Nakagin document — twice the framework's 8 000 µs interactive step ceiling, inside the
+/// one turn every precompute-gated command publishes from. Splitting it is what keeps each half inside
+/// that ceiling; making each half typed (`scene_from_snapshot`, `scene_config`,
+/// `Puzzle3dKindMeshIndex`) is what keeps every one of them under this artifact's own 2 000 µs budget.
+///
+/// 🔄️ `runtime`/`active_utility` are refreshed from the caller's own `config` at the top of every step,
+/// so a staged work that spends many turns here reads exactly the configuration the framework handed it
+/// that turn — only the expensive document-shaped halves are carried across turns.
+#[derive(Default)]
+pub(crate) struct Puzzle3dActionPrologue {
+    scene: Option<Puzzle3dScene>,
+    before: Option<Value>,
+    sync_stage: Puzzle3dPrologueSyncStage,
+    built: Option<crate::standards::v1::subsets::any::schema::SceneConfig>,
+}
+
+impl Puzzle3dActionPrologue {
+    /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority. The persisted
+    /// projection `Value` is materialized ONLY for a document-intent action, which is its one reader
+    /// (`puzzle3d_operations_from_fixture_change`'s `before`).
+    pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
+        let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
+        self.before = puzzle3d_action_document_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
+        self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
+    }
+
+    /// 🧊️ Half two: the precompute session sync, for the actions that read it. The ~forty session-less
+    /// actions never touch this half at all. RESUMABLE — exactly one owed collision-mesh fallback per
+    /// call, then the engine scene build, then its push; answers whether another call is still owed, so a
+    /// staged work spends one bounded turn on each instead of 15 ms on all of them at once.
+    pub(crate) fn sync_step(&mut self, app: &Puzzle3dPlayApp, action: &str, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> bool {
+        if !puzzle3d_action_uses_precompute(action) {
+            return false;
+        }
+        let applied_count = config.fill_count;
+        let stage = match self.sync_stage {
+            Puzzle3dPrologueSyncStage::Done => return false,
+            Puzzle3dPrologueSyncStage::Meshes => {
+                let Some(scene) = self.refreshed(config, view_state, window_id) else {
+                    return false;
+                };
+                let owed = seed_one_precompute_mesh_fallback(&mut app.precompute.borrow_mut(), scene);
+                if owed {
+                    Puzzle3dPrologueSyncStage::Meshes
+                } else {
+                    Puzzle3dPrologueSyncStage::Build
+                }
+            }
+            Puzzle3dPrologueSyncStage::Build => {
+                self.built = self.refreshed(config, view_state, window_id).and_then(scene_config);
+                Puzzle3dPrologueSyncStage::Push
+            }
+            Puzzle3dPrologueSyncStage::Push => {
+                let mut precompute = app.precompute.borrow_mut();
+                if let Some(built) = self.built.take() {
+                    push_precompute_scene(&mut precompute, built);
+                }
+                precompute.set_fill_applied_count(applied_count);
+                Puzzle3dPrologueSyncStage::Done
+            }
+        };
+        self.sync_stage = stage;
+        stage != Puzzle3dPrologueSyncStage::Done
+    }
+
+    /// 🎬️ Half three: the action arm itself plus the whole `Emit` assembly — the only half that reads
+    /// `args`, mutates the scene and diffs the document.
+    pub(crate) fn dispatch_step(
+        &mut self,
+        app: &Puzzle3dPlayApp,
+        command: &Puzzle3dCommand,
+        window_id: Option<&str>,
+        config: &Puzzle3dRuntime,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &Puzzle3dInteractionSnapshot,
+    ) -> Puzzle3dActionEmission {
+        let action = command.action_id();
+        let args = command.args();
+        let active_utility_initial = puzzle3d_scene_active_utility(config, view_state, window_id);
+        if self.refreshed(config, view_state, window_id).is_none() {
             return (Emit::default(), EphemeralEmit::default());
         }
-        let document_action = puzzle3d_action_document_intent(action);
-        let before = document_action.then(|| puzzle3d_projection_value(snapshot.value()));
-        let active_utility_initial = puzzle3d_scene_active_utility(config, view_state, window_id);
+        let before = self.before.take();
+        let Some(mut scene) = self.scene.take() else {
+            return (Emit::default(), EphemeralEmit::default());
+        };
         let shared_before = window_ownership::shared(config);
         let window_before = window_ownership::Puzzle3dWindowConfig::from_runtime(config);
         let transient_before = window_ownership::transient(config);
         // 🪟️ This action targets the one exact window owner already composed into `config`.
         let wid = window_id.map_or_else(|| main::WINDOW_KIND_ID.into(), str::to_string);
-        let mut scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), config.clone(), &active_utility_initial);
         let mut ui_scope = UiDirtyScope::Full;
         let mut effects = Vec::new();
-        let uses_precompute = puzzle3d_action_uses_precompute(action);
-        if uses_precompute {
-            sync_precompute_session(&mut self.precompute.borrow_mut(), &scene);
-            self.precompute.borrow_mut().set_fill_applied_count(config.fill_count);
-        }
         let mut interaction_writes = Vec::new();
-        let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, view_state, interaction, ui_scope: &mut ui_scope, effects: &mut effects, interaction_writes: &mut interaction_writes, abort: false };
+        let mut ctx = Puzzle3dActionCtx { app, scene: &mut scene, window_id: &wid, config, view_state, interaction, ui_scope: &mut ui_scope, effects: &mut effects, interaction_writes: &mut interaction_writes, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
@@ -2620,7 +2920,44 @@ impl Puzzle3dPlayApp {
         let window_transient = if transient_after != transient_before { view_state.and_then(|view| window_ownership::addressed_transient(view, transient_after).ok()).into_iter().collect() } else { Vec::new() };
         (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
     }
+
+    /// 🔄️ Re-materializes the carried scene's view-local halves against the configuration of the turn
+    /// that is about to read them.
+    fn refreshed(&mut self, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> Option<&Puzzle3dScene> {
+        let scene = self.scene.as_mut()?;
+        scene.runtime = config.clone();
+        scene.active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
+        Some(scene)
+    }
+
+    /// 🧹️ One retained owner per bounded grant, for a staged work's own close cursor.
+    pub(crate) fn close_one(&mut self) -> bool {
+        self.scene.take().is_some() || self.before.take().is_some() || self.built.take().is_some()
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.scene.is_none() && self.before.is_none() && self.built.is_none()
+    }
+
+    /// ⏱️ Turns one staged run of this prologue may take: one for the scene, one per mesh identity the
+    /// document seeds a collision fallback for, one that finds none owed, one to build the engine scene,
+    /// one to push it, and one to dispatch. A document past this refuses on its work's own capacity
+    /// guard rather than running long.
+    pub(crate) const WORK_ITEMS: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS + 5;
 }
+
+/// 🗨️ The three actions with no document interaction at all, hence no scene/before/after scaffolding:
+/// `openAddObjectDialog` opens the declared dialog over a glass veil, and the host-only gumball
+/// brackets are pure `World3dHost` state (it owns the live drag and dispatches ONE absolute delta on
+/// drag end), so there is nothing for the app to open or close.
+fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
+    match action {
+        "openAddObjectDialog" => Some((Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default())),
+        "transformBegin" | "transformEnd" => Some((Emit::default(), EphemeralEmit::default())),
+        _ => None,
+    }
+}
+//#endregion 🧾️ActionPrologue
 
 /// 🎬️ Dispatch only: every arm's behaviour lives in its `🎮️commands/<group>/🦀️.rs` free
 /// function. No behaviour lives in this match.
@@ -2787,22 +3124,8 @@ fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySn
 
 /// 🧵️ Session-less entry point — the shape `PuzzleCommandReducer` demands of a plain fn pointer, for
 /// the retained actions that only rewrite the document and gain nothing from a warm cache.
+#[expect(clippy::unnecessary_wraps, reason = "Implements the fallible PuzzleCommandReducer callback signature.")]
 fn puzzle3d_retained_reduce(
-    command: &Puzzle3dCommand,
-    snapshot: &Puzzle3dPlaySnapshot,
-    config: &Puzzle3dConfig,
-    interaction: &protocol::InteractionState,
-    hover: &semio_framework_plugin::app::InteractionHoverState,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
-) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, Fault> {
-    puzzle3d_retained_reduce_in_session(None, command, snapshot, config, interaction, hover, view_state)
-}
-
-/// 🎟️ The precompute-gated retained actions run here instead, carrying the `app_instance_id` the
-/// framework already threaded into their job request, so registered brush meshes and the brush
-/// broad-phase index survive the dispatch and the worker hop.
-fn puzzle3d_retained_reduce_in_session(
-    session: Option<(u32, Option<String>)>,
     command: &Puzzle3dCommand,
     snapshot: &Puzzle3dPlaySnapshot,
     config: &Puzzle3dConfig,
@@ -2828,14 +3151,29 @@ fn puzzle3d_retained_reduce_in_session(
         return Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
     }
     let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
-    Ok(with_puzzle3d_app_for(session, &runtime, |app| {
-        app.handle_action_impl(command.action_id(), command.args(), command.window_id(), snapshot, &runtime, view_state, &snapshot_interaction).0
-    }))
+    Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl(command, command.window_id(), snapshot, &runtime, view_state, &snapshot_interaction).0))
 }
 
+/// 🧾️ The shared action prologue's three halves as this work's own stages.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dWindowCommandStage {
+    Scene,
+    Sync,
+    Dispatch,
+    Complete,
+    Closing,
+}
+
+/// 🪟️ The one-action-per-window route: every tool id whose whole semantic work IS
+/// [`Puzzle3dActionPrologue`] — no document scan of its own, no extra cursor. It used to run that
+/// prologue whole in ONE turn, which on the 180-object Nakagin document measured 17.6 ms, twice the
+/// framework's interactive step ceiling (ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3); it now spends one
+/// bounded turn on the scene, one per owed mesh fallback, and one on the dispatch.
 struct Puzzle3dWindowCommandWork {
     tool_id: &'static str,
-    consumed: bool,
+    stage: Puzzle3dWindowCommandStage,
+    turns: usize,
+    prologue: Puzzle3dActionPrologue,
     view_state: Option<semio_framework_plugin::ViewModel>,
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
     window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
@@ -2845,20 +3183,34 @@ struct Puzzle3dWindowCommandWork {
 
 impl Puzzle3dWindowCommandWork {
     fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, consumed: false, view_state: None, window_config: None, window_transient: None, session: None, ephemeral: None }
+        Self { tool_id, stage: Puzzle3dWindowCommandStage::Scene, turns: 0, prologue: Puzzle3dActionPrologue::default(), view_state: None, window_config: None, window_transient: None, session: None, ephemeral: None }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
 }
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dWindowCommandWork {
-    fn tool_id(&self) -> &'static str { self.tool_id }
-    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) { self.view_state = view_state; }
-    fn bind_instance(&mut self, app_instance_id: u32, document_id: &str) { self.session = Some((app_instance_id, Some(document_id.to_string()))); }
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
+        self.view_state = view_state;
+    }
+    fn bind_instance(&mut self, app_instance_id: u32, document_id: &str) {
+        self.session = Some((app_instance_id, Some(document_id.to_string())));
+    }
     fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
         self.window_config = config;
         self.window_transient = transient;
     }
-    fn take_ephemeral(&mut self) -> EphemeralEmit<EditorApp<Puzzle3dPlayApp>> { self.ephemeral.take().unwrap_or_default() }
-    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> { Some(1) }
+    fn take_ephemeral(&mut self) -> EphemeralEmit<EditorApp<Puzzle3dPlayApp>> {
+        self.ephemeral.take().unwrap_or_default()
+    }
+    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(1)
+    }
     fn step(
         &mut self,
         command: &Puzzle3dCommand,
@@ -2867,19 +3219,61 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         interaction: &protocol::InteractionState,
         hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
-        if self.consumed { return Err(Fault::from("puzzle3d-window-work-repeated")); }
+        if self.turns >= Puzzle3dActionPrologue::WORK_ITEMS {
+            return Err(Fault::from("puzzle3d-window-work-capacity"));
+        }
+        self.turns += 1;
         let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
         let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-window-id-required"))?;
         let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
         let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-        let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
-        let (emit, ephemeral) = with_puzzle3d_app_for(self.session.clone(), &runtime, |app| {
-            app.handle_action_impl(command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), &snapshot_interaction)
-        });
-        self.consumed = true;
-        self.ephemeral = Some(ephemeral);
-        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
+        match self.stage {
+            Puzzle3dWindowCommandStage::Scene => {
+                if let Some(shell) = puzzle3d_shell_only_emit(command.action_id()) {
+                    self.stage = Puzzle3dWindowCommandStage::Complete;
+                    self.ephemeral = Some(shell.1);
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(shell.0));
+                }
+                self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
+                self.stage = Puzzle3dWindowCommandStage::Sync;
+                Ok(Self::progress("puzzle3d-action-scene", "Reading the document", "Dokument wird gelesen"))
+            }
+            Puzzle3dWindowCommandStage::Sync => {
+                let owed = with_puzzle3d_app_for(self.session.clone(), &runtime, |app| self.prologue.sync_step(app, command.action_id(), &runtime, Some(view), Some(window_id)));
+                if !owed {
+                    self.stage = Puzzle3dWindowCommandStage::Dispatch;
+                }
+                Ok(Self::progress("puzzle3d-action-sync", "Preparing the placement session", "Platzierungssitzung wird vorbereitet"))
+            }
+            Puzzle3dWindowCommandStage::Dispatch => {
+                let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
+                let (emit, ephemeral) = with_puzzle3d_app_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                self.stage = Puzzle3dWindowCommandStage::Complete;
+                self.ephemeral = Some(ephemeral);
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
+            }
+            Puzzle3dWindowCommandStage::Complete => Err(Fault::from("puzzle3d-window-work-repeated")),
+            Puzzle3dWindowCommandStage::Closing => Err(Fault::from("puzzle3d-window-work-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dWindowCommandStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.prologue.close_one() || self.view_state.take().is_some() || self.window_config.take().is_some() || self.window_transient.take().is_some() || self.session.take().is_some() || self.ephemeral.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dWindowCommandStage::Closing && self.prologue.is_empty() && self.view_state.is_none() && self.window_config.is_none() && self.window_transient.is_none() && self.session.is_none() && self.ephemeral.is_none()
     }
 }
 
@@ -2972,7 +3366,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         &mut self,
         command: &Puzzle3dCommand,
         snapshot: &Puzzle3dPlaySnapshot,
-        _config: &Puzzle3dConfig,
+        config: &Puzzle3dConfig,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
@@ -4613,12 +5007,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dSetActiveExampleStage::Publish => {
                 self.stage = Puzzle3dSetActiveExampleStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: std::mem::take(&mut self.mutations),
-                    config_mutations: Vec::new(),
-                    ui_scope: UiDirtyScope::Full,
-                    ..Default::default()
-                }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }
             Puzzle3dSetActiveExampleStage::Complete => Err(Fault::from("puzzle3d-set-active-example-complete-repolled")),
             Puzzle3dSetActiveExampleStage::Closing => Err(Fault::from("puzzle3d-set-active-example-closing")),
@@ -4923,7 +5312,17 @@ struct Puzzle3dFocusSelectionWork {
 
 impl Default for Puzzle3dFocusSelectionWork {
     fn default() -> Self {
-        Self { stage: Puzzle3dFocusSelectionStage::Selection, selection_cursor: 0, object_cursor: 0, selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS), center: [0.0; 3], matched: 0, maximum_distance: 1.0, view_state: None, window_config: None }
+        Self {
+            stage: Puzzle3dFocusSelectionStage::Selection,
+            selection_cursor: 0,
+            object_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            center: [0.0; 3],
+            matched: 0,
+            maximum_distance: 1.0,
+            view_state: None,
+            window_config: None,
+        }
     }
 }
 
@@ -5389,12 +5788,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAcceptSuggestionStage::PublishResult => {
                 self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: std::mem::take(&mut self.mutations),
-                    config_mutations: Vec::new(),
-                    ui_scope: UiDirtyScope::Full,
-                    ..Default::default()
-                }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }
             Puzzle3dAcceptSuggestionStage::Complete => Err(Fault::from("puzzle3d-accept-complete-repolled")),
             Puzzle3dAcceptSuggestionStage::Closing => Err(Fault::from("puzzle3d-accept-closing")),
@@ -5409,14 +5803,28 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.vortices.pop().is_some() || self.mutations.pop().is_some() || self.target_id.take().is_some() || self.target_position.take().is_some() || self.object_id.take().is_some() || self.mesh_url.take().is_some() || self.window_transient.take().is_some() {
+        if self.vortices.pop().is_some()
+            || self.mutations.pop().is_some()
+            || self.target_id.take().is_some()
+            || self.target_position.take().is_some()
+            || self.object_id.take().is_some()
+            || self.mesh_url.take().is_some()
+            || self.window_transient.take().is_some()
+        {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dAcceptSuggestionStage::Closing && self.vortices.is_empty() && self.mutations.is_empty() && self.target_id.is_none() && self.target_position.is_none() && self.object_id.is_none() && self.mesh_url.is_none() && self.window_transient.is_none()
+        self.stage == Puzzle3dAcceptSuggestionStage::Closing
+            && self.vortices.is_empty()
+            && self.mutations.is_empty()
+            && self.target_id.is_none()
+            && self.target_position.is_none()
+            && self.object_id.is_none()
+            && self.mesh_url.is_none()
+            && self.window_transient.is_none()
     }
 }
 
@@ -5433,6 +5841,8 @@ enum Puzzle3dPrecomputeCommandStage {
     FillPrepare,
     FillPlan,
     FillApply,
+    PrologueScene,
+    PrologueSync,
     Publish,
     Complete,
     Closing,
@@ -5460,6 +5870,7 @@ struct Puzzle3dPrecomputeCommandWork {
     ephemeral: Option<EphemeralEmit<EditorApp<Puzzle3dPlayApp>>>,
     fill_precompute: Option<Puzzle3dPrecomputeSession>,
     fill_mutations: Vec<Puzzle3dMutation>,
+    prologue: Puzzle3dActionPrologue,
 }
 
 impl Puzzle3dPrecomputeCommandWork {
@@ -5488,6 +5899,7 @@ impl Puzzle3dPrecomputeCommandWork {
             ephemeral: None,
             fill_precompute: None,
             fill_mutations: Vec::new(),
+            prologue: Puzzle3dActionPrologue::default(),
         }
     }
 
@@ -5543,7 +5955,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.delta = command.args().and_then(|args| args.get("delta")).and_then(Value::as_i64).map_or(self.delta, |value| value.clamp(isize::MIN as i64, isize::MAX as i64) as isize);
                 self.stage = match self.tool_id {
                     "registerBrushMesh" => Puzzle3dPrecomputeCommandStage::Positions,
-                    "cancelFillBuild" => Puzzle3dPrecomputeCommandStage::Publish,
+                    "cancelFillBuild" => Puzzle3dPrecomputeCommandStage::PrologueScene,
                     _ => Puzzle3dPrecomputeCommandStage::Objects,
                 };
                 Ok(Self::progress("puzzle3d-precompute-decode", "Reading precompute command", "Vorberechnungsbefehl wird gelesen"))
@@ -5594,7 +6006,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.catalog_vortex_cursor += 1;
                     return Ok(Self::progress("puzzle3d-precompute-catalog-vortex", "Scanning one vortex kind", "Eine Vortexart wird geprüft"));
                 }
-                self.stage = if self.tool_id == "setFillCount" { Puzzle3dPrecomputeCommandStage::FillPrepare } else { Puzzle3dPrecomputeCommandStage::Publish };
+                self.stage = if self.tool_id == "setFillCount" { Puzzle3dPrecomputeCommandStage::FillPrepare } else { Puzzle3dPrecomputeCommandStage::PrologueScene };
                 Ok(Self::progress("puzzle3d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
             }
             Puzzle3dPrecomputeCommandStage::Positions => {
@@ -5619,7 +6031,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.payload_cursor += 1;
                     return Ok(Self::progress("puzzle3d-register-mesh-index", "Reading one mesh index", "Ein Mesh-Index wird gelesen"));
                 }
-                self.stage = Puzzle3dPrecomputeCommandStage::Publish;
+                self.stage = Puzzle3dPrecomputeCommandStage::PrologueScene;
                 Ok(Self::progress("puzzle3d-register-mesh-transfer", "Transferring validated mesh owner", "Geprüfter Mesh-Inhaber wird übertragen"))
             }
             Puzzle3dPrecomputeCommandStage::FillPrepare => {
@@ -5656,11 +6068,40 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 }
                 Ok(Self::progress("puzzle3d-fill-apply", "Applying one retained fill placement", "Eine beibehaltene Füllplatzierung wird angewendet"))
             }
+            Puzzle3dPrecomputeCommandStage::PrologueScene => {
+                let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
+                let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
+                let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
+                let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
+                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
+                self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
+                self.stage = Puzzle3dPrecomputeCommandStage::PrologueSync;
+                Ok(Self::progress("puzzle3d-action-scene", "Reading the document", "Dokument wird gelesen"))
+            }
+            Puzzle3dPrecomputeCommandStage::PrologueSync => {
+                let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
+                let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
+                let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
+                let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
+                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
+                let session = self.session();
+                let owed = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.sync_step(app, command.action_id(), &runtime, Some(view), Some(window_id)));
+                if !owed {
+                    self.stage = Puzzle3dPrecomputeCommandStage::Publish;
+                }
+                Ok(Self::progress("puzzle3d-action-sync", "Preparing the placement session", "Platzierungssitzung wird vorbereitet"))
+            }
             Puzzle3dPrecomputeCommandStage::Publish => {
                 if self.tool_id == "setFillCount" {
-                    let config_mutations = (self.requested_count != config.fill_count).then(|| Puzzle3dConfigMutation::SetFillCount { count: self.requested_count }).into_iter().collect();
+                    let config_mutations = (self.requested_count != config.fill_count).then_some(Puzzle3dConfigMutation::SetFillCount { count: self.requested_count }).into_iter().collect();
                     self.stage = Puzzle3dPrecomputeCommandStage::Complete;
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.fill_mutations), config_mutations, coalesce_key: Some("fill-count".into()), ui_scope: puzzle3d_fill_build_scope(), ..Default::default() }));
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: std::mem::take(&mut self.fill_mutations),
+                        config_mutations,
+                        coalesce_key: Some("fill-count".into()),
+                        ui_scope: puzzle3d_fill_build_scope(),
+                        ..Default::default()
+                    }));
                 }
                 let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
                 let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
@@ -5668,9 +6109,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
                 let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
-                let (emit, ephemeral) = with_puzzle3d_app_for(self.session(), &runtime, |app| {
-                    app.handle_action_impl(command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), &snapshot_interaction)
-                });
+                let session = self.session();
+                let (emit, ephemeral) = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.dispatch_step(app, command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.ephemeral = Some(ephemeral);
                 self.stage = Puzzle3dPrecomputeCommandStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -5688,14 +6128,30 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.view_state.take().is_some() || self.window_config.take().is_some() || self.window_transient.take().is_some() || self.ephemeral.take().is_some() || self.session.take().is_some() || self.fill_precompute.take().is_some() || self.fill_mutations.pop().is_some() {
+        if self.view_state.take().is_some()
+            || self.window_config.take().is_some()
+            || self.window_transient.take().is_some()
+            || self.ephemeral.take().is_some()
+            || self.session.take().is_some()
+            || self.fill_precompute.take().is_some()
+            || self.fill_mutations.pop().is_some()
+            || self.prologue.close_one()
+        {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dPrecomputeCommandStage::Closing && self.view_state.is_none() && self.window_config.is_none() && self.window_transient.is_none() && self.ephemeral.is_none() && self.session.is_none() && self.fill_precompute.is_none() && self.fill_mutations.is_empty()
+        self.stage == Puzzle3dPrecomputeCommandStage::Closing
+            && self.view_state.is_none()
+            && self.window_config.is_none()
+            && self.window_transient.is_none()
+            && self.ephemeral.is_none()
+            && self.session.is_none()
+            && self.fill_precompute.is_none()
+            && self.fill_mutations.is_empty()
+            && self.prologue.is_empty()
     }
 }
 
@@ -6377,6 +6833,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "setVortexShow"
             | "setVortexDirection"
             | "setBrushPlacementOverlapBudget"
+            | "openVortexSuggestions"
             | "closeVortexSuggestions"
             | "hoverSuggestion"
             | "engagementControlSelect"
@@ -6451,9 +6908,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let interaction = Puzzle3dInteractionSnapshot::from_interaction(interaction);
         let window = window_ownership::config_from_view(cfg);
         let runtime = window_ownership::runtime(cfg.snapshot, &window, &window_ownership::Puzzle3dWindowTransient::default(), view_state);
-        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| {
-            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &runtime, view_state, &interaction).0
-        }))
+        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(command, command.window_id(), doc.snapshot, &runtime, view_state, &interaction).0))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

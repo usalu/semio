@@ -7,7 +7,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { it, expect, vi } = vitest;
 
   it("ActorBytePage matches shared vectors and Node Buffer for every fixed word", async () => {
-    const { default: fixture } = await import("../../🧫️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(schema);
@@ -49,7 +49,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ActorBytePage rejects invalid selected fields and nonzero padding without invoking getters", async () => {
-    const { default: fixture } = await import("../../🧫️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     for (const length of [...fixture.invalidLengths, NaN, Infinity, "1", null, undefined]) {
       const page = { ...createActorBytePage(new Uint8Array()), length };
       expect(() => readActorBytePage(page as ActorBytePage)).toThrow();
@@ -85,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ActorBytePage performs only fixed selected reads and at most one payload allocation", async () => {
-    const { default: fixture } = await import("../../🧫️fixture/🔣️.json");
+    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
     const input = new Uint8Array(fixture.maximumBytes).fill(255);
     const page = createActorBytePage(input);
     let enumerations = 0; let unknownReads = 0;

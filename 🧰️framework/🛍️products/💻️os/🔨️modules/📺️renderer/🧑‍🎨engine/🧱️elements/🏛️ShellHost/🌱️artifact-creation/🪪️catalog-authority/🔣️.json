@@ -17,6 +17,11 @@
     { "id": "captured-nonmember", "captured": "without-member", "live": "current", "choice": "member", "admitted": false },
     { "id": "no-captured-authority", "captured": "unavailable", "live": "current", "choice": "member", "admitted": false }
   ],
+  "statusCases": [
+    { "generation": "current", "admitted": true },
+    { "generation": "rotated", "admitted": false },
+    { "generation": "missing", "admitted": false }
+  ],
   "draftCases": [
     { "id": "artifact-kind-cleared", "format": "artifactKind", "clear": true },
     { "id": "surface-choice-retained", "format": "surfaceApp", "clear": false },

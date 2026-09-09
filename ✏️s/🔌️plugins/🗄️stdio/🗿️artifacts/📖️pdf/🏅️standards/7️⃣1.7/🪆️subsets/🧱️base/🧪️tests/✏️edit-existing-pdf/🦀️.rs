@@ -11,7 +11,7 @@ use semio_s_plugin_stdio_test_oracle::document::{oracle_delete_page, oracle_repl
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
-const INPUT: &str = "local://2️⃣two-pages.pdf";
+const INPUT: &str = "shared://✏️edit-existing-pdf/2️⃣two-pages.pdf";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

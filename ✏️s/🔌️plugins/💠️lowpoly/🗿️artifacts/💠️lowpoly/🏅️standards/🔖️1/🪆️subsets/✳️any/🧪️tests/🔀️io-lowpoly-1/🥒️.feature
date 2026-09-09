@@ -7,7 +7,7 @@ Feature: Round-trip the lowpoly document through every non-PNG stdio format the 
   `export_stdio_kinds()` both declare nine `stdio.*` formats — `dwg`, `gltf`, `json`, `las`, `obj`,
   `ply`, `png`, `stl`, `txt`. `png` is covered by the Pillow-backed sibling `📷️io-lowpoly-png-1` case;
   every scenario here takes the SAME committed `LowpolySnapshot` fixture
-  (`local://💠️lowpoly-snapshot.json`, two objects: one with a mesh child handle and a paint layer, one
+  (`shared://🔀️io-lowpoly-1/💠️lowpoly-snapshot.json`, two objects: one with a mesh child handle and a paint layer, one
   bare) and exports it through this subset's own `serialize_bytes` for the named format. For the four
   formats whose serializer is real (`json`, `obj`, `ply`, `txt`) the produced bytes are imported back
   through the matching `deserialize_bytes` and the re-imported document must equal the committed
@@ -54,7 +54,7 @@ Feature: Round-trip the lowpoly document through every non-PNG stdio format the 
       """
       {
         "format": "<format>",
-        "document": "local://💠️lowpoly-snapshot.json"
+        "document": "shared://🔀️io-lowpoly-1/💠️lowpoly-snapshot.json"
       }
       """
     When it is exported through this subset's own `serialize_bytes` for <format> and the produced bytes are imported back through the matching `deserialize_bytes`
@@ -74,7 +74,7 @@ Feature: Round-trip the lowpoly document through every non-PNG stdio format the 
       """
       {
         "format": "<format>",
-        "document": "local://💠️lowpoly-snapshot.json"
+        "document": "shared://🔀️io-lowpoly-1/💠️lowpoly-snapshot.json"
       }
       """
     When it is exported through this subset's own `serialize_bytes` for <format>

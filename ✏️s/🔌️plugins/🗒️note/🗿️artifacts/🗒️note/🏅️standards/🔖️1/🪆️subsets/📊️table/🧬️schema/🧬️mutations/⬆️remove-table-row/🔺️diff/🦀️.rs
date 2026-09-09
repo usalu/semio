@@ -20,6 +20,6 @@ pub fn diff(payload: &RemoveTableRow, base: &NoteSnapshot) -> protocol::Mutation
     if let crate::NoteBlockNode::Table { rows, .. } = &mut updated {
         rows.pop();
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

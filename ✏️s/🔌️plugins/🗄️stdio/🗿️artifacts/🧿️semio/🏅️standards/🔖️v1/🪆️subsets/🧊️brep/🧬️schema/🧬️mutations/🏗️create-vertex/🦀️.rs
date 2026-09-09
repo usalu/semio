@@ -10,6 +10,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 pub struct CreateVertex {
     pub id: String,
     pub point: SemioPoint3,
+    pub tol: f64,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateVertex {

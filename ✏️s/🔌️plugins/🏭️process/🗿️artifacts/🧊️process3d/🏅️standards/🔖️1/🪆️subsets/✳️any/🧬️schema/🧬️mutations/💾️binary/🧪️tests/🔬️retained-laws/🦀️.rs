@@ -31,10 +31,136 @@ fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutat
     drop(store);
 }
 
+/// 📏️ Budget the TYPICAL unit of one whole-document store-replacement phase must respect. A quarter of
+/// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8 000us), the ceiling the OS runtime's
+/// cooperative-maintenance clock faults an instance on: this runs at opt-level 0, far slower than
+/// the release wasm that ceiling guards, so a native phase already eating a quarter of it is the
+/// defect and not the noise.
+const REPLACEMENT_PHASE_BUDGET_US: u64 = 2_000;
+
+/// 🚨️ Mirror of `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` — that crate is not a
+/// dependency of this one, and no single unit of a maintenance stage may reach it.
+const REPLACEMENT_STEP_CEILING_US: u64 = 8_000;
+
+/// 🧭️ The store replacement job's own phases, in the order `drive_store_replacement_jobs` runs
+/// them. Each is one cooperative-maintenance unit and is budgeted on its own.
+const REPLACEMENT_PHASES: [&str; 3] = ["Initializing", "CandidateReady", "RetiringCommittedStore"];
+
+/// 📐️ Units retained per phase for the typical-cost statistic. Fixed, and taken from the FIRST
+/// units a phase runs — the busy ones, where a phase that has real work does it.
+const REPLACEMENT_UNIT_SAMPLES: usize = 64;
+
+/// ⏱️ Measured wall cost of one run's replacement units, per [`REPLACEMENT_PHASES`] entry. Fixed
+/// capacity by construction.
+///
+/// Two statistics, because one cannot carry both halves of the framework's law. [`worst`] is the
+/// per-phase MEDIAN — a phase that overruns because of its OWN work overruns unit after unit, so a
+/// median catches a systemic regression while ignoring the machine (the runtime's ceiling verdict
+/// times the unit on the wall clock of a contended thread). [`worst_unit`] is the plain maximum,
+/// which is what the ceiling itself actually bounds, and is therefore budgeted against the ceiling
+/// rather than against the far tighter typical-unit budget. Median precedent:
+/// `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs`.
+struct ReplacementPhaseBudget {
+    samples_us: [[u64; REPLACEMENT_UNIT_SAMPLES]; REPLACEMENT_PHASES.len()],
+    sampled: [usize; REPLACEMENT_PHASES.len()],
+    worst_us: [u64; REPLACEMENT_PHASES.len()],
+    units: [u32; REPLACEMENT_PHASES.len()],
+}
+
+impl Default for ReplacementPhaseBudget {
+    fn default() -> Self {
+        Self { samples_us: [[0; REPLACEMENT_UNIT_SAMPLES]; REPLACEMENT_PHASES.len()], sampled: [0; REPLACEMENT_PHASES.len()], worst_us: [0; REPLACEMENT_PHASES.len()], units: [0; REPLACEMENT_PHASES.len()] }
+    }
+}
+
+impl ReplacementPhaseBudget {
+    /// ⏱️ Typical cost of one unit of `phase`: the median of its retained readings.
+    fn median(&self, phase: usize) -> u64 {
+        let sampled = self.sampled[phase];
+        if sampled == 0 {
+            return 0;
+        }
+        let mut ordered = self.samples_us[phase];
+        ordered[..sampled].sort_unstable();
+        ordered[sampled / 2]
+    }
+
+    /// ⏱️ The phase whose typical unit is the most expensive, with that median in microseconds.
+    fn worst(&self) -> (&'static str, u64) {
+        let mut worst = (REPLACEMENT_PHASES[0], 0);
+        for phase in 0..REPLACEMENT_PHASES.len() {
+            let median = self.median(phase);
+            if median > worst.1 {
+                worst = (REPLACEMENT_PHASES[phase], median);
+            }
+        }
+        worst
+    }
+
+    /// ⏱️ The phase that ran the single most expensive unit, with that maximum in microseconds.
+    fn worst_unit(&self) -> (&'static str, u64) {
+        let mut worst = (REPLACEMENT_PHASES[0], 0);
+        for phase in 0..REPLACEMENT_PHASES.len() {
+            if self.worst_us[phase] > worst.1 {
+                worst = (REPLACEMENT_PHASES[phase], self.worst_us[phase]);
+            }
+        }
+        worst
+    }
+
+    /// 🎲️ Folds one more independent round of the same scenario in by keeping, per phase, the
+    /// SMALLEST median and the SMALLEST maximum any round observed. Real work costs the same in
+    /// every round; a run that happened to share the machine with a heavier neighbour is dropped.
+    fn keep_best_round(&mut self, round: &Self) {
+        for phase in 0..REPLACEMENT_PHASES.len() {
+            if round.units[phase] == 0 {
+                continue;
+            }
+            if self.sampled[phase] == 0 || round.median(phase) < self.median(phase) {
+                self.samples_us[phase] = round.samples_us[phase];
+                self.sampled[phase] = round.sampled[phase];
+            }
+            if self.units[phase] == 0 || round.worst_us[phase] < self.worst_us[phase] {
+                self.worst_us[phase] = round.worst_us[phase];
+            }
+            self.units[phase] = self.units[phase].max(round.units[phase]);
+        }
+    }
+
+    /// 📊️ Per-phase `phase=median/worst/units` breakdown of every unit measured.
+    fn report(&self) -> String {
+        let mut report = String::new();
+        for phase in 0..REPLACEMENT_PHASES.len() {
+            report.push_str(&format!("{}={}/{}us/{}u ", REPLACEMENT_PHASES[phase], self.median(phase), self.worst_us[phase], self.units[phase]));
+        }
+        report
+    }
+}
+
+/// ⏱️ Runs one replacement phase unit under the framework's own clock and records the reading.
+fn measure_phase<T>(budget: &mut ReplacementPhaseBudget, phase: usize, work: impl FnOnce() -> T) -> T {
+    let started_us = semio_framework_job::default_now_us();
+    let value = work();
+    budget.units[phase] += 1;
+    if let (Some(started_us), Some(finished_us)) = (started_us, semio_framework_job::default_now_us()) {
+        let elapsed_us = finished_us.saturating_sub(started_us);
+        if budget.sampled[phase] < REPLACEMENT_UNIT_SAMPLES {
+            budget.samples_us[phase][budget.sampled[phase]] = elapsed_us;
+            budget.sampled[phase] += 1;
+        }
+        budget.worst_us[phase] = budget.worst_us[phase].max(elapsed_us);
+    }
+    value
+}
+
 fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
+    owned_store_measured(label, operation_value, &mut ReplacementPhaseBudget::default())
+}
+
+fn owned_store_measured(label: &str, operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
     let operation = semio_framework_job::OperationId(operation_value);
     let generation = semio_framework_job::Generation(51);
-    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_MOUNTED_OUTPUT_CHANNELS, PROCESS3D_MOUNTED_CONTROL_CREDITS).expect("fixture publication authority");
+    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
     let mut snapshot = crate::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
     let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, label, snapshot, None);
@@ -44,7 +170,7 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
     let mut complete = false;
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context) {
+        match measure_phase(budget, 0, || semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context)) {
             semio_framework_job::StepOutcome::Complete(_) => {
                 complete = true;
                 break;
@@ -101,6 +227,73 @@ fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
     assert_eq!(live.snapshot_root().stock_label, "accepted-candidate");
     close_store(displaced);
     close_store(live);
+}
+
+/// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave R2: `drive_store_replacement_jobs` is ONE
+/// cooperative-maintenance unit of the OS runtime's live-cleanup clock, which faults its instance
+/// with `plugin.internal.interactive-ceiling` the moment a unit overruns
+/// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`. Each of the replacement's three phases is
+/// therefore its own unit and must fit alone: `Initializing`'s worker step, `CandidateReady`'s
+/// atomic swap (`build_document_store_disposer` + `validate_document_store_publication` +
+/// `publish_document_store_candidate_if_authoritative`), and `Retiring*`'s one-item displaced-store
+/// close step. Measured on the real initializer/publication/disposer path, naming the phase that
+/// overruns.
+#[test]
+fn every_store_replacement_phase_unit_fits_the_interactive_step_budget() {
+    let mut best = ReplacementPhaseBudget::default();
+    for round in 0..REPLACEMENT_BUDGET_ROUNDS {
+        best.keep_best_round(&measure_one_store_replacement(round as u64));
+    }
+    let (typical_phase, median_us) = best.worst();
+    let (peak_phase, peak_us) = best.worst_unit();
+    eprintln!("[DEBUG] store replacement budget typical_phase={typical_phase} median_us={median_us} peak_phase={peak_phase} peak_us={peak_us} breakdown={}", best.report());
+    assert!(median_us <= REPLACEMENT_PHASE_BUDGET_US, "store replacement phase {typical_phase}'s typical unit cost {median_us}us in every round, over the {REPLACEMENT_PHASE_BUDGET_US}us typical-unit budget (per-phase median/worst/units: {})", best.report());
+    assert!(peak_us < REPLACEMENT_STEP_CEILING_US, "store replacement phase {peak_phase} ran one unit for {peak_us}us in every round, at or over the framework's {REPLACEMENT_STEP_CEILING_US}us interactive step ceiling (per-phase median/worst/units: {})", best.report());
+}
+
+/// 🎲️ Independent repetitions of the whole measured replacement, folded per phase by
+/// [`ReplacementPhaseBudget::keep_best_round`].
+const REPLACEMENT_BUDGET_ROUNDS: u64 = 3;
+
+/// ⏱️ Drives one whole real store replacement — initializer to displaced-store retirement — and
+/// hands back what each phase's single most expensive unit cost.
+fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
+    use semio_framework_plugin::ArtifactOwnedDisposer;
+    let authority = authority_fixture();
+    let operation = semio_framework_job::OperationId(authority.operation);
+    let generation = semio_framework_job::Generation(authority.generation);
+    let mut budget = ReplacementPhaseBudget::default();
+
+    let mut live = owned_store_measured("budget-live", u64::MAX - 318 - round * 2, &mut budget);
+    let candidate = owned_store_measured("budget-candidate", u64::MAX - 317 - round * 2, &mut budget);
+
+    let displaced = match measure_phase(&mut budget, 1, || {
+        let disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+        let published = semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, candidate, || {
+            process3d_validate_atomic_lease(authority, operation, generation, generation).map_err(|code| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "budget publication"))
+        });
+        (disposer, published)
+    }) {
+        (_disposer, Ok(displaced)) => displaced,
+        (_disposer, Err((_fault, rejected))) => {
+            close_store(rejected);
+            close_store(live);
+            panic!("fresh authority rejected the budget candidate")
+        }
+    };
+    assert_eq!(live.snapshot_root().stock_label, "budget-candidate");
+
+    let mut displaced = displaced;
+    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+    for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
+        if matches!(measure_phase(&mut budget, 2, || disposer.close_step(&mut displaced, 1, PROCESS3D_OWNER_BYTES)), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
+            break;
+        }
+    }
+    assert!(disposer.terminal_is_empty(&displaced), "the displaced store must reach terminal-empty ownership within its bounded close");
+    drop(displaced);
+    close_store(live);
+    budget
 }
 
 #[test]

@@ -75,7 +75,7 @@ pub fn kind_label(kind: GeometryKind) -> &'static str {
 }
 
 pub fn geometry_dict(kernel: &Brep, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
-    let kind = kernel.kind(handle).map_err(map_kernel_error)?;
+    let kind = kernel.kind(handle).map_err(|error| map_kernel_error(&error))?;
     Ok(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
 
@@ -205,9 +205,9 @@ pub fn points_to_grid(points: &[Vec3], rows: usize) -> Result<Vec<Vec<Vec3>>, Ev
 
 pub fn wire_from_points(kernel: &mut Brep, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
     if points.len() >= 2 {
-        kernel.polyline_wire(points).map_err(map_kernel_error)
+        kernel.polyline_wire(points).map_err(|error| map_kernel_error(&error))
     } else if let Some(point) = points.first() {
-        kernel.vertex(*point).map_err(map_kernel_error)
+        kernel.vertex(*point).map_err(|error| map_kernel_error(&error))
     } else {
         Err(EvalError::InvalidInput("no intersection".into()))
     }
@@ -233,7 +233,7 @@ pub fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-pub fn map_kernel_error(error: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
+pub fn map_kernel_error(error: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -425,7 +425,7 @@ impl Operator for BrepDeconstruct {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let shape = read_geometry(input, "brep")?;
-            let topology = kernel.deconstruct(&shape).map_err(map_kernel_error)?;
+            let topology = kernel.deconstruct(&shape).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new()
                 .insert("brep", Value::Dictionary(geometry_dict(kernel, &shape)?))
                 .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))

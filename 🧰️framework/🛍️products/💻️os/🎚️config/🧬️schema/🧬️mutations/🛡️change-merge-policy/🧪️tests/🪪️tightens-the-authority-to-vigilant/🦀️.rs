@@ -18,11 +18,11 @@
 
 use super::{MergePolicyConfigMutation, MergePolicySetting};
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json");
 
 fn before() -> MergePolicySetting {
     dsl::os_pack::json::from_json_str(BEFORE).expect("before merge-policy setting decodes")

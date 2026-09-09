@@ -2124,7 +2124,7 @@ impl EventRouter {
         EventRouter { subscribers: Mutex::new(HashMap::new()), mailboxes: Mutex::new(HashMap::new()) }
     }
 
-    pub async fn subscribe(&self, topic: Topic, actor: ActorId, policy: ChannelPolicy) {
+    pub fn subscribe(&self, topic: Topic, actor: ActorId, policy: ChannelPolicy) {
         let mailbox = Mailbox::new(&policy);
         self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned").insert((topic.clone(), actor), mailbox);
         self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").entry(topic).or_default().push(Subscriber { actor, policy });

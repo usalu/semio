@@ -45,7 +45,7 @@ mod subject {
             .steps
             .iter()
             .flat_map(|(_, text)| text.split_whitespace())
-            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .find(|token| (token.starts_with("asset://") || token.starts_with("shared://♻️mutate-rewrite-1/") || token.starts_with("shared://")) && token.contains(needle))
             .map(|token| token.to_string())
             .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
     }
@@ -100,7 +100,7 @@ mod subject {
     /// feature states, and asserts in role that it moved the rule and wrote exactly one member.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot_of(&fixture_text(ctx, "local://🔣️.snapshot.json")?, "derived", kind)?;
+            let base = snapshot_of(&fixture_text(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json")?, "derived", kind)?;
             let payload = mutation_of(ctx.doc_string()?, "feature", kind)?;
             let mut current = base.clone();
             let raised = apply_rewriting_mutation_reporting(&mut current, &payload);
@@ -121,7 +121,7 @@ mod subject {
     /// project the same value and the differential would be vacuous.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot_of(&fixture_text(ctx, "local://🔣️.snapshot.json")?, "derived", kind)?;
+            let base = snapshot_of(&fixture_text(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json")?, "derived", kind)?;
             let payload = mutation_of(ctx.doc_string()?, "feature", kind)?;
             let mut current = base.clone();
             let raised = apply_rewriting_mutation_reporting(&mut current, &payload);
@@ -208,7 +208,7 @@ mod subject {
             ));
         }
         let ground_floor = snapshot_of(&fixture_text(ctx, "nakagin-ground-floor")?, "ground floor", "identity-round-trip")?;
-        let derived = snapshot_of(&fixture_text(ctx, "local://🔣️.snapshot.json")?, "capsule tower", "identity-round-trip")?;
+        let derived = snapshot_of(&fixture_text(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json")?, "capsule tower", "identity-round-trip")?;
         for (rule, what) in [(&ground_floor, "ground floor"), (&derived, "capsule tower")] {
             let reread = snapshot_of(&encode_rewriting_snapshot_json(rule), "re-encoded", "identity-round-trip")?;
             if &reread != rule {

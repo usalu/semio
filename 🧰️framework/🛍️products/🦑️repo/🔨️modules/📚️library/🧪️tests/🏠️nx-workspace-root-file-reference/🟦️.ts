@@ -9,8 +9,8 @@ const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.t
 const syntax = ts.createSourceFile("../🏠️nx-workspace-root-file-reference/🟦️.ts", text, ts.ScriptTarget.Latest, true);
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; targetValues?: string[]; rewriteKind?: string; rewriteData?: Record<string, unknown>; unsupportedReason?: string };
 type Parser = (path: string, content: string, adapter: "json" | "jsonc") => Token[];
-const helpers = new Set(["normalizeRelative", "sourceRelative", "emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "lineLocation", "embeddedArgumentTokens", "artifactRootForPath", "mutationStructuralPaths", "canonicalProjectionSuffix", "projectionKey", "projectedStructuralValue", "structuralProjectionToken", "structuralTokensInFragment"]);
-const constants = new Set(["SEGMENTER", "indexedLineContent", "indexedLineStarts", "OLD_MUTATION_TEST_PREFIX_SOURCE", "OLD_MUTATION_STRUCTURE_SOURCE"]);
+const helpers = new Set(["lineLocation", "embeddedArgumentTokens"]);
+const constants = new Set(["indexedLineContent", "indexedLineStarts"]);
 const support = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? helpers.has(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax)).join("\n");
 const declaration = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "jsonTokens");
 if (declaration.length !== 1) throw new Error("Expected one actual jsonTokens implementation");
@@ -22,8 +22,7 @@ const compilers = [
 
 /** 🧬️ Executes the actual private parser through independent compilers with a stub owner lookup. */
 function implementation(compiler: typeof compilers[number]): Parser {
-  const dependencies = new Function(compiler.compile(support) + "\nreturn { artifactRootForPath, structuralTokensInFragment, mutationStructuralPaths, embeddedArgumentTokens };")();
-  return new Function("artifactRootForPath", "structuralTokensInFragment", "mutationStructuralPaths", "embeddedArgumentTokens", compiler.compile(parserSource) + "\nreturn jsonTokens;")(() => null, dependencies.structuralTokensInFragment, dependencies.mutationStructuralPaths, dependencies.embeddedArgumentTokens);
+  return new Function(compiler.compile(`${support}\n${parserSource}`) + "\nreturn jsonTokens;")();
 }
 
 /** 🧪️ Fixture-only, non-real paths — a genuine repo path here would itself become a live physical

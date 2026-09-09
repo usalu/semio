@@ -16,11 +16,11 @@ use crate::schema::mutations::create_node::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "create-node/inserts-an-empty-node-ahead-of-the-root-node";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️inserts-an-empty-e75eec/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️inserts-an-empty-e75eec/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️inserts-an-empty-e75eec/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️inserts-an-empty-e75eec/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️inserts-an-empty-e75eec/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

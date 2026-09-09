@@ -1,51 +1,31 @@
 syntax = "proto3";
 package semio.s.norm.din18599.diff;
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message Din18599Diff {
   // @state artifact
-  optional Din18599Artifact artifact = 1;
+  optional string use_class = 1;
   // @state artifact
-  optional string use_class = 2;
+  optional double heated_area_m2 = 2;
   // @state artifact
-  optional double heated_area_m2 = 3;
+  optional uint32 occupants = 3;
   // @state artifact
-  optional uint32 occupants = 4;
+  optional double h_t = 4;
   // @state artifact
-  optional double h_t = 5;
+  optional double h_v = 5;
   // @state artifact
-  optional double h_v = 6;
+  semio.os.store.ArtifactChild climate = 6;
   // @state artifact
-  optional string climate = 7;
+  optional double internal_gains_w_m2 = 7;
   // @state artifact
-  optional double internal_gains_w_m2 = 8;
+  optional double solar_gains_kwh = 8;
   // @state artifact
-  optional double solar_gains_kwh = 9;
+  optional double system_losses_kwh = 9;
   // @state artifact
-  optional double system_losses_kwh = 10;
+  optional double renewable_kwh = 10;
   // @state artifact
-  optional double renewable_kwh = 11;
+  optional double annual_limit_kwh = 11;
   // @state artifact
-  optional double annual_limit_kwh = 12;
+  optional string energy_carrier = 12;
   // @state artifact
-  optional string energy_carrier = 13;
-  // @state artifact
-  optional double reference_q_p_kwh = 14;
+  optional double reference_q_p_kwh = 13;
 }
-
-message Din18599Artifact {
-  string use_class = 1;
-  double heated_area_m2 = 2;
-  uint32 occupants = 3;
-  double h_t = 4;
-  double h_v = 5;
-  string climate = 6;
-  double internal_gains_w_m2 = 7;
-  double solar_gains_kwh = 8;
-  double system_losses_kwh = 9;
-  double renewable_kwh = 10;
-  double annual_limit_kwh = 11;
-  string energy_carrier = 12;
-  double reference_q_p_kwh = 13;
-}
-
-message Din18599StringList { repeated string values = 1; }

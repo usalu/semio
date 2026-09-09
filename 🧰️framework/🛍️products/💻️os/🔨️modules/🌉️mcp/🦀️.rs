@@ -17,7 +17,8 @@ pub use crate::inference::*;
 pub use crate::conformance::*;
 pub use crate::context::*;
 pub use crate::errors::*;
-pub use crate::fixtures::*;
+#[cfg(test)]
+pub(crate) use crate::testkit::*;
 pub use crate::handles::*;
 pub use crate::policy::*;
 pub use crate::prompts::*;

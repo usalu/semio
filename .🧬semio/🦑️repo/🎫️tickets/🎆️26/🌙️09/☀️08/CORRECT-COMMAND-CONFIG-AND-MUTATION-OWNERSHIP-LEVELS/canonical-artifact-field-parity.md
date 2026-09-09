@@ -100,3 +100,11 @@ Latest refresh: `artifact-field-parity-report-5.log` completed successfully in 1
 Equation projections are now corrected by the execution agent. Its `artifact-field-parity-report-equation-6.log` refresh reports 59 remaining mismatching representations and zero Equation findings. The dedicated Equation native lifecycle rerun is separate and still pending.
 
 The Drawing/Raster execution-agent refresh (`artifact-field-parity-drawing-raster-1.log`) reports 41 remaining representation mismatches and no Drawing/Raster rows. This includes concurrent Equation/Shooting/Sequence corrections, so the total reduction is not attributed solely to Drawing/Raster. Focused Drawing/Raster TypeScript checks passed with skipLibCheck; full ambient type checking remains affected by unrelated MDX JSX declarations.
+
+## Current Continuation Checkpoint
+
+`artifact-field-parity-current-7.log` completed the report target in 37.4 seconds and found 39 schema representations disagreeing with canonical document field sets (previous checkpoint 41). This is a reporting command, not a passing parity enforcement result. The improvement includes concurrent family edits; no attribution to the Wires app config change is implied. All 39 findings remain part of this active goal.
+
+## Norm Child Contract Correction
+
+`artifact-field-parity-norm-8.log` reports 36 remaining mismatching schema representations, down from 39, with no EN 1990 or DIN 18599 findings. These artifacts now import the shared child identity in their non-Rust facets and omit the removed replacement diff field. Their independent fixture/type verification is detailed in `norm-document-contract-ownership.md`. This report does not establish repository-wide parity.

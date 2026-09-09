@@ -24,7 +24,7 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
   authoritative over that closed surface; what a reference genuinely can adjudicate is membership,
   POSITION and count, and that is what this one does.
 
-  The artifact is real. `local://🔣️.snapshot.json` was derived ONCE by
+  The artifact is real. `shared://🗂️mutate-curation-1/🔣️.snapshot.json` was derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-curate-selection.py`
   from the artifact's own committed demo document
   (`🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`): the
@@ -74,7 +74,7 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived timber-kit curation
-    Given the real derived curation local://🔣️.snapshot.json
+    Given the real derived curation shared://🗂️mutate-curation-1/🔣️.snapshot.json
     When the <id> mutation is applied with the parameters the feature states
       """
       {"effect": "<effect>", "mutation": <mutation>}
@@ -90,7 +90,7 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undo <id> on the real derived curation and land back on it
-    Given the real derived curation local://🔣️.snapshot.json
+    Given the real derived curation shared://🗂️mutate-curation-1/🔣️.snapshot.json
     When the <id> mutation is applied and then its own computed inverse is applied
       """
       {"effect": "<effect>", "mutation": <mutation>}
@@ -106,9 +106,9 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
     When the committed mutation is applied to the committed before-snapshot
       """
       {"effect": "<effect>"}
@@ -124,7 +124,7 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
   @level-long
   @mode-round-trip
   Scenario: Read the real derived curation in both languages, and hold the committed carrier to its own law in Rust
-    Given the real derived curation local://🔣️.snapshot.json
-    And the artifact's own committed carrier asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real derived curation shared://🗂️mutate-curation-1/🔣️.snapshot.json
+    And the artifact's own committed carrier asset://🎬️demo/🗣️.dsl.semio
     When each implementation reads the derived curation, and the Rust additionally parses the committed carrier and prints it back
     Then both languages read the same catalogue, stock table and curation, and the Rust reproduces the committed carrier byte for byte

@@ -1,7 +1,7 @@
 
 #[test]
 fn borrowed_slices_match_neutral_values_and_serde() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔪️slices.json")).expect("slice fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔪️slices.json")).expect("slice fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let values: Vec<i64> = serde_json::from_value(case.clone()).expect("integer sequence");
         let actual = crate::to_dsl_value(values.as_slice()).expect("slice encoding");
@@ -14,7 +14,7 @@ use super::*;
 
 #[test]
 fn integer_from_value_matches_serde_without_coercion() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).expect("neutral exact integer corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral exact integer corpus");
     macro_rules! check {
             ($($ty:ty),+ $(,)?) => { $(
                 for row in fixture["raw"].as_array().unwrap() {
@@ -162,7 +162,7 @@ fn negative_zero_float_round_trips_and_stays_a_float() {
 /// `0.41999998688697815`. `serde_json` is the third-party oracle for both widths here.
 #[test]
 fn f32_widens_through_its_own_shortest_lexeme_not_its_bits() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔢️f32-decimals.json")).expect("float decimal fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔢️f32-decimals.json")).expect("float decimal fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let value = f32::from_bits(u32::from_str_radix(case["bits"].as_str().unwrap(), 16).unwrap());
         let decimal = case["decimal"].as_str().unwrap();

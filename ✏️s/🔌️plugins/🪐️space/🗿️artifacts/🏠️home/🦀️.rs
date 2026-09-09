@@ -191,7 +191,7 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps-the-catalog-generation-to-7/🦀️.rs"]
                                     mod tests_bumps_the_catalog_generation_to_7;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/📝️text/🦀️.rs"]
                                     pub mod text;

@@ -1,17 +1,3 @@
 syntax = "proto3";
 package semio.app.note.note;
-message NoteConfig {
-  reserved 1, 2;
-  // @state config
-  string engagement_input = 3;
-  // @state config
-  NoteCamera camera = 4;
-  reserved 5;
-  // @state config
-}
-
-message NoteCamera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
+message NoteConfig { reserved 1, 2, 3, 4, 5; }

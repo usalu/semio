@@ -26,11 +26,11 @@ use semio_repo_test_host::Adapter;
 const KINDS: &[&str] = &["connect-steps", "disconnect-steps"];
 
 /// 📄️ This case's own local copy of the plugin's committed real sequence artifact.
-const SEQUENCE_ASSET: &str = "local://🗣️.dsl.semio";
+const SEQUENCE_ASSET: &str = "shared://🔗️mutate-sequence-1-any-dependency/🗣️.dsl.semio";
 
 /// 🧫️ The three steps and one edge the composed content child is seeded with — a local copy of the
 /// identical fixture `🔗️dependency`'s own case already carries.
-const BASE_SCENE: &str = "local://🎬️base-scene.json";
+const BASE_SCENE: &str = "shared://🔗️mutate-sequence-1-any-dependency/🎬️base-scene.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

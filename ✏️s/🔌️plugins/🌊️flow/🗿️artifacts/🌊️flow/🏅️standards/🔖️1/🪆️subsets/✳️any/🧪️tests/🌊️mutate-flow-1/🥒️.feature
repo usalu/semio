@@ -18,17 +18,17 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph and 
   (`flow-widget-graph-mutation-semantics`) is narrowed to an empty `capabilities` list rather than
   deleted, because its own investigation remains the honest record of what was checked.
 
-  Both implementations now read the SAME committed base graph — `local://🔣️.json` below, already
+  Both implementations now read the SAME committed base graph — `shared://🌊️mutate-flow-1/🔣️.json` below, already
   declared as this case's local fixture — and apply the SAME ten committed `params` payloads to it.
 
-  📄️ The base document is real and committed. `asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is
+  📄️ The base document is real and committed. `asset://🎬️demo/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl` and supplies the schema and the CAMERA every scenario starts
   from — the camera is inline document state on `FlowSnapshot`, not composed content, so it comes from
   the file and from nowhere else. What the committed artifact cannot supply is the graph:
   `FlowSnapshot` keeps its widgets, synapses and layout in a composed `s.stdio.semio.flow` CHILD and the
   `.flow` DSL persists the child HANDLE, not the child, so a case that only parsed it would find an empty
   graph and every id-keyed kind would address nothing. The four widgets, two synapses and two layout
-  entries are therefore committed once in `local://🔣️.json`, derived from this vocabulary's OWN
+  entries are therefore committed once in `shared://🌊️mutate-flow-1/🔣️.json`, derived from this vocabulary's OWN
   committed per-kind leaf fixtures under
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/`; that file records which
   widget, synapse, port and layout entry came from which committed payload and which are this case's
@@ -62,8 +62,8 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph and 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real committed widget graph and observe it move
-    Given the real committed flow artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
-    And its composed content child seeded from local://🔣️.json
+    Given the real committed flow artifact asset://🎬️demo/🗣️.dsl.semio
+    And its composed content child seeded from shared://🌊️mutate-flow-1/🔣️.json
     When the <id> mutation is applied through apply_flow_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
@@ -86,8 +86,8 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph and 
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real committed widget graph exactly
-    Given the real committed flow artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
-    And its composed content child seeded from local://🔣️.json
+    Given the real committed flow artifact asset://🎬️demo/🗣️.dsl.semio
+    And its composed content child seeded from shared://🌊️mutate-flow-1/🔣️.json
     When the <id> mutation is applied through apply_flow_mutation, and separately by the Python reference
       """
       {"kind": "<id>", "params": <params>}
@@ -111,7 +111,7 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph and 
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real committed flow artifact
-    Given the real committed flow artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed flow artifact asset://🎬️demo/🗣️.dsl.semio
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

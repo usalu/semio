@@ -828,7 +828,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes-trailing-2c093d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes-trailing-asset-prop/🦀️.rs"]
                             mod tests_removes_trailing_asset_prop;
                         }
                         #[path = "."]
@@ -841,7 +841,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/🏷️renames-asset-077db9/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/🏷️renames-asset-hero-to-lead/🦀️.rs"]
                             mod tests_renames_asset_hero_to_lead;
                         }
                         #[path = "."]
@@ -854,7 +854,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🧪️tests/🌐️points-asset-f34d81/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🧪️tests/🌐️points-asset-prop-at-v2-mesh/🦀️.rs"]
                             mod tests_points_asset_prop_at_v2_mesh;
                         }
                         #[path = "."]
@@ -867,7 +867,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🧪️tests/🔀️moves-asset-hero-429909/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🧪️tests/🔀️moves-asset-hero-behind-asset-prop/🦀️.rs"]
                             mod tests_moves_asset_hero_behind_asset_prop;
                         }
                         #[path = "."]
@@ -880,7 +880,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🧪️tests/🚚️offsets-both-4b6f47/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🧪️tests/🚚️offsets-both-assets-and-skips-a-ghost/🦀️.rs"]
                             mod tests_offsets_both_assets_and_skips_a_ghost;
                         }
                         #[path = "."]
@@ -893,7 +893,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🧪️tests/🔄️spins-asset-hero-3d83e7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🧪️tests/🔄️spins-asset-hero-about-z/🦀️.rs"]
                             mod tests_spins_asset_hero_about_z;
                         }
                         #[path = "."]
@@ -906,7 +906,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles-asset-92c08a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles-asset-hero-scale/🦀️.rs"]
                             mod tests_doubles_asset_hero_scale;
                         }
                         #[path = "."]
@@ -932,7 +932,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🧪️tests/🚫️removes-trailing-5e56b3/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🧪️tests/🚫️removes-trailing-shot-close/🦀️.rs"]
                             mod tests_removes_trailing_shot_close;
                         }
                         #[path = "."]
@@ -945,7 +945,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🧪️tests/🔤️relabels-shot-b26bd4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🧪️tests/🔤️relabels-shot-close-to-detail/🦀️.rs"]
                             mod tests_relabels_shot_close_to_detail;
                         }
                         #[path = "."]
@@ -958,7 +958,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🧪️tests/↔️widens-shot-close-3eb531/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🧪️tests/↔️widens-shot-close-to-1024/🦀️.rs"]
                             mod tests_widens_shot_close_to_1024;
                         }
                         #[path = "."]
@@ -971,7 +971,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🧪️tests/↕️heightens-shot-c214df/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🧪️tests/↕️heightens-shot-close-to-768/🦀️.rs"]
                             mod tests_heightens_shot_close_to_768;
                         }
                         #[path = "."]
@@ -984,7 +984,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🧪️tests/🎨️switches-shot-2cb0cd/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🧪️tests/🎨️switches-shot-wide-to-svg/🦀️.rs"]
                             mod tests_switches_shot_wide_to_svg;
                         }
                         #[path = "."]
@@ -997,7 +997,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🧪️tests/⭕️rounds-shot-wide-ed879d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🧪️tests/⭕️rounds-shot-wide-to-ellipse/🦀️.rs"]
                             mod tests_rounds_shot_wide_to_ellipse;
                         }
                         #[path = "."]
@@ -1010,7 +1010,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🧪️tests/⬆️moves-shot-close-2568fb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🧪️tests/⬆️moves-shot-close-to-front/🦀️.rs"]
                             mod tests_moves_shot_close_to_front;
                         }
                         #[path = "."]
@@ -1023,7 +1023,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🧪️tests/📷️rewrites-cam-e6f8c8/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🧪️tests/📷️rewrites-cam-wide-through-shot-wide/🦀️.rs"]
                             mod tests_rewrites_cam_wide_through_shot_wide;
                         }
                         #[path = "."]
@@ -1036,7 +1036,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🧪️tests/🎥️appends-saved-6de9a0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🧪️tests/🎥️appends-saved-camera-top/🦀️.rs"]
                             mod tests_appends_saved_camera_top;
                         }
                         #[path = "."]
@@ -1049,7 +1049,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🧪️tests/🚫️removes-trailing-b30008/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🧪️tests/🚫️removes-trailing-cam-close/🦀️.rs"]
                             mod tests_removes_trailing_cam_close;
                         }
                         #[path = "."]
@@ -1062,7 +1062,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🧪️tests/🔤️relabels-cam-371bd1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🧪️tests/🔤️relabels-cam-close-to-tight/🦀️.rs"]
                             mod tests_relabels_cam_close_to_tight;
                         }
                         #[path = "."]
@@ -1075,7 +1075,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved-camera-view/🧪️tests/📍️repositions-cam-6dbf9c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved-camera-view/🧪️tests/📍️repositions-cam-close-view/🦀️.rs"]
                             mod tests_repositions_cam_close_view;
                         }
                         #[path = "."]
@@ -1088,7 +1088,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🧪️tests/🔁️moves-cam-close-4e547f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🧪️tests/🔁️moves-cam-close-to-front/🦀️.rs"]
                             mod tests_moves_cam_close_to_front;
                         }
                         #[path = "."]
@@ -1101,7 +1101,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🧪️tests/🎯️activates-shot-8809b1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🧪️tests/🎯️activates-shot-close/🦀️.rs"]
                             mod tests_activates_shot_close;
                         }
                         #[path = "."]
@@ -1114,7 +1114,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🧪️tests/📌️activates-asset-dc81fa/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🧪️tests/📌️activates-asset-prop/🦀️.rs"]
                             mod tests_activates_asset_prop;
                         }
                         #[path = "."]
@@ -1127,7 +1127,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun-enabled/🧪️tests/☀️switches-scene-20cc49/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun-enabled/🧪️tests/☀️switches-scene-sun-off/🦀️.rs"]
                             mod tests_switches_scene_sun_off;
                         }
                         #[path = "."]
@@ -1140,7 +1140,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun-azimuth/🧪️tests/🧭️turns-scene-sun-7cdee7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun-azimuth/🧪️tests/🧭️turns-scene-sun-to-315-degrees/🦀️.rs"]
                             mod tests_turns_scene_sun_to_315_degrees;
                         }
                         #[path = "."]
@@ -1153,7 +1153,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun-elevation/🧪️tests/🌅️raises-scene-sun-a14d8e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun-elevation/🧪️tests/🌅️raises-scene-sun-to-60-degrees/🦀️.rs"]
                             mod tests_raises_scene_sun_to_60_degrees;
                         }
                         #[path = "."]
@@ -1166,7 +1166,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims-scene-sun-9d414b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧪️tests/💡️dims-scene-sun-to-half/🦀️.rs"]
                             mod tests_dims_scene_sun_to_half;
                         }
                         #[path = "."]
@@ -1179,7 +1179,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient-intensity/🧪️tests/🔅️dims-scene-79cd21/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient-intensity/🧪️tests/🔅️dims-scene-ambient-to-quarter/🦀️.rs"]
                             mod tests_dims_scene_ambient_to_quarter;
                         }
                         #[path = "."]
@@ -1192,7 +1192,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow-enabled/🧪️tests/🌑️switches-scene-6aa721/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow-enabled/🧪️tests/🌑️switches-scene-shadows-off/🦀️.rs"]
                             mod tests_switches_scene_shadows_off;
                         }
                         #[path = "."]
@@ -1205,7 +1205,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene-material-roughness/🧪️tests/✨️polishes-scene-b91b33/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene-material-roughness/🧪️tests/✨️polishes-scene-material-to-quarter/🦀️.rs"]
                             mod tests_polishes_scene_material_to_quarter;
                         }
                     }
@@ -1566,8 +1566,8 @@ pub mod editor {
             pub mod camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖨️export/🦀️.rs"]
             pub mod export;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️fixture/🦀️.rs"]
-            pub mod fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️.rs"]
+            pub mod document;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️gumball/🦀️.rs"]
             pub mod gumball;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️scene/🦀️.rs"]

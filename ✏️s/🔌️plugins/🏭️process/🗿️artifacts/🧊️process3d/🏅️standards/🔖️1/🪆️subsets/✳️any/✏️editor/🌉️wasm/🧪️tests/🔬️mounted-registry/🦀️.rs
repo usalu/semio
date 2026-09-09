@@ -411,10 +411,10 @@ mod mounted_laws {
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS),
+            crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }),
             Err("process3d-publication.initial-freshness")
         );
-        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
         assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.wrong-operation"));
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
@@ -422,7 +422,7 @@ mod mounted_laws {
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));
         assert!(crate::spr::process3d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
         assert!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)).is_err());
         assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));

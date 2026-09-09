@@ -8,7 +8,7 @@ import { testInputCommitObserverFixture } from "../../🔗️commit/🧪️tests
 import { testWatchdogTailFixture } from "../../../../../../⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts";
 
 export function testInputAdmissionFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const value = JSON.parse(readFileSync(new URL("../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(value).compile(schema);

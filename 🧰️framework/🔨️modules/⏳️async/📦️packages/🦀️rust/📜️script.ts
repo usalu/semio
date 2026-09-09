@@ -19,7 +19,7 @@ class WorkerMaintenanceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-maintenance-check accepts only --native");
     const owner = join(this.root, "../../🔔️maintenance"), export_ = "MaintenanceFixture";
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -58,7 +58,7 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
     const owner = join(this.root, "../../🔔️deferred-wake"), export_ = "DeferredWakeFixture";
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -143,7 +143,7 @@ class WorkerPoolUseCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
     const owner = join(this.root, "../../🔐️use"), export_ = "UseFixture";
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));

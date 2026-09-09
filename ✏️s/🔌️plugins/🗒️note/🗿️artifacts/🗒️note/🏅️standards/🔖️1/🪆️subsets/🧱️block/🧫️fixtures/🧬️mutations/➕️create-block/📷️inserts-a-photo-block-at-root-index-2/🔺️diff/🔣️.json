@@ -1,0 +1,40 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [
+      {
+        "parentId": null,
+        "index": 2,
+        "block": {
+          "kind": "image",
+          "id": "blk-photo",
+          "name": "Photo",
+          "x": 620,
+          "y": 0,
+          "width": 200,
+          "height": 140,
+          "rotation": 0,
+          "visible": true,
+          "locked": false,
+          "imageKey": "asset-logo"
+        }
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
+}

@@ -3043,30 +3043,9 @@ pub struct OwnerRef {
     pub child_id: String,
 }
 
-/// @emoji 🔗️ An independent-lifecycle reference to another artifact: a PIN (so it can be frozen to
-/// a specific point in the target's history) plus a `role` (the named slot it fills on the
-/// referencing artifact, e.g. `"cover-image"`). Renders as a chip, never nests inline — the
-/// structural opposite of `ArtifactChild`; see the region doc's CHILD-vs-LINK split.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct ArtifactLink {
-    pub target: crate::os_io::ArtifactRef,
-    pub pin: LinkPin,
-    pub role: String,
-}
-
-/// @emoji 📌️ What an `ArtifactLink` is frozen to: nothing (`Head`, always the target's live tip),
-/// a specific `Checkpoint`, or a content-addressed `Snapshot` blob (survives even the target
-/// document's own history being pruned/GC'd, since the bytes are escrowed independently).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
-pub enum LinkPin {
-    Head,
-    Checkpoint { id: String },
-    Snapshot { blob: BlobRef },
-}
+#[path = "🔗️link/🧬️schema/🦀️.rs"]
+mod artifact_link_schema;
+pub use artifact_link_schema::{ArtifactLink, LinkPin};
 
 /// @emoji 🌳️ Lets a snapshot type declare its own composed children / referenced links. Both
 /// methods default to empty, so a leaf artifact (the overwhelming majority) needs zero
@@ -13070,6 +13049,7 @@ impl Drop for ArtifactEditMessageLedger {
 #[path = "🧵️canonical-edit/🦀️.rs"]
 mod canonical_edit;
 pub use canonical_edit::{
+    ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep,
     ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue,
     ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH,
 };
@@ -13091,6 +13071,12 @@ pub struct ArtifactStoreOneItemFootprint {
 impl ArtifactStoreOneItemFootprint {
     pub fn is_admissible(self) -> bool {
         self.work_items != 0 && self.work_items <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS && self.retained_bytes <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES
+    }
+
+    /// ➕️ Folds one more admitted item into the gesture-wide declaration a batched publication is
+    /// admitted against.
+    pub fn merged(self, item: Self) -> Self {
+        Self { work_items: self.work_items.saturating_add(item.work_items), retained_bytes: self.retained_bytes.max(item.retained_bytes) }
     }
 }
 
@@ -13309,6 +13295,133 @@ pub trait ArtifactStoreOneItemPreparationFactory<P, Mutation>: Send + Sync {
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Mutation>>;
 }
 
+//#region 🧺️BatchSource
+/// 🏭️ The per-item app authority one batched gesture draws on, erased over whichever input its
+/// lane admits: a typed mutation for the app's own document lane, an owned wire item for a member.
+/// The batch machine calls it exactly once per staged mutation and never inspects the input.
+trait ArtifactStoreBatchItemAuthority<P, Mutation>: Send + Sync {
+    type Input: Send;
+
+    fn preflight(&self, input: &Self::Input, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Self::Input>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Self::Input>>;
+}
+
+impl<P: Send + Sync, Mutation: Send> ArtifactStoreBatchItemAuthority<P, Mutation> for Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>> {
+    type Input = Mutation;
+
+    fn preflight(&self, input: &Mutation, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        self.as_ref().preflight(input, description, lane)
+    }
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Mutation>> {
+        self.as_ref().begin(request)
+    }
+}
+
+impl<P: Send + Sync, Mutation: Send> ArtifactStoreBatchItemAuthority<P, Mutation> for Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>> {
+    type Input = MemberStoreOneItemWire;
+
+    fn preflight(&self, input: &MemberStoreOneItemWire, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        self.as_ref().preflight(input, description, lane)
+    }
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire>> {
+        self.as_ref().begin(request)
+    }
+}
+
+/// 🧳 One item's exact owner bundle, minted by the store from the batch's single shared live
+/// authority and the running post root the item before it produced.
+struct ArtifactStoreBatchItemRequest<P> {
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    base_revision: [u8; 32],
+    lane: HistoryLane,
+    authority: Arc<ArtifactStoreOneItemLiveAuthority>,
+    base: SnapshotRead<P>,
+}
+
+/// 🧺️ The still-unstaged inputs of one admitted gesture. `remaining` is the only census the batch
+/// machine reads; every owner leaves through `begin_next` or one bounded `close_step`.
+trait ArtifactStoreBatchSource<P, Mutation>: Send {
+    fn remaining(&self) -> usize;
+    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, String>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> SnapshotRetirementStep;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+/// 🧺️ The one batch source shape: an app-owned per-item authority plus the gesture's inputs in
+/// reverse authored order, so `pop` hands the next item back in the order the app emitted it.
+struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> {
+    authority: Option<A>,
+    inputs: Vec<A::Input>,
+    description: Option<String>,
+    marker: PhantomData<fn() -> (P, Mutation)>,
+}
+
+impl<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
+    /// 🧮 Declares the whole gesture in one footprint: work items sum across every staged forward
+    /// and inverse owner, retained bytes stay the widest single item because only one item's
+    /// owners are ever live at once.
+    fn footprint(&self, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        let authority = self.authority.as_ref().ok_or_else(|| "batch source lost its exact app-owned item authority".to_string())?;
+        let description = self.description.as_deref();
+        let mut total = ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 };
+        for input in &self.inputs {
+            let item = authority.preflight(input, description, lane)?;
+            if !item.is_admissible() {
+                return Err("one-item preparation footprint exceeds its fixed item or byte capacity".into());
+            }
+            total = total.merged(item);
+        }
+        Ok(total)
+    }
+}
+
+impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSource<P, Mutation> for ArtifactStoreBatchSourceOf<P, Mutation, A> {
+    fn remaining(&self) -> usize {
+        self.inputs.len()
+    }
+
+    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, String> {
+        let authority = self.authority.as_ref().ok_or_else(|| "batch source lost its exact app-owned item authority".to_string())?;
+        let mutation = self.inputs.pop().ok_or_else(|| "batch source was advanced past its last admitted item".to_string())?;
+        let ArtifactStoreBatchItemRequest { operation, generation, base_revision, lane, authority: live, base } = request;
+        let item = ArtifactStoreOneItemPreparationRequest { operation, generation, base_revision, lane, authority: live, description: self.description.take(), base, mutation };
+        match authority.begin(item) {
+            Ok(preparation) => Ok(preparation),
+            Err(item) => {
+                let (base, mutation, description) = item.into_owners();
+                let _ = base.return_to_registry();
+                self.inputs.push(mutation);
+                self.description = description;
+                Err("app-owned one-item preparation factory rejected its exact owner bundle".into())
+            }
+        }
+    }
+
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> SnapshotRetirementStep {
+        if grant.maximum_items == 0 {
+            return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.inputs.pop().is_some() {
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(description) = self.description.take() {
+            return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: description.len() };
+        }
+        if self.authority.take().is_some() {
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        SnapshotRetirementStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.inputs.is_empty() && self.description.is_none() && self.authority.is_none()
+    }
+}
+//#endregion 🧺️BatchSource
+
 //#region 🧩️MemberOneItemPublication
 /// 📨 Owned member wire, transferred without decoding or cloning at the composition boundary.
 #[derive(Debug)]
@@ -13349,12 +13462,12 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
 
 struct MemberStoreOneItemPublication<P, Mutation> {
     member: Option<Arc<SnapshotReadLeaseRegistry>>,
-    publication: ArtifactStoreOneItemPublication<P, Mutation>,
+    publication: ArtifactStoreBatchPublication<P, Mutation>,
     group_history: Option<ArtifactStoreHistoryCommitReservation>,
     group_displaced: Option<ArtifactStoreDisplacedOwnerReservation>,
 }
 
-impl<P: 'static, Mutation: 'static> ErasedMemberStoreOneItemPublication for MemberStoreOneItemPublication<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneItemPublication for MemberStoreOneItemPublication<P, Mutation> {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
@@ -13436,30 +13549,129 @@ pub enum ArtifactStoreOneItemAdvance {
 }
 
 /// 🚫 Exact owners returned when the app has no retained factory, preflight rejects, or the
-/// store's live base authority no longer matches.
+/// store's live base authority no longer matches. The whole admitted gesture comes back in the
+/// order it was offered, so the caller can retry or retire it without reconstructing anything.
 #[derive(Debug)]
-pub struct ArtifactStoreOneItemAdmissionRejected<Mutation> {
+pub struct ArtifactStoreBatchAdmissionRejected<Mutation> {
     pub reason: String,
-    pub mutation: Mutation,
+    pub mutations: Vec<Mutation>,
     pub description: Option<String>,
 }
 
-impl<Mutation> ArtifactStoreOneItemAdmissionRejected<Mutation> {
-    pub fn into_owners(self) -> (String, Mutation, Option<String>) {
-        (self.reason, self.mutation, self.description)
+impl<Mutation> ArtifactStoreBatchAdmissionRejected<Mutation> {
+    pub fn into_owners(self) -> (String, Vec<Mutation>, Option<String>) {
+        (self.reason, self.mutations, self.description)
     }
 }
 
-/// 📬️ Retained one-item publication authority. It never calls `apply_one`, `apply_command`,
+/// 🧾️ One gesture's staged edit. Every admitted mutation is folded into these exact owners against
+/// the running post root, so the whole gesture commits as ONE `Edit` in ONE history ledger slot and
+/// is ONE undo step. It carries its own retirement authority: a cancelled batch retires the staged
+/// forwards, inverses, metadata and post root one owner per bounded turn.
+struct ArtifactStoreBatchStage<P, Mutation> {
+    edit: Box<Edit<Mutation>>,
+    post: Option<Arc<P>>,
+    next_clock: HybridLogicalTimestamp,
+    local_actor: Option<String>,
+    applied_edit_id: String,
+    tail_edit_id: String,
+    digest: [u8; 32],
+    folded: usize,
+    completed_items: u32,
+    completed_bytes: u64,
+    mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>,
+    snapshot_retirement: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    retiring: Option<Box<dyn ErasedSnapshotRetirement>>,
+}
+
+impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
+    fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
+        ArtifactStoreOneItemCheckpoint { cursor: self.folded as u32, completed_items: self.completed_items, completed_bytes: self.completed_bytes, digest: self.digest }
+    }
+
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        if let Some(owner) = self.retiring.as_mut() {
+            let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !owner.terminal_is_empty() {
+                return Err("staged batch owner retirement reported complete without terminal emptiness".into());
+            }
+            self.retiring = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.edit.inverse.pop().or_else(|| self.edit.forwards.pop()) {
+            let factory = self.mutation_retirement.as_ref().ok_or_else(|| "staged batch edit lacks its exact mutation retirement authority".to_string())?;
+            self.retiring = Some(factory.retire_owned(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.edit.mutation_meta.pop().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(post) = self.post.take() {
+            let factory = self.snapshot_retirement.as_ref().ok_or_else(|| "staged batch root lacks its exact snapshot retirement authority".to_string())?;
+            self.retiring = Some(factory.retire(post));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        for value in [&mut self.edit.id, &mut self.applied_edit_id, &mut self.tail_edit_id, &mut self.edit.started_at] {
+            if !value.is_empty() {
+                let released = value.len();
+                value.clear();
+                value.shrink_to_fit();
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released });
+            }
+        }
+        for value in [&mut self.edit.actor, &mut self.edit.description, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
+            if let Some(taken) = value.take() {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: taken.len() });
+            }
+        }
+        if self.mutation_retirement.take().is_some() || self.snapshot_retirement.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.retiring.is_none()
+            && self.post.is_none()
+            && self.edit.forwards.is_empty()
+            && self.edit.inverse.is_empty()
+            && self.edit.mutation_meta.is_empty()
+            && self.edit.id.is_empty()
+            && self.applied_edit_id.is_empty()
+            && self.tail_edit_id.is_empty()
+            && self.edit.started_at.is_empty()
+            && self.edit.actor.is_none()
+            && self.edit.description.is_none()
+            && self.edit.coalesce_key.is_none()
+            && self.edit.finished_at.is_none()
+            && self.local_actor.is_none()
+            && self.mutation_retirement.is_none()
+            && self.snapshot_retirement.is_none()
+    }
+}
+
+/// 📬️ Retained batched publication authority: ONE user gesture, N admitted mutations, ONE staged
+/// `Edit`, ONE history ledger slot, ONE undo step. Each turn folds at most one mutation — the
+/// single-mutation case is simply the N = 1 batch. It never calls `apply_one`, `apply_command`,
 /// `replay_mutations`, `pump`, or `flush_outbound`.
-pub struct ArtifactStoreOneItemPublication<P, Mutation> {
+pub struct ArtifactStoreBatchPublication<P, Mutation> {
     operation: semio_framework_job::OperationId,
     expected_generation: u64,
     expected_revision: [u8; 32],
     lane: HistoryLane,
     footprint: ArtifactStoreOneItemFootprint,
+    admitted_items: usize,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
+    source: Option<Box<dyn ArtifactStoreBatchSource<P, Mutation>>>,
     preparation: Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>,
+    item_closing: bool,
+    stage: Option<Box<ArtifactStoreBatchStage<P, Mutation>>>,
     receipt: Option<LaneItemReceipt>,
     attempts: u8,
     published: bool,
@@ -13469,7 +13681,7 @@ pub struct ArtifactStoreOneItemPublication<P, Mutation> {
     phase: ArtifactStoreOneItemPublicationPhase,
 }
 
-impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
+impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     pub fn operation(&self) -> semio_framework_job::OperationId {
         self.operation
     }
@@ -13478,8 +13690,41 @@ impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
         self.phase
     }
 
+    /// 🔢️ How many mutations this gesture admitted, and how many of them are already staged.
+    pub fn admitted_items(&self) -> usize {
+        self.admitted_items
+    }
+
+    pub fn staged_items(&self) -> usize {
+        self.stage.as_ref().map_or(0, |stage| stage.folded)
+    }
+
+    /// 🎁️ Hands the staged gesture edit back as ONE sealed candidate so a group-atomic decision can
+    /// linearize several stores' candidates before any of them becomes visible. Only the commit turn
+    /// may call it, and the publication then owns nothing but its receipt lane.
+    fn take_staged_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>> {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::Publishing || self.stage.as_ref().is_none_or(|stage| stage.post.is_none()) {
+            return None;
+        }
+        let authority = Arc::clone(self.authority.as_ref()?);
+        let stage = self.stage.take()?;
+        let ArtifactStoreBatchStage { edit, post, local_actor: _, applied_edit_id, tail_edit_id, digest, .. } = *stage;
+        let post = post.expect("validated staged batch post root");
+        Some(authority.seal_prepared_owned(edit, post, digest, [authority.actor.clone(), applied_edit_id, tail_edit_id]))
+    }
+
+    /// 📍️ Monotone gesture-wide progress: everything already folded into the stage plus the item
+    /// currently preparing. A folded item's own checkpoint is absorbed into the stage in the same
+    /// turn it leaves the preparation owner, so no turn ever reports less than the one before it.
     pub fn progress(&self) -> ArtifactStoreOneItemCheckpoint {
-        self.preparation.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |owner| owner.checkpoint())
+        let staged = self.stage.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |stage| stage.checkpoint());
+        let item = if self.item_closing { ArtifactStoreOneItemCheckpoint::default() } else { self.preparation.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |owner| owner.checkpoint()) };
+        ArtifactStoreOneItemCheckpoint {
+            cursor: staged.cursor,
+            completed_items: staged.completed_items.saturating_add(item.completed_items),
+            completed_bytes: staged.completed_bytes.saturating_add(item.completed_bytes),
+            digest: if item.digest == [0; 32] { staged.digest } else { item.digest },
+        }
     }
 
     pub fn fault(&self) -> Option<&str> {
@@ -13529,6 +13774,29 @@ impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
                 return Err("one-item preparation reported complete without terminal emptiness".into());
             }
             self.preparation = None;
+            self.item_closing = false;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(source) = self.source.as_mut() {
+            let step = source.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes });
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !source.terminal_is_empty() {
+                return Err("batch source reported complete without terminal emptiness".into());
+            }
+            self.source = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(stage) = self.stage.as_mut() {
+            let step = stage.close_step(grant)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !stage.terminal_is_empty() {
+                return Err("staged batch edit reported complete without terminal emptiness".into());
+            }
+            self.stage = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if grant.maximum_items == 0 {
@@ -13545,7 +13813,7 @@ impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(fault) = self.fault.as_mut().filter(|fault| !fault.is_empty()) {
-            let scalar = fault.chars().next_back().expect("nonempty one-item fault");
+            let scalar = fault.chars().next_back().expect("nonempty batch fault");
             if scalar.len_utf8() > grant.maximum_bytes {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -13558,13 +13826,19 @@ impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete
+            && self.preparation.is_none()
+            && self.source.is_none()
+            && self.stage.is_none()
+            && self.authority.is_none()
+            && self.receipt.is_none()
+            && self.fault.is_none()
     }
 }
 
-impl<P, Mutation> Drop for ArtifactStoreOneItemPublication<P, Mutation> {
+impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "one-item artifact-store publication reached Drop without its exact terminal-empty witness");
+        assert!(self.terminal_is_empty(), "batched artifact-store publication reached Drop without its exact terminal-empty witness");
     }
 }
 //#endregion 📬️OneItemPublication
@@ -15328,96 +15602,110 @@ where
     /// The returned lane witness is independent of the edit receipt so a retained publisher can
     /// validate, ACK, retry, and retire one semantic unit without entering a batch API.
     //#region 📬️OneItemPublication
-    /// 🎟️ Admits one exact app-owned retained mutation preparation. No generic mutation
-    /// method is called here or by `advance_apply_one`; absence of a domain factory is explicit.
-    pub fn begin_apply_one(
+    /// 🎟️ Admits ONE gesture's exact app-owned retained mutation preparations. No generic mutation
+    /// method is called here or by `advance_apply_batch`; absence of a domain factory is explicit.
+    /// A single-mutation publication is simply the `mutations.len() == 1` case of this one machine.
+    pub fn begin_apply_batch(
         &self,
         operation: semio_framework_job::OperationId,
         expected_generation: u64,
         expected_revision: [u8; 32],
         actor: String,
-        mutation: Mutation,
+        mutations: Vec<Mutation>,
         description: Option<String>,
         lane: HistoryLane,
-        factory: Option<&dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>,
-    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Mutation>>
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
     where
         P: Sync,
+        Mutation: Send,
     {
         let Some(factory) = factory else {
-            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "one-item publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutation, description });
+            return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutations, description });
         };
-        self.begin_apply_one_owned(operation, expected_generation, expected_revision, actor, mutation, description, lane, None, |mutation, description, lane| factory.preflight(mutation, description, lane), |request| factory.begin(request))
+        let mut inputs = mutations;
+        inputs.reverse();
+        let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs, description, marker: PhantomData };
+        self.begin_apply_batch_owned(operation, expected_generation, expected_revision, actor, lane, None, source).map_err(|rejected| {
+            let (reason, mut mutations, description) = rejected.into_owners();
+            mutations.reverse();
+            ArtifactStoreBatchAdmissionRejected { reason, mutations, description }
+        })
     }
 
     /// 🧩 Uses the exact typed factory installed by the member's owner catalog.
-    pub fn begin_member_apply_one(
+    pub fn begin_member_apply_batch(
         &self,
         operation: semio_framework_job::OperationId,
         expected_generation: u64,
         expected_revision: [u8; 32],
         actor: String,
-        mutation: Mutation,
+        mutations: Vec<Mutation>,
         description: Option<String>,
-    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Mutation>>
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
     where
         P: Sync,
+        Mutation: Send,
     {
-        self.begin_apply_one(operation, expected_generation, expected_revision, actor, mutation, description, HistoryLane::Document, self.one_item_preparation_factory.as_deref())
+        self.begin_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, self.one_item_preparation_factory.as_ref())
     }
 
-    fn begin_apply_one_owned<Input>(
+    fn begin_apply_batch_owned<A>(
         &self,
         operation: semio_framework_job::OperationId,
         expected_generation: u64,
         expected_revision: [u8; 32],
         actor: String,
-        mutation: Input,
-        description: Option<String>,
         lane: HistoryLane,
         group_id: Option<String>,
-        preflight: impl FnOnce(&Input, Option<&str>, HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>,
-        begin: impl FnOnce(ArtifactStoreOneItemPreparationRequest<P, Input>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Input>>,
-    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Input>>
+        source: ArtifactStoreBatchSourceOf<P, Mutation, A>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<A::Input>>
     where
-        P: Sync,
+        P: Sync + Send,
+        A: ArtifactStoreBatchItemAuthority<P, Mutation> + 'static,
+        Mutation: 'static,
+        P: 'static,
     {
-        let reject = |reason: String, mutation: Input, description: Option<String>| ArtifactStoreOneItemAdmissionRejected { reason, mutation, description };
+        let reject = |reason: String, source: ArtifactStoreBatchSourceOf<P, Mutation, A>| ArtifactStoreBatchAdmissionRejected { reason, mutations: source.inputs, description: source.description };
+        if source.inputs.is_empty() {
+            return Err(reject("batched publication requires at least one admitted mutation owner".into(), source));
+        }
         if self.durable_group_root.is_some() {
-            return Err(reject("one-item publication cannot interleave with an unresolved durable group decision".into(), mutation, description));
+            return Err(reject("batched publication cannot interleave with an unresolved durable group decision".into(), source));
         }
         if self.generation != expected_generation || self.content_revision != expected_revision {
-            return Err(reject("one-item publication base generation or revision is stale".into(), mutation, description));
+            return Err(reject("batched publication base generation or revision is stale".into(), source));
         }
         if lane != HistoryLane::Document {
-            return Err(reject("one-item publication has no retained side-lane map preparation authority".into(), mutation, description));
+            return Err(reject("batched publication has no retained side-lane map preparation authority".into(), source));
         }
         if self.backbone.is_some() {
-            return Err(reject("one-item publication has no retained outbound backbone encoder/sender authority".into(), mutation, description));
+            return Err(reject("batched publication has no retained outbound backbone encoder/sender authority".into(), source));
         }
-        let footprint = match preflight(&mutation, description.as_deref(), lane) {
+        let footprint = match source.footprint(lane) {
             Ok(footprint) if footprint.is_admissible() => footprint,
-            Ok(_) => return Err(reject("one-item preparation footprint exceeds its fixed item or byte capacity".into(), mutation, description)),
-            Err(reason) => return Err(reject(reason, mutation, description)),
+            Ok(_) => return Err(reject("batched preparation footprint exceeds its fixed item or byte capacity".into(), source)),
+            Err(reason) => return Err(reject(reason, source)),
         };
         if actor.is_empty() || actor.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
-            return Err(reject("one-item publication actor exceeds its fixed identity capacity".into(), mutation, description));
+            return Err(reject("batched publication actor exceeds its fixed identity capacity".into(), source));
         }
         if group_id.as_ref().is_some_and(|id| id.is_empty() || id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err(reject("one-item publication group exceeds its fixed identity capacity".into(), mutation, description));
+            return Err(reject("batched publication group exceeds its fixed identity capacity".into(), source));
         }
         let Some(cursor) = self.envelope.cursor.as_ref() else {
-            return Err(reject("one-item publication requires an initialized live cursor authority".into(), mutation, description));
+            return Err(reject("batched publication requires an initialized live cursor authority".into(), source));
         };
         if cursor.applied_edit_ids.len() != self.applied_edit_ids.len() || cursor.redo_edit_ids.len() != self.redo_edit_ids.len() || cursor.checkpoint_id.as_deref() != self.current_checkpoint_id.as_deref() {
-            return Err(reject("one-item publication live cursor is stale or lacks preinstalled fixed capacity".into(), mutation, description));
+            return Err(reject("batched publication live cursor is stale or lacks preinstalled fixed capacity".into(), source));
         }
         let next_sequence_number = match self.edit_sequence.checked_add(1) {
             Some(value) => value,
-            None => return Err(reject("one-item edit sequence exhausted".into(), mutation, description)),
+            None => return Err(reject("batched edit sequence exhausted".into(), source)),
         };
         let mut next_clock = self.clock;
         next_clock.tick(now_ms());
+        let admitted_items = source.inputs.len();
         let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
             operation,
             generation: semio_framework_job::Generation(expected_generation),
@@ -15428,27 +15716,21 @@ where
             actor,
             group_id,
         });
-        let base = match self.snapshot_read() {
-            Ok(base) => base,
-            Err(error) => return Err(reject(error.to_string(), mutation, description)),
-        };
-        let request = ArtifactStoreOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base_revision: expected_revision, lane, authority: Arc::clone(&authority), description, base, mutation };
-        let preparation = match begin(request) {
-            Ok(preparation) => preparation,
-            Err(request) => {
-                let (base, mutation, description) = request.into_owners();
-                let _ = base.return_to_registry();
-                return Err(reject("app-owned one-item preparation factory rejected its exact owner bundle".into(), mutation, description));
-            }
-        };
-        Ok(ArtifactStoreOneItemPublication {
+        if admitted_items > footprint.work_items {
+            return Err(reject("batched publication item census disagrees with its declared fixed work envelope".into(), source));
+        }
+        Ok(ArtifactStoreBatchPublication {
             operation,
             expected_generation,
             expected_revision,
             lane,
             footprint,
+            admitted_items,
             authority: Some(authority),
-            preparation: Some(preparation),
+            source: Some(Box::new(source)),
+            preparation: None,
+            item_closing: false,
+            stage: None,
             receipt: None,
             attempts: 0,
             published: false,
@@ -15459,9 +15741,29 @@ where
         })
     }
 
-    /// ⏭️ Advances at most one preparation, cursor, preflight, or atomic move-publication
-    /// unit. The post-snapshot is an already-built `Arc` and is moved into the store.
-    pub fn advance_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
+    /// 🧵️ Mints the base read one staged item prepares against: the store's own committed root for
+    /// the first item, and the previous item's post root — leased through the same exact registry —
+    /// for every later one.
+    fn batch_item_base(&self, staged_root: Option<&Arc<P>>) -> Result<SnapshotRead<P>, VcsError>
+    where
+        P: Sync,
+    {
+        let Some(root) = staged_root else { return self.snapshot_read() };
+        if !self.snapshot_read_leases.publish_authority(self.generation, self.content_revision) {
+            return Err(VcsError::ValidationFailed("staged batch read commit authority is busy or exhausted".into()));
+        }
+        let owner = Arc::clone(root);
+        let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("staged batch read lease registry is busy, saturated, or exhausted".into()))?;
+        Ok(SnapshotRead::new(owner, lease))
+    }
+
+    /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
+    /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
+    /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
+    pub fn advance_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError>
+    where
+        P: Sync,
+    {
         self.ensure_durable_group_idle()?;
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
             return Ok(ArtifactStoreOneItemAdvance::Complete);
@@ -15477,99 +15779,145 @@ where
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
         if self.generation != publication.expected_generation || self.content_revision != publication.expected_revision {
-            publication.fault = Some("one-item publication became stale before commit".into());
+            publication.fault = Some("batched publication became stale before commit".into());
             publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
             publication.begin_close();
-            return Err(VcsError::ValidationFailed("one-item publication became stale before commit".into()));
+            return Err(VcsError::ValidationFailed("batched publication became stale before commit".into()));
         }
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
+        let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes };
         match publication.phase {
             ArtifactStoreOneItemPublicationPhase::Preparing => {
-                let owner = publication.preparation.as_mut().ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its retained preparation owner".into()))?;
-                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(VcsError::ValidationFailed)? {
-                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
-                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
-                        if owner.prepared().is_none() {
-                            return Err(VcsError::ValidationFailed("one-item preparation reported Prepared without its exact candidate owner".into()));
+                if publication.item_closing {
+                    let owner = publication.preparation.as_mut().ok_or_else(|| VcsError::ValidationFailed("staged batch item lost its retained preparation owner before retirement".into()))?;
+                    let step = owner.close_step(item_grant).map_err(VcsError::ValidationFailed)?;
+                    if step != SnapshotRetirementStep::Complete {
+                        return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
+                    }
+                    if !owner.terminal_is_empty() {
+                        return Err(VcsError::ValidationFailed("staged batch item preparation reported complete without terminal emptiness".into()));
+                    }
+                    publication.preparation = None;
+                    publication.item_closing = false;
+                    return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
+                }
+                if publication.preparation.is_none() {
+                    let staged_root = publication.stage.as_ref().and_then(|stage| stage.post.clone());
+                    let remaining = publication.source.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its admitted item source".into()))?.remaining();
+                    if remaining == 0 {
+                        if publication.stage.is_none() {
+                            return Err(VcsError::ValidationFailed("batched publication staged no edit before its cursor turn".into()));
                         }
                         publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
-                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
+                        return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
                     }
-                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                    let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live authority".into()))?);
+                    let base = self.batch_item_base(staged_root.as_ref())?;
+                    let request = ArtifactStoreBatchItemRequest {
+                        operation: publication.operation,
+                        generation: authority.generation,
+                        base_revision: authority.base_revision,
+                        lane: publication.lane,
+                        authority,
+                        base,
+                    };
+                    let source = publication.source.as_mut().expect("validated batched publication item source");
+                    let preparation = source.begin_next(request).map_err(VcsError::ValidationFailed)?;
+                    publication.preparation = Some(preparation);
+                    return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
                 }
+                let owner = publication.preparation.as_mut().expect("validated batched publication item preparation");
+                if owner.prepared().is_none() {
+                    return match owner.advance(item_grant).map_err(VcsError::ValidationFailed)? {
+                        ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                        ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                            if owner.prepared().is_none() {
+                                return Err(VcsError::ValidationFailed("one-item preparation reported Prepared without its exact candidate owner".into()));
+                            }
+                            Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
+                        }
+                        ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                    };
+                }
+                self.fold_batch_item(publication)?;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
-                let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item cursor preparation lost its candidate".into()))?;
-                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("one-item cursor preparation lost its live authority".into()))?;
-                if prepared.edit.id.is_empty() || prepared.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count != self.applied_edit_ids.len() {
-                    return Err(VcsError::ValidationFailed("domain-prepared one-item candidate failed its live cursor authority".into()));
+                let stage = publication.stage.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched cursor preparation lost its staged edit".into()))?;
+                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched cursor preparation lost its live authority".into()))?;
+                if stage.edit.id.is_empty() || stage.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count != self.applied_edit_ids.len() {
+                    return Err(VcsError::ValidationFailed("domain-prepared batched candidate failed its live cursor authority".into()));
                 }
                 publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
-                let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item commit preflight lost its candidate".into()))?;
-                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("one-item commit preflight lost its live authority".into()))?;
-                let meta = prepared.edit.mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("one-item edit lacks its exact authority metadata".into()))?;
-                authority.validate_prepared(prepared).map_err(VcsError::ValidationFailed)?;
+                let stage = publication.stage.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched commit preflight lost its staged edit".into()))?;
+                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched commit preflight lost its live authority".into()))?;
+                let meta = stage.edit.mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;
                 if publication.lane != HistoryLane::Document
-                    || prepared.edit.sequence_number != authority.next_sequence_number
-                    || prepared.edit.forwards.len() != 1
-                    || prepared.edit.mutation_meta.len() != 1
-                    || prepared.edit.id != prepared.applied_edit_id
-                    || prepared.edit.id != prepared.tail_edit_id
-                    || prepared.edit.actor.as_deref() != Some(authority.actor.as_str())
-                    || prepared.local_actor.as_deref() != Some(authority.actor.as_str())
-                    || prepared.next_clock != authority.next_clock
+                    || stage.folded != publication.admitted_items
+                    || stage.edit.sequence_number != authority.next_sequence_number
+                    || stage.edit.forwards.len() != publication.admitted_items
+                    || stage.edit.mutation_meta.len() != publication.admitted_items
+                    || stage.edit.id != stage.applied_edit_id
+                    || stage.edit.id != stage.tail_edit_id
+                    || stage.edit.actor.as_deref() != Some(authority.actor.as_str())
+                    || stage.local_actor.as_deref() != Some(authority.actor.as_str())
+                    || stage.next_clock != authority.next_clock
                     || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(authority.actor.as_str())
                     || meta.timestamp != authority.next_clock
-                    || prepared.edit.inverse.len().saturating_add(prepared.edit.forwards.len()) > publication.footprint.work_items
+                    || stage.edit.inverse.len().saturating_add(stage.edit.forwards.len()) > publication.footprint.work_items
+                    || stage.post.is_none()
                     || self.backbone.is_some()
                 {
-                    return Err(VcsError::ValidationFailed("one-item prepared candidate failed its exact fixed commit contract".into()));
+                    return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
                 }
                 if self.applied_edit_ids.len() == self.applied_edit_ids.capacity()
                     || self.revision_accumulator.applied.len() == self.revision_accumulator.applied.capacity()
                     || self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.applied_edit_ids.len() == cursor.applied_edit_ids.capacity())
                 {
-                    return Err(VcsError::ValidationFailed("one-item publication requires preinstalled fixed applied and revision capacity".into()));
+                    return Err(VcsError::ValidationFailed("batched publication requires preinstalled fixed applied and revision capacity".into()));
                 }
                 if self.generation == u64::MAX {
-                    return Err(VcsError::ValidationFailed("one-item store generation is exhausted".into()));
+                    return Err(VcsError::ValidationFailed("batched store generation is exhausted".into()));
                 }
+                stage.digest = CursorRevisionAccumulator::edit_digest(&stage.edit);
                 self.displaced_retirements.reserve(12)?;
                 if self.snapshot_retirement_factory.is_none() || self.mutation_retirement_factory.is_none() {
-                    return Err(VcsError::ValidationFailed("one-item commit lacks exact snapshot or mutation retirement authority".into()));
+                    return Err(VcsError::ValidationFailed("batched commit lacks exact snapshot or mutation retirement authority".into()));
                 }
                 publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
                 let reservation = self.reserve_edit_history_slot()?;
-                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its prepared candidate at atomic transfer".into()))?;
+                let stage = publication.stage.take().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
+                let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, digest, .. } = *stage;
+                let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                 let generation_before = self.generation;
                 let pre_snapshot = Arc::clone(&self.current);
-                let cursor = self.envelope.cursor.as_mut().ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its live cursor authority".into()))?;
+                let cursor = self.envelope.cursor.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live cursor authority".into()))?;
                 let retired_cursor_redo = std::mem::take(&mut cursor.redo_edit_ids);
-                cursor.applied_edit_ids.push(prepared.edit.id.clone());
+                cursor.applied_edit_ids.push(edit.id.clone());
                 if !retired_cursor_redo.is_empty() || retired_cursor_redo.capacity() != 0 {
                     self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(retired_cursor_redo)));
                 }
                 self.replace_pending_report_retained(PendingCommandReport::default())?;
-                self.replace_local_actor_retained(prepared.local_actor)?;
-                self.replace_tail_undo_cache_retained(Some((prepared.tail_edit_id, pre_snapshot)))?;
-                self.applied_edit_ids.push(prepared.applied_edit_id);
+                self.replace_local_actor_retained(local_actor)?;
+                self.replace_tail_undo_cache_retained(Some((tail_edit_id, pre_snapshot)))?;
+                self.applied_edit_ids.push(applied_edit_id);
                 self.replace_redo_edit_ids_retained(Vec::new())?;
-                self.replace_current_retained(prepared.post_snapshot)?;
-                self.edit_sequence = prepared.edit.sequence_number;
-                self.clock = prepared.next_clock;
-                let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[prepared.edit.id.as_bytes()]);
+                self.replace_current_retained(post)?;
+                self.edit_sequence = edit.sequence_number;
+                self.clock = next_clock;
+                let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
                 let previous = self.revision_accumulator.applied.last().map_or(self.revision_accumulator.identity_digest, |record| record.prefix_digest);
-                let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &prepared.edit_digest]);
-                self.insert_reserved_edit_history(reservation, *prepared.edit)?;
-                self.revision_accumulator.applied.push(CursorRevisionRecord { id_digest: edit_id_digest, edit_digest: prepared.edit_digest, prefix_digest });
+                let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &digest]);
+                self.insert_reserved_edit_history(reservation, *edit)?;
+                self.revision_accumulator.applied.push(CursorRevisionRecord { id_digest: edit_id_digest, edit_digest: digest, prefix_digest });
                 let retired_redo = std::mem::take(&mut self.revision_accumulator.redo);
                 if !retired_redo.is_empty() || retired_redo.capacity() != 0 {
                     self.displaced_retirements.push_reserved(Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(CursorRevisionAccumulator {
@@ -15580,7 +15928,7 @@ where
                 }
                 self.generation += 1;
                 self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
-                assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner one-item publication must advance its exact snapshot authority");
+                assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner batched publication must advance its exact snapshot authority");
                 self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
                 let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
                 publication.expected_generation = self.generation;
@@ -15590,12 +15938,12 @@ where
                 publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
                 Ok(ArtifactStoreOneItemAdvance::Published(receipt))
             }
-            ArtifactStoreOneItemPublicationPhase::Fault => Err(VcsError::ValidationFailed(publication.fault.clone().unwrap_or_else(|| "one-item publication faulted".into()))),
-            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled one-item terminal control phase"),
+            ArtifactStoreOneItemPublicationPhase::Fault => Err(VcsError::ValidationFailed(publication.fault.clone().unwrap_or_else(|| "batched publication faulted".into()))),
+            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled batched terminal control phase"),
         }
     }
 
-    pub fn cancel_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) -> bool {
+    pub fn cancel_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> bool {
         if matches!(publication.phase, ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Closing) {
             return false;
         }
@@ -15603,6 +15951,123 @@ where
         publication.begin_close();
         true
     }
+    /// 🧺️ Folds ONE app-prepared item into the staged gesture edit: its forward and its inverse
+    /// block (reversed exactly as `replay_mutations` reverses one operation's inverse, so the whole
+    /// staged inverse is consumed tail-first), its metadata, and its post root as the base the next
+    /// item prepares against. The displaced root is only retired when this batch is its last owner —
+    /// the still-closing item preparation holds the exact registry lease otherwise.
+    fn fold_batch_item(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<(), VcsError> {
+        let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched fold lost its live authority".into()))?);
+        let candidate = publication
+            .preparation
+            .as_ref()
+            .and_then(|owner| owner.prepared())
+            .ok_or_else(|| VcsError::ValidationFailed("batched fold lost its prepared candidate before validation".into()))?;
+        authority.validate_prepared(candidate).map_err(VcsError::ValidationFailed)?;
+        if candidate.edit.id.is_empty()
+            || candidate.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || candidate.edit.sequence_number != authority.next_sequence_number
+            || candidate.edit.forwards.len() != 1
+            || candidate.edit.mutation_meta.len() != 1
+            || candidate.edit.id != candidate.applied_edit_id
+            || candidate.edit.id != candidate.tail_edit_id
+            || candidate.edit.actor.as_deref() != Some(authority.actor.as_str())
+            || candidate.local_actor.as_deref() != Some(authority.actor.as_str())
+            || candidate.next_clock != authority.next_clock
+            || candidate.edit.inverse.len().saturating_add(candidate.edit.forwards.len()) > publication.footprint.work_items
+        {
+            return Err(VcsError::ValidationFailed("batched item candidate failed its exact fixed fold contract".into()));
+        }
+        if publication.stage.is_none() {
+            let mut staged = Box::new(Self::empty_batch_stage(&authority));
+            staged.mutation_retirement = (*self.mutation_retirement_factory).clone();
+            staged.snapshot_retirement = (*self.snapshot_retirement_factory).clone();
+            if staged.mutation_retirement.is_none() || staged.snapshot_retirement.is_none() {
+                return Err(VcsError::ValidationFailed("batched fold lacks exact snapshot or mutation retirement authority".into()));
+            }
+            let inverse_capacity = publication.footprint.work_items.saturating_sub(publication.admitted_items);
+            staged.edit.forwards.try_reserve_exact(publication.admitted_items).map_err(|_| VcsError::ValidationFailed("batched staged forwards exceeded its admitted fixed capacity".into()))?;
+            staged.edit.mutation_meta.try_reserve_exact(publication.admitted_items).map_err(|_| VcsError::ValidationFailed("batched staged metadata exceeded its admitted fixed capacity".into()))?;
+            staged.edit.inverse.try_reserve_exact(inverse_capacity).map_err(|_| VcsError::ValidationFailed("batched staged inverse exceeded its admitted fixed capacity".into()))?;
+            publication.stage = Some(staged);
+        }
+        let owner = publication.preparation.as_mut().expect("validated batched fold preparation owner");
+        let item = owner.checkpoint();
+        let prepared = owner.take_prepared().ok_or_else(|| VcsError::ValidationFailed("batched fold lost its prepared candidate at atomic transfer".into()))?;
+        let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest, local_actor, applied_edit_id, tail_edit_id, seal: _ } = prepared;
+        let mut edit = *edit;
+        let stage = publication.stage.as_mut().expect("validated staged batch edit");
+        if stage.folded == 0 {
+            stage.edit.id = edit.id.clone();
+            stage.applied_edit_id = applied_edit_id;
+            stage.tail_edit_id = tail_edit_id;
+            stage.edit.actor = edit.actor.take();
+            stage.edit.description = edit.description.take();
+            stage.edit.started_at = std::mem::take(&mut edit.started_at);
+            stage.local_actor = local_actor;
+            stage.next_clock = next_clock;
+        }
+        if stage.edit.forwards.len() == stage.edit.forwards.capacity() || stage.edit.mutation_meta.len() == stage.edit.mutation_meta.capacity() {
+            return Err(VcsError::ValidationFailed("batched fold exceeded its admitted fixed staging capacity".into()));
+        }
+        let mut inverse = std::mem::take(&mut edit.inverse);
+        inverse.reverse();
+        if stage.edit.inverse.len().saturating_add(inverse.len()) > stage.edit.inverse.capacity() {
+            return Err(VcsError::ValidationFailed("batched fold exceeded its admitted fixed inverse capacity".into()));
+        }
+        stage.edit.inverse.extend(inverse);
+        stage.edit.forwards.extend(std::mem::take(&mut edit.forwards));
+        stage.edit.mutation_meta.extend(std::mem::take(&mut edit.mutation_meta));
+        stage.folded = stage.folded.saturating_add(1);
+        stage.completed_items = stage.completed_items.saturating_add(item.completed_items);
+        stage.completed_bytes = stage.completed_bytes.saturating_add(item.completed_bytes);
+        stage.digest = edit_digest;
+        let displaced = stage.post.replace(post_snapshot);
+        publication.item_closing = true;
+        if let Some(owner) = publication.preparation.as_mut() {
+            owner.begin_close();
+        }
+        if let Some(displaced) = displaced {
+            if Arc::strong_count(&displaced) == 1 {
+                self.displaced_retirements.reserve(1)?;
+                let factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("batched fold lacks its exact snapshot retirement authority".into()))?;
+                self.displaced_retirements.push_reserved(factory.retire(displaced));
+            }
+        }
+        Ok(())
+    }
+
+    /// 🧾️ The empty staged shell every fold accumulates into — no allocation happens here; the
+    /// first fold reserves the gesture's exact admitted capacity.
+    fn empty_batch_stage(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreBatchStage<P, Mutation> {
+        ArtifactStoreBatchStage {
+            edit: Box::new(Edit {
+                id: String::new(),
+                actor: None,
+                forwards: Vec::new(),
+                inverse: Vec::new(),
+                mutation_meta: Vec::new(),
+                description: None,
+                coalesce_key: None,
+                sequence_number: authority.next_sequence_number,
+                started_at: String::new(),
+                finished_at: None,
+            }),
+            post: None,
+            next_clock: authority.next_clock,
+            local_actor: None,
+            applied_edit_id: String::new(),
+            tail_edit_id: String::new(),
+            digest: [0; 32],
+            folded: 0,
+            completed_items: 0,
+            completed_bytes: 0,
+            mutation_retirement: None,
+            snapshot_retirement: None,
+            retiring: None,
+        }
+    }
+
     //#endregion 📬️OneItemPublication
 
     pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, description: Option<String>, lane: HistoryLane) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
@@ -17702,19 +18167,9 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 
 //#region 🔖️BlobStore
 //#region 🔖️BlobStore
-/// @emoji 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
-/// callers that just put/read a blob already hold those; this is what gets embedded in a document
-/// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
-/// 🌱️ serde is carried UNCONDITIONALLY here, not `#[cfg_attr(test, …)]`: `🪐️space/🦀️.rs` serializes a
-/// `BlobRef` through `workflow_kernel` at runtime, so gating it breaks the `s` plugin's wasip2 build.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
-pub struct BlobRef {
-    pub hash: String,
-    pub size: u64,
-    pub media_type: String,
-}
+#[path = "📦️blob/🧬️schema/🦀️.rs"]
+mod blob_reference_schema;
+pub use blob_reference_schema::BlobRef;
 
 /// @emoji 🗄️ Content-addressed blob persistence backing any `ArtifactKind::ContentAddressedBlob`-
 /// shaped field that needs to reference bytes durably without embedding them inline. `put` is
@@ -17752,7 +18207,7 @@ pub trait SpaceMember {
     fn owner_ref(&self) -> Option<OwnerRef>;
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]);
     fn one_item_wire_publication_supported(&self) -> bool;
-    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>>;
+    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>>;
     fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String>;
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
@@ -17931,25 +18386,15 @@ where
         self.one_item_wire_preparation_factory.is_some() && self.snapshot_retirement_factory.is_some() && self.mutation_retirement_factory.is_some() && self.backbone.is_none() && !self.owned_disposer_terminal
     }
 
-    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>> {
+    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
         let Some(factory) = self.one_item_wire_preparation_factory.as_ref().filter(|_| self.one_item_wire_publication_supported()) else {
-            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "member requires its exact retained wire preparation and retirement authority".into(), mutation: request.wire, description: request.description });
+            return Err(ArtifactStoreBatchAdmissionRejected { reason: "member requires its exact retained wire preparation and retirement authority".into(), mutations: vec![request.wire], description: request.description });
         };
         if request.wire.schema.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || request.wire.bytes.len() > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
-            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutation: request.wire, description: request.description });
+            return Err(ArtifactStoreBatchAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutations: vec![request.wire], description: request.description });
         }
-        let publication = self.begin_apply_one_owned(
-            request.operation,
-            request.expected_generation,
-            request.expected_revision,
-            request.actor,
-            request.wire,
-            request.description,
-            HistoryLane::Document,
-            request.group_id,
-            |wire, description, lane| factory.preflight(wire, description, lane),
-            |request| factory.begin(request),
-        )?;
+        let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs: vec![request.wire], description: request.description, marker: PhantomData };
+        let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source)?;
         Ok(Box::new(MemberStoreOneItemPublication { member: Some(Arc::clone(&self.snapshot_read_leases)), publication, group_history: None, group_displaced: None }))
     }
 
@@ -17961,7 +18406,7 @@ where
         if publication.group_history.is_some() || publication.group_displaced.is_some() {
             return Err("group-reserved member candidate requires an atomic group visibility authority".into());
         }
-        self.advance_apply_one(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())
+        self.advance_apply_batch(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())
     }
 
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
@@ -17991,7 +18436,7 @@ where
         if matches!(publication.publication.phase(), ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Fault) {
             return Err("member group preparation is no longer in a prepublication phase".into());
         }
-        match self.advance_apply_one(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())? {
+        match self.advance_apply_batch(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())? {
             ArtifactStoreOneItemAdvance::Progress(checkpoint) => Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint)),
             ArtifactStoreOneItemAdvance::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
             _ => Err("member group preparation crossed its reserved prepublication boundary".into()),
@@ -18282,7 +18727,7 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    fn begin_one_item_wire_publication(&self, _request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>> {
+    fn begin_one_item_wire_publication(&self, _request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
         match *self {}
     }
 
@@ -18500,7 +18945,7 @@ macro_rules! space_members {
             fn one_item_wire_publication_supported(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m)),+ }
             }
-            fn begin_one_item_wire_publication(&self, request: $crate::os_store::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::ErasedMemberStoreOneItemPublication>, $crate::os_store::ArtifactStoreOneItemAdmissionRejected<$crate::os_store::MemberStoreOneItemWire>> {
+            fn begin_one_item_wire_publication(&self, request: $crate::os_store::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::ErasedMemberStoreOneItemPublication>, $crate::os_store::ArtifactStoreBatchAdmissionRejected<$crate::os_store::MemberStoreOneItemWire>> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m, request)),+ }
             }
             fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemAdvance, String> {
@@ -20447,7 +20892,7 @@ impl ArtifactPack for protocol::InteractionState {
 mod artifact_addressing_tests;
 
 #[cfg(test)]
-#[path = "🧫️fixtures/🦀️.rs"]
+#[path = "🧪️testkit/🦀️.rs"]
 mod fixture_mutations;
 
 #[cfg(test)]

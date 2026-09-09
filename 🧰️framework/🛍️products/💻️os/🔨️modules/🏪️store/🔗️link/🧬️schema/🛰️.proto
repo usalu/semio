@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.os.store;
+import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🛰️.proto";
+message LinkHeadPin {}
+message LinkCheckpointPin { string id = 1; }
+message LinkSnapshotPin { BlobRef blob = 1; }
+message LinkPin { oneof kind { LinkHeadPin head = 1; LinkCheckpointPin checkpoint = 2; LinkSnapshotPin snapshot = 3; } }
+message ArtifactLink { semio.framework.io.ArtifactRef target = 1; LinkPin pin = 2; string role = 3; }

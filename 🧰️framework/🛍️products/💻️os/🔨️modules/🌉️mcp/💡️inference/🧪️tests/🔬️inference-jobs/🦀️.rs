@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_async::{CancelToken, TraceId};
 
-const FIXTURE: &str = include_str!("../../../../../../../../🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../../../🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("the neutral gis-map-proposal-approval fixture parses")
@@ -447,7 +447,7 @@ fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope()
 
 #[test]
 fn a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity() {
-    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
+    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
     let request: semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1 = serde_json::from_value(undo_fixture["request"].clone()).expect("closed request");
     let scope = DocumentScope::new("space-a", "map-a");
     let response = serde_json::json!({

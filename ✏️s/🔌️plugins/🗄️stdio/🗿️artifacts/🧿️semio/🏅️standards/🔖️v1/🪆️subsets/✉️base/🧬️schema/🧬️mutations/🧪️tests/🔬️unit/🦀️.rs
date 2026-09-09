@@ -184,7 +184,7 @@ async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
     let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep {
-        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),
+        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7 }),
     });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Brep(_)));

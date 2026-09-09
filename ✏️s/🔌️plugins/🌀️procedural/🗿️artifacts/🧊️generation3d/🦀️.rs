@@ -227,7 +227,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget-position/🧪️tests/🧹️unpins-the-node-76ac74/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget-position/🧪️tests/🧹️unpins-the-node-a-position/🦀️.rs"]
                             mod tests_unpins_the_node_a_position;
                         }
                         #[path = "."]
@@ -240,7 +240,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts-wire-ab-e28360/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts-wire-ab-leaving-both-nodes/🦀️.rs"]
                             mod tests_cuts_wire_ab_leaving_both_nodes;
                         }
                         #[path = "."]
@@ -253,7 +253,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/🚫️removes-node-a-4524b6/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/🚫️removes-node-a-and-leaves-wire-ab-dangling/🦀️.rs"]
                             mod tests_removes_node_a_and_leaves_wire_ab_dangling;
                         }
                         #[path = "."]
@@ -266,7 +266,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🧪️tests/🔍️frames-the-graph-56967e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🧪️tests/🔍️frames-the-graph-at-double-zoom/🦀️.rs"]
                             mod tests_frames_the_graph_at_double_zoom;
                         }
                         #[path = "."]
@@ -279,7 +279,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-node-366d41/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-node-a-in-the-graph/🦀️.rs"]
                             mod tests_repositions_node_a_in_the_graph;
                         }
                         #[path = "."]
@@ -292,7 +292,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-677666/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema-id/🦀️.rs"]
                             mod tests_restamps_the_fixture_schema_id;
                         }
                         #[path = "."]
@@ -305,7 +305,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse/🧪️tests/📡️repoints-wire-ab-ed8ed9/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse/🧪️tests/📡️repoints-wire-ab-onto-the-cap-port/🦀️.rs"]
                             mod tests_repoints_wire_ab_onto_the_cap_port;
                         }
                         #[path = "."]
@@ -318,7 +318,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/🎚️retunes-the-knob-d14c8f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/🎚️retunes-the-knob-slider-value/🦀️.rs"]
                             mod tests_retunes_the_knob_slider_value;
                         }
                     }

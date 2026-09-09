@@ -1,7 +1,7 @@
 //! 🩹️ Exact reverse WIT-to-kernel UI patch ownership bridge shared by both native actor hosts.
 
 use super::wit_ui;
-use semio_framework::kernel::{ActorUiPatchReceipt, UiTurnPatches, UI_TURN_PATCHES_MAXIMUM};
+use semio_framework::kernel::{ActorUiPatchReceipt, UI_TURN_PATCHES_MAXIMUM, UiTurnPatches};
 use semio_framework_ui_contract::{self as ui, UiNodeBindings, UiNodeChildren, UiNodeId, UiPatch, UiPatchOp, UiPatchOps};
 
 #[derive(serde::Deserialize)]

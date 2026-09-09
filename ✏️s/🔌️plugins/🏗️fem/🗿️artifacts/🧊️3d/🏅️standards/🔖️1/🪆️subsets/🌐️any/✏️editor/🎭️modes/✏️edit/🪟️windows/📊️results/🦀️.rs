@@ -104,7 +104,7 @@ pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::live_visu
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
     eprintln!("[DEBUG] fem3d results window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
-    crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, scene)
+    crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, &scene)
 }
 
 /// 📊️ Static results: solved fresh on every render (no cache, mirrors `Fem3dPlayApp`'s v0 design) —
@@ -136,7 +136,7 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), doc.analysis.deformation_scale, nodal_stress.as_ref());
     let scene = crate::app_surface::world_3d_surface(
         FEM3D_BODY_RESULTS,
-        semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
+        &semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
     with_caption(scene?, format!("Case: {case_id}"))
 }
@@ -157,7 +157,7 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> s
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
     let scene = crate::app_surface::world_3d_surface(
         FEM3D_BODY_RESULTS,
-        semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
+        &semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
     with_caption(scene?, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
 }
@@ -183,7 +183,7 @@ fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usi
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
     let scene = crate::app_surface::world_3d_surface(
         FEM3D_BODY_RESULTS,
-        semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
+        &semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
     with_caption(scene?, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
 }

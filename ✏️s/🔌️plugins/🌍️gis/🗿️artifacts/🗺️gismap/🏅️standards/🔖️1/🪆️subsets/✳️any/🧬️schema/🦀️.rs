@@ -19,6 +19,7 @@ use std::collections::HashSet;
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
+#[derive(Default)]
 pub struct GisMapArtifact {
     #[state(artifact)]
     pub positions: Vec<MapFeature>,
@@ -39,11 +40,7 @@ pub struct GisMapArtifact {
 //#endregion 🔹Artifact
 
 //#region 🔹Conversions
-impl Default for GisMapArtifact {
-    fn default() -> Self {
-        Self { positions: Vec::new(), routes: Vec::new(), regions: Vec::new(), image: None }
-    }
-}
+
 
 impl GisMapArtifact {
     /// 📸️ Persisted subset with stable drawing/value member coordinates; their content is emitted
@@ -54,7 +51,7 @@ impl GisMapArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
-        Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image, ..Self::default() }
+        Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image }
     }
 
     /// Writes persistent fields from a snapshot into this artifact.

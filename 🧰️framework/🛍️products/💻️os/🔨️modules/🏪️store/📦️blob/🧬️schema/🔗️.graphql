@@ -1,0 +1,2 @@
+scalar UInt64
+type BlobRef { hash: String! size: UInt64! mediaType: String! }

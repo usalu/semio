@@ -412,7 +412,7 @@ impl CommitBuild {
 }
 
 fn ensure_materialization_space(bytes: &[u8], byte_limit: usize, additional: usize, detail: &'static [u8]) -> Result<(), JobFault> {
-    if bytes.len().checked_add(additional).map_or(true, |length| length > byte_limit) {
+    if bytes.len().checked_add(additional).is_none_or(|length| length > byte_limit) {
         let _ = detail;
         return Err(empty_job_fault());
     }
@@ -1468,17 +1468,17 @@ impl<T: Topology + Clone> WfcRestore<T> {
                 }
                 self.stage = RestoreStage::Rebuild;
             }
-            RestoreStage::Rebuild => self.rebuild_one()?,
-            RestoreStage::Complete => self.finish()?,
+            RestoreStage::Rebuild => self.rebuild_one(),
+            RestoreStage::Complete => self.finish(),
         }
         Ok(())
     }
 
-    fn rebuild_one(&mut self) -> Result<(), String> {
+    fn rebuild_one(&mut self) {
         let header = self.header.as_ref().expect("restore header");
         if self.domain_cursor == header.domain_count {
             self.stage = RestoreStage::Complete;
-            return Ok(());
+            return;
         }
         if self.pattern_cursor < header.pattern_count {
             let pattern = PatternId::from_index(self.pattern_cursor);
@@ -1489,7 +1489,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
                 self.weight_sum += weight;
                 self.weighted_log_sum += self.model.as_ref().expect("restore model").weights().w_ln_w(pattern);
             }
-            return Ok(());
+            return;
         }
         self.domain_counts.push(self.count);
         self.weight_sums.push(self.weight_sum);
@@ -1507,10 +1507,9 @@ impl<T: Topology + Clone> WfcRestore<T> {
         self.count = 0;
         self.weight_sum = 0.0;
         self.weighted_log_sum = 0.0;
-        Ok(())
     }
 
-    fn finish(&mut self) -> Result<(), String> {
+    fn finish(&mut self) {
         let header = self.header.take().expect("restore header");
         let state = WfcState {
             operation_id: header.operation_id,
@@ -1568,7 +1567,6 @@ impl<T: Topology + Clone> WfcRestore<T> {
             publication: None,
             closing: false,
         });
-        Ok(())
     }
 
     pub(crate) fn take_job(&mut self) -> Option<WfcJob<T>> {
@@ -1748,7 +1746,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                 WfcStage::DetectContradiction => self.detect(),
                 WfcStage::BacktrackTrailEntry => self.backtrack_one(),
                 WfcStage::CommitSlot => {
-                    if self.state.observations == 1 || self.state.observations % CHECKPOINT_INTERVAL == 0 {
+                    if self.state.observations == 1 || self.state.observations.is_multiple_of(CHECKPOINT_INTERVAL) {
                         if let Err(fault) = self.begin_checkpoint(false) {
                             return StepOutcome::Fault(fault);
                         }

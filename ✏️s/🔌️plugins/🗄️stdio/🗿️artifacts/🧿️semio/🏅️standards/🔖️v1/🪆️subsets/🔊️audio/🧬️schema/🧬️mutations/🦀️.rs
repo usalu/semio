@@ -301,6 +301,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🎧️rerates-to-48-9bb6d3/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🎧️rerates-to-48-khz-and-rewrites-the-right-channel/🦀️.rs"]
 mod set_snapshot_rerates_to_48_khz_and_rewrites_the_right_channel;
 //#endregion 🧪️FixtureCases

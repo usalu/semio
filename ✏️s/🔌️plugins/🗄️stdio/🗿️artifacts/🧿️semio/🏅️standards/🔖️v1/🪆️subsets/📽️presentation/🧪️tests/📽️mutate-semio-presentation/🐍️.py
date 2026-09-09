@@ -89,10 +89,10 @@ KINDS = (
     "set-layout-master",
 )
 
-TALK_DSL = "local://🎙️talk/🗣️.dsl.semio"
-TALK_PACK = "local://🎒️.pack.semio"
-DECK_DSL = "asset://📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio"
-DECK_PACK = "asset://📚️examples/📽️deck/🖼️assets/🎒️.pack.semio"
+TALK_DSL = "shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio"
+TALK_PACK = "shared://📽️mutate-semio-presentation/🎒️.pack.semio"
+DECK_DSL = "asset://📽️deck/🗣️.dsl.semio"
+DECK_PACK = "asset://📽️deck/🎒️.pack.semio"
 
 
 def hex_of_text(text: str) -> str:
@@ -948,7 +948,7 @@ def projection_of(document: dict) -> dict:
 def mutate(ctx: Context) -> Outcome:
     """🎯️ One verb applied to the real derived talk deck by this implementation alone."""
     document = talk(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "local://") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://📽️mutate-semio-presentation/") if uri.endswith("/🦠️mutation/🔣️.json")))
     return Outcome(projection_of(apply_mutation(document, mutation)))
 
 
@@ -956,7 +956,7 @@ def inverse(ctx: Context) -> Outcome:
     """↩️ The metamorphic inverse law on the real deck: the verb followed by its OWN computed inverse
     must restore the deck exactly, slide and shape ORDER included."""
     document = talk(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "local://") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://📽️mutate-semio-presentation/") if uri.endswith("/🦠️mutation/🔣️.json")))
     undo = inverse_mutation(document, mutation)
     mutated = apply_mutation(document, mutation)
     restored = apply_mutation(mutated, undo)
@@ -969,7 +969,7 @@ def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector, whose
     before-state is the committed `📽️deck` example artifact — a THIRD statement of what the verb
     means, independent of both implementations."""
-    uris = step_uris(ctx, "local://")
+    uris = step_uris(ctx, "shared://📽️mutate-semio-presentation/")
     before = fixture_json(ctx, uris[0])
     mutation = fixture_json(ctx, uris[1])
     expected = fixture_json(ctx, uris[2])

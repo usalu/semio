@@ -15,7 +15,7 @@ fn close(cursor: &mut RetainedDictionaryDelta, grant: usize) -> usize {
 }
 
 fn verify_payload_fixture(accepted: bool) -> usize {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut selected = 0;
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["error"].is_null() == accepted) {
         selected += 1;
@@ -113,7 +113,7 @@ fn verify_payload_fixture(accepted: bool) -> usize {
 #[test]
 fn retained_dictionary_delta_matches_neutral_text_ranges_without_publication() {
     assert_eq!(verify_payload_fixture(true), 11);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
     for (base, name) in [(0, "dictionary"), (7, "secondDictionary")] {
         let entries = fixture[name].as_array().unwrap();
         let mut bytes = vec![1, base, entries.len() as u8];

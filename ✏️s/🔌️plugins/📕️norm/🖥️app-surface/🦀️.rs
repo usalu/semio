@@ -96,7 +96,20 @@ pub fn render_report(report: &CheckReport) -> UiAssemblyResult<BuiltNode> {
     if report.checks.is_empty() {
         return render_text("No checks computed.");
     }
-    let children = report.checks.iter().enumerate().map(|(index, check)| render_text(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))).collect::<UiAssemblyResult<Vec<_>>>()?;
+    let children = report
+        .checks
+        .iter()
+        .enumerate()
+        .map(|(index, check)| {
+            let label =
+                ui::Label::try_from(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message)).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row admission failed"))?;
+            ui::text(label)
+                .try_id(format!("norm-report-check-{index}"))
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row id admission failed"))?
+                .try_build()
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row build failed"))
+        })
+        .collect::<UiAssemblyResult<Vec<_>>>()?;
     ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report children admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report build failed"))
 }
 
@@ -286,12 +299,7 @@ where
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
-/// 📤️ The whole-document replace every app's `set-document` and `evaluate` commands emit — `description`
-/// is the manifest action id the command was declared under, which the command log labels the edit with.
-
-/// 📤️ Commit a typed document mutation (kept for the norm sub-lane's not-yet-migrated sibling facets;
-/// migrated facets use `commit_snapshot_fields` below instead, since the whole-document-replace
-/// variant this helper used to construct is banned with no 1:1 replacement).
+/// 📤️ Commits a typed document mutation under its manifest action description.
 pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![mutation], description))
 }
@@ -386,11 +394,12 @@ pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = cr
 /// 🧵️ The retained reducer shared by all fifteen apps — no norm command reads selection or hover, so the
 /// interaction owners are unused and the reduction is exactly the ordinary `handle` path.
 ///
-/// 🔁️ `artifact_mutations` is reversed on the way out because the retained publication lane drains the
-/// bundle LIFO (one `begin_apply_one` per `Vec::pop`, one store edit each), whereas `Emit::commit`'s
-/// ordinary dispatch applies the same vector front-to-back inside one edit. `XMutation::from_snapshot`
-/// emits ordered `remove-layer`/`insert-layer` runs, so handing the bundle back-to-front is what makes
-/// the published document identical to the one the ordinary path produces.
+/// 🔁️ `artifact_mutations` is handed back in authored order: the retained publication lane stages the
+/// whole bundle front-to-back into ONE batched edit (`store::begin_apply_batch`), exactly as
+/// `Emit::commit`'s ordinary dispatch applies it. `XMutation::from_snapshot` emits ordered
+/// `remove-layer`/`insert-layer` runs, so the published document is identical either way — the LIFO
+/// compensation the old one-mutation-per-turn drain needed is gone with that drain.
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 pub fn norm_retained_reduce<A: NormRetainedEditor>(
     command: &A::Command,
     snapshot: &A::Snapshot,
@@ -405,8 +414,7 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
         return Err(Fault::from("norm-command-retained-route-rejected"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let mut emit = A::dispatch_retained(command, &doc, &ConfigView { snapshot: config, window: None })?;
-    emit.artifact_mutations.reverse();
+    let emit = A::dispatch_retained(command, &doc, &ConfigView { snapshot: config, window: None })?;
     Ok(emit)
 }
 

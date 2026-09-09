@@ -2,7 +2,7 @@ mod typed_command_full_operation_tests {
     use super::*;
     use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-    const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧪️fixture/🔣️.json");
+    const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json");
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     struct TypedCommandCensusDecision {
@@ -446,7 +446,7 @@ mod typed_command_full_operation_tests {
         panic!("full-domain key did not progress under the production grant")
     }
 
-    pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: &dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+    pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
         let fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).unwrap();
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
@@ -495,7 +495,7 @@ mod typed_command_full_operation_tests {
                 };
                 if boundary != "producer" {
                     let pending =
-                        app.store.begin_apply_one(operation.operation, generation, revision, "fixture".into(), mutation(), None, HistoryLane::Document, Some(factory)).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
+                        app.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], None, HistoryLane::Document, Some(&factory)).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
                     let target = match boundary {
                         "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -1258,7 +1258,7 @@ mod typed_command_full_operation_tests {
         let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
         let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
         let publisher = &source[publisher_start..publisher_end];
-        for retained_seam in ["pending_artifact_publication", "begin_apply_one", "advance_apply_one", "ArtifactStoreOneItemAdvance::Published", "publication.close_step(grant)"] {
+        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "publication.close_step(grant)"] {
             assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
         }
         for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
@@ -1295,7 +1295,7 @@ mod typed_command_full_operation_tests {
         assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
         assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
 
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
         for row in fixture["lanes"].as_array().expect("result lanes") {
             let lane: TypedOperationResultLane = protocol::json::from_json_str(&serde_json::to_string(&row["name"]).unwrap()).expect("own lane decoder");
             let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");

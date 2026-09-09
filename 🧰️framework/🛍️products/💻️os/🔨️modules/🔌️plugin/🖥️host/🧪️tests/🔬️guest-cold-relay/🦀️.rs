@@ -84,8 +84,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
         registry.pool.clone(),
         semio_framework_async::CancelToken::root_now(),
         1,
-        "semio.infer".to_string(),
-        vec![0; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES],
+        ("semio.infer".to_string(), vec![0; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]),
     );
     maximum_rejected_job.begin_close();
     for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
@@ -299,7 +298,7 @@ async fn relay_session_with_tokens(
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
     let instance = Arc::new(Mutex::new(GuestInstanceSlot::Available(instance)));
     let gate = mock.script_pending_job_step(actor, step).await;
-    let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async::Semaphore::new(1)), pool, relay_cancel, 1, "semio.infer".to_string(), b"request".to_vec());
+    let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async::Semaphore::new(1)), pool, relay_cancel, 1, ("semio.infer".to_string(), b"request".to_vec()));
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(actor.0),
         generation: semio_framework_job::Generation(1),
@@ -340,7 +339,7 @@ async fn relay_session_for_handle(
     step: JobStep,
 ) -> (semio_framework_job::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>) {
     let gate = mock.script_pending_job_step(handle.actor, step).await;
-    let relay = GuestColdRelayJob::new(Arc::clone(&handle.runtime), Arc::clone(&handle.instance), Arc::clone(&handle.instance_gate), pool, relay_cancel, 77, "semio.infer".to_string(), b"request".to_vec());
+    let relay = GuestColdRelayJob::new(Arc::clone(&handle.runtime), Arc::clone(&handle.instance), Arc::clone(&handle.instance_gate), pool, relay_cancel, 77, ("semio.infer".to_string(), b"request".to_vec()));
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(handle.actor.0),
         generation: semio_framework_job::Generation(77),

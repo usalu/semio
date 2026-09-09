@@ -1,0 +1,280 @@
+# Native903 Current Diagnostics
+
+{"unused_qualifications":1,"clippy::result_large_err":96,"clippy::manual_is_multiple_of":1,"clippy::empty_line_after_doc_comments":2,"clippy::map_unwrap_or":6,"clippy::large_enum_variant":7,"clippy::unnecessary_unwrap":3,"clippy::needless_borrow":2,"clippy::unnecessary_wraps":3,"clippy::await_holding_lock":11,"clippy::clone_on_copy":2,"clippy::too_many_arguments":4,"clippy::type_complexity":2,"clippy::vec_init_then_push":54,"clippy::useless_format":77,"clippy::needless_pass_by_value":3,"clippy::redundant_async_block":1,"clippy::redundant_clone":1}
+
+- unused_qualifications 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27001 unnecessary qualification
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️.rs:637 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️.rs:1024 the `Err`-variant returned from this closure is very large
+- clippy::manual_is_multiple_of 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22432 manual implementation of `.is_multiple_of()`
+- clippy::empty_line_after_doc_comments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1462 empty line after doc comment
+- clippy::empty_line_after_doc_comments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4786 empty line after doc comment
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🦀️.rs:392 called `map(<f>).unwrap_or(<a>)` on an `Option` value
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🦀️.rs:80 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🦀️.rs:157 the `Err`-variant returned from this function is very large
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:58 large size difference between variants
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:696 the `Err`-variant returned from this function is very large
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:724 large size difference between variants
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:857 large size difference between variants
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:895 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1019 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1056 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1073 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1142 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1187 the `Err`-variant returned from this function is very large
+- clippy::unnecessary_unwrap 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1329 called `expect` on `seed.materialized_kind` after checking its variant with `is_none`
+- clippy::unnecessary_unwrap 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1348 called `expect` on `seed.materialized_input` after checking its variant with `is_none`
+- clippy::unnecessary_unwrap 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1367 called `expect` on `seed.materialized_checkpoint` after checking its variant with `is_none`
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1491 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1570 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1786 the `Err`-variant returned from this function is very large
+- clippy::needless_borrow 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1813 this expression creates a reference which is immediately dereferenced by the compiler
+- clippy::needless_borrow 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1928 this expression creates a reference which is immediately dereferenced by the compiler
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:1938 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2031 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2050 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2075 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2098 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2112 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2126 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2169 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2176 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2194 the `Err`-variant returned from this function is very large
+- clippy::unnecessary_wraps 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🚚️process-transport/🦀️.rs:61 this function's return value is unnecessarily wrapped by `Result`
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:157 this `MutexGuard` is held across an await point
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:289 this `MutexGuard` is held across an await point
+- clippy::clone_on_copy 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:909 using `clone` on type `ScopeDrainReport` which implements the `Copy` trait
+- clippy::clone_on_copy 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:991 using `clone` on type `MediaType` which implements the `Copy` trait
+- clippy::too_many_arguments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:1047 this function has too many arguments (10/7)
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️imports/🦀️.rs:567 called `map(<f>).unwrap_or(<a>)` on a `Result` value
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs:90 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs:137 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs:276 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs:320 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:177 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:12 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:16 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:27 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:35 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:43 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️cold-pair/🦀️.rs:71 the `Err`-variant returned from this function is very large
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:656 large size difference between variants
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1141 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1146 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1156 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1187 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1192 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1302 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1309 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1327 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1331 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1416 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1431 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1435 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1441 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1513 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1520 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1524 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1532 the `Err`-variant returned from this function is very large
+- clippy::unnecessary_wraps 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:161 this function's return value is unnecessarily wrapped by `Result`
+- clippy::unnecessary_wraps 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:174 this function's return value is unnecessarily wrapped by `Result`
+- clippy::type_complexity 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:216 very complex type used. Consider factoring parts into `type` definitions
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:857 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:863 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:869 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:876 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:883 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:889 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:895 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:903 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:910 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:917 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:926 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:933 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:940 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:946 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:952 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:960 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:966 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:973 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:980 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:987 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:993 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1000 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1007 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1014 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1020 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1026 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1032 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1038 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1044 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1050 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1057 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1064 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1070 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1076 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1082 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1088 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1094 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1101 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1107 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1114 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1120 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1126 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1132 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1138 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1144 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1150 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1156 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1163 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1170 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1176 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1182 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1188 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1194 calls to `push` immediately after creation
+- clippy::vec_init_then_push 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1200 calls to `push` immediately after creation
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1221 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1225 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1229 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1230 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1234 useless use of `format!`
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1643 called `map(<f>).unwrap_or(<a>)` on a `Result` value
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:1845 the `Err`-variant returned from this function is very large
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2088 large size difference between variants
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1235 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1239 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1243 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1247 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1248 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1249 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1253 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1254 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1258 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1259 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1263 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1264 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1265 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1266 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1270 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1271 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1275 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1276 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1280 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1284 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1288 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1289 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1290 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1294 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1298 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1299 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1303 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1304 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1308 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1309 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1313 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1317 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1318 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1322 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1323 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1327 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1332 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1336 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1340 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1344 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1348 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1352 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1356 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1357 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1361 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1362 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1366 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1370 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1374 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1378 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1382 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1386 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1391 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1395 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1400 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1404 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1408 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1412 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1416 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1420 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1424 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1428 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1429 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1433 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1434 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1438 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1442 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1446 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1450 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1454 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1458 useless use of `format!`
+- clippy::useless_format 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/../../🧬️schema/🦀️.rs:1459 useless use of `format!`
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2425 the `Err`-variant returned from this function is very large
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2556 called `map(<f>).unwrap_or(<a>)` on an `Option` value
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2597 the `Err`-variant returned from this function is very large
+- clippy::type_complexity 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2718 very complex type used. Consider factoring parts into `type` definitions
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3111 the `Err`-variant returned from this function is very large
+- clippy::too_many_arguments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3146 this function has too many arguments (10/7)
+- clippy::too_many_arguments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3225 this function has too many arguments (10/7)
+- clippy::needless_pass_by_value 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3227 this argument is passed by value, but not consumed in the function body
+- clippy::needless_pass_by_value 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3233 this argument is passed by value, but not consumed in the function body
+- clippy::too_many_arguments 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3639 this function has too many arguments (8/7)
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3750 large size difference between variants
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3787 the `Err`-variant returned from this function is very large
+- clippy::large_enum_variant 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3818 large size difference between variants
+- clippy::redundant_async_block 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4390 this async expression only awaits a single future
+- clippy::needless_pass_by_value 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4403 this argument is passed by value, but not consumed in the function body
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4641 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4681 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4697 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4716 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4726 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4739 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4760 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4966 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4975 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4981 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5115 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5200 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5224 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5253 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5272 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5275 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5291 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5310 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5313 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5328 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5332 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5367 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5411 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5553 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5569 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5588 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5592 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5621 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5637 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5684 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5696 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5712 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5771 the `Err`-variant returned from this function is very large
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5893 this `MutexGuard` is held across an await point
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5911 this `MutexGuard` is held across an await point
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5943 this `MutexGuard` is held across an await point
+- clippy::await_holding_lock 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5950 this `MutexGuard` is held across an await point
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6028 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6034 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6070 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6086 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6098 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6142 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6160 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6171 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6183 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6240 the `Err`-variant returned from this function is very large
+- clippy::result_large_err 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6414 the `Err`-variant returned from this function is very large
+- clippy::redundant_clone 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6689 redundant clone
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6674 called `map(<f>).unwrap_or(false)` on an `Option` value
+- clippy::map_unwrap_or 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:6788 called `map(<f>).unwrap_or(false)` on an `Option` value

@@ -18,6 +18,7 @@ use protocol::Mutation;
 #[dsl(extension = "presentcfg")]
 #[dsl(id = "presentation.config")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct PresentationConfig {
     /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentationPlayRuntime::engagement_input`.
     pub engagement_input: String,
@@ -67,11 +68,7 @@ impl store::ArtifactPack for PresentationConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-impl Default for PresentationConfig {
-    fn default() -> Self {
-        Self { engagement_input: String::new() }
-    }
-}
+
 
 store::impl_whole_record_config!(PresentationConfig);
 //#endregion 🔖️Config

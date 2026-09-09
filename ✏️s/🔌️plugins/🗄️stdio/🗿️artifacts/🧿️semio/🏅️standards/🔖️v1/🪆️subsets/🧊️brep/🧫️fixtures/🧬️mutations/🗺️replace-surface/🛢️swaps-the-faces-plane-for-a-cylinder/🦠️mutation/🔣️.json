@@ -1,0 +1,19 @@
+{
+  "ReplaceSurface": {
+    "face_id": "f1",
+    "new_surface": {
+      "kind": "cylinder",
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "axis": {
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "radius": 2
+    }
+  }
+}

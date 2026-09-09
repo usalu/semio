@@ -76,7 +76,7 @@ pub struct ConformanceCatalogFixtureGroup {
     pub cases: BTreeMap<String, String>,
 }
 
-/// 🧫 `🧪️fixtures/👥️presence-overlay.json`: the four presence-overlay cases proving that one update's
+/// 🧫 `🧫️fixtures/👥️presence-overlay.json`: the four presence-overlay cases proving that one update's
 /// `selected`/`hovered`/`previewed` flags stay separate through a round trip. The Rust half of the
 /// `ContractFixture` export; `🧪️tests/🔬️presence-unit/🦀️.rs` decodes the file through it.
 #[derive(Clone, Debug, Deserialize)]

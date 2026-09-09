@@ -34,7 +34,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 /// 🧩️ `replace-pixels`' payload is full-resolution real RGBA8 (this fixture decodes to 23M+ bytes), far
 /// too large for an inline feature-file hex literal — its row instead carries
-/// `{"pixelsFixture": "local://…"}`, resolved here into the literal `pixels` hex key
+/// `{"pixelsFixture": "shared://🖼️mutate-tiff-6-0/…"}`, resolved here into the literal `pixels` hex key
 /// `oracle_apply_mutation` (and the subject's own parser below) expect. Every other kind's spec
 /// passes through untouched.
 fn resolve_spec(ctx: &Context, spec: Json) -> Result<Json, String> {

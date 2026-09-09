@@ -98,7 +98,7 @@ fn semantic_digest(result: &Generation3dSemanticResult) -> u64 {
 
 #[test]
 fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
-    let source = include_bytes!("../../../../../🧪️tests/🔬️p8yz-b-third-party-oracle-laws.json");
+    let source = include_bytes!("../../../../../🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
     let oracle = SerdeJsonMoveOracle.evaluate(source).expect("third-party P3 semantic oracle");
     let mut snapshot = Generation3dSnapshot::default();
     snapshot.fixture.widgets = vec![

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf};
 use store::OpBinary;
 
 fn vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧬️job-test-mutations/🧪️tests/🔣️.json")).expect("neutral job vectors")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🔣️.json")).expect("neutral job vectors")
 }
 
 fn apply_stored_inverse(stored: &[JobTestOp], after: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {

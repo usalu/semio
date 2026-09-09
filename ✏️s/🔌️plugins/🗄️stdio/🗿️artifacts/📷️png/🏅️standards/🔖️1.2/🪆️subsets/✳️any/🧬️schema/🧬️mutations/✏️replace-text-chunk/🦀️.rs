@@ -60,7 +60,7 @@ pub fn contribute(base: &PngSnapshot, index: usize, chunk: &PngTextChunk) -> Png
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-text-chunk payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/✏️replace-text-chunk/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-text-chunk payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 /** 🧬️ Compares declared source closures with native bundlers and validates missing generated boundaries. */
 export async function testTypeScriptSourceInputs(generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/⚡️inputs/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️schema.json"), "utf8"));
   const validate = new (require("ajv"))().compile(schema);
   assert.equal(validate(fixture.contract), true, JSON.stringify(validate.errors));

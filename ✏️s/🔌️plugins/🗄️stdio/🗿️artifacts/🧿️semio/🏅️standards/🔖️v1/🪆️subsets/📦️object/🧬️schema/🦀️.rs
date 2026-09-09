@@ -36,13 +36,17 @@ impl Default for SemioObjectArtifact {
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioObjectArtifact {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
-            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-            ("transform".to_string(), dsl::ToValue::to_value(&self.transform)),
-            ("brep".to_string(), dsl::to_dsl_value(&self.brep).expect("ArtifactChild serializes")),
-            ("mesh".to_string(), dsl::to_dsl_value(&self.mesh).expect("ArtifactChild serializes")),
-            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
-        ])
+        let mut entries = vec![("schema".to_string(), dsl::ToValue::to_value(&self.schema)), ("transform".to_string(), dsl::ToValue::to_value(&self.transform))];
+        if let Some(brep) = &self.brep {
+            entries.push(("brep".to_string(), dsl::to_dsl_value(brep).expect("ArtifactChild serializes")));
+        }
+        if let Some(mesh) = &self.mesh {
+            entries.push(("mesh".to_string(), dsl::to_dsl_value(mesh).expect("ArtifactChild serializes")));
+        }
+        if let Some(properties) = &self.properties {
+            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+        }
+        dsl::DslValue::object(entries)
     }
 }
 impl dsl::FromValue for SemioObjectArtifact {
@@ -53,9 +57,9 @@ impl dsl::FromValue for SemioObjectArtifact {
         Ok(Self {
             schema: dsl::FromValue::from_value(field("schema")?)?,
             transform: dsl::FromValue::from_value(field("transform")?)?,
-            brep: dsl::from_dsl_value(field("brep")?).map_err(dsl::ValueError::new)?,
-            mesh: dsl::from_dsl_value(field("mesh")?).map_err(dsl::ValueError::new)?,
-            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+            brep: get("brep").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            mesh: get("mesh").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
+            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
         })
     }
 }

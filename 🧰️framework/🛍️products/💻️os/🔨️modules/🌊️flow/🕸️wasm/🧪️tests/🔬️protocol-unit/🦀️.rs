@@ -2,6 +2,11 @@
 use super::*;
 use semio_framework::abi::AbiOperation;
 
+const FLOW_ABI_LEDGER: &str = include_str!("../../🧫️fixtures/📒️ledger/📊️.tsv");
+const FLOW_ABI_LIMITS: &str = include_str!("../../🧫️fixtures/📐️limits.tsv");
+const FLOW_ABI_TRACE: &str = include_str!("../../🧫️fixtures/👣️trace/📊️.tsv");
+const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+
 #[derive(Default)]
 struct MockDomain {
     close_calls: usize,

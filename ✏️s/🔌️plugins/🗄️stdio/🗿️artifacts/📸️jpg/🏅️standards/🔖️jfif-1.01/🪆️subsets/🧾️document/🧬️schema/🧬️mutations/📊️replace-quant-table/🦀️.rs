@@ -63,8 +63,8 @@ pub fn contribute(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior-c47775/🦠️mutation/🔣️.json")).expect("committed replace-quant-table payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📊️replace-quant-table/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-quant-table payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior-c47775/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

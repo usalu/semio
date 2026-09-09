@@ -64,8 +64,8 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, active_utility, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
+pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
 }
 //#endregion 🔖️Render
 

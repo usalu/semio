@@ -7,210 +7,225 @@
   "required": [],
   "properties": {
     "artifact": {
-      "title": "NoteArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "id": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "title": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "string"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json"
         }
       ],
       "x-semio-state": "artifact"
     },
-    "blocks": {
-      "$ref": "#/$defs/NoteBlocksDelta",
-      "x-semio-state": "artifact"
-    },
-    "gridVisible": {
-      "oneOf": [
+    "schema": {
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "boolean"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/schema"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/id"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/title"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "gridVisible": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridVisible"
         }
       ],
       "x-semio-state": "artifact"
     },
     "gridSpacing": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridSpacing"
         }
       ],
       "x-semio-state": "artifact"
     },
     "gridSubdivisions": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridSubdivisions"
         }
       ],
       "x-semio-state": "artifact"
     },
     "gridOpacity": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/gridOpacity"
         }
       ],
       "x-semio-state": "artifact"
     },
     "snapEnabled": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "boolean"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/snapEnabled"
         }
       ],
       "x-semio-state": "artifact"
     },
     "snapGridSpacing": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/snapGridSpacing"
         }
       ],
       "x-semio-state": "artifact"
     },
     "pencilWidth": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/pencilWidth"
         }
       ],
       "x-semio-state": "artifact"
     },
     "eraserRadius": {
-      "oneOf": [
+      "anyOf": [
         {
           "type": "null"
         },
         {
-          "type": "number",
-          "format": "double"
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/eraserRadius"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "linkedArtifact": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/properties/linkedArtifact"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "blocks": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/NoteBlocksDelta"
         }
       ],
       "x-semio-state": "artifact"
     },
     "assets": {
-      "$ref": "#/$defs/NoteAssetsDelta",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/NoteAssetsDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "NoteAssetsDelta": {
-      "title": "NoteAssetsDelta",
+    "NoteAddedBlockEntry": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "entries"
+        "parentId",
+        "index",
+        "block"
       ],
       "properties": {
-        "entries": {
-          "type": "object",
-          "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteImageAsset"
-              }
-            ]
-          }
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "block": {
+          "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteBlockNode"
         }
       }
     },
-    "NoteStringList": {
-      "title": "NoteStringList",
+    "NoteBlockPatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "values"
-      ],
+      "required": [],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "NoteBlocksDelta": {
-      "title": "NoteBlocksDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteBlockNode"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/NoteBlockPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "blockJson": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       }
     },
     "NoteBlockPatchEntry": {
-      "title": "NoteBlockPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -226,20 +241,69 @@
         }
       }
     },
-    "NoteBlockPatch": {
-      "title": "NoteBlockPatch",
+    "NoteBlocksDelta": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
       "properties": {
-        "blockJson": {
-          "type": "string"
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteAddedBlockEntry"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoteBlockPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         }
       }
     },
-    "NoteArtifact": {
-      "title": "NoteArtifact",
+    "NoteAssetsDelta": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteImageAsset"
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }

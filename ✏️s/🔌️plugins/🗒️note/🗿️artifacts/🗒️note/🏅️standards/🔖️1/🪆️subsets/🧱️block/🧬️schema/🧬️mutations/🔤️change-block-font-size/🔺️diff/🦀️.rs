@@ -20,6 +20,6 @@ pub fn diff(payload: &ChangeBlockFontSize, base: &NoteSnapshot) -> protocol::Mut
     if let crate::NoteBlockNode::Text { font_size, .. } = &mut updated {
         *font_size = payload.new_font_size;
     }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
+    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
 }
 //#endregion 🔖️Diff

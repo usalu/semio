@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
+    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     assert!(text.len() > 8);
 }
 
@@ -10,7 +10,7 @@ async fn inference_determinism_law() {
     use crate::forms_steps;
     use protocol::Inference;
 
-    let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
+    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     // 🩹️ The demo asset is real playbook-grammar domain content (never regenerated into
     // `FormsSnapshot`'s own opaque `structure`/`results`-handle wire format — see
     // `parse_playbook_example_dsl`'s own doc comment, ticket

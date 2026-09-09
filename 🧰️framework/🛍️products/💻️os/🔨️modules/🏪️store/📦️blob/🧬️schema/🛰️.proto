@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.os.store;
+message BlobRef { string hash = 1; uint64 size = 2; string media_type = 3; }

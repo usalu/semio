@@ -11,7 +11,5 @@ export interface WiresDiff {
   /** @state artifact */
   content: ArtifactChild | null;
   /** @state artifact */
-  camera: DslValue;
-  /** @state artifact */
   meta: DslValue;
 }

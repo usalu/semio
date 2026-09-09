@@ -68,13 +68,13 @@ LETTER_PIN = {letter: kind for kind, letter in PIN_LETTER.items()}
 #: element types, one design carrying 180 real capsule pieces with their real placement transforms and
 #: 179 real port-to-port connections, and one representation link per type — derived ONCE from the
 #: real committed IFC 4 file with IfcOpenShell 0.8.4 by `🐍️derive-kit-fixture.py` in the ticket folder.
-TOWER_DSL = "local://🏢️nakagin-capsule-tower/🗣️.dsl.semio"
-TOWER_PACK = "local://🎒️.pack.semio"
+TOWER_DSL = "shared://🧰️mutate-semio-kit/🏢️nakagin-capsule-tower/🗣️.dsl.semio"
+TOWER_PACK = "shared://🧰️mutate-semio-kit/🎒️.pack.semio"
 #: 🪑️ The tiny committed furniture kit, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
-FURNITURE_DSL = "asset://📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio"
-FURNITURE_PACK = "asset://📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio"
+FURNITURE_DSL = "asset://🪑️furniture/🗣️.dsl.semio"
+FURNITURE_PACK = "asset://🪑️furniture/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

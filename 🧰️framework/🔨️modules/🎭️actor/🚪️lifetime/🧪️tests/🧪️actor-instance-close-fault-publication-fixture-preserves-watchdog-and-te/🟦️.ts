@@ -35,7 +35,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor instance close native value fixture accounts exact descendant text and independent cloned structure", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
@@ -82,7 +82,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor instance close fixed-list fixture preserves ordered payload handoff", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
@@ -107,7 +107,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor typed descendant fixture covers the exact component and patch rosters", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/TypedFixture`)!;
     expect(validate(fixture)).toBe(true);
@@ -171,7 +171,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor arena handback fixture preserves exact fair obligations across word boundaries", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
@@ -222,7 +222,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor patch storage separates physical placement from semantic retirement grants", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
@@ -262,7 +262,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("actor instance close wire matches strict shared fixtures and an independent LEB128 encoder", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const ajv = new Ajv({ strict: true });
     ajv.addSchema(JSON.parse(readFileSync(new URL("../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8")));
@@ -332,7 +332,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("actor instance close receipts reject reused IDs and premature terminal messages", async () => {
     const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const prior = { ...fixture.reopen.prior, activationGeneration: BigInt(fixture.reopen.prior.activationGeneration), guestLifetime: BigInt(fixture.reopen.prior.guestLifetime) };
     const current = { ...fixture.reopen.current, activationGeneration: BigInt(fixture.reopen.current.activationGeneration), guestLifetime: BigInt(fixture.reopen.current.guestLifetime) };
     const request: ActorInstanceCloseRequest = { kind: "close", lifetime: current, requestSequence: 9 };
@@ -367,7 +367,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     // `"node:url" doesn't have a matching export named "fileURLToPath"`.
     const materializeSpecifier = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url).href;
     const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);
     const current = prior + 1n;
     const { Worker } = await import("node:worker_threads");

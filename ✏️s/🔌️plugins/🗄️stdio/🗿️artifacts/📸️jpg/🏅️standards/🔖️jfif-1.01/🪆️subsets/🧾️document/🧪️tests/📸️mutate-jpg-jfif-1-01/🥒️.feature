@@ -5,7 +5,7 @@
 Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   The input is a real 483 KB, 2275x2560, 500 DPI JFIF 1.01 scan of a floor plan
   (abbau-aufbau-masterarbeit-grundriss.jpg) — not a synthetic fixture — sourced from
-  🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/ and already copied into this
+  🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/ and already copied into this
   artifact's own 🧫️fixtures/. Every scenario copies it into the case work directory before touching
   it; the committed fixture is never written to.
 
@@ -79,7 +79,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real scanned document
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
+    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -102,7 +102,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the document
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
+    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When the <id> mutation is applied and then undone
       """
       {"kind": "<id>", "params": <params>}
@@ -125,6 +125,6 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
+    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
     When it is fully decoded to the typed snapshot and re-encoded from that snapshot alone
     Then the oracle and the subject agree on the semantic projection

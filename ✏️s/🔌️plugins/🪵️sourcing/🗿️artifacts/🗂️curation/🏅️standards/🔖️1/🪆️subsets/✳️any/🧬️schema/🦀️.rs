@@ -38,7 +38,7 @@ impl CurationArtifact {
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: CurationSnapshot) -> Self {
-        Self { catalog: snapshot.catalog, stock_extra: snapshot.stock_extra, curated: snapshot.curated, ..Self::default() }
+        Self { catalog: snapshot.catalog, stock_extra: snapshot.stock_extra, curated: snapshot.curated }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

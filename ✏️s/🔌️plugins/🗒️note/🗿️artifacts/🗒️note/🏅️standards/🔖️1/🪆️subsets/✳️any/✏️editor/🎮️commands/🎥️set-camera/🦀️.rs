@@ -15,8 +15,10 @@ pub struct SetCamera {
     pub camera: NoteCamera,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    Ok(Emit::config(vec![NoteConfigMutation::SetCamera(crate::editor::note::config::SetCamera { camera: payload.camera.clone() })]))
+pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    let view = ctx.view_state.as_ref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+    let config = crate::editor::note::window::NoteCompositeWindowConfig { camera: payload.camera.clone() };
+    Ok(Emit { window_config_mutations: vec![crate::editor::note::window::addressed_config(view, config)?], ..Default::default() })
 }
 
 //#region 🧪️Tests

@@ -3,31 +3,47 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
   "projectType": "library",
-  "tags": ["lang:rust", "role:framework", "family:os-plugin"],
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
   "targets": {
     "document-backbone-binding-check": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "options": { "command": "bun ./📜️script.ts document-backbone-binding-check", "cwd": "{projectRoot}" }
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts document-backbone-binding-check",
+        "cwd": "{projectRoot}"
+      }
     },
     "document-backbone-binding-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "options": { "command": "bun ./📜️script.ts document-backbone-binding-check --native", "cwd": "{projectRoot}" }
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts document-backbone-binding-check --native",
+        "cwd": "{projectRoot}"
+      }
     },
     "cold-document-pair-ingress-check": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "options": { "command": "bun ./📜️script.ts cold-document-pair-ingress-check", "cwd": "{projectRoot}" }
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts cold-document-pair-ingress-check",
+        "cwd": "{projectRoot}"
+      }
     },
     "cold-document-pair-ingress-native-check": {
       "executor": "nx:run-commands",
-      "cache": false,
-      "options": { "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native", "cwd": "{projectRoot}" }
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native",
+        "cwd": "{projectRoot}"
+      }
     },
     "artifact-admission-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-admission-check",
         "cwd": "{projectRoot}",
@@ -44,7 +60,7 @@
     },
     "guest-lifecycle-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts guest-lifecycle-check",
         "cwd": "{projectRoot}",
@@ -53,7 +69,7 @@
     },
     "retained-child-close-check": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test --retained-child-close-exact",
         "cwd": "{projectRoot}"
@@ -69,12 +85,13 @@
     },
     "test-codec-send-source": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-codec-send-source",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

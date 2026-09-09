@@ -7,9 +7,9 @@ fn mutation(schema: &str) -> PlaygroundMutation {
 
 #[test]
 fn committed_json_bridge_round_trips() {
-    let before = include_str!("../📅️retags-the-4f474c/📸️snapshot/⬅️before/🔣️.json");
-    let operation = include_str!("../📅️retags-the-4f474c/🦠️mutation/🔣️.json");
-    let after = include_str!("../📅️retags-the-4f474c/📸️snapshot/➡️after/🔣️.json");
+    let before = include_str!("../../../../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json");
+    let operation = include_str!("../../../../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/🦠️mutation/🔣️.json");
+    let after = include_str!("../../../../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json");
     let applied: serde_json::Value = serde_json::from_str(&apply_playground_mutation_json(before, operation).expect("apply committed mutation")).expect("decode bridge answer");
     let expected: serde_json::Value = serde_json::from_str(after).expect("decode committed after snapshot");
     assert_eq!(applied["snapshot"], expected);

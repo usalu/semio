@@ -3,7 +3,7 @@ use crate::*;
 
 #[test]
 fn ordered_document_fixture_matches_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
     assert_eq!(fixture["package"], env!("CARGO_PKG_NAME"));
     let encoded = serde_json::to_string(&fixture["document"]).expect("fixture JSON");
     let oracle: PlaybookSpec = serde_json::from_str(&encoded).expect("third-party typed decoder");

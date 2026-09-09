@@ -1,0 +1,44 @@
+{
+  "snapshotFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps-the-name-a-node-already-carries/📸️snapshot/⬅️before/🔣️.json",
+  "diffFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps-the-name-a-node-already-carries/🔺️diff/🔣️.json",
+  "expectedChildKind": "s.stdio.semio",
+  "invalidDocuments": [
+    {
+      "schema": "trinity.graph",
+      "name": "legacy embedded graph",
+      "manifest": { "nodeKinds": [], "edgeKinds": [], "portKinds": [] },
+      "camera": { "x": 0, "y": 0, "zoom": 1 },
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "schema": "trinity.graph",
+      "name": "invalid child identity",
+      "manifest": { "nodeKinds": [], "edgeKinds": [], "portKinds": [] },
+      "camera": { "x": 0, "y": 0, "zoom": 1 },
+      "content": { "childId": "jack-content", "target": "s.stdio.semio.graph" }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "schema": null,
+      "name": null,
+      "manifestId": null,
+      "manifest": null,
+      "camera": null,
+      "nodes": null,
+      "edges": null,
+      "rootNodeId": null
+    },
+    {
+      "artifact": null,
+      "schema": null,
+      "name": null,
+      "manifestId": null,
+      "manifest": null,
+      "camera": null,
+      "content": null,
+      "rootNodeId": null
+    }
+  ]
+}

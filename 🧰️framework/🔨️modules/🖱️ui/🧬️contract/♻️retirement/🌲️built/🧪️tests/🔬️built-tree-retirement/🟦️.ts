@@ -6,7 +6,7 @@ import { inspectRustModuleGraphFacts } from "../../../../../../../🛍️product
 
 export function testBuiltTreeRetirementFixture(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../../", import.meta.url)), "utf8");
-  const fixture = JSON.parse(read("./🧫️fixture/🔣️.json"));
+  const fixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));
   const valueBytes = (value: unknown): number => typeof value === "string" ? Buffer.byteLength(value) : Array.isArray(value) ? value.reduce((sum, item) => sum + valueBytes(item), 0) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, item]) => sum + Buffer.byteLength(key) + valueBytes(item), 0) : 0;
@@ -30,7 +30,7 @@ export function testBuiltTreeRetirementFixture(): void {
   const modules = inspectRustModuleGraphFacts(native).modules.filter(module => module.name === "tests" && module.conditional && !module.inline && module.pathTarget !== null);
   assert.equal(modules.length, 1);
   const testUrl = new URL(modules[0]!.pathTarget!, new URL("../../", import.meta.url));
-  const fixtureUrl = new URL("../../🧫️fixture/🔣️.json", import.meta.url);
+  const fixtureUrl = new URL("../../🧫️fixtures/🔣️.json", import.meta.url);
   const includes = [...readFileSync(testUrl, "utf8").matchAll(/include_str!\(\s*"([^"]+)"\s*\)/gu)];
   assert(includes.some(match => new URL(match[1]!, testUrl).href === fixtureUrl.href));
   const typedDepths = ["UiText", "crate::Component", "crate::LayoutSpec", "crate::StyleSpec", "crate::Activity", "bool", "crate::AccessibilitySpec", "crate::UiNodeBindings", "Option<MenuRef>"];

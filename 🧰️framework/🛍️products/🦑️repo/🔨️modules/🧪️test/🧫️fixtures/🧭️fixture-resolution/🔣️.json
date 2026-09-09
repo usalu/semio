@@ -1,0 +1,55 @@
+{
+  "files": {
+    "🧫️fixtures/🧪️case/🔣️.json": "{\"answer\":42}\n",
+    "🖼️assets/🔣️.json": "{\"production\":true}\n",
+    "🧪️tests/🧪️case/🧫️fixtures/🔣️.json": "{\"local\":true}\n",
+    "📦️packages/🔣️.json": "{\"package\":true}\n"
+  },
+  "cases": [
+    {
+      "id": "owner-fixture",
+      "uri": "shared://🧪️case/🔣️.json",
+      "path": "🧫️fixtures/🧪️case/🔣️.json"
+    },
+    {
+      "id": "owner-asset",
+      "uri": "asset://🔣️.json",
+      "path": "🖼️assets/🔣️.json"
+    },
+    {
+      "id": "local-rejected",
+      "uri": "local://🔣️.json",
+      "path": null
+    },
+    {
+      "id": "fixture-cannot-be-an-asset",
+      "uri": "asset://../🧫️fixtures/🧪️case/🔣️.json",
+      "path": null
+    },
+    {
+      "id": "package-file-is-not-an-asset",
+      "uri": "asset://📦️packages/🔣️.json",
+      "path": null
+    },
+    {
+      "id": "asset-cannot-be-a-fixture",
+      "uri": "shared://../🖼️assets/🔣️.json",
+      "path": null
+    },
+    {
+      "id": "missing-fixture",
+      "uri": "shared://missing.json",
+      "path": null
+    },
+    {
+      "id": "directory-is-not-a-fixture",
+      "uri": "shared://🧪️case",
+      "path": null
+    },
+    {
+      "id": "backslash-path-rejected",
+      "uri": "shared://🧪️case\\🔣️.json",
+      "path": null
+    }
+  ]
+}

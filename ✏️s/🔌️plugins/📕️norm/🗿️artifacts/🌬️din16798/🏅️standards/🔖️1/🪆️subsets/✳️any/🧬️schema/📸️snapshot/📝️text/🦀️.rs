@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::Din16798Snapshot;
 
 /// 📜️ Bundled default example document (`.semio` envelope + DSL body).
-pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses DIN EN 16798 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Din16798Snapshot, store::TextError> {

@@ -23,7 +23,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   no-oracle decision it replaces is gone, because a reference now exists.
 
   **The drawing under test is a real one, and its provenance is written down.**
-  `local://🗣️.dsl.semio` and its binary twin were derived ONCE from two real committed SVG
+  `shared://🖊️mutate-semio-drawing/🗣️.dsl.semio` and its binary twin were derived ONCE from two real committed SVG
   documents — `🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg`, the introduction demonstration mouse with its
   eight real cubic-and-line paths, its `clipPath` group and its real stroke widths and opacities, and
   `…/🎨️svg/🧫️fixtures/qr-code.svg`, a real 1015×1015 Inkscape QR document whose 329 rectangles each
@@ -98,8 +98,8 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real derived drawing
-    Given the real derived drawing artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived drawing artifact shared://🖊️mutate-semio-drawing/🗣️.dsl.semio
+    And the committed mutation payload shared://🖊️mutate-semio-drawing/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the drawing parsed from it
     Then the independent implementation and the subject agree on the resulting snapshot and on the scene-graph census
     Examples:
@@ -126,8 +126,8 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the real derived drawing
-    Given the real derived drawing artifact local://🗣️.dsl.semio
-    And the committed mutation payload local://<fixture>/🦠️mutation/🔣️.json
+    Given the real derived drawing artifact shared://🖊️mutate-semio-drawing/🗣️.dsl.semio
+    And the committed mutation payload shared://🖊️mutate-semio-drawing/<fixture>/🦠️mutation/🔣️.json
     When the <id> mutation is applied to the drawing parsed from it and each side undoes it with its own computed inverse
     Then both sides restore the drawing and agree on the mutated and the restored snapshot, scene-graph order and nesting included
     Examples:
@@ -154,9 +154,9 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed handcrafted specification vector
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<slug>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<slug>/📸️snapshot/➡️after/🔣️.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
@@ -183,7 +183,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @level-long
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived drawing from the parsed document
-    Given the real derived drawing artifact local://🗣️.dsl.semio
-    And its committed binary twin local://🎒️.pack.semio
+    Given the real derived drawing artifact shared://🖊️mutate-semio-drawing/🗣️.dsl.semio
+    And its committed binary twin shared://🖊️mutate-semio-drawing/🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the drawing, the scene-graph census and the digests of what they emitted

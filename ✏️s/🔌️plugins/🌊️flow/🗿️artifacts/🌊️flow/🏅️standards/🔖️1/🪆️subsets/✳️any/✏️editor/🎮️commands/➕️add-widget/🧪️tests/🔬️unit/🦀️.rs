@@ -5,24 +5,40 @@ use store::{ArtifactPack, SpaceMember};
 
 #[semio_framework_async_macros::async_test]
 async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content() {
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::testkit::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+    use semio_framework_plugin::PluginApp;
+
     let mut app = flow_app().await;
     let parent_before = app.snapshot().expect("snapshot");
     let child_id = parent_before.content.child_id.clone();
     let content_before = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
+    assert!(result.mutations.is_empty(), "admission must retain the child publication");
+    let first = settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("first child publication");
     let repeated = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(50.0), y: Some(51.0) })).await;
+    assert!(repeated.mutations.is_empty(), "repeated admission must retain the child publication");
+    let second = settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("repeated child publication");
     let parent_after = app.snapshot().expect("snapshot");
     let content_after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
-    assert_eq!(result.mutations.len(), 1, "addWidget must expose one child kernel mutation");
-    assert_eq!(repeated.mutations.len(), 1, "a reconstructed host must expose one child kernel mutation for a repeated kind");
-    assert_eq!(result.inverse_group.member_edits.len(), 1, "addWidget must dispatch one typed child edit");
-    assert_eq!(repeated.inverse_group.member_edits.len(), 1, "a repeated kind must dispatch one typed child edit");
+    for receipt in [first, second] {
+        assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Terminal], "each command must publish exactly one acknowledged child group followed by terminal");
+    }
     assert_eq!(parent_after.content, parent_before.content, "addWidget must preserve the exact parent content coordinate");
     assert_eq!(content_after.nodes.len(), content_before.nodes.len() + 2);
     let inserted = &content_after.nodes[content_before.nodes.len()..];
     assert_eq!((inserted[0].position.x, inserted[0].position.y), (40.0, 40.0));
     assert_eq!((inserted[1].position.x, inserted[1].position.y), (50.0, 51.0));
     assert_eq!((inserted[0].id.as_str(), inserted[1].id.as_str()), ("note_2", "note_3"));
+    let mut after_first_undo = content_before.clone();
+    after_first_undo.nodes.push(inserted[0].clone());
+    for expected in [after_first_undo, content_before] {
+        app.handle_action("undo", None, &meta("local")).await.expect("undo child group");
+        let content = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child after undo").document_pack_bytes().await.expect("Flow child pack after undo")).expect("Flow child snapshot after undo");
+        assert_eq!(content, expected, "each inverse must restore the complete preceding child document in reverse insertion order");
+    }
+    close_registered_fixture_app(&mut app);
+    eprintln!("[DEBUG] two acknowledged Flow child groups preserve parent identity and undo to the original child document");
 }
 
 #[semio_framework_async_macros::async_test]

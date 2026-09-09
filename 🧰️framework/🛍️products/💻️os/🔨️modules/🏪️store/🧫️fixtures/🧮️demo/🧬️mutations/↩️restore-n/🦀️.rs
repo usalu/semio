@@ -28,5 +28,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for RestoreN {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🧪️tests/🧫️fixture-🧮️demo-↩️restore-n/🦀️.rs"]
 mod tests;

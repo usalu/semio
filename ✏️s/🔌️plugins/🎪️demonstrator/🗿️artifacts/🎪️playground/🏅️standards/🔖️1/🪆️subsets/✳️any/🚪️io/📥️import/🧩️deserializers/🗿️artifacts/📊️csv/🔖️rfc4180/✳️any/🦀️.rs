@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 /// 🎯️ Rewritten for stdio's migrated `CsvSnapshot` (`{has_header, records}`, was `{headers, rows}`).
 pub fn deserialize(from: &CsvSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-    let first_data_record = from.records.iter().skip(usize::from(from.has_header)).next();
+    let first_data_record = from.records.iter().nth(usize::from(from.has_header));
     Ok(match first_data_record.and_then(|record| record.fields.first()) {
         Some(field) if !field.value.is_empty() => PlaygroundSnapshot { schema: field.value.clone() },
         _ => PlaygroundSnapshot::default(),

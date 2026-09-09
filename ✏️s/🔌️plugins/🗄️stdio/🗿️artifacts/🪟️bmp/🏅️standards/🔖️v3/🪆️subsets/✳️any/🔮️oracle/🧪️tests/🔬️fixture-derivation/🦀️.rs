@@ -20,7 +20,7 @@ fn find_repo_root(start: &std::path::Path) -> std::path::PathBuf {
 fn derive_real_world_fixture() {
     let repo_root = find_repo_root(std::path::Path::new(env!("CARGO_MANIFEST_DIR")));
     let mut png_path = repo_root.clone();
-    png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.png");
+    png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png");
     let mut out_path = repo_root.clone();
     out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.bmp");
 

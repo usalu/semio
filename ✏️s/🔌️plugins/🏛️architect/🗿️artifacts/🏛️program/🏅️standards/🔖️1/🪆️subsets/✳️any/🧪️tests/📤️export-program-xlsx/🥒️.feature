@@ -11,6 +11,6 @@ Feature: Export every architect program table to a real XLSX workbook
   @level-quick
   @mode-differential
   Scenario: A populated program remains visible to an independent spreadsheet reader
-    Given the committed program snapshot asset://🧬️schema/🧬️mutations/🧱️program-element/🌱️create/🧪️tests/🌱️creates-a/📸️snapshot/➡️after/🔣️.json
+    Given the committed program snapshot shared://🧬️mutations/🧱️program-element/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json
     When the subject exports every register through the XLSX serializer
     Then calamine observes the same worksheet names, columns and populated cells

@@ -28,7 +28,7 @@
   "$defs": {
     "BrowserHostDeclaration": {
       "title": "Browser Host Declaration",
-      "description": "🌐️ Language-agnostic declaration of the browser UI host port. Bounds are the ceilings the owned Rust host enforces (`🖥️host/📦️packages/🦀️rust/🪟️window.rs` `BROWSER_HOST_*`, `📡️event.rs` `BROWSER_EVENT_*`, `🌉️abi/🦀️.rs` `ABI_*`) and the laws in `🧪️fixtures/📐️browser-host-limits.tsv`.",
+      "description": "🌐️ Language-agnostic declaration of the browser UI host port. Bounds are the ceilings the owned Rust host enforces (`🖥️host/📦️packages/🦀️rust/🪟️window.rs` `BROWSER_HOST_*`, `📡️event.rs` `BROWSER_EVENT_*`, `🌉️abi/🦀️.rs` `ABI_*`) and the laws in `🧫️fixtures/📐️browser-host-limits.tsv`.",
       "type": "object",
       "additionalProperties": false,
       "required": [

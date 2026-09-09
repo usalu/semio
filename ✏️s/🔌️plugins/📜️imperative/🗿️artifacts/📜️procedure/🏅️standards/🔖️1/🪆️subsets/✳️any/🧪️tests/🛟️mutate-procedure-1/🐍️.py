@@ -62,7 +62,7 @@ PROGRAMS = {
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 VECTORS = {
     "create-step": (f"{_ROOT}/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path", "createStep", True),
     "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body", "deleteStep", True),

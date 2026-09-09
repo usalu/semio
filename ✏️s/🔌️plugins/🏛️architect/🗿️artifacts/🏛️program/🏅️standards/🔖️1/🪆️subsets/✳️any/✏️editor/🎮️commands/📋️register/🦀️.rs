@@ -116,7 +116,7 @@ pub mod patch_register_item {
         let Ok(patch) = dsl::json::from_json_str::<Value>(&payload.patch_json) else {
             return Ok(Emit::default());
         };
-        match patch_register_item_operation(doc.snapshot, &payload.register_id, EntityId(payload.entity_id.clone()), patch) {
+        match patch_register_item_operation(doc.snapshot, &payload.register_id, &EntityId(payload.entity_id.clone()), &patch) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }

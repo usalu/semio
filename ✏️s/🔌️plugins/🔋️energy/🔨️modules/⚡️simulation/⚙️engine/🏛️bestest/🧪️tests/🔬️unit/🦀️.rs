@@ -313,7 +313,7 @@ fn fixture_path(case: &str) -> std::path::PathBuf {
 }
 
 fn example_asset_path(directory: &str) -> std::path::PathBuf {
-    subset_root().join("📚️examples").join(directory).join("🖼️assets").join("🗣️.dsl.semio")
+    subset_root().join("🖼️assets").join(directory).join("🗣️.dsl.semio")
 }
 
 fn example_dsl(case: &str) -> String {

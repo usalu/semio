@@ -14,7 +14,7 @@ import { applyTaxonomyPlan, frozenCoordinateEvidenceCoordinates, inventoryTaxono
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🏺️historical-package-owner-identity/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏺️historical-package-owner-identity/🔣️.json"), "utf8"));
 const goldenPath = join(libraryRoot, vector.historicalDocument.libraryRelativePath);
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString());
@@ -143,7 +143,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const taxonomy = structuredClone(loadCatalogTaxonomy());
   const schemaPath = golden.taxonomy.path;
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
-  const catalog = JSON.parse(readFileSync(join(libraryRoot, "📦️packages/🟦️typescript/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
+  const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
   const projection = catalog.projections[1];
   for (const row of projection.mappings) write(row.sourcePath, row.sourcePath === golden.mappings[29][0] ? sourceBytes() : row.sourcePath.endsWith("Cargo.toml") ? vector.fixture.manifest : "pub fn fixture() -> usize { 1 }\n");
   delete taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery;
@@ -191,7 +191,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
 //#endregion Tests
 
 describe("Energy historical source coordinates", () => {
-  const input = JSON.parse(readFileSync(join(import.meta.dir, "🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏺️historical-package-owner-identity/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
   const expected = Object.fromEntries(input.documents.map((row: { id: string; registration: FrozenCoordinateEvidenceContract; energy: { declaration: FrozenCoordinateEvidenceContract["coordinates"][number] }[] }) => [row.id, { ...row.registration, coordinates: [...row.registration.coordinates, ...row.energy.map((entry) => entry.declaration)] }])) as Record<string, FrozenCoordinateEvidenceContract>;
   const schema = loadCatalogTaxonomy();
   const contracts = Object.fromEntries(Object.keys(expected).map((id) => [id, schema.frozenCoordinateEvidenceContracts[id]!]));

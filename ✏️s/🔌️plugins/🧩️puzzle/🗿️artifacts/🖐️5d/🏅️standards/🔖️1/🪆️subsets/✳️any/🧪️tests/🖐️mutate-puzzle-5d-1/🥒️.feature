@@ -73,45 +73,45 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                            | vector                                                       |
-      | create-part                   | 🌱create-part/🧪️tests/🌱️appends-part-c                          |
-      | delete-part                   | 🗑️delete-part/🧪️tests/🚫️removes-part-a-and-severs-fastener      |
-      | move-part2d                   | 📍move-part2d/🧪️tests/📍️moves-part-a                            |
-      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🧪️tests/🔳️circle-to-rectangle         |
-      | edit-part2d-text              | ✏️edit-part2d-text/🧪️tests/✏️retitles-part-a                   |
-      | change-part2d-icon            | 🎨change-part2d-icon/🧪️tests/🎨️swaps-icon                       |
-      | change-part2d-hidden          | 🙈change-part2d-hidden/🧪️tests/🙈️hides-part-a                   |
-      | change-part2d-locked          | 🔒change-part2d-locked/🧪️tests/🔒️locks-part-a                   |
-      | move-part3d                   | 🚀move-part3d/🧪️tests/🗺️moves-part-a-in-world                   |
-      | rotate-part3d                 | 🔃rotate-part3d/🧪️tests/🔄️half-turn-about-z                     |
-      | scale-part3d                  | 📏scale-part3d/🧪️tests/📏️uniform-double                         |
-      | change-part3d-mesh            | 🧱change-part3d-mesh/🧪️tests/🕸️repoints-mesh                    |
-      | edit-part3d-label             | 🖋️edit-part3d-label/🧪️tests/🔤️relabels-part-a                  |
-      | change-part-kind              | 🏗️change-part-kind/🧪️tests/🏷️reassigns-kind                     |
-      | change-part-anchor            | ⚓change-part-anchor/🧪️tests/⚓️fixed-to-derived                 |
-      | add-part-grip                 | ➕add-part-grip/🧪️tests/✊️appends-grip-3                        |
-      | remove-part-grip              | ➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-severs-fastener |
-      | replace-part-grip             | 🔌replace-part-grip/🧪️tests/🏷️rekinds-grip-1                    |
-      | connect-grips                 | 🪢️connect-grips/🧪️tests/🔩️adds-second-fastener                  |
-      | disconnect-grips              | ✂️disconnect-grips/🧪️tests/🚫️removes-fast-1                    |
-      | replace-fastener-geometry     | 🧮replace-fastener-geometry/🧪️tests/📍️repositions-fast-1        |
-      | change-fastener-kind          | 🎯change-fastener-kind/🧪️tests/🏷️rekinds-fast-1                 |
-      | rename-puzzle5d               | 🏷️rename-puzzle5d/🧪️tests/📃️relabels-document                   |
-      | change-domain                 | 🌐change-domain/🧪️tests/⚙️architecture-to-engineering           |
-      | change-description            | 🗒️change-description/🧪️tests/📝️rewrites-description             |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🧪️tests/🤝️adds-grip-pair           |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-pair     |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/🧪️tests/📇️null-catalogs-is-noop         |
+      | create-part                   | 🌱create-part/🌱️appends-part-c                          |
+      | delete-part                   | 🗑️delete-part/🚫️removes-part-a-and-severs-fastener      |
+      | move-part2d                   | 📍move-part2d/📍️moves-part-a                            |
+      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle-to-rectangle         |
+      | edit-part2d-text              | ✏️edit-part2d-text/✏️retitles-part-a                   |
+      | change-part2d-icon            | 🎨change-part2d-icon/🎨️swaps-icon                       |
+      | change-part2d-hidden          | 🙈change-part2d-hidden/🙈️hides-part-a                   |
+      | change-part2d-locked          | 🔒change-part2d-locked/🔒️locks-part-a                   |
+      | move-part3d                   | 🚀move-part3d/🗺️moves-part-a-in-world                   |
+      | rotate-part3d                 | 🔃rotate-part3d/🔄️half-turn-about-z                     |
+      | scale-part3d                  | 📏scale-part3d/📏️uniform-double                         |
+      | change-part3d-mesh            | 🧱change-part3d-mesh/🕸️repoints-mesh                    |
+      | edit-part3d-label             | 🖋️edit-part3d-label/🔤️relabels-part-a                  |
+      | change-part-kind              | 🏗️change-part-kind/🏷️reassigns-kind                     |
+      | change-part-anchor            | ⚓change-part-anchor/⚓️fixed-to-derived                 |
+      | add-part-grip                 | ➕add-part-grip/✊️appends-grip-3                        |
+      | remove-part-grip              | ➖remove-part-grip/🚫️removes-grip-1-and-severs-fastener |
+      | replace-part-grip             | 🔌replace-part-grip/🏷️rekinds-grip-1                    |
+      | connect-grips                 | 🪢️connect-grips/🔩️adds-second-fastener                  |
+      | disconnect-grips              | ✂️disconnect-grips/🚫️removes-fast-1                    |
+      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions-fast-1        |
+      | change-fastener-kind          | 🎯change-fastener-kind/🏷️rekinds-fast-1                 |
+      | rename-puzzle5d               | 🏷️rename-puzzle5d/📃️relabels-document                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering           |
+      | change-description            | 🗒️change-description/📝️rewrites-description             |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
 
   @id-inverse
   @level-exhaustive
@@ -121,50 +121,50 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                            | vector                                                       |
-      | create-part                   | 🌱create-part/🧪️tests/🌱️appends-part-c                          |
-      | delete-part                   | 🗑️delete-part/🧪️tests/🚫️removes-part-a-and-severs-fastener      |
-      | move-part2d                   | 📍move-part2d/🧪️tests/📍️moves-part-a                            |
-      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🧪️tests/🔳️circle-to-rectangle         |
-      | edit-part2d-text              | ✏️edit-part2d-text/🧪️tests/✏️retitles-part-a                   |
-      | change-part2d-icon            | 🎨change-part2d-icon/🧪️tests/🎨️swaps-icon                       |
-      | change-part2d-hidden          | 🙈change-part2d-hidden/🧪️tests/🙈️hides-part-a                   |
-      | change-part2d-locked          | 🔒change-part2d-locked/🧪️tests/🔒️locks-part-a                   |
-      | move-part3d                   | 🚀move-part3d/🧪️tests/🗺️moves-part-a-in-world                   |
-      | rotate-part3d                 | 🔃rotate-part3d/🧪️tests/🔄️half-turn-about-z                     |
-      | scale-part3d                  | 📏scale-part3d/🧪️tests/📏️uniform-double                         |
-      | change-part3d-mesh            | 🧱change-part3d-mesh/🧪️tests/🕸️repoints-mesh                    |
-      | edit-part3d-label             | 🖋️edit-part3d-label/🧪️tests/🔤️relabels-part-a                  |
-      | change-part-kind              | 🏗️change-part-kind/🧪️tests/🏷️reassigns-kind                     |
-      | change-part-anchor            | ⚓change-part-anchor/🧪️tests/⚓️fixed-to-derived                 |
-      | add-part-grip                 | ➕add-part-grip/🧪️tests/✊️appends-grip-3                        |
-      | remove-part-grip              | ➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-severs-fastener |
-      | replace-part-grip             | 🔌replace-part-grip/🧪️tests/🏷️rekinds-grip-1                    |
-      | connect-grips                 | 🪢️connect-grips/🧪️tests/🔩️adds-second-fastener                  |
-      | disconnect-grips              | ✂️disconnect-grips/🧪️tests/🚫️removes-fast-1                    |
-      | replace-fastener-geometry     | 🧮replace-fastener-geometry/🧪️tests/📍️repositions-fast-1        |
-      | change-fastener-kind          | 🎯change-fastener-kind/🧪️tests/🏷️rekinds-fast-1                 |
-      | rename-puzzle5d               | 🏷️rename-puzzle5d/🧪️tests/📃️relabels-document                   |
-      | change-domain                 | 🌐change-domain/🧪️tests/⚙️architecture-to-engineering           |
-      | change-description            | 🗒️change-description/🧪️tests/📝️rewrites-description             |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🧪️tests/🤝️adds-grip-pair           |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-pair     |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/🧪️tests/📇️null-catalogs-is-noop         |
+      | create-part                   | 🌱create-part/🌱️appends-part-c                          |
+      | delete-part                   | 🗑️delete-part/🚫️removes-part-a-and-severs-fastener      |
+      | move-part2d                   | 📍move-part2d/📍️moves-part-a                            |
+      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle-to-rectangle         |
+      | edit-part2d-text              | ✏️edit-part2d-text/✏️retitles-part-a                   |
+      | change-part2d-icon            | 🎨change-part2d-icon/🎨️swaps-icon                       |
+      | change-part2d-hidden          | 🙈change-part2d-hidden/🙈️hides-part-a                   |
+      | change-part2d-locked          | 🔒change-part2d-locked/🔒️locks-part-a                   |
+      | move-part3d                   | 🚀move-part3d/🗺️moves-part-a-in-world                   |
+      | rotate-part3d                 | 🔃rotate-part3d/🔄️half-turn-about-z                     |
+      | scale-part3d                  | 📏scale-part3d/📏️uniform-double                         |
+      | change-part3d-mesh            | 🧱change-part3d-mesh/🕸️repoints-mesh                    |
+      | edit-part3d-label             | 🖋️edit-part3d-label/🔤️relabels-part-a                  |
+      | change-part-kind              | 🏗️change-part-kind/🏷️reassigns-kind                     |
+      | change-part-anchor            | ⚓change-part-anchor/⚓️fixed-to-derived                 |
+      | add-part-grip                 | ➕add-part-grip/✊️appends-grip-3                        |
+      | remove-part-grip              | ➖remove-part-grip/🚫️removes-grip-1-and-severs-fastener |
+      | replace-part-grip             | 🔌replace-part-grip/🏷️rekinds-grip-1                    |
+      | connect-grips                 | 🪢️connect-grips/🔩️adds-second-fastener                  |
+      | disconnect-grips              | ✂️disconnect-grips/🚫️removes-fast-1                    |
+      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions-fast-1        |
+      | change-fastener-kind          | 🎯change-fastener-kind/🏷️rekinds-fast-1                 |
+      | rename-puzzle5d               | 🏷️rename-puzzle5d/📃️relabels-document                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering           |
+      | change-description            | 🗒️change-description/📝️rewrites-description             |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-part, one-fastener puzzle assembly
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🌱create-part/🌱️appends-part-c/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

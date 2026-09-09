@@ -85,52 +85,52 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                            | vector                                                               |
-      | create-object                 | 🌱create-object/🧪️tests/🌱️appends-object-c                              |
-      | delete-object                 | 🗑️delete-object/🧪️tests/🚫️removes-object-a-and-severs-attraction        |
-      | move-object                   | 📍move-object/🧪️tests/📍️moves-object-a                                  |
-      | rotate-object                 | 🔃rotate-object/🧪️tests/🔄️half-turn-about-z                             |
-      | scale-object                  | 📏scale-object/🧪️tests/📐️uniform-to-per-axis                            |
-      | change-object-mesh            | 🧱change-object-mesh/🧪️tests/🕸️repoints-object-a-mesh                   |
-      | edit-object-label             | 🖋️edit-object-label/🧪️tests/🔤️relabels-object-a                        |
-      | change-object-kind            | 🏗️change-object-kind/🧪️tests/🏷️reassigns-object-a-kind                  |
-      | change-object-anchor          | ⚓change-object-anchor/🧪️tests/⚓️fixed-to-derived                       |
-      | change-object-hidden          | 👁️change-object-hidden/🧪️tests/🙈️hides-object-a                         |
-      | change-object-locked          | 🔒change-object-locked/🧪️tests/🔒️locks-object-a                         |
-      | add-object-vortex             | ➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-object-b              |
-      | remove-object-vortex          | ➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-and-severs-attraction |
-      | replace-object-vortex         | 🔌replace-object-vortex/🧪️tests/⏸️rekind-vortex-1-is-noop               |
-      | connect-vortices              | 🪢️connect-vortices/🧪️tests/🧲️adds-second-attraction                     |
-      | disconnect-vortices           | ✂️disconnect-vortices/🧪️tests/🚫️removes-attraction-1                   |
-      | replace-attraction-geometry   | 🧮replace-attraction-geometry/🧪️tests/📍️repositions-attraction-1        |
-      | create-target-volume          | 🌍create-target-volume/🧪️tests/🧊️appends-volume-2                       |
-      | delete-target-volume          | 🪦delete-target-volume/🧪️tests/🚫️removes-volume-1                       |
-      | move-target-volume            | 🚀move-target-volume/🧪️tests/⬆️lifts-volume-1                           |
-      | rotate-target-volume          | 🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z                      |
-      | scale-target-volume           | 📐scale-target-volume/🧪️tests/📏️per-axis-to-uniform                     |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🧪️tests/🙈️hides-volume-1                  |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🧪️tests/🔒️locks-volume-1                  |
-      | create-reference              | 🖼️create-reference/🧪️tests/🖼️appends-reference-2                        |
-      | delete-reference              | 🚮delete-reference/🧪️tests/🚫️removes-reference-1                        |
-      | move-reference                | 🎯move-reference/🧪️tests/↔️slides-reference-1                           |
-      | resize-reference              | 📎resize-reference/🧪️tests/↔️widens-reference-1                         |
-      | replace-reference-source      | 🖇️replace-reference-source/🧪️tests/🖇️repoints-reference-1-source        |
-      | change-reference-hidden       | 👀change-reference-hidden/🧪️tests/🙈️hides-reference-1                   |
-      | change-reference-locked       | 🗝️change-reference-locked/🧪️tests/🔒️locks-reference-1                   |
-      | change-domain                 | 🌐change-domain/🧪️tests/⚙️architecture-to-engineering                   |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-pair            |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-kind-pair      |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-kind-catalog          |
+      | create-object                 | 🌱create-object/🌱️appends-object-c                              |
+      | delete-object                 | 🗑️delete-object/🚫️removes-object-a-and-severs-attraction        |
+      | move-object                   | 📍move-object/📍️moves-object-a                                  |
+      | rotate-object                 | 🔃rotate-object/🔄️half-turn-about-z                             |
+      | scale-object                  | 📏scale-object/📐️uniform-to-per-axis                            |
+      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints-object-a-mesh                   |
+      | edit-object-label             | 🖋️edit-object-label/🔤️relabels-object-a                        |
+      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns-object-a-kind                  |
+      | change-object-anchor          | ⚓change-object-anchor/⚓️fixed-to-derived                       |
+      | change-object-hidden          | 👁️change-object-hidden/🙈️hides-object-a                         |
+      | change-object-locked          | 🔒change-object-locked/🔒️locks-object-a                         |
+      | add-object-vortex             | ➕add-object-vortex/🌀️appends-vortex-3-to-object-b              |
+      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes-vortex-2-and-severs-attraction |
+      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind-vortex-1-is-noop               |
+      | connect-vortices              | 🪢️connect-vortices/🧲️adds-second-attraction                     |
+      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes-attraction-1                   |
+      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions-attraction-1        |
+      | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2                       |
+      | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1                       |
+      | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                           |
+      | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z                      |
+      | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform                     |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1                  |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1                  |
+      | create-reference              | 🖼️create-reference/🖼️appends-reference-2                        |
+      | delete-reference              | 🚮delete-reference/🚫️removes-reference-1                        |
+      | move-reference                | 🎯move-reference/↔️slides-reference-1                           |
+      | resize-reference              | 📎resize-reference/↔️widens-reference-1                         |
+      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints-reference-1-source        |
+      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides-reference-1                   |
+      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks-reference-1                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering                   |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
 
   @id-inverse
   @level-exhaustive
@@ -140,57 +140,57 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
       """
       {
         "kind": "<id>",
-        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "asset://🧬️schema/🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
     And every field the committed diff declares actually differs
     Examples:
       | id                            | vector                                                               |
-      | create-object                 | 🌱create-object/🧪️tests/🌱️appends-object-c                              |
-      | delete-object                 | 🗑️delete-object/🧪️tests/🚫️removes-object-a-and-severs-attraction        |
-      | move-object                   | 📍move-object/🧪️tests/📍️moves-object-a                                  |
-      | rotate-object                 | 🔃rotate-object/🧪️tests/🔄️half-turn-about-z                             |
-      | scale-object                  | 📏scale-object/🧪️tests/📐️uniform-to-per-axis                            |
-      | change-object-mesh            | 🧱change-object-mesh/🧪️tests/🕸️repoints-object-a-mesh                   |
-      | edit-object-label             | 🖋️edit-object-label/🧪️tests/🔤️relabels-object-a                        |
-      | change-object-kind            | 🏗️change-object-kind/🧪️tests/🏷️reassigns-object-a-kind                  |
-      | change-object-anchor          | ⚓change-object-anchor/🧪️tests/⚓️fixed-to-derived                       |
-      | change-object-hidden          | 👁️change-object-hidden/🧪️tests/🙈️hides-object-a                         |
-      | change-object-locked          | 🔒change-object-locked/🧪️tests/🔒️locks-object-a                         |
-      | add-object-vortex             | ➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-object-b              |
-      | remove-object-vortex          | ➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-and-severs-attraction |
-      | replace-object-vortex         | 🔌replace-object-vortex/🧪️tests/⏸️rekind-vortex-1-is-noop               |
-      | connect-vortices              | 🪢️connect-vortices/🧪️tests/🧲️adds-second-attraction                     |
-      | disconnect-vortices           | ✂️disconnect-vortices/🧪️tests/🚫️removes-attraction-1                   |
-      | replace-attraction-geometry   | 🧮replace-attraction-geometry/🧪️tests/📍️repositions-attraction-1        |
-      | create-target-volume          | 🌍create-target-volume/🧪️tests/🧊️appends-volume-2                       |
-      | delete-target-volume          | 🪦delete-target-volume/🧪️tests/🚫️removes-volume-1                       |
-      | move-target-volume            | 🚀move-target-volume/🧪️tests/⬆️lifts-volume-1                           |
-      | rotate-target-volume          | 🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z                      |
-      | scale-target-volume           | 📐scale-target-volume/🧪️tests/📏️per-axis-to-uniform                     |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🧪️tests/🙈️hides-volume-1                  |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🧪️tests/🔒️locks-volume-1                  |
-      | create-reference              | 🖼️create-reference/🧪️tests/🖼️appends-reference-2                        |
-      | delete-reference              | 🚮delete-reference/🧪️tests/🚫️removes-reference-1                        |
-      | move-reference                | 🎯move-reference/🧪️tests/↔️slides-reference-1                           |
-      | resize-reference              | 📎resize-reference/🧪️tests/↔️widens-reference-1                         |
-      | replace-reference-source      | 🖇️replace-reference-source/🧪️tests/🖇️repoints-reference-1-source        |
-      | change-reference-hidden       | 👀change-reference-hidden/🧪️tests/🙈️hides-reference-1                   |
-      | change-reference-locked       | 🗝️change-reference-locked/🧪️tests/🔒️locks-reference-1                   |
-      | change-domain                 | 🌐change-domain/🧪️tests/⚙️architecture-to-engineering                   |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-pair            |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-kind-pair      |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-kind-catalog          |
+      | create-object                 | 🌱create-object/🌱️appends-object-c                              |
+      | delete-object                 | 🗑️delete-object/🚫️removes-object-a-and-severs-attraction        |
+      | move-object                   | 📍move-object/📍️moves-object-a                                  |
+      | rotate-object                 | 🔃rotate-object/🔄️half-turn-about-z                             |
+      | scale-object                  | 📏scale-object/📐️uniform-to-per-axis                            |
+      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints-object-a-mesh                   |
+      | edit-object-label             | 🖋️edit-object-label/🔤️relabels-object-a                        |
+      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns-object-a-kind                  |
+      | change-object-anchor          | ⚓change-object-anchor/⚓️fixed-to-derived                       |
+      | change-object-hidden          | 👁️change-object-hidden/🙈️hides-object-a                         |
+      | change-object-locked          | 🔒change-object-locked/🔒️locks-object-a                         |
+      | add-object-vortex             | ➕add-object-vortex/🌀️appends-vortex-3-to-object-b              |
+      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes-vortex-2-and-severs-attraction |
+      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind-vortex-1-is-noop               |
+      | connect-vortices              | 🪢️connect-vortices/🧲️adds-second-attraction                     |
+      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes-attraction-1                   |
+      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions-attraction-1        |
+      | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2                       |
+      | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1                       |
+      | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                           |
+      | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z                      |
+      | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform                     |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1                  |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1                  |
+      | create-reference              | 🖼️create-reference/🖼️appends-reference-2                        |
+      | delete-reference              | 🚮delete-reference/🚫️removes-reference-1                        |
+      | move-reference                | 🎯move-reference/↔️slides-reference-1                           |
+      | resize-reference              | 📎resize-reference/↔️widens-reference-1                         |
+      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints-reference-1-source        |
+      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides-reference-1                   |
+      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks-reference-1                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering                   |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the four-collection puzzle scene
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/🌱create-object/🧪️tests/🌱️appends-object-c/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🌱create-object/🌱️appends-object-c/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

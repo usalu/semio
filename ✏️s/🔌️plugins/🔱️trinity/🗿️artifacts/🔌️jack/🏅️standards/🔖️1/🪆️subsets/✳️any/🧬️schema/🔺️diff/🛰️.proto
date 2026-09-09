@@ -1,95 +1,13 @@
 syntax = "proto3";
 package semio.s.trinity.jack.diff;
-
-// 🧬️ Jack diff schema — sparse field delta.
-
+import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message JackDiff {
-  // @state artifact
-  optional JackArtifact artifact = 1;
-  // @state artifact
-  optional string schema = 2;
-  // @state artifact
-  optional string name = 3;
-  // @state artifact
-  optional string manifest_id = 4;
-  // @state artifact
-  optional Manifest manifest = 5;
-  // @state artifact
-  optional Camera camera = 6;
-  // @state artifact
-  optional JackNodesDelta nodes = 7;
-  // @state artifact
-  optional JackEdgesDelta edges = 8;
-  // @state artifact
-  optional string root_node_id = 9;
-}
-
-message JackNodesDelta {
-  repeated Node added = 1;
-  repeated string removed = 2;
-  repeated JackNodePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message JackNodePatchEntry {
-  string id = 1;
-  JackNodePatch patch = 2;
-}
-
-message JackNodePatch {
-  optional string name = 1;
-  optional double x = 2;
-  optional double y = 3;
-  optional double width = 4;
-  optional double height = 5;
-}
-
-message JackEdgesDelta {
-  repeated Edge added = 1;
-  repeated string removed = 2;
-  repeated JackEdgePatchEntry patched = 3;
-  repeated string reordered = 4;
-}
-
-message JackEdgePatchEntry {
-  string id = 1;
-  JackEdgePatch patch = 2;
-}
-
-message JackEdgePatch {
-  optional string key = 1;
-  optional string value_json = 2;
-}
-
-message JackArtifact {
-  string schema = 1;
-  string name = 2;
-}
-
-
-message Camera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
-
-message Node {
-  string id = 1;
-  string kind = 2;
-  string name = 3;
-}
-
-message Edge {
-  string id = 1;
-  string kind = 2;
-  string source = 3;
-  string target = 4;
-}
-
-message Manifest {
-  repeated ManifestKind node_kinds = 1;
-}
-
-message ManifestKind {
-  string name = 1;
+  optional string schema = 1;
+  optional string name = 2;
+  optional string manifest_id = 3;
+  optional semio.s.trinity.jack.artifact.Manifest manifest = 4;
+  optional semio.s.trinity.jack.artifact.Camera camera = 5;
+  optional semio.os.store.ArtifactChild content = 6;
+  optional string root_node_id = 7;
 }

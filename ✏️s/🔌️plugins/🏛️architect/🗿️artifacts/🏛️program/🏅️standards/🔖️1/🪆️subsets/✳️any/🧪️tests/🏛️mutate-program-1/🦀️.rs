@@ -10,7 +10,7 @@
 //! `🔖️Laws` region, because the Python host exposes no `law` module.
 //!
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector
-//! under each of the 266 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves. Those files are read HERE
+//! under each of the 266 `🧫️fixtures/🧬️mutations/<slug>/<fixture>/` leaves. Those files are read HERE
 //! through `asset://`, so the plan pins all 1,064 of their digests and a silently edited vector
 //! changes the plan rather than the result. At this vocabulary size that matters more than anywhere
 //! else in the repository: the mapping from kind to vector is DATA in the feature's own `Examples`
@@ -332,11 +332,11 @@ const GUARD_VECTORS: &[&str] = &["delete-benchmark-record", "rename-benchmark-re
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
 /// case's owner — the artifact root, which is what `asset://` resolves against.
-const VECTORS: &str = "asset://🧬️schema/🧬️mutations";
+const VECTORS: &str = "shared://🧬️mutations";
 
 #[cfg(feature = "sut")]
 /// 📄️ The real committed example document, in this subset's own `.dsl.semio` text envelope.
-const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio";
+const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject

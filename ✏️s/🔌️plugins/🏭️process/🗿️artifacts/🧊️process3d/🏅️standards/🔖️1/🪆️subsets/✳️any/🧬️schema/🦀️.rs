@@ -91,7 +91,7 @@ impl Process3dArtifact {
             step_payloads: snapshot.step_payloads,
             tool_solids: snapshot.tool_solids,
             resolved_up_to: snapshot.resolved_up_to,
-            ..Self::default()
+
         }
     }
 

@@ -1,48 +1,10 @@
 {
-  "base": {
-    "engagementInput": "Before",
-    "camera": {
-      "x": 0.25,
-      "y": -0.75,
-      "zoom": 1.5
-    }
-  },
+  "base": {},
   "cases": [
     {
-      "kind": "set-engagement-input",
-      "mutation": {
-        "SetEngagementInput": {
-          "value": "Nachher"
-        }
-      },
-      "expected": {
-        "engagementInput": "Nachher",
-        "camera": {
-          "x": 0.25,
-          "y": -0.75,
-          "zoom": 1.5
-        }
-      }
-    },
-    {
-      "kind": "set-camera",
-      "mutation": {
-        "SetCamera": {
-          "camera": {
-            "x": 2.5,
-            "y": -3.25,
-            "zoom": 1.75
-          }
-        }
-      },
-      "expected": {
-        "engagementInput": "Before",
-        "camera": {
-          "x": 2.5,
-          "y": -3.25,
-          "zoom": 1.75
-        }
-      }
+      "kind": "snapshot",
+      "mutation": {"Snapshot": {"config": {}}},
+      "expected": {}
     }
   ]
 }

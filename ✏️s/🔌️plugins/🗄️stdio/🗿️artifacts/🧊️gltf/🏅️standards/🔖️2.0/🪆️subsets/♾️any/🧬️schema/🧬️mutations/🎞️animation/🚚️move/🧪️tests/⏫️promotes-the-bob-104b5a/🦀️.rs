@@ -15,11 +15,11 @@ use crate::schema::mutations::move_animation::{diff, inverse, mutation};
 use crate::GltfSnapshot;
 
 const CASE: &str = "move-animation/promotes-the-bob-clip-ahead-of-the-spin-clip";
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🧬️operation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎞️animation/🚚️move/⏫️promotes-the-bob-104b5a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎞️animation/🚚️move/⏫️promotes-the-bob-104b5a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎞️animation/🚚️move/⏫️promotes-the-bob-104b5a/🧬️operation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎞️animation/🚚️move/⏫️promotes-the-bob-104b5a/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🎞️animation/🚚️move/⏫️promotes-the-bob-104b5a/🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

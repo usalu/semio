@@ -32,8 +32,8 @@ impl RetirementCursor for SnapshotRetirement {
             Ok(scene) => scene,
             Err(_) => return RetirementStep::BudgetExhausted,
         };
-        let WiresSnapshot { wires_fixture, content, camera, meta } = self.0.take().expect("exact Wires snapshot remains owned");
-        RetirementStep::Child(store::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), camera.retirement(), meta.retirement(), Box::new(SceneRoot(ManuallyDrop::new(scene)))]))
+        let WiresSnapshot { wires_fixture, content, meta } = self.0.take().expect("exact Wires snapshot remains owned");
+        RetirementStep::Child(store::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement(), Box::new(SceneRoot(ManuallyDrop::new(scene)))]))
     }
     fn terminal_is_empty(&self) -> bool {
         self.0.is_none()

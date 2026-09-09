@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { readFileSync } = await import("node:fs");
     const Ajv = (await import("ajv")).default;
     const equal = (await import("fast-deep-equal")).default;
-    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);

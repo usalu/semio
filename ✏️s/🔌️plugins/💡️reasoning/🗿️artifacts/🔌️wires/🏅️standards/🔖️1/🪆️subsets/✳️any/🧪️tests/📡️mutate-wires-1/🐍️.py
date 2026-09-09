@@ -38,7 +38,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 VECTORS = {
     "create-node": (f"{_ROOT}/🌱create-node/🧪️tests/rejects-a-node-id-the-board-already-holds", "createNode", True),
     "delete-node": (f"{_ROOT}/🗑️delete-node/🧪️tests/rejects-deleting-a-node-the-board-never-held", "deleteNode", True),
@@ -86,7 +86,7 @@ def find_edge(document, edge_id):
 
 
 # region 🔖️Vocabulary
-NULL_DIFF = {"artifact": None, "wiresFixture": None, "content": None, "camera": None, "meta": None, "dragNodeId": None, "dragLastX": None, "dragLastY": None, "locale": None}
+NULL_DIFF = {"artifact": None, "wiresFixture": None, "content": None, "meta": None, "dragNodeId": None, "dragLastX": None, "dragLastY": None, "locale": None}
 
 
 def rejected(document, code, path):

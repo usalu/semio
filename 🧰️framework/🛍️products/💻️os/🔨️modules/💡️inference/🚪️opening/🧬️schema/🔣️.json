@@ -8,6 +8,7 @@
     "request",
     "opened",
     "refused",
+    "authorityRefused",
     "indeterminate",
     "routes"
   ],
@@ -111,6 +112,7 @@
           "enum": [
             null,
             "inference.capacity",
+            "inference.denied",
             "inference.invalid",
             "inference.lease-unverified",
             "inference.transport"
@@ -136,6 +138,7 @@
             "code": {
               "enum": [
                 "inference.capacity",
+                "inference.denied",
                 "inference.invalid",
                 "inference.lease-unverified"
               ]
@@ -204,6 +207,7 @@
           "enum": [
             null,
             "inference.capacity",
+            "inference.denied",
             "inference.invalid",
             "inference.lease-unverified",
             "inference.transport"
@@ -229,6 +233,7 @@
             "code": {
               "enum": [
                 "inference.capacity",
+                "inference.denied",
                 "inference.invalid",
                 "inference.lease-unverified"
               ]
@@ -246,6 +251,9 @@
           }
         }
       ]
+    },
+    "authorityRefused": {
+      "$ref": "#/properties/refused"
     },
     "indeterminate": {
       "type": "object",
@@ -297,6 +305,7 @@
           "enum": [
             null,
             "inference.capacity",
+            "inference.denied",
             "inference.invalid",
             "inference.lease-unverified",
             "inference.transport"
@@ -322,6 +331,7 @@
             "code": {
               "enum": [
                 "inference.capacity",
+                "inference.denied",
                 "inference.invalid",
                 "inference.lease-unverified"
               ]

@@ -11,7 +11,7 @@
 
 pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
-use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
+use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
 use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
@@ -308,7 +308,7 @@ semio_framework_plugin::app_commands! {
         "fillBucket" as "fill-bucket" => fill_bucket::FillBucket,
         "transformEnd" as "transform-end" => transform_end::TransformEnd,
         "importSnapshotJson" as "import-snapshot-json" => set_snapshot_json::ImportSnapshotJson,
-        "setFixtureJson" as "set-fixture-json" => set_fixture_json::SetFixtureJson,
+        "replaceSnapshotJson" as "replace-snapshot-json" => replace_snapshot_json::ReplaceSnapshotJson,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
         "setActivePaintLayer" as "set-active-paint-layer" => set_active_paint_layer::SetActivePaintLayer,
@@ -337,7 +337,7 @@ semio_framework_plugin::app_commands! {
 use camera::set_camera;
 use chrome::toggle_show_edges;
 use engagement::{engagement_input, engagement_submit};
-use fixture::{set_fixture_json, set_snapshot_json};
+use document::{replace_snapshot_json, set_snapshot_json};
 use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
 use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
 use selection::{set_active_object, set_active_paint_layer};
@@ -372,7 +372,7 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "setSunIntensity",
     "setCamera",
     "importSnapshotJson",
-    "setFixtureJson",
+    "replaceSnapshotJson",
     "paintSample",
     "paintStrokeBegin",
     "transformBegin",
@@ -438,7 +438,7 @@ fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDispositio
         // every one of these is `Artifact` (the real edit) `+ Transient` (the cache bookkeeping).
         "paintStrokeEnd" | "extrude" | "inset" | "bevel" | "loopCut" | "subdivide" | "triangulate" | "mirror" | "decimate" | "flipFaces" | "merge" | "dissolve" | "snap" | "toggleSmooth" | "unwrapActive" | "markUvSeam" | "clearSeam"
         | "engagementSubmit" | "translateSelection" | "rotateSelection" | "scaleSelection" | "transformEnd" => LowpolyCommandDisposition::ArtifactTransient,
-        "importSnapshotJson" | "setFixtureJson" => LowpolyCommandDisposition::HostOnly,
+        "importSnapshotJson" | "replaceSnapshotJson" => LowpolyCommandDisposition::HostOnly,
         "paintStrokeBegin" | "transformBegin" => LowpolyCommandDisposition::Transient,
         // 🖌️ Every paint-tick command (`paint_tick` mutates the mid-drag stroke scratch, or — eyedropper — emits a `Config` mutation instead):
         // both outcomes need the same `[Config, Transient]` lane pair the tick's own disposition can't
@@ -480,7 +480,7 @@ fn lowpoly_command_admitted(command: &LowpolyCommand, snapshot: &LowpolySnapshot
             LowpolyCommand::SetUtilityParam(payload) => field(&payload.key) && field(&payload.value_json),
             LowpolyCommand::EngagementInput(payload) => field(&payload.value),
             LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
-            LowpolyCommand::SetFixtureJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
+            LowpolyCommand::ReplaceSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
             LowpolyCommand::PaintSample(payload) => payload.object_id.as_deref().is_none_or(field),
             LowpolyCommand::PaintStrokeEnd(_) => true,
             LowpolyCommand::PaintStrokeBegin(_) | LowpolyCommand::TransformBegin(_) => true,
@@ -601,7 +601,7 @@ fn lowpoly_retained_reduce(
         LowpolyCommand::SetSunIntensity(payload) => set_sun_intensity::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::SetCamera(payload) => set_camera::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::ImportSnapshotJson(payload) => set_snapshot_json::handle(payload, &doc, &cfg, &mut bounded),
-        LowpolyCommand::SetFixtureJson(payload) => set_fixture_json::handle(payload, &doc, &cfg, &mut bounded),
+        LowpolyCommand::ReplaceSnapshotJson(payload) => replace_snapshot_json::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::PaintSample(payload) => return Ok(ArtifactCommandWorkStep::Complete(lowpoly_sample_pixel(snapshot, config, payload))),
         LowpolyCommand::PaintStrokeBegin(_) => {
             let transient = context.transient.begin_stroke_drag();
@@ -984,7 +984,7 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintStrokeBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
@@ -1556,7 +1556,7 @@ impl ArtifactEditor for LowpolyPlayApp {
             "setSunIntensity" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "setCamera" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "importSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setFixtureJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "replaceSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintStrokeBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "transformBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
@@ -1757,11 +1757,11 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// open, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
-/// `"mesh:in"`/`"document:in"` above, `commands::fixture::{set_snapshot_json,set_fixture_json}`)
+/// `"mesh:in"`/`"document:in"` above, `commands::document::{set_snapshot_json,replace_snapshot_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
 // 🚫️async: E5 executor bridge — `store::print_document_spr` is `async fn` per R2, but every caller of
-// `reset_document_effect` (`commands::fixture::{set_snapshot_json,set_fixture_json}`) is a plain sync
+// `reset_document_effect` (`commands::document::{set_snapshot_json,replace_snapshot_json}`) is a plain sync
 // `handle` in this crate's `app_commands!` dispatch, and the `envelope` built here is always a genesis
 // envelope with empty `vcs.edits`/`edit_messages`/`conflicts` — `print_document_spr`'s only work on
 // that shape is the unconditional `validate_persisted_conflicts` call, which does no real I/O over an
@@ -1860,7 +1860,7 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("paintFill", LocalizedLabel::native("Paint Fill", "Füllen malen"))
             .mutation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
             .mutation("importSnapshotJson", LocalizedLabel::native("Import Snapshot Json", "Snapshot-JSON importieren"))
-            .mutation("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
+            .mutation("replaceSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
@@ -1970,7 +1970,7 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("fillBucket", InteractiveJobClassification::Migrated)
             .action_interactive_job("transformEnd", InteractiveJobClassification::Migrated)
             .action_interactive_job("importSnapshotJson", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("replaceSnapshotJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveObject", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActivePaintLayer", InteractiveJobClassification::Migrated)

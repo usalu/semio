@@ -84,7 +84,7 @@ fn assert_structurally_equal(ours: &MeshData, oracle: &MeshData) {
 
 #[test]
 fn differential_embedded_bin_chunk_matches_gltf_crate_oracle() {
-    let bytes = include_bytes!("../🧊️gltf-codec/🧫️fixtures/🧊️single-triangle-embedded.glb");
+    let bytes = include_bytes!("../../🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
     let ours = mesh_from_glb(bytes).expect("first-party decode");
     let oracle = oracle_mesh_from_glb(bytes).expect("oracle decode");
     assert_structurally_equal(&ours, &oracle);

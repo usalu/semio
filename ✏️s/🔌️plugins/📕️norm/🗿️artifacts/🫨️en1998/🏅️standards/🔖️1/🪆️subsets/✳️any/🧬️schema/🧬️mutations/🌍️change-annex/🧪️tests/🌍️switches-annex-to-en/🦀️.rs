@@ -11,11 +11,11 @@ use crate::diff::En1998Diff;
 use crate::mutations::En1998Mutation;
 use crate::En1998Snapshot;
 
-const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-annex-to-en/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-annex-to-en/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-annex-to-en/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-annex-to-en/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-annex-to-en/🎯️outcome/🔣️.json");
 
 fn before() -> En1998Snapshot {
     serde_json::from_str(BEFORE).expect("change-annex before-snapshot decodes")

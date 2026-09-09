@@ -49,7 +49,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntryMuta
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-palette-entry payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-palette-entry/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-palette-entry payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

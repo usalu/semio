@@ -6,7 +6,7 @@ import { testSingleEnqueuePublicationFixture } from "../../📥️enqueue/🧪�
 
 export function testInputCommitObserverFixture(): void {
   testSingleEnqueuePublicationFixture();
-  const fixture = JSON.parse(readFileSync(new URL("../🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));

@@ -100,7 +100,7 @@ mod tests {
             assert_eq!(context, [31, 41]);
             if STEPS.fetch_add(1, Ordering::SeqCst) == 0 { WorkerMaintenanceStep::More } else { WorkerMaintenanceStep::Idle }
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         STEPS.store(0, Ordering::SeqCst);
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         let ticket = pool.install_maintenance_hook(Lane::Io, step, [31, 41]).unwrap();
@@ -128,7 +128,7 @@ mod tests {
         fn retire(_: [u64; 2]) -> WorkerMaintenanceStep {
             WorkerMaintenanceStep::Retire
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         for _ in 0..fixture["selfRetire"]["cycles"].as_u64().unwrap() {
             let ticket = pool.install_maintenance_hook(Lane::Io, retire, [0; 2]).unwrap();
@@ -165,7 +165,7 @@ mod tests {
             }
             WorkerMaintenanceStep::More
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         for shutdown in [false, true] {
             ENTERED.store(false, Ordering::SeqCst);
             RELEASE.store(false, Ordering::SeqCst);
@@ -212,7 +212,7 @@ mod tests {
             ORDER.lock().unwrap().push(context[0]);
             WorkerMaintenanceStep::Idle
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔔️maintenance/🧫️fixtures/🔣️.json")).unwrap();
         ORDER.lock().unwrap().clear();
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         let (started_tx, started_rx) = std::sync::mpsc::channel();
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn native_drr_finishes_eligible_deficit_frontier_before_idle() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🤝️cooperative/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🤝️cooperative/🧫️fixtures/🔣️.json")).unwrap();
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();

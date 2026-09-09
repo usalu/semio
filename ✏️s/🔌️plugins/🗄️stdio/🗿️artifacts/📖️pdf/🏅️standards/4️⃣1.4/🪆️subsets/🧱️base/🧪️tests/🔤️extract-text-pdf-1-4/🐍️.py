@@ -18,7 +18,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixture
-DOCUMENT = "asset://📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf"
+DOCUMENT = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf"
 
 
 def reader(ctx: Context) -> pypdf.PdfReader:

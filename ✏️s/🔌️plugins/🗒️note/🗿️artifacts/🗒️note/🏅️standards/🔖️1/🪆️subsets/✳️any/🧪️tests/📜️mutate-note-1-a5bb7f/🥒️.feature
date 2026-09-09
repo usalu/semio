@@ -9,7 +9,7 @@ Feature: Apply the typed note document identity mutation twice — once in Rust,
   `drawing`/`equation`/`fem2d`/`fem3d`. Reuses the ALREADY-manifested `note-1-document-mutate`
   capability, so no new v2 manifest entry or runtime-inventory coordinate is created. The committed
   vector this scenario replays is COPIED (not referenced) into this case's own `🧫️fixtures/`, read
-  through `local://` rather than `asset://`, because a `✳️any`-owned case's escape guard cannot reach
+  through this owner's `🧫️fixtures/📜️mutate-note-1-a5bb7f` tree rather than `asset://`, because a `✳️any`-owned case's escape guard cannot reach
   sideways into `📜️document`'s own physical leaves the way `asset://` requires.
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-note-1`
@@ -28,10 +28,10 @@ Feature: Apply the typed note document identity mutation twice — once in Rust,
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot local://<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload local://<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot local://<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector local://<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://📜️mutate-note-1-a5bb7f/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://📜️mutate-note-1-a5bb7f/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://📜️mutate-note-1-a5bb7f/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://📜️mutate-note-1-a5bb7f/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -45,8 +45,8 @@ Feature: Apply the typed note document identity mutation twice — once in Rust,
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot local://<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload local://<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://📜️mutate-note-1-a5bb7f/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://📜️mutate-note-1-a5bb7f/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_note_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}

@@ -7,6 +7,6 @@ pub use crate::standards::v_ac1024::subsets::any::schema::mutations::*;
 /// mutations root so `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves
 /// against this file's own directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔢️bumps-the-eebfc0/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔢️bumps-the-auxiliary-save-counter/🦀️.rs"]
 mod set_snapshot_bumps_the_auxiliary_save_counter;
 //#endregion 🧪️FixtureCases

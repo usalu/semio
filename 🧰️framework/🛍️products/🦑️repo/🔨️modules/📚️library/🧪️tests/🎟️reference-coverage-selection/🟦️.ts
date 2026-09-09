@@ -9,7 +9,7 @@ import ts from "typescript";
 type Token = Readonly<{ id: string; adapter: string; start: number; end: number; value: string; rewriteKind?: string; physicalInterpretation?: string; physicalTargets?: readonly string[]; unsupportedReason?: string }>;
 type Scenario = Readonly<{ id: string; supported: readonly string[]; unsupported: readonly string[]; retained: readonly string[] }>;
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
-const inputBytes = readFileSync(join(import.meta.dir, "../🎟️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
+const inputBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎟️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizerBytes = readFileSync(normalizerPath);
 const tree = ts.createSourceFile(normalizerPath, normalizerBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const declaration = (name: string): string => {
@@ -55,7 +55,7 @@ function oracle(supported: readonly Token[], unsupported: readonly Token[]): rea
 }
 
 test("reference coverage selection has a closed neutral contract and every adapter", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🎟️reference-coverage-selection/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const bad of [{ ...vector, extra: true }, { ...vector, schemaVersion: 2 }, { ...vector, scale: { ...vector.scale, expectedCoverageCalls: 1 } }]) expect(validate(bad)).toBe(false);
   const errors: ParseError[] = [];

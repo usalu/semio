@@ -183,7 +183,7 @@ pub struct SynapseSpec {
 
 /// 🎛️ Flow widget discriminant encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Widget {
     Neuron {
         id: String,

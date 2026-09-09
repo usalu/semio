@@ -27,14 +27,14 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
+_ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "rename-vcs": (f"{_ROOT}/✏️rename-vcs/🧪️tests/✏️retitles-the-document", "renameVcs"),
-    "change-counter": (f"{_ROOT}/🔢change-counter/🧪️tests/🔢️sets-counter-to-seven", "changeCounter"),
-    "change-notes": (f"{_ROOT}/📝change-notes/🧪️tests/📝️rewrites-the-notes", "changeNotes"),
-    "change-status": (f"{_ROOT}/🚦change-status/🧪️tests/🔎️draft-to-review", "changeStatus"),
-    "add-tag": (f"{_ROOT}/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag", "addTag"),
-    "remove-tag": (f"{_ROOT}/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag", "removeTag"),
+    "rename-vcs": (f"{_ROOT}/✏️rename-vcs/✏️retitles-the-document", "renameVcs"),
+    "change-counter": (f"{_ROOT}/🔢change-counter/🔢️sets-counter-to-seven", "changeCounter"),
+    "change-notes": (f"{_ROOT}/📝change-notes/📝️rewrites-the-notes", "changeNotes"),
+    "change-status": (f"{_ROOT}/🚦change-status/🔎️draft-to-review", "changeStatus"),
+    "add-tag": (f"{_ROOT}/🏷️add-tag/🏷️appends-urgent-tag", "addTag"),
+    "remove-tag": (f"{_ROOT}/🗑️remove-tag/➖️detaches-the-review-tag", "removeTag"),
 }
 
 

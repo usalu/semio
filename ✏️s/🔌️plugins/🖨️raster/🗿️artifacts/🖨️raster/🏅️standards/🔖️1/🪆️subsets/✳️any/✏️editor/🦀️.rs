@@ -281,6 +281,7 @@ fn raster_retained_extent(command: &RasterCommand, snapshot: &RasterSnapshot, _i
     (items <= RASTER_RETAINED_WORK_ITEMS).then_some(1)
 }
 
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn raster_retained_reduce(
     command: &RasterCommand,
     snapshot: &RasterSnapshot,

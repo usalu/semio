@@ -72,7 +72,7 @@ async fn dep_input_changes_when_a_coefficient_changes() {
     let mut before = EquationSnapshot::default();
     before.equation = quadratic_with_roots_one_and_two();
     let mut after = before.clone();
-    after.equation.replace(EquationNodeLabel(6), EquationNodeKind::Integer { lexeme: "99".into() });
+    after.equation.replace(EquationNodeLabel(6), &EquationNodeKind::Integer { lexeme: "99".into() });
     let before_bytes = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&before, &0, &[]);
     let after_bytes = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&after, &0, &[]);
     assert_ne!(before_bytes, after_bytes, "changing a coefficient must change the DepHash input");

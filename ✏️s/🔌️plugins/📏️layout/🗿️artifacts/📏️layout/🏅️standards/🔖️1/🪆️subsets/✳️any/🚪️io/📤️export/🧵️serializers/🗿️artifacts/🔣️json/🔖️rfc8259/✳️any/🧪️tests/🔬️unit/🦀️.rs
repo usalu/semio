@@ -1,7 +1,7 @@
 use super::*;
 #[test]
 fn json_artifact_round_trip_preserves_the_language_neutral_snapshot() {
-    let fixture = include_str!("../../../../../../../../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json");
+    let fixture = include_str!("../../../../../../../../../🧫️fixtures/🧬️mutations/🔀reorder-pages/🔀️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json");
     let snapshot = crate::standards::v1::subsets::any::schema::parse_layout_document(fixture).unwrap();
     let actual = serialize_text(&snapshot).unwrap();
     let oracle: serde_json::Value = serde_json::from_str(fixture).unwrap();

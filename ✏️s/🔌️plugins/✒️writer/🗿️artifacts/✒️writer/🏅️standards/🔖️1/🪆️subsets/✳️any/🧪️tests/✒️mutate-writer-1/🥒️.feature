@@ -45,10 +45,10 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
-    And the committed after-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome vector asset://🧬️schema/🧬️mutations/<vector>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    And the committed after-snapshot shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome vector shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json
     When <id> is applied through apply_writer_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -56,17 +56,17 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id              | vector                                                                |
-      | rename-writer   | 🏷️rename-writer/🧪️tests/🏷️renames-the-document-to-mission-brief          |
-      | change-uri      | 🔗change-uri/🧪️tests/🔗️republishes-the-brief-under-a-new-uri            |
-      | change-language | 🌐change-language/🧪️tests/🔤️switches-the-brief-from-plaintext-to-markdown |
-      | edit-text       | ✏️edit-text/🧪️tests/⚠️warns-that-the-brief-body-is-unchanged             |
+      | rename-writer   | 🏷️rename-writer/🏷️renames-the-document-to-mission-brief          |
+      | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
+      | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
+      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed before-snapshot asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation payload shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json
     When <id> is applied and then its own computed inverse is applied through apply_writer_mutation_outcome
       """
       {"kind": "<id>", "vector": "<vector>"}
@@ -74,15 +74,15 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id              | vector                                                                |
-      | rename-writer   | 🏷️rename-writer/🧪️tests/🏷️renames-the-document-to-mission-brief          |
-      | change-uri      | 🔗change-uri/🧪️tests/🔗️republishes-the-brief-under-a-new-uri            |
-      | change-language | 🌐change-language/🧪️tests/🔤️switches-the-brief-from-plaintext-to-markdown |
-      | edit-text       | ✏️edit-text/🧪️tests/⚠️warns-that-the-brief-body-is-unchanged             |
+      | rename-writer   | 🏷️rename-writer/🏷️renames-the-document-to-mission-brief          |
+      | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
+      | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
+      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse the real committed jack document and print it back without losing or copying anything
-    Given the real committed artifact asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed artifact asset://🎬️demo/🗣️.dsl.semio
     When the artifact is parsed to a WriterSnapshot, printed back to `.writer` DSL and parsed again
     Then both parses agree on the same document and the printed text reproduces the committed bytes exactly

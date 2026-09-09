@@ -1,7 +1,7 @@
 /** 🧪️ Runs the shared window-context vectors against the TypeScript implementation. */
 import assert from "node:assert/strict";
 import { panelViewContext, windowViewContext, type PluginViewState } from "../../🟦️.ts";
-import fixture from "./🔣️.json";
+import fixture from "../../🧫️fixtures/🔬️window-view-context/🔣️.json";
 
 export function testWindowViewContext(): void {
   const view: PluginViewState = fixture.view;

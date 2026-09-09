@@ -1,6 +1,6 @@
 //! 🧪️ Every public norm editor/viewer wrapper renders its declared language-neutral surface inventory.
 
-use semio_framework_plugin::testkit::project_and_retire_fixture_tree;
+use semio_framework_plugin::testkit::{close_registered_fixture_app, project_and_retire_fixture_tree};
 use semio_framework_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
@@ -29,32 +29,42 @@ fn panel_bodies(panels: &[PanelTabDefinition], keys: &mut BTreeSet<String>) {
     }
 }
 
-async fn check_surface<A: PluginApp>(mut app: A, definition: &AppDefinition, fixture: &Surface) -> usize {
-    assert_eq!(definition.id, fixture.app_id);
-    assert_eq!(definition.role.as_str(), fixture.role);
-    assert_eq!(app.app_id().await, fixture.app_id);
-    assert_eq!(app.document_schema().await, format!("semio.norm.{}/v1", fixture.variant));
-    assert_eq!(definition.io.document_schema, app.document_schema().await);
-    assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", fixture.variant));
+async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fixture: &Surface) -> Result<usize, String> {
+    if app.app_id().await != fixture.app_id {
+        return Err(format!("{} factory returned the wrong app identity", fixture.app_id));
+    }
+    let document_schema = app.document_schema().await;
+    if document_schema != format!("semio.norm.{}/v1", fixture.variant) || definition.io.document_schema != document_schema {
+        return Err(format!("{} factory returned the wrong document schema", fixture.app_id));
+    }
     let mut keys: BTreeSet<String> = definition.window_kinds.iter().map(|window| window.body_key.clone()).collect();
     panel_bodies(&definition.panel_tabs, &mut keys);
-    assert_eq!(keys, fixture.body_keys.iter().cloned().collect());
+    if keys != fixture.body_keys.iter().cloned().collect() {
+        return Err(format!("{} manifest returned the wrong surface inventory", fixture.app_id));
+    }
     let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::default() };
     for key in &fixture.body_keys {
-        let tree = app.render(key, None, &view).await.unwrap_or_else(|error| panic!("{} {key}: {error:?}", fixture.app_id));
-        let projection = project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement");
-        assert!(!projection.contains("Unknown body"), "{} {key}", fixture.app_id);
+        let tree = app.render(key, None, &view).await.map_err(|error| format!("{} {key}: {error:?}", fixture.app_id))?;
+        let projection = project_and_retire_fixture_tree(tree).map_err(|error| format!("{} {key} observation and retirement: {error}", fixture.app_id))?;
+        if projection.contains("Unknown body") {
+            return Err(format!("{} {key} resolved to the unknown-body fallback", fixture.app_id));
+        }
     }
-    let unknown = app.render("unregistered.norm.surface", None, &view).await.unwrap();
-    assert!(project_and_retire_fixture_tree(unknown).expect("unknown fixture observation and retirement").contains("Unknown body"));
-    assert!(app.render(&"x".repeat(70_000), None, &view).await.is_err());
+    let unknown = app.render("unregistered.norm.surface", None, &view).await.map_err(|error| format!("{} unknown fallback: {error:?}", fixture.app_id))?;
+    let unknown_projection = project_and_retire_fixture_tree(unknown).map_err(|error| format!("{} unknown fallback observation and retirement: {error}", fixture.app_id))?;
+    if !unknown_projection.contains("Unknown body") {
+        return Err(format!("{} did not render its unknown-body fallback", fixture.app_id));
+    }
+    if app.render(&"x".repeat(70_000), None, &view).await.is_ok() {
+        return Err(format!("{} accepted an oversized surface identity", fixture.app_id));
+    }
     eprintln!("[DEBUG] Norm public surface {}: {} declared bodies, unknown fallback, oversized rejection", fixture.app_id, fixture.body_keys.len());
-    fixture.body_keys.len()
+    Ok(fixture.body_keys.len())
 }
 
 #[semio_framework_async_macros::async_test]
 async fn norm_public_surfaces_render_all_declared_bodies() {
-    let fixture: Fixture = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture.contract_id, "semio.norm.surface-render/v1");
     assert_eq!(fixture.rows.len(), 30);
     let plugin = semio_s_plugin_norm::plugin().expect("the real norm plugin must assemble its complete surface registry");
@@ -65,8 +75,13 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
     for row in &fixture.rows {
         assert!(visited.insert(row.app_id.clone()));
         let definition = plugin.manifest.apps.iter().find(|app| app.id == row.app_id).unwrap();
-        let app = plugin.create_app(&row.app_id).expect("each manifest app must have a registered factory");
-        rendered += check_surface(app, definition, row).await;
+        assert_eq!(definition.id, row.app_id);
+        assert_eq!(definition.role.as_str(), row.role);
+        assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", row.variant));
+        let mut app = plugin.create_app(&row.app_id).expect("each manifest app must have a registered factory");
+        let result = check_surface(&mut app, definition, row).await;
+        close_registered_fixture_app(&mut app);
+        rendered += result.unwrap_or_else(|error| panic!("{error}"));
     }
     assert_eq!(visited.len(), 30);
     assert_eq!(rendered, 120);
@@ -173,7 +188,8 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
                 assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
             }
         }
-        assert!(plugin.create_app(&app.controller).is_some(), "{} must build with its owned bounded factory registered", app.controller);
+        let mut runtime = plugin.create_app(&app.controller).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
+        close_registered_fixture_app(&mut runtime);
         identities += fixture.routes.len();
     }
     assert_eq!(identities, fixture.expected.identities);

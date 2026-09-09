@@ -4,7 +4,7 @@ use super::*;
 fn require_send<F: std::future::Future + Send>(_: &F) {}
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]

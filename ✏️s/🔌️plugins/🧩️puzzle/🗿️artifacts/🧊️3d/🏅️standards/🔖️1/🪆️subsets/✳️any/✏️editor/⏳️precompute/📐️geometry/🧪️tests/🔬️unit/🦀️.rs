@@ -1,4 +1,3 @@
-
 use super::*;
 
 use crate::standards::v1::subsets::any::schema::testkit::*;
@@ -431,7 +430,7 @@ fn spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_
         assert!(!index.retire_one_owner(), "a populated spatial index cannot bulk-retire in one grant");
         let after = retained_credit(&index);
         assert!(before.0.saturating_sub(after.0) <= 1, "one close grant releases at most one exact allocation/root");
-        assert!(before.1.saturating_sub(after.1) <= 16 * 1024, "one close grant releases at most one admitted page");
+        assert!(before.1.saturating_sub(after.1) <= DOCUMENT_OWNER_PAGE_BYTES, "one close grant releases at most one admitted page");
         grants += 1;
     }
     assert!(grants > 4, "entry, bucket vector, nested ids, and oversized key retire independently");
@@ -517,5 +516,8 @@ fn document_scale_capacities_are_derived_from_the_fill_ceiling_not_the_bookkeepi
     ] {
         assert!(page > 0 && page <= DOCUMENT_OWNER_PAGE_BYTES, "a {slots}-slot document page claims {page} bytes beyond the declared ceiling");
     }
-    assert!(FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes() + DOCUMENT_CELL_SLOTS * FixedOwnerMap::<String, ()>::page_bytes() <= 8 * 1024 * 1024, "fully occupied cells keep their lazily allocated member buckets bounded");
+    assert!(
+        FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes() + DOCUMENT_CELL_SLOTS * FixedOwnerMap::<String, ()>::page_bytes() <= 8 * 1024 * 1024,
+        "fully occupied cells keep their lazily allocated member buckets bounded"
+    );
 }

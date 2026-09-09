@@ -12,7 +12,7 @@ import * as leaf from "../../🟦️.ts";
 type Case = Readonly<{ export: string; id: string; accepted: boolean; instance: unknown }>;
 
 const module_ = JSON.parse(readFileSync(new URL("../../🔣️.json", import.meta.url), "utf8")) as { $id: string; $defs: Record<string, unknown> };
-const corpus = JSON.parse(readFileSync(new URL("🔣️.json", import.meta.url), "utf8")) as { version: number; scope: string; cases: readonly Case[] };
+const corpus = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️parser-oracle/🔣️.json", import.meta.url), "utf8")) as { version: number; scope: string; cases: readonly Case[] };
 const parsers = leaf as unknown as Record<string, (value: unknown) => unknown>;
 
 function vendorKeywords(node: unknown, found = new Set<string>()): Set<string> {

@@ -96,6 +96,7 @@ impl store::ArtifactOwnedValueRetirementFactory<PresentationMutation> for Presen
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
 enum PresentationPackSnapshotState {
     AwaitToken,
     Decode(store::OwnedSchemaHexAuthority<PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES>),
@@ -335,6 +336,7 @@ impl Drop for PresentationProjectionCompletionState {
 
 /// 🎯️ Nonblocking publication target for one completed Presentation snapshot owner.
 pub trait PresentationProjectionAdoptionTarget {
+    #[expect(clippy::result_large_err, reason = "Returns the exact unadopted snapshot owner for retry or incremental retirement without allocating on refusal.")]
     fn try_adopt(&mut self, value: PresentationSnapshot) -> Result<(), PresentationSnapshot>;
 }
 
@@ -449,6 +451,7 @@ pub struct PresentationEnvelopeMaterializeJob {
 }
 
 impl PresentationEnvelopeMaterializeJob {
+    #[expect(clippy::result_large_err, reason = "Preserves the fixed diagnostic path inline so bounded cleanup can report failure without allocating.")]
     fn pump_field_return(&mut self) -> Result<bool, store::OwnedSchemaDecodeDiagnostic> {
         if let Some(retirement) = self.field_retirement.as_mut() {
             let step = store::ErasedSnapshotRetirement::close_step(retirement, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|_| store::OwnedSchemaDecodeDiagnostic {
@@ -477,6 +480,7 @@ impl PresentationEnvelopeMaterializeJob {
         }
     }
 
+    #[expect(clippy::result_large_err, reason = "Preserves the fixed diagnostic path inline so bounded cleanup can report failure without allocating.")]
     fn begin_completed_close(&mut self) -> Result<(), store::OwnedSchemaDecodeDiagnostic> {
         let Some(ticket) = self.decode_completion.ticket() else {
             self.state = PresentationEnvelopeMaterializeState::Cancelled;

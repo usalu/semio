@@ -23,7 +23,7 @@ Feature: Decode the lowpoly PNG export with Pillow
       """
       {
         "format": "png",
-        "document": "local://💠️lowpoly-snapshot.json"
+        "document": "shared://📷️io-lowpoly-png-1/💠️lowpoly-snapshot.json"
       }
       """
     When the Rust subject exports it through `serialize_bytes` and Pillow opens those exact PNG bytes
