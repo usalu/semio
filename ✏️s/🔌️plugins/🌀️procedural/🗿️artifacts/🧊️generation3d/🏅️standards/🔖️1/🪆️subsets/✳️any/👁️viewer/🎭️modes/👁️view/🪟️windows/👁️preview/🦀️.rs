@@ -9,11 +9,12 @@
 //! pruned by `validate_state`. Hover is read off the ephemeral pointer channel and selection off the
 //! persisted interaction store; the viewer stores NEITHER (see `👁️viewer/🫧️transient/🦀️.rs`).
 //!
-//! 🧵️ Evaluation input is the viewer's own ephemeral local-only `preview_eval_text` when a command
-//! has already computed it (chunked, cancellable, in `Generation3dViewCommandWork`); otherwise this
-//! window evaluates the fixture inline once so a freshly opened artifact still paints without
-//! waiting for a first command. Tessellation deflection, shading mode, camera and sun all come from
-//! the viewer's own `🎚️config`.
+//! 🧵️ Evaluation input is the viewer's own ephemeral local-only `preview_eval_text`, computed
+//! chunked and cancellable in `Generation3dViewCommandWork`. `render` NEVER evaluates: a pure render
+//! that fell back to a synchronous `FlowHost::evaluate` raced the real command chain and paid for a
+//! whole flow evaluation on every repaint that arrived before the first tick landed. Until the chain
+//! publishes, the window paints its empty world and the tick chain drives it. Tessellation
+//! deflection, shading mode, camera and sun all come from the viewer's own `🎚️config`.
 //!
 //! Every helper below is a read-only TWIN of the sibling surface's own — duplicated, never imported
 //! (`policyViewerPurityBreaches` forbids a viewer file importing through `✏️editor`).
@@ -299,6 +300,86 @@ impl Default for ViewPreviewPayload {
     }
 }
 
+/// 🧊️ One built mesh table — everything in a preview payload that does NOT depend on hover or
+/// selection. Held across renders keyed by [`PreviewMeshTable::signature`] so orbiting the camera or
+/// moving the pointer rebuilds only the instance table.
+struct PreviewMeshTable {
+    signature: u64,
+    meshes_json: String,
+    mesh_ids: std::collections::BTreeSet<String>,
+    mesh_id_by_handle: std::collections::BTreeMap<String, String>,
+}
+
+thread_local! {
+    /// 🧊️ The single live mesh table. One entry, not an LRU: a surface paints one document at one
+    /// LOD at a time, and holding stale tables would retain their whole vertex payloads.
+    static PREVIEW_MESH_TABLE: std::cell::RefCell<Option<PreviewMeshTable>> = const { std::cell::RefCell::new(None) };
+    /// 🧮️ How many real tessellations the preview path has run in this process — the observable a
+    /// hover-only re-render must leave untouched.
+    static PREVIEW_TESSELLATIONS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// 🧮️ Preview tessellations run so far. A hover/camera re-render of an unchanged document must not
+/// move this (`🎭️modes/👁️view/🧪️tests/👁️preview/🔬️unit/🦀️.rs`).
+pub fn preview_tessellation_count() -> u64 {
+    PREVIEW_TESSELLATIONS.with(std::cell::Cell::get)
+}
+
+/// 🧹️ Drops the retained mesh table — for a test that wants a cold measurement.
+pub fn reset_preview_mesh_table() {
+    PREVIEW_MESH_TABLE.with(|table| table.borrow_mut().take());
+}
+
+/// 🔒 What a built mesh table is valid for: the evaluation it was tessellated from, the deflection
+/// its LOD asked for, the shading mode applied to it, and the preview widgets it covered.
+fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str, preview_ids: &[String]) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    eval_json.hash(&mut hasher);
+    tolerance_bits.hash(&mut hasher);
+    show_mode.hash(&mut hasher);
+    preview_ids.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// 🧊️ Tessellates every preview handle exactly once, in the declaration order the instance table
+/// replays. Only reached when [`preview_mesh_signature`] says the retained table is stale.
+fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String], tolerance: f64, show_mode: &str) -> PreviewMeshTable {
+    let mut meshes: Vec<Value> = Vec::new();
+    let mut mesh_ids = std::collections::BTreeSet::new();
+    let mut mesh_id_by_handle = std::collections::BTreeMap::new();
+    for id in preview_ids {
+        for item in preview_channel_items_for_widget(eval, id) {
+            let PreviewChannelItem { channel, index, handle, inline } = item;
+            let own_mesh_id = format!("eval-{id}@{channel}#{index}");
+            let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
+            if mesh_ids.contains(&mesh_id) {
+                continue;
+            }
+            let data = match inline {
+                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(x, y, z)),
+                None => {
+                    PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
+                    semio_framework_os_flow::tessellate_geometry(&handle, tolerance).ok()
+                }
+            };
+            let Some(data) = data.map(|data| apply_show_mode_mesh(data, show_mode)).filter(mesh_has_preview_geometry) else {
+                continue;
+            };
+            let mut mesh_object = Object::new();
+            mesh_object.insert("id", Value::String(mesh_id.clone()));
+            mesh_object.insert("data", Value::from(data));
+            meshes.push(Value::Object(mesh_object));
+            if !handle.is_empty() {
+                mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
+            }
+            mesh_ids.insert(mesh_id);
+        }
+    }
+    PreviewMeshTable { signature, meshes_json: dsl::json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
+}
+
 pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, config: &Generation3dViewConfig, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
     if eval_json.is_empty() {
         return ViewPreviewPayload::default();
@@ -309,45 +390,33 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
     };
     let tolerance = config.tolerance();
     let show_mode = config.effective_show_mode();
-    let mut meshes: Vec<Value> = Vec::new();
-    let mut instances: Vec<Value> = Vec::new();
-    // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it.
-    let mut mesh_id_by_handle: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    let mut selected_ids: Vec<String> = Vec::new();
-    let mut hovered_id: Option<String> = None;
-    for widget in &fixture.widgets {
-        let preview = matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. });
-        if !preview {
-            continue;
+    let preview_ids: Vec<String> = fixture
+        .widgets
+        .iter()
+        .filter(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. }))
+        .map(|widget| crate::widget_id(widget).to_string())
+        .collect();
+    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids);
+    PREVIEW_MESH_TABLE.with(|retained| {
+        let mut retained = retained.borrow_mut();
+        if retained.as_ref().is_none_or(|table| table.signature != signature) {
+            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, tolerance, show_mode));
         }
-        let id = crate::widget_id(widget).to_string();
-        for item in preview_channel_items_for_widget(&eval, &id) {
-            let PreviewChannelItem { channel, index, handle, inline } = item;
-            let instance_id = format!("{id}@{channel}#{index}");
-            let own_mesh_id = format!("eval-{id}@{channel}#{index}");
-            let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
-            if !meshes.iter().any(|entry: &Value| entry.get("id").and_then(Value::as_str) == Some(mesh_id.as_str())) {
-                let data = match inline {
-                    Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
-                    Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(x, y, z)),
-                    None => semio_framework_os_flow::tessellate_geometry(&handle, tolerance).ok(),
-                };
-                if let Some(data) = data {
-                    let data = apply_show_mode_mesh(data, show_mode);
-                    if mesh_has_preview_geometry(&data) {
-                        let mut mesh_object = Object::new();
-                        mesh_object.insert("id", Value::String(mesh_id.clone()));
-                        mesh_object.insert("data", Value::from(data));
-                        meshes.push(Value::Object(mesh_object));
-                        if !handle.is_empty() {
-                            mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
-                        }
-                    }
+        let table = retained.as_ref().expect("preview mesh table was just built");
+        let mut instances: Vec<Value> = Vec::new();
+        let mut selected_ids: Vec<String> = Vec::new();
+        let mut hovered_id: Option<String> = None;
+        for id in &preview_ids {
+            for item in preview_channel_items_for_widget(&eval, id) {
+                let PreviewChannelItem { channel, index, handle, .. } = item;
+                let own_mesh_id = format!("eval-{id}@{channel}#{index}");
+                let mesh_id = if handle.is_empty() { own_mesh_id } else { table.mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
+                if !table.mesh_ids.contains(&mesh_id) {
+                    continue;
                 }
-            }
-            if meshes.iter().any(|entry: &Value| entry.get("id").and_then(Value::as_str) == Some(mesh_id.as_str())) {
-                let selected = marks.selects(&id, &channel, index);
-                let hovered = marks.hovers(&id, &channel, index);
+                let instance_id = format!("{id}@{channel}#{index}");
+                let selected = marks.selects(id, &channel, index);
+                let hovered = marks.hovers(id, &channel, index);
                 if selected {
                     selected_ids.push(instance_id.clone());
                 }
@@ -367,8 +436,8 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
                 instances.push(Value::Object(instance_object));
             }
         }
-    }
-    ViewPreviewPayload { meshes_json: dsl::json::to_string(&Value::Array(meshes)), instances_json: dsl::json::to_string(&Value::Array(instances)), selected_ids, hovered_id }
+        ViewPreviewPayload { meshes_json: table.meshes_json.clone(), instances_json: dsl::json::to_string(&Value::Array(instances)), selected_ids, hovered_id }
+    })
 }
 
 /// 🧮️ `[f64; 3]` -> a `pack::json` array, for the position/scale fields above.
@@ -398,12 +467,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, marks: &Generation3dViewMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let owned_eval = match eval_json {
-        Some(text) if !text.is_empty() => None,
-        _ => Some(evaluate_fixture(&document.fixture)),
-    };
-    let eval_text = owned_eval.as_deref().or(eval_json).unwrap_or_default();
-    let payload = preview_payload(eval_text, &document.fixture, config, marks);
+    let payload = preview_payload(eval_json.unwrap_or_default(), &document.fixture, config, marks);
     let selection_json = preview_selection_json(config, &payload);
     let sun = config.sun();
     crate::scene_surface(
@@ -426,6 +490,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

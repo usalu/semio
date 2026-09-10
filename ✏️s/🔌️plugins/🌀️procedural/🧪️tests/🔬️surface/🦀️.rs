@@ -3,6 +3,7 @@ use semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2d
 use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer;
 
+
 #[test]
 fn plugin_manifest_builds_synchronously() {
     super::plugin().expect("procedural plugin manifest should build synchronously");
@@ -13,10 +14,18 @@ fn plugin_manifest_builds_synchronously() {
 async fn generation2d_viewer_never_mutates() {
     semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>().await;
 }
-#[semio_framework_async_macros::async_test]
-async fn generation3d_viewer_never_mutates() {
-    semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation3dViewer>().await;
-}
+// 👁️ `Generation3dViewer` cannot use the same helper any more, and the law is not lost.
+// `assert_viewer_never_mutates` is bounded `Presence = NoPresence, Transient = NoTransient`
+// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:7308`) because its `BoundedViewerFixture`
+// falls back to `no_presence_store_disposer()`, which exists only for the zero-payload type — so the
+// helper can only ever cover a viewer that owns NO state. The 3D viewer owns a real
+// `Generation3dViewPresence` and `Generation3dViewTransient` since `📓️viewer-2026-09-09.md` §2.2-§2.3,
+// which is exactly why the plugin's lib test target stopped compiling with four `E0271`s on this one
+// line. The identical law now runs over the real viewer, with its real state, in
+// `🗿️artifacts/🧊️generation3d/…/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs`
+// (`every_viewer_action_dispatches_live_and_never_mutates_the_document`), which dispatches all seven
+// view commands through the interactive-job pipeline and asserts the document is untouched — strictly
+// more than the one default command the helper sends.
 
 /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
 #[semio_framework_async_macros::async_test]

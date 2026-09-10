@@ -63,6 +63,7 @@ fn retained_handback_take_entry_does_not_wait_for_registry() {
 }
 
 #[test]
+#[ignore = "poisons SURFACE_RECONCILE_HANDBACKS by design; run via runExactCargoLaws"]
 fn retained_handback_poison_is_fault_without_mutating_queued_owner() {
     let _guard = crate::surface_reconcile_registry_test_guard();
     let key = queued();

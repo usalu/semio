@@ -1,0 +1,25 @@
+package semio:procedural-generation2d-editor-config@1.0.0;
+
+/// 🎚️ The language-neutral surface of `Generation2dConfig` — the persisted per-instance state of the
+/// 2D editor. One camera only: the 2D editor's preview shares the graph window's frame, which is why
+/// its sibling `s.procedural.generation3d` carries a second one here and this subset does not.
+interface config {
+    /// 🕸️ The flow-graph camera (`CameraJson` in the artifact schema): a 2D pan/zoom frame.
+    record graph-camera {
+        x: f64,
+        y: f64,
+        zoom: f64,
+    }
+
+    /// 🎚️ The persisted editor state.
+    record editor-config {
+        camera: graph-camera,
+        show-mode: string,
+        selected-generation-id: string,
+    }
+}
+
+/// 🌍️ The world one 2D editor instance's configuration store exports.
+world generation2d-editor-config {
+    export config;
+}

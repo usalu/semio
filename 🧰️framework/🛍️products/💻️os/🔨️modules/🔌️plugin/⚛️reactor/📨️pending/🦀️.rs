@@ -334,14 +334,21 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
-    pub(super) fn close_step(&mut self) -> Result<bool, &'static str> {
+    /// 🧹️ Retires one unit of the oldest acknowledged publication, or of a closing instance, against
+    /// the caller's grant. The grant is the whole point: an acknowledged slot keeps
+    /// [`Self::has_unpublished`] TRUE, which keeps the reactor turn in `MoreWork`, which costs the
+    /// host one turn ROUND TRIP per unit — so a unit priced at one item retires a document-scaled
+    /// world-3d patch (≈ 460 `UiText` slices across 11 lane carriers) one host round trip at a time.
+    /// Measured 2026-09-10 (W-S2): 24.3 s and 8 799 worker messages between the Nakagin example click
+    /// and the repaint. Every other stage of the same turn is priced per PAGE; this one now is too.
+    pub(super) fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
         if let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.acknowledged)) {
-            self.close_slot_step(index, 1, 4096)?;
+            self.close_slot_step(index, items, bytes)?;
             return Ok(false);
         }
         let Some(index) = self.closing_instances.iter().position(|closing| closing.is_some_and(|closing| closing.active && !closing.complete)) else { return Ok(true) };
         let Some(closing) = self.closing_instances[index] else { return Err("pending patch close reservation disappeared") };
-        if self.close_instance_step(closing.key.instance(), 1, 4096)?.complete {
+        if self.close_instance_step(closing.key.instance(), items, bytes)?.complete {
             self.closing_instances[index].as_mut().expect("exact retained pending patch receipt").complete = true;
         }
         Ok(false)

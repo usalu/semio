@@ -22,6 +22,7 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
     let trimmed = new_id.trim();
     let mut fixture = snapshot.to_fixture();
     if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
+        fixture.retire_cold();
         return None;
     }
     for widget in fixture.widgets.iter_mut() {
@@ -60,9 +61,15 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
 /// the next dispatch, same as any other deleted-then-recreated id), an accepted UX regression for this
 /// wave (mirrors note's `add-block`/`rename-flow-widget` no longer being able to steer selection).
 pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let fixture = doc.snapshot;
-    match renamed_fixture(fixture, &payload.old_id, &payload.value) {
-        Some(next) => Ok(Emit::mutations(crate::schema::mutations::snapshot_operations(fixture, &next))),
-        None => Ok(Emit::default()),
+    Ok(Emit::mutations(rename_operations(payload, doc.snapshot)))
+}
+
+/// 🏷️ The rename document operations — the one body the batch `handle` above and the retained
+/// `FlowGraphOperationWork` route both run, so neither can drift from the other
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Empty when the rename is a no-op.
+pub fn rename_operations(payload: &RenameFlowWidget, snapshot: &FlowSnapshot) -> Vec<FlowMutation> {
+    match renamed_fixture(snapshot, &payload.old_id, &payload.value) {
+        Some(next) => crate::schema::mutations::snapshot_operations(snapshot, &next),
+        None => Vec::new(),
     }
 }

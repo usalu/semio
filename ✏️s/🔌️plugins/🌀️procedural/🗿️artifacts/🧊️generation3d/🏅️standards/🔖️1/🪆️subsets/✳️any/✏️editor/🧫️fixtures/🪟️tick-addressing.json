@@ -1,0 +1,69 @@
+{
+  "format": "semio.generation3d.tick-addressing",
+  "version": 1,
+  "note": "The window address of the self-dispatched flowEvalTick chain, declared as data. `arming` is what Generation3dPlayApp::pending_effects may put on the wire for a given attached-window roster; `dispatch` is which of those addresses the retained route's own preflight admits. Language-agnostic: an implementation in any language must answer these exact rows.",
+  "windowKinds": {
+    "flow": "procedural-main",
+    "preview": "procedural-preview"
+  },
+  "arming": [
+    {
+      "id": "no-surface-mounted",
+      "attached": [],
+      "armedWindowIds": [],
+      "why": "Before the first SurfaceVisible there is no roster and no window transient to publish into — the chain waits instead of spinning an address that cannot land."
+    },
+    {
+      "id": "flow-window-only",
+      "attached": [{ "id": "main", "kind": "flow" }],
+      "armedWindowIds": [],
+      "why": "The flow window holds no evaluation publication; arming a tick it can only refuse is the served-app stall."
+    },
+    {
+      "id": "flow-and-preview",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "preview", "kind": "preview" }],
+      "armedWindowIds": ["preview"],
+      "why": "The preview window owns the retained evaluation, so the tick names it — never the current window."
+    },
+    {
+      "id": "two-previews",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "left", "kind": "preview" }, { "id": "right", "kind": "preview" }],
+      "armedWindowIds": ["left", "right"],
+      "why": "Every preview window holds its OWN publication, so every one gets its own addressed chain."
+    }
+  ],
+  "dispatch": [
+    {
+      "id": "unaddressed",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "preview", "kind": "preview" }],
+      "currentWindowId": "main",
+      "payloadWindowId": "",
+      "admitted": false,
+      "why": "The defect: an Effect::DispatchAction carries no window, so the shell redispatches under the current window and the route refuses."
+    },
+    {
+      "id": "flow-window-addressed",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "preview", "kind": "preview" }],
+      "currentWindowId": "main",
+      "payloadWindowId": "main",
+      "admitted": false,
+      "why": "An attached window of the wrong KIND is refused, not silently accepted."
+    },
+    {
+      "id": "preview-addressed-from-the-flow-window",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "preview", "kind": "preview" }],
+      "currentWindowId": "main",
+      "payloadWindowId": "preview",
+      "admitted": true,
+      "why": "The fix: the payload names the preview window, so the runtime captures THAT window's transient authority while the shell stays focused on the flow window."
+    },
+    {
+      "id": "detached-window-addressed",
+      "attached": [{ "id": "main", "kind": "flow" }, { "id": "preview", "kind": "preview" }],
+      "currentWindowId": "main",
+      "payloadWindowId": "closed-preview",
+      "admitted": false,
+      "why": "A window that left the roster fails closed — the chain ends and the next refresh re-arms it, rather than spinning."
+    }
+  ]
+}

@@ -731,6 +731,7 @@
         "grant",
         "operationCount",
         "cancelPrefixes",
+        "budget",
         "laws"
       ],
       "properties": {
@@ -767,8 +768,8 @@
         },
         "laws": {
           "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
+          "minItems": 11,
+          "maxItems": 11,
           "uniqueItems": true,
           "items": {
             "enum": [
@@ -780,8 +781,49 @@
               "cancel-retains-input-owner",
               "no-whole-instance-close",
               "late-cancel-preserves-ack",
-              "shared-close-driver"
+              "shared-close-driver",
+              "budget-scales-with-node-quota",
+              "budget-slice-is-resumable"
             ]
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stepsPerNode",
+            "sliceSteps",
+            "ceilings"
+          ],
+          "properties": {
+            "stepsPerNode": {
+              "const": 8192
+            },
+            "sliceSteps": {
+              "const": 4096
+            },
+            "ceilings": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maxNodes",
+                  "steps"
+                ],
+                "properties": {
+                  "maxNodes": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "steps": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
           }
         }
       }

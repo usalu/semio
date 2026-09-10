@@ -63,6 +63,6 @@ pub fn render(document: &AssemblySnapshot) -> UiAssemblyResult<BuiltNode> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/🌳️structure/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

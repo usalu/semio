@@ -1,0 +1,29 @@
+package semio:procedural-generation3d-viewer-config@1.0.0;
+
+/// 🎚️ The language-neutral surface of `Generation3dViewConfig` — the persisted, read-only view
+/// state the 3D viewer keeps per instance. It is the same four facets the sibling formats state
+/// (`🔣️.json` `$id` `…/procedural/3d/viewer/config/schema.json`, `🦀️.rs` `Generation3dViewConfig`,
+/// `🟦️.ts`, `🔗️.graphql`, `🛰️.proto`); the editor's own `Generation3dConfig` carries three more
+/// (`camera`, `selected-generation-id`, `preview-eval-text`) the viewer has no window for.
+interface config {
+    /// 📷️ A preview camera. `position` and `target` are exactly three doubles, in metres; WIT has no
+    /// fixed-length list, so the length is the contract, not the type.
+    record view-camera {
+        position: list<f64>,
+        target: list<f64>,
+        fov: f64,
+    }
+
+    /// 🎚️ The persisted view-state record.
+    record view-config {
+        lod-mode: string,
+        show-mode: string,
+        preview-camera: view-camera,
+        sun-json: string,
+    }
+}
+
+/// 🌍️ The world one 3D viewer instance's configuration store exports.
+world generation3d-viewer-config {
+    export config;
+}

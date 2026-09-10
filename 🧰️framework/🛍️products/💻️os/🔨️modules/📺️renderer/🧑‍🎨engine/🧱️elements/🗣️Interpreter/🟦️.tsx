@@ -14,6 +14,7 @@
 
 // #region 🔌️Adapters
 import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { packedTextLeaf } from "../🔌️PluginRuntime/packed-text.ts";
 import {
   Button,
   ContextMenuController,
@@ -96,6 +97,7 @@ import {
   type StackLayout,
   type StyleSpec,
   type PatchRejection,
+  type SurfaceId,
   type SurfaceProps,
   type UiDocumentLimits,
   type UiIntent,
@@ -466,8 +468,9 @@ function renderComponentSceneHost(
  *    `instances` changes only when the document does.
  * 2. **Partial arrival.** A surface tree larger than `SURFACE_RECONCILE_PAGE_BYTES` arrives across
  *    several patches, so a spine can land before the leaves it declares. A lane whose concatenation
- *    does not yet match the declared byte length falls back to its last complete text instead of
- *    handing the host a truncated JSON string that would parse to nothing.
+ *    does not yet match the declared byte length is omitted when its hash changed (a document swap
+ *    must not keep serving the previous fixture) and is served from cache only when the hash still
+ *    matches — never as truncated JSON that would parse to nothing.
  *
  * Bounded by {@link SURFACE_SCENE_LANE_CACHE_ENTRIES} with plain insertion-order eviction — an entry
  * is one lane of one live surface node, and a torn-down document simply stops touching its own. */
@@ -501,7 +504,7 @@ function utf8ByteLength(value: string): number {
   return bytes;
 }
 
-/** 🧩️ Depth-first concatenation of every `text` leaf under `root` — the exact inverse of the plugin
+/** 🧩️ Depth-first concatenation of every packed `text` leaf (`value` then sorted `dataAttributes`) under `root` — the exact inverse of the plugin
  * host's `paged_text_carrier`, and the same walk `sectionValueFromBuiltNode` does for a reserved
  * refresh section. */
 function surfaceSceneLaneText(state: UiDocumentState, root: UiNodeRecord): string {
@@ -511,7 +514,9 @@ function surfaceSceneLaneText(state: UiDocumentState, root: UiNodeRecord): strin
     const id = stack.pop()!;
     const record = state.nodes.get(id);
     if (!record) continue;
-    if (record.component.type === "text" && typeof record.component.value === "string") payload += record.component.value;
+    if (record.component.type === "text" && typeof record.component.value === "string") {
+      payload += packedTextLeaf(record.component.value, record.component.dataAttributes);
+    }
     for (let index = (record.children ?? []).length - 1; index >= 0; index -= 1) stack.push(record.children[index]!);
   }
   return payload;
@@ -540,8 +545,6 @@ function world3dSurfaceLaneTexts(record: UiNodeRecord, state: UiDocumentState, d
     if (utf8ByteLength(text) === ref.bytes) {
       rememberSurfaceSceneLane(cacheKey, ref.hash, text);
       texts.set(lane.bodyKey, text);
-    } else if (cached) {
-      texts.set(lane.bodyKey, cached.text);
     }
   }
   return texts;
@@ -649,11 +652,24 @@ export async function openSurfaceContextMenu(
   mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
   shellFallback: (() => ContextMenuItem[]) | undefined,
 ): Promise<SurfaceContextMenuResult> {
-  const specs = requestContextMenu ? await requestContextMenu(request) : [];
-  return {
-    items: specs.length > 0 ? mapSpecs(specs) : (shellFallback?.() ?? []),
-    titleKey: surfaceContextMenuTitleKey(request),
-  };
+  if (!requestContextMenu) {
+    return {
+      items: shellFallback?.() ?? [],
+      titleKey: surfaceContextMenuTitleKey(request),
+    };
+  }
+  try {
+    const specs = await requestContextMenu(request);
+    return {
+      items: mapSpecs(specs),
+      titleKey: surfaceContextMenuTitleKey(request),
+    };
+  } catch {
+    return {
+      items: [],
+      titleKey: surfaceContextMenuTitleKey(request),
+    };
+  }
 }
 
 //#region VirtualFileSystemHost
@@ -984,7 +1000,8 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
       {...dataAttrs}
       {...aria}
       role={activateBinding ? "button" : role}
-      data-ui-node-id={record.id}
+      id={nodeDomId(store, record)}
+      data-ui-node-id={record.id} data-ui-node-key={record.key}
       data-activity={record.activity}
       className={cn(activityBorderClass(record), activateBinding && cn(borderElementClass, "border cursor-pointer rounded-md"), presence.selected && "ring-primary ring-1", presence.hovered && "outline-primary/50 outline-1")}
       aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
@@ -1000,7 +1017,7 @@ function TextView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "text" }>;
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
   return (
-    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} {...aria}>
+    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} data-ui-node-key={record.key} {...aria}>
       {describedBy}
       {component.value}
     </p>
@@ -1011,8 +1028,8 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
   const component = record.component as Extract<Component, { type: "button" }>;
   return (
     <Button
-      id={`node-${record.id}`}
-      data-ui-node-id={record.id}
+      id={nodeDomId(context.store, record)}
+      data-ui-node-id={record.id} data-ui-node-key={record.key}
       text={component.label}
       icon={resolveControlIconNode(component.icon)}
       disabled={record.disabled}
@@ -1034,8 +1051,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   if (component.kind === "longText") {
     return (
       <Textarea
-        id={`node-${record.id}`}
-        data-ui-node-id={record.id}
+        id={nodeDomId(context.store, record)}
+        data-ui-node-id={record.id} data-ui-node-key={record.key}
         className="min-h-[4.5rem] w-full min-w-0"
         value={component.value}
         placeholder={component.placeholder ?? undefined}
@@ -1047,8 +1064,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
   return (
     <Input
-      id={`node-${record.id}`}
-      data-ui-node-id={record.id}
+      id={nodeDomId(context.store, record)}
+      data-ui-node-id={record.id} data-ui-node-key={record.key}
       type={inputType}
       className="h-medium w-full min-w-0"
       value={component.kind === "file" ? undefined : component.value}
@@ -1066,8 +1083,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
 function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
   return (
-    <Select id={`node-${record.id}-select`} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
-      <SelectTrigger id={`node-${record.id}`} data-ui-node-id={record.id} className="h-medium w-full min-w-0" size="sm">
+    <Select id={`${nodeDomId(context.store, record)}-select`} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+      <SelectTrigger id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-medium w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
       <SelectContent>
@@ -1083,13 +1100,13 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
 
 function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  return <Toggle id={`node-${record.id}`} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  return <Toggle id={nodeDomId(context.store, record)} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "keyValueList" }>;
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-node-id={record.id}>
+    <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
       {component.entries.map((entry, index) => (
         <div key={`${entry.label}:${index}`} className="contents">
           <dt className="text-muted-foreground">{entry.label}</dt>
@@ -1104,8 +1121,8 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
   const component = record.component as Extract<Component, { type: "slider" }>;
   const slider = (
     <Slider
-      id={`node-${record.id}`}
-      data-ui-node-id={record.id}
+      id={nodeDomId(context.store, record)}
+      data-ui-node-id={record.id} data-ui-node-key={record.key}
       className="w-full min-w-0"
       max={component.max}
       min={component.min}
@@ -1129,7 +1146,7 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
   const component = record.component as Extract<Component, { type: "numberStepper" }>;
   return (
     <Stepper
-      id={`node-${record.id}`}
+      id={nodeDomId(context.store, record)}
       step={component.step}
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
@@ -1141,7 +1158,7 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
 
 function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "ring" }>;
-  return <Ring id={`node-${record.id}`} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+  return <Ring id={nodeDomId(context.store, record)} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
 }
 
 function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -1149,7 +1166,7 @@ function IconSelectView({ record, context }: { readonly record: UiNodeRecord; re
   return (
     <IconSelector
       classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
-      id={`node-${record.id}`}
+      id={nodeDomId(context.store, record)}
       onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
       uniform={component.uniform}
       value={component.value}
@@ -1170,14 +1187,49 @@ function collectTreeItems(state: UiDocumentState, ids: readonly UiNodeId[]): rea
   return out;
 }
 
-function treeItemToTreeData(state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue): TreeDataItem {
+/** 🎛️ Non-`treeItem` children of a tree item are its inline row controls (the History panel's
+ * `framework.history.undo.run` button, the filter's select) — mounted through {@link UiNodeView}
+ * into {@link TreeDataItem.control} so their own bindings stay live; `collectTreeItems` alone
+ * silently dropped them (browser-measured 2026-09-10: `.run` never mounted, Undo row inert). */
+function collectTreeItemControls(state: UiDocumentState, ids: readonly UiNodeId[]): readonly UiNodeRecord[] {
+  const out: UiNodeRecord[] = [];
+  for (const id of ids) {
+    const record = state.nodes.get(id);
+    if (!record || record.component.type === "treeItem") continue;
+    out.push(record);
+  }
+  return out;
+}
+
+//#region 🪪️StableDomIds
+/** 🪪️ THE stable DOM id of one retained UI node: the surface it belongs to, then the node's own
+ * Rust-authored `key`. `UiNodeRecord.id` is a DFS-order integer re-minted on EVERY full-body
+ * reconciliation (`builtNodeToSnapshot`, `📃️UiDocumentStore/🟦️.tsx`), so an id built from it names a
+ * different row after the next refresh — a scripted or assistive click keyed on `#5` silently targets
+ * the wrong node. `key` is authored by the program (`procedural3d-play-generate.add-generation`) and
+ * survives every refresh, and the surface prefix is what namespaces it per window, since two windows of
+ * one app can render the same authored key. Falls back to the volatile id only for a keyless node
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function uiNodeDomId(surface: SurfaceId, key: string, fallbackNodeId: UiNodeId): string {
+  return key ? `${surface}/${key}` : `node-${fallbackNodeId}`;
+}
+
+/** 🪪️ {@link uiNodeDomId} for a record held by a live store — the surface comes off the store's own state. */
+function nodeDomId(store: UiDocumentStore, record: UiNodeRecord): string {
+  return uiNodeDomId(store.getState().surface, record.key, record.id);
+}
+//#endregion 🪪️StableDomIds
+
+function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue): TreeDataItem {
   const { record, props } = node;
   const presence = overlay.byKey.get(record.key) ?? {};
   const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
+  const controlRecords = collectTreeItemControls(state, record.children ?? []);
+  const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate"));
   return {
-    id: String(record.id),
+    id: uiNodeDomId(state.surface, record.key, record.id),
     label: props.label,
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
@@ -1188,8 +1240,9 @@ function treeItemToTreeData(state: UiDocumentState, node: TreeWalkNode, context:
     isHidden: props.dimmed ?? undefined,
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(state, child, context, overlay)) : undefined,
-    onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : undefined,
+    control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{controlRecords.filter((child) => child !== activatableControl).map((child) => <UiNodeView key={String(child.id)} store={store} id={child.id} context={context} />)}</> : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay)) : undefined,
+    onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined,
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
     actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
   };
@@ -1206,12 +1259,12 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
       const items = collectTreeItems(state, sectionRecord.children ?? []);
       return {
-        id: String(sectionRecord.id),
+        id: uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id),
         label: sectionProps.label ?? "",
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(state, item, context, overlay)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay)),
       };
     });
   }, [store, record, revision, context, overlay]);
@@ -1223,7 +1276,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-auto"
-      sections={sections.length > 0 ? sections : [treeStatusSection(record)]}
+      sections={sections.length > 0 ? sections : [treeStatusSection(store, record)]}
       selectionMode="single"
       showLines
       dragAndDropController={dragController}
@@ -1242,17 +1295,17 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
  * contract's declared mechanism for this state, and it was the one thing this view dropped: a
  * `treeSection` carries `loading`/`waiting` for exactly this purpose. An idle tree with no sections is
  * a real, rendered empty body and says so instead. */
-function treeStatusSection(record: UiNodeRecord): TreeDataSection {
+function treeStatusSection(store: UiDocumentStore, record: UiNodeRecord): TreeDataSection {
   const loading = record.activity === "loading";
   const waiting = record.activity === "waiting";
   const status = loading || waiting ? interpLabel("ui.common.loadingSurface") : interpLabel("ui.common.noData");
-  return { id: `node-${record.id}-status`, label: status, defaultOpen: true, loading, waiting, items: [], emptyState: status };
+  return { id: `${nodeDomId(store, record)}-status`, label: status, defaultOpen: true, loading, waiting, items: [], emptyState: status };
 }
 //#endregion Tree
 
 function ImageView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "image" }>;
-  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} />;
+  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
 }
 
 /** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`). Its `doc.bytes` carry only
@@ -1283,7 +1336,7 @@ function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "extension" }>;
   return (
     <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-      <p className="text-muted-foreground text-xs" data-ui-node-id={record.id}>
+      <p className="text-muted-foreground text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
         Extension unavailable: {component.extension}
       </p>
     </ShellFaultBoundary>
@@ -1296,7 +1349,7 @@ function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
   const kind = (record.component as { readonly type: string }).type;
   console.error(`Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
   return (
-    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-unknown-component={kind}>
+    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key} data-unknown-component={kind}>
       Unrecognized component: {kind}
     </div>
   );
@@ -1306,7 +1359,7 @@ function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
 function interpretUiNodeBusyShell(record: UiNodeRecord): ReactNode | null {
   if (record.activity !== "loading" && record.activity !== "waiting") return null;
   return (
-    <div data-ui-node-id={record.id} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
+    <div data-ui-node-id={record.id} data-ui-node-key={record.key} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
       {elementSkeleton(record.component.type as ElementSkeletonKind)}
     </div>
   );
@@ -1325,7 +1378,7 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
     case "button":
       return <ButtonView record={record} context={context} />;
     case "separator":
-      return <hr className={cn("border-0", borderNormalTopClass)} data-ui-node-id={record.id} />;
+      return <hr className={cn("border-0", borderNormalTopClass)} data-ui-node-id={record.id} data-ui-node-key={record.key} />;
     case "input":
       return <InputView record={record} context={context} />;
     case "select":

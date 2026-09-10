@@ -9,7 +9,7 @@ type Operation = { kind: "upsert"; node: OwnedUiNode } | { kind: "field"; id: nu
 type Program = Generator<number, void, void>;
 type Link = { id: number; next: Link | null };
 const MINT = Symbol("owned-ui-operation");
-export type OwnedUiOperationResult = { readonly nodes: OwnedUiNodeIndex; readonly root: number | null; readonly touched: NumericIndex<true>; readonly estimatedBytes: number };
+export type OwnedUiOperationResult = { readonly nodes: OwnedUiNodeIndex; readonly root: number | null; readonly touched: NumericIndex<true>; readonly estimatedBytes: number; readonly shapePreserving: boolean };
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const state = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function id(value: number): number { if (!Number.isSafeInteger(value) || value < 0) throw new RangeError("UI node ID is not a nonnegative safe integer"); return value === 0 ? 0 : value; }
@@ -25,6 +25,33 @@ function* operationStrings(operation: Operation): Generator<string> {
     if (change.field === "bindings") yield* retainedUiBindingStrings(change.payload.value);
     if (change.field === "menu") yield change.payload.value?.id ?? "";
   }
+}
+
+/** 🏷️ Whether a record renders as a section container — the only component property the graph
+ * invariants read as *structure* rather than as content (`🔬️graph/🟦️.ts`'s `sectionNested`). */
+function sectionRole(component: RetainedUiNodeRecord["component"]): boolean { return component.type === "container" && component.role === "section"; }
+
+/** 🧮️ Metered equality over the three record properties the graph invariants are a function of:
+ * sibling `key`, `children` edges and section role. Two records that agree on all three occupy the
+ * SAME position in every invariant the validated base already proved — reachability, depth, cycles,
+ * nested sections, orphan children and duplicate sibling keys — so a delta made only of such
+ * replacements needs no graph walk at all (see {@link OwnedUiOperationResult.shapePreserving}). */
+function* sameGraphShape(previous: RetainedUiNodeRecord, next: RetainedUiNodeRecord, grant: () => NumericIndexGrant): Generator<number, boolean, void> {
+  yield 48;
+  if (previous.key.length !== next.key.length || previous.children.length !== next.children.length || sectionRole(previous.component) !== sectionRole(next.component)) return false;
+  let index = 0;
+  while (index < previous.key.length) {
+    let work = 0;
+    while (index < previous.key.length && work + 8 <= grant().maxBytes) { if (previous.key.charCodeAt(index) !== next.key.charCodeAt(index)) return false; index++; work += 8; }
+    yield work;
+  }
+  let edge = 0;
+  while (edge < previous.children.length) {
+    let work = 0;
+    while (edge < previous.children.length && work + 8 <= grant().maxBytes) { if (previous.children[edge] !== next.children[edge]) return false; edge++; work += 8; }
+    yield work;
+  }
+  return true;
 }
 
 /** 🩹️ A typed operation captures exact normalized field owners, never arbitrary borrowed JSON. */
@@ -83,6 +110,7 @@ export class OwnedUiOperationCursor {
   #status: "pending" | "ready" | "rejected" | "closing" | "closed" = "pending";
   #failure: string | null = null;
   #estimatedBytes = 16;
+  #shapePreserving = true;
   readonly #maxChildren: number;
   readonly #maxTextBytes: number;
 
@@ -119,8 +147,13 @@ export class OwnedUiOperationCursor {
     if (component && (yield* measureRetainedUiText(retainedUiComponentStrings(component), () => this.#grant)) > this.#maxTextBytes) throw new Error("Owned UI text quota exceeded");
     this.#estimatedBytes += yield* measureRetainedUiText(operationStrings(operation), () => this.#grant);
     if (operation.kind === "field" && operation.change.field === "children") this.#estimatedBytes += operation.change.payload.value.length * 8;
-    if (operation.kind === "root") { this.#root = operation.id; yield 16; }
-    else if (operation.kind === "upsert") { yield* this.#change(this.#nodes!.beginSet(operation.node)); yield* this.#touched.set(operation.node.value.id, true); }
+    if (operation.kind === "root") { this.#shapePreserving = operation.id === this.#root; this.#root = operation.id; yield 16; }
+    else if (operation.kind === "upsert") {
+      yield* this.#lookup(operation.node.value.id);
+      this.#shapePreserving = this.#shapePreserving && this.#node !== null && (yield* sameGraphShape(this.#node.value, operation.node.value, () => this.#grant));
+      yield* this.#releaseNode();
+      yield* this.#change(this.#nodes!.beginSet(operation.node)); yield* this.#touched.set(operation.node.value.id, true);
+    }
     else if (operation.kind === "remove") {
       this.#stack = { id: operation.id, next: null }; yield 32;
       while (this.#stack) {
@@ -128,6 +161,7 @@ export class OwnedUiOperationCursor {
         yield* this.#lookup(cell.id);
         if (!this.#node) continue;
         const children = this.#node.value.children;
+        this.#shapePreserving = false;
         yield* this.#change(this.#nodes!.beginRemove(cell.id)); yield* this.#touched.set(cell.id, true);
         for (const child of children) { this.#stack = { id: child, next: this.#stack }; yield 32; }
         yield* this.#releaseNode();
@@ -136,6 +170,7 @@ export class OwnedUiOperationCursor {
       yield* this.#lookup(operation.id);
       if (!this.#node) throw new Error(`Unknown UI node: ${operation.id}`);
       this.#replacement = operation.kind === "field" ? this.#node.replace(operation.change) : this.#node.withActivity(operation.payload); yield 512;
+      this.#shapePreserving = this.#shapePreserving && (yield* sameGraphShape(this.#node.value, this.#replacement.value, () => this.#grant));
       yield* this.#change(this.#nodes!.beginSet(this.#replacement)); yield* this.#touched.set(operation.id, true);
       yield* this.#releaseNode(); this.#node = this.#replacement; this.#replacement = null; yield* this.#releaseNode();
     }
@@ -151,7 +186,7 @@ export class OwnedUiOperationCursor {
     catch (error) { this.#failure = error instanceof Error ? error.message : "Owned UI operation failed"; this.#status = "rejected"; this.#program = null; return state("rejected", "operation", 64); }
   }
 
-  takeResult(): OwnedUiOperationResult | null { if (this.#status !== "ready" || !this.#nodes) return null; const nodes = this.#nodes; this.#nodes = null; return { nodes, root: this.#root, touched: this.#touched.take(), estimatedBytes: this.#estimatedBytes }; }
+  takeResult(): OwnedUiOperationResult | null { if (this.#status !== "ready" || !this.#nodes) return null; const nodes = this.#nodes; this.#nodes = null; return { nodes, root: this.#root, touched: this.#touched.take(), estimatedBytes: this.#estimatedBytes, shapePreserving: this.#shapePreserving }; }
   beginClose(): void { if (this.#status === "closed" || this.#status === "closing") return; this.#status = "closing"; this.#program = null; }
   closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
     if (this.#status === "closed") return state("complete", "operation-close");

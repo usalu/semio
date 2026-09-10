@@ -145,6 +145,31 @@ struct BrowserBootStepOutput {
     progress: f32,
     shell_boot: bool,
     complete: bool,
+    /// ⏱️ What this ONE bootstrap phase executed for, in microseconds, measured inside the Worker
+    /// isolate. The JS driver prices its own `renderer-bootstrap` turn against the browser-owned
+    /// suspension ledger, which cannot separate this phase's work from the Worker being descheduled;
+    /// this reading can, because it never leaves the phase. Reported, never a verdict — the phase
+    /// machine below is already the chunking, one phase per macrotask.
+    elapsed_us: u32,
+}
+
+/// 🧱️ One bootstrap phase's own answer, before the driver stamps what it cost. Split from
+/// [`BrowserBootStepOutput`] so the phase machine's arms stay declarations of WHAT the phase is and
+/// the measurement is taken in exactly one place.
+struct BootPhase {
+    stage: &'static str,
+    progress: f32,
+    shell_boot: bool,
+    complete: bool,
+}
+
+/// ⏱️ `performance.now()` inside the frame Worker — the only sub-millisecond monotonic clock a Worker
+/// isolate publishes (`js_sys::Date::now()` is wall time at millisecond resolution, too coarse to price
+/// a boot phase). Falls back to `0.0`, which the caller reads as a zero-length span, when the isolate
+/// exposes no performance object at all.
+fn worker_now_ms() -> f64 {
+    use wasm_bindgen::JsCast;
+    js_sys::global().dyn_into::<web_sys::WorkerGlobalScope>().ok().and_then(|scope| scope.performance()).map(|performance| performance.now()).unwrap_or(0.0)
 }
 //#endregion 📥️Wire
 
@@ -583,43 +608,46 @@ pub struct BrowserRendererBootstrap {
 #[wasm_bindgen]
 impl BrowserRendererBootstrap {
     pub fn step(&mut self) -> Result<String, JsValue> {
-        let output = match self.phase {
+        let started_at = worker_now_ms();
+        let phase = match self.phase {
             0 => {
                 self.atlas = Some(FontAtlas::from_bytes(&[]).map_err(|error| js_error("font-atlas", &error.to_string()))?);
-                BrowserBootStepOutput { stage: "font-atlas", progress: 0.1, shell_boot: false, complete: false }
+                BootPhase { stage: "font-atlas", progress: 0.1, shell_boot: false, complete: false }
             }
             1 => {
                 if crate::icon_atlas::icon_atlas_source_count() > ICON_SOURCE_CAPACITY {
                     return Err(js_error("icon-credits", "icon atlas source count exceeds the Worker boot cap"));
                 }
                 self.icons = Some(crate::icon_atlas::build_icon_atlas());
-                BrowserBootStepOutput { stage: "icon-atlas", progress: 0.25, shell_boot: false, complete: false }
+                BootPhase { stage: "icon-atlas", progress: 0.25, shell_boot: false, complete: false }
             }
             2 => {
                 self.gpu.as_mut().expect("bootstrap GPU exists").upload_font_atlas(self.atlas.as_ref().expect("bootstrap atlas exists"));
-                BrowserBootStepOutput { stage: "font-upload", progress: 0.35, shell_boot: false, complete: false }
+                BootPhase { stage: "font-upload", progress: 0.35, shell_boot: false, complete: false }
             }
             3 => {
                 self.gpu.as_mut().expect("bootstrap GPU exists").upload_icon_atlas(self.icons.as_ref().expect("bootstrap icons exist"));
-                BrowserBootStepOutput { stage: "icon-upload", progress: 0.45, shell_boot: false, complete: false }
+                BootPhase { stage: "icon-upload", progress: 0.45, shell_boot: false, complete: false }
             }
             4 => {
                 self.entries = Some(filter_plugins(parse_plugin_entries(self.plugins.clone()).map_err(|error| js_error("plugin-parse", &error.to_string()))?, &self.plugin_filter));
-                BrowserBootStepOutput { stage: "plugin-parse", progress: 0.55, shell_boot: false, complete: false }
+                BootPhase { stage: "plugin-parse", progress: 0.55, shell_boot: false, complete: false }
             }
             5 => {
                 let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone());
                 shell.screen_w = self.width.max(1) as f32;
                 shell.screen_h = self.height.max(1) as f32;
                 self.shell = Some(shell);
-                BrowserBootStepOutput { stage: "shell-construct", progress: 0.65, shell_boot: false, complete: false }
+                BootPhase { stage: "shell-construct", progress: 0.65, shell_boot: false, complete: false }
             }
-            6 => BrowserBootStepOutput { stage: "shell-boot", progress: 0.7, shell_boot: true, complete: false },
-            _ => BrowserBootStepOutput { stage: "runtime-ready", progress: 0.95, shell_boot: false, complete: true },
+            6 => BootPhase { stage: "shell-boot", progress: 0.7, shell_boot: true, complete: false },
+            _ => BootPhase { stage: "runtime-ready", progress: 0.95, shell_boot: false, complete: true },
         };
         if self.phase != 6 {
             self.phase = self.phase.saturating_add(1);
         }
+        let elapsed_us = ((worker_now_ms() - started_at).max(0.0) * 1000.0).min(f64::from(u32::MAX)) as u32;
+        let output = BrowserBootStepOutput { stage: phase.stage, progress: phase.progress, shell_boot: phase.shell_boot, complete: phase.complete, elapsed_us };
         serde_json::to_string(&output).map_err(|error| js_error("boot-step-encode", &error.to_string()))
     }
 

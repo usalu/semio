@@ -16,7 +16,6 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
     assert_eq!(mutations.len(), GENERATION2D_MUTATION_VARIANT_COUNT);
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P2 retained mutation fixture encode");
-        eprintln!("[DEBUG] retained fixture kind={:?} bytes={}", protocol::SemanticMutation::semantics(&mutation).kind, bytes.len());
         let mut session = Generation2dMutationSession::new(bytes.len(), GENERATION2D_MAXIMUM_DOMAIN_ITEMS).expect("P2 retained mutation preflight");
         for byte in bytes {
             assert!(session.ingress_ready());

@@ -1,0 +1,29 @@
+semio procedural.assembly.dsl v1
+schema=s.assembly seed=42 modules=[ child_id=wall target="wall!s.stdio.semio@v1/kit" child_id=roof target="roof!s.stdio.semio@v1/kit" ]
+slots [id:TEXT x:NUM y:NUM z:NUM pinned:TEXT] {
+  bay-0-ground 0 0 0 _
+  bay-1-ground 1 0 0 _
+  bay-0-top 0 0 1 _
+  bay-1-top 1 0 1 roof
+}
+edges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT] {
+  edge-ground-row bay-0-ground bay-1-ground
+  edge-top-row bay-0-top bay-1-top
+  edge-bay-0-stack bay-0-ground bay-0-top
+  edge-bay-1-stack bay-1-ground bay-1-top
+}
+weights [module-id:TEXT weight:NUM] {
+  wall 3
+  roof 1
+}
+rules [id:TEXT module-a-id:TEXT module-b-id:TEXT allowed:BOOL params:VAL] {
+  rule-wall-wall wall wall true {
+    kind="null"
+  }
+  rule-wall-roof wall roof true {
+    kind="null"
+  }
+  rule-roof-roof roof roof false {
+    kind="null"
+  }
+}

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -26,15 +26,40 @@ export function decodeAstralEscapes(text: string): string {
   return text.replace(/\\u(d[89ab][0-9a-f]{2})\\u(d[c-f][0-9a-f]{2})/gi, (_match, hi: string, lo: string) => String.fromCharCode(parseInt(hi, 16), parseInt(lo, 16)));
 }
 
-/** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes. */
+let bundleLane: Promise<void> = Promise.resolve();
+
+/** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes.
+ * Bun labels every bundled module with a banner comment spelling that module's path RELATIVE TO
+ * `process.cwd()` — the `root` build option does not govern it — so the identical sources rendered
+ * from an Nx target's project cwd and from a repo-root dev lane differ in thousands of comment bytes
+ * and the generate/check pair can never agree (measured: 316 differing lines, `🧰️framework/…` against
+ * `../../../../../../../../../…`). The render therefore always runs with the process anchored at the
+ * workspace root — the one cwd every caller can name — and restores the caller's cwd afterwards.
+ * Renders are serialized through {@link bundleLane} so a concurrent caller never observes the
+ * anchored cwd of another render. */
 export async function renderBrowserEntry(entryPath: string): Promise<string> {
   assertPinnedBunVersion();
+  const rendered = bundleLane.then(() => bundleAtWorkspaceRoot(resolve(entryPath)));
+  bundleLane = rendered.then(
+    () => undefined,
+    () => undefined,
+  );
+  return await rendered;
+}
+
+async function bundleAtWorkspaceRoot(entryPath: string): Promise<string> {
   const runtime = globalThis as typeof globalThis & {
     Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm"; define: Record<string, string> }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> };
   };
-  const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" } });
-  if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
-  return decodeAstralEscapes(await result.outputs[0]!.text());
+  const callerCwd = process.cwd();
+  process.chdir(repoRoot);
+  try {
+    const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" } });
+    if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
+    return decodeAstralEscapes(await result.outputs[0]!.text());
+  } finally {
+    process.chdir(callerCwd);
+  }
 }
 
 /** 🚀️ Renders the browser boot artifact without changing generated files. */

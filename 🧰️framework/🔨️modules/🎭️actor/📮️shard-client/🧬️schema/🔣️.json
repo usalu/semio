@@ -29,6 +29,7 @@
             "heartbeatTimeoutMs",
             "missedLimit",
             "progressIntervalMs",
+            "firstTurnTimeoutMs",
             "pluginLoadIdleTimeoutMs",
             "pluginLoadCeilingMs"
           ],
@@ -42,6 +43,10 @@
               "minimum": 1
             },
             "progressIntervalMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "firstTurnTimeoutMs": {
               "type": "integer",
               "minimum": 1
             },
@@ -84,6 +89,7 @@
             "required": [
               "id",
               "heartbeatTimeoutMs",
+              "firstTurnTimeoutMs",
               "timeline",
               "expected"
             ],
@@ -93,6 +99,10 @@
                 "pattern": "^[a-z0-9-]+$"
               },
               "heartbeatTimeoutMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "firstTurnTimeoutMs": {
                 "type": "integer",
                 "minimum": 1
               },
@@ -114,6 +124,7 @@
                     "event": {
                       "enum": [
                         "pending",
+                        "pending-first-turn",
                         "idle",
                         "liveness",
                         "check"

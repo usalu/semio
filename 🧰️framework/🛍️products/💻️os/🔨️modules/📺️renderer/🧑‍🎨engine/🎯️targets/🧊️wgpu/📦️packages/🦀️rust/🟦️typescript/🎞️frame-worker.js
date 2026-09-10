@@ -30,7 +30,7 @@ var __toESM = (mod, isNodeMode, target) => {
 };
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
 
-// ../../../../../../../../../../node_modules/react/cjs/react.development.js
+// node_modules/react/cjs/react.development.js
 var require_react_development = __commonJS((exports, module) => {
   (function() {
     function defineDeprecationWarning(methodName, info) {
@@ -853,16 +853,16 @@ See https://react.dev/link/invalid-hook-call for tips about how to debug and fix
   })();
 });
 
-// ../../../../../../../../../../node_modules/react/index.js
+// node_modules/react/index.js
 var require_react = __commonJS((exports, module) => {
   var react_development = __toESM(require_react_development());
   if (false) {} else {
     module.exports = react_development;
   }
 });
-/* ../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts */
+/* 🧰️framework/🔨️modules/🛂️manifest/🟦️.ts */
 if (undefined) {}
-/* ../../../../../../../../../🔨️modules/🔏️hash/🟦️.ts */
+/* 🧰️framework/🔨️modules/🔏️hash/🟦️.ts */
 var BLAKE3_IV = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
 var BLAKE3_MSG_PERMUTATION = [2, 6, 3, 10, 7, 0, 4, 13, 1, 11, 12, 5, 9, 14, 15, 8];
 var BLAKE3_CHUNK_START = 1;
@@ -1041,7 +1041,7 @@ class Blake3Hasher {
     return blake3RootOutputBytes(output, outLen);
   }
 }
-/* ../../../../../../../../../🔨️modules/🧬️schema/🟦️.ts */
+/* 🧰️framework/🔨️modules/🧬️schema/🟦️.ts */
 var GRAPHQL_STATE_PREAMBLE = `enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }
 ` + `directive @state(class: StateClass!) on FIELD_DEFINITION
 ` + "directive @derived on FIELD_DEFINITION";
@@ -1096,7 +1096,7 @@ class AppSchemaRegistry {
     return this.#byId.size === 0;
   }
 }
-/* ../../../../../../../../../🔨️modules/🖥️platform/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖥️platform/🟦️.ts */
 class Store {
   listeners = new Set;
   disposed = false;
@@ -1115,7 +1115,7 @@ class Store {
     this.listeners.clear();
   }
 }
-/* ../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts */
 var ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = 44;
 function decodeActorInstanceLifecycle(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES)
@@ -1173,7 +1173,7 @@ function actorInstanceCloseReceiptMatches(request, accepted, receipt) {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts */
 var ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = 35;
 function encodeActorUiPatchReceipt(receipt) {
   const lifetime = receipt.lifetime;
@@ -1234,7 +1234,7 @@ function validateActorUiPatchPairing(patchCount, receipt) {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts */
+/* 🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts */
 var MINT = Object.freeze({});
 var OWNER = Object.freeze({ bytes: 200, slots: 2, owners: 2 });
 var PAGE = Object.freeze({ bytes: 520, slots: 3, owners: 2 });
@@ -2339,7 +2339,7 @@ class OwnedResidentRetirement {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts */
 var MINT2 = Object.freeze({});
 var NO_OUTPUT_FAULT = Symbol("actor-output.no-fault");
 var MAX_SEQUENCE = 0xffffffffffffffffn;
@@ -2682,7 +2682,7 @@ class OwnedActorTurnOutputs {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts */
 var ACTOR_BYTE_PAGE_BYTES = 4096;
 function createActorBytePage(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length > ACTOR_BYTE_PAGE_BYTES)
@@ -2703,7 +2703,7 @@ function createActorBytePage(bytes) {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts */
 var ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES = 41;
 var ACTOR_RETURN_DRIVE_MAXIMUM_BYTES = 43;
 var ACTOR_RETURN_RESULT_MAXIMUM_BYTES = 1 + ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES + ACTOR_BYTE_PAGE_BYTES;
@@ -2969,7 +2969,7 @@ function decodeActorReturnResult(bytes) {
   return value.kind === "page" ? Object.freeze({ kind: "page", receipt: value.receipt, page: createActorBytePage(bytes.subarray(value.payloadOffset, value.payloadOffset + value.receipt.length)) }) : value;
 }
 if (undefined) {}
-/* ../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts */
+/* 🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts */
 var queueTask;
 var ownersOf;
 var closeOwner;
@@ -3668,7 +3668,7 @@ class NumericIndexEdit {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts */
 function finite(component) {
   switch (component.type) {
     case "slider":
@@ -3766,8 +3766,23 @@ function* retainedUiGraphValidation(nodes, root, limits, marks, keys, violations
       yield* violation({ type: "danglingRoot", node: id }, frontier, violations);
   }
 }
+function* retainedUiGraphTouchedValidation(nodes, touched, limits, violations, frontier) {
+  if (nodes.size > limits.maxNodes) {
+    yield* violation({ type: "nodeQuota", count: nodes.size, max: limits.maxNodes }, frontier, violations);
+    return;
+  }
+  for (const entry of touched.entries()) {
+    if (typeof entry === "number") {
+      yield entry;
+      continue;
+    }
+    const record = yield* nodes.lookup(entry[0]);
+    if (record && !finite(record.component))
+      yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
+  }
+}
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts */
 var granted2 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 256;
 var quota = (quota2, actual, max) => ({ type: "quotaExceeded", quota: quota2, actual, max });
 function copyLimits(value) {
@@ -4588,7 +4603,7 @@ class RetainedUiTransaction {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts */
 var admitted3 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var state = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 var adoptIndex;
@@ -4768,7 +4783,7 @@ class OwnedUiNodeIndexReader {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts */
 var PAGE_BYTES = 256;
 var MAXIMUM_BYTES = 32768;
 var admitted4 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
@@ -4922,7 +4937,7 @@ class UiSurfaceByteRetirement {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔒️transport/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔒️transport/🟦️.ts */
 function getter(prototype, key) {
   const read = Object.getOwnPropertyDescriptor(prototype, key)?.get;
   if (!read)
@@ -4960,7 +4975,7 @@ function takeOwnedNativeBuffer(input, kind, maximumBytes) {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts */
 var TEXT_BYTES = 512;
 var COLLECTION_ITEMS = 256;
 var MINIMUM_GRANT = 4096;
@@ -5438,7 +5453,7 @@ class RetainedUiWireValueCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts */
 var OWNER_MINT = Object.freeze({});
 var admitted6 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var step3 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -6420,7 +6435,7 @@ class RetainedUiChildIdsCursor {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts */
 var MINT3 = Symbol("owned-ui-operation");
 var admitted7 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var state2 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -6451,6 +6466,37 @@ function* operationStrings(operation) {
     if (change.field === "menu")
       yield change.payload.value?.id ?? "";
   }
+}
+function sectionRole(component) {
+  return component.type === "container" && component.role === "section";
+}
+function* sameGraphShape(previous, next, grant) {
+  yield 48;
+  if (previous.key.length !== next.key.length || previous.children.length !== next.children.length || sectionRole(previous.component) !== sectionRole(next.component))
+    return false;
+  let index = 0;
+  while (index < previous.key.length) {
+    let work = 0;
+    while (index < previous.key.length && work + 8 <= grant().maxBytes) {
+      if (previous.key.charCodeAt(index) !== next.key.charCodeAt(index))
+        return false;
+      index++;
+      work += 8;
+    }
+    yield work;
+  }
+  let edge = 0;
+  while (edge < previous.children.length) {
+    let work = 0;
+    while (edge < previous.children.length && work + 8 <= grant().maxBytes) {
+      if (previous.children[edge] !== next.children[edge])
+        return false;
+      edge++;
+      work += 8;
+    }
+    yield work;
+  }
+  return true;
 }
 
 class OwnedUiOperation {
@@ -6541,6 +6587,7 @@ class OwnedUiOperationCursor {
   #status = "pending";
   #failure = null;
   #estimatedBytes = 16;
+  #shapePreserving = true;
   #maxChildren;
   #maxTextBytes;
   constructor(source, root, operation, limits = { maxChildren: Number.MAX_SAFE_INTEGER, maxTextBytes: Number.MAX_SAFE_INTEGER }) {
@@ -6627,9 +6674,13 @@ class OwnedUiOperationCursor {
     if (operation.kind === "field" && operation.change.field === "children")
       this.#estimatedBytes += operation.change.payload.value.length * 8;
     if (operation.kind === "root") {
+      this.#shapePreserving = operation.id === this.#root;
       this.#root = operation.id;
       yield 16;
     } else if (operation.kind === "upsert") {
+      yield* this.#lookup(operation.node.value.id);
+      this.#shapePreserving = this.#shapePreserving && this.#node !== null && (yield* sameGraphShape(this.#node.value, operation.node.value, () => this.#grant));
+      yield* this.#releaseNode();
       yield* this.#change(this.#nodes.beginSet(operation.node));
       yield* this.#touched.set(operation.node.value.id, true);
     } else if (operation.kind === "remove") {
@@ -6644,6 +6695,7 @@ class OwnedUiOperationCursor {
         if (!this.#node)
           continue;
         const children2 = this.#node.value.children;
+        this.#shapePreserving = false;
         yield* this.#change(this.#nodes.beginRemove(cell.id));
         yield* this.#touched.set(cell.id, true);
         for (const child of children2) {
@@ -6658,6 +6710,7 @@ class OwnedUiOperationCursor {
         throw new Error(`Unknown UI node: ${operation.id}`);
       this.#replacement = operation.kind === "field" ? this.#node.replace(operation.change) : this.#node.withActivity(operation.payload);
       yield 512;
+      this.#shapePreserving = this.#shapePreserving && (yield* sameGraphShape(this.#node.value, this.#replacement.value, () => this.#grant));
       yield* this.#change(this.#nodes.beginSet(this.#replacement));
       yield* this.#touched.set(operation.id, true);
       yield* this.#releaseNode();
@@ -6707,7 +6760,7 @@ class OwnedUiOperationCursor {
       return null;
     const nodes = this.#nodes;
     this.#nodes = null;
-    return { nodes, root: this.#root, touched: this.#touched.take(), estimatedBytes: this.#estimatedBytes };
+    return { nodes, root: this.#root, touched: this.#touched.take(), estimatedBytes: this.#estimatedBytes, shapePreserving: this.#shapePreserving };
   }
   beginClose() {
     if (this.#status === "closed" || this.#status === "closing")
@@ -6792,7 +6845,7 @@ class OwnedUiOperationCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts */
 var admitted8 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var state3 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 
@@ -6913,7 +6966,7 @@ class OwnedUiValidationCursor {
   #failure = null;
   #taken = false;
   #close = 0;
-  constructor(source, root, limits) {
+  constructor(source, root, limits, touched = null) {
     if (root !== null && (!Number.isSafeInteger(root) || root < 0))
       throw new RangeError("Invalid UI graph root");
     const exact = { maxNodes: limits.maxNodes, maxDepth: limits.maxDepth, maxChildren: limits.maxChildren, maxTextBytes: limits.maxTextBytes, maxPatchOps: limits.maxPatchOps, maxPatchBytes: limits.maxPatchBytes };
@@ -6924,7 +6977,7 @@ class OwnedUiValidationCursor {
     this.#marks = new Table(NumericIndex.empty(), () => this.#grant);
     this.#violations = new Table(NumericIndex.empty(), () => this.#grant);
     this.#keys = new SiblingKeys(() => this.#grant);
-    this.#program = retainedUiGraphValidation(this.#nodes, root, exact, this.#marks, this.#keys, this.#violations, this.#frontier);
+    this.#program = touched ? retainedUiGraphTouchedValidation(this.#nodes, touched, exact, this.#violations, this.#frontier) : retainedUiGraphValidation(this.#nodes, root, exact, this.#marks, this.#keys, this.#violations, this.#frontier);
     Object.freeze(this);
   }
   get failure() {
@@ -6992,7 +7045,7 @@ class OwnedUiValidationCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts */
 var admitted9 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var state4 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function utf8(code) {
@@ -7315,7 +7368,7 @@ class OwnedUiSnapshotHashCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts */
 var GRANT = Object.freeze({ maxItems: 1, maxBytes: 4096 });
 var MINT4 = Object.freeze({});
 var admitted10 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
@@ -7973,7 +8026,7 @@ class OwnedUiSceneCursor {
     return this.#closing && this.#program === null && this.#frames === null && this.#entryReader === null && this.#bucketReader === null && this.#entryEdit === null && this.#bucketEdit === null && this.#retirements === null && this.#buckets === null && this.#entries === null && this.#source === null;
   }
 }
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📇️catalog.json */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📇️catalog.json */
 var _catalog_default = {
   version: 1,
   surfaces: [
@@ -7996,7 +8049,7 @@ var _catalog_default = {
   records: {
     Canvas2dScene: { fields: [["cameraX", "f64"], ["cameraY", "f64"], ["zoom", "f64"], ["layersJson", "text"], ["snapshot", "?#Canvas2dSnapshotLease"]] },
     World3dScene: { fields: [["snapshot", "?#World3dSnapshotLease"], ["cameraJson", "text"], ["meshesJson", "text"], ["instancesJson", "text"], ["selectionJson", "text"], ["vorticesJson", "?text"], ["attractionsJson", "?text"], ["targetVolumesJson", "?text"], ["referencesJson", "?text"], ["brushPreviewJson", "?text"], ["interactionJson", "?text"], ["engagementPreviewJson", "?text"], ["lodJson", "?text"], ["chunkingJson", "?text"], ["environmentJson", "?text"], ["frameJson", "?text"], ["fitJson", "?text"], ["terrainJson", "?text"], ["pointsJson", "?text"], ["statusJson", "?text"], ["domainId", "?text"], ["domainGranularityId", "?text"]] },
-    NodeGraphScene: { fields: [["nodes", "[#NodeGraphNodeRecord]"], ["edges", "[#NodeGraphEdgeRecord]"], ["viewport", "?#NodeGraphViewport"], ["editable", "?bool"], ["operators", "[#NodeGraphOperatorRecord]"], ["findItems", "[#NodeGraphFindItem]"], ["selection", "[text]"], ["hover", "?#NodeGraphHover"], ["previewOffJson", "?text"], ["lodJson", "?text"], ["catalogueJson", "?text"], ["controlsJson", "?text"], ["clustersJson", "?text"], ["computingJson", "?text"], ["statusJson", "?text"], ["capabilitiesJson", "?text"], ["fixtureJson", "?text"], ["presencePeersJson", "?text"], ["evalJson", "?text"]], defaults: { nodes: [], edges: [], operators: [], findItems: [], selection: [] } },
+    NodeGraphScene: { fields: [["nodes", "[#NodeGraphNodeRecord]"], ["edges", "[#NodeGraphEdgeRecord]"], ["viewport", "?#NodeGraphViewport"], ["editable", "?bool"], ["operators", "[#NodeGraphOperatorRecord]"], ["findItems", "[#NodeGraphFindItem]"], ["selection", "[text]"], ["hover", "?#NodeGraphHover"], ["previewOffJson", "?text"], ["lodJson", "?text"], ["controlsJson", "?text"], ["clustersJson", "?text"], ["computingJson", "?text"], ["statusJson", "?text"], ["capabilitiesJson", "?text"], ["fixtureJson", "?text"], ["presencePeersJson", "?text"], ["evalJson", "?text"]], defaults: { nodes: [], edges: [], operators: [], findItems: [], selection: [] } },
     TextEditorScene: { fields: [["buffer", "text"], ["language", "?text"], ["selectionJson", "?text"], ["tokensJson", "?text"], ["diagnosticsJson", "?text"], ["completionsJson", "?text"], ["overlaysJson", "?text"], ["occurrencesJson", "?text"], ["placeholdersJson", "?text"], ["extraCaretsJson", "?text"], ["selectableSpansJson", "?text"], ["settingsJson", "?text"], ["cameraJson", "?text"], ["hoverJson", "?text"], ["newlineGatesJson", "?text"], ["renameJson", "?text"]] },
     TableScene: { fields: [["columnsJson", "text"], ["rowsJson", "text"], ["selectionJson", "?text"], ["rowDragMime", "?text"], ["dropActionJson", "?text"], ["sortJson", "?text"], ["domainId", "?text"]] },
     Paint2dScene: { fields: [["documentSyncJson", "text"], ["assetsJson", "text"], ["cameraJson", "text"], ["selectionJson", "text"], ["hoveredId", "?text"], ["activeUtility", "text"], ["brushSize", "f64"], ["brushOpacity", "f64"], ["viewMode", "text"], ["compositeViewportJson", "?text"]] },
@@ -8023,7 +8076,7 @@ var _catalog_default = {
   }
 };
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts */
 var SPECS = _catalog_default.records;
 var GRANT2 = Object.freeze({ maxItems: 1, maxBytes: 4096 });
 var MINT5 = Object.freeze({});
@@ -8514,7 +8567,7 @@ class OwnedUiSceneProjectionCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts */
 var GRANT3 = Object.freeze({ maxItems: 1, maxBytes: 4096 });
 var MINT6 = Object.freeze({});
 var admitted12 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
@@ -8841,7 +8894,7 @@ class OwnedUiSceneBindingCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts */
 var MINT7 = Object.freeze({});
 var admitted13 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var step7 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -9026,7 +9079,7 @@ class OwnedUiSceneBindingIndexReader {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts */
 var ISSUED_MINT = Object.freeze({});
 var admitted14 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var state5 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -9461,7 +9514,7 @@ class OwnedUiNodeReadLease {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts */
 var admitted15 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var MINT8 = Object.freeze({});
 var state6 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -9996,6 +10049,7 @@ class OwnedUiSurfacePatch {
   #finished = false;
   #count = 0;
   #estimatedBytes = 0;
+  #shapePreserving = true;
   #failure = null;
   #epoch = null;
   #scan = null;
@@ -10088,6 +10142,7 @@ class OwnedUiSurfacePatch {
     this.#root = result2.root;
     this.#operationTouched = new Table(result2.touched, () => this.#grant);
     this.#estimatedBytes += result2.estimatedBytes;
+    this.#shapePreserving = this.#shapePreserving && result2.shapePreserving;
     yield 192;
     if (this.#estimatedBytes > this.#limits.maxPatchBytes)
       throw new Error("Owned UI patch byte quota exceeded");
@@ -10231,7 +10286,7 @@ class OwnedUiSurfacePatch {
     this.#bindings = this.#source.bindings.capture();
     yield 64;
     this.#phase = "validation";
-    this.#validation = new OwnedUiValidationCursor(this.#nodes, this.#root, this.#limits);
+    this.#validation = new OwnedUiValidationCursor(this.#nodes, this.#root, this.#limits, this.#shapePreserving ? this.#touched : null);
     yield 256;
     for (;; ) {
       const step8 = this.#validation.advance(this.#grant);
@@ -10289,11 +10344,15 @@ class OwnedUiSurfacePatch {
       this.#cell = this.#scan;
       this.#scan = this.#cell.next;
       yield 32;
-      while (this.#cell.active && !this.#cell.initialized)
+      if (this.#cell.active && !this.#cell.initialized) {
         yield 16;
+        continue;
+      }
       if (this.#cell.active && this.#cell.id !== null && (yield* this.#touched.lookup(this.#cell.id))) {
-        while (this.#cell.active && !this.#cell.lease.hasCapacity)
+        if (this.#cell.active && !this.#cell.lease.hasCapacity) {
           yield 16;
+          continue;
+        }
         if (this.#cell.active) {
           yield* this.#lookupBinding(this.#bindings, this.#cell.id);
           if (this.#cell.active) {
@@ -10547,7 +10606,7 @@ class OwnedUiSurfacePatch {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts */
 var admitted16 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var step8 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function childStep2(current, grant) {
@@ -10976,7 +11035,7 @@ class OwnedUiWirePatchCursor {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts */
 var CONTENT_MAGIC = [115, 114, 116, 1];
 var CONTENT_STATUS = ["idle", "moreWork", "checkpointReady", "faulted"];
 function contentFault(reason) {
@@ -11361,7 +11420,7 @@ class KernelReturnUiOperationHeader {
 if (undefined) {}
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts */
 var MINT9 = Object.freeze({});
 var NO_INPUT_FAULT = Symbol("return-input.no-fault");
 var BUILDER_CONSUMED = Symbol("return-input.builder-consumed");
@@ -11887,7 +11946,7 @@ class OwnedKernelReturnInputRelease {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts */
 var MINT10 = Object.freeze({});
 var NO_FAILURE = Object.freeze({});
 var admitted17 = (grant, bytes) => Number.isSafeInteger(grant.maxItems) && grant.maxItems >= 1 && Number.isSafeInteger(grant.maxBytes) && grant.maxBytes >= bytes;
@@ -12547,7 +12606,7 @@ class OwnedUiOperationInputCancelled {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts */
 var ENVELOPES = Object.freeze({
   pool: Object.freeze({ bytes: 264, slots: 5, owners: 5 }),
   instance: Object.freeze({ bytes: 376, slots: 6, owners: 6 }),
@@ -12563,7 +12622,7 @@ function uiResidentMetadataEnvelope(kind) {
   return ENVELOPES[kind];
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts */
 var readerState;
 var createReader2;
 var createReaderWitness;
@@ -15531,7 +15590,7 @@ function closeReaderSlot(state7, grant, requested = null) {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts */
 var MINT12 = Object.freeze({});
 var admitted19 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var step11 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -16158,7 +16217,7 @@ class OwnedUiInstance {
   }
 }
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts */
 var residentCapacityGetter;
 var residentCapacity = () => residentCapacityGetter ??= Object.getOwnPropertyDescriptor(OwnedResidentLedger.prototype, "capacity").get;
 var NO_RESIDENT_FAULT = Symbol("actor-resident.no-fault");
@@ -16220,21 +16279,23 @@ var SHARD_LIVENESS_POLICY = Object.freeze({
   heartbeatTimeoutMs: 5000,
   missedLimit: 3,
   progressIntervalMs: 1000,
+  firstTurnTimeoutMs: 30000,
   pluginLoadIdleTimeoutMs: 30000,
   pluginLoadCeilingMs: 300000
 });
 var DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 function freshHeartbeatState(nowMs) {
-  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
+  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastHeartbeatPhase: null, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
 }
 function evaluateShardLiveness(window2) {
   const unchanged = { missedCount: window2.missedCount, lastMissCountedAtMs: window2.lastMissCountedAtMs, terminate: false };
   if (window2.oldestPendingStartedAtMs === null)
     return unchanged;
+  const timeoutMs = window2.oldestPendingIsFirstTurn ? Math.max(window2.heartbeatTimeoutMs, window2.firstTurnTimeoutMs) : window2.heartbeatTimeoutMs;
   const provenAliveAtMs = Math.max(window2.lastLivenessAtMs, window2.oldestPendingStartedAtMs);
-  if (window2.nowMs - provenAliveAtMs <= window2.heartbeatTimeoutMs)
+  if (window2.nowMs - provenAliveAtMs <= timeoutMs)
     return unchanged;
-  if (window2.nowMs - window2.lastMissCountedAtMs < window2.heartbeatTimeoutMs)
+  if (window2.nowMs - window2.lastMissCountedAtMs < timeoutMs)
     return unchanged;
   const missedCount = window2.missedCount + 1;
   return { missedCount, lastMissCountedAtMs: window2.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
@@ -16246,6 +16307,25 @@ function describeShardWorkerError(event) {
     return message;
   return `${message} at ${record.filename}:${typeof record.lineno === "number" ? record.lineno : "?"}:${typeof record.colno === "number" ? record.colno : "?"}`;
 }
+function describeShardSilence(report) {
+  const silence = Number.isFinite(report.lastLivenessAtMs) ? `silent for ${Math.max(0, Math.round(report.nowMs - report.lastLivenessAtMs))} ms` : "never sent a single message";
+  const phase = report.lastHeartbeatPhase ? `, last reported phase "${report.lastHeartbeatPhase}"` : "";
+  const requests = report.inFlight.length === 0 ? "no request was outstanding" : report.inFlight.map((entry) => `${entry.kind}${entry.firstTurn ? " (first turn)" : ""} ${entry.actorId || "<no actor>"} started ${Math.max(0, Math.round(report.nowMs - entry.startedAtMs))} ms ago`).join("; ");
+  return `shard ${report.shardIndex} terminated by the host watchdog: the worker was ${silence}${phase}; outstanding: ${requests}. A guest turn that never yields blocks the worker's event loop and its progress ticker with it, so this reads identically to a dead worker — check the guest's own turn cost before suspecting a crash.`;
+}
+async function settleFailedInstanceOpen(error, cleanup) {
+  try {
+    await cleanup();
+  } catch (cleanupError) {
+    console.error(`[DEBUG] shard-client: cleanup after a failed instance open faulted: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`);
+  }
+  throw error;
+}
+function describeShardMessageError(shardIndex, event) {
+  const record = event ?? {};
+  const shape = record.data === undefined ? "" : ` (undeserializable payload of type ${typeof record.data})`;
+  return `shard ${shardIndex} worker message error: a structured-clone message could not be deserialized${shape} — the request or result it carried is lost`;
+}
 function formatShardWorkerFault(shardIndex, fault) {
   const where = fault.filename ? ` at ${fault.filename}:${fault.lineno ?? "?"}` : "";
   const actor = fault.actorId ? ` actor=${fault.actorId}` : "";
@@ -16256,14 +16336,21 @@ var SHARD_JSPI_FAULT_TEXT = Object.freeze({
   en: "This browser cannot run semio plugins: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) is unavailable. Chromium-based browsers ship it on by default; Firefox needs javascript.options.wasm_js_promise_integration in about:config, Node.js needs --experimental-wasm-jspi, and headless Chromium needs --enable-features=WebAssemblyJavaScriptPromiseIntegration.",
   de: "Dieser Browser kann semio-Plugins nicht ausführen: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) ist nicht verfügbar. Chromium-basierte Browser liefern sie standardmäßig aus; Firefox benötigt javascript.options.wasm_js_promise_integration in about:config, Node.js --experimental-wasm-jspi und headless Chromium --enable-features=WebAssemblyJavaScriptPromiseIntegration."
 });
-function graftWorkerStack(actorId, reason, stack, kind, framesBytes) {
+function graftWorkerStack(actorId, reason, stack, kind, framesBytes, retryableLifecycle) {
   const error = new Error(reason);
   if (stack)
     error.stack = `${stack}
     ↳ main: ${error.stack ?? ""}`;
+  if (retryableLifecycle === true)
+    Object.defineProperty(error, RETRYABLE_LIFECYCLE_TURN, { value: true });
   console.log(`[DEBUG] program worker ${actorId || "unknown"} error type=${kind ?? "unknown"} framesBytes=${framesBytes ?? "n/a"}`);
   return error;
 }
+var RETRYABLE_LIFECYCLE_TURN = Symbol("semio.actor.retryable-lifecycle-turn");
+function isRetryableLifecycleTurn(error) {
+  return typeof error === "object" && error !== null && error[RETRYABLE_LIFECYCLE_TURN] === true;
+}
+var RETRYABLE_LIFECYCLE_TURN_ATTEMPTS = 16;
 var ACTIVATION_MINT = Symbol("actor-activation.private-lease");
 var mintCapturedActivation;
 var capturedActivationMatches;
@@ -16502,9 +16589,11 @@ class ShardClient {
   instanceLifecycles = new Map;
   instanceTurns = new WeakMap;
   pending = new Map;
+  actorsPastFirstTurn = new Set;
   exclusiveIndices;
   heartbeatSabView;
   heartbeatTimeoutMs;
+  firstTurnTimeoutMs;
   watchdogIntervalMs;
   now;
   createWorker;
@@ -16530,6 +16619,7 @@ class ShardClient {
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
     this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? SHARD_LIVENESS_POLICY.heartbeatTimeoutMs;
+    this.firstTurnTimeoutMs = options.firstTurnTimeoutMs ?? SHARD_LIVENESS_POLICY.firstTurnTimeoutMs;
     this.watchdogIntervalMs = options.watchdogIntervalMs ?? this.heartbeatTimeoutMs;
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
@@ -17169,6 +17259,13 @@ class ShardClient {
       console.error(`[DEBUG] shard ${index} worker error: ${detail}`, error);
       this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
+    worker.onmessageerror = (event) => {
+      if (this.shards[index] !== slot)
+        return;
+      const detail = describeShardMessageError(index, event);
+      console.error(`[DEBUG] ${detail}`, event);
+      this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
+    };
     if (this.heartbeatSabView)
       worker.postMessage({ kind: "attachHeartbeatSab", shardIndex: index, sab: this.heartbeatSabView.buffer });
     return slot;
@@ -17178,7 +17275,7 @@ class ShardClient {
       return;
     this.noteLiveness(slot, this.now());
     if (message.kind === "heartbeat") {
-      this.recordHeartbeat(slot, message.turnSeq, this.now());
+      this.recordHeartbeat(slot, message.turnSeq, this.now(), message.phase ?? null);
       return;
     }
     if (message.kind === "worker-fault") {
@@ -17208,11 +17305,13 @@ class ShardClient {
     try {
       this.pending.delete(message.requestId);
       slot.pendingRequestIds.delete(message.requestId);
+      if (entry.kind === "turn" && entry.actorId !== "")
+        this.actorsPastFirstTurn.add(entry.actorId);
       this.recomputeOldestPending(slot);
       if (message.ok)
         entry.resolve(message.value);
       else
-        entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes));
+        entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes, message.retryableLifecycle));
     } catch (error) {
       entry.reject(error);
     }
@@ -17323,7 +17422,9 @@ class ShardClient {
     }
     return new Promise((resolve, reject) => {
       const startedAtMs = this.now();
-      this.pending.set(requestId, { resolve, reject, slot, startedAtMs, actorId: "actorId" in message ? message.actorId : "", output });
+      const actorId = "actorId" in message ? message.actorId : "";
+      const firstTurn = message.kind === "turn" && actorId !== "" && !this.actorsPastFirstTurn.has(actorId);
+      this.pending.set(requestId, { resolve, reject, slot, startedAtMs, actorId, kind: message.kind, firstTurn, output });
       slot.pendingRequestIds.add(requestId);
       if (slot.heartbeat.oldestPendingStartedAtMs === null)
         slot.heartbeat.oldestPendingStartedAtMs = startedAtMs;
@@ -17349,6 +17450,7 @@ class ShardClient {
     const activation = { slot, actorId, generation: generation2, available: true, activated: false, teardownPosted: false, operationsAllowed: true, operationGeneration: 0n, lastGuestLifetime: 0n, lastReturnSequence: 0n, returned: null, instance: null, close: null };
     this.activationGeneration = generation2;
     this.actorActivations.set(actorId, activation);
+    this.actorsPastFirstTurn.delete(actorId);
     await this.send(slot, { kind: "activate", requestId, actorId, activationGeneration: generation2, moduleUrl, caps, budget, assets }, requestId);
     activation.activated = true;
   }
@@ -17856,9 +17958,25 @@ class ShardClient {
         if (owner.cancellation.head === null)
           owner.cancellation = null;
       }
-      const result3 = await this.send(slot, { kind: "turn", requestId, actorId: activation.actorId, activationGeneration: activation.generation, events, budget }, requestId, () => {
-        posted = true;
-      });
+      let result3;
+      for (let attempt = 0;; attempt += 1) {
+        try {
+          const attemptId = attempt === 0 ? requestId : this.nextRequestId();
+          result3 = await this.send(slot, { kind: "turn", requestId: attemptId, actorId: activation.actorId, activationGeneration: activation.generation, events, budget }, attemptId, () => {
+            posted = true;
+          });
+          break;
+        } catch (error) {
+          if (!isRetryableLifecycleTurn(error) || attempt + 1 >= RETRYABLE_LIFECYCLE_TURN_ATTEMPTS)
+            throw error;
+          console.log(`[DEBUG] shard client: replaying retryable lifecycle turn attempt=${attempt + 1} actor=${activation.actorId} events=${events.length}`);
+          posted = false;
+          if (!activation.available || !slot.available || this.shards[slot.index] !== slot) {
+            owner.failure = "worker-lost";
+            throw new Error("actor-lifecycle.worker-lost");
+          }
+        }
+      }
       this.recordInstanceTurn(owner, result3);
       if (!activation.available || !slot.available || this.shards[slot.index] !== slot) {
         owner.failure = "worker-lost";
@@ -18035,9 +18153,10 @@ class ShardClient {
     const requestId = this.nextRequestId();
     return this.send(slot, { kind: "stepJob", requestId, actorId, job, budget }, requestId);
   }
-  cancelJob(actorId, job) {
+  async cancelJob(actorId, job) {
     const slot = this.requireShard(actorId);
-    this.send(slot, { kind: "cancelJob", actorId, job }, null);
+    const requestId = this.nextRequestId();
+    await this.send(slot, { kind: "cancelJob", requestId, actorId, job }, requestId);
   }
   async takeSegmentedDownloadChunk(actorId, instanceId, operationId) {
     if (!Number.isSafeInteger(instanceId) || instanceId < 0 || typeof operationId !== "bigint" || operationId <= 0n || operationId > MAX_SEGMENTED_DOWNLOAD_OPERATION_ID)
@@ -18210,10 +18329,20 @@ class ShardClient {
     slot.heartbeat.missedCount = 0;
     slot.heartbeat.lastMissCountedAtMs = atMs;
   }
-  recordHeartbeat(slot, turnSeq, atMs) {
+  recordHeartbeat(slot, turnSeq, atMs, phase = slot.heartbeat.lastHeartbeatPhase) {
     slot.heartbeat.lastHeartbeatAtMs = atMs;
     slot.heartbeat.lastHeartbeatTurnSeq = turnSeq;
+    slot.heartbeat.lastHeartbeatPhase = phase;
     this.noteLiveness(slot, atMs);
+  }
+  outstandingRequests(slot) {
+    const entries = [];
+    for (const requestId of slot.pendingRequestIds) {
+      const entry = this.pending.get(requestId);
+      if (entry)
+        entries.push(entry);
+    }
+    return entries.sort((left, right) => left.startedAtMs - right.startedAtMs);
   }
   pollHeartbeatSab(nowMs = this.now()) {
     if (!this.heartbeatSabView)
@@ -18227,20 +18356,31 @@ class ShardClient {
   }
   checkHeartbeats(nowMs = this.now()) {
     for (const slot of this.shards) {
+      const outstanding = this.outstandingRequests(slot);
       const decision = evaluateShardLiveness({
         nowMs,
         oldestPendingStartedAtMs: slot.heartbeat.oldestPendingStartedAtMs,
         lastLivenessAtMs: slot.heartbeat.lastLivenessAtMs,
         missedCount: slot.heartbeat.missedCount,
         lastMissCountedAtMs: slot.heartbeat.lastMissCountedAtMs,
-        heartbeatTimeoutMs: this.heartbeatTimeoutMs
+        heartbeatTimeoutMs: this.heartbeatTimeoutMs,
+        firstTurnTimeoutMs: this.firstTurnTimeoutMs,
+        oldestPendingIsFirstTurn: outstanding[0]?.firstTurn ?? false
       });
       slot.heartbeat.missedCount = decision.missedCount;
       slot.heartbeat.lastMissCountedAtMs = decision.lastMissCountedAtMs;
       if (!decision.terminate)
         continue;
       const actorIds = [...slot.actorIds];
-      this.terminate(slot.index);
+      const detail = describeShardSilence({
+        shardIndex: slot.index,
+        nowMs,
+        lastLivenessAtMs: slot.heartbeat.lastLivenessAtMs,
+        lastHeartbeatPhase: slot.heartbeat.lastHeartbeatPhase,
+        inFlight: outstanding.map((entry) => ({ kind: entry.kind, actorId: entry.actorId, startedAtMs: entry.startedAtMs, firstTurn: entry.firstTurn }))
+      });
+      console.error(`[DEBUG] ${detail}`);
+      this.terminate(slot.index, detail);
       this.rebuild(slot.index);
       this.onShardLost?.(slot.index, actorIds);
     }
@@ -18267,12 +18407,12 @@ class ShardClient {
       return { shard: slot.index, metrics: { actors, busyRatio, heartbeatAgeMs } };
     });
   }
-  terminate(index) {
+  terminate(index, detail) {
     const slot = this.shards[index];
     if (!slot)
       throw new Error(`[DEBUG] ShardClient.terminate: no shard ${index}`);
     const actorIds = [...slot.actorIds];
-    this.failShard(slot, new Error(`shard ${index} terminated`));
+    this.failShard(slot, new Error(detail ?? `shard ${index} terminated`));
     slot.worker.terminate();
     return actorIds;
   }
@@ -18294,7 +18434,7 @@ class ShardClient {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📬️mailbox/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts */
 var MAILBOX_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
 function laneRank(lane) {
   return MAILBOX_LANE_ORDER.indexOf(lane);
@@ -18352,7 +18492,7 @@ function createBoundedMailbox(capacity) {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts */
 var LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
 function freshLaneCounts() {
   return { Interactive: 0, UserVisible: 0, Background: 0, Maintenance: 0 };
@@ -18461,7 +18601,7 @@ class TurnScheduler {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎠️kernel/🟦️.ts */
 class OsTransient {
   boxes = new Map;
   maps = new Map;
@@ -18925,32 +19065,82 @@ function resolvePluginRegistryId(catalog, playgroundPluginId) {
 function resolvePlaygroundDefaultAppId(catalog, playgroundPluginId) {
   return findPlaygroundVariant(catalog, playgroundPluginId)?.app;
 }
-function resolvePlaygroundBoot(catalog, variant, session) {
-  const defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
-  if (session?.variant === variant) {
-    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins, dependencyErrors: [] };
+var PLUGIN_GRAPH_CHUNK_ROWS = 16;
+
+class PlaygroundBootPlanner {
+  catalog;
+  variant;
+  targets;
+  defaultAppId;
+  registryPluginId;
+  hostMode;
+  rows = [];
+  reused;
+  cursor = 0;
+  phase = "rows";
+  expanded = [];
+  order = [];
+  errors = [];
+  constructor(catalog, variant, session) {
+    this.catalog = catalog;
+    this.variant = variant;
+    this.defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
+    this.registryPluginId = resolvePluginRegistryId(catalog, variant);
+    this.hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
+    this.targets = [...catalog.plugins, ...catalog.extensions];
+    if (session?.variant === variant) {
+      this.reused = { variant, defaultAppId: session.defaultAppId ?? this.defaultAppId, plugins: session.plugins, dependencyErrors: [] };
+      this.phase = "done";
+    }
   }
-  const registryPluginId = resolvePluginRegistryId(catalog, variant);
-  const hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
-  const catalogPlugins = [...catalog.plugins, ...catalog.extensions].map((target) => ({
-    pluginId: target.pluginId,
-    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId) : catalog.moduleUrl(target.pluginId),
-    contributes: target.contributes,
-    consumes: target.consumes,
-    dependencies: dependsOnToPluginDependencies(target.dependsOn)
-  }));
-  const expanded = expandPluginRegistry(catalogPlugins, hostMode ? undefined : registryPluginId, hostMode);
-  const { order, errors } = orderPluginRegistryEntries(expanded);
-  if (errors.length > 0) {
-    for (const error of errors)
-      console.error(`[DEBUG] resolvePlaygroundBoot(${variant}): ${pluginGraphErrorMessage(error, "en")}`);
+  stage() {
+    return this.phase === "rows" ? `plugin-graph:rows ${Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length)}/${this.targets.length}` : `plugin-graph:${this.phase}`;
   }
-  return {
-    variant,
-    defaultAppId,
-    plugins: order,
-    dependencyErrors: errors
-  };
+  completion() {
+    if (this.phase === "done")
+      return 1;
+    if (this.phase === "rows")
+      return this.targets.length === 0 ? 0.8 : this.cursor / this.targets.length * 0.8;
+    return this.phase === "closure" ? 0.85 : 0.95;
+  }
+  step() {
+    if (this.phase === "rows") {
+      const end = Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length);
+      for (;this.cursor < end; this.cursor++) {
+        const target = this.targets[this.cursor];
+        this.rows.push({
+          pluginId: target.pluginId,
+          moduleUrl: target.role === "extension" ? this.catalog.extensionModuleUrl(target.pluginId) : this.catalog.moduleUrl(target.pluginId),
+          contributes: target.contributes,
+          consumes: target.consumes,
+          dependencies: dependsOnToPluginDependencies(target.dependsOn)
+        });
+      }
+      if (this.cursor >= this.targets.length)
+        this.phase = "closure";
+      return true;
+    }
+    if (this.phase === "closure") {
+      this.expanded = expandPluginRegistry(this.rows, this.hostMode ? undefined : this.registryPluginId, this.hostMode);
+      this.phase = "order";
+      return true;
+    }
+    if (this.phase === "order") {
+      const resolved = orderPluginRegistryEntries(this.expanded);
+      this.order = resolved.order;
+      this.errors = resolved.errors;
+      for (const error of this.errors)
+        console.error(`[DEBUG] resolvePlaygroundBoot(${this.variant}): ${pluginGraphErrorMessage(error, "en")}`);
+      this.phase = "done";
+      return false;
+    }
+    return false;
+  }
+  finish() {
+    while (this.phase !== "done")
+      this.step();
+    return this.reused ?? { variant: this.variant, defaultAppId: this.defaultAppId, plugins: this.order, dependencyErrors: this.errors };
+  }
 }
 function resolvePluginHostConfig(catalog, playgroundPluginId) {
   const registryId = resolvePluginRegistryId(catalog, playgroundPluginId);
@@ -19288,7 +19478,7 @@ class ArtifactInferenceRouter {
 }
 if (undefined) {}
 if (undefined) {}
-/* ../../../../../../../../../🔨️modules/🔄️machine/🟦️.ts */
+/* 🧰️framework/🔨️modules/🔄️machine/🟦️.ts */
 var NodeId = (value) => value;
 var ActorId = (value) => value;
 var ROOT = NodeId(0);
@@ -19876,9 +20066,286 @@ function routeCommand(host, snapshot, actor, command) {
   }
 }
 if (undefined) {}
-/* ../../../../../../../../../📦️packages/🟦️typescript/🟦️.ts */
+/* 🧰️framework/📦️packages/🟦️typescript/🟦️.ts */
 if (undefined) {}
-/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json */
+
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts */
+var UI_TURN_BUDGET_MS = 2;
+var WORKER_STEP_BUDGET_MS = 8;
+var SUSTAINED_TURN_OVERRUN_TURNS = 4;
+var TURN_SAMPLE_CAPACITY = 64;
+var TURN_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+var diagnosticsOverride;
+var diagnosticsResolved;
+function diagnosticsArmed(value) {
+  return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
+}
+function turnDiagnosticsEnabled() {
+  if (diagnosticsOverride !== undefined)
+    return diagnosticsOverride;
+  if (diagnosticsResolved !== undefined)
+    return diagnosticsResolved;
+  let armed = false;
+  try {
+    armed = diagnosticsArmed(import.meta.env?.[`VITE_${TURN_DIAGNOSTICS_KEY}`]);
+  } catch {
+    armed = false;
+  }
+  diagnosticsResolved = armed;
+  return armed;
+}
+
+class TurnClock {
+  now;
+  depth = 0;
+  spanStartedAt = 0;
+  charged = 0;
+  clockLost = false;
+  constructor(now) {
+    this.now = now;
+  }
+  enter() {
+    if (this.depth === 0) {
+      this.charged = 0;
+      this.clockLost = false;
+      this.spanStartedAt = this.reading();
+    } else {
+      this.chargeSpan();
+    }
+    this.depth++;
+  }
+  suspend() {
+    if (this.depth === 0)
+      return;
+    this.chargeSpan();
+  }
+  resume() {
+    if (this.depth === 0)
+      return;
+    this.spanStartedAt = this.reading();
+  }
+  leave() {
+    if (this.depth === 0)
+      return;
+    this.depth--;
+    if (this.depth > 0)
+      return;
+    this.chargeSpan();
+    return this.clockLost ? undefined : this.charged;
+  }
+  chargeSpan() {
+    const now = this.reading();
+    const started = this.spanStartedAt;
+    if (!Number.isFinite(now) || !Number.isFinite(started) || now < started) {
+      this.clockLost = true;
+      return;
+    }
+    this.charged += now - started;
+    this.spanStartedAt = now;
+  }
+  reading() {
+    try {
+      const value = this.now();
+      return typeof value === "number" ? value : Number.NaN;
+    } catch {
+      return Number.NaN;
+    }
+  }
+}
+
+class TurnLedger {
+  budgetMs;
+  scope;
+  samples = new Float64Array(TURN_SAMPLE_CAPACITY);
+  sampleCount = 0;
+  consecutive = 0;
+  longestRun = 0;
+  recorded = 0;
+  sustained = 0;
+  worstExecutingMs = 0;
+  worstSite = "";
+  degradedUntilAdmitted = false;
+  constructor(budgetMs = UI_TURN_BUDGET_MS, scope = "ui-turn") {
+    this.budgetMs = budgetMs;
+    this.scope = scope;
+  }
+  admit(site, executingMs) {
+    if (executingMs === undefined || !Number.isFinite(executingMs) || executingMs < 0) {
+      this.consecutive = 0;
+      return { site, verdict: "clock-fault", executingMs: 0, consecutive: 0 };
+    }
+    this.samples[this.sampleCount % TURN_SAMPLE_CAPACITY] = executingMs;
+    this.sampleCount++;
+    if (executingMs < this.budgetMs) {
+      this.consecutive = 0;
+      this.degradedUntilAdmitted = false;
+      return { site, verdict: "admitted", executingMs, consecutive: 0 };
+    }
+    this.consecutive++;
+    this.longestRun = Math.max(this.longestRun, this.consecutive);
+    this.recorded++;
+    if (executingMs > this.worstExecutingMs) {
+      this.worstExecutingMs = executingMs;
+      this.worstSite = site;
+    }
+    if (this.consecutive < SUSTAINED_TURN_OVERRUN_TURNS) {
+      this.trace(site, "recorded-overrun", executingMs);
+      return { site, verdict: "recorded-overrun", executingMs, consecutive: this.consecutive };
+    }
+    this.sustained++;
+    this.degradedUntilAdmitted = true;
+    this.trace(site, "sustained-overrun", executingMs);
+    return { site, verdict: "sustained-overrun", executingMs, consecutive: this.consecutive };
+  }
+  degraded() {
+    return this.degradedUntilAdmitted;
+  }
+  snapshot() {
+    return {
+      recordedOverruns: this.recorded,
+      sustainedOverruns: this.sustained,
+      consecutive: this.consecutive,
+      longestRun: this.longestRun,
+      worstExecutingMs: this.worstExecutingMs,
+      worstSite: this.worstSite,
+      degraded: this.degradedUntilAdmitted,
+      p99Ms: this.p99Ms()
+    };
+  }
+  p99Ms() {
+    const count = Math.min(this.sampleCount, TURN_SAMPLE_CAPACITY);
+    if (count === 0)
+      return 0;
+    const ordered = Array.from(this.samples.subarray(0, count)).sort((left, right) => left - right);
+    return ordered[Math.min(count - 1, Math.ceil(count * 0.99) - 1)];
+  }
+  trace(site, verdict, executingMs) {
+    if (!turnDiagnosticsEnabled())
+      return;
+    console.debug(`[DEBUG] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive}/${SUSTAINED_TURN_OVERRUN_TURNS}`);
+  }
+}
+
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts */
+var FRAME_WORKER_BOOT_LIVENESS_POLICY = Object.freeze({
+  silenceTimeoutMs: 60000,
+  livenessIntervalMs: 1000,
+  defaultPhaseCeilingMs: 300000,
+  phaseCeilingMs: Object.freeze({
+    "renderer-module": 300000,
+    "wasm-artifact": 60000,
+    "wasm-cache-read": 120000,
+    "wasm-compile": 900000,
+    "wasm-instantiate": 300000,
+    plugin: 300000,
+    "gpu-platform": 900000,
+    "shell-boot": 900000,
+    "renderer-bootstrap": 900000
+  })
+});
+
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts */
+var CACHE_DATABASE = "semio-wgpu-renderer-modules";
+var CACHE_STORE = "modules";
+var CACHE_VERSION = 1;
+var CACHE_OPERATION_TIMEOUT_MS = 5000;
+function cacheKey(url) {
+  try {
+    return new URL(url, "http://renderer.invalid/").pathname;
+  } catch {
+    return url;
+  }
+}
+function withTimeout(operation) {
+  return Promise.race([
+    operation.catch(() => {
+      return;
+    }),
+    new Promise((resolve) => setTimeout(() => resolve(undefined), CACHE_OPERATION_TIMEOUT_MS))
+  ]);
+}
+function requested(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error("indexeddb request failed"));
+  });
+}
+async function openCache() {
+  const factory = globalThis.indexedDB;
+  if (!factory)
+    return;
+  return withTimeout(new Promise((resolve, reject) => {
+    const request = factory.open(CACHE_DATABASE, CACHE_VERSION);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(CACHE_STORE))
+        request.result.createObjectStore(CACHE_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error("indexeddb open failed"));
+    request.onblocked = () => reject(new Error("indexeddb open blocked"));
+  }));
+}
+async function rendererArtifactTag(url) {
+  try {
+    const response = await fetch(url, { method: "HEAD", cache: "no-cache" });
+    if (!response.ok)
+      return "";
+    const etag = response.headers.get("etag") ?? "";
+    if (etag)
+      return `etag:${etag}`;
+    const modified = response.headers.get("last-modified") ?? "";
+    const length = response.headers.get("content-length") ?? "";
+    return modified && length ? `mtime:${modified}:${length}` : "";
+  } catch {
+    return "";
+  }
+}
+async function readCachedRendererModule(url, tag) {
+  if (!tag)
+    return;
+  const database = await openCache();
+  if (!database)
+    return;
+  try {
+    const row = await withTimeout(requested(database.transaction(CACHE_STORE, "readonly").objectStore(CACHE_STORE).get(cacheKey(url))));
+    if (!row || row.tag !== tag || !(row.module instanceof WebAssembly.Module))
+      return;
+    return { module: row.module, tag: row.tag, byteLength: row.byteLength, storedAtMs: row.storedAtMs };
+  } catch {
+    return;
+  } finally {
+    database.close();
+  }
+}
+async function writeCachedRendererModule(url, tag, module, byteLength, nowMs) {
+  if (!tag)
+    return false;
+  const database = await openCache();
+  if (!database)
+    return false;
+  try {
+    const store = database.transaction(CACHE_STORE, "readwrite").objectStore(CACHE_STORE);
+    const row = { tag, byteLength, storedAtMs: nowMs, module };
+    return await withTimeout(requested(store.put(row, cacheKey(url)))) !== undefined;
+  } catch {
+    return false;
+  } finally {
+    database.close();
+  }
+}
+async function evictCachedRendererModule(url) {
+  const database = await openCache();
+  if (!database)
+    return;
+  try {
+    await withTimeout(requested(database.transaction(CACHE_STORE, "readwrite").objectStore(CACHE_STORE).delete(cacheKey(url))));
+  } catch {
+    return;
+  } finally {
+    database.close();
+  }
+}
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json */
 var _catalog_default2 = {
   version: 1,
   modules: [
@@ -19943,7 +20410,7 @@ var _catalog_default2 = {
     { pluginId: "writer", directoryName: "✒️writer" }
   ]
 };
-/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json */
 var __default = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://semio.tech/schema/os/plugin/registry/deployment/component.json",
@@ -19982,12 +20449,12 @@ var __default = {
     }
   }
 };
-/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🛣️routes.json */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json */
 var _routes_default = {
   plugin: "/🔌️plugin-modules",
   extension: "/🧩️extension-modules"
 };
-/* ../../../../../../🧩️extension/🧬️schema/🔣️.json */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json */
 var __default2 = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://semio.tech/schema/os/extension/component.json",
@@ -20002,7 +20469,7 @@ var __default2 = {
   }
 };
 
-/* ../../../../../../🧩️extension/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts */
 var schema = __default2.$defs.InstallationDirectoryV1;
 var pattern = new RegExp(schema.pattern, "u");
 var segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
@@ -20012,7 +20479,7 @@ function installationDirectoryEmoji(name) {
   return [...segmenter.segment(name)][0].segment.replaceAll("️", "");
 }
 
-/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts */
 var schema2 = __default.$defs.DeploymentCatalogV1;
 var idSpec = schema2.properties.modules.items.properties.pluginId;
 var idPattern = new RegExp(idSpec.pattern, "u");
@@ -20056,59 +20523,59 @@ function moduleDirectoryName(pluginId) {
   return row.directoryName;
 }
 
-/* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts */
 var PLUGIN_HOST_CONFIGS = [
   { pluginId: "space", landingAppId: "home", hostAppId: "studio" }
 ];
 var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "animate", packageId: "semio:animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", coreWasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", descriptorSha256: "12a912e82f98d54f405262123150f41035a15234332a1abc971062ac7e973b17" } },
-  { pluginId: "architect", packageId: "semio:architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_architect.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:data.program"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", coreWasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", descriptorSha256: "09d0f7320243a4aa38d5c83fa7d0a75ed398756edcb093c848adf515d1c1c4d8" } },
+  { pluginId: "animate", packageId: "semio:animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "architect", packageId: "semio:architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_architect.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:data.program"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "block", packageId: "semio:block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_block.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
-  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "3fb18c84bafa0d38deb34003d0202f79be775ee3c0eba894f980770c6b3a9f99", coreWasmSha256: "a3298941a7db3a4030134a222ce03a0a8cb9a1723e71ac21e0a3c5b1d81adeb5", descriptorSha256: "f982e24ca2f7cfb4f079faf5bdea070a904153dd32506ea2350ab19849725016" } },
-  { pluginId: "dag", packageId: "semio:dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_dag.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.dag"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", coreWasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", descriptorSha256: "53d81f2b0927fbc1383cccb1c989a5fe190fd98ea582786bd6ea1846aea5258d" } },
-  { pluginId: "demonstrator", packageId: "semio:demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "b2dd0e6e4a3d937bb1f47f1b371fde667bfd168039d882074523fb256edc2ec3", coreWasmSha256: "73537f6a0dfd9006a1a96bb8a407e071873858f04b6f17b98361d819fa66ca48", descriptorSha256: "75e9f3f89a13332860959e65b02e2d0cc6c55314b622a6aa1d94b534b7dd3cf5" } },
-  { pluginId: "draw", packageId: "semio:draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_draw.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.drawing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", coreWasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", descriptorSha256: "b9d12f23271b085b41da39d7ba395ea78604cab8006b6b00e1ee39aa5265a1bd" } },
-  { pluginId: "energy", packageId: "semio:energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_energy.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:data.model"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", coreWasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", descriptorSha256: "383853b475b0308336f8088fe067d27fa2f525b21349d70b080b07aa86ae2ec1" } },
-  { pluginId: "fem", packageId: "semio:fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_fem.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.fem2d", "on-artifact-kind:computation.fem3d"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", coreWasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", descriptorSha256: "f0c10888f9dc7101c596b0e8b837fcbd439cb031738dd233e767cc8ad59f6fdb" } },
-  { pluginId: "flow", packageId: "semio:flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:computation.flow"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "0633c05b201e949d618509d9439e6663e163d906010fbfbabd7739023e7aaeff", coreWasmSha256: "cb6a1d183cf931feb6ac0dc61a563e45a8ab77a15dc7074c2c4fdf05a0a9e50a", descriptorSha256: "b8a3b1cd33cc16c06e47b607a65c1839f6f08c212e529750fe25ea6b643a0425" } },
-  { pluginId: "forms", packageId: "semio:forms", cratePath: "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_forms.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind"], dependsOn: [], activationEvents: ["on-artifact-kind:form.dictionary"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a63d0dfc2619a9e7f05ae83c119717989ff8a32667f4771838c5c5599014b152", coreWasmSha256: "a63d0dfc2619a9e7f05ae83c119717989ff8a32667f4771838c5c5599014b152", descriptorSha256: "8e0b3d00eb48790dd1f31070462adaf925fc00cdc8a664c1865366b6589c0d88" } },
-  { pluginId: "gis", packageId: "semio:gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_gis.wasm", role: "plugin", capabilities: ["documents.write", "shell.navigate"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:s.gis.gismap"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "662a9f85feed22a7efceef285407e0da8cd5af574a182872d5218c3955770ade", coreWasmSha256: "7e5c3bd0570f88a893b88f968af607550acc550915c3b165b5ca3e6aa78693f4", descriptorSha256: "9907f9a60510b04450dd8fb48557d59264cfefa965b9fd7eeb6a3b12abdf318f" } },
-  { pluginId: "imperative", packageId: "semio:imperative", cratePath: "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.procedure"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f", coreWasmSha256: "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f", descriptorSha256: "7dc6bc0885b16f4a552ecdf5e1757da8d336efebcb81b603c87341ae25a66506" } },
-  { pluginId: "layout", packageId: "semio:layout", cratePath: "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_layout.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.layout"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "dfde964f079e83c8f8cc67873cd495448be7a06ac8f6776e8585aef4b4f5b0bc", coreWasmSha256: "dfde964f079e83c8f8cc67873cd495448be7a06ac8f6776e8585aef4b4f5b0bc", descriptorSha256: "66358711ac5cd24af7edebf20ba9e40c3a7d96bb9e28ba19bc9d548b62c026db" } },
-  { pluginId: "lowpoly", packageId: "semio:lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_lowpoly.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.lowpoly"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2f1fb53b0df83472f989cefcc5f6d45281d7128f8f6d338638b2b830565e03d3", coreWasmSha256: "6512a90775022fd4695d6688b848155582ae7da1fe204baf7a0904b971928d10", descriptorSha256: "b77ec71d7abb709d311b872b8786fe7ee496ff76fef5143e08c62abbf084fc5f" } },
-  { pluginId: "mathematical", packageId: "semio:mathematical", cratePath: "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_mathematical.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.equation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "0b801ea2f23f760c1b8b2b24a7f137af965cc5825da11065cac51cd179b14716", coreWasmSha256: "0b801ea2f23f760c1b8b2b24a7f137af965cc5825da11065cac51cd179b14716", descriptorSha256: "824b2c80a380ac3cebb2c39ec5ff9b95282fb98e6888f6c91293f85e0263b227" } },
-  { pluginId: "norm", packageId: "semio:norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_norm.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.norm.din4108", "on-artifact-kind:computation.norm.din16798", "on-artifact-kind:computation.norm.din18599", "on-artifact-kind:computation.norm.en1990", "on-artifact-kind:computation.norm.en1991", "on-artifact-kind:computation.norm.en1992", "on-artifact-kind:computation.norm.en1993", "on-artifact-kind:computation.norm.en1994", "on-artifact-kind:computation.norm.en1995", "on-artifact-kind:computation.norm.en1996", "on-artifact-kind:computation.norm.en1997", "on-artifact-kind:computation.norm.en1998", "on-artifact-kind:computation.norm.en1999", "on-artifact-kind:computation.norm.iso16757", "on-artifact-kind:computation.norm.vdi3805"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", coreWasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", descriptorSha256: "dbca604de90af12da82cb423792a4ced55422e75c1f1baee863caf898f0295c3" } },
-  { pluginId: "note", packageId: "semio:note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_note.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.note"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", coreWasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", descriptorSha256: "1b8c29c800f1fd38f95f6754ec982585b59595a60ddf06fdbbadb6738850a093" } },
+  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "dag", packageId: "semio:dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_dag.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.dag"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "demonstrator", packageId: "semio:demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing"], activationEvents: [], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "draw", packageId: "semio:draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_draw.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.drawing"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "energy", packageId: "semio:energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_energy.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:data.model"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "fem", packageId: "semio:fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_fem.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.fem2d", "on-artifact-kind:computation.fem3d"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "flow", packageId: "semio:flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:computation.flow"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "forms", packageId: "semio:forms", cratePath: "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_forms.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind"], dependsOn: [], activationEvents: ["on-artifact-kind:form.dictionary"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "gis", packageId: "semio:gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_gis.wasm", role: "plugin", capabilities: ["documents.write", "shell.navigate"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:s.gis.gismap"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "imperative", packageId: "semio:imperative", cratePath: "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.procedure"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "layout", packageId: "semio:layout", cratePath: "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_layout.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.layout"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "lowpoly", packageId: "semio:lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_lowpoly.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.lowpoly"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "mathematical", packageId: "semio:mathematical", cratePath: "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_mathematical.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.equation"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "norm", packageId: "semio:norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_norm.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.norm.din4108", "on-artifact-kind:computation.norm.din16798", "on-artifact-kind:computation.norm.din18599", "on-artifact-kind:computation.norm.en1990", "on-artifact-kind:computation.norm.en1991", "on-artifact-kind:computation.norm.en1992", "on-artifact-kind:computation.norm.en1993", "on-artifact-kind:computation.norm.en1994", "on-artifact-kind:computation.norm.en1995", "on-artifact-kind:computation.norm.en1996", "on-artifact-kind:computation.norm.en1997", "on-artifact-kind:computation.norm.en1998", "on-artifact-kind:computation.norm.en1999", "on-artifact-kind:computation.norm.iso16757", "on-artifact-kind:computation.norm.vdi3805"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "note", packageId: "semio:note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_note.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.note"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "playbook", packageId: "semio:playbook", cratePath: "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_playbook.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["playbook.blockKind"], dependsOn: [], activationEvents: [], extensionPoints: [] },
-  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "d7d359ef9c214eeb0d58160db8b474247b8c13de3a1f3c376fd73d46ed87c629", coreWasmSha256: "5976716270bab4bf7d008d77083a62ac6b1a9c22babec74bb2a986ccbc2d9f5e", descriptorSha256: "75f2bdcddb3f0d759d9f2dbffeb35d3687555f8ef2993da3deecd9ec23f45ca6" } },
-  { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: [], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "62570c3b700cb6930423670f0446bced2b3daf1a5dd1944ccb96412056939d17", coreWasmSha256: "5185c035e07360b13b3b31fc41b544196b636efd3e0478c4deb6fccbc094bda6", descriptorSha256: "81d51e3e8633cac0a1fc726da5c29a1e3eba88462e79c66536e101578b047bc3" } },
-  { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "c3ba4da1c54ed9687ac583afd30bd273ef88e31a038c5896fb7013087c92c66e", coreWasmSha256: "8da6f6bd97876500fa57b4d879f880d92f98c146b856246c39d500b03905f02d", descriptorSha256: "9e8e6ebf2a1b41a05c930accefa73333c07200ae01d2f06eb67bb6c964da4dc6" } },
-  { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", coreWasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", descriptorSha256: "26760a5a3c146b1612a8e8036c877f91a17c13cef425b94a174127df3e33bd94" } },
-  { pluginId: "reasoning", packageId: "semio:reasoning", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
-  { pluginId: "remodel", packageId: "semio:remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_remodel.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.remodel"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", coreWasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", descriptorSha256: "1e1dded5a4979ce72c0ff11f4e12e8336df93784c89c0f53b0ee573b694fbe62" } },
-  { pluginId: "sequence", packageId: "semio:sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sequence.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.sequence"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", coreWasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", descriptorSha256: "5c5ee126f62f14b60a81d95575c85186db47ec9b7712d0e56d5ba6b2a032088a" } },
-  { pluginId: "shooting", packageId: "semio:shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_shooting.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.shooting"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", coreWasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", descriptorSha256: "ad86c4d9cf0730ae4b512389898962bb9eefd1f631f8543d7fd8143be3276129" } },
-  { pluginId: "sourcing", packageId: "semio:sourcing", cratePath: "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:catalogue.sourcing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "f16af641ac3393adb76296b7008ef8a9f7f52bf536aa5b00ecee9c6288a47584", coreWasmSha256: "01ef146fa55af081bb5b50a109a646b07c4e5c0eb612e94af49b8d47705d5444", descriptorSha256: "ff253fb9bfd6349457740879ab6579454011490cb0aa634c1f1ff3d9e72978ca" } },
-  { pluginId: "space", packageId: "semio:space", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated", hashes: { wasmSha256: "c2cdc7865628aecf380599a4dbc5a27e5cd42b86e9fcf205e2bdf43bc3b800e9", coreWasmSha256: "6e531de96e3109b112d37ee4e9b004f956ae361a52f655280b2fb2d245e78122", descriptorSha256: "98d2cf3227539582d0e269efd7ff795796a3ae287200380b34e210629602c62b" } },
+  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: [], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "reasoning", packageId: "semio:reasoning", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "remodel", packageId: "semio:remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_remodel.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.remodel"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "sequence", packageId: "semio:sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sequence.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.sequence"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "shooting", packageId: "semio:shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_shooting.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.shooting"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "sourcing", packageId: "semio:sourcing", cratePath: "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:catalogue.sourcing"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "space", packageId: "semio:space", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated" },
   { pluginId: "stdio", packageId: "semio:stdio", cratePath: "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_stdio.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
   { pluginId: "trinity", packageId: "semio:trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_trinity.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
-  { pluginId: "vcs", packageId: "semio:vcs", cratePath: "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_vcs.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:vcs.document"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", coreWasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", descriptorSha256: "b702fe11bb1c92bb06226ccce58792ccd37fa01be8313a740e52ea6a48e8329e" } },
-  { pluginId: "writer", packageId: "semio:writer", cratePath: "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_writer.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:text.document"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "6507f654884a1c93e633bfc4cd42b5cebb880925ca4e03ca278bc9ccf191c18e", coreWasmSha256: "6507f654884a1c93e633bfc4cd42b5cebb880925ca4e03ca278bc9ccf191c18e", descriptorSha256: "ced53b5c3f821e2cb2fc847868737e6c695e8e32aa9c2358886df559214e750d" } }
+  { pluginId: "vcs", packageId: "semio:vcs", cratePath: "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_vcs.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:vcs.document"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "writer", packageId: "semio:writer", cratePath: "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_writer.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:text.document"], extensionPoints: [], executionMode: "isolated" }
 ];
 var EXTENSION_TARGETS = [
-  { pluginId: "cad-extension-aec-building", packageId: "semio:cad-extension-aec-building", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building.wasm", role: "extension", capabilities: [], contributes: [], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "isolated", hashes: { wasmSha256: "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0", coreWasmSha256: "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0", descriptorSha256: "4f06e341b211c507f489e3929838512d79015d79a3b8fd97f3c4ef1f3a2ee43e" } },
-  { pluginId: "cad-extension-aec-building-energy", packageId: "semio:cad-extension-aec-building-energy", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building_energy.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative", hashes: { wasmSha256: "443bec3bdaf7eb177c3c3423c6ae31e39f37a55582e7016ebd5ad2db0667142c", coreWasmSha256: "5b7454e9351ef8b3fe773a05e76e14fcad88c7c002e8442ea394bd9c051ba381", descriptorSha256: "da7fbc88c25bb278428de3da0a9edcf71dec9c15b09b816277996a5a7842912e" } },
-  { pluginId: "cad-extension-aec-building-structure", packageId: "semio:cad-extension-aec-building-structure", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building_structure.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative", hashes: { wasmSha256: "4e0d11a17c9431c8dad8e22ef0c1bb7b1682e589bbf62a16cf4203fecaa3bc6b", coreWasmSha256: "c52714be5547c66d896ef01e7df9971706cf2c3b4e470d5cf583f9051c5302b3", descriptorSha256: "8ca705525ef6c64425eb341b074ad6a6f132a0947f85c91fb0ce72ed52b16dfe" } },
-  { pluginId: "cad-extension-spatial-shape", packageId: "semio:cad-extension-spatial-shape", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_spatial_shape.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative", hashes: { wasmSha256: "45f482b4689564bc89ea3ffcd94e9efb1bc3b80e145e1c47dbe54866509aacda", coreWasmSha256: "577f6163ec4a4f3662a1617a6489263709fe2bfcf41a4bd156e20b3f5ea3f216", descriptorSha256: "6edbf25e2e16b2728e662101c08f441d68f4bba2bf52a4895006d81e57f08a15" } },
-  { pluginId: "flow-extension-bim", packageId: "semio:flow-extension-bim", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_bim.wasm", role: "extension", capabilities: ["flow.extension"], contributes: ["flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow" },
-  { pluginId: "flow-extension-brep", packageId: "semio:flow-extension-brep", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_brep.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "c52ca7d01a338b8fc7fecff1fda71ef00542196ecfedaec667da8bfc22de81dc", coreWasmSha256: "4d43db12908d30a8ef3c6744e812c5221f6746bd7e63fa2ad5e516c0cd42ed35", descriptorSha256: "1a6126fef1e8998764333e13c5396f90503e7758af126e159adacfbdcd646042" } },
-  { pluginId: "flow-extension-dictionary", packageId: "semio:flow-extension-dictionary", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_dictionary.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "30c40c697d29b332c8824afa50e47b525d86ad74340be483e8ada7e1486fdc7d", coreWasmSha256: "52c65ac90c5704226696d95e158934614f94b36ac6290d777e5fa74daf1a3fb8", descriptorSha256: "5048396ef0ef3db13be6f302ea8eb6283d2d121b95bfc10d9073d693d8e58fcc" } },
-  { pluginId: "flow-extension-draw", packageId: "semio:flow-extension-draw", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_draw.wasm", role: "extension", capabilities: ["flow.extension"], contributes: ["flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow" },
-  { pluginId: "flow-extension-list", packageId: "semio:flow-extension-list", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_list.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "80279cc0d9fc1100c9cf8f3459e8fd72e6cf5bf5c9a7280e3af75b692358b7c9", coreWasmSha256: "fc006d58446771fcea054aac352d1381af62c77bcc009c65db758e0d9ca6e34b", descriptorSha256: "2b7d50a0ce8ddb9a053d5107246038f2e00de67cfbb9ff25977b10cfc49281fc" } },
-  { pluginId: "flow-extension-logic", packageId: "semio:flow-extension-logic", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_logic.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "7a1252e7e8acd43235ffd2932b557674be7e1444a6ad0ce3e7b28dd714931c04", coreWasmSha256: "192391016bc3ff8d670504846c9997ba06fa1bf8d3847dca554984003ae7f691", descriptorSha256: "c9a87d590e7eafb2b4d38193ae4a9e6c7df831be0a384c060ebdf5c2a7419e58" } },
-  { pluginId: "flow-extension-math", packageId: "semio:flow-extension-math", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_math.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "2e8602d3fe46f6722807130f9218c99644a5d25dc4290818ec37a2cc451007de", coreWasmSha256: "1e36b79220e413850e0cc24724a1c27b4e42c4ad23da73dc5e3f637fb53ec533", descriptorSha256: "652e4ab908d4034bf217e8204f9424f30cb368b0ab66df6a76ee0e31e4637010" } },
-  { pluginId: "flow-extension-primitive", packageId: "semio:flow-extension-primitive", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_primitive.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "db84097704a54f65af8fd06f1a223c83c2357d34acc63d46a64a36ddf086b537", coreWasmSha256: "81289412c8ac144bc7469eebfd64779fc893db7c157a1441f48f2d016a474a68", descriptorSha256: "e97a7fc839b263b02f6b5b21e97a349f984db1f6e1d042156a6ff9a84d2698ea" } },
-  { pluginId: "flow-extension-text", packageId: "semio:flow-extension-text", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_text.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked", hashes: { wasmSha256: "624d6acbd65e285f56ec8ea45031c7beb8a68e75e45efdc598021ca37678c38b", coreWasmSha256: "8df86ec417cc9c33ea5cd18a41f7c0a9affeb558c0cef29c9633b7ff8d2397d2", descriptorSha256: "bd4d46a280929497be49750be998eb9595ce241e0ec48cf4d634f72c37e57048" } },
+  { pluginId: "cad-extension-aec-building", packageId: "semio:cad-extension-aec-building", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building.wasm", role: "extension", capabilities: [], contributes: [], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "isolated" },
+  { pluginId: "cad-extension-aec-building-energy", packageId: "semio:cad-extension-aec-building-energy", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building_energy.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative" },
+  { pluginId: "cad-extension-aec-building-structure", packageId: "semio:cad-extension-aec-building-structure", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_aec_building_structure.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative" },
+  { pluginId: "cad-extension-spatial-shape", packageId: "semio:cad-extension-spatial-shape", cratePath: "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad_spatial_shape.wasm", role: "extension", capabilities: [], contributes: ["cad.computer"], consumes: [], dependsOn: ["cad"], activationEvents: [], extensionPoints: [], extends: "cad", executionMode: "declarative" },
+  { pluginId: "flow-extension-bim", packageId: "semio:flow-extension-bim", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_bim.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-brep", packageId: "semio:flow-extension-brep", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_brep.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-dictionary", packageId: "semio:flow-extension-dictionary", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_dictionary.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-draw", packageId: "semio:flow-extension-draw", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_draw.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-list", packageId: "semio:flow-extension-list", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_list.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-logic", packageId: "semio:flow-extension-logic", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_logic.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-math", packageId: "semio:flow-extension-math", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_math.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-primitive", packageId: "semio:flow-extension-primitive", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_primitive.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
+  { pluginId: "flow-extension-text", packageId: "semio:flow-extension-text", cratePath: "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_flow_extension_text.wasm", role: "extension", capabilities: [], contributes: ["flow.extension", "flow.extension"], consumes: [], dependsOn: ["flow"], activationEvents: [], extensionPoints: [], extends: "flow", executionMode: "linked" },
   { pluginId: "imperative-extension-control", packageId: "semio:imperative-extension-control", cratePath: "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative_control.wasm", role: "extension", capabilities: ["imperative.module"], contributes: ["imperative.module"], consumes: [], dependsOn: ["imperative"], activationEvents: [], extensionPoints: [], extends: "imperative" },
   { pluginId: "imperative-extension-effect", packageId: "semio:imperative-extension-effect", cratePath: "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative_effect.wasm", role: "extension", capabilities: ["imperative.module"], contributes: ["imperative.module"], consumes: [], dependsOn: ["imperative"], activationEvents: [], extensionPoints: [], extends: "imperative" },
   { pluginId: "imperative-extension-logic", packageId: "semio:imperative-extension-logic", cratePath: "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative_logic.wasm", role: "extension", capabilities: ["imperative.module"], contributes: ["imperative.module"], consumes: [], dependsOn: ["imperative"], activationEvents: [], extensionPoints: [], extends: "imperative" },
@@ -20130,7 +20597,7 @@ var PROGRAM_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
 var pluginModuleUrl = (pluginId) => `${MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(pluginId)}/${MODULE_BRIDGE_FILE}`;
 var extensionModuleUrl = (extensionId) => `${MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(extensionId)}/${MODULE_BRIDGE_FILE}`;
 
-/* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
 var PLAYGROUND_BUILD_TARGETS = [
   { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: ["🎬️demo"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-assets", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" }] },
   { variant: "animate", pluginId: "animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: ["🎬️demo"], engines: [], assets: [] },
@@ -20194,7 +20661,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "writer", pluginId: "writer", cratePath: "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["🎬️demo"], engines: [], assets: [] }
 ];
 
-/* ../../../../../../🔌️plugin/📇️registry/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts */
 function toCatalogTarget(target) {
   return { pluginId: target.pluginId, wasmOut: target.wasmOut, role: target.role, contributes: target.contributes, consumes: target.consumes, dependsOn: target.dependsOn };
 }
@@ -20213,7 +20680,7 @@ function buildPluginCatalog() {
 }
 var PLUGIN_CATALOG = buildPluginCatalog();
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout.ts */
 var DIAGRAM_UNIT = 48;
 var DIAGRAM_LAYOUT_CODEC_KIND = "diagram-directed-layout-v1";
 var DIAGRAM_LAYOUT_INGRESS_ITEMS = 64;
@@ -21529,13 +21996,12 @@ function createDiagramLayoutWorkerJob(descriptor) {
   return new DiagramLayoutWireJob(descriptor);
 }
 
-/* ../../🔌️browser-interactive-job-port/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts */
 var INTERACTIVE_JOB_SLOT_CAPACITY = 16;
 var INTERACTIVE_JOB_INPUT_ITEM_CAPACITY = 65536;
 var INTERACTIVE_JOB_INPUT_BYTE_CAPACITY = 256 * 1024 * 1024;
 var INTERACTIVE_JOB_PAGE_ITEM_CAPACITY = 128;
 var INTERACTIVE_JOB_PAGE_BYTE_CAPACITY = 16 * 1024;
-var INTERACTIVE_JOB_UI_BUDGET_MS = 2;
 var INTERACTIVE_JOB_OBSERVER_CAPACITY = 32;
 var INTERACTIVE_JOB_PORT_ITEM_CAPACITY = 262144;
 var INTERACTIVE_JOB_PORT_BYTE_CAPACITY = 256 * 1024 * 1024;
@@ -21556,13 +22022,14 @@ class BrowserInteractiveJobPort {
   observerNotifyScheduled = false;
   statusRevision = 0;
   statusSnapshot = { status: "unavailable", revision: 0 };
-  now;
+  uiTurns = new TurnLedger;
+  uiTurnClock;
   constructor(lifecycle, send, now, quarantineConsumer, schedule = (callback) => setTimeout(callback, 0)) {
     this.lifecycle = lifecycle;
     this.send = send;
     this.quarantineConsumer = quarantineConsumer;
     this.schedule = schedule;
-    this.now = now;
+    this.uiTurnClock = new TurnClock(now);
   }
   ready() {
     if (this.status === "unavailable") {
@@ -21574,10 +22041,13 @@ class BrowserInteractiveJobPort {
     return this.statusSnapshot;
   }
   observeConsumerTurn(site, durationMs) {
-    if (durationMs < INTERACTIVE_JOB_UI_BUDGET_MS)
-      return true;
-    this.quarantine(`${site} took ${durationMs.toFixed(3)} ms`);
-    return false;
+    return this.uiTurns.admit(site, durationMs).verdict !== "sustained-overrun";
+  }
+  reportConsumerFault(site, detail) {
+    this.quarantine(`${site} threw: ${detail}`);
+  }
+  uiTurnSnapshot() {
+    return this.uiTurns.snapshot();
   }
   subscribe(listener) {
     const slot = this.observers.findIndex((entry) => entry === undefined);
@@ -21645,16 +22115,16 @@ class BrowserInteractiveJobPort {
         this.quarantine("interactive job pull exceeded fixed credits");
         return true;
       }
-      const startedAt2 = this.now();
+      this.uiTurnClock.enter();
       let page;
       try {
         page = slot.consumer.readInputPage(message.cursor, Math.min(message.maxItems, slot.descriptor.inputPageItems));
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`input consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt2, "input consumer"))
-        return true;
+      this.observe("input consumer");
       if (!this.admitPage(slot, page, true))
         return true;
       slot.inputCursor += page.itemCount;
@@ -21668,15 +22138,15 @@ class BrowserInteractiveJobPort {
     if (message.kind === "job-output-page") {
       if (!this.admitPage(slot, message.page, false))
         return true;
-      const startedAt2 = this.now();
+      this.uiTurnClock.enter();
       try {
         slot.consumer.onOutputPage(message.page);
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`output consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt2, "output consumer"))
-        return true;
+      this.observe("output consumer");
       return true;
     }
     if (message.status !== "complete" && message.status !== "cancelled" && message.status !== "fault") {
@@ -21684,18 +22154,18 @@ class BrowserInteractiveJobPort {
       return true;
     }
     const terminal = { operation: message.operation, generation: message.generation, status: message.status, ...message.detail === undefined ? {} : { detail: message.detail } };
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       slot.consumer.onTerminal(terminal);
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`terminal consumer threw: ${error instanceof Error ? error.message : String(error)}`);
       slot.closing = true;
       this.scheduleClose();
       return true;
     }
     slot.closing = true;
-    if (!this.observe(startedAt, "terminal consumer"))
-      return true;
+    this.observe("terminal consumer");
     this.scheduleClose();
     return true;
   }
@@ -21721,18 +22191,18 @@ class BrowserInteractiveJobPort {
     if (this.closeCursor === this.slots.length)
       return true;
     const slot = this.slots[this.closeCursor];
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     let complete = false;
     try {
       complete = slot.consumer.closeStep();
       if (complete)
         complete = slot.consumer.terminalIsEmpty();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`consumer close threw: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
-    if (!this.observe(startedAt, "consumer close"))
-      return false;
+    this.observe("consumer close");
     if (complete) {
       this.releaseSlot(this.closeCursor);
       this.closeCursor++;
@@ -21791,12 +22261,8 @@ class BrowserInteractiveJobPort {
     }
     return true;
   }
-  observe(startedAt, site) {
-    const duration = this.now() - startedAt;
-    if (duration < INTERACTIVE_JOB_UI_BUDGET_MS)
-      return true;
-    this.quarantine(`${site} took ${duration.toFixed(3)} ms`);
-    return false;
+  observe(site) {
+    return this.uiTurns.admit(site, this.uiTurnClock.leave()).verdict !== "sustained-overrun";
   }
   quarantine(detail) {
     if (this.status !== "ready")
@@ -21829,15 +22295,15 @@ class BrowserInteractiveJobPort {
     if (this.observerCursor === this.observers.length)
       return;
     const observer = this.observers[this.observerCursor++];
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       observer();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`status observer threw: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
-    if (!this.observe(startedAt, "status observer"))
-      return;
+    this.observe("status observer");
     this.observerNotifyScheduled = true;
     this.schedule(() => this.notifyOneObserver());
   }
@@ -21865,7 +22331,7 @@ function admittedCount(value) {
   return Number.isSafeInteger(value) && value >= 0;
 }
 
-/* ../../📇️interactive-job-registry/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts */
 var DIAGRAM_DESCRIPTOR = {
   kind: DIAGRAM_LAYOUT_CODEC_KIND,
   inputPageItems: 64,
@@ -22152,7 +22618,7 @@ function admitPage2(page, itemCapacity, byteCapacity) {
 function admittedCount2(value) {
   return Number.isSafeInteger(value) && value >= 0;
 }
-/* ../../../../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts */
 var DOCUMENT_BROWSER_ACTOR_INTERFACES = Object.freeze([
   "semio:framework/host-async@1.0.0",
   "semio:framework/pure@1.0.0",
@@ -22171,7 +22637,7 @@ var DOCUMENT_BROWSER_ACTOR_INTERFACES = Object.freeze([
   "wasi:io/poll@0.2.0",
   "wasi:io/streams@0.2.0"
 ]);
-/* ../../../../../../📇️directory/🧬️schema/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts */
 var DIRECTORY_EVENT_PAGE_MAX_BYTES = 64 * 1024;
 var DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES = 48 * 1024;
 var CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES = 8 * 1024;
@@ -22218,19 +22684,22 @@ var GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1 = Object.freeze({
 });
 var GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1 = Object.freeze({
   heading: Object.freeze({ en: "Bounds proposal", de: "Begrenzungsvorschlag" }),
+  request: Object.freeze({ en: "Request bounds proposal", de: "Begrenzungsvorschlag anfordern" }),
   cancel: Object.freeze({ en: "Cancel proposal", de: "Vorschlag abbrechen" }),
+  reject: Object.freeze({ en: "Reject proposal", de: "Vorschlag ablehnen" }),
   approve: Object.freeze({ en: "Approve proposal", de: "Vorschlag freigeben" }),
   close: Object.freeze({ en: "Close proposal", de: "Vorschlag schließen" }),
   progress: Object.freeze({ en: "Proposal progress", de: "Fortschritt des Vorschlags" }),
   region: Object.freeze({ en: "Region", de: "Gebiet" }),
   longitude: Object.freeze({ en: "Longitude extent", de: "Längengradbereich" }),
-  latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" })
+  latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" }),
+  overlay: Object.freeze({ en: "Proposed bounds on the map", de: "Vorgeschlagene Grenzen auf der Karte" })
 });
-/* ../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts */
+/* 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts */
 function localInteractionIdentityEquals(left, right) {
   return left.appInstanceId === right.appInstanceId && left.generation === right.generation && left.revision === right.revision && left.documentRevision === right.documentRevision && left.topologyRevision === right.topologyRevision;
 }
-/* ../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts */
+/* 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts */
 var rejections = ["busy", "closed", "generation-exhausted", "source-failed"];
 var maximumWireBytes = 4256;
 function encodeLocalInteractionUnsigned(text2) {
@@ -22353,7 +22822,7 @@ function decodeLocalInteractionQueryReply(bytes) {
   return result3;
 }
 
-/* ../../../../../../../../../🔨️modules/📡️replication/🟦️.ts */
+/* 🧰️framework/🔨️modules/📡️replication/🟦️.ts */
 //! 📡️ Replication contract — TypeScript twin of the Rust `protocol` crate.
 //!
 //! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧫️fixtures/📡️wire`
@@ -22809,13 +23278,13 @@ class ArtifactBootstrapAssembler {
   }
 }
 if (undefined) {}
-/* ../../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts */
 if (undefined) {}
 
-/* ../../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts */
 var BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 if (undefined) {}
-/* ../../../../../../../🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🟦️.ts */
 var replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 if (undefined) {}
 var JSON_BRIDGE_FIELD_ID = 1;
@@ -23221,6 +23690,7 @@ function decodeInvocationResultPacks(frame) {
   return { mutations: mutations.map((entry, index) => invocationResultMutation(entry, `invocation.mutations[${index}]`)), inverseGroup: invocationResultUndoGroup(decodePackWire(new Uint8Array(frame.inverse_group), "invocation.inverseGroup"), "invocation.inverseGroup") };
 }
 var SCENE_PACK_UNIT = Symbol("scene-pack-unit");
+if (undefined) {}
 var INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 262144;
 function readOptU64(bytes, pos) {
   return readBool(bytes, pos) ? readVarintU64(bytes, pos) : null;
@@ -23319,7 +23789,8 @@ var APP_FRAME_TAGS = {
   UiPatch: 21,
   UiSnapshotEnd: 22,
   LocalInteractionQuery: 23,
-  WindowConfigs: 24
+  WindowConfigs: 24,
+  OperationCompleted: 25
 };
 function encodeAppCommand(cmd) {
   const out = [];
@@ -23602,6 +24073,13 @@ function decodeAppFrame(bytes) {
     }
     case APP_FRAME_TAGS.UiSnapshotEnd:
       return { UiSnapshotEnd: { revision: readVarintU64(bytes, pos) } };
+    case APP_FRAME_TAGS.OperationCompleted: {
+      const operation = readVarintU64(bytes, pos);
+      const revision = readVarintU64(bytes, pos);
+      const ui_scope = readBytes(bytes, pos);
+      const history_patch = readBytes(bytes, pos);
+      return { OperationCompleted: { operation, revision, ui_scope, history_patch } };
+    }
     case APP_FRAME_TAGS.LocalInteractionQuery: {
       const length = readVarintU64(bytes, pos);
       if (length > 4256 || pos[0] + length !== bytes.length)
@@ -23689,6 +24167,7 @@ class AppChannelRequestSequence {
 class AppChannelClient {
   sequenceOwner;
   localQuery = null;
+  completionListeners = new Set;
   disposed = false;
   handle;
   instanceId;
@@ -23742,6 +24221,8 @@ class AppChannelClient {
       for (const frame of frames) {
         if ("LocalInteractionQuery" in frame)
           this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
+        else if ("OperationCompleted" in frame)
+          this.publishOperationCompletion(frame.OperationCompleted);
         else
           ordinary.push(frame);
       }
@@ -23763,8 +24244,31 @@ class AppChannelClient {
       this.finishDisposal();
     }
   }
+  onOperationCompleted(listener) {
+    this.completionListeners.add(listener);
+    return () => this.completionListeners.delete(listener);
+  }
+  publishOperationCompletion(frame) {
+    if (this.disposed || this.completionListeners.size === 0)
+      return;
+    const completion = {
+      instanceId: this.instanceId,
+      operation: frame.operation,
+      revision: frame.revision,
+      uiScope: frame.ui_scope.length ? decodePackWire(new Uint8Array(frame.ui_scope), "$.uiScope") : undefined,
+      historyPatch: frame.history_patch.length ? decodePackWire(new Uint8Array(frame.history_patch), "$.historyPatch") : undefined
+    };
+    for (const listener of [...this.completionListeners]) {
+      try {
+        listener(completion);
+      } catch (error) {
+        console.error("[DEBUG] operation completion subscriber failed", error);
+      }
+    }
+  }
   dispose() {
     this.disposed = true;
+    this.completionListeners.clear();
     this.cachedPack = null;
     this.cachedSpr = null;
     for (let index = this.pending.length - 1;index >= 0; index -= 1) {
@@ -24050,7 +24554,7 @@ class AppChannelClient {
 if (undefined) {}
 if (undefined) {}
 if (undefined) {}
-/* ../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
 var SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js";
 var DEFAULT_SHARD_BUDGET = { fuel: 50000000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
 function poolConcurrency() {
@@ -24070,13 +24574,13 @@ function createPooledActorRuntime(options) {
   return { shardClient };
 }
 
-/* ../../../../💾️resident/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts */
 var ledger = new OwnedResidentLedger({ bytes: 33554432, slots: 262144, owners: 262144, control: { bytes: 65536, slots: 1024, owners: 1024 } });
 function rendererResidentLedger() {
   return ledger;
 }
 
-/* ../../../../🧱️elements/📃️UiDocumentStore/🟦️.tsx */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx */
 var import_react = __toESM(require_react(), 1);
 var DEFAULT_UI_DOCUMENT_LIMITS = {
   maxNodes: 20000,
@@ -24457,7 +24961,7 @@ class UiDocumentStore {
 }
 if (undefined) {}
 
-/* ../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts */
 var admitted20 = (grant) => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 var step13 = (kind, phase, bytes = 0) => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 
@@ -24469,6 +24973,8 @@ class OwnedUiPatchIntake {
   #patch = null;
   #phase = "lookup";
   #ordinal = 0;
+  #stall = 0;
+  #stallPhase = null;
   #closing = false;
   #closed = false;
   #failure = null;
@@ -24505,106 +25011,121 @@ class OwnedUiPatchIntake {
     if (this.#closing || this.#failure)
       return step13("rejected", "intake");
     try {
-      switch (this.#phase) {
-        case "lookup": {
-          const source = this.#source.value;
-          this.#lookup = this.#owner.beginSurfaceLookup(source.activation, source.lifetime, source.surface);
-          if (!this.#lookup)
-            return step13("blocked", "intake-lookup-capacity");
-          this.#phase = "lookup-read";
-          return step13("pending", "intake-lookup", 256 + source.surface.length * 5);
-        }
-        case "lookup-read": {
-          const current = this.#lookup.advance(grant);
-          if (current.kind === "rejected") {
-            this.#failure = this.#lookup.failure ?? "Native surface lookup rejected";
-            return current;
+      return this.#step((() => {
+        switch (this.#phase) {
+          case "lookup": {
+            const source = this.#source.value;
+            this.#lookup = this.#owner.beginSurfaceLookup(source.activation, source.lifetime, source.surface);
+            if (!this.#lookup)
+              return step13("blocked", "intake-lookup-capacity");
+            this.#phase = "lookup-read";
+            return step13("pending", "intake-lookup", 256 + source.surface.length * 5);
           }
-          if (current.kind === "ready")
-            this.#phase = "lookup-take";
-          return { ...current, kind: "pending" };
-        }
-        case "lookup-take": {
-          this.#surface = this.#lookup.takeResult();
-          if (!this.#surface)
-            throw new Error("Native surface lookup result is missing");
-          this.#lookup.beginClose();
-          this.#phase = "lookup-close";
-          return step13("pending", "intake-surface", 64);
-        }
-        case "lookup-close": {
-          const current = this.#lookup.closeStep(grant);
-          const result3 = this.#closeResult(current, this.#lookup.failure);
-          if (current.kind === "complete") {
-            this.#lookup = null;
-            this.#phase = "patch";
+          case "lookup-read": {
+            const current = this.#lookup.advance(grant);
+            if (current.kind === "rejected") {
+              this.#failure = this.#lookup.failure ?? "Native surface lookup rejected";
+              return current;
+            }
+            if (current.kind === "ready")
+              this.#phase = "lookup-take";
+            return { ...current, kind: "pending" };
           }
-          return result3;
-        }
-        case "patch":
-          this.#patch = this.#owner.beginPatch(this.#source, this.#surface);
-          this.#phase = "offer";
-          return step13("pending", "intake-patch", 2048);
-        case "offer": {
-          if (this.#ordinal === this.#source.value.operationCount) {
-            this.#phase = "seal";
-            return step13("pending", "intake-input-finished", 32);
+          case "lookup-take": {
+            this.#surface = this.#lookup.takeResult();
+            if (!this.#surface)
+              throw new Error("Native surface lookup result is missing");
+            this.#lookup.beginClose();
+            this.#phase = "lookup-close";
+            return step13("pending", "intake-surface", 64);
           }
-          if (!this.#patch.offer(this.#ordinal))
-            return step13("blocked", "intake-input-capacity");
-          this.#phase = "input";
-          return step13("pending", "intake-offer", 2048);
-        }
-        case "input": {
-          const current = this.#patch.advance(grant);
-          if (current.kind === "rejected") {
-            this.#failure = this.#patch.failure ?? "Native input rejected";
-            return current;
+          case "lookup-close": {
+            const current = this.#lookup.closeStep(grant);
+            const result3 = this.#closeResult(current, this.#lookup.failure);
+            if (current.kind === "complete") {
+              this.#lookup = null;
+              this.#phase = "patch";
+            }
+            return result3;
           }
-          if (current.kind === "ready")
-            this.#phase = "input-release";
-          return { ...current, kind: "pending" };
-        }
-        case "input-release": {
-          const token2 = this.#patch.peekInputReceipt();
-          if (!token2 || !this.#patch.releaseInputReceipt(token2))
-            return step13("blocked", "intake-input-retirement");
-          this.#ordinal++;
-          this.#phase = "offer";
-          return step13("pending", "intake-input-retirement", 256);
-        }
-        case "seal":
-          this.#patch.finishInput();
-          this.#phase = "publication";
-          return step13("pending", "intake-seal", 64);
-        case "publication": {
-          const current = this.#patch.advance(grant);
-          if (current.kind === "rejected") {
-            this.#failure = this.#patch.failure ?? "Native publication rejected";
-            return current;
+          case "patch":
+            this.#patch = this.#owner.beginPatch(this.#source, this.#surface);
+            this.#phase = "offer";
+            return step13("pending", "intake-patch", 2048);
+          case "offer": {
+            if (this.#ordinal === this.#source.value.operationCount) {
+              this.#phase = "seal";
+              return step13("pending", "intake-input-finished", 32);
+            }
+            if (!this.#patch.offer(this.#ordinal))
+              return step13("blocked", "intake-input-capacity");
+            this.#phase = "input";
+            return step13("pending", "intake-offer", 2048);
           }
-          if (current.kind === "ready")
-            this.#phase = "ack";
-          return { ...current, kind: "pending" };
-        }
-        case "ack":
-          return step13("blocked", "intake-publication-receipt");
-        case "patch-close": {
-          const current = this.#patch.closeStep(grant);
-          const result3 = this.#closeResult(current, this.#patch.failure);
-          if (current.kind === "complete") {
-            this.#patch = null;
-            this.#phase = "ready";
+          case "input": {
+            const current = this.#patch.advance(grant);
+            if (current.kind === "rejected") {
+              this.#failure = this.#patch.failure ?? "Native input rejected";
+              return current;
+            }
+            if (current.kind === "ready")
+              this.#phase = "input-release";
+            return { ...current, kind: "pending" };
           }
-          return result3;
+          case "input-release": {
+            const token2 = this.#patch.peekInputReceipt();
+            if (!token2 || !this.#patch.releaseInputReceipt(token2))
+              return step13("blocked", "intake-input-retirement");
+            this.#ordinal++;
+            this.#phase = "offer";
+            return step13("pending", "intake-input-retirement", 256);
+          }
+          case "seal":
+            this.#patch.finishInput();
+            this.#phase = "publication";
+            return step13("pending", "intake-seal", 64);
+          case "publication": {
+            const current = this.#patch.advance(grant);
+            if (current.kind === "rejected") {
+              this.#failure = this.#patch.failure ?? "Native publication rejected";
+              return current;
+            }
+            if (current.kind === "ready")
+              this.#phase = "ack";
+            return { ...current, kind: "pending" };
+          }
+          case "ack":
+            return step13("blocked", "intake-publication-receipt");
+          case "patch-close": {
+            const current = this.#patch.closeStep(grant);
+            const result3 = this.#closeResult(current, this.#patch.failure);
+            if (current.kind === "complete") {
+              this.#patch = null;
+              this.#phase = "ready";
+            }
+            return result3;
+          }
+          case "ready":
+            return step13("ready", "intake-ready");
         }
-        case "ready":
-          return step13("ready", "intake-ready");
-      }
+      })());
     } catch (error) {
       this.#failure = error instanceof Error ? error.message : "Native intake failed";
       return step13("rejected", "intake", 4096);
     }
+  }
+  #step(result3) {
+    const progressed = result3.kind !== "pending" || result3.bytes > 0 || result3.items > 0 || this.#phase !== this.#stallPhase;
+    if (progressed) {
+      this.#stall = 0;
+      this.#stallPhase = this.#phase;
+      return result3;
+    }
+    this.#stall += 1;
+    if (this.#stall < 32)
+      return result3;
+    this.#failure = `Native intake made no progress in phase ${this.#phase}`;
+    return step13("rejected", "intake-zero-progress");
   }
   #closeResult(current, failure) {
     if (current.kind === "rejected") {
@@ -24663,8 +25184,14 @@ class OwnedUiPatchIntake {
     return this.#closed && !this.#owner && !this.#source && !this.#lookup && !this.#surface && !this.#patch;
   }
 }
+var RETAINED_UI_INTAKE_STEPS_PER_NODE = 8192;
+var RETAINED_UI_INTAKE_SLICE_STEPS = 4096;
+function retainedUiIntakeStepCeiling(limits) {
+  return limits.maxNodes * RETAINED_UI_INTAKE_STEPS_PER_NODE;
+}
+if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts */
 var COLD_PAIR_MAXIMUM_PAGES = 64;
 var COLD_PAIR_FAULT_MAXIMUM_BYTES = 4 * 1024;
 function exactRecord2(value, keys, code) {
@@ -24765,7 +25292,7 @@ function parseWitColdPairIngressStatus(value) {
 }
 if (undefined) {}
 
-/* ../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts */
+/* 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts */
 function coerceWireBytes(raw) {
   if (raw instanceof Uint8Array)
     return raw;
@@ -24873,7 +25400,7 @@ function wireEffectToFriendly(effect, decodePackValue2) {
   }
 }
 
-/* 🟦️typescript/🐚️plugin-bridge.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts */
 class MainThreadShardWorker {
   shardIndex;
   onmessage = null;
@@ -24883,6 +25410,7 @@ class MainThreadShardWorker {
   terminated = false;
   constructor(shardIndex) {
     this.shardIndex = shardIndex;
+    routeShardPorts();
     shardPortWaiters.set(shardIndex, (port) => this.attach(port));
     self.postMessage({ kind: "shard-spawn", shardIndex, url: SHARD_WORKER_URL });
   }
@@ -24925,13 +25453,19 @@ class MainThreadShardWorker {
   }
 }
 var shardPortWaiters = new Map;
-self.addEventListener("message", (event) => {
-  const data2 = event.data;
-  if (!data2 || typeof data2 !== "object" || data2.kind !== "shard-port" || typeof data2.shardIndex !== "number")
+var shardPortsRouted = false;
+function routeShardPorts() {
+  if (shardPortsRouted)
     return;
-  shardPortWaiters.get(data2.shardIndex)?.(data2.port);
-  shardPortWaiters.delete(data2.shardIndex);
-});
+  shardPortsRouted = true;
+  self.addEventListener("message", (event) => {
+    const data2 = event.data;
+    if (!data2 || typeof data2 !== "object" || data2.kind !== "shard-port" || typeof data2.shardIndex !== "number")
+      return;
+    shardPortWaiters.get(data2.shardIndex)?.(data2.port);
+    shardPortWaiters.delete(data2.shardIndex);
+  });
+}
 var pooledRuntime = null;
 function getShardClient() {
   pooledRuntime ??= createPooledActorRuntime({
@@ -24964,12 +25498,39 @@ function submitTurn(actorId, events, commandPage) {
   return submitActorWork(actorId, () => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
 }
 var RETAINED_DOCUMENT_OPPORTUNITIES = 256;
-var WGPU_UI_CONTINUATION_LIMIT = 4096;
 var WGPU_UI_CONTINUATION_BATCH_SIZE = 8;
 var WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4096 });
+var WGPU_UI_INTAKE_STEP_CEILING = retainedUiIntakeStepCeiling(DEFAULT_UI_DOCUMENT_LIMITS);
 async function yieldWgpuUi(step14) {
   if (step14 % WGPU_UI_CONTINUATION_BATCH_SIZE === 0)
     await new Promise((resolve) => setTimeout(resolve, 0));
+}
+async function nextWgpuFrame() {
+  const frame = globalThis.requestAnimationFrame;
+  if (typeof frame === "function")
+    await new Promise((resolve) => frame.call(globalThis, () => resolve()));
+  else
+    await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+class WgpuUiIntakeCursor {
+  #steps = 0;
+  #ceiling;
+  constructor(ceiling = WGPU_UI_INTAKE_STEP_CEILING) {
+    this.#ceiling = ceiling;
+  }
+  get steps() {
+    return this.#steps;
+  }
+  async next(phase) {
+    this.#steps += 1;
+    if (this.#steps > this.#ceiling)
+      throw new Error(`wgpu-ui.intake-budget-exhausted:${phase}:${this.#steps}`);
+    if (this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0)
+      await nextWgpuFrame();
+    else
+      await yieldWgpuUi(this.#steps);
+  }
 }
 function ownedUiComponentToBuilt(component) {
   if (component.type !== "surface")
@@ -25014,13 +25575,12 @@ class WgpuOwnedUiInstanceRoute {
   }
   async#closeIntake(intake) {
     intake.beginClose();
-    for (let step14 = 1;!intake.terminalIsEmpty(); step14 += 1) {
-      if (step14 > WGPU_UI_CONTINUATION_LIMIT)
-        throw new Error("wgpu-ui.intake-close-budget-exhausted");
+    const cursor = new WgpuUiIntakeCursor;
+    while (!intake.terminalIsEmpty()) {
       const current = intake.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected")
         throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
-      await yieldWgpuUi(step14);
+      await cursor.next("intake-close");
     }
     this.#intakes.delete(intake);
   }
@@ -25042,30 +25602,27 @@ class WgpuOwnedUiInstanceRoute {
       const source = this.lifecycle.captureUiPatchAuthority(turn.original, index);
       const intake = new OwnedUiPatchIntake(this.owner, source);
       this.#intakes.add(intake);
+      const cursor = new WgpuUiIntakeCursor;
       let token2 = null;
-      for (let step14 = 1;token2 === null; step14 += 1) {
-        if (step14 > WGPU_UI_CONTINUATION_LIMIT)
-          throw new Error("wgpu-ui.intake-budget-exhausted");
+      while (token2 === null) {
         const current = intake.advance(WGPU_UI_GRANT);
         token2 = intake.peekAcknowledgement();
         if (current.kind === "rejected")
           throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token2 === null)
           throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
-        await yieldWgpuUi(step14);
+        await cursor.next("intake");
       }
       const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token2, DEFAULT_SHARD_BUDGET));
       if (!intake.acceptAcknowledgement(acknowledged.receipt))
         throw new Error("wgpu-ui.acknowledgement-refused");
-      for (let step14 = 1;; step14 += 1) {
-        if (step14 > WGPU_UI_CONTINUATION_LIMIT)
-          throw new Error("wgpu-ui.publication-close-budget-exhausted");
+      for (;; ) {
         const current = intake.advance(WGPU_UI_GRANT);
         if (current.kind === "ready")
           break;
         if (current.kind === "blocked" || current.kind === "rejected")
           throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
-        await yieldWgpuUi(step14);
+        await cursor.next("publication-close");
       }
       const surface = intake.takeSurface();
       if (!surface)
@@ -25142,13 +25699,12 @@ class WgpuOwnedUiInstanceRoute {
       await this.#closeIntake(intake);
     this.#surfaces.clear();
     this.owner.beginClose();
-    for (let step14 = 1;!this.owner.terminalIsEmpty(); step14 += 1) {
-      if (step14 > WGPU_UI_CONTINUATION_LIMIT)
-        throw new Error("wgpu-ui.owner-close-budget-exhausted");
+    const cursor = new WgpuUiIntakeCursor;
+    while (!this.owner.terminalIsEmpty()) {
       const current = this.owner.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected")
         throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
-      await yieldWgpuUi(step14);
+      await cursor.next("owner-close");
     }
     const witness = this.owner.takeRetirementWitness();
     if (!witness)
@@ -25185,9 +25741,8 @@ async function retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, execute) {
       throw new Error("wgpu-ui.patch-during-cancelled-open");
   }
   lifecycle.beginClose();
-  for (let step14 = 1;lifecycle.progress().kind !== "complete"; step14 += 1) {
-    if (step14 > WGPU_UI_CONTINUATION_LIMIT)
-      throw new Error("wgpu-ui.lifecycle-close-budget-exhausted");
+  const cursor = new WgpuUiIntakeCursor;
+  while (lifecycle.progress().kind !== "complete") {
     const receipt = lifecycle.pendingReceipt;
     let current;
     if (receipt?.kind === "accepted")
@@ -25203,7 +25758,7 @@ async function retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, execute) {
     }
     if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined)
       throw new Error("wgpu-ui.patch-after-lifecycle-close");
-    await yieldWgpuUi(step14);
+    await cursor.next("lifecycle-close");
   }
   lifecycle.dispose();
 }
@@ -25411,11 +25966,9 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       return opening.then((value) => {
         forget();
         return value;
-      }, async (error) => {
+      }, (error) => {
         forget();
-        if (!retiringInstances.has(instanceId))
-          await handle.destroyApp(instanceId);
-        throw error;
+        return settleFailedInstanceOpen(error, () => retiringInstances.has(instanceId) ? Promise.resolve() : handle.destroyApp(instanceId));
       });
     },
     destroyApp: (instanceId) => {
@@ -25434,13 +25987,11 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         channelByInstance.get(instanceId)?.dispose();
         const lifecycle = lifecycleByInstance.get(instanceId);
         const route = uiRouteByInstance.get(instanceId);
-        if (!lifecycle) {
+        if (!lifecycle || !route) {
           registry.cancel(actorId);
           releaseInstance(instanceId, actorId);
           return;
         }
-        if (!route)
-          throw new Error("wgpu-ui.native-owner-required");
         await retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, executeFor(actorId));
         registry.cancel(actorId);
         releaseInstance(instanceId, actorId);
@@ -25496,7 +26047,7 @@ function pluginHandleForBridge(handle) {
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items))
   };
 }
-/* ../../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json */
+/* 🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json */
 var _catalog_default3 = {
   $schema: "./🧬️schema/🔣️.json",
   version: 1,
@@ -25525,7 +26076,7 @@ var _catalog_default3 = {
     }
   ]
 };
-/* ../../../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json */
+/* 🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json */
 var _catalog_default4 = {
   $schema: "./🧬️schema/🔣️.json",
   version: 1,
@@ -25623,7 +26174,7 @@ var _catalog_default4 = {
   ]
 };
 
-/* ../../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts */
+/* 🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts */
 function object(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Mesh catalog object required");
@@ -25714,25 +26265,47 @@ function meshAssetTransportUrl(url, catalog = MESH_DELIVERY_CATALOG) {
   return url.startsWith("/mesh/") ? `/mesh/${resolveMeshAsset(url, catalog).path}` : url;
 }
 
-/* ../../🎞️frame-worker/🟦️.ts */
-var WORKER_STEP_BUDGET_MS = 8;
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts */
 var BOOT_HEARTBEAT_MS = 2;
-var BOOT_LIVENESS_INTERVAL_MS = 1000;
+var BOOT_LIVENESS_INTERVAL_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.livenessIntervalMs;
 var lastProgressValue = 0;
+var bootDeclarationsOpen = true;
 var PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 var ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 var ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 var INTROSPECTION_STEP_BUDGET_MS = 64;
 var BROWSER_OWNED_SUSPENSION_BUDGET_MS = 30000;
-function ownedStep(stage, callback, budgetMs = WORKER_STEP_BUDGET_MS) {
-  const startedAt = performance.now();
-  const value = callback();
-  const duration = performance.now() - startedAt;
-  if (duration >= budgetMs)
-    throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms against a ${budgetMs} ms budget`);
-  return value;
+var stepClock = new TurnClock(() => performance.now());
+var stepLedger = new TurnLedger(WORKER_STEP_BUDGET_MS, "worker-step");
+var suspensionLedger = new TurnLedger(BROWSER_OWNED_SUSPENSION_BUDGET_MS, "browser-owned-suspension");
+var lastStepOutcome;
+function ownedStep(stage, callback, ledger2 = stepLedger) {
+  stepClock.enter();
+  try {
+    return callback();
+  } finally {
+    lastStepOutcome = ledger2.admit(stage, stepClock.leave());
+  }
 }
-async function monitoredSuspension(stage, operation, blockBudgetMs = WORKER_STEP_BUDGET_MS) {
+function declaredStep(stage, callback, ledger2 = stepLedger) {
+  const startedAt = performance.now();
+  declarePhase(stage, "enter", 0);
+  try {
+    return ownedStep(stage, callback, ledger2);
+  } finally {
+    declarePhase(stage, "leave", performance.now() - startedAt);
+  }
+}
+function stepsDegraded() {
+  return stepLedger.degraded();
+}
+function stepLedgerReport() {
+  const snapshot = stepLedger.snapshot();
+  return { degraded: snapshot.degraded, recordedOverruns: snapshot.recordedOverruns, sustainedOverruns: snapshot.sustainedOverruns, worstStepMs: snapshot.worstExecutingMs, worstStepSite: snapshot.worstSite };
+}
+async function monitoredSuspension(stage, operation, ledger2 = suspensionLedger) {
+  const declaredAt = performance.now();
+  declarePhase(stage, "enter", 0);
   let lastBeat = performance.now();
   let lastLivenessAt = performance.now();
   let maximumBlockMs = 0;
@@ -25747,21 +26320,36 @@ async function monitoredSuspension(stage, operation, blockBudgetMs = WORKER_STEP
     }
   }, BOOT_HEARTBEAT_MS);
   try {
-    const result3 = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
+    stepClock.suspend();
+    const result3 = await ownedStep(`${stage}:start`, operation, ledger2);
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (closed || closing)
       throw new Error(`worker-boot-cancelled: ${stage}`);
-    if (maximumBlockMs >= blockBudgetMs)
-      throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms against a ${blockBudgetMs} ms budget`);
+    ledger2.admit(`${stage}:block`, maximumBlockMs);
     return result3;
   } finally {
     clearInterval(heartbeat);
+    stepClock.resume();
+    declarePhase(stage, "leave", performance.now() - declaredAt);
   }
 }
 async function macrotask() {
+  stepClock.suspend();
   await new Promise((resolve) => setTimeout(resolve, 0));
+  stepClock.resume();
   if (closed || closing)
     throw new Error("worker-boot-cancelled");
+}
+async function driveChunks(unit, base, span) {
+  for (;; ) {
+    const stage = unit.stage();
+    const more = ownedStep(stage, () => unit.step());
+    progress(stage, base + unit.completion() * span);
+    if (!more)
+      return;
+    if (stepsDegraded())
+      await macrotask();
+  }
 }
 var scope = self;
 var lifecycle = 0;
@@ -25816,11 +26404,7 @@ async function receive(message) {
       fault("interactive-job-not-ready", "interactive job arrived before Worker boot completed");
       return;
     }
-    const startedAt2 = performance.now();
-    interactiveJobs.receive(message);
-    const duration = performance.now() - startedAt2;
-    if (duration >= WORKER_STEP_BUDGET_MS)
-      fault("interactive-job-overrun", `interactive job admission turn took ${duration.toFixed(3)} ms`);
+    ownedStep(`interactive-job:${message.kind}`, () => interactiveJobs.receive(message));
     return;
   }
   if (!runtime) {
@@ -25828,14 +26412,19 @@ async function receive(message) {
     return;
   }
   const startedAt = performance.now();
+  let outcome;
   try {
-    runtime.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
-    const result3 = JSON.parse(runtime.tick(message.timestampMs, message.sequence, message.generation));
-    const duration = performance.now() - startedAt;
+    const result3 = ownedStep("frame-step", () => {
+      runtime.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
+      return JSON.parse(runtime.tick(message.timestampMs, message.sequence, message.generation));
+    });
+    outcome = lastStepOutcome;
     lastFrame = { cursor: result3.cursor, fullscreen: result3.fullscreen };
-    if (result3.quarantined || duration >= WORKER_STEP_BUDGET_MS)
-      quarantined = { code: result3.faultCode ?? "worker-step-overrun", detail: result3.faultDetail ?? `frame step took ${duration.toFixed(3)} ms` };
-    post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result3.cursor, fullscreen: result3.fullscreen, requestFrame: result3.requestFrame, progress: result3.progress, workerDurationMs: duration, quarantined: quarantined !== undefined, faultCode: quarantined?.code, faultDetail: quarantined?.detail });
+    if (result3.quarantined)
+      quarantined = { code: result3.faultCode ?? "renderer-quarantine", detail: result3.faultDetail ?? "renderer quarantined its own frame step" };
+    const sustained = outcome?.verdict === "sustained-overrun";
+    const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome.executingMs.toFixed(3)} ms for ${outcome.consecutive} consecutive steps` } : undefined);
+    post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result3.cursor, fullscreen: result3.fullscreen, requestFrame: result3.requestFrame, progress: result3.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     if (quarantined)
       requestFault(quarantined.code, quarantined.detail);
     else
@@ -25868,19 +26457,17 @@ function answerIntrospection(message) {
 }
 async function closeRuntime() {
   for (;; ) {
-    const startedAt = performance.now();
-    if (closeOwner2 === "runtime" && !runtimeCloseComplete) {
-      runtimeCloseComplete = runtime ? runtime.closeStep() : true;
-      closeOwner2 = "jobs";
-    } else if (!jobsCloseComplete) {
-      jobsCloseComplete = interactiveJobs ? interactiveJobs.closeStep() : true;
-      closeOwner2 = "runtime";
-    } else if (!runtimeCloseComplete) {
-      closeOwner2 = "runtime";
-    }
-    if (performance.now() - startedAt >= WORKER_STEP_BUDGET_MS) {
-      pendingFault ??= { code: "worker-close-overrun", detail: "Worker close turn exceeded the Worker budget" };
-    }
+    ownedStep("close-step", () => {
+      if (closeOwner2 === "runtime" && !runtimeCloseComplete) {
+        runtimeCloseComplete = runtime ? runtime.closeStep() : true;
+        closeOwner2 = "jobs";
+      } else if (!jobsCloseComplete) {
+        jobsCloseComplete = interactiveJobs ? interactiveJobs.closeStep() : true;
+        closeOwner2 = "runtime";
+      } else if (!runtimeCloseComplete) {
+        closeOwner2 = "runtime";
+      }
+    });
     if (runtimeCloseComplete && jobsCloseComplete)
       break;
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -25918,7 +26505,7 @@ async function mountPluginHandles(targets) {
     progress(`plugin:${target.pluginId}`, share);
     await macrotask();
     try {
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), suspensionLedger);
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
     } catch (error) {
       if (closed || closing)
@@ -25928,6 +26515,54 @@ async function mountPluginHandles(targets) {
   }
   return mounted;
 }
+var WASM_FETCH_PROGRESS_BUCKETS = 50;
+async function compileRendererModule(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok || !response.body)
+      return;
+    const total = Number(response.headers.get("content-length") ?? 0);
+    let received = 0;
+    let reported = -1;
+    const counted = response.body.pipeThrough(new TransformStream({
+      transform(chunk, controller) {
+        received += chunk.byteLength;
+        const share = total > 0 ? received / total : 0;
+        const bucket = Math.floor(share * WASM_FETCH_PROGRESS_BUCKETS);
+        if (total > 0 && bucket > reported) {
+          reported = bucket;
+          progress(`wasm-compile ${Math.round(share * 100)} %`, 0.06 + 0.09 * share);
+        }
+        controller.enqueue(chunk);
+      }
+    }));
+    const module = await WebAssembly.compileStreaming(new Response(counted, { headers: { "content-type": "application/wasm" } }));
+    return { module, byteLength: received };
+  } catch {
+    return;
+  }
+}
+async function instantiateRendererWasm(bindings2, url) {
+  const tag = await monitoredSuspension("wasm-artifact", () => rendererArtifactTag(url), suspensionLedger);
+  const cached = tag ? await monitoredSuspension("wasm-cache-read", () => readCachedRendererModule(url, tag), suspensionLedger) : undefined;
+  if (cached) {
+    progress(`wasm-instantiate:cached ${(cached.byteLength / 1048576).toFixed(1)} MB`, 0.18);
+    await monitoredSuspension("wasm-instantiate", () => bindings2.default(cached.module), suspensionLedger);
+    return;
+  }
+  progress("wasm-compile", 0.06);
+  const compiled = await monitoredSuspension("wasm-compile", () => compileRendererModule(url), suspensionLedger);
+  progress("wasm-instantiate", 0.18);
+  if (!compiled) {
+    await monitoredSuspension("wasm-instantiate", () => bindings2.default(url), suspensionLedger);
+    return;
+  }
+  await monitoredSuspension("wasm-instantiate", () => bindings2.default(compiled.module), suspensionLedger);
+  if (tag)
+    writeCachedRendererModule(url, tag, compiled.module, compiled.byteLength, performance.now());
+  else
+    evictCachedRendererModule(url);
+}
 async function boot(message) {
   if (runtime || lifecycle !== 0) {
     fault("duplicate-boot", "the frame Worker accepts exactly one boot lifecycle");
@@ -25936,21 +26571,21 @@ async function boot(message) {
   lifecycle = message.lifecycle;
   try {
     progress("renderer-module", 0.05);
-    const loaded = await monitoredSuspension("renderer-module", () => import(message.bindingsModuleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    const loaded = await monitoredSuspension("renderer-module", () => import(message.bindingsModuleUrl), suspensionLedger);
     bindings = loaded;
-    if (loaded.default) {
-      progress("wasm-instance", 0.15);
-      await monitoredSuspension("wasm-instance", () => loaded.default(message.bindingsWasmUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-    }
+    if (loaded.default)
+      await instantiateRendererWasm(loaded, message.bindingsWasmUrl);
     if (!loaded.semioWgpuWorkerBootstrap)
       throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       if (message.hub)
         loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
-    }, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
+    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, message.pluginVariant);
+    await driveChunks(planner, 0.25, 0.05);
+    const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY)
       throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
     for (const error of bootPlan.dependencyErrors)
@@ -25959,23 +26594,23 @@ async function boot(message) {
     if (plugins.length === 0)
       throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
-    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), suspensionLedger);
     while (true) {
       await macrotask();
-      const bootstrapStartedAt = performance.now();
-      const step14 = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-      console.log(`[DEBUG] renderer-bootstrap stage=${step14.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
+      const step14 = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()), suspensionLedger);
+      console.log(`[DEBUG] renderer-bootstrap stage=${step14.stage} executing=${(lastStepOutcome?.executingMs ?? 0).toFixed(3)}ms phaseUs=${step14.elapsedUs}`);
       progress(step14.stage, 0.65 + step14.progress * 0.3);
       if (step14.shellBoot) {
-        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), suspensionLedger);
         continue;
       }
       if (step14.complete)
         break;
     }
-    runtime = ownedStep("renderer-finish", () => bootstrap.finish(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    runtime = declaredStep("renderer-finish", () => bootstrap.finish(), suspensionLedger);
+    interactiveJobs = declaredStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), suspensionLedger);
     progress("ready", 1);
+    bootDeclarationsOpen = false;
     post({ kind: "booted", lifecycle });
     scheduleAssetPump();
   } catch (error) {
@@ -26044,7 +26679,14 @@ async function pumpAsset() {
 function progress(stage, value) {
   lastProgressValue = value;
   if (!closed && !closing && !failed)
-    post({ kind: "boot-progress", lifecycle, stage, progress: value });
+    post({ kind: "boot-progress", lifecycle, stage, progress: value, worker: stepLedgerReport() });
+}
+function declarePhase(phase, state7, elapsedMs) {
+  if (!bootDeclarationsOpen || closed || closing || failed)
+    return;
+  post({ kind: "boot-phase", lifecycle, phase, state: state7, elapsedMs });
+  if (state7 === "leave" && elapsedMs >= BOOT_LIVENESS_INTERVAL_MS)
+    console.log(`[DEBUG] boot-phase ${phase} ${elapsedMs.toFixed(0)} ms`);
 }
 function post(message) {
   scope.postMessage(message);

@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 
-import { pluginGraphErrorMessage, resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
+import { TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
+import { FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
+import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../🗄️wasm-module-cache/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
@@ -25,7 +28,7 @@ type BrowserRendererBootstrapHandle = {
   finish(): BrowserRendererWorkerHandle;
 };
 
-type BrowserRendererBootStep = { readonly stage: string; readonly progress: number; readonly shellBoot: boolean; readonly complete: boolean };
+type BrowserRendererBootStep = { readonly stage: string; readonly progress: number; readonly shellBoot: boolean; readonly complete: boolean; readonly elapsedUs: number };
 
 type RendererBindings = {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
@@ -46,16 +49,36 @@ type RendererBindings = {
 //#endregion 🔖️Bindings
 
 //#region ⏱️StepAuthority
-const WORKER_STEP_BUDGET_MS = 8;
+/** @emoji ⏱️ This Worker's step law, declared once for both browser isolates in
+ * `../⏱️turn-budget/🟦️.ts`. A step is priced against the EXECUTING spans it actually ran for, an
+ * isolated breach is recorded and the work continues, {@link SUSTAINED_TURN_OVERRUN_TURNS} breaches in
+ * a row degrade the boot to yielding cadence — and NOTHING here may terminate the Worker. Only a throw
+ * is a fault, because only a throw is evidence of a defect.
+ *
+ * 🩸️ What this replaces: a single `performance.now()` wall delta that THREW. `plugin-graph` executes for
+ * 187 µs (native median of 9) and read 8.300 ms of wall time in a hidden pane on a box at load ~20; the
+ * throw became `worker-boot-failed`, which closed the Worker and took the transferred OffscreenCanvas —
+ * the surface's only frame path — with it. The UI isolate's ledger recorded `0/0` overruns across that
+ * same boot, which is the measurement that settles the attribution. */
 const BOOT_HEARTBEAT_MS = 2;
-/** @emoji 💓️ How often a still-running browser-owned suspension re-posts its stage to the UI isolate.
- * `FRAME_WORKER_BOOT_TIMEOUT_MS` fires on SILENCE, not on slowness, and a cold `shell-boot` of a 5.4 MB-manifest
- * plugin legitimately outlasts it while yielding normally — so liveness is reported rather than the watchdog
- * loosened, and a genuinely wedged worker still trips it. Posts `boot-liveness`, NOT `boot-progress`: the
- * latter runs the UI isolate's `progress-hook`, whose DOM work overran `FRAME_UI_TURN_BUDGET_MS` (2 ms)
- * once it fired every second. Liveness only needs to re-arm the stall timer. */
-const BOOT_LIVENESS_INTERVAL_MS = 1_000;
+/** @emoji 💓️ How often a still-running browser-owned suspension re-posts liveness to the UI isolate, from
+ * the shared law in `../🫀️boot-liveness/🟦️.ts`. Posts `boot-liveness`, NOT `boot-progress`: the latter runs
+ * the UI isolate's `progress-hook`, whose DOM work overran `FRAME_UI_TURN_BUDGET_MS` (2 ms) once it fired
+ * every second — no longer fatal there (`../⏱️turn-budget/🟦️.ts` records and degrades instead of failing),
+ * but still pointless work to manufacture.
+ *
+ * 🩸️ This ticker is NOT the boot's proof of life and never was: it is a `setInterval` on this Worker's own
+ * event loop, so it cannot fire while that loop is blocked — which is exactly what compiling the 76 MB
+ * renderer, `semioWgpuWorkerBootstrap`'s synchronous prologue and every Rust bootstrap phase do. The proof
+ * of life for those is the `boot-phase` DECLARATION {@link monitoredSuspension} posts before it blocks. */
+const BOOT_LIVENESS_INTERVAL_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.livenessIntervalMs;
 let lastProgressValue = 0;
+/** @emoji 🧭️ Whether phase declarations are still meaningful. They exist for ONE reader — the UI isolate's
+ * boot watchdog — which stops listening the moment it sees `booted`. `monitoredSuspension` is also the
+ * asset pump's suspension wrapper (`asset-fetch`, `asset-stream-read`, once per 16 KiB page), so leaving
+ * declarations open past boot would post two ignored messages per page across the whole session's hot
+ * asset path. Closed exactly where the watchdog stops caring. */
+let bootDeclarationsOpen = true;
 /** @emoji 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
  * subset of the catalog's own plugin and extension rows, so no legitimate plan can exceed it, and unlike a
  * magic number it cannot go stale as the product grows — a hardcoded 32 rejected the `s` plan's 57 rows
@@ -68,28 +91,73 @@ const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
  * be the thing that takes the surface down. */
 const INTROSPECTION_STEP_BUDGET_MS = 64;
 /** @emoji 🧱️ Ceiling for the boot stages whose blocking time is spent inside the browser itself — the module
- * loader, the WebAssembly compiler, and the GPU driver. `WORKER_STEP_BUDGET_MS` bounds turns *this* Worker
+ * loader, the WebAssembly compiler, and the GPU driver. `WORKER_STEP_BUDGET_MS` prices turns *this* Worker
  * owns and can slice; a `WebAssembly.instantiate` of the renderer module or a `requestDevice` is neither
- * ours nor sliceable, so measuring it against the frame budget only ever reports the browser's own cost as a
- * Worker fault (measured: instantiating the debug renderer blocks ~62 ms, which failed the 8 ms frame
- * budget and killed every boot). The UI isolate's `FRAME_WORKER_BOOT_TIMEOUT_MS` remains the outer bound.
- * 📈️ Raised from 1 s: a COLD `WebAssembly.instantiate` of the multi-MB renderer measured 1093 ms and the
- * font-atlas `renderer-bootstrap` step 12002 ms, both on a machine at load average ~36 across 10 cores.
- * None of this work is sliceable — the browser and the GPU driver own it. This is a BOOT ceiling only;
- * the per-frame budgets (`WORKER_STEP_BUDGET_MS` 8 ms, `FRAME_UI_TURN_BUDGET_MS` 2 ms) are untouched.
- * Still well under the outer boot timeout, which `monitoredSuspension`'s liveness heartbeat now keeps
- * honest, so a genuinely wedged instantiate still fails rather than hanging forever. */
+ * ours nor sliceable (measured: a COLD instantiate of the multi-MB renderer 1093 ms, the font-atlas
+ * `renderer-bootstrap` phase 12002 ms, on a machine at load ~36 across 10 cores), so charging it to the
+ * interactive ceiling would latch the boot into degraded cadence for work no chunking can shorten. It is
+ * therefore a SEPARATE ledger, not a separate verdict: since this lane no budget in this file can end a
+ * boot, and the UI isolate's `FRAME_WORKER_BOOT_STALL_TIMEOUT_MS` — which fires on SILENCE, kept honest by
+ * `monitoredSuspension`'s liveness heartbeat — is the one remaining outer bound on a wedged instantiate. */
 const BROWSER_OWNED_SUSPENSION_BUDGET_MS = 30_000;
 
-function ownedStep<T>(stage: string, callback: () => T, budgetMs: number = WORKER_STEP_BUDGET_MS): T {
-  const startedAt = performance.now();
-  const value = callback();
-  const duration = performance.now() - startedAt;
-  if (duration >= budgetMs) throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms against a ${budgetMs} ms budget`);
-  return value;
+const stepClock = new TurnClock(() => performance.now());
+/** @emoji 📒️ Prices the turns this Worker OWNS and can slice, against {@link WORKER_STEP_BUDGET_MS}. */
+const stepLedger = new TurnLedger(WORKER_STEP_BUDGET_MS, "worker-step");
+/** @emoji 🧱️ Prices the stages whose blocking time belongs to the browser itself — the module loader,
+ * the WebAssembly compiler, the GPU driver. None of it is ours to slice, so it is measured against the
+ * wedge ceiling instead of the interactive one and never degrades the boot's cadence. */
+const suspensionLedger = new TurnLedger(BROWSER_OWNED_SUSPENSION_BUDGET_MS, "browser-owned-suspension");
+
+/** @emoji 🧾️ The verdict the most recently CLOSED owned step earned, so a caller that must report its own
+ * step's price — the frame reply — reads the executing measurement instead of taking a second wall sample. */
+let lastStepOutcome: TurnOutcome | undefined;
+
+/** @emoji ⏱️ Runs one owned step inside the executing clock and admits it to its ledger. The measurement
+ * happens whether the callback returns or throws; the THROW is the only thing that propagates. */
+function ownedStep<T>(stage: string, callback: () => T, ledger: TurnLedger = stepLedger): T {
+  stepClock.enter();
+  try {
+    return callback();
+  } finally {
+    lastStepOutcome = ledger.admit(stage, stepClock.leave());
+  }
 }
 
-async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>, blockBudgetMs: number = WORKER_STEP_BUDGET_MS): Promise<T> {
+/** @emoji 🧭️ One SYNCHRONOUS owned step long enough to be worth declaring. A blocking Rust bootstrap phase
+ * (`font-atlas` measured at 12 002 ms) posts nothing while it runs — the same blindness a browser-owned
+ * suspension has — so it declares itself to the UI-isolate watchdog first and withdraws afterwards, and its
+ * real cost rides out on the withdrawal. */
+function declaredStep<T>(stage: string, callback: () => T, ledger: TurnLedger = stepLedger): T {
+  const startedAt = performance.now();
+  declarePhase(stage, "enter", 0);
+  try {
+    return ownedStep(stage, callback, ledger);
+  } finally {
+    declarePhase(stage, "leave", performance.now() - startedAt);
+  }
+}
+
+/** @emoji 🐢️ Whether this Worker's owned steps have sustained a run of overruns and the boot should hand
+ * the isolate back between chunks. Latches on the run and clears itself on the first admitted step. */
+function stepsDegraded(): boolean {
+  return stepLedger.degraded();
+}
+
+/** @emoji 📊️ What the UI isolate is told about this Worker's own step ledger on every boot report. */
+function stepLedgerReport(): { readonly degraded: boolean; readonly recordedOverruns: number; readonly sustainedOverruns: number; readonly worstStepMs: number; readonly worstStepSite: string } {
+  const snapshot = stepLedger.snapshot();
+  return { degraded: snapshot.degraded, recordedOverruns: snapshot.recordedOverruns, sustainedOverruns: snapshot.sustainedOverruns, worstStepMs: snapshot.worstExecutingMs, worstStepSite: snapshot.worstSite };
+}
+
+/** @emoji ⏸️ Awaits one browser-owned operation. The synchronous prologue is an owned step; the blocking
+ * gap the heartbeat measures is admitted to {@link suspensionLedger} as an observation — a Worker that did
+ * not run is the machine's report about the machine, never evidence about this step's own work, so it can
+ * no longer end the boot. `FRAME_WORKER_BOOT_TIMEOUT_MS` in the UI isolate remains the outer bound and the
+ * liveness heartbeat keeps it honest. */
+async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>, ledger: TurnLedger = suspensionLedger): Promise<T> {
+  const declaredAt = performance.now();
+  declarePhase(stage, "enter", 0);
   let lastBeat = performance.now();
   let lastLivenessAt = performance.now();
   let maximumBlockMs = 0;
@@ -103,19 +171,41 @@ async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>
     }
   }, BOOT_HEARTBEAT_MS);
   try {
-    const result = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
+    stepClock.suspend();
+    const result = await ownedStep(`${stage}:start`, operation, ledger);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
     if (closed || closing) throw new Error(`worker-boot-cancelled: ${stage}`);
-    if (maximumBlockMs >= blockBudgetMs) throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms against a ${blockBudgetMs} ms budget`);
+    ledger.admit(`${stage}:block`, maximumBlockMs);
     return result;
   } finally {
     clearInterval(heartbeat);
+    stepClock.resume();
+    declarePhase(stage, "leave", performance.now() - declaredAt);
   }
 }
 
 async function macrotask(): Promise<void> {
+  stepClock.suspend();
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  stepClock.resume();
   if (closed || closing) throw new Error("worker-boot-cancelled");
+}
+
+/** @emoji 🧩️ A unit of boot work that can be performed one bounded chunk at a time — the shape
+ * `PlaygroundBootPlanner` and the Rust `BrowserRendererBootstrap` phase machine both take. */
+type ResumableBootUnit = { stage(): string; completion(): number; step(): boolean };
+
+/** @emoji ⏭️ Drives one resumable unit to completion, one chunk per owned step, reporting each chunk as
+ * boot progress and handing the isolate back between chunks whenever the ledger says this Worker's own
+ * steps are running long. Chunk size is the unit's own business; the ceiling is never the unit's. */
+async function driveChunks(unit: ResumableBootUnit, base: number, span: number): Promise<void> {
+  for (;;) {
+    const stage = unit.stage();
+    const more = ownedStep(stage, () => unit.step());
+    progress(stage, base + unit.completion() * span);
+    if (!more) return;
+    if (stepsDegraded()) await macrotask();
+  }
 }
 
 //#endregion ⏱️StepAuthority
@@ -177,10 +267,7 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
       fault("interactive-job-not-ready", "interactive job arrived before Worker boot completed");
       return;
     }
-    const startedAt = performance.now();
-    interactiveJobs.receive(message);
-    const duration = performance.now() - startedAt;
-    if (duration >= WORKER_STEP_BUDGET_MS) fault("interactive-job-overrun", `interactive job admission turn took ${duration.toFixed(3)} ms`);
+    ownedStep(`interactive-job:${message.kind}`, () => interactiveJobs!.receive(message));
     return;
   }
   if (!runtime) {
@@ -188,13 +275,18 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     return;
   }
   const startedAt = performance.now();
+  let outcome: TurnOutcome | undefined;
   try {
-    runtime.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
-    const result = JSON.parse(runtime.tick(message.timestampMs, message.sequence, message.generation)) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "sequence" | "generation" | "workerDurationMs">;
-    const duration = performance.now() - startedAt;
+    const result = ownedStep("frame-step", () => {
+      runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), message.generation);
+      return JSON.parse(runtime!.tick(message.timestampMs, message.sequence, message.generation)) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "sequence" | "generation" | "workerDurationMs">;
+    });
+    outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };
-    if (result.quarantined || duration >= WORKER_STEP_BUDGET_MS) quarantined = { code: result.faultCode ?? "worker-step-overrun", detail: result.faultDetail ?? `frame step took ${duration.toFixed(3)} ms` };
-    post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: duration, quarantined: quarantined !== undefined, faultCode: quarantined?.code, faultDetail: quarantined?.detail });
+    if (result.quarantined) quarantined = { code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" };
+    const sustained = outcome?.verdict === "sustained-overrun";
+    const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
+    post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else scheduleAssetPump();
   } catch (error) {
@@ -230,19 +322,17 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
 
 async function closeRuntime(): Promise<void> {
   for (;;) {
-    const startedAt = performance.now();
-    if (closeOwner === "runtime" && !runtimeCloseComplete) {
-      runtimeCloseComplete = runtime ? runtime.closeStep() : true;
-      closeOwner = "jobs";
-    } else if (!jobsCloseComplete) {
-      jobsCloseComplete = interactiveJobs ? interactiveJobs.closeStep() : true;
-      closeOwner = "runtime";
-    } else if (!runtimeCloseComplete) {
-      closeOwner = "runtime";
-    }
-    if (performance.now() - startedAt >= WORKER_STEP_BUDGET_MS) {
-      pendingFault ??= { code: "worker-close-overrun", detail: "Worker close turn exceeded the Worker budget" };
-    }
+    ownedStep("close-step", () => {
+      if (closeOwner === "runtime" && !runtimeCloseComplete) {
+        runtimeCloseComplete = runtime ? runtime.closeStep() : true;
+        closeOwner = "jobs";
+      } else if (!jobsCloseComplete) {
+        jobsCloseComplete = interactiveJobs ? interactiveJobs.closeStep() : true;
+        closeOwner = "runtime";
+      } else if (!runtimeCloseComplete) {
+        closeOwner = "runtime";
+      }
+    });
     if (runtimeCloseComplete && jobsCloseComplete) break;
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
@@ -287,7 +377,7 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     progress(`plugin:${target.pluginId}`, share);
     await macrotask();
     try {
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), suspensionLedger);
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
     } catch (error) {
       if (closed || closing) throw error;
@@ -295,6 +385,74 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     }
   }
   return mounted;
+}
+
+/** @emoji 📶️ How many buckets the 76 MB download reports itself in — one `boot-progress` every 2 %, which
+ * is real streamed progress rather than a stage name that sits still for the whole transfer, and is far
+ * below the rate at which the UI isolate's `progress-hook` would become the expensive thing. */
+const WASM_FETCH_PROGRESS_BUCKETS = 50;
+
+/** @emoji 🧱️ Compiles the renderer wasm WHILE it downloads, reporting the transfer as it goes.
+ * `compileStreaming` over a counting `TransformStream` keeps the browser's streaming compilation — the
+ * bytes are never buffered into one 76 MB array — while every 2 % of the body posts a `boot-progress`, so
+ * the longest phase of the boot stops being a stage name that sits still. Answers `undefined` for every
+ * failure (a browser that will not `compileStreaming` a constructed `Response`, a transport fault), which
+ * hands the caller back to wasm-bindgen's own URL path rather than failing the boot. */
+async function compileRendererModule(url: string): Promise<{ readonly module: WebAssembly.Module; readonly byteLength: number } | undefined> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok || !response.body) return undefined;
+    const total = Number(response.headers.get("content-length") ?? 0);
+    let received = 0;
+    let reported = -1;
+    const counted = response.body.pipeThrough(
+      new TransformStream<Uint8Array, Uint8Array>({
+        transform(chunk, controller) {
+          received += chunk.byteLength;
+          const share = total > 0 ? received / total : 0;
+          const bucket = Math.floor(share * WASM_FETCH_PROGRESS_BUCKETS);
+          if (total > 0 && bucket > reported) {
+            reported = bucket;
+            progress(`wasm-compile ${Math.round(share * 100)} %`, 0.06 + 0.09 * share);
+          }
+          controller.enqueue(chunk);
+        },
+      }),
+    );
+    const module = await WebAssembly.compileStreaming(new Response(counted, { headers: { "content-type": "application/wasm" } }));
+    return { module, byteLength: received };
+  } catch {
+    return undefined;
+  }
+}
+
+/** @emoji 🧱️ Brings the renderer wasm up in DECLARED phases instead of one opaque `init(url)`.
+ *
+ * 🩸️ What this replaces: `loaded.default(url)` — one call that fetched, compiled, instantiated and linked
+ * 76 048 601 B behind a single stage name, reported nothing while it ran, and re-did all of it on every
+ * reload. The four phases here each declare themselves to the UI-isolate watchdog before they block
+ * (`monitoredSuspension`), the compile reports its own transfer, and the compiled module is kept in
+ * IndexedDB (`../🗄️wasm-module-cache/🟦️.ts`) so the second boot on an unchanged artifact skips the compile
+ * entirely and goes straight to instantiation. A cache miss costs one `HEAD`; a browser that cannot cache
+ * a `WebAssembly.Module` at all costs the same `HEAD` and nothing else. */
+async function instantiateRendererWasm(bindings: RendererBindings, url: string): Promise<void> {
+  const tag = await monitoredSuspension("wasm-artifact", () => rendererArtifactTag(url), suspensionLedger);
+  const cached = tag ? await monitoredSuspension("wasm-cache-read", () => readCachedRendererModule(url, tag), suspensionLedger) : undefined;
+  if (cached) {
+    progress(`wasm-instantiate:cached ${(cached.byteLength / 1_048_576).toFixed(1)} MB`, 0.18);
+    await monitoredSuspension("wasm-instantiate", () => bindings.default!(cached.module), suspensionLedger);
+    return;
+  }
+  progress("wasm-compile", 0.06);
+  const compiled = await monitoredSuspension("wasm-compile", () => compileRendererModule(url), suspensionLedger);
+  progress("wasm-instantiate", 0.18);
+  if (!compiled) {
+    await monitoredSuspension("wasm-instantiate", () => bindings.default!(url), suspensionLedger);
+    return;
+  }
+  await monitoredSuspension("wasm-instantiate", () => bindings.default!(compiled.module), suspensionLedger);
+  if (tag) void writeCachedRendererModule(url, tag, compiled.module, compiled.byteLength, performance.now());
+  else void evictCachedRendererModule(url);
 }
 
 async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): Promise<void> {
@@ -305,40 +463,39 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
   lifecycle = message.lifecycle;
   try {
     progress("renderer-module", 0.05);
-    const loaded = await monitoredSuspension("renderer-module", () => import(/* @vite-ignore */ message.bindingsModuleUrl) as Promise<RendererBindings>, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    const loaded = await monitoredSuspension("renderer-module", () => import(/* @vite-ignore */ message.bindingsModuleUrl) as Promise<RendererBindings>, suspensionLedger);
     bindings = loaded;
-    if (loaded.default) {
-      progress("wasm-instance", 0.15);
-      await monitoredSuspension("wasm-instance", () => loaded.default!(message.bindingsWasmUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-    }
+    if (loaded.default) await instantiateRendererWasm(loaded, message.bindingsWasmUrl);
     if (!loaded.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
-    }, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
+    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, message.pluginVariant);
+    await driveChunks(planner, 0.25, 0.05);
+    const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
     const plugins = await mountPluginHandles(bootPlan.plugins);
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
-    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), suspensionLedger);
     while (true) {
       await macrotask();
-      const bootstrapStartedAt = performance.now();
-      const step = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-      console.log(`[DEBUG] renderer-bootstrap stage=${step.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
+      const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
+      console.log(`[DEBUG] renderer-bootstrap stage=${step.stage} executing=${(lastStepOutcome?.executingMs ?? 0).toFixed(3)}ms phaseUs=${step.elapsedUs}`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
-        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), suspensionLedger);
         continue;
       }
       if (step.complete) break;
     }
-    runtime = ownedStep("renderer-finish", () => bootstrap.finish(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    runtime = declaredStep("renderer-finish", () => bootstrap.finish(), suspensionLedger);
+    interactiveJobs = declaredStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), suspensionLedger);
     progress("ready", 1);
+    bootDeclarationsOpen = false;
     post({ kind: "booted", lifecycle });
     scheduleAssetPump();
   } catch (error) {
@@ -404,9 +561,23 @@ async function pumpAsset(): Promise<void> {
   }
 }
 
+/** @emoji 📣️ Reports one boot stage AND this Worker's own step ledger with it, so the boot UI shows the
+ * degraded state instead of only the stage that happened to be running when the isolate was descheduled. */
 function progress(stage: string, value: number): void {
   lastProgressValue = value;
-  if (!closed && !closing && !failed) post({ kind: "boot-progress", lifecycle, stage, progress: value });
+  if (!closed && !closing && !failed) post({ kind: "boot-progress", lifecycle, stage, progress: value, worker: stepLedgerReport() });
+}
+
+/** @emoji 🧭️ DECLARES that this Worker is about to block on one browser-owned phase — or that it has left
+ * it. Posted while the event loop still runs, which is the whole point: a `postMessage` issued a tick
+ * before a multi-second `WebAssembly.compile` reaches the UI isolate, a `boot-liveness` issued DURING it
+ * never does. The UI-isolate watchdog measures a declared phase against its own ceiling
+ * (`../🫀️boot-liveness/🟦️.ts`) instead of against silence, so it can no longer terminate a Worker that is
+ * merely busy, and `elapsedMs` on the withdrawal is the per-phase cost the next boot is measured by. */
+function declarePhase(phase: string, state: "enter" | "leave", elapsedMs: number): void {
+  if (!bootDeclarationsOpen || closed || closing || failed) return;
+  post({ kind: "boot-phase", lifecycle, phase, state, elapsedMs });
+  if (state === "leave" && elapsedMs >= BOOT_LIVENESS_INTERVAL_MS) console.log(`[DEBUG] boot-phase ${phase} ${elapsedMs.toFixed(0)} ms`);
 }
 
 function post(message: BrowserFrameWorkerMessage): void {

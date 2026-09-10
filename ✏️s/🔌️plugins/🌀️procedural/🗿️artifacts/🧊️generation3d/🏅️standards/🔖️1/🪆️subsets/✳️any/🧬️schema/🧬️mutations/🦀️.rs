@@ -219,37 +219,52 @@ pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Gen
 /// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
 /// via `crate::standards::v1::subsets::any::schema::commit_fixture`, unchanged) but every pushed
 /// mutation is now a real semantic variant.
+///
+/// ⚠️ Order is load-bearing: every orphaned layout override is retired FIRST, while its widget is
+/// still present. `delete_widget` leaves the widget's `layout` entry behind, and
+/// `delete_widget_position` fail-closes with `mutation.target-missing` once the widget is gone — so
+/// authoring the position removals after the widget removals silently kept every stale override, and
+/// an example swap accumulated the previous example's layout keys forever
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn generation3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Generation3dMutation> {
     let mut operations = Vec::new();
+    for id in before.layout.keys() {
+        if !after.layout.contains_key(id) {
+            operations.push(Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.clone() }));
+        }
+    }
+    let before_widget_ids: Vec<&str> = before.widgets.iter().map(widget_id).collect();
+    let after_widget_ids: Vec<&str> = after.widgets.iter().map(widget_id).collect();
+    let rebuilt_widgets = reordered_survivors(&before_widget_ids, &after_widget_ids);
     for widget in &before.widgets {
-        if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
-            operations.push(Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: widget_id(widget).to_string() }));
+        let id = widget_id(widget);
+        if !after_widget_ids.contains(&id) || rebuilt_widgets.contains(id) {
+            operations.push(Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: id.to_string() }));
         }
     }
     for (index, widget) in after.widgets.iter().enumerate() {
-        let prior = before.widgets.iter().find(|entry| widget_id(entry) == widget_id(widget));
+        let id = widget_id(widget);
+        let prior = if rebuilt_widgets.contains(id) { None } else { before.widgets.iter().find(|entry| widget_id(entry) == id) };
         match prior {
             Some(previous) if previous != widget => operations.push(Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() })),
             None => operations.push(Generation3dMutation::CreateWidget(create_widget::CreateWidget { index, widget: widget.clone() })),
             _ => {}
         }
     }
+    let before_synapse_ids: Vec<&str> = before.synapses.iter().map(|entry| entry.id.as_str()).collect();
+    let after_synapse_ids: Vec<&str> = after.synapses.iter().map(|entry| entry.id.as_str()).collect();
+    let rebuilt_synapses = reordered_survivors(&before_synapse_ids, &after_synapse_ids);
     for synapse in &before.synapses {
-        if !after.synapses.iter().any(|entry| entry.id == synapse.id) {
+        if !after_synapse_ids.contains(&synapse.id.as_str()) || rebuilt_synapses.contains(synapse.id.as_str()) {
             operations.push(Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: synapse.id.clone() }));
         }
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
-        let prior = before.synapses.iter().find(|entry| entry.id == synapse.id);
+        let prior = if rebuilt_synapses.contains(synapse.id.as_str()) { None } else { before.synapses.iter().find(|entry| entry.id == synapse.id) };
         match prior {
             Some(previous) if previous != synapse => operations.push(Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: synapse.clone() })),
             None => operations.push(Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index, synapse: synapse.clone() })),
             _ => {}
-        }
-    }
-    for id in before.layout.keys() {
-        if !after.layout.contains_key(id) {
-            operations.push(Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.clone() }));
         }
     }
     for (id, layout) in &after.layout {
@@ -261,6 +276,36 @@ pub fn generation3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
         operations.push(Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: after.schema.clone() }));
     }
     operations
+}
+
+/// 🔢️ Ids of the entries that survive into `after` but must be RE-CREATED to reach its order:
+/// every survivor outside a longest run whose target positions already ascend. The mutation
+/// vocabulary has no reorder verb — `update-widget`/`update-synapse` replace in place — so a survivor
+/// that crossed another survivor is authored as a delete plus a create at its target index. Without
+/// this a fixture swap silently kept the PREVIOUS fixture's entry order
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn reordered_survivors(before_ids: &[&str], after_ids: &[&str]) -> std::collections::BTreeSet<String> {
+    let survivors: Vec<(usize, &str)> = before_ids.iter().filter_map(|id| after_ids.iter().position(|entry| entry == id).map(|index| (index, *id))).collect();
+    let mut run = vec![1usize; survivors.len()];
+    let mut previous = vec![usize::MAX; survivors.len()];
+    let mut longest = usize::MAX;
+    for index in 0..survivors.len() {
+        for candidate in 0..index {
+            if survivors[candidate].0 < survivors[index].0 && run[candidate] + 1 > run[index] {
+                run[index] = run[candidate] + 1;
+                previous[index] = candidate;
+            }
+        }
+        if longest == usize::MAX || run[index] > run[longest] {
+            longest = index;
+        }
+    }
+    let mut kept = std::collections::BTreeSet::new();
+    while longest != usize::MAX {
+        kept.insert(survivors[longest].1);
+        longest = previous[longest];
+    }
+    survivors.iter().filter(|(_, id)| !kept.contains(id)).map(|(_, id)| (*id).to_string()).collect()
 }
 //#endregion 🔖️FixtureDiffing
 

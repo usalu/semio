@@ -1,0 +1,44 @@
+{
+  "note": "🎯️ Which program+app a standalone wgpu shell boot opens for one playground variant. `programs` is the boot plan in the order the renderer receives it — dependency-first, exactly as `resolvePlaygroundBoot` orders it — so case `dependency-sorts-first` is the live generation3d closure that made the shell open the flow plugin's app and die on the flow actor's first-step trap.",
+  "cases": [
+    {
+      "id": "dependency-sorts-first",
+      "variant": "generation3d",
+      "programs": [
+        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
+        { "pluginId": "procedural", "appIds": ["s.procedural.generation2d@1/*#editor", "s.procedural.generation3d@1/*#editor"] }
+      ],
+      "expected": { "index": 1, "appId": "s.procedural.generation3d@1/*#editor" }
+    },
+    {
+      "id": "requested-plugin-absent",
+      "variant": "generation3d",
+      "programs": [{ "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] }],
+      "expected": null
+    },
+    {
+      "id": "requested-plugin-without-the-declared-app",
+      "variant": "generation3d",
+      "programs": [
+        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
+        { "pluginId": "procedural", "appIds": ["s.procedural.generation2d@1/*#editor"] }
+      ],
+      "expected": { "index": 1, "appId": "s.procedural.generation2d@1/*#editor" }
+    },
+    {
+      "id": "declaring-program-under-another-id",
+      "variant": "generation3d",
+      "programs": [
+        { "pluginId": "flow", "appIds": ["s.flow.flow@1/*#editor"] },
+        { "pluginId": "procedural-preview", "appIds": ["s.procedural.generation3d@1/*#editor"] }
+      ],
+      "expected": { "index": 1, "appId": "s.procedural.generation3d@1/*#editor" }
+    },
+    {
+      "id": "single-program-variant",
+      "variant": "puzzle3d",
+      "programs": [{ "pluginId": "puzzle", "appIds": ["s.puzzle.puzzle3d@1/*#editor"] }],
+      "expected": { "index": 0, "appId": "s.puzzle.puzzle3d@1/*#editor" }
+    }
+  ]
+}

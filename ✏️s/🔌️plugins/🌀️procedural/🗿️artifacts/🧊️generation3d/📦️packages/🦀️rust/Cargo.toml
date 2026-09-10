@@ -52,6 +52,9 @@ semio-framework-ui-styling = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+# 🧮️ The heap witness the guest-memory laws weigh the contributions install path with — test-only,
+# never a `[dependencies]` entry: a production guest reads its own footprint with `memory.size`.
+semio-framework-trace = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 # 🔬️ Headless example-geometry harness (`[[test]] example-geometry`): the flow host + the two

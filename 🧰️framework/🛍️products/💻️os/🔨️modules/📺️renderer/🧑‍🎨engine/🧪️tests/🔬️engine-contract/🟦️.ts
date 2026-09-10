@@ -1,4 +1,4 @@
-import { act as reactAct, createElement, useState, type ReactElement } from "react";
+import { act as reactAct, createElement, useLayoutEffect, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
@@ -8,6 +8,9 @@ import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../�
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
 import {
   dispatchInvokeExtensionEffect,
+  RUNTIME_DIAGNOSTICS_KEY,
+  runtimeDiagnosticsEnabled,
+  setRuntimeDiagnostics,
   artifactKindChoiceDraftRetirementsV1,
   captureSpaceArtifactCreationCatalogAuthorityV1,
   mountedGisMapProbeV1,
@@ -18,10 +21,14 @@ import {
   spaceArtifactCreationRequestFromAction,
   selectedSpaceArtifactCreationCatalogV1,
   tutorialInteractionSelectionActions,
+  createBuiltNodeStoreCacheV1,
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { EMPTY_APP_LABELS_OVERLAY, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { resolveUiDirtyScope } from "@semio-tech/framework";
+import { openSurfaceContextMenu, uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
@@ -1088,6 +1095,29 @@ describe("mounted GIS map probe", () => {
   });
 });
 
+//#region 🩺️RuntimeDiagnostics
+describe("shell runtime diagnostics switch", () => {
+  afterEach(() => {
+    setRuntimeDiagnostics(undefined);
+  });
+
+  it("is off by default and names the same key the guest switch does", () => {
+    // 🪞️ `RUNTIME_DIAGNOSTICS_ENV` in `🧰️framework/🔨️modules/⏱️trace/🦀️.rs` — one name, two languages.
+    expect(RUNTIME_DIAGNOSTICS_KEY).toBe("SEMIO_RUNTIME_DIAGNOSTICS");
+    expect(runtimeDiagnosticsEnabled()).toBe(false);
+  });
+
+  it("an explicit host override outranks every resolved source, in both directions", () => {
+    setRuntimeDiagnostics(true);
+    expect(runtimeDiagnosticsEnabled()).toBe(true);
+    setRuntimeDiagnostics(false);
+    expect(runtimeDiagnosticsEnabled()).toBe(false);
+    setRuntimeDiagnostics(undefined);
+    expect(runtimeDiagnosticsEnabled()).toBe(false);
+  });
+});
+//#endregion 🩺️RuntimeDiagnostics
+
 //#region 🔁️ExtensionInvocation
 describe("extension invocation completion ownership", () => {
   const fixture = extensionInvocationFixture;
@@ -1162,6 +1192,30 @@ describe("extension invocation completion ownership", () => {
     expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson);
     expect(complete).toHaveBeenCalledOnce();
     expect(publish).toHaveBeenCalledExactlyOnceWith(requester, await complete.mock.results[0]!.value);
+  });
+
+  // 🪪️ LAW: an invocation addresses an extension by the CONTRIBUTING PLUGIN's id. A producer whose
+  // own domain names the extension differently (flow calls the text kernel `text`, its plugin is
+  // `flow-extension-text`) must translate before it emits — this shell knows no topic vocabulary and
+  // resolves nothing but `handle.pluginId`. Regression guard: the removed fallback scanned
+  // `manifest.contributions` for an `extensionId` field no manifest carries, so the miss was silent
+  // and every flow evaluation stalled (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  it("resolves the extension actor by plugin id and faults a flow-domain address", async () => {
+    const { decodePackValue, decodeFaultFromWire } = await import("@semio-tech/framework-os");
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const address = async (extensionId: string) => {
+      const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
+      const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
+      const extension = { handle: { pluginId: fixture.extensionId, invoke }, manifest: { topicContributions: [{ topic: "flow.extension", payload: { extensionId: fixture.foreignAddress } }] } } as unknown as LoadedProgramState;
+      await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => {});
+      return complete.mock.calls[0] as unknown as [number, bigint, { ok?: Uint8Array; fault?: Uint8Array }];
+    };
+    const [, , resolved] = await address(fixture.extensionId);
+    expect(invoke).toHaveBeenCalledOnce();
+    expect(decodePackValue(resolved.ok!)).toEqual(fixture.response);
+    const [, , missed] = await address(fixture.foreignAddress);
+    expect(invoke).toHaveBeenCalledOnce();
+    expect(decodeFaultFromWire(Array.from(missed.fault!), decodePackValue)?.code).toBe("extension.missing");
   });
 
   it("rejects a missing originating plugin rather than silently discarding its request", async () => {
@@ -1510,10 +1564,11 @@ import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊�
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
+import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi.json" with { type: "json" };
 import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
 import flowWasmSchema from "../../../../🌊️flow/🕸️wasm/🧬️schema/🔣️.json" with { type: "json" };
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, test, vi } from "vitest";
 import {
   deriveUtilityNodes,
   actionSemanticsForKind,
@@ -1532,6 +1587,7 @@ import {
   type UtilityNode,
   type BuiltNode,
   type Component,
+  type NodeGraphScene,
   type UiNodeRecord,
   type UiSnapshot,
   type ActionBinding,
@@ -1551,9 +1607,9 @@ import {
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../🧑‍💻dev/🏷️brand/🟦️.ts";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
-import { Footer, navbarFillItem, progressPanelTabSelection, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
+import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { parseWorldBrushPreview } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -1580,6 +1636,9 @@ import {
   unregisterBoard2dPeer,
   NodeGraphHost,
   FlowGraphCanvasHost,
+  InterpretedUiNode,
+  builtNodeToSnapshot,
+  resizeCanvasBackingStore,
   catalogueGhostDescriptorJson,
   computeDagMarqueeOverlay,
   flowCatalogueItemDescriptor,
@@ -1633,6 +1692,8 @@ import {
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
   worldInstancePickBlocked,
+  worldFillBuildShouldTick,
+  worldFillBuildHostTickAllowed,
   parseWorldTerrainStyle,
   clearWorldCatalogueDropPreview,
   getWorldCatalogueDropPreview,
@@ -1793,8 +1854,11 @@ import {
   windowMeasureTreeContainsId,
   renderWindowMeasuresTree,
   buildToolTabs,
+  toolCategoryOpenPath,
+  toolLeafInactiveRepress,
   toolIdFromPanelTabId,
   reconcileToolTabSelection,
+  toolPanelTreeContentRevision,
   type ToolTabSelection,
   sceneToSyncPack,
   FrameworkOsShell,
@@ -1807,7 +1871,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, pasteActionWithRetainedFragment, pasteArgsFragment } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -4604,6 +4668,31 @@ describe("framework renderer hosts", () => {
     expect(items[2]).toMatchObject({ id: "delete", destructive: true, icon: "trash" });
   });
 
+  it("keeps exportFixture and importFixture menu rows on the same leaf onSelect bind", () => {
+    const dispatch = vi.fn();
+    const items = mapContextMenuSpecs(
+      [
+        { id: "shell-menu.action.exportFixture", label: "Export", action: "exportFixture" },
+        { id: "shell-menu.action.importFixture", label: "Import", action: "importFixture" },
+        { id: "shell-menu.action.openImportFixture", label: "Import…", action: "openImportFixture" },
+      ],
+      dispatch,
+    );
+    expect(items.map((item) => ({ id: item.id, action: item.action, hasSelect: typeof item.onSelect === "function", children: item.children?.length ?? 0 }))).toEqual([
+      { id: "shell-menu.action.exportFixture", action: "exportFixture", hasSelect: true, children: 0 },
+      { id: "shell-menu.action.importFixture", action: "importFixture", hasSelect: true, children: 0 },
+      { id: "shell-menu.action.openImportFixture", action: "openImportFixture", hasSelect: true, children: 0 },
+    ]);
+    items[0]?.onSelect?.(new Event("select"));
+    items[1]?.onSelect?.(new Event("select"));
+    expect(dispatch).toHaveBeenCalledWith("exportFixture", {});
+    expect(dispatch).toHaveBeenCalledWith("importFixture", {});
+  });
+
+  it("keeps context-menu leaf rows pointer-hittable under dimmed window chrome", () => {
+    expect(contextMenuItemClassName({})).toContain("pointer-events-auto");
+  });
+
   it("maps suggestion-style specs without a color swatch field", () => {
     const dispatch = vi.fn();
     const items = mapContextMenuSpecs(
@@ -4782,6 +4871,81 @@ describe("framework renderer hosts", () => {
     expect(perspectiveCenter![0]).toBeCloseTo(0, 4);
     expect(perspectiveCenter![1]).toBeCloseTo(0, 4);
     expect(perspectiveCenter![2]).toBeCloseTo(0, 4);
+  });
+
+  it("a host click pick hits the nearest projected instance AABB and misses empty space", () => {
+    const table = { id: "table", corners: [[400, 300], [600, 300], [400, 380], [600, 380]] as const, depth: 10 };
+    const far = { id: "far", corners: [[400, 300], [600, 300], [400, 380], [600, 380]] as const, depth: 40 };
+    expect(world3dProjectedAabbContainsClick({ x: 500, y: 340 }, table.corners)).toBe(true);
+    expect(world3dProjectedAabbContainsClick({ x: 10, y: 10 }, table.corners)).toBe(false);
+    expect(resolveClickInstanceIdFromProjected({ x: 500, y: 340 }, [table, far])).toBe("table");
+    expect(resolveClickInstanceIdFromProjected({ x: 10, y: 10 }, [table, far])).toBeNull();
+    expect(world3dMarqueePointerCaptureArmed(0)).toBe(false);
+    expect(world3dMarqueePointerCaptureArmed(4)).toBe(false);
+    expect(world3dMarqueePointerCaptureArmed(5)).toBe(true);
+    expect(world3dInstancePickUsesInteractionDomain(undefined)).toBe(false);
+    expect(world3dInstancePickUsesInteractionDomain({ id: "seed-left-001" })).toBe(false);
+    expect(world3dInstancePickUsesInteractionDomain({ id: "seed-left-001", interactionId: "port@0" })).toBe(true);
+  });
+
+  it("arms the suggestions gesture from a host vortex hover without a guest InteractionView", () => {
+    expect(world3dSuggestionsGestureArmed(true, "table@in")).toBe(true);
+    expect(world3dSuggestionsGestureArmed(true, null)).toBe(false);
+    expect(world3dSuggestionsGestureArmed(false, "table@in")).toBe(false);
+  });
+
+  it("frames world instances onto the table centroid without a guest selection", () => {
+    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    const framed = world3dFrameCameraFromInstances([{ id: "seed-left-001", x: 2, y: -1, z: 0.4 }], camera);
+    expect(framed.target[0]).toBeCloseTo(2);
+    expect(framed.target[1]).toBeCloseTo(-1);
+    expect(framed.target[2]).toBeCloseTo(0.4);
+    const far = Math.hypot(camera.position[0] - 2, camera.position[1] + 1, camera.position[2] - 0.4);
+    const near = Math.hypot(framed.position[0] - 2, framed.position[1] + 1, framed.position[2] - 0.4);
+    expect(near).toBeLessThan(far * 0.2);
+    expect(near).toBeGreaterThan(1);
+  });
+
+  it("frames a table-sized world AABB without leaving the current look direction", () => {
+    const camera = { position: [40, -40, 30] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    const framed = world3dFrameCameraFromBounds([0, 0, 0.4], 1.2, camera);
+    expect(framed.target[0]).toBeCloseTo(0);
+    expect(framed.target[1]).toBeCloseTo(0);
+    expect(framed.target[2]).toBeCloseTo(0.4);
+    const distance = Math.hypot(framed.position[0], framed.position[1], framed.position[2] - 0.4);
+    expect(distance).toBeGreaterThan(2);
+    expect(distance).toBeLessThan(8);
+    const farDir = [40, -40, 30];
+    const nearDir = [framed.position[0], framed.position[1], framed.position[2] - 0.4];
+    const farLen = Math.hypot(...farDir);
+    const nearLen = Math.hypot(...nearDir);
+    expect(nearDir[0] / nearLen).toBeCloseTo(farDir[0] / farLen, 1);
+    expect(nearDir[1] / nearLen).toBeCloseTo(farDir[1] / farLen, 1);
+  });
+
+  it("treats a non-string media-export encoding as a one-shot download, not a segmented marker", () => {
+    expect(mediaExportEncodingText("utf-8")).toBe("utf-8");
+    expect(mediaExportEncodingText({ some: "utf-8" })).toBeUndefined();
+    expect(mediaExportEncodingText(undefined)).toBeUndefined();
+  });
+
+  it("appends a download anchor and keeps the object URL alive past the click turn", () => {
+    const revoked: string[] = [];
+    const create = URL.createObjectURL;
+    const revoke = URL.revokeObjectURL;
+    URL.createObjectURL = () => "blob:export-fixture";
+    URL.revokeObjectURL = (url) => {
+      revoked.push(String(url));
+    };
+    try {
+      downloadMediaExport("puzzle-3d.json", "application/json", "{}", "utf-8");
+      expect(DOWNLOAD_MEDIA_EXPORT_REVOKE_MS).toBeGreaterThanOrEqual(1000);
+      expect(document.querySelector("a[download='puzzle-3d.json']")).not.toBeNull();
+      expect(revoked).toEqual([]);
+    } finally {
+      URL.createObjectURL = create;
+      URL.revokeObjectURL = revoke;
+    }
   });
 
   it("shares the world catalogue drop preview across all registered hosts", () => {
@@ -5280,6 +5444,39 @@ describe("framework renderer hosts", () => {
     expect(worldInstancePickBlocked("volumeBrush")).toBe(true);
     expect(worldInstancePickBlocked("move")).toBe(false);
     expect(worldInstancePickBlocked(undefined)).toBe(false);
+  });
+
+  it("an unstarted fill plan (done true, count 0) still schedules fillBuildTick while fill is armed", () => {
+    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }), "fails-before: !done starved the first tick").toBe(false);
+    expect(worldFillBuildShouldTick("fill", { done: true, count: 0 })).toBe(true);
+    expect(worldFillBuildShouldTick("fill", undefined)).toBe(true);
+    expect(worldFillBuildShouldTick("fill", { done: false, count: 0 })).toBe(true);
+    expect(worldFillBuildShouldTick("fill", { done: true, count: 12 })).toBe(false);
+    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }, "fill")).toBe(true);
+  });
+
+  it("skips fillBuildTick while an Isolated job is driving unless a UI poll is due", () => {
+    expect(worldFillBuildHostTickAllowed(true, true, false), "fails-before: driving ticks starved the job pump").toBe(false);
+    expect(worldFillBuildHostTickAllowed(true, false, false)).toBe(true);
+    expect(worldFillBuildHostTickAllowed(true, true, true)).toBe(true);
+    expect(worldFillBuildHostTickAllowed(false, false, true)).toBe(false);
+  });
+
+  it("keeps the vortex hit proxy visible so Three's raycaster does not skip it", () => {
+    expect(worldVortexHitProxy(0.36)).toEqual({ visible: true, radius: 0.36 });
+    expect(worldVortexHitProxy(0.1).radius).toBeGreaterThanOrEqual(0.36);
+    expect(worldVortexHitProxy().visible).toBe(true);
+  });
+
+  it("clears instance mesh raycasts when pick is blocked so sibling vortex markers stay hittable", () => {
+    expect(worldInstanceMeshRaycast(true)).toBeUndefined();
+    expect(worldInstanceMeshRaycast(false)).toEqual(expect.any(Function));
+    const mesh = { isMesh: true, raycast: "keep" as unknown };
+    const root = { traverse: (fn: (object: typeof mesh) => void) => fn(mesh) };
+    applyWorldInstanceMeshRaycast(root, false, "keep");
+    expect(mesh.raycast).toEqual(expect.any(Function));
+    applyWorldInstanceMeshRaycast(root, true, "keep");
+    expect(mesh.raycast).toBe("keep");
   });
 
   it("resolves vortex pointer-down to select in brush or vertex mode and click-or-drag otherwise", () => {
@@ -7172,6 +7369,18 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
     // expanded and valid → execute with merged effective args
     expect(resolveKeybindingIntent(argAction, "extrude", { depth: 4 })).toEqual({ kind: "execute", actionId: "extrude", args: { depth: 4 } });
   });
+
+  it("retains a clipboardWrite fragment and injects it onto the next paste dispatch", () => {
+    const fragment = { objects: [{ id: "slab-1" }] };
+    expect(clipboardWriteFragmentFromEffect({ notify: { message: "x" } })).toBeUndefined();
+    expect(clipboardWriteFragmentFromEffect({ clipboardWrite: { fragment } })).toBe(fragment);
+    expect(pasteActionWithRetainedFragment({ action: "copy" }, fragment)).toEqual({ action: "copy" });
+    expect(pasteActionWithRetainedFragment({ action: "paste" }, undefined)).toEqual({ action: "paste" });
+    expect(pasteActionWithRetainedFragment({ action: "paste", args: { fragment: { kept: true } } }, fragment)).toEqual({ action: "paste", args: { fragment: { kept: true } } });
+    expect(pasteActionWithRetainedFragment({ action: "paste" }, fragment)).toEqual({ action: "paste", args: { fragment } });
+    expect(pasteArgsFragment({ args: { fragment } })).toBe(fragment);
+    expect(pasteArgsFragment({ args: {} })).toBeUndefined();
+  });
 });
 
 describe("registry-derived utilities and activation (P5)", () => {
@@ -7546,6 +7755,58 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(toolIdFromPanelTabId("tool.")).toBeNull();
     expect(toolIdFromPanelTabId(undefined)).toBeNull();
   });
+
+  // 🛠️ W-G3: guest always publishes fill measures on `framework.section.tools`, but the desktop
+  // Tool pane is `PanelTreeUnitsPane` (memoized) over lazy `resolveTree`. A first resolve against an
+  // empty ref (boot / tools surface not yet retained) stayed empty forever because `buildPanelProps`
+  // omitted `treeContentRevision`. This law fails if the revision identity does not change when the
+  // packed tools carrier lands, which is what re-calls `resolveTree` on the same tab objects.
+  it("late-arriving fill measures change the tool panel tree revision so the memoized pane re-resolves", () => {
+    const toolMeasuresByToolIdRef = { current: {} as Readonly<Record<string, readonly WindowMeasure[]>> };
+    const tabs = buildToolTabs(toolApp.tools, toolMeasuresByToolIdRef, vi.fn());
+    const fillTree = (tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>).trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
+    expect(fillTree.resolveTree().sections[0]!.items).toEqual([]);
+    const emptyRevision = toolPanelTreeContentRevision(null, toolMeasuresByToolIdRef.current, {});
+    toolMeasuresByToolIdRef.current = { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 0, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] };
+    expect(fillTree.resolveTree().sections[0]!.items).toHaveLength(1);
+    const landedRevision = toolPanelTreeContentRevision(null, toolMeasuresByToolIdRef.current, {});
+    expect(landedRevision).not.toEqual(emptyRevision);
+    expect(landedRevision.toolMeasuresByToolId.fill).toHaveLength(1);
+  });
+
+  // 🛠️ W-G3: a closed Tool category press must not swallow as a root re-select. Opening from an
+  // empty current path applies memory (or the first tool leaf) so one press reveals Fill.
+  it("one press on an inactive selected Fill leaf arms the tool instead of collapsing it", () => {
+    const previous = ["framework.category.tool", "tool.fill"];
+    const collapsed = progressPanelTabSelection(
+      [{ kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: buildToolTabs(toolApp.tools, { current: {} }, vi.fn()) }],
+      previous,
+      ["framework.category.tool", "tool.fill"],
+      { "framework.category.tool": "tool.fill" },
+    );
+    expect(collapsed.path).toEqual(["framework.category.tool"]);
+    const repress = toolLeafInactiveRepress(previous, collapsed.path, null);
+    expect(repress).toEqual({ path: previous, toolId: "fill" });
+    expect(toolLeafInactiveRepress(previous, collapsed.path, "fill")).toBeNull();
+  });
+
+  it("one press that opens the Tool category selects Fill when no leaf is remembered", () => {
+    const tabs = buildToolTabs(toolApp.tools, { current: {} }, vi.fn());
+    const opened = progressPanelTabSelection([{ kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: tabs }], [], ["framework.category.tool"], {});
+    expect(opened.fold).toBe(false);
+    expect(opened.path).toEqual(["framework.category.tool"]);
+    expect(toolCategoryOpenPath(opened.path, opened.memory, tabs.map((tab) => tab.id))).toEqual(["framework.category.tool", "tool.fill"]);
+  });
+
+  it("a Tool category branch still exposes the remembered Fill leaf trees as the panel body", () => {
+    const fill = buildToolTabs(toolApp.tools, { current: {} }, vi.fn())[0]!;
+    const branch: PanelTabNode = { kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: [fill] };
+    const body = resolvePanelBranchBodyLeaf(branch, { "framework.category.tool": "tool.fill" });
+    expect(body?.id).toBe("tool.fill");
+    expect(body?.kind).toBe("leaf");
+    expect(body && body.kind === "leaf" ? body.trees.length : 0).toBeGreaterThan(0);
+    expect(resolvePanelBranchBodyLeaf(branch, {})?.id).toBe("tool.fill");
+  });
 });
 
 describe("Introduce App command", () => {
@@ -7640,6 +7901,24 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(resolveBootExampleId("rectangle-extrude-volume", options, "sphere-cut-with-torus")).toBe("rectangle-extrude-volume");
     expect(resolveBootExampleId("missing", options)).toBe("hexagonal-mushroom-column");
     expect(resolveBootExampleId("", [])).toBe("");
+  });
+
+  it("the example picker dispatches the chosen example id and its completion refreshes the whole shell", () => {
+    // 🎨️ The picker writes the LABEL through `SET_ACTIVE_EXAMPLE_ID` and reaches the program through
+    // exactly one descriptor — boot #11 changed the label while the flow window kept the previous
+    // fixture, so both halves are pinned here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    expect(buildActiveExampleAction("s.procedural.generation3d@1/*#editor", "box-shell-preview")).toEqual({
+      controllerId: "s.procedural.generation3d@1/*#editor",
+      action: SET_ACTIVE_EXAMPLE_ACTION_ID,
+      args: { exampleId: "box-shell-preview" },
+    });
+    expect(buildActiveExampleAction("c", "")).toEqual({ controllerId: "c", action: "setActiveExample", args: { exampleId: "" } });
+    // 🏁️ `setActiveExample` is a retained typed operation: `handleAction` only admits it, and the shell's
+    // `subscribeOperationCompletions` handler is the ONLY carrier of its outcome — it must resolve the
+    // completion's own scope, and an absent scope must still repaint every surface.
+    expect(resolveUiDirtyScope({ kind: "full" })).toEqual({ kind: "full" });
+    expect(resolveUiDirtyScope(undefined)).toEqual({ kind: "full" });
+    expect(resolveUiDirtyScope({ kind: "none" })).toEqual({ kind: "none" });
   });
 
   it("shouldReplayIntroductionOnLoad opts a brand into replaying its tour after every window refresh", () => {
@@ -8780,3 +9059,443 @@ describe("world-3d scene mesh kind references", () => {
   });
 });
 //#endregion 🥽️SceneMeshKindReferences
+
+//#region 🥽️HiddenTabSurfaceSizing
+describe("node-graph surface sizing", () => {
+  it("adopts its container's size on mount without any animation frame", () => {
+    const container = new DOMRect(0, 0, 966, 836);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(container);
+    // 🙈️ A hidden/background tab never runs a frame callback — the regression this guards is a canvas
+    // that only ever reached its real size from inside one (`📓️runtime-verification-2026-09-09.md` #3).
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    // The wasm surface never settles here either, so nothing but the container observer can size these.
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
+    vi.stubGlobal("devicePixelRatio", 2);
+    const view = render(createElement(FlowGraphCanvasHost, {
+      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, fixtureJson: '{"schema":"flow.fixture","widgets":[]}' },
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+    }));
+    try {
+      const canvases = [...view.container.querySelectorAll("canvas")];
+      expect(canvases.length).toBe(2);
+      for (const canvas of canvases) {
+        expect([canvas.width, canvas.height]).toEqual([1932, 1672]);
+        expect([canvas.style.width, canvas.style.height]).toEqual(["966px", "836px"]);
+      }
+      expect(frame.mock.results.every((result) => result.value === 0)).toBe(true);
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      frame.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
+  it("keeps the exact device-pixel store the shared helper computes", () => {
+    const canvas = document.createElement("canvas");
+    expect([canvas.width, canvas.height]).toEqual([300, 150]);
+    expect(resizeCanvasBackingStore(canvas, 966, 836, 1.5)).toBe(true);
+    expect([canvas.width, canvas.height]).toEqual([1449, 1254]);
+    expect(resizeCanvasBackingStore(canvas, 966, 836, 1.5)).toBe(false);
+    expect(resizeCanvasBackingStore(canvas, 0, 0, 1)).toBe(true);
+    expect([canvas.width, canvas.height]).toEqual([1, 1]);
+    expect(resizeCanvasBackingStore(null, 966, 836, 1)).toBe(false);
+  });
+});
+//#endregion 🥽️HiddenTabSurfaceSizing
+
+//#region 🥽️HiddenTabSurfaceAttach
+/** 🍄️ The served `hexagonal-mushroom-column` shape the boot report measured: seven nodes, six edges. */
+function hexagonalMushroomColumnScene(): NodeGraphScene {
+  const port = (id: string) => [{ id, label: id }];
+  const nodes = ["sides", "radius", "height", "profile", "extrusion-axis", "extrude", "column-preview"].map((id, index) => ({
+    id, label: id, x: index * 180, y: (index % 2) * 120, width: 140, height: 64, inputs: port("in"), outputs: port("out"),
+  }));
+  const edges = [["sides", "profile"], ["radius", "profile"], ["height", "extrusion-axis"], ["profile", "extrude"], ["extrusion-axis", "extrude"], ["extrude", "column-preview"]]
+    .map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
+  return {
+    nodes, edges, viewport: { x: 0, y: 0, zoom: 1.78 }, editable: true,
+    fixtureJson: JSON.stringify({ schema: "flow.fixture", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
+  };
+}
+
+/** 🖌️ Recording stand-in for a 2D context — jsdom implements none, so this is the only way to witness
+ * that a paint actually reached a canvas rather than merely being scheduled. */
+function recordingCanvasContext(operations: string[]): CanvasRenderingContext2D {
+  const record = (name: string) => (...args: unknown[]) => { operations.push(`${name}(${args.join(",")})`); };
+  return new Proxy({} as CanvasRenderingContext2D, {
+    get: (_target, key) => (typeof key === "string" ? record(key) : undefined),
+    set: () => true,
+  });
+}
+
+describe("node-graph surface attachment in a hidden tab", () => {
+  it("attaches, feeds the scene and draws without any animation frame", async () => {
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    // 🙈️ The exact boot condition of `📓️runtime-verification-2026-09-09.md` #4: a hidden tab, so no frame
+    // callback ever runs, on a host with no `navigator.gpu` at all (jsdom ships none).
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    const painted = new Map<HTMLCanvasElement, string[]>();
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
+      const operations = painted.get(this) ?? [];
+      painted.set(this, operations);
+      return recordingCanvasContext(operations);
+    } as unknown as HTMLCanvasElement["getContext"]);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
+    vi.stubGlobal("devicePixelRatio", 1);
+    const view = render(createElement(FlowGraphCanvasHost, {
+      scene: hexagonalMushroomColumnScene(),
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+    }));
+    try {
+      expect(globalThis.navigator.gpu).toBeUndefined();
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.renderFrame));
+      expect(bridge.operations).toContain(flowAbi.operations.attachSurface);
+      expect(bridge.operations).toContain(flowAbi.operations.surfaceStatus);
+      expect(bridge.operations).toContain(flowAbi.operations.synchronizeDocumentJson);
+      expect(bridge.operations).toContain(flowAbi.operations.setCamera);
+      expect(bridge.operations).toContain(flowAbi.operations.setSize);
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.labelOverlayPaintStateJson));
+      const canvases = [...view.container.querySelectorAll("canvas")];
+      expect(canvases.length).toBe(2);
+      await waitFor(() => { for (const canvas of canvases) expect((painted.get(canvas) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true); });
+      // 📏️ A frame that carries no size of its own must not collapse the store the host measured.
+      for (const canvas of canvases) expect([canvas.width, canvas.height]).toEqual([966, 836]);
+      expect(painted.get(canvases[0]!)).toContain("clearRect(0,0,966,836)");
+      expect(frame).not.toHaveBeenCalled();
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
+      frame.mockRestore();
+      hidden.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+});
+//#endregion 🥽️HiddenTabSurfaceAttach
+
+//#region 🥽️BuiltNodeStoreReload
+describe("built-node store reloads", () => {
+  const contractNode = (value: string): BuiltNode => buildContractNode({ key: "window.body", component: { type: "text", value, emphasize: null, dataAttributes: null } });
+
+  it("loads a new key inline and defers every later reload to the flush", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const first = contractNode("first");
+    const store = cache.storeFor("window:procedural-main", first);
+    const rootId = store.getState().root;
+    expect(rootId).not.toBeNull();
+    const textOf = () => (store.getNodeSnapshot(store.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    let notifications = 0;
+    const unsubscribe = store.subscribeNode(rootId ?? 0)(() => { notifications += 1; });
+    try {
+      expect(cache.storeFor("window:procedural-main", first)).toBe(store);
+      expect(cache.pendingReloadKeys()).toEqual([]);
+      expect(notifications).toBe(0);
+      const second = contractNode("second");
+      expect(cache.storeFor("window:procedural-main", second)).toBe(store);
+      expect(cache.pendingReloadKeys()).toEqual(["window:procedural-main"]);
+      expect(notifications).toBe(0);
+      expect(textOf()).toBe("first");
+      cache.flushPendingReloads();
+      expect(cache.pendingReloadKeys()).toEqual([]);
+      expect(textOf()).toBe("second");
+      expect(notifications).toBeGreaterThan(0);
+      const settled = notifications;
+      expect(cache.storeFor("window:procedural-main", second)).toBe(store);
+      cache.flushPendingReloads();
+      expect(notifications).toBe(settled);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it("never updates a subscribed UiNodeView while another component renders", () => {
+    const messages: string[] = [];
+    const consoleError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => { messages.push(args.map(String).join(" ")); });
+    const renderPhaseUpdates = () => messages.filter((message) => message.includes("while rendering a different component"));
+    const cache = createBuiltNodeStoreCacheV1();
+    const deferred = ({ node }: { readonly node: BuiltNode }) => {
+      const store = cache.storeFor("window:procedural-main", node);
+      useLayoutEffect(() => cache.flushPendingReloads());
+      return createElement(InterpretedUiNode, { store, onAction: noopAction, onIntent: noopAction, requestContextMenu: undefined });
+    };
+    const eager = ({ node }: { readonly node: BuiltNode }) => {
+      const store = cache.storeFor("window:procedural-eager", node);
+      store.loadSnapshot(builtNodeToSnapshot("window:procedural-eager", node));
+      return createElement(InterpretedUiNode, { store, onAction: noopAction, onIntent: noopAction, requestContextMenu: undefined });
+    };
+    const view = render(createElement(deferred, { node: contractNode("first") }));
+    try {
+      expect(view.container.textContent).toContain("first");
+      view.rerender(createElement(deferred, { node: contractNode("second") }));
+      expect(view.container.textContent).toContain("second");
+      expect(renderPhaseUpdates()).toEqual([]);
+      // 🧪️ Control: the pre-fix shape (a `loadSnapshot` in the render body of a store that already has
+      // mounted subscribers) is exactly what React reports as a cross-component render-phase update.
+      const control = render(createElement(eager, { node: contractNode("first") }));
+      control.rerender(createElement(eager, { node: contractNode("second") }));
+      expect(renderPhaseUpdates().length).toBeGreaterThan(0);
+      control.unmount();
+    } finally {
+      view.unmount();
+      consoleError.mockRestore();
+    }
+  });
+});
+//#endregion 🥽️BuiltNodeStoreReload
+
+
+test("world3d rectangle marquee draws a rectangle and pick draws nothing", () => {
+  expect(world3dMarqueeOverlayShape("rectangle")).toBe("rect");
+  expect(world3dMarqueeOverlayShape("lasso")).toBe("polygon");
+  expect(world3dMarqueeOverlayShape("pick")).toBeNull();
+});
+
+test("openSurfaceContextMenu keeps an empty plugin answer off the shell fallback", async () => {
+  const shell = [{ id: "setActiveExample", label: "Set Active Example" }];
+  const guest = async () => [];
+  const mapped = await openSurfaceContextMenu(guest, { menu: { id: "world3d", args: null }, point: { x: 0, y: 0 } } as never, (specs) => [...specs] as never, () => shell as never);
+  expect(mapped.items).toEqual([]);
+});
+
+//#region 📄️PublicInvocationPaging
+import publicInvocationSchema from "../../../../../../../🔨️modules/🛂️manifest/🎛️public-invocation/🧬️schema/🔣️.json";
+import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationCharCost, publicInvocationStringPages } from "@semio-tech/framework";
+
+describe("public invocation paging", () => {
+  it("mirrors the language-neutral envelope schema both Rust and the shell read", () => {
+    expect(PUBLIC_INVOCATION_BODY_BYTES).toBe(publicInvocationSchema.properties.maxBodyBytes.const);
+    expect(PUBLIC_INVOCATION_STRING_BYTES).toBe(publicInvocationSchema.properties.maxStringBytes.const);
+    expect(PUBLIC_INVOCATION_DEPTH).toBe(publicInvocationSchema.properties.maxDepth.const);
+  });
+
+  /** 📐️ The Node oracle for the cost function: what `JSON.stringify` actually writes for this
+   * character, minus the leading backslash the guest's counter skips. */
+  const oracleCost = (character: string): number => {
+    const encoded = JSON.stringify(character).slice(1, -1);
+    return encoded.length - (encoded.match(/\\/gu)?.length ?? 0);
+  };
+
+  it("never undercharges a character against the JSON.stringify oracle", () => {
+    for (const character of ['"', "\\", "\n", "\r", "\t", "\u0001", "a", "\u00e4", "\u26f0", "\u{1f300}"]) {
+      expect(publicInvocationCharCost(character)).toBeGreaterThanOrEqual(oracleCost(character));
+    }
+    expect(publicInvocationCharCost('"')).toBe(1);
+    expect(publicInvocationCharCost("\u0001")).toBe(5);
+    expect(publicInvocationCharCost("\u{1f300}")).toBe(10);
+  });
+
+  it("fills every page to the bound, splits only on code points and loses nothing", () => {
+    const payload = '{"id":"brep.extrude","name":"Extrudieren \u26f0\ufe0f"},'.repeat(4_096);
+    const pages = publicInvocationStringPages(payload);
+    expect(pages.length).toBeGreaterThan(1);
+    for (const page of pages) {
+      let cost = 0;
+      for (const character of page) cost += publicInvocationCharCost(character);
+      expect(cost).toBeLessThanOrEqual(PUBLIC_INVOCATION_STRING_BYTES);
+      const encoded = JSON.stringify(page).slice(1, -1);
+      expect(encoded.length - (encoded.match(/\\/gu)?.length ?? 0)).toBeLessThanOrEqual(PUBLIC_INVOCATION_STRING_BYTES);
+    }
+    expect(pages.join("")).toBe(payload);
+  });
+
+  it("yields one empty page for an empty payload, so a producer always sends an addressed page", () => {
+    expect(publicInvocationStringPages("")).toEqual([""]);
+  });
+});
+//#endregion 📄️PublicInvocationPaging
+
+//#region 📄️ContributionsPushDeclaration
+import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { appCommandTakesPageRun, appOwnsCommand } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+
+/** 📄️ One plugin descriptor, read off disk rather than imported, because the procedural manifest is
+ * ~1 MB and belongs in no test bundle. */
+const readPluginManifest = (relativeUrl: string): { readonly apps?: readonly { readonly id: string; readonly commands?: readonly { readonly id: string }[] }[] } | undefined => {
+  const path = fileURLToPath(new URL(relativeUrl, import.meta.url));
+  if (!existsSync(path)) return undefined;
+  const descriptor = JSON.parse(readFileSync(path, "utf8")) as { readonly manifest?: unknown };
+  return (descriptor.manifest ?? descriptor) as { readonly apps?: readonly { readonly id: string; readonly commands?: readonly { readonly id: string }[] }[] };
+};
+
+const PROCEDURAL_SOURCE_DESCRIPTOR = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🔣️.json";
+/** 📄️ The dev server's own copy — a build artifact, so it is asserted only when a dev tree has one.
+ * A stale copy is exactly how a served boot ends up receiving one unpaged 293 KiB command the guest
+ * refuses as `command contains an oversized string`. */
+const PROCEDURAL_SERVED_DESCRIPTOR = "../../../../🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/🔣️.json";
+
+describe("contributions push declaration", () => {
+  /** ⚖️ LAW: every procedural app that opts into the host's `setContributions` push declares the
+   * `pageCount` argument, so the shell's own gate pages it. An app that declares only `json` is
+   * handed one command carrying the whole closure, which `validate_public_json_envelope` refuses —
+   * the gate is `appCommandTakesPageRun`, so the law runs THAT, never a copy of it
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("declares pageCount on every procedural app the shell pushes contributions to", () => {
+    for (const [label, relativeUrl] of [
+      ["source", PROCEDURAL_SOURCE_DESCRIPTOR],
+      ["served", PROCEDURAL_SERVED_DESCRIPTOR],
+    ] as const) {
+      const manifest = readPluginManifest(relativeUrl);
+      if (!manifest) {
+        expect(label).toBe("served");
+        continue;
+      }
+      const receivers = (manifest.apps ?? []).filter((app) => appOwnsCommand(app as never, "setContributions"));
+      expect(receivers.map((app) => app.id).sort()).toEqual(["s.procedural.generation2d@1/*#editor", "s.procedural.generation3d@1/*#editor", "s.procedural.generation3d@1/*#viewer"]);
+      for (const app of receivers) {
+        expect(`${label}:${app.id}:${appCommandTakesPageRun(app as never, "setContributions")}`).toBe(`${label}:${app.id}:true`);
+      }
+    }
+  });
+});
+//#endregion 📄️ContributionsPushDeclaration
+
+//#region 📇️WindowKindActionScoping
+type DescriptorWindowKind = { readonly id: string; readonly actions?: readonly { readonly id: string }[] };
+type DescriptorApp = { readonly id: string; readonly windowKinds?: readonly DescriptorWindowKind[] };
+
+const windowKindsDeclaring = (app: DescriptorApp, actionId: string): readonly string[] =>
+  (app.windowKinds ?? []).filter((kind) => (kind.actions ?? []).some((action) => action.id === actionId)).map((kind) => kind.id);
+
+describe("window-kind action scoping", () => {
+  /** ⚖️ LAW: a window-scoped action is declared on the window kinds that dispatch it and on NO other.
+   * `WindowKindDefinition.actions` is what `ShellHost`'s `declaredAction` gate reads before it will call
+   * `plugin.handleAction`, what the focused-window keybinding table resolves against, and what a window's
+   * chrome menu renders — and until this ticket every generation3d/generation2d window carried a copy of
+   * the whole app action list, because `build_definition` copies every UNOWNED app action onto every
+   * window (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`) and no window owned
+   * anything. This reads the published descriptor, so it fails on a stale
+   * `@semio-tech/procedural-plugin:describe` as well as on a lost `.window_kind_action_refs(...)`
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("scopes each generation window's own actions to that window in the published procedural descriptor", () => {
+    const manifest = readPluginManifest(PROCEDURAL_SOURCE_DESCRIPTOR) as { readonly apps?: readonly DescriptorApp[] } | undefined;
+    expect(manifest).toBeDefined();
+    const apps = new Map((manifest?.apps ?? []).map((app) => [app.id, app]));
+    const expectations: readonly (readonly [string, string, readonly string[]])[] = [
+      ["s.procedural.generation3d@1/*#editor", "addGeneration", ["generation3d-generations"]],
+      ["s.procedural.generation3d@1/*#editor", "selectGeneration", ["generation3d-generations"]],
+      ["s.procedural.generation3d@1/*#editor", "renameGeneration", ["generation3d-generations"]],
+      ["s.procedural.generation3d@1/*#editor", "removeGeneration", ["generation3d-generations"]],
+      ["s.procedural.generation3d@1/*#editor", "updateGenerationValues", ["generation3d-generate-form"]],
+      ["s.procedural.generation3d@1/*#editor", "setLodMode", ["procedural-main"]],
+      ["s.procedural.generation3d@1/*#editor", "nodeGraphEdit", ["procedural-main"]],
+      ["s.procedural.generation3d@1/*#editor", "setShowMode", ["generation3d-generate-preview", "procedural-preview"]],
+      ["s.procedural.generation3d@1/*#editor", "setSunAzimuth", ["generation3d-generate-preview", "procedural-preview"]],
+      ["s.procedural.generation3d@1/*#editor", "translateSelection", ["procedural-preview"]],
+      ["s.procedural.generation3d@1/*#viewer", "setShowMode", ["procedural-view-preview"]],
+      ["s.procedural.generation3d@1/*#viewer", "setCamera", ["procedural-view-preview"]],
+      ["s.procedural.generation2d@1/*#editor", "addGeneration", ["generation2d-generations"]],
+      ["s.procedural.generation2d@1/*#editor", "updateGenerationValues", ["generation2d-generate-form"]],
+      ["s.procedural.generation2d@1/*#editor", "nodeGraphViewport", ["generation2d-main"]],
+      ["s.procedural.generation2d@1/*#editor", "canvasWheel", ["generation2d-generate-preview", "generation2d-preview"]],
+    ];
+    for (const [appId, actionId, owners] of expectations) {
+      const app = apps.get(appId);
+      expect(`${appId}:declared`).toBe(app ? `${appId}:declared` : `${appId}:missing`);
+      expect(`${appId}:${actionId}:${windowKindsDeclaring(app as DescriptorApp, actionId).slice().sort().join(",")}`).toBe(`${appId}:${actionId}:${owners.slice().sort().join(",")}`);
+    }
+  });
+
+  /** ⚖️ LAW: an app-scoped verb no single window body dispatches — the navbar's `setActiveExample`, the
+   * catalogue palette's `addWidget`, the framework's own `undo` — stays UNOWNED, and therefore reaches
+   * every window kind. That is the other half of the scoping contract: over-scoping an app verb would
+   * make it undispatchable from any window that does not own it. */
+  it("leaves app-scoped verbs on every window kind of the procedural editors", () => {
+    const manifest = readPluginManifest(PROCEDURAL_SOURCE_DESCRIPTOR) as { readonly apps?: readonly DescriptorApp[] } | undefined;
+    const apps = new Map((manifest?.apps ?? []).map((app) => [app.id, app]));
+    for (const [appId, actionId] of [
+      ["s.procedural.generation3d@1/*#editor", "setActiveExample"],
+      ["s.procedural.generation3d@1/*#editor", "addWidget"],
+      ["s.procedural.generation3d@1/*#editor", "undo"],
+      ["s.procedural.generation2d@1/*#editor", "addWidget"],
+      ["s.procedural.generation2d@1/*#editor", "undo"],
+    ] as const) {
+      const app = apps.get(appId) as DescriptorApp;
+      expect(`${appId}:${actionId}:${windowKindsDeclaring(app, actionId).length}`).toBe(`${appId}:${actionId}:${(app.windowKinds ?? []).length}`);
+    }
+  });
+});
+//#endregion 📇️WindowKindActionScoping
+
+//#region 🪪️StableUiNodeDomIds
+describe("stable ui node dom ids", () => {
+  /** ⚖️ LAW: a bound node's DOM id is a function of the SURFACE and the node's own Rust-authored `key`,
+   * never of `UiNodeRecord.id` — that integer is re-minted in DFS order on every full-body
+   * reconciliation (`builtNodeToSnapshot`), so an id built from it names a different row after the next
+   * refresh and a scripted or assistive click silently targets the wrong node
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("derives the dom id from the surface and the authored key, not the reconciliation ordinal", () => {
+    expect(uiNodeDomId("procedural.play.generations", "procedural3d-play-generate.add-generation", 5)).toBe("procedural.play.generations/procedural3d-play-generate.add-generation");
+    expect(uiNodeDomId("procedural.play.generations", "procedural3d-play-generate.add-generation", 12)).toBe(uiNodeDomId("procedural.play.generations", "procedural3d-play-generate.add-generation", 5));
+  });
+
+  /** ⚖️ LAW: the surface is the namespace — two windows of one app rendering the same authored key get
+   * two distinct DOM ids. */
+  it("namespaces the same authored key per window surface", () => {
+    expect(uiNodeDomId("procedural.play.generations", "generation.g1", 1)).not.toBe(uiNodeDomId("procedural.play.generate-form", "generation.g1", 1));
+  });
+
+  /** ⚖️ LAW: a keyless node still gets a usable id — the volatile ordinal is the FALLBACK, never the
+   * default. */
+  it("falls back to the reconciliation ordinal only for a keyless node", () => {
+    expect(uiNodeDomId("procedural.play.main", "", 7)).toBe("node-7");
+  });
+
+  /** ⚖️ LAW: every authored key of one rendered body mints a distinct DOM id, so `getElementById` is
+   * unambiguous across the whole window body. */
+  it("mints one distinct dom id per authored key of a body", () => {
+    const keys = ["procedural3d-play-generate", "procedural3d-play-generate.generations", "procedural3d-play-generate.generation.generation-1", "procedural3d-play-generate.actions", "procedural3d-play-generate.add-generation"];
+    const ids = new Set(keys.map((key, index) => uiNodeDomId("procedural.play.generations", key, index + 1)));
+    expect(ids.size).toBe(keys.length);
+  });
+});
+//#endregion 🪪️StableUiNodeDomIds
+
+//#region 🚨️UndeclaredActionDiagnostic
+describe("undeclared action diagnostic", () => {
+  const windowKinds = [
+    { id: "generation3d-generations", actions: [{ id: "addGeneration" }] },
+    { id: "procedural-main", actions: [{ id: "nodeGraphEdit" }] },
+  ];
+
+  /** ⚖️ LAW: the drop is DESCRIBED, not silent — the message names the app, the action and the window
+   * kind the dispatch came from, and is not `[DEBUG]`-prefixed, because it is the only signal a fully
+   * wired binding died (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("names the app, the action and the dispatching window kind", () => {
+    const diagnostic = undeclaredActionDiagnostic("generation3d", "setActiveExample", windowKinds, "procedural-main");
+    expect(diagnostic).not.toBeNull();
+    expect(diagnostic?.action).toBe("setActiveExample");
+    expect(diagnostic?.windowKindId).toBe("procedural-main");
+    expect(diagnostic?.windowKindIds).toEqual(["generation3d-generations", "procedural-main"]);
+    expect(diagnostic?.message.includes("[DEBUG]")).toBe(false);
+    for (const fragment of ["generation3d", "setActiveExample", "procedural-main", "window_kind_action_refs"]) expect(diagnostic?.message.includes(fragment)).toBe(true);
+  });
+
+  /** ⚖️ LAW: the gate is app-wide — an action owned by ONE window kind is dispatchable from anywhere
+   * (a context menu, the palette, a keybinding), so declaring `addGeneration` only on the Generations
+   * window must not turn a context-menu dispatch from the flow window into a drop. */
+  it("accepts an action declared on any window kind, whatever window dispatched it", () => {
+    expect(undeclaredActionDiagnostic("generation3d", "addGeneration", windowKinds, "procedural-main")).toBeNull();
+    expect(undeclaredActionDiagnostic("generation3d", "addGeneration", windowKinds, null)).toBeNull();
+  });
+
+  /** ⚖️ LAW: the framework's own reserved verbs are never a plugin's to declare. */
+  it("never reports a framework-reserved verb", () => {
+    for (const action of ["undo", "redo", "setActiveUtility", "setActiveTool"]) expect(undeclaredActionDiagnostic("generation3d", action, windowKinds)).toBeNull();
+  });
+
+  /** ⚖️ LAW: an app with no window kinds at all still produces a readable message rather than an empty list. */
+  it("says so when the app declares no window kinds", () => {
+    expect(undeclaredActionDiagnostic("empty", "addGeneration", [])?.message.includes("window kinds: none")).toBe(true);
+  });
+});
+//#endregion 🚨️UndeclaredActionDiagnostic

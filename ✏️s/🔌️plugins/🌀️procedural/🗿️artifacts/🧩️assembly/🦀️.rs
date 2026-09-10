@@ -54,6 +54,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🧩️ModuleChild
+/// 🧩️ Addresses one placeable MODULE as this document's child in the `s.stdio.semio@v1/kit` store.
+/// A module is never embedded inline — `AssemblySnapshot::modules` holds handles — so every author
+/// (examples, editor affordances, importers) mints the handle here rather than spelling the dialect
+/// out again. `child_id` IS the module id the weight table and the rule set name.
+pub fn module_child_handle(module_id: &str) -> store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot> {
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
+    store::ArtifactChild::new(module_id.to_string(), store::os_io::ArtifactRef { artifact_id: module_id.to_string(), dialect })
+}
+//#endregion 🧩️ModuleChild
+
 //#region 🔖️Declaration
 /// 🧾️ Defines `s.assembly`'s immutable runtime capability leaves — the single `schema.artifact`
 /// capability this packet's brief asks for. `descriptor`/`claim` use the SAME `"s.assembly"` string
@@ -96,13 +107,25 @@ pub mod standards {
                 pub mod schema {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                     pub mod diff;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                    pub mod snapshot;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
                         #[path = "."]
                         pub mod create_slot {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🦀️.rs"]
@@ -232,6 +255,41 @@ pub mod standards {
         }
     }
 }
+
+// 🚧️ The authored `✏️editor`/`👁️viewer` surfaces are NOT mounted here, and this is measured, not
+// assumed: mounting them behind `component-app-assembly` and running
+// `cargo check -p semio-s-artifact-procedural-assembly --features component-app-assembly`
+// (26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-10) fails on exactly five unsatisfied codec bounds,
+// every one of them owed by this artifact's own schema tree, none by the surfaces:
+//   `AssemblySnapshot: store::ArtifactDsl`, `AssemblySnapshot: store::ArtifactPack`,
+//   `AssemblyMutation: protocol::OpText`, `AssemblyMutation: protocol::OpBinary`,
+//   `AssemblyEditorCommand: protocol::OpBinary` (and its viewer twin).
+// `generation3d` carries the same five as hand-written impls in its `🧬️schema/📸️snapshot/📝️text/🦀️.rs`
+// and `🧬️schema/🧬️mutations/💾️binary/🦀️.rs` leaves, which assembly's schema tree does not yet have.
+// Author those two representation leaves and the mount is a pure addition — nothing in the surfaces
+// themselves has to change.
+
+//#region 📚️Examples
+/// 📚️ The bundled WFC problem specs this subset ships — one forced path, one cyclic lattice. Each
+/// slug owns its own directory under `🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/`, and the Rust
+/// builder there is the authority its `🗣️.dsl.semio` asset is printed from.
+#[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🦀️.rs"]
+    pub mod two_room_corridor;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🦀️.rs"]
+    pub mod wall_roof_facade_strip;
+
+    /// 📇️ Every bundled example, in the order the editor's example picker offers them.
+    pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![two_room_corridor::source(), wall_roof_facade_strip::source()]
+    }
+
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️outcome/🦀️.rs"]
+    mod tests;
+}
+//#endregion 📚️Examples
 
 // ---- Shims: flat access from the artifact root, mirroring generation2d/generation3d ----
 pub mod schema {

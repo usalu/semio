@@ -1,0 +1,17 @@
+{
+  "windowKindId": "procedural-main",
+  "instanceId": 1,
+  "dispatchAction": { "req": 41, "action": "flowEvalTick", "delayMs": 16 },
+  "openWindow": { "req": 42, "kind": "proceduralPreview" },
+  "openDialog": { "req": 43, "dialogId": "example.picker" },
+  "spawnPluginInstance": {
+    "req": 44,
+    "pluginId": "procedural",
+    "appId": "s.procedural.procedural3d@1/*#editor",
+    "osInstanceId": "os-7",
+    "label": "Hexagonal Mushroom Column",
+    "documentJson": "{}"
+  },
+  "unaddressedFaultCode": "renderer.invocation.unaddressed",
+  "unaddressedFaultOrigin": "renderer"
+}

@@ -363,6 +363,57 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
 }
 
+/// ⚖️ LAW: the flow extension registry GENERATION is a session's invalidation key.
+///
+/// A node whose operator no plugin has contributed yet does not merely stall — its miss is cached in
+/// the session's neural cache, in its incremental baseline and in its published
+/// `eval_json`/`status_json`, and the chain that hit it stops. Installing the contribution afterwards
+/// changes a process-wide registry and publishes nothing, so a session has to be TOLD its results
+/// predate the registry it can now address. Keying that on the generation is what stops a re-push of
+/// an unchanged closure from restarting a settled evaluation
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🧪️ Built on a bare `FlowHost::default()` and a seeded cache rather than on
+/// `host_with_two_node_chain`, whose `test_kind_infos_json` helper currently trips the neural
+/// engine's `final Dictionary ownership` gate on its own (every session law in this file is red for
+/// that reason) — the claim here is about the SESSION, and it is stated without inheriting an
+/// unrelated red.
+#[test]
+fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generation_moves() {
+    let host = FlowHost::default();
+    let mut session = FlowEvalSession::new();
+    let generation = session.flow_extension_generation();
+    assert_eq!(generation, crate::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
+    let cached = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
+    let cached_json = crate::os_pack::json::to_json_string(&cached);
+    cached.retire_cold();
+    session.seed_node_cache(17, &cached_json).expect("a host-mediated extension answer seeds the retained cache");
+    assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
+    assert!(session.pending());
+
+    assert!(!session.invalidate_for_flow_extension_registry(generation), "an unmoved generation invalidates nothing");
+    assert!(session.pending(), "and therefore releases nothing");
+    assert!(session.neural_cache().contains(17));
+
+    assert!(session.invalidate_for_flow_extension_registry(generation + 1), "a moved generation invalidates");
+    assert_eq!(session.flow_extension_generation(), generation + 1);
+    assert_eq!(session.status_json(), "{}", "the per-node status computed against the old registry is released");
+    assert!(session.eval_json().is_empty(), "the published evaluation is released");
+    assert!(!session.pending(), "a released session admits a new chain rather than waiting on the one that gave up");
+    assert!(!session.neural_cache().contains(17), "every node output computed against the old registry is evicted");
+    assert!(!session.invalidate_for_flow_extension_registry(generation + 1), "the same generation twice invalidates once");
+
+    session.begin_close();
+    for _ in 0..1_000_000 {
+        if session.terminal_is_empty() {
+            break;
+        }
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
+    assert!(session.terminal_is_empty(), "an invalidated session still reaches terminal-empty through its own close ladder");
+    host.retire_cold();
+}
+
 #[test]
 fn connect_ports_allows_fan_out_from_same_output() {
     let mut host = host_with_test_bridge();

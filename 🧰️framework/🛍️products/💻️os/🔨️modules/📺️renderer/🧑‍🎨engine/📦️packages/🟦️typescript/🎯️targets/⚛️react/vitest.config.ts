@@ -20,6 +20,7 @@ const engineTestSuites = [
   engineSuite("📇️session-authority-notice", "tsx"),
   engineSuite("📡️actor-backbone"),
   engineSuite("📨️browser-frame-transport"),
+  engineSuite("📥️wgpu-intake-budget"),
   engineSuite("🔬️artifact-creation-ready-opening"),
   engineSuite("🔬️document-opening"),
   engineSuite("🔬️engine-contract"),

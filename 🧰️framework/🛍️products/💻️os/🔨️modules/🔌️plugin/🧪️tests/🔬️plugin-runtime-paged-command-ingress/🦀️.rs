@@ -2,7 +2,7 @@ mod paged_command_ingress_tests {
     use super::*;
 
     fn two_page_command() -> semio_framework::kernel::PagedCommand {
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new(2).unwrap();
         pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[2; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).unwrap()).unwrap();
         pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"tail").unwrap()).unwrap();
         semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap()

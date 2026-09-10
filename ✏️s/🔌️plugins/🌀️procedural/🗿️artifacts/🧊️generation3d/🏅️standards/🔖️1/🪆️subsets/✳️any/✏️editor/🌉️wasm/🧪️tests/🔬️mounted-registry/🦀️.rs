@@ -526,7 +526,7 @@ mod mounted_laws {
             assert!(mounted_snapshot.contains(required), "mounted P3 route lost retained canonical layer: {required}");
         }
         assert!(snapshot_source.contains("one scalar byte opportunity"));
-        assert!(owner_source.contains("GENERATION3D_RETAINED_COMBINED_DEPTH: usize = 12"));
+        assert!(owner_source.contains("GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64"));
         assert!(snapshot_source.contains("*b\"P3D3\""));
         assert!(owner_source.contains("*b\"P2D2\""));
         assert!(owner_source.contains("cx.should_yield()"));

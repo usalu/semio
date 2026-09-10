@@ -7059,6 +7059,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-ui-styling",
@@ -7157,6 +7158,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
@@ -8962,11 +8964,14 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-trace",
  "semio-s-artifact-procedural-assembly",
  "semio-s-artifact-procedural-generation2d",
  "semio-s-artifact-procedural-generation3d",
+ "serde_json",
 ]
 
 [[package]]

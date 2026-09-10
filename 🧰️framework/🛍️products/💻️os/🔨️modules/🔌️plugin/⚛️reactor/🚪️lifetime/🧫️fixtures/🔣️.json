@@ -26,7 +26,7 @@
   "preflight": { "detachedApps": 0, "detachedDescendants": 0, "lostOwners": 0 },
   "faults": ["open-after-construction", "capture-before-publication", "child-step-unwind", "publication-clock-missing", "publication-clock-backward", "publication-elapsed-equality", "output-full"],
   "faultRecovery": { "ownerRemainsReachable": true, "receiptRemainsOwned": true, "terminalReceiptPublished": false },
-  "terminalRelease": { "startedUs": 100, "destructorWorkUs": 8000, "firstAckAccepted": false, "destructionsAfterRetry": 1, "receiptRetainedOnLateClock": true, "arbitraryPanickingDestructorSupported": false },
+  "terminalRelease": { "startedUs": 100, "destructorWorkUs": 5000000, "firstAckAccepted": false, "destructionsAfterRetry": 1, "receiptRetainedOnLateClock": true, "arbitraryPanickingDestructorSupported": false },
   "pendingPatch": { "surfaces": ["7:保留,🙂", "7:second"], "grants": [1, 64, 4096], "zeroGrantChangesOwner": false, "occupiedHandbackAcceptsReplacement": false, "terminalBeforeExactRelease": false, "faultLeavesStructuralOwner": true },
   "retirement": { "nativeAppAloneIsTerminal": false, "globalEmptyIsTerminal": false, "allCapturedNativeOwnersIsTerminal": true, "retiredReceiptAloneAllowsHostDispose": false }
 }

@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { scheduleDemandFrame, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { createContext } from "react";
 // #endregion 🔌️Adapters
 
@@ -56,21 +56,22 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 export function createDemandFrameScheduler(render: () => void, opts?: { readonly trailingWindowMs?: number }): { invalidate(): void; beginContinuous(reason: string): void; endContinuous(reason: string): void; dispose(): void } {
   const trailingWindowMs = opts?.trailingWindowMs ?? 250;
   const continuousReasons = new Set<string>();
-  let raf = 0;
+  let handle: { readonly cancel: () => void } | null = null;
   let trailingUntil = 0;
   let disposed = false;
 
   const tick = () => {
-    raf = 0;
+    handle = null;
     if (disposed) return;
     render();
-    if (continuousReasons.size > 0 || Date.now() < trailingUntil) {
-      raf = requestAnimationFrame(tick);
-    }
+    if (continuousReasons.size > 0 || Date.now() < trailingUntil) schedule();
+  };
+  const schedule = () => {
+    handle = scheduleDemandFrame(tick);
   };
   const ensureScheduled = () => {
-    if (disposed || raf !== 0) return;
-    raf = requestAnimationFrame(tick);
+    if (disposed || handle !== null) return;
+    schedule();
   };
 
   return {
@@ -89,8 +90,8 @@ export function createDemandFrameScheduler(render: () => void, opts?: { readonly
     dispose() {
       disposed = true;
       continuousReasons.clear();
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
+      handle?.cancel();
+      handle = null;
     },
   };
 }

@@ -38,4 +38,13 @@ async fn window_view_context_uses_the_addressed_instance() {
     assert_eq!(panel.terminology, view.terminology);
     assert_eq!(panel.active_mode_id, view.active_mode_id);
     assert_eq!(panel.active_utility_by_window_id, view.active_utility_by_window_id);
+    let window_only = view.for_window_instance("left").unwrap();
+    assert!(window_only.active_tool_id.is_none(), "fails-before: windowed dispatch without host overlay drops the armed tool");
+    for case in fixture["hostArmed"].as_array().unwrap() {
+        let host_tool = case["hostActiveToolId"].as_str();
+        let window_id = case["windowId"].as_str();
+        let projected = view.for_host_armed_action(host_tool, window_id).unwrap();
+        assert_eq!(projected.active_tool_id.as_deref(), case["activeToolId"].as_str());
+        assert_eq!(projected.active_utility_id.as_deref(), case["activeUtilityId"].as_str());
+    }
 }

@@ -1,0 +1,16 @@
+{
+  "schema": "s.procedural.assembly.example-outcome/v1",
+  "example": "two-room-corridor",
+  "seed": 7,
+  "slots": 3,
+  "edges": 2,
+  "weights": 2,
+  "modules": ["room", "corridor"],
+  "rules": 3,
+  "satisfiable": true,
+  "assignments": {
+    "room-a": "room",
+    "corridor": "corridor",
+    "room-b": "room"
+  }
+}

@@ -3153,6 +3153,22 @@
       }
     },
     {
+      "name": "⚖️gate🔌️plugin📏️turn-future-size",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --args=the_reactor_turn_future_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 406.1 }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🧮️turn-retention",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --args=a_settled_reactor_turn_retains_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 406.2 }
+    },
+    {
       "name": "⚖️gate🔌️plugin🪪️factory-proofs",
       "type": "node-terminal",
       "request": "launch",
@@ -3254,6 +3270,14 @@
       "command": "bun nx run @semio-tech/framework-plugin-host:test",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 407.6 }
+    },
+    {
+      "name": "⚖️gate🖥️host📈️poll-turn-memory",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin-host:test --args=the_poll_export_keeps_guest_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.62 }
     },
     {
       "name": "⚖️gate🖥️host♻️lifecycle",
@@ -8906,6 +8930,20 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p semio-s-artifact-stdio-semio --test brep_analytic_blend -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test⏱️procedural🧊️boot-deadline",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-plugin-procedural --test boot_deadline -- --nocapture --test-threads 1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🚪️procedural🧊️close-ladder",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-plugin-procedural --test close_ladder -- --nocapture --test-threads 1",
       "cwd": "${workspaceFolder}"
     },
     {

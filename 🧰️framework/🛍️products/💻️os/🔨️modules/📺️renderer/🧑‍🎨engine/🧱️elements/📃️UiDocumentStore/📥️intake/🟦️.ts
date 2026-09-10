@@ -120,47 +120,65 @@ export class OwnedUiPatchIntake {
 }
 //#endregion 📥️ExactPatchIntake
 
-//#region 📏️IntakeBudget
-/** 📏️ Walks a wire patch (and any nested lane tree hiding behind a one-op upsert) without a depth
- * cap — a shallow ops walk measured Nakagin as one small op and exhausted 36 864 steps mid-decode. */
-export function measureRetainedUiPatchBytes(value: unknown): number {
-  let bytes = 0;
-  const seen = new Set<unknown>();
-  const walk = (item: unknown): void => {
-    if (item == null) return;
-    if (typeof item === "string") { bytes += item.length; return; }
-    if (typeof item === "number" || typeof item === "boolean" || typeof item === "bigint") { bytes += 8; return; }
-    if (item instanceof ArrayBuffer) { bytes += item.byteLength; return; }
-    if (ArrayBuffer.isView(item)) { bytes += item.byteLength; return; }
-    if (typeof item !== "object") return;
-    if (seen.has(item)) return;
-    seen.add(item);
-    if (Array.isArray(item)) { for (const child of item) walk(child); return; }
-    for (const child of Object.values(item as Record<string, unknown>)) walk(child);
-  };
-  walk(value);
-  return bytes;
-}
+//#region 📏️IntakeCeiling
+/** 📏️ Intake steps one retained NODE costs at its FIRST publication, measured with ~1.8× headroom.
+ *
+ * The expensive patch is the one that mints a document: decoding one wire node into owned typed fields
+ * dominates, and re-rooting the surface pays the authoritative whole-graph walk. Measured on a
+ * Nakagin-scale world-3d surface (145 nodes, 57 294 carried bytes, 18 paged scene lanes) at grant
+ * `{256, 65 536}`: 671 321 steps, i.e. 4 630 per node — 18× the 36 864 the first byte-scaled budget
+ * credited and 1.3× the 528 384 its 64 KiB floor credited, which is why both of those budgets faulted
+ * (`plugin-ui.intake-budget-exhausted`) on a document the renderer had to publish.
+ *
+ * A LATER patch is priced by its own delta, not by this constant: re-publishing one of the 18 lanes of
+ * that same document costs 28 066 steps (4.2 %), because a shape-preserving delta re-checks only the
+ * records it replaced instead of rewalking the graph (`🧵️retained/🖼️surface`'s `#prepare`). Both
+ * numbers are pinned by `OwnedIntake drives a Nakagin-scale paged scene-lane surface patch`
+ * (`📃️UiDocumentStore/🧪️tests/🧪️typedwire`). */
+export const RETAINED_UI_INTAKE_STEPS_PER_NODE = 8_192;
 
-/** 📏️ Steps the native intake may take for one surface patch. Nested lane carriers are invisible to a
- * shallow ops walk, so the budget floors at 64 KiB of credited payload (× 8 phases) above the 4096
- * continuation base — enough for a Nakagin-scale (57 KiB) world-3d tree even when `ops.length === 1`. */
-export function pluginUiIntakeBudget(patch: { readonly ops?: readonly unknown[] }): number {
-  const bytes = measureRetainedUiPatchBytes(patch.ops ?? []);
-  const ops = patch.ops?.length ?? 0;
-  return 4_096 + Math.max(bytes, ops * 4_096, 65_536) * 8;
+/** 🎞️ Steps one drive may spend before it MUST hand the frame back. Exhausting a slice is not a
+ * fault: the caller parks the intake with its retained cursor and resumes the same intake on the next
+ * frame, so a document larger than one slice publishes across several frames instead of rejecting.
+ * Only {@link retainedUiIntakeStepCeiling} — the whole-document backstop — is terminal. 4 096 is the
+ * fixed limit the wgpu target used to apply as its TOTAL budget, which is exactly why generation3d's
+ * first document (flow window scene + preview + catalogue pages + measures) faulted with
+ * `wgpu-ui.intake-budget-exhausted` at `shell-boot`. */
+export const RETAINED_UI_INTAKE_SLICE_STEPS = 4_096;
+
+/** 📏️ Liveness backstop for one surface patch: the steps a document at the contract's own node quota
+ * may cost to mint. It is NOT the progress guarantee — {@link OwnedUiPatchIntake} rejects a phase that
+ * reports 32 consecutive steps carrying neither an item nor a byte, and that byte-aware rule is what
+ * catches a genuine stall. A phase-name-only rule cannot: a legitimate Nakagin FIRST publication stays
+ * in `validation` for 163 284 consecutive steps.
+ *
+ * Both renderers drive the SAME {@link OwnedUiPatchIntake} one phase per `advance`, so both price it
+ * through this one function; the numbers are declared once in
+ * `🧵️retained/🧫️fixtures/📥️intake/🔣️.json`'s `budget` and mirrored by
+ * `UiDocumentLimits::retained_ui_intake_step_ceiling` (`🛡️limits.rs`). */
+export function retainedUiIntakeStepCeiling(limits: { readonly maxNodes: number }): number {
+  return limits.maxNodes * RETAINED_UI_INTAKE_STEPS_PER_NODE;
 }
-//#endregion 📏️IntakeBudget
+//#endregion 📏️IntakeCeiling
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  describe("paged scene-lane intake budget", () => {
-    it("credits a one-op nested lane tree enough steps to finish a 57 KiB payload", () => {
-      const nested = { tag: "upsert", val: { node: { children: [{ text: "x".repeat(20_000) }, { text: "y".repeat(20_000) }, { text: "z".repeat(20_000) }] } } };
-      const shallow = { ops: [{ tag: "upsert", val: { node: { id: 1 } } }] };
-      expect(pluginUiIntakeBudget(shallow)).toBeGreaterThan(36_864);
-      expect(pluginUiIntakeBudget({ ops: [nested] })).toBeGreaterThan(57_281 * 8);
-      expect(measureRetainedUiPatchBytes([nested])).toBeGreaterThan(57_281);
+  describe("paged scene-lane intake ceiling", () => {
+    it("credits every node a document's first publication has to mint", () => {
+      expect(retainedUiIntakeStepCeiling({ maxNodes: 20_000 })).toBe(20_000 * RETAINED_UI_INTAKE_STEPS_PER_NODE);
+      expect(retainedUiIntakeStepCeiling({ maxNodes: 145 })).toBeGreaterThan(671_321);
+      expect(retainedUiIntakeStepCeiling({ maxNodes: 1 })).toBe(RETAINED_UI_INTAKE_STEPS_PER_NODE);
+    });
+    it("carries the numbers the language-agnostic fixture declares, so the Rust twin cannot drift", async () => {
+      const { default: fixture } = await import("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📥️intake/🔣️.json");
+      expect(RETAINED_UI_INTAKE_STEPS_PER_NODE).toBe(fixture.budget.stepsPerNode);
+      expect(RETAINED_UI_INTAKE_SLICE_STEPS).toBe(fixture.budget.sliceSteps);
+      for (const ceiling of fixture.budget.ceilings) expect(retainedUiIntakeStepCeiling({ maxNodes: ceiling.maxNodes })).toBe(ceiling.steps);
+      expect(fixture.laws).toContain("budget-scales-with-node-quota");
+      expect(fixture.laws).toContain("budget-slice-is-resumable");
+    });
+    it("prices a slice far below the document a surface may mint, so exhausting one is a yield and not a fault", () => {
+      expect(RETAINED_UI_INTAKE_SLICE_STEPS).toBeLessThan(retainedUiIntakeStepCeiling({ maxNodes: 1 }));
     });
   });
 }

@@ -200,10 +200,13 @@
   },
   "descriptorVersion": 1,
   "execution": "isolated",
+  "executionProtocol": {
+    "appChannelVersion": 15
+  },
   "hashes": {
-    "coreWasmSha256": "cb6a1d183cf931feb6ac0dc61a563e45a8ab77a15dc7074c2c4fdf05a0a9e50a",
-    "descriptorSha256": "b8a3b1cd33cc16c06e47b607a65c1839f6f08c212e529750fe25ea6b643a0425",
-    "wasmSha256": "0633c05b201e949d618509d9439e6663e163d906010fbfbabd7739023e7aaeff"
+    "coreWasmSha256": "9cfdb9981c082e1724279f2ff2a48c998b8ee4c4c6f99533ad9347c6d9dddbc6",
+    "descriptorSha256": "269f1398102a83cfc3567dec31256521e437f2686c6110882cc620a5faba2f01",
+    "wasmSha256": "fb92f0f7ea998b845a30a2f5b4d221989d58c0bd5c605e2705bd3604c6638e92"
   },
   "manifest": {
     "apps": [
@@ -236,39 +239,21 @@
         },
         "commands": [
           {
-            "args": [
-              {
-                "id": "json",
-                "label": {
-                  "native": {
-                    "de": "Beiträge",
-                    "en": "Contributions"
-                  },
-                  "reuse": {
-                    "de": "Beiträge",
-                    "en": "Contributions"
-                  }
-                },
-                "required": false,
-                "schema": {
-                  "kind": "string"
-                }
-              }
-            ],
-            "category": "host",
-            "iconId": "code",
-            "id": "setContributions",
+            "args": [],
+            "category": "runtime",
+            "iconId": "eye",
+            "id": "flowEvalTick",
             "inPalette": false,
             "keybindings": [],
             "kind": "view",
             "label": {
               "native": {
-                "de": "Beiträge festlegen",
-                "en": "Set Contributions"
+                "de": "Flow-Auswertungsschritt",
+                "en": "Evaluate Flow Tick"
               },
               "reuse": {
-                "de": "Beiträge festlegen",
-                "en": "Set Contributions"
+                "de": "Flow-Auswertungsschritt",
+                "en": "Evaluate Flow Tick"
               }
             },
             "semantics": {
@@ -285,7 +270,7 @@
                 "class": "interactive",
                 "expectedRevision": false,
                 "idempotency": "none",
-                "interactiveJob": "batchOnlyPendingRewrite",
+                "interactiveJob": "migrated",
                 "preview": "none",
                 "undo": {
                   "kind": "none"
@@ -303,19 +288,19 @@
           {
             "args": [],
             "category": "runtime",
-            "iconId": "code",
-            "id": "flowEvalTick",
+            "iconId": "eye",
+            "id": "flowEvalResolve",
             "inPalette": false,
             "keybindings": [],
             "kind": "view",
             "label": {
               "native": {
-                "de": "Flow-Auswertungsschritt",
-                "en": "Evaluate Flow Tick"
+                "de": "Flow-Auswertung auflösen",
+                "en": "Resolve Flow Evaluation"
               },
               "reuse": {
-                "de": "Flow-Auswertungsschritt",
-                "en": "Evaluate Flow Tick"
+                "de": "Flow-Auswertung auflösen",
+                "en": "Resolve Flow Evaluation"
               }
             },
             "semantics": {
@@ -587,7 +572,7 @@
               {
                 "args": [],
                 "category": "generation",
-                "iconId": "code",
+                "iconId": "sparkles",
                 "id": "addGeneration",
                 "inPalette": false,
                 "keybindings": [],
@@ -616,7 +601,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -633,7 +618,7 @@
               {
                 "args": [],
                 "category": "generation",
-                "iconId": "code",
+                "iconId": "sparkles",
                 "id": "removeGeneration",
                 "inPalette": false,
                 "keybindings": [],
@@ -662,7 +647,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -679,7 +664,7 @@
               {
                 "args": [],
                 "category": "generation",
-                "iconId": "code",
+                "iconId": "eye",
                 "id": "selectGeneration",
                 "inPalette": false,
                 "keybindings": [],
@@ -708,7 +693,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -726,7 +711,7 @@
               {
                 "args": [],
                 "category": "generation",
-                "iconId": "code",
+                "iconId": "sparkles",
                 "id": "renameGeneration",
                 "inPalette": false,
                 "keybindings": [],
@@ -755,7 +740,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -772,7 +757,7 @@
               {
                 "args": [],
                 "category": "generation",
-                "iconId": "code",
+                "iconId": "sparkles",
                 "id": "updateGenerationValues",
                 "inPalette": false,
                 "keybindings": [],
@@ -801,7 +786,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1131,51 +1116,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    }
-                  },
-                  "policy": {
-                    "approval": "whenDestructive",
-                    "scopes": [
-                      "documents.write"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "sparkles",
-                "id": "duplicateWidgetStep",
-                "inPalette": false,
-                "kind": "mutation",
-                "label": {
-                  "native": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  },
-                  "reuse": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reversible": true,
-                    "writes": [
-                      "artifact:{self}"
-                    ]
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": true,
-                    "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1308,7 +1249,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1397,7 +1338,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1485,7 +1426,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1529,7 +1470,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1573,7 +1514,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1617,7 +1558,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1707,7 +1648,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -3863,51 +3804,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    }
-                  },
-                  "policy": {
-                    "approval": "whenDestructive",
-                    "scopes": [
-                      "documents.write"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "sparkles",
-                "id": "duplicateWidgetStep",
-                "inPalette": false,
-                "kind": "mutation",
-                "label": {
-                  "native": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  },
-                  "reuse": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reversible": true,
-                    "writes": [
-                      "artifact:{self}"
-                    ]
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": true,
-                    "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4040,7 +3937,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4129,7 +4026,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4217,7 +4114,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4261,7 +4158,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4305,7 +4202,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4349,7 +4246,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4439,7 +4336,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -6593,51 +6490,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    }
-                  },
-                  "policy": {
-                    "approval": "whenDestructive",
-                    "scopes": [
-                      "documents.write"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "sparkles",
-                "id": "duplicateWidgetStep",
-                "inPalette": false,
-                "kind": "mutation",
-                "label": {
-                  "native": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  },
-                  "reuse": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reversible": true,
-                    "writes": [
-                      "artifact:{self}"
-                    ]
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": true,
-                    "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6770,7 +6623,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6859,7 +6712,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6947,7 +6800,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6991,7 +6844,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -7035,7 +6888,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -7079,7 +6932,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -7169,7 +7022,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -9323,51 +9176,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    }
-                  },
-                  "policy": {
-                    "approval": "whenDestructive",
-                    "scopes": [
-                      "documents.write"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "sparkles",
-                "id": "duplicateWidgetStep",
-                "inPalette": false,
-                "kind": "mutation",
-                "label": {
-                  "native": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  },
-                  "reuse": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reversible": true,
-                    "writes": [
-                      "artifact:{self}"
-                    ]
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": true,
-                    "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9500,7 +9309,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9589,7 +9398,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9677,7 +9486,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9721,7 +9530,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9765,7 +9574,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9809,7 +9618,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -9899,7 +9708,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -12053,51 +11862,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    }
-                  },
-                  "policy": {
-                    "approval": "whenDestructive",
-                    "scopes": [
-                      "documents.write"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "sparkles",
-                "id": "duplicateWidgetStep",
-                "inPalette": false,
-                "kind": "mutation",
-                "label": {
-                  "native": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  },
-                  "reuse": {
-                    "de": "Widgetduplizierung fortsetzen",
-                    "en": "Continue Duplicating Widget"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reversible": true,
-                    "writes": [
-                      "artifact:{self}"
-                    ]
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": true,
-                    "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12230,7 +11995,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12319,7 +12084,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12407,7 +12172,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12451,7 +12216,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12495,7 +12260,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12539,7 +12304,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -12629,7 +12394,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"

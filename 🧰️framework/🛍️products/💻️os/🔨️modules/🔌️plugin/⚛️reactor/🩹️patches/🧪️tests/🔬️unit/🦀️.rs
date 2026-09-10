@@ -128,7 +128,7 @@ fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
     tracker.reserve_close_instance(key).expect("exact close reservation");
     tracker.activate_close_instance(key).expect("activate retained close");
     for _ in 0..65_536 {
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         if tracker.close_instance_complete(key).expect("exact close receipt") {
             tracker.release_close_instance(key).expect("final ACK releases close slot");
             assert!(tracker.terminal_is_empty());
@@ -320,7 +320,7 @@ fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
     tracker.reserve_close_instance(key).unwrap();
     tracker.activate_close_instance(key).unwrap();
     for _ in 0..8 {
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         assert!(!tracker.close_instance_complete(key).unwrap());
     }
     let root = tree_with_owned_child("returned");
@@ -707,7 +707,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         assert!(!tracker.mark_rejected(surface, first + 1), "future feedback cannot reset a current generation");
         for turn in 0..4096 {
             tracker.drive_one();
-            tracker.close_step();
+            tracker.close_step(1, 4096);
             if tracker.state.borrow().slots.iter().flatten().any(|slot| slot.surface.as_ref() == surface && slot.job.is_none() && slot.producer.is_none() && slot.output_index.is_none() && slot.reconciler.is_some()) {
                 break;
             }
@@ -724,7 +724,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         assert_eq!(tracker.revision(surface), before);
         assert_eq!(tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface).unwrap().generation, second);
         for turn in 0..65536 {
-            if pending.close_step().unwrap() {
+            if pending.close_step(1, 4096).unwrap() {
                 break;
             }
             assert!(turn < 65535);
@@ -844,7 +844,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
         tracker.activate_close_instance(*key).unwrap();
     }
     for _ in 0..65_536 {
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         if keys.iter().all(|key| tracker.close_instance_complete(*key).unwrap()) {
             break;
         }
@@ -954,7 +954,7 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
     tracker.activate_close_instance(key).expect("activate retained close");
     assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());
     for _ in 0..16_384 {
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         if tracker.close_instance_complete(key).expect("exact close receipt") {
             break;
         }
@@ -1119,7 +1119,7 @@ fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
     }
     for _ in 0..4_096 {
         tracker.drive_one();
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         let _ = tracker.take_deferred_ready();
         if !tracker.has_work() {
             break;
@@ -1138,7 +1138,7 @@ fn a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit() {
     assert!(tracker.mark_rejected("6:main", generation), "the published generation must be rejectable into a terminal");
     let mut steps = 0;
     while tracker.has_work() {
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         let _ = tracker.take_deferred_ready();
         steps += 1;
         assert!(steps < 1_024, "a single closing terminal must drain one unit per close step, not one per 64: {}", tracker.debug_state());
@@ -1152,7 +1152,7 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
     tracker.begin("9:main".into(), leaf("root", "a")).expect("admitted");
     for _ in 0..4_096 {
         tracker.drive_one();
-        tracker.close_step();
+        tracker.close_step(1, 4096);
         if !tracker.state.borrow().slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some()) {
             break;
         }

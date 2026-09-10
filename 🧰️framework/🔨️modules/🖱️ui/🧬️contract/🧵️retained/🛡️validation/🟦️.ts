@@ -5,7 +5,7 @@ import { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import type { OwnedUiNode, RetainedUiNodeRecord, UiNodeRetirement } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
-import { retainedUiGraphValidation, closeRetainedUiGraphFrame, type RetainedUiGraphFrontier } from "./🔬️graph/🟦️.ts";
+import { retainedUiGraphValidation, retainedUiGraphTouchedValidation, closeRetainedUiGraphFrame, type RetainedUiGraphFrontier } from "./🔬️graph/🟦️.ts";
 
 type Program<T> = Generator<number, T, void>;
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
@@ -64,7 +64,14 @@ class GraphNodes {
 //#endregion 📖️AnchoredGraphReads
 
 //#region 🛡️ValidationCursor
-/** 🛡️ Captures one immutable index; graph results carry no publication authority. */
+/** 🛡️ Captures one immutable index; graph results carry no publication authority.
+ *
+ * `touched` selects the delta-priced program: passing the patch's own touched table asserts that the
+ * candidate's node set, edges and root are identical to an ALREADY-VALIDATED base and only the listed
+ * records were replaced, so {@link retainedUiGraphTouchedValidation} decides the one invariant that can
+ * still break instead of rewalking the document. Passing `null` runs the authoritative whole-graph walk
+ * — the only program that mints the exact depth-first violation ORDER, and therefore the one every
+ * rejection path and every conformance fixture uses. */
 export class OwnedUiValidationCursor {
   #grant: NumericIndexGrant = { maxItems: 0, maxBytes: 0 };
   #nodes: GraphNodes;
@@ -78,7 +85,7 @@ export class OwnedUiValidationCursor {
   #taken = false;
   #close = 0;
 
-  constructor(source: OwnedUiNodeIndex, root: number | null, limits: UiDocumentLimits) {
+  constructor(source: OwnedUiNodeIndex, root: number | null, limits: UiDocumentLimits, touched: RetainedUiNumericTable<true> | null = null) {
     if (root !== null && (!Number.isSafeInteger(root) || root < 0)) throw new RangeError("Invalid UI graph root");
     const exact = { maxNodes: limits.maxNodes, maxDepth: limits.maxDepth, maxChildren: limits.maxChildren, maxTextBytes: limits.maxTextBytes, maxPatchOps: limits.maxPatchOps, maxPatchBytes: limits.maxPatchBytes };
     for (const limit of [exact.maxNodes, exact.maxDepth, exact.maxChildren, exact.maxTextBytes, exact.maxPatchOps, exact.maxPatchBytes]) if (!Number.isSafeInteger(limit) || limit < 0) throw new RangeError("Invalid UI document limit");
@@ -86,7 +93,7 @@ export class OwnedUiValidationCursor {
     this.#marks = new RetainedUiNumericTable(NumericIndex.empty<number>(), () => this.#grant);
     this.#violations = new RetainedUiNumericTable(NumericIndex.empty<UiContractViolation>(), () => this.#grant);
     this.#keys = new RetainedUiSiblingKeys(() => this.#grant);
-    this.#program = retainedUiGraphValidation(this.#nodes, root, exact, this.#marks, this.#keys, this.#violations, this.#frontier);
+    this.#program = touched ? retainedUiGraphTouchedValidation(this.#nodes, touched, exact, this.#violations, this.#frontier) : retainedUiGraphValidation(this.#nodes, root, exact, this.#marks, this.#keys, this.#violations, this.#frontier);
     Object.freeze(this);
   }
   get failure(): string | null { return this.#failure; }

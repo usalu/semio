@@ -1,0 +1,249 @@
+===== FILL BUILD TICK /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs =====
+
+//! 🪣️ `fill-build-tick` command.
+
+use dsl::os_pack::json::Value;
+use crate::editor::puzzle3d::precompute::FILL_JOB_KIND;
+use crate::editor::puzzle3d::puzzle3d_fill_build_scope;
+use crate::editor::puzzle3d::puzzle3d_fill_tool_active;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::kernel::{Effect, JobPlacement};
+
+/// 🪣️ No catch-up `setFillCount` dispatch here: `apply_puzzle3d_fill_count` always clamps the
+/// committed count to what's available at commit time, so `fill_count` can never run ahead of
+/// `applied_count` — a slider can only request what `render`'s reveal-tagged instances already show.
+/// Each tick only observes the latest worker publication and, when no fill job is live, requests one
+/// isolated shared-pool job. Solver work is exclusively driven by `fill_job`.
+pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
+    if !puzzle3d_fill_tool_active(ctx.config) {
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
+    }
+    let mut precompute = ctx.app.precompute.borrow_mut();
+    let changed = precompute.poll_fill_job();
+    let spawn = precompute.enqueue_fill_job();
+    let faulted = precompute.take_fill_fault_notice();
+    drop(precompute);
+    let spawned = spawn.is_some();
+    if let Some((job, input)) = spawn {
+        ctx.effects.push(Effect::SpawnJob { job, kind: FILL_JOB_KIND.into(), input, placement: JobPlacement::Isolated });
+    }
+    if faulted {
+        ctx.notice(|labels| labels.fill_failed.as_str());
+    }
+    *ctx.ui_scope = if changed || spawned || faulted { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
+}
+
+/// 🛑 `cancelFillBuild` — stops the live background fill job, and only that one: the action carries the
+/// job's own `(job, operation, generation)` triple, so a cancel dispatched against a superseded run is a
+/// no-op instead of killing the plan the user is looking at. Same convention as `🔋️energy`'s
+/// `cancel-energy-simulation` identity args feeding `Effect::CancelJob`.
+pub fn cancel_fill_build(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+    let identity = |key: &str| args.and_then(|args| args.get(key)).and_then(Value::as_u64);
+    let (Some(job), Some(operation), Some(generation)) = (identity("job"), identity("operation"), identity("generation")) else {
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
+    };
+    let cancelled = ctx.app.precompute.borrow_mut().cancel_fill_job_for(job, operation, generation);
+    if !cancelled {
+        *ctx.ui_scope = UiDirtyScope::None;
+        return;
+    }
+    ctx.effects.push(Effect::CancelJob { job });
+    *ctx.ui_scope = puzzle3d_fill_build_scope();
+}
+
+
+===== PRECOMPUTE excerpts /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs =====
+
+
+--- 40-80 ---
+
+40: }
+41: 
+42: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+43: struct FillPreviewJsonIdentity {
+44:     operation: u64,
+45:     base_revision: u64,
+46:     registry_generation: u64,
+47:     generation: u64,
+48:     sequence: u64,
+49: }
+50: 
+51: impl FillPreviewJsonIdentity {
+52:     fn read(preview: &FillBuildPreview) -> Option<Self> {
+53:         (preview_json_wire_u64(preview.operation, 1).is_ok()
+54:             && preview_json_wire_u64(preview.base_revision, 1).is_ok()
+55:             && preview_json_wire_u64(preview.registry_generation, 1).is_ok()
+56:             && preview_json_wire_u64(preview.generation, 1).is_ok()
+57:             && preview_json_wire_u64(preview.sequence, 0).is_ok())
+58:         .then_some(Self { operation: preview.operation, base_revision: preview.base_revision, registry_generation: preview.registry_generation, generation: preview.generation, sequence: preview.sequence })
+59:     }
+60: }
+61: 
+62: #[derive(Clone, Copy)]
+63: struct FillPreviewJsonSourceAuthority {
+64:     root: u64,
+65:     candidate_ghost: u64,
+66: }
+67: 
+68: impl FillPreviewJsonSourceAuthority {
+69:     fn field(value: usize) -> Result<u64, ()> {
+70:         let value = preview_json_wire_usize(value)?;
+71:         (value <= FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX).then_some(value).ok_or(())
+72:     }
+73: 
+74:     fn read(preview: &FillBuildPreview) -> Result<Option<Self>, ()> {
+75:         let Some(ghost) = preview.candidate_ghost.as_ref() else {
+76:             return Ok(None);
+77:         };
+78:         Ok(Some(Self { root: Self::field(ghost.source_vortex_index)?, candidate_ghost: Self::field(ghost.source_vortex_index)? }))
+79:     }
+80: }
+
+--- 3140-3280 ---
+
+3140:             appended_objects: Vec::new(),
+3141:             appended_attractions: Vec::new(),
+3142:             sequence: Vec::new(),
+3143:             preview: Some(self.preview.clone()),
+3144:         }
+3145:     }
+3146: 
+3147:     pub(crate) fn preview_json_step(&mut self, color: &str, status_label: &str, fuel: &mut u32, cancelled: bool, deadline_reached: bool) -> FillPreviewJsonStep {
+3148:         self.preview_json.step(&self.preview, color, status_label, fuel, cancelled, deadline_reached)
+3149:     }
+3150: 
+3151:     pub(crate) fn preview_json_ready(&self) -> Option<&str> {
+3152:         self.preview_json.ready()
+3153:     }
+3154: 
+3155:     #[cfg(test)]
+3156:     pub(crate) fn preview_json_ready_identity(&self) -> Option<[u64; 5]> {
+3157:         self.preview_json.ready_identity()
+3158:     }
+3159: 
+3160:     fn retire_one_close_owner(&mut self) -> bool {
+3161:         if let Some(current) = self.close_current.as_mut() {
+3162:             if retire_retained_owner(current) {
+3163:                 self.close_current = None;
+3164:             }
+3165:             return false;
+3166:         }
+3167:         let mut current = None;
+3168:         let retired = match self.close_field {
+3169:             0 => take_fixture_owner(&mut self.base, &mut current),
+3170:             1 => false,
+3171:             2 => take_sequence_owner(self, &mut current),
+3172:             3 => take_lookup_owner(self, &mut current),
+3173:             4 => take_catalog_owner(self, &mut current),
+3174:             5 => take_weight_mesh_owner(self, &mut current),
+3175:             6 => take_target_owner(self, &mut current),
+3176:             7 => take_target_weight_owner(self),
+3177:             8 => take_candidate_owner(self, &mut current),
+3178:             9 => take_candidate_order_owner(self, &mut current),
+3179:             10 => match self.broad_phase_query.as_mut() {
+3180:                 Some(query) => {
+3181:                     if query.retire_one_owner() {
+3182:                         self.broad_phase_query.take();
+3183:                     }
+3184:                     true
+3185:                 }
+3186:                 None => false,
+3187:             },
+3188:             11 => self.pending_payload.take().is_some_and(|value| {
+3189:                 current = Some(FillRetiredOwner::Payload(value));
+3190:                 true
+3191:             }),
+3192:             12 => self.pending_object.take().is_some_and(|value| {
+3193:                 current = Some(FillRetiredOwner::FixtureObject(value));
+3194:                 true
+3195:             }),
+3196:             13 => self.pending_attraction.take().is_some_and(|value| {
+3197:                 current = Some(FillRetiredOwner::Attraction(value));
+3198:                 true
+3199:             }),
+3200:             14 => self.current_target.take().is_some_and(|value| {
+3201:                 current = Some(FillRetiredOwner::Target(value));
+3202:                 true
+3203:             }),
+3204:             15 => self.current_preview.take().is_some_and(|value| {
+3205:                 current = Some(FillRetiredOwner::PreviewState(value));
+3206:                 true
+3207:             }),
+3208:             16 => self.last_rejection.take().is_some_and(|value| {
+3209:                 current = Some(FillRetiredOwner::String(value));
+3210:                 true
+3211:             }),
+3212:             17 => self.collision.take().is_some(),
+3213:             18 => !self.preview_json.close_step(),
+3214:             19 => !retire_fill_preview(&mut self.preview),
+3215:             20 => match self.fixed_rejection.as_mut() {
+3216:                 Some(rejected) => {
+3217:                     if retire_retained_owner(rejected) {
+3218:                         self.fixed_rejection.take();
+3219:                     }
+3220:                     true
+3221:                 }
+3222:                 None => false,
+3223:             },
+3224:             21 => retire_fixed_collection_backing(self),
+3225:             22 => !self.spatial_index.retire_one_owner(),
+3226:             23 if self.collection_over_capacity => {
+3227:                 self.collection_over_capacity = false;
+3228:                 true
+3229:             }
+3230:             23 => false,
+3231:             24 => match self.preparation_spatial.as_mut() {
+3232:                 Some(mutation) => {
+3233:                     if mutation.retire_one_owner() {
+3234:                         self.preparation_spatial.take();
+3235:                     }
+3236:                     true
+3237:                 }
+3238:                 None => false,
+3239:             },
+3240:             25 => match self.pending_spatial.as_mut() {
+3241:                 Some(mutation) => {
+3242:                     if mutation.retire_one_owner() {
+3243:                         self.pending_spatial.take();
+3244:                     }
+3245:                     true
+3246:                 }
+3247:                 None => false,
+3248:             },
+3249:             26 => match self.tail_removal.as_mut() {
+3250:                 Some(removal) => {
+3251:                     if removal.retire_one_owner() {
+3252:                         self.tail_removal.take();
+3253:                     }
+3254:                     true
+3255:                 }
+3256:                 None => false,
+3257:             },
+3258:             27 if self.preparation_roots.take().is_some() => true,
+3259:             27 => false,
+3260:             28 if self.preparation_capacity_refusal.take().is_some() => true,
+3261:             28 => false,
+3262:             _ => return self.terminal_owners_empty() && self.close_current.is_none(),
+3263:         };
+3264:         self.close_current = current;
+3265:         if !retired {
+3266:             self.close_field = self.close_field.saturating_add(1);
+3267:         }
+3268:         false
+3269:     }
+3270: 
+3271:     fn collision_owner(&self) -> CollisionIndexOwner {
+3272:         CollisionIndexOwner { operation: self.operation.operation.0, generation: self.operation.generation.0 }
+3273:     }
+3274: 
+3275:     fn fixture_object(&self, index: usize) -> Option<&FixtureObject> {
+3276:         self.base.objects.get(index).or_else(|| self.appended_objects.get(index.saturating_sub(self.base.objects.len())))
+3277:     }
+3278: 
+3279:     fn fixture_attraction(&self, index: usize) -> Option<&AttractionProps> {
+3280:         self.base.attractions.get(index).or_else(|| self.appended_attractions.get(index.saturating_sub(self.base.attractions.len())))
+
+===== TESTKIT drive spawned /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/🧪️tests/🔬️testkit/🦀️.rs =====

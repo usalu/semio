@@ -173,8 +173,9 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
             break;
         }
     }
-    let cancelled_outcome = cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget");
+    let mut cancelled_outcome = cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget");
     assert!(matches!(cancelled_outcome, semio_framework_job::StepOutcome::Cancelled));
+    close_outcome(&mut cancelled_outcome);
     assert!(cancelled.terminal_is_empty());
     assert!(generation3d_release_publication_authority(cancelled_operation, cancelled_generation));
 
@@ -199,11 +200,26 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
             break;
         }
     }
-    let stale_outcome = stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget");
+    let mut stale_outcome = stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget");
     assert!(matches!(stale_outcome, semio_framework_job::StepOutcome::Fault(_)));
+    close_outcome(&mut stale_outcome);
     assert!(stale.terminal_is_empty());
     assert!(generation3d_release_publication_authority(stale_operation, stale_generation));
 }
+/// 🧹️ Drains a terminal [`semio_framework_job::StepOutcome`]'s retained payload pages. A
+/// `Fault`/`PreviewReady`/`Complete` outcome carries a `RetainedJobPayload` whose `Drop` deliberately
+/// preserves its page backing, so an owner that merely inspects the discriminant and lets the value
+/// fall out of scope aborts the test process
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn close_outcome(outcome: &mut semio_framework_job::StepOutcome) {
+    for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
+        if matches!(outcome.close_step(1, 4096), semio_framework_job::JobPayloadCloseStep::Complete) {
+            return;
+        }
+    }
+    panic!("P3 terminal step outcome did not close");
+}
+
 //#endregion ⏱️BoundedInitializer
 
 fn close_session(session: &mut Generation3dMutationSession) {

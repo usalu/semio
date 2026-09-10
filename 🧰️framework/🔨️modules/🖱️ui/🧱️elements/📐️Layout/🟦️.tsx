@@ -14,7 +14,7 @@ import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { type PanelProps, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦️.tsx";
-import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
+import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection, resolvePanelBranchBodyLeaf } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
@@ -56,7 +56,8 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
   if (!visible || tabs.length === 0) return null;
 
   const showTabBar = tabs.length > 0;
-  const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
+  const bodyLeaf = activeNode?.kind === "leaf" ? activeNode : activeNode ? resolvePanelBranchBodyLeaf(activeNode, pathMemory ?? {}) : undefined;
+  const activeTabTrees = bodyLeaf?.trees ?? null;
 
   return (
     <LevelProvider level="panel">
@@ -73,7 +74,7 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div ref={panelContentRef} data-dim data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} /> : null}
+            {activeTabTrees && bodyLeaf ? <PanelTreeUnitsPane tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} /> : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>

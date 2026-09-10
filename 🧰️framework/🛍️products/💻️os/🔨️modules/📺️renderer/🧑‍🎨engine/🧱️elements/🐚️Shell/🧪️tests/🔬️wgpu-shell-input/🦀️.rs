@@ -2,10 +2,12 @@
 use super::*;
 #[test]
 fn standalone_multi_app_variants_resolve_their_declared_app() {
-    assert_eq!(resolve_playground_app_id("puzzle2d"), Some("puzzle2d-play"));
-    assert_eq!(resolve_playground_app_id("puzzle3d"), Some("puzzle3d-play"));
-    assert_eq!(resolve_playground_app_id("3d"), Some("puzzle3d-play"));
-    assert_eq!(resolve_playground_app_id("puzzle5d"), Some("puzzle5d-play"));
+    assert_eq!(resolve_playground_app_id("puzzle2d"), Some("s.puzzle.puzzle2d@1/*#editor"));
+    assert_eq!(resolve_playground_app_id("puzzle3d"), Some("s.puzzle.puzzle3d@1/*#editor"));
+    assert_eq!(resolve_playground_app_id("3d"), Some("s.puzzle.puzzle3d@1/*#editor"));
+    assert_eq!(resolve_playground_app_id("puzzle5d"), Some("s.puzzle.puzzle5d@1/*#editor"));
+    assert_eq!(resolve_registry_plugin_id("generation3d"), "procedural");
+    assert_eq!(resolve_playground_app_id("generation3d"), Some("s.procedural.generation3d@1/*#editor"));
 }
 
 //#region SilhouetteContentTests

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   BrowserFrameTransport,
   FRAME_WORKER_BYTE_CAPACITY,
@@ -9,10 +9,19 @@ import {
   FRAME_WORKER_LOSSLESS_ITEM_CAPACITY,
   FRAME_WORKER_MESSAGE_BYTE_CAPACITY,
   FRAME_WORKER_POINTER_CAPACITY,
+  type BrowserFrameFallbackState,
   type BrowserFrameUiMessage,
   type BrowserFrameWorkerMessage,
   type BrowserFrameWorkerPort,
 } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import {
+  FRAME_WORKER_BOOT_LIVENESS_POLICY,
+  bootPhaseCeilingMs,
+  describeBrowserBootPhase,
+  describeBrowserBootSilence,
+  evaluateBrowserBootLiveness,
+} from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
+import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
 
 class FakeWorker implements BrowserFrameWorkerPort {
   onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
@@ -173,10 +182,10 @@ describe("browser frame worker transport", () => {
     subject.enqueueLossless({ kind: "text", text: "a" });
     subject.flush(1);
     subject.enqueueLossless({ kind: "text", text: "b" });
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
     expect(subject.flush(2)).toBe(true);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([2]);
   });
 
@@ -186,7 +195,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.close();
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("closed");
     expect(worker.terminated).toBe(false);
     worker.reply({ kind: "closed", lifecycle: 1 });
@@ -199,7 +208,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("faulted");
     expect(subject.fault?.code).toBe("protocol-violation");
   });
@@ -223,16 +232,17 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 8 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 40, workerExecutingMs: 9, workerStepVerdict: "sustained-overrun", quarantined: true, faultCode: "worker-step-overrun", faultDetail: "frame step executed 9.000 ms for 4 consecutive steps" });
     expect(subject.status).toBe("quarantined");
     expect(worker.terminated).toBe(false);
     expect(directives).toEqual([]);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, progress: 1, workerDurationMs: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
   });
 
-  it("measures external UI hooks centrally and stops immediately on hook overrun", () => {
+  it("measures external UI hooks centrally and keeps the surface alive on hook overrun", () => {
     const worker = new FakeWorker();
+    const overruns: string[] = [];
     let now = 0;
     const subject = new BrowserFrameTransport({
       worker,
@@ -240,20 +250,42 @@ describe("browser frame worker transport", () => {
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
-      onReady: () => { now = 2; },
+      onReady: () => { now += 50; },
+      onUiTurn: (outcome) => overruns.push(`${outcome.verdict}:${outcome.site}`),
     });
     worker.reply({ kind: "booted", lifecycle: 1 });
-    expect(subject.status).toBe("quarantined");
-    expect(worker.messages.filter((message) => message.kind === "batch")).toHaveLength(0);
+    expect(subject.status).toBe("ready");
+    expect(subject.fault).toBeUndefined();
+    expect(overruns).toEqual(["recorded-overrun:ready-hook"]);
+    expect(subject.flush()).toBe(true);
+    expect(worker.messages.filter((message) => message.kind === "batch")).toHaveLength(1);
   });
 
-  it("fails closed when the bounded structured clone consumes the UI turn budget", () => {
+  it("fails the surface only when a UI hook throws, under its own fault code", () => {
+    const worker = new FakeWorker();
+    const faults: string[] = [];
+    const subject = new BrowserFrameTransport({
+      worker,
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor" },
+      now: () => 0,
+      setTimer: () => 1,
+      clearTimer: () => {},
+      onReady: () => { throw new Error("hook exploded"); },
+      onFault: (code) => faults.push(code),
+    });
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    expect(subject.status).toBe("faulted");
+    expect(subject.fault?.code).toBe("ui-hook-failed");
+    expect(faults).toEqual(["ui-hook-failed"]);
+  });
+
+  it("records rather than fails when the bounded structured clone consumes the UI turn budget", () => {
     const worker = new FakeWorker();
     let now = 0;
     const original = worker.postMessage.bind(worker);
     worker.postMessage = (message) => {
       original(message);
-      if (message.kind === "batch") now = 2;
+      if (message.kind === "batch") now += 50;
     };
     const subject = new BrowserFrameTransport({
       worker,
@@ -263,8 +295,10 @@ describe("browser frame worker transport", () => {
       clearTimer: () => {},
     });
     worker.reply({ kind: "booted", lifecycle: 1 });
-    expect(subject.flush()).toBe(false);
-    expect(subject.fault?.code).toBe("ui-turn-overrun");
+    expect(subject.flush()).toBe(true);
+    expect(subject.fault).toBeUndefined();
+    expect(subject.status).toBe("ready");
+    expect(subject.fallbackState().uiTurns.recordedOverruns).toBeGreaterThan(0);
   });
 
   it("routes an introspection dump across the Worker seam behind a flushed frame", async () => {
@@ -311,7 +345,7 @@ describe("browser frame worker transport", () => {
     expect(bootSource).not.toContain("PLUGIN_CATALOG");
     expect(bootSource).not.toContain("resolvePlaygroundBoot");
     expect(bootSource).not.toContain("performance.getEntriesByType");
-    expect(workerSource).toContain("resolvePlaygroundBoot(PLUGIN_CATALOG");
+    expect(workerSource).toContain("new PlaygroundBootPlanner(PLUGIN_CATALOG");
     expect(workerSource).toContain('monitoredSuspension("renderer-module", () => import');
     expect(workerSource).toContain('closeOwner === "runtime"');
     expect(workerSource).toContain("interactiveJobs?.close()");
@@ -348,5 +382,207 @@ describe("browser frame worker transport", () => {
     expect(rustSource).toContain("pending_discrete.saturating_add(discrete_commits)");
     expect(rustSource).not.toContain("stream.text.push_str");
     expect(bootSource.indexOf("location.search.length")).toBeLessThan(bootSource.indexOf("new URLSearchParams"));
+  });
+});
+
+type VirtualTimer = { readonly id: number; readonly callback: () => void; readonly dueAtMs: number };
+
+/** @emoji ⏱️ A virtual clock + timer queue, so a 120 s boot is decided in microseconds and the watchdog's
+ * verdict is a function of the timeline rather than of how loaded the machine running the suite is. */
+function bootHarness(tongue: "en" | "de" = "en") {
+  const worker = new FakeWorker();
+  const timers = new Map<number, VirtualTimer>();
+  const faults: { readonly code: string; readonly detail: string; readonly fallback: BrowserFrameFallbackState }[] = [];
+  let nextTimerId = 1;
+  let nowMs = 0;
+  const subject = new BrowserFrameTransport({
+    worker,
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: tongue, appRole: "editor" },
+    now: () => nowMs,
+    setTimer: (callback, delayMs) => {
+      const id = nextTimerId++;
+      timers.set(id, { id, callback, dueAtMs: nowMs + delayMs });
+      return id;
+    },
+    clearTimer: (handle) => void timers.delete(handle),
+    onFault: (code, detail, fallback) => faults.push({ code, detail, fallback }),
+  });
+  const advance = (deltaMs: number): void => {
+    const targetMs = nowMs + deltaMs;
+    for (;;) {
+      let due: VirtualTimer | undefined;
+      for (const timer of timers.values()) if (timer.dueAtMs <= targetMs && (due === undefined || timer.dueAtMs < due.dueAtMs)) due = timer;
+      if (due === undefined) break;
+      timers.delete(due.id);
+      nowMs = Math.max(nowMs, due.dueAtMs);
+      due.callback();
+    }
+    nowMs = targetMs;
+  };
+  return { advance, faults, subject, worker, now: () => nowMs };
+}
+
+describe("wgpu boot liveness watchdog", () => {
+  it("re-arms for the exact remaining window and never terminates a declared phase inside its ceiling", () => {
+    const silenceTimeoutMs = FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs;
+    expect(evaluateBrowserBootLiveness({ nowMs: 40_000, lastLivenessAtMs: 10_000, silenceTimeoutMs, phase: undefined })).toEqual({ terminate: false, rearmInMs: 30_000, silentForMs: 30_000, phaseElapsedMs: 0 });
+    expect(evaluateBrowserBootLiveness({ nowMs: 70_000, lastLivenessAtMs: 10_000, silenceTimeoutMs, phase: undefined }).terminate).toBe(true);
+    expect(evaluateBrowserBootLiveness({ nowMs: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, silenceTimeoutMs, phase: undefined }).silentForMs).toBe(Number.POSITIVE_INFINITY);
+    const phase = { phase: "gpu-platform", ceilingMs: bootPhaseCeilingMs("gpu-platform"), enteredAtMs: 1_000 };
+    const busy = evaluateBrowserBootLiveness({ nowMs: 601_000, lastLivenessAtMs: 1_000, silenceTimeoutMs, phase });
+    expect(busy.terminate).toBe(false);
+    expect(busy.phaseElapsedMs).toBe(600_000);
+    expect(busy.rearmInMs).toBe(Math.min(silenceTimeoutMs, phase.ceilingMs - 600_000));
+    expect(evaluateBrowserBootLiveness({ nowMs: 1_000 + phase.ceilingMs, lastLivenessAtMs: 1_000, silenceTimeoutMs, phase }).terminate).toBe(true);
+  });
+
+  it("prices a phase family by the segment before its colon and bounds every unnamed phase", () => {
+    expect(bootPhaseCeilingMs("plugin:generation3d")).toBe(FRAME_WORKER_BOOT_LIVENESS_POLICY.phaseCeilingMs["plugin"]);
+    expect(bootPhaseCeilingMs("shell-boot")).toBe(FRAME_WORKER_BOOT_LIVENESS_POLICY.phaseCeilingMs["shell-boot"]);
+    expect(bootPhaseCeilingMs("a-phase-nobody-declared")).toBe(FRAME_WORKER_BOOT_LIVENESS_POLICY.defaultPhaseCeilingMs);
+    expect(bootPhaseCeilingMs("a-phase-nobody-declared")).toBeGreaterThan(0);
+  });
+
+  it("keeps a Worker that declared a long phase alive across 120 s of total wall silence", () => {
+    const { advance, faults, subject, worker } = bootHarness();
+    worker.reply({ kind: "boot-progress", lifecycle: 1, stage: "renderer-runtime", progress: 0.65, worker: { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" } });
+    worker.reply({ kind: "boot-phase", lifecycle: 1, phase: "gpu-platform", state: "enter" });
+    advance(120_000);
+    expect(faults).toEqual([]);
+    expect(subject.status).toBe("booting");
+    expect(worker.terminated).toBe(false);
+    expect(subject.fallbackState().bootPhase?.phase).toBe("gpu-platform");
+    expect(subject.fallbackState().bootPhaseElapsedMs).toBe(120_000);
+    worker.reply({ kind: "boot-phase", lifecycle: 1, phase: "gpu-platform", state: "leave", elapsedMs: 120_000 });
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    expect(subject.status).toBe("ready");
+  });
+
+  it("keeps a heartbeating Worker alive indefinitely and still terminates one that goes silent with no phase declared", () => {
+    const { advance, faults, subject, worker } = bootHarness();
+    worker.reply({ kind: "boot-progress", lifecycle: 1, stage: "plugin:generation3d", progress: 0.4, worker: { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" } });
+    for (let beat = 0; beat < 240; beat++) {
+      advance(FRAME_WORKER_BOOT_LIVENESS_POLICY.livenessIntervalMs);
+      worker.reply({ kind: "boot-liveness", lifecycle: 1 });
+    }
+    expect(faults).toEqual([]);
+    expect(subject.status).toBe("booting");
+    advance(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs + 1);
+    expect(subject.status).toBe("faulted");
+    expect(faults).toHaveLength(1);
+    expect(faults[0]?.code).toBe("worker-boot-timeout");
+    expect(faults[0]?.detail).toContain("declared no long phase");
+    expect(faults[0]?.detail).toContain("plugin:generation3d");
+    expect(worker.messages.some((message) => message.kind === "close")).toBe(true);
+  });
+
+  it("terminates a declared phase only once it blows its OWN ceiling, naming the phase, its elapsed and that ceiling", () => {
+    const { advance, faults, subject, worker } = bootHarness();
+    worker.reply({ kind: "boot-progress", lifecycle: 1, stage: "renderer-runtime", progress: 0.65, worker: { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" } });
+    worker.reply({ kind: "boot-phase", lifecycle: 1, phase: "gpu-platform", state: "enter" });
+    const ceilingMs = bootPhaseCeilingMs("gpu-platform");
+    advance(ceilingMs - 1);
+    expect(subject.status).toBe("booting");
+    advance(2);
+    expect(subject.status).toBe("faulted");
+    expect(faults[0]?.code).toBe("worker-boot-timeout");
+    expect(faults[0]?.detail).toContain('"gpu-platform"');
+    expect(faults[0]?.detail).toContain(`${ceilingMs} ms ceiling`);
+    expect(faults[0]?.detail).toContain('last reported stage "renderer-runtime"');
+    expect(faults[0]?.fallback.bootPhase?.phase).toBe("gpu-platform");
+    expect(faults[0]?.fallback.bootStage).toBe("renderer-runtime");
+  });
+
+  it("names a Worker that never sent a single message, and says the same thing in German", () => {
+    const { advance, faults, subject } = bootHarness("de");
+    advance(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs + 1);
+    expect(subject.status).toBe("faulted");
+    expect(faults[0]?.detail).toContain("hat nie eine einzige Nachricht gesendet");
+    expect(faults[0]?.detail).toContain("Ereignisschleife hängt");
+    const report = { heard: true, lastStage: "renderer-runtime", silentForMs: 61_000, silenceTimeoutMs: 60_000, phase: { phase: "wasm-compile", ceilingMs: 900_000, enteredAtMs: 0 }, phaseElapsedMs: 901_000 };
+    expect(describeBrowserBootSilence(report, "en")).toBe('The frame Worker\'s declared long phase "wasm-compile" ran 901000 ms against its 900000 ms ceiling (last reported stage "renderer-runtime", silent for 61000 ms).');
+    expect(describeBrowserBootSilence(report, "de")).toContain("Die erklärte lange Phase „wasm-compile“");
+    expect(describeBrowserBootPhase(report.phase, 901_000, "en")).toBe('Long boot phase: "wasm-compile" for 901000 ms (ceiling 900000 ms)');
+    expect(describeBrowserBootPhase(undefined, 0, "de")).toBe("Lange Boot-Phase: keine erklärt");
+  });
+
+  it("declares every browser-owned phase BEFORE it blocks, and brings the renderer wasm up in cached, reporting phases", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const suspension = workerSource.slice(workerSource.indexOf("async function monitoredSuspension"), workerSource.indexOf("async function macrotask"));
+    expect(suspension.indexOf('declarePhase(stage, "enter", 0)')).toBeGreaterThan(-1);
+    expect(suspension.indexOf('declarePhase(stage, "enter", 0)')).toBeLessThan(suspension.indexOf("stepClock.suspend()"));
+    expect(suspension).toContain('declarePhase(stage, "leave"');
+    expect(workerSource).toContain('declaredStep("renderer-bootstrap"');
+    expect(workerSource).toContain("WebAssembly.compileStreaming");
+    expect(workerSource).toContain("readCachedRendererModule");
+    expect(workerSource).toContain("writeCachedRendererModule");
+    expect(workerSource).not.toContain('monitoredSuspension("wasm-instance"');
+    expect(bootSource).toContain("describeBrowserBootPhase(state.bootPhase, state.bootPhaseElapsedMs, tongue)");
+    expect(workerSource).toContain("if (!bootDeclarationsOpen || closed || closing || failed) return;");
+    expect(workerSource.indexOf("bootDeclarationsOpen = false;")).toBeLessThan(workerSource.indexOf('post({ kind: "booted", lifecycle })'));
+  });
+});
+
+describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
+  /** @emoji 🧪️ The same 120 s timeline decided by vitest's own fake timers (`@sinonjs/fake-timers`) driving
+   * the real `setTimeout`/`clearTimeout`, instead of this file's hand-rolled queue — an INDEPENDENT clock
+   * implementation reaching the same verdicts, so a bug in the harness cannot pass for a passing law. */
+  it("survives a declared 120 s phase and dies on 60 s of undeclared silence under vitest's fake timers", () => {
+    vi.useFakeTimers();
+    try {
+      const worker = new FakeWorker();
+      const faults: string[] = [];
+      const subject = new BrowserFrameTransport({
+        worker,
+        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor" },
+        now: () => Date.now(),
+        setTimer: (callback, delayMs) => setTimeout(callback, delayMs) as unknown as number,
+        clearTimer: (handle) => clearTimeout(handle),
+        onFault: (code, detail) => faults.push(`${code}: ${detail}`),
+      });
+      worker.reply({ kind: "boot-progress", lifecycle: 1, stage: "renderer-runtime", progress: 0.65, worker: { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" } });
+      worker.reply({ kind: "boot-phase", lifecycle: 1, phase: "gpu-platform", state: "enter" });
+      vi.advanceTimersByTime(120_000);
+      expect(faults).toEqual([]);
+      expect(subject.status).toBe("booting");
+      worker.reply({ kind: "boot-phase", lifecycle: 1, phase: "gpu-platform", state: "leave", elapsedMs: 120_000 });
+      vi.advanceTimersByTime(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs + 1);
+      expect(subject.status).toBe("faulted");
+      expect(faults[0]).toContain("worker-boot-timeout");
+      expect(faults[0]).toContain("declared no long phase");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("wgpu renderer module cache", () => {
+  it("reads the artifact's server-asserted identity and disables itself when the server offers none", async () => {
+    const original = globalThis.fetch;
+    try {
+      globalThis.fetch = (async () => new Response(null, { status: 200, headers: { etag: 'W/"7ab1"' } })) as typeof fetch;
+      expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe('etag:W/"7ab1"');
+      globalThis.fetch = (async () => new Response(null, { status: 200, headers: { "last-modified": "Thu, 10 Sep 2026 09:29:09 GMT", "content-length": "76048601" } })) as typeof fetch;
+      expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("mtime:Thu, 10 Sep 2026 09:29:09 GMT:76048601");
+      globalThis.fetch = (async () => new Response(null, { status: 200 })) as typeof fetch;
+      expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
+      globalThis.fetch = (async () => new Response(null, { status: 404 })) as typeof fetch;
+      expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
+      globalThis.fetch = (async () => { throw new Error("offline"); }) as typeof fetch;
+      expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  it("fails soft to no cache wherever IndexedDB or a taggable artifact is unavailable", async () => {
+    expect((globalThis as { indexedDB?: unknown }).indexedDB).toBeUndefined();
+    expect(await readCachedRendererModule("http://host/renderer_bg.wasm", "")).toBeUndefined();
+    expect(await readCachedRendererModule("http://host/renderer_bg.wasm", "etag:1")).toBeUndefined();
+    expect(await writeCachedRendererModule("http://host/renderer_bg.wasm", "", {} as WebAssembly.Module, 1, 0)).toBe(false);
+    expect(await writeCachedRendererModule("http://host/renderer_bg.wasm", "etag:1", {} as WebAssembly.Module, 1, 0)).toBe(false);
+    await expect(evictCachedRendererModule("http://host/renderer_bg.wasm")).resolves.toBeUndefined();
   });
 });

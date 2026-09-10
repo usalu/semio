@@ -273,6 +273,21 @@ pub(super) fn output_registry_occupied_count() -> usize {
 pub(super) fn recover_output_registry_poison() {
     drop(REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
 }
+
+#[allow(dead_code)]
+pub(super) fn reclaim_orphaned_registry_slots() {
+    let mut registry = REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    for index in 0..SLOTS {
+        ENTRY_RETURNS[index].store(false, Ordering::Release);
+        QUEUE_RETURNS[index].store(false, Ordering::Release);
+        let epoch = registry.entries[index].epoch;
+        registry.entries[index] = Entry { epoch, ..Entry::EMPTY };
+        let queue_epoch = registry.queues[index].epoch;
+        registry.queues[index] = Queue { epoch: queue_epoch, ..Queue::EMPTY };
+    }
+    registry.entry_cursor = 0;
+    registry.queue_cursor = 0;
+}
 //#endregion 🧪Isolation
 
 //#region 🧪️ExactReturns

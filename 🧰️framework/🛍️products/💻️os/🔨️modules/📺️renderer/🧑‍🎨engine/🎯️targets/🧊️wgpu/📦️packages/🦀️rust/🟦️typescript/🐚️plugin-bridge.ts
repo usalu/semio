@@ -69,13 +69,13 @@ import {
   type TurnOutcome,
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
-import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import { OwnedUiPatchIntake } from "../../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
+import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "../../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { RetainedUiNodeRecord } from "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import {
@@ -113,6 +113,7 @@ class MainThreadShardWorker implements ShardWorkerLike {
   private terminated = false;
 
   constructor(private readonly shardIndex: number) {
+    routeShardPorts();
     shardPortWaiters.set(shardIndex, (port) => this.attach(port));
     (self as unknown as { postMessage(message: unknown): void }).postMessage({ kind: "shard-spawn", shardIndex, url: SHARD_WORKER_URL });
   }
@@ -156,12 +157,23 @@ class MainThreadShardWorker implements ShardWorkerLike {
 }
 
 const shardPortWaiters = new Map<number, (port: MessagePort) => void>();
-self.addEventListener("message", (event: MessageEvent) => {
-  const data = event.data as { readonly kind?: unknown; readonly shardIndex?: unknown; readonly port?: unknown } | null;
-  if (!data || typeof data !== "object" || data.kind !== "shard-port" || typeof data.shardIndex !== "number") return;
-  shardPortWaiters.get(data.shardIndex)?.(data.port as MessagePort);
-  shardPortWaiters.delete(data.shardIndex);
-});
+let shardPortsRouted = false;
+
+/** @emoji 📬️ Arms the `shard-port` handoff route the UI isolate answers a `shard-spawn` with, on the
+ * FIRST shard this isolate spawns rather than at module scope. The worker global only exists in the
+ * isolate that spawns shards, so a module-scope `self.addEventListener` made merely IMPORTING this
+ * bridge throw `ReferenceError: self is not defined` in every other host — which took the package's own
+ * node test suite down at import, before a single test ran. */
+function routeShardPorts(): void {
+  if (shardPortsRouted) return;
+  shardPortsRouted = true;
+  self.addEventListener("message", (event: MessageEvent) => {
+    const data = event.data as { readonly kind?: unknown; readonly shardIndex?: unknown; readonly port?: unknown } | null;
+    if (!data || typeof data !== "object" || data.kind !== "shard-port" || typeof data.shardIndex !== "number") return;
+    shardPortWaiters.get(data.shardIndex)?.(data.port as MessagePort);
+    shardPortWaiters.delete(data.shardIndex);
+  });
+}
 //#endregion 🧵️MainThreadShardWorkers
 
 //#region 🔖️PooledSingletons
@@ -207,14 +219,48 @@ function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], comm
 
 //#region 🔖️OwnedUiRoute
 const RETAINED_DOCUMENT_OPPORTUNITIES = 256;
-const WGPU_UI_CONTINUATION_LIMIT = 4_096;
 const WGPU_UI_CONTINUATION_BATCH_SIZE = 8;
 const WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4_096 });
+
+/** 📏️ The whole-document liveness backstop, shared with the React target and declared
+ * language-agnostically in `🧵️retained/🧫️fixtures/📥️intake/🔣️.json` — NOT a per-drive cap. The fixed
+ * `4_096` that stood here priced every intake as if it were a few KiB: the intake advances ONE phase
+ * per `advance(grant)` (a LEB128 byte, a text body, an attach), so the grant never buys more phases,
+ * and generation3d's first document (flow window scene + preview + catalogue pages + measures) blew
+ * through it at `shell-boot` as `wgpu-ui.intake-budget-exhausted`. */
+export const WGPU_UI_INTAKE_STEP_CEILING = retainedUiIntakeStepCeiling(DEFAULT_UI_DOCUMENT_LIMITS);
 type WgpuActorExecutor = <T>(work: () => Promise<T>) => Promise<T>;
 type WgpuOwnedUiProjection = Readonly<{ node: BuiltNode; document: Readonly<{ surface: string; revision: number; root: number; nodes: readonly object[]; layoutEpoch: number }> }>;
 
 async function yieldWgpuUi(step: number): Promise<void> {
   if (step % WGPU_UI_CONTINUATION_BATCH_SIZE === 0) await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+/** 🎞️ Hands the frame back. `requestAnimationFrame` where the target has one (the worker's
+ * `OffscreenCanvas` context does), a macrotask otherwise, so a headless test resumes too. */
+async function nextWgpuFrame(): Promise<void> {
+  const frame = (globalThis as { requestAnimationFrame?: (callback: () => void) => unknown }).requestAnimationFrame;
+  if (typeof frame === "function") await new Promise<void>((resolve) => frame.call(globalThis, () => resolve()));
+  else await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+/** 🎞️ One RESUMABLE drive cursor for a single retained intake. Exhausting a slice
+ * ({@link RETAINED_UI_INTAKE_SLICE_STEPS}) is a yield, not a fault: the cursor is retained across the
+ * frame boundary and the very same intake continues where it stopped, so a document larger than one
+ * slice publishes over several frames. Only {@link WGPU_UI_INTAKE_STEP_CEILING} — the whole-document
+ * backstop — is terminal, and a genuine stall is caught earlier and more precisely by the intake's own
+ * 32-consecutive-zero-progress rejection. */
+export class WgpuUiIntakeCursor {
+  #steps = 0;
+  readonly #ceiling: number;
+  constructor(ceiling: number = WGPU_UI_INTAKE_STEP_CEILING) { this.#ceiling = ceiling; }
+  get steps(): number { return this.#steps; }
+  async next(phase: string): Promise<void> {
+    this.#steps += 1;
+    if (this.#steps > this.#ceiling) throw new Error(`wgpu-ui.intake-budget-exhausted:${phase}:${this.#steps}`);
+    if (this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0) await nextWgpuFrame();
+    else await yieldWgpuUi(this.#steps);
+  }
 }
 
 function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["component"]): Component {
@@ -256,11 +302,11 @@ export class WgpuOwnedUiInstanceRoute {
 
   async #closeIntake(intake: OwnedUiPatchIntake): Promise<void> {
     intake.beginClose();
-    for (let step = 1; !intake.terminalIsEmpty(); step += 1) {
-      if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.intake-close-budget-exhausted");
+    const cursor = new WgpuUiIntakeCursor();
+    while (!intake.terminalIsEmpty()) {
       const current = intake.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
-      await yieldWgpuUi(step);
+      await cursor.next("intake-close");
     }
     this.#intakes.delete(intake);
   }
@@ -279,23 +325,22 @@ export class WgpuOwnedUiInstanceRoute {
       const source = this.lifecycle.captureUiPatchAuthority(turn.original, index);
       const intake = new OwnedUiPatchIntake(this.owner, source);
       this.#intakes.add(intake);
+      const cursor = new WgpuUiIntakeCursor();
       let token: OwnedUiPatchAcknowledgement | null = null;
-      for (let step = 1; token === null; step += 1) {
-        if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.intake-budget-exhausted");
+      while (token === null) {
         const current = intake.advance(WGPU_UI_GRANT);
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token === null) throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
-        await yieldWgpuUi(step);
+        await cursor.next("intake");
       }
       const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token, DEFAULT_SHARD_BUDGET));
       if (!intake.acceptAcknowledgement(acknowledged.receipt)) throw new Error("wgpu-ui.acknowledgement-refused");
-      for (let step = 1; ; step += 1) {
-        if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.publication-close-budget-exhausted");
+      for (;;) {
         const current = intake.advance(WGPU_UI_GRANT);
         if (current.kind === "ready") break;
         if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
-        await yieldWgpuUi(step);
+        await cursor.next("publication-close");
       }
       const surface = intake.takeSurface();
       if (!surface) throw new Error("wgpu-ui.surface-missing");
@@ -358,11 +403,11 @@ export class WgpuOwnedUiInstanceRoute {
     for (const intake of [...this.#intakes]) await this.#closeIntake(intake);
     this.#surfaces.clear();
     this.owner.beginClose();
-    for (let step = 1; !this.owner.terminalIsEmpty(); step += 1) {
-      if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.owner-close-budget-exhausted");
+    const cursor = new WgpuUiIntakeCursor();
+    while (!this.owner.terminalIsEmpty()) {
       const current = this.owner.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
-      await yieldWgpuUi(step);
+      await cursor.next("owner-close");
     }
     const witness = this.owner.takeRetirementWitness();
     if (!witness) throw new Error("wgpu-ui.retirement-witness-missing");
@@ -370,6 +415,11 @@ export class WgpuOwnedUiInstanceRoute {
     return witness;
   }
 }
+
+/** 🧯 Re-exported from its one owner (`📮️shard-client/🟦️.ts`) so this target and the React runtime
+ * settle a failed open the same way: run the cleanup, report a cleanup fault on its own line, reject
+ * with the ORIGINAL cause. */
+export { settleFailedInstanceOpen };
 
 /** 🚪️ Opens one captured lifecycle only after binding its exact host UI retirement owner. */
 async function settleInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease, route: WgpuOwnedUiInstanceRoute, initial: WireTurnResult, execute: WgpuActorExecutor): Promise<void> {
@@ -400,8 +450,8 @@ export async function retireWgpuOwnedUiInstanceLifecycle(lifecycle: ShardInstanc
     if (acknowledged.uiPatches.length > 0 || acknowledged.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.patch-during-cancelled-open");
   }
   lifecycle.beginClose();
-  for (let step = 1; lifecycle.progress().kind !== "complete"; step += 1) {
-    if (step > WGPU_UI_CONTINUATION_LIMIT) throw new Error("wgpu-ui.lifecycle-close-budget-exhausted");
+  const cursor = new WgpuUiIntakeCursor();
+  while (lifecycle.progress().kind !== "complete") {
     const receipt = lifecycle.pendingReceipt;
     let current: WireTurnResult;
     if (receipt?.kind === "accepted") current = coerceTurnResult(await execute(() => lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET)));
@@ -414,7 +464,7 @@ export async function retireWgpuOwnedUiInstanceLifecycle(lifecycle: ShardInstanc
       current = coerceTurnResult(await execute(() => progress.kind === "closing" ? lifecycle.close(DEFAULT_SHARD_BUDGET) : lifecycle.poll(DEFAULT_SHARD_BUDGET)));
     }
     if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.patch-after-lifecycle-close");
-    await yieldWgpuUi(step);
+    await cursor.next("lifecycle-close");
   }
   lifecycle.dispose();
 }
@@ -671,12 +721,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       });
       openingInstances.set(instanceId, opening);
       const forget = (): void => { if (openingInstances.get(instanceId) === opening) openingInstances.delete(instanceId); };
-      return opening.then((value) => { forget(); return value; }, async (error) => {
+      return opening.then((value) => { forget(); return value; }, (error) => {
         forget();
-        if (!retiringInstances.has(instanceId)) await handle.destroyApp(instanceId);
-        throw error;
+        return settleFailedInstanceOpen(error, () => (retiringInstances.has(instanceId) ? Promise.resolve() : handle.destroyApp(instanceId)));
       });
     },
+    /** 🧹 Retires one instance. An instance whose `open` never produced a lifetime owns NO retained UI
+     * — there is nothing to retire, only an actor to cancel — so a missing route joins the missing
+     * lifecycle branch instead of throwing. Throwing here is what turned every guest first-step trap
+     * into `create_app promise failed: wgpu-ui.native-owner-required` at the shell boundary: the
+     * failed-open cleanup below awaits this call, and its rejection replaced the real cause. */
     destroyApp: (instanceId) => {
       const previous = retiringInstances.get(instanceId);
       if (previous) return previous;
@@ -690,12 +744,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         channelByInstance.get(instanceId)?.dispose();
         const lifecycle = lifecycleByInstance.get(instanceId);
         const route = uiRouteByInstance.get(instanceId);
-        if (!lifecycle) {
+        if (!lifecycle || !route) {
           registry.cancel(actorId);
           releaseInstance(instanceId, actorId);
           return;
         }
-        if (!route) throw new Error("wgpu-ui.native-owner-required");
         await retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, executeFor(actorId));
         registry.cancel(actorId);
         releaseInstance(instanceId, actorId);

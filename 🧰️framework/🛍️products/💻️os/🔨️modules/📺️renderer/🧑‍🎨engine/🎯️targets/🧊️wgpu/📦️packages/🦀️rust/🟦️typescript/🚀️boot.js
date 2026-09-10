@@ -1,10 +1,169 @@
-/* ../../🔌️browser-interactive-job-port/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts */
+var UI_TURN_BUDGET_MS = 2;
+var SUSTAINED_TURN_OVERRUN_TURNS = 4;
+var TURN_SAMPLE_CAPACITY = 64;
+var TURN_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+var diagnosticsOverride;
+var diagnosticsResolved;
+function diagnosticsArmed(value) {
+  return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
+}
+function setTurnDiagnostics(enabled) {
+  diagnosticsOverride = enabled;
+  diagnosticsResolved = undefined;
+}
+function turnDiagnosticsEnabled() {
+  if (diagnosticsOverride !== undefined)
+    return diagnosticsOverride;
+  if (diagnosticsResolved !== undefined)
+    return diagnosticsResolved;
+  let armed = false;
+  try {
+    armed = diagnosticsArmed(import.meta.env?.[`VITE_${TURN_DIAGNOSTICS_KEY}`]);
+  } catch {
+    armed = false;
+  }
+  diagnosticsResolved = armed;
+  return armed;
+}
+
+class TurnClock {
+  now;
+  depth = 0;
+  spanStartedAt = 0;
+  charged = 0;
+  clockLost = false;
+  constructor(now) {
+    this.now = now;
+  }
+  enter() {
+    if (this.depth === 0) {
+      this.charged = 0;
+      this.clockLost = false;
+      this.spanStartedAt = this.reading();
+    } else {
+      this.chargeSpan();
+    }
+    this.depth++;
+  }
+  suspend() {
+    if (this.depth === 0)
+      return;
+    this.chargeSpan();
+  }
+  resume() {
+    if (this.depth === 0)
+      return;
+    this.spanStartedAt = this.reading();
+  }
+  leave() {
+    if (this.depth === 0)
+      return;
+    this.depth--;
+    if (this.depth > 0)
+      return;
+    this.chargeSpan();
+    return this.clockLost ? undefined : this.charged;
+  }
+  chargeSpan() {
+    const now = this.reading();
+    const started = this.spanStartedAt;
+    if (!Number.isFinite(now) || !Number.isFinite(started) || now < started) {
+      this.clockLost = true;
+      return;
+    }
+    this.charged += now - started;
+    this.spanStartedAt = now;
+  }
+  reading() {
+    try {
+      const value = this.now();
+      return typeof value === "number" ? value : Number.NaN;
+    } catch {
+      return Number.NaN;
+    }
+  }
+}
+
+class TurnLedger {
+  budgetMs;
+  scope;
+  samples = new Float64Array(TURN_SAMPLE_CAPACITY);
+  sampleCount = 0;
+  consecutive = 0;
+  longestRun = 0;
+  recorded = 0;
+  sustained = 0;
+  worstExecutingMs = 0;
+  worstSite = "";
+  degradedUntilAdmitted = false;
+  constructor(budgetMs = UI_TURN_BUDGET_MS, scope = "ui-turn") {
+    this.budgetMs = budgetMs;
+    this.scope = scope;
+  }
+  admit(site, executingMs) {
+    if (executingMs === undefined || !Number.isFinite(executingMs) || executingMs < 0) {
+      this.consecutive = 0;
+      return { site, verdict: "clock-fault", executingMs: 0, consecutive: 0 };
+    }
+    this.samples[this.sampleCount % TURN_SAMPLE_CAPACITY] = executingMs;
+    this.sampleCount++;
+    if (executingMs < this.budgetMs) {
+      this.consecutive = 0;
+      this.degradedUntilAdmitted = false;
+      return { site, verdict: "admitted", executingMs, consecutive: 0 };
+    }
+    this.consecutive++;
+    this.longestRun = Math.max(this.longestRun, this.consecutive);
+    this.recorded++;
+    if (executingMs > this.worstExecutingMs) {
+      this.worstExecutingMs = executingMs;
+      this.worstSite = site;
+    }
+    if (this.consecutive < SUSTAINED_TURN_OVERRUN_TURNS) {
+      this.trace(site, "recorded-overrun", executingMs);
+      return { site, verdict: "recorded-overrun", executingMs, consecutive: this.consecutive };
+    }
+    this.sustained++;
+    this.degradedUntilAdmitted = true;
+    this.trace(site, "sustained-overrun", executingMs);
+    return { site, verdict: "sustained-overrun", executingMs, consecutive: this.consecutive };
+  }
+  degraded() {
+    return this.degradedUntilAdmitted;
+  }
+  snapshot() {
+    return {
+      recordedOverruns: this.recorded,
+      sustainedOverruns: this.sustained,
+      consecutive: this.consecutive,
+      longestRun: this.longestRun,
+      worstExecutingMs: this.worstExecutingMs,
+      worstSite: this.worstSite,
+      degraded: this.degradedUntilAdmitted,
+      p99Ms: this.p99Ms()
+    };
+  }
+  p99Ms() {
+    const count = Math.min(this.sampleCount, TURN_SAMPLE_CAPACITY);
+    if (count === 0)
+      return 0;
+    const ordered = Array.from(this.samples.subarray(0, count)).sort((left, right) => left - right);
+    return ordered[Math.min(count - 1, Math.ceil(count * 0.99) - 1)];
+  }
+  trace(site, verdict, executingMs) {
+    if (!turnDiagnosticsEnabled())
+      return;
+    console.debug(`[DEBUG] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive}/${SUSTAINED_TURN_OVERRUN_TURNS}`);
+  }
+}
+
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts */
 var INTERACTIVE_JOB_SLOT_CAPACITY = 16;
 var INTERACTIVE_JOB_INPUT_ITEM_CAPACITY = 65536;
 var INTERACTIVE_JOB_INPUT_BYTE_CAPACITY = 256 * 1024 * 1024;
 var INTERACTIVE_JOB_PAGE_ITEM_CAPACITY = 128;
 var INTERACTIVE_JOB_PAGE_BYTE_CAPACITY = 16 * 1024;
-var INTERACTIVE_JOB_UI_BUDGET_MS = 2;
 var INTERACTIVE_JOB_OBSERVER_CAPACITY = 32;
 var INTERACTIVE_JOB_PORT_ITEM_CAPACITY = 262144;
 var INTERACTIVE_JOB_PORT_BYTE_CAPACITY = 256 * 1024 * 1024;
@@ -25,13 +184,14 @@ class BrowserInteractiveJobPort {
   observerNotifyScheduled = false;
   statusRevision = 0;
   statusSnapshot = { status: "unavailable", revision: 0 };
-  now;
+  uiTurns = new TurnLedger;
+  uiTurnClock;
   constructor(lifecycle, send, now, quarantineConsumer, schedule = (callback) => setTimeout(callback, 0)) {
     this.lifecycle = lifecycle;
     this.send = send;
     this.quarantineConsumer = quarantineConsumer;
     this.schedule = schedule;
-    this.now = now;
+    this.uiTurnClock = new TurnClock(now);
   }
   ready() {
     if (this.status === "unavailable") {
@@ -43,10 +203,13 @@ class BrowserInteractiveJobPort {
     return this.statusSnapshot;
   }
   observeConsumerTurn(site, durationMs) {
-    if (durationMs < INTERACTIVE_JOB_UI_BUDGET_MS)
-      return true;
-    this.quarantine(`${site} took ${durationMs.toFixed(3)} ms`);
-    return false;
+    return this.uiTurns.admit(site, durationMs).verdict !== "sustained-overrun";
+  }
+  reportConsumerFault(site, detail) {
+    this.quarantine(`${site} threw: ${detail}`);
+  }
+  uiTurnSnapshot() {
+    return this.uiTurns.snapshot();
   }
   subscribe(listener) {
     const slot = this.observers.findIndex((entry) => entry === undefined);
@@ -114,16 +277,16 @@ class BrowserInteractiveJobPort {
         this.quarantine("interactive job pull exceeded fixed credits");
         return true;
       }
-      const startedAt2 = this.now();
+      this.uiTurnClock.enter();
       let page;
       try {
         page = slot.consumer.readInputPage(message.cursor, Math.min(message.maxItems, slot.descriptor.inputPageItems));
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`input consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt2, "input consumer"))
-        return true;
+      this.observe("input consumer");
       if (!this.admitPage(slot, page, true))
         return true;
       slot.inputCursor += page.itemCount;
@@ -137,15 +300,15 @@ class BrowserInteractiveJobPort {
     if (message.kind === "job-output-page") {
       if (!this.admitPage(slot, message.page, false))
         return true;
-      const startedAt2 = this.now();
+      this.uiTurnClock.enter();
       try {
         slot.consumer.onOutputPage(message.page);
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`output consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt2, "output consumer"))
-        return true;
+      this.observe("output consumer");
       return true;
     }
     if (message.status !== "complete" && message.status !== "cancelled" && message.status !== "fault") {
@@ -153,18 +316,18 @@ class BrowserInteractiveJobPort {
       return true;
     }
     const terminal = { operation: message.operation, generation: message.generation, status: message.status, ...message.detail === undefined ? {} : { detail: message.detail } };
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       slot.consumer.onTerminal(terminal);
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`terminal consumer threw: ${error instanceof Error ? error.message : String(error)}`);
       slot.closing = true;
       this.scheduleClose();
       return true;
     }
     slot.closing = true;
-    if (!this.observe(startedAt, "terminal consumer"))
-      return true;
+    this.observe("terminal consumer");
     this.scheduleClose();
     return true;
   }
@@ -190,18 +353,18 @@ class BrowserInteractiveJobPort {
     if (this.closeCursor === this.slots.length)
       return true;
     const slot = this.slots[this.closeCursor];
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     let complete = false;
     try {
       complete = slot.consumer.closeStep();
       if (complete)
         complete = slot.consumer.terminalIsEmpty();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`consumer close threw: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
-    if (!this.observe(startedAt, "consumer close"))
-      return false;
+    this.observe("consumer close");
     if (complete) {
       this.releaseSlot(this.closeCursor);
       this.closeCursor++;
@@ -260,12 +423,8 @@ class BrowserInteractiveJobPort {
     }
     return true;
   }
-  observe(startedAt, site) {
-    const duration = this.now() - startedAt;
-    if (duration < INTERACTIVE_JOB_UI_BUDGET_MS)
-      return true;
-    this.quarantine(`${site} took ${duration.toFixed(3)} ms`);
-    return false;
+  observe(site) {
+    return this.uiTurns.admit(site, this.uiTurnClock.leave()).verdict !== "sustained-overrun";
   }
   quarantine(detail) {
     if (this.status !== "ready")
@@ -298,15 +457,15 @@ class BrowserInteractiveJobPort {
     if (this.observerCursor === this.observers.length)
       return;
     const observer = this.observers[this.observerCursor++];
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       observer();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`status observer threw: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
-    if (!this.observe(startedAt, "status observer"))
-      return;
+    this.observe("status observer");
     this.observerNotifyScheduled = true;
     this.schedule(() => this.notifyOneObserver());
   }
@@ -334,14 +493,66 @@ function admittedCount(value) {
   return Number.isSafeInteger(value) && value >= 0;
 }
 
-/* ../../🚚️browser-frame-transport/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts */
+var FRAME_WORKER_BOOT_LIVENESS_POLICY = Object.freeze({
+  silenceTimeoutMs: 60000,
+  livenessIntervalMs: 1000,
+  defaultPhaseCeilingMs: 300000,
+  phaseCeilingMs: Object.freeze({
+    "renderer-module": 300000,
+    "wasm-artifact": 60000,
+    "wasm-cache-read": 120000,
+    "wasm-compile": 900000,
+    "wasm-instantiate": 300000,
+    plugin: 300000,
+    "gpu-platform": 900000,
+    "shell-boot": 900000,
+    "renderer-bootstrap": 900000
+  })
+});
+function bootPhaseCeilingMs(phase) {
+  const table = FRAME_WORKER_BOOT_LIVENESS_POLICY.phaseCeilingMs;
+  const family = phase.slice(0, phase.indexOf(":") < 0 ? phase.length : phase.indexOf(":"));
+  return table[phase] ?? table[family] ?? FRAME_WORKER_BOOT_LIVENESS_POLICY.defaultPhaseCeilingMs;
+}
+function evaluateBrowserBootLiveness(window2) {
+  const silentForMs = Number.isFinite(window2.lastLivenessAtMs) ? Math.max(0, window2.nowMs - window2.lastLivenessAtMs) : Number.POSITIVE_INFINITY;
+  if (window2.phase) {
+    const phaseElapsedMs = Math.max(0, window2.nowMs - window2.phase.enteredAtMs);
+    const remainingMs2 = window2.phase.ceilingMs - phaseElapsedMs;
+    if (remainingMs2 > 0)
+      return { terminate: false, rearmInMs: Math.min(window2.silenceTimeoutMs, remainingMs2), silentForMs, phaseElapsedMs };
+    return { terminate: true, rearmInMs: 0, silentForMs, phaseElapsedMs };
+  }
+  const remainingMs = window2.silenceTimeoutMs - silentForMs;
+  if (remainingMs > 0)
+    return { terminate: false, rearmInMs: remainingMs, silentForMs, phaseElapsedMs: 0 };
+  return { terminate: true, rearmInMs: 0, silentForMs, phaseElapsedMs: 0 };
+}
+function roundedMs(value) {
+  return Number.isFinite(value) ? String(Math.max(0, Math.round(value))) : "∞";
+}
+function describeBrowserBootSilence(report, tongue) {
+  const stage = report.lastStage || (tongue === "de" ? "—" : "—");
+  if (report.phase) {
+    return tongue === "de" ? `Die erklärte lange Phase „${report.phase.phase}“ des Frame-Workers lief ${roundedMs(report.phaseElapsedMs)} ms gegen ihre Obergrenze von ${roundedMs(report.phase.ceilingMs)} ms (letzte gemeldete Stufe „${stage}“, still seit ${roundedMs(report.silentForMs)} ms).` : `The frame Worker's declared long phase "${report.phase.phase}" ran ${roundedMs(report.phaseElapsedMs)} ms against its ${roundedMs(report.phase.ceilingMs)} ms ceiling (last reported stage "${stage}", silent for ${roundedMs(report.silentForMs)} ms).`;
+  }
+  const silence = report.heard ? tongue === "de" ? `war ${roundedMs(report.silentForMs)} ms still` : `was silent for ${roundedMs(report.silentForMs)} ms` : tongue === "de" ? "hat nie eine einzige Nachricht gesendet" : "never sent a single message";
+  return tongue === "de" ? `Der Frame-Worker ${silence} (Obergrenze ${roundedMs(report.silenceTimeoutMs)} ms, letzte gemeldete Stufe „${stage}“) und hatte keine lange Phase erklärt — seine Ereignisschleife hängt.` : `The frame Worker ${silence} (ceiling ${roundedMs(report.silenceTimeoutMs)} ms, last reported stage "${stage}") and had declared no long phase — its event loop is wedged.`;
+}
+function describeBrowserBootPhase(phase, elapsedMs, tongue) {
+  if (!phase)
+    return tongue === "de" ? "Lange Boot-Phase: keine erklärt" : "Long boot phase: none declared";
+  return tongue === "de" ? `Lange Boot-Phase: „${phase.phase}“ seit ${roundedMs(elapsedMs)} ms (Obergrenze ${roundedMs(phase.ceilingMs)} ms)` : `Long boot phase: "${phase.phase}" for ${roundedMs(elapsedMs)} ms (ceiling ${roundedMs(phase.ceilingMs)} ms)`;
+}
+
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts */
 var FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 var FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-var FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 60000;
+var FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs;
 var FRAME_WORKER_POINTER_CAPACITY = 16;
 var FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 var FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
-var FRAME_UI_TURN_BUDGET_MS = 2;
 var FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
 var FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 1e4;
 
@@ -357,8 +568,11 @@ class BrowserFrameTransport {
   setTimer;
   onReady;
   onProgress;
+  workerSteps = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
+  workerStepOverruns = 0;
   onDirectives;
   onFault;
+  onUiTurn;
   requestRaf;
   cancelRaf;
   pointerIds = new Array(FRAME_WORKER_POINTER_CAPACITY);
@@ -376,14 +590,23 @@ class BrowserFrameTransport {
   frameRequested = false;
   rafHandle;
   bootTimer;
+  lastLivenessAtMs = Number.NEGATIVE_INFINITY;
+  bootStage = "";
+  bootPhase;
+  bootStartedAtMs = 0;
+  locale;
   closeRequested = false;
-  uiTurnSamples = new Float64Array(64);
-  uiTurnSampleCount = 0;
+  uiTurns = new TurnLedger;
+  uiTurnClock;
+  deferredWork = [];
+  deferredScheduled = false;
   introspections = new Map;
   nextIntrospectionId = 1;
   constructor(options) {
     this.worker = options.worker;
     this.now = options.now ?? (() => performance.now());
+    this.locale = options.boot.locale === "de" ? "de" : "en";
+    this.bootStartedAtMs = this.now();
     const setTimer = options.setTimer ?? ((callback, delayMs) => window.setTimeout(callback, delayMs));
     this.setTimer = setTimer;
     this.clearTimer = options.clearTimer ?? ((handle) => window.clearTimeout(handle));
@@ -391,13 +614,15 @@ class BrowserFrameTransport {
     this.onProgress = options.onProgress;
     this.onDirectives = options.onDirectives;
     this.onFault = options.onFault;
+    this.onUiTurn = options.onUiTurn;
+    this.uiTurnClock = new TurnClock(this.now);
     this.requestRaf = options.requestAnimationFrame;
     this.cancelRaf = options.cancelAnimationFrame;
-    this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("ui-turn-overrun", detail), (callback) => void this.setTimer(callback, 0));
+    this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("interactive-job-violation", detail), (callback) => void this.setTimer(callback, 0));
     this.worker.onmessage = (event) => this.receive(event.data);
     this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
     this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
-    this.armBootStallTimer();
+    this.armBootWatchdog(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs);
     try {
       this.worker.postMessage({ kind: "boot", lifecycle: this.lifecycle, ...options.boot }, [options.boot.canvas]);
     } catch (error) {
@@ -490,13 +715,12 @@ class BrowserFrameTransport {
     const sequence = ++this.sequence;
     this.inFlight = true;
     try {
-      const startedAt = this.now();
+      this.uiTurnClock.enter();
       this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, sequence, generation: this.generation, timestampMs, replaceable, lossless });
-      const duration = this.now() - startedAt;
-      if (!this.observeUiTurn("frame-transfer", duration))
-        return false;
+      this.observeUiTurn("frame-transfer", this.uiTurnClock.leave());
       return true;
     } catch (error) {
+      this.uiTurnClock.leave();
       this.fail("worker-message-failed", error instanceof Error ? error.message : String(error));
       return false;
     }
@@ -535,31 +759,78 @@ class BrowserFrameTransport {
     this.clearQueues();
     this.status = "closed";
   }
-  observeUiTurn(site, durationMs) {
-    this.uiTurnSamples[this.uiTurnSampleCount % this.uiTurnSamples.length] = durationMs;
-    this.uiTurnSampleCount++;
-    if (durationMs < FRAME_UI_TURN_BUDGET_MS)
-      return true;
-    if (this.status === "quarantined" || this.status === "faulted" || this.status === "closed")
-      return false;
-    const detail = `${site} UI turn took ${durationMs.toFixed(3)} ms`;
-    if (this.status === "ready")
-      this.quarantine("ui-turn-overrun", detail);
-    else
-      this.fail("ui-turn-overrun", detail);
-    return false;
+  observeUiTurn(site, executingMs) {
+    const outcome = this.uiTurns.admit(site, executingMs);
+    if (outcome.verdict !== "admitted" && outcome.verdict !== "clock-fault")
+      this.onUiTurn?.(outcome);
+    return outcome.verdict === "admitted" || outcome.verdict === "clock-fault";
+  }
+  degraded() {
+    return this.uiTurns.degraded();
+  }
+  fallbackState() {
+    return {
+      surface: this.status,
+      uiThreadFrames: "unavailable-offscreen-transferred",
+      workerTerminated: this.status === "faulted" || this.status === "closed",
+      inputAccepted: this.accepting(),
+      deferredCadence: this.uiTurns.degraded(),
+      uiTurns: this.uiTurns.snapshot(),
+      workerSteps: { ...this.workerSteps, sustainedOverruns: this.workerSteps.sustainedOverruns + this.workerStepOverruns },
+      bootPhase: this.bootPhase,
+      bootPhaseElapsedMs: this.bootPhase ? Math.max(0, this.now() - this.bootPhase.enteredAtMs) : 0,
+      bootStage: this.bootStage,
+      bootSilentForMs: Math.max(0, this.now() - (Number.isFinite(this.lastLivenessAtMs) ? this.lastLivenessAtMs : this.bootStartedAtMs))
+    };
   }
   uiTurnP99Ms() {
-    const count = Math.min(this.uiTurnSampleCount, this.uiTurnSamples.length);
-    if (count === 0)
-      return 0;
-    const samples = Array.from(this.uiTurnSamples.subarray(0, count)).sort((left, right) => left - right);
-    return samples[Math.min(count - 1, Math.ceil(count * 0.99) - 1)];
+    return this.uiTurns.p99Ms();
   }
-  armBootStallTimer() {
+  deferToNextTurn(work) {
+    this.deferredWork.push(work);
+    if (this.deferredScheduled)
+      return;
+    this.deferredScheduled = true;
+    this.setTimer(() => {
+      this.deferredScheduled = false;
+      const pending = this.deferredWork;
+      this.deferredWork = [];
+      for (const item of pending) {
+        if (this.status === "closed")
+          return;
+        this.uiTurnClock.enter();
+        try {
+          item();
+        } catch (error) {
+          this.uiTurnClock.leave();
+          this.fail("ui-hook-failed", `deferred UI turn threw: ${error instanceof Error ? error.message : String(error)}`);
+          return;
+        }
+        this.observeUiTurn("deferred-hook", this.uiTurnClock.leave());
+      }
+    }, 0);
+  }
+  armBootWatchdog(delayMs) {
     if (this.bootTimer !== undefined)
       this.clearTimer(this.bootTimer);
-    this.bootTimer = this.setTimer(() => this.fail("worker-boot-timeout", `Worker reported no boot progress for ${FRAME_WORKER_BOOT_STALL_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_STALL_TIMEOUT_MS);
+    this.bootTimer = this.setTimer(() => this.judgeBootLiveness(), Math.max(0, delayMs));
+  }
+  judgeBootLiveness() {
+    this.bootTimer = undefined;
+    if (this.status !== "booting")
+      return;
+    const nowMs = this.now();
+    const window2 = { nowMs, lastLivenessAtMs: this.lastLivenessAtMs, silenceTimeoutMs: FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs, phase: this.bootPhase };
+    const decision = evaluateBrowserBootLiveness(window2);
+    if (!decision.terminate) {
+      this.armBootWatchdog(decision.rearmInMs);
+      return;
+    }
+    const detail = describeBrowserBootSilence({ heard: Number.isFinite(this.lastLivenessAtMs), lastStage: this.bootStage, silentForMs: decision.silentForMs, silenceTimeoutMs: window2.silenceTimeoutMs, phase: this.bootPhase, phaseElapsedMs: decision.phaseElapsedMs }, this.locale);
+    this.fail("worker-boot-timeout", detail);
+  }
+  witnessWorker() {
+    this.lastLivenessAtMs = this.now();
   }
   accepting() {
     return this.status === "booting" || this.status === "ready";
@@ -618,6 +889,8 @@ class BrowserFrameTransport {
       if (this.bootTimer !== undefined)
         this.clearTimer(this.bootTimer);
       this.bootTimer = undefined;
+      this.bootPhase = undefined;
+      this.witnessWorker();
       this.status = "ready";
       this.interactiveJobs.ready();
       if (!this.runUiHook("ready-hook", () => this.onReady?.()))
@@ -627,14 +900,30 @@ class BrowserFrameTransport {
     }
     if (message.kind === "boot-liveness") {
       if (this.status === "booting")
-        this.armBootStallTimer();
+        this.witnessWorker();
+      return;
+    }
+    if (message.kind === "boot-phase") {
+      if (this.status !== "booting")
+        return;
+      this.witnessWorker();
+      if (message.state === "enter")
+        this.bootPhase = { phase: message.phase, ceilingMs: bootPhaseCeilingMs(message.phase), enteredAtMs: this.now() };
+      else if (this.bootPhase?.phase === message.phase)
+        this.bootPhase = undefined;
       return;
     }
     if (message.kind === "boot-progress") {
       if (this.status !== "booting")
         return;
-      this.armBootStallTimer();
-      this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
+      this.witnessWorker();
+      this.bootStage = message.stage;
+      this.workerSteps = message.worker;
+      const report = () => this.onProgress?.(message.stage, message.progress, message.worker);
+      if (this.degraded() || message.worker.degraded)
+        this.deferToNextTurn(report);
+      else
+        this.runUiHook("progress-hook", report);
       return;
     }
     if (message.kind === "wake") {
@@ -652,9 +941,11 @@ class BrowserFrameTransport {
     if (message.sequence <= this.acceptedSequence)
       return;
     this.inFlight = false;
-    if (message.quarantined || message.workerDurationMs >= 8) {
+    if (message.workerStepVerdict === "sustained-overrun")
+      this.workerStepOverruns++;
+    if (message.quarantined) {
       const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : "worker-step-overrun";
-      this.quarantine(code, message.faultDetail ?? `worker frame step took ${message.workerDurationMs.toFixed(3)} ms`);
+      this.quarantine(code, message.faultDetail ?? `worker frame step executed ${message.workerExecutingMs.toFixed(3)} ms`);
       return;
     }
     if (message.generation === this.generation) {
@@ -678,7 +969,8 @@ class BrowserFrameTransport {
     this.clearQueues();
     this.fault = { code, detail };
     this.status = "faulted";
-    this.runUiHook("fault-hook", () => this.onFault?.(code, detail));
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
   }
   quarantine(code, detail) {
     if (this.status !== "ready")
@@ -691,21 +983,22 @@ class BrowserFrameTransport {
     this.clearQueues();
     this.fault = { code, detail };
     this.status = "quarantined";
-    this.runUiHook("fault-hook", () => this.onFault?.(code, detail));
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
   }
   runUiHook(site, callback) {
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       callback();
     } catch (error) {
+      this.uiTurnClock.leave();
       const detail = `${site} threw: ${error instanceof Error ? error.message : String(error)}`;
-      if (this.status === "ready")
-        this.quarantine("ui-turn-overrun", detail);
-      else if (this.status !== "quarantined" && this.status !== "faulted" && this.status !== "closed")
-        this.fail("ui-turn-overrun", detail);
+      if (this.status !== "faulted" && this.status !== "closed")
+        this.fail("ui-hook-failed", detail);
       return false;
     }
-    return this.observeUiTurn(site, this.now() - startedAt);
+    this.observeUiTurn(site, this.uiTurnClock.leave());
+    return true;
   }
   clearQueues() {
     for (const pending of this.introspections.values()) {
@@ -787,12 +1080,13 @@ function isLowSurrogate(value) {
   return value >= 56320 && value <= 57343;
 }
 
-/* ../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts */
+/* 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts */
 var unavailableInteractiveJobPort = {
   status: "unavailable",
   getSnapshot: () => ({ status: "unavailable", revision: 0 }),
   subscribe: () => () => {},
   observeConsumerTurn: () => true,
+  reportConsumerFault: () => {},
   submit: () => {
     return;
   }
@@ -832,21 +1126,20 @@ function notifyOneInteractiveJobObserver() {
   const startedAt = typeof performance === "undefined" ? Date.now() : performance.now();
   try {
     observer();
-  } catch {
-    installedInteractiveJobPort.observeConsumerTurn("status observer threw", Number.POSITIVE_INFINITY);
+  } catch (error) {
+    installedInteractiveJobPort.reportConsumerFault("status observer", error instanceof Error ? error.message : String(error));
     return;
   }
   const finishedAt = typeof performance === "undefined" ? Date.now() : performance.now();
-  if (!installedInteractiveJobPort.observeConsumerTurn("status observer", finishedAt - startedAt))
-    return;
+  installedInteractiveJobPort.observeConsumerTurn("status observer", finishedAt - startedAt);
   observerNotifyScheduled = true;
   setTimeout(notifyOneInteractiveJobObserver, 0);
 }
 
-/* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
 var DEFAULT_HOST_VARIANT = "s";
 
-/* ../../🚀️browser-boot/🟦️.ts */
+/* 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts */
 var RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
 var RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
 var FRAME_WORKER_URL = new URL("./🎞️frame-worker.js", import.meta.url);
@@ -858,6 +1151,15 @@ await new Promise((resolve) => {
   else
     resolve();
 });
+function armUiTurnDiagnostics() {
+  try {
+    const stored = globalThis.localStorage?.getItem(TURN_DIAGNOSTICS_KEY);
+    if (stored !== null && stored !== undefined)
+      setTurnDiagnostics(["1", "true", "on", "yes"].includes(stored.trim().toLowerCase()));
+  } catch {
+    setTurnDiagnostics(undefined);
+  }
+}
 function locale() {
   return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
 }
@@ -901,15 +1203,49 @@ function statusElement(root) {
   root.appendChild(status);
   return status;
 }
-function renderFault(root, code, detail) {
+function fallbackLines(state, tongue) {
+  if (!state) {
+    return tongue === "de" ? "Oberfläche: vor der Übergabe der Zeichenfläche an den Worker gescheitert. Kein Frame-Pfad war je aktiv." : "Surface: failed before the canvas reached the Worker. No frame path was ever live.";
+  }
+  const turns = state.uiTurns;
+  const steps = state.workerSteps;
+  const ledger = `${turns.recordedOverruns}/${turns.sustainedOverruns} (p99 ${turns.p99Ms.toFixed(3)} ms, worst ${turns.worstExecutingMs.toFixed(3)} ms @ ${turns.worstSite || "—"})`;
+  const workerLedger = `${steps.recordedOverruns}/${steps.sustainedOverruns} (worst ${steps.worstStepMs.toFixed(3)} ms @ ${steps.worstStepSite || "—"})`;
+  const phaseLine = describeBrowserBootPhase(state.bootPhase, state.bootPhaseElapsedMs, tongue);
+  if (tongue === "de") {
+    return [
+      `Oberfläche: ${state.surface}${state.deferredCadence ? " · verzögerte Taktung" : ""}`,
+      `Boot-Stufe: ${state.bootStage || "—"} · still seit ${Math.round(state.bootSilentForMs)} ms`,
+      phaseLine,
+      `UI-Thread-Frames: nicht verfügbar — die Zeichenfläche gehört dem Frame-Worker (OffscreenCanvas übergeben)`,
+      `Worker beendet: ${state.workerTerminated ? "ja" : "nein"} · Eingaben angenommen: ${state.inputAccepted ? "ja" : "nein"}`,
+      `UI-Takte über dem Budget (erfasst/anhaltend): ${ledger}`,
+      `Worker-Schritte über dem Budget (erfasst/anhaltend): ${workerLedger}${steps.degraded ? " · verzögerte Taktung" : ""}`
+    ].join(`
+`);
+  }
+  return [
+    `Surface: ${state.surface}${state.deferredCadence ? " · deferred cadence" : ""}`,
+    `Boot stage: ${state.bootStage || "—"} · silent for ${Math.round(state.bootSilentForMs)} ms`,
+    phaseLine,
+    `UI-thread frames: unavailable — the canvas belongs to the frame Worker (OffscreenCanvas transferred)`,
+    `Worker terminated: ${state.workerTerminated ? "yes" : "no"} · input accepted: ${state.inputAccepted ? "yes" : "no"}`,
+    `UI turns over budget (recorded/sustained): ${ledger}`,
+    `Worker steps over budget (recorded/sustained): ${workerLedger}${steps.degraded ? " · deferred cadence" : ""}`
+  ].join(`
+`);
+}
+function renderFault(root, code, detail, state) {
   const banner = document.createElement("div");
   banner.setAttribute("role", "alert");
   banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0acc;color:#ffb4b4;font:14px monospace;white-space:pre-wrap;overflow:auto;z-index:9999;";
-  banner.textContent = `wgpu renderer fault:
+  const tongue = locale();
+  const title = tongue === "de" ? "wgpu-Renderer-Fehler" : "wgpu renderer fault";
+  banner.textContent = `${title}:
 
 ${code}: ${detail}
 
-No UI-thread frame fallback was attempted.`;
+${fallbackLines(state, tongue)}`;
   root.appendChild(banner);
 }
 function wireInput(canvas, transport) {
@@ -992,6 +1328,7 @@ function wireInput(canvas, transport) {
   return () => abort.abort();
 }
 async function mount(root) {
+  armUiTurnDiagnostics();
   const descriptor = bootDescriptor();
   if (typeof Worker === "undefined")
     throw new Error("worker-unavailable: Dedicated Worker is not supported");
@@ -1024,8 +1361,13 @@ async function mount(root) {
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
     requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
-    onProgress: (stage, progress) => {
-      status.textContent = `${stage} ${Math.round(progress * 100)}%`;
+    onProgress: (stage, progress, worker2) => {
+      status.textContent = `${stage} ${Math.round(progress * 100)}%${worker2.degraded ? locale() === "de" ? " · verzögerte Taktung" : " · deferred cadence" : ""}`;
+      status.dataset.workerDegraded = worker2.degraded ? "true" : "false";
+      status.dataset.workerStepOverruns = String(worker2.recordedOverruns);
+    },
+    onUiTurn: (outcome) => {
+      canvas.dataset.uiTurn = `${outcome.verdict}:${outcome.site}:${outcome.executingMs.toFixed(3)}`;
     },
     onReady: () => {
       status.remove();
@@ -1041,10 +1383,10 @@ async function mount(root) {
       if (fullscreen === false && document.fullscreenElement)
         document.exitFullscreen().catch(() => {});
     },
-    onFault: (code, detail) => {
+    onFault: (code, detail, fallback) => {
       cleanupInput();
       detachIntrospection();
-      renderFault(root, code, detail);
+      renderFault(root, code, detail, fallback);
     }
   });
   const previousInteractiveJobPort = setInteractiveJobPort(transport.interactiveJobs);

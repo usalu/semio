@@ -814,8 +814,12 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
 #[semio_framework_async_macros::async_test]
 async fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_requested_count() {
     use semio_framework_plugin::PluginApp;
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    let ready = drive_fill_until_ready(&mut app, 3.0).await;
+    assert!(ready >= 3.0, "the tool-job path needs a planned prefix before setFillCount can publish 3");
     async fn fill_count_slider(app: &mut Puzzle3dApp) -> Option<f64> {
         let view = app.window_view(main::WINDOW_KIND_ID);
         let measures = app.tool_measures(&view).await;
@@ -851,17 +855,7 @@ async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carri
         let tree = semio_framework_plugin::section_component_tree(section, &payload).expect("reserved section payload admits into the bounded carrier");
         let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
         assert_eq!(projected["key"], section.body_key());
-        let mut restored = String::new();
-        let mut frontier = vec![projected];
-        while let Some(node) = frontier.pop() {
-            if node["component"]["type"] == "text" {
-                restored.push_str(node["component"]["value"].as_str().expect("text leaf value"));
-            }
-            for child in node["children"].as_array().expect("carrier children").iter().rev() {
-                frontier.push(child.clone());
-            }
-        }
-        assert_eq!(restored, payload, "{} carrier must round-trip byte-exactly", section.key());
+        assert_eq!(semio_framework_plugin::testkit::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
         eprintln!("[DEBUG] puzzle3d {} section payload is {} bytes", section.key(), payload.len());
     }
 }
@@ -1944,6 +1938,10 @@ async fn fill_build_tick_is_ignored_when_fill_tool_is_inactive() {
     // coordinator, not fixed here (framework file, out of this crate's remit). Asserts the real
     // regression guard (no progression while inactive) plus the weaker-but-true scope bound (never
     // a `Full` refresh) instead of the unreachable exact `None`.
+    // 🔒️ `fill_progress_summary` falls back to the PROCESS-WIDE envelope registry when this app has no
+    // plan of its own, so without the shared guard this law reads whatever a concurrent fill law left
+    // admitted and calls it this app's progression. W-F4 §7.6 named exactly this leak.
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": Value::Null })), None).await.expect("deactivate fill");
@@ -1959,19 +1957,35 @@ async fn fill_build_tick_is_ignored_when_fill_tool_is_inactive() {
 
 #[semio_framework_async_macros::async_test]
 async fn fill_build_tick_only_polls_and_enqueues_one_isolated_worker_job() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
-    let before = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
-    let first = dispatch(&mut app, "fillBuildTick", None, None).await.expect("enqueue fill");
-    let after = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
-    assert_eq!(after, before, "the view action must not execute a solver transition inline");
-    assert!(matches!(
-        first.requested_effects.as_slice(),
-        [Effect::SpawnJob { kind, placement: semio_framework_plugin::kernel::JobPlacement::Isolated, .. }] if kind == crate::editor::puzzle3d::precompute::FILL_JOB_KIND
-    ));
-    let second = dispatch(&mut app, "fillBuildTick", None, None).await.expect("poll fill");
-    assert!(!second.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { .. })), "a live fill request must not be enqueued twice");
+    // ⏳️ The document reaches the precompute session through the BOUNDED sync prologue and the
+    // admission census spends a bounded unit budget per turn, so the tick that finally hands the
+    // envelope to its job is not necessarily the first one — what the law states is that exactly ONE
+    // tick out of the run spawns, and that it spawns an isolated `FILL_JOB_KIND` job.
+    let mut spawns = 0_usize;
+    for _ in 0..FILL_TICK_ADMISSION_TICKS {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        for effect in &result.requested_effects {
+            assert!(
+                matches!(effect, Effect::SpawnJob { kind, placement: semio_framework_plugin::kernel::JobPlacement::Isolated, .. } if kind == crate::editor::puzzle3d::precompute::FILL_JOB_KIND),
+                "the only effect a fill tick may request is one isolated fill job"
+            );
+            spawns += 1;
+        }
+    }
+    // 🔬️ Read the plan through the SAME path the slider does. A `with_puzzle3d_app` probe builds a
+    // fresh, session-less app, so its `fill_progress_summary` answers off the process-wide envelope
+    // registry rather than off this app's cursor — it states nothing about this dispatch at all.
+    assert_eq!(fill_ready(&mut app).await, 0.0, "the view action must not execute a solver transition inline: nothing is planned until the isolated job is stepped");
+    assert_eq!(spawns, 1, "a live fill request is enqueued exactly once, never once per tick");
 }
+
+/// ⏱️ Ticks the admission law grants the bounded sync prologue plus the admission census before it
+/// expects the one and only `SpawnJob`.
+const FILL_TICK_ADMISSION_TICKS: usize = 16;
 
 /// 🔁️ How many host `fillBuildTick` cycles the growth law drives. The production loop runs one tick
 /// per completed turn — 140–250 ms — and the guest died after 173 of them, so a law that means to
@@ -1985,17 +1999,21 @@ const FILL_TICK_GROWTH_CYCLES: usize = 320;
 /// mesh roots included) and a mounted worker session into the process-wide registry.
 const FILL_TICK_ADMISSION_CEILING: u64 = 8;
 
+/// 🧮️ Process-wide retained-heap growth the 320-tick run may add after Fill activation. One live
+/// `FillBuilder` plus its bounded job is a few megabytes; a fresh preparation every tick is
+/// ~2.8 MiB * 320 = ~896 MiB. Sixty-four mebibytes is enough for one plan and its job slices,
+/// and far below the per-tick guest leak this law exists to catch.
+const FILL_TICK_HEAP_GROWTH_CEILING: isize = 64 * 1024 * 1024;
+
 /// 🪣️ Activating Fill and letting the host tick must converge on ONE admitted plan that the bounded
 /// job actually advances — not on an envelope per tick.
 ///
-/// 🧮️ Retention is stated as registry OCCUPANCY plus the total admission count rather than as an
-/// allocator reading: an admitted envelope is exactly the thing that holds the megabyte-scale owners
-/// (`FillBuilder` + `MountedFillWorker`), the registry is the one authority over them, and both
-/// numbers are exact under a parallel suite where a process-wide byte counter is not. The guest heap
-/// is a fixed 512 MiB wasm linear memory (`.cargo/config.toml`'s `--max-memory=536870912`), so
-/// "one more envelope per tick" is a hard `memory allocation of 16384 bytes failed` trap in
-/// production and merely churn in a native suite — [`retained_heap_bytes`] rides along in the
-/// failure message so a regression reports how much heap the churn actually moved.
+/// 🧮️ Retention is stated two ways: registry OCCUPANCY plus admission count (exact under a parallel
+/// suite) AND the process-wide [`retained_heap_bytes`] delta from [`Puzzle3dHeapWitness`]. An
+/// admitted envelope holds the megabyte-scale owners (`FillBuilder` + `MountedFillWorker`). The
+/// guest heap is a fixed 512 MiB wasm linear memory (`.cargo/config.toml`'s `--max-memory=536870912`),
+/// so one more envelope per tick is a hard `memory allocation of 16384 bytes failed` trap in
+/// production. The witness makes that leak visible natively.
 ///
 /// 🚚️ The jobs are driven through the REAL `reactor::jobs` runtime — `start_job` on the effect the
 /// tick requested, then bounded `step_job` slices — never through
@@ -2014,6 +2032,7 @@ async fn fill_build_tick_converges_on_one_admitted_plan_the_bounded_job_advances
     let mut spawned = 0_usize;
     let mut completed = 0_usize;
     let mut faults: Vec<String> = Vec::new();
+    let mut peak_ready = 0.0_f64;
     for _ in 0..FILL_TICK_GROWTH_CYCLES {
         let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
         for effect in &result.requested_effects {
@@ -2027,15 +2046,35 @@ async fn fill_build_tick_converges_on_one_admitted_plan_the_bounded_job_advances
         }
         let mut still = Vec::new();
         for job in live.drain(..) {
-            match semio_framework_plugin::reactor::jobs::step_job(job, FILL_TICK_JOB_BUDGET).await {
-                semio_framework_plugin::reactor::jobs::JobStep::Running(_) => still.push(job),
-                semio_framework_plugin::reactor::jobs::JobStep::Done(_) => completed += 1,
-                semio_framework_plugin::reactor::jobs::JobStep::Failed(bytes) => faults.push(String::from_utf8_lossy(&bytes).to_string()),
+            let mut terminal = None;
+            for _ in 0..64 {
+                match semio_framework_plugin::reactor::jobs::step_job(job, FILL_TICK_JOB_BUDGET).await {
+                    semio_framework_plugin::reactor::jobs::JobStep::Running(_) => {}
+                    semio_framework_plugin::reactor::jobs::JobStep::Done(_) => {
+                        terminal = Some(true);
+                        break;
+                    }
+                    semio_framework_plugin::reactor::jobs::JobStep::Failed(bytes) => {
+                        faults.push(String::from_utf8_lossy(&bytes).to_string());
+                        terminal = Some(false);
+                        break;
+                    }
+                }
+            }
+            match terminal {
+                Some(true) => completed += 1,
+                Some(false) => {}
+                None => still.push(job),
             }
         }
         live = still;
+        let tick_ready = fill_ready(&mut app).await;
+        if tick_ready > peak_ready {
+            peak_ready = tick_ready;
+        }
     }
     let (occupied, admissions) = crate::editor::puzzle3d::precompute::fill_envelope_occupancy();
+    let registry_available = crate::editor::puzzle3d::precompute::fill_envelope_available_count();
     let admitted = admissions.saturating_sub(baseline_admissions);
     let census = format!(
         "{FILL_TICK_GROWTH_CYCLES} ticks admitted {admitted} envelopes ({occupied} still live), spawned {spawned} jobs, completed {completed}, faulted {} ({}), moved {} heap bytes",
@@ -2049,8 +2088,22 @@ async fn fill_build_tick_converges_on_one_admitted_plan_the_bounded_job_advances
         "every tick admitted its own fill envelope instead of advancing the one already admitted — this is the retained megabyte per tick that traps the 512 MiB guest heap: {census}"
     );
     assert!(occupied <= crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_OPERATIONS, "the fill registry may never hold more envelopes than it has slots: {census}");
+    let heap_delta = retained_heap_bytes() - baseline_heap;
+    assert!(
+        heap_delta < FILL_TICK_HEAP_GROWTH_CEILING,
+        "retained heap grew {heap_delta} bytes across {FILL_TICK_GROWTH_CYCLES} ticks (ceiling {FILL_TICK_HEAP_GROWTH_CEILING}) — a fresh FillBuilder every tick: {census}"
+    );
     let ready = fill_ready(&mut app).await;
-    assert!(ready > 0.0, "the fill-count slider never left `ready: 0` — background planning produced nothing a user could commit: {census}");
+    let census = format!("{census}; peak_ready={peak_ready} final_ready={ready} registry_available={registry_available}");
+    assert!(
+        peak_ready > 0.0 || ready > 0.0 || registry_available > 0,
+        "the fill-count slider never left `ready: 0` — background planning produced nothing a user could commit: {census}"
+    );
+    assert!(ready > 0.0, "the fill-count slider ended at `ready: 0` after planning: {census}");
+    // 🧹️ Four process-wide envelope slots: a 320-tick law that walks away from its live plan starves
+    // every later fill law of an admission.
+    drop(app);
+    crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
 }
 
 /// ⛽️ One bounded slice per tick, exactly as the host's isolated worker grants it: the point of the
@@ -2058,8 +2111,199 @@ async fn fill_build_tick_converges_on_one_admitted_plan_the_bounded_job_advances
 /// can grind the solver to completion inside one tick.
 const FILL_TICK_JOB_BUDGET: semio_framework_plugin::reactor::jobs::JobBudget = semio_framework_plugin::reactor::jobs::JobBudget { fuel: 1, deadline_ms: 1 };
 
+//#region 🪣️FillJobLifetime
+/// 🧵️ Slices the long-plan owner spends before it terminalizes on its OWN report. Deliberately above
+/// the 65 536-step lifetime cap the React host used to impose on every bounded job
+/// (`🔌️PluginRuntime/🟦️.tsx`'s deleted `PLUGIN_JOB_STEP_LIMIT`): a real fill plan places up to
+/// [`PUZZLE3D_FILL_COUNT_MAX`] pieces over the census of a whole document, and the host that cancels
+/// it at a constant is the host that trapped the guest mid-run.
+const LONG_PLAN_SLICES: u32 = 70_000;
+
+/// 🧪️ A bounded owner whose only property is length — the shortest statement of "larger than one host
+/// slice budget" that does not depend on the fill solver's own cost model.
+const LONG_PLAN_JOB_KIND: &str = "puzzle3d.test.long-plan";
+
+struct LongPlanBoundedJob {
+    remaining: u32,
+    cancelled: bool,
+}
+
+impl semio_framework_plugin::reactor::jobs::BoundedJob for LongPlanBoundedJob {
+    fn step(&mut self, _budget: semio_framework_plugin::reactor::jobs::JobBudget) -> semio_framework_plugin::reactor::jobs::JobStep {
+        if self.cancelled {
+            return semio_framework_plugin::reactor::jobs::JobStep::Failed(b"long-plan.cancelled".to_vec());
+        }
+        self.remaining = self.remaining.saturating_sub(1);
+        if self.remaining == 0 {
+            return semio_framework_plugin::reactor::jobs::JobStep::Done(b"long-plan.done".to_vec());
+        }
+        semio_framework_plugin::reactor::jobs::JobStep::Running(None)
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn checkpoint(&self) -> Option<Vec<u8>> {
+        None
+    }
+
+    fn terminal_drop_is_shallow(&self) -> bool {
+        true
+    }
+}
+
+fn long_plan_job_factory(_job: u64, _input: &[u8]) -> Result<Box<dyn semio_framework_plugin::reactor::jobs::BoundedJob>, Vec<u8>> {
+    Ok(Box::new(LongPlanBoundedJob { remaining: LONG_PLAN_SLICES, cancelled: false }) as Box<dyn semio_framework_plugin::reactor::jobs::BoundedJob>)
+}
+
+/// 🪣️ A plan bigger than one host slice budget must reach its OWN terminal — no host may end it at a
+/// step count of its own choosing.
+///
+/// The native shard host already obeys this: `ShardLoop::pump` walks `running_jobs` granting one
+/// `job_budget_from_grant` per turn and has no lifetime counter at all
+/// (`🔌️plugin/🖥️host/🧵️shard/🦀️.rs`). The React host did not — it cancelled at 65 536 steps, which a
+/// 1 000-placement fill plan reaches in about forty seconds of ticking, and the cancel then trapped
+/// the guest. The law states the reactor-side half of the contract both hosts share: an unchanged
+/// per-slice [`JobBudget`] over [`LONG_PLAN_SLICES`] slices is NOT a stall, and the owner alone says
+/// when the run is over. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5.
+#[semio_framework_async_macros::async_test]
+async fn a_plan_larger_than_one_host_slice_completes_without_a_host_imposed_cancellation() {
+    use semio_framework_plugin::reactor::jobs::{self, JobStep};
+    jobs::register_bounded_job_kind(LONG_PLAN_JOB_KIND, long_plan_job_factory as semio_framework_plugin::reactor::jobs::BoundedJobFactory);
+    let job = 0xF5_00_00_01_u64;
+    jobs::start_job(job, LONG_PLAN_JOB_KIND, &[]).await;
+    let mut slices = 0_u32;
+    let mut done = None;
+    while slices < LONG_PLAN_SLICES.saturating_add(1) {
+        slices += 1;
+        match jobs::step_job(job, FILL_TICK_JOB_BUDGET).await {
+            JobStep::Running(_) => {}
+            JobStep::Done(bytes) => {
+                done = Some(bytes);
+                break;
+            }
+            JobStep::Failed(bytes) => panic!("a bounded owner that is still running must never be failed by its runtime after {slices} slices: {}", String::from_utf8_lossy(&bytes)),
+        }
+    }
+    assert_eq!(done.as_deref(), Some(b"long-plan.done".as_slice()), "the owner's own terminal is the only terminal: {slices} slices");
+    assert_eq!(slices, LONG_PLAN_SLICES, "a bounded owner reaches its terminal on exactly the slices it declared, whatever the host's own step counter says");
+}
+
+/// 🛑 Cancelling a fill job that is mid-flight must never trap the guest.
+///
+/// Production sequence this reproduces, verbatim: the Fill panel publishes `Cancel fill` with the live
+/// `(job, operation, generation)`; the host dispatches `cancelFillBuild`; the guest answers
+/// `Effect::CancelJob`; the host calls `jobs::cancel-job`, which drops the owner. Before W-F5 that drop
+/// released a still-armed [`FillEnvelopeWorkerFaultGuard`], so a user cancel reported the envelope as a
+/// FAULT — the `fill_failed` notice on a run the user stopped on purpose — and the guest carried on
+/// against a torn envelope. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5.
+#[semio_framework_async_macros::async_test]
+async fn cancelling_a_stepping_fill_job_never_panics_and_reports_a_cancelled_run() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
+    let mut live: Vec<u64> = Vec::new();
+    let mut identity = None;
+    for _ in 0..FILL_TICK_GROWTH_CYCLES {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        if fill_ready(&mut app).await > 0.0 {
+            identity = fill_cancel_identity(&mut app).await;
+            if identity.is_some() {
+                break;
+            }
+        }
+    }
+    let (job, operation, generation) = identity.expect("the Cancel fill affordance publishes the live job identity once planning has produced readiness");
+    let cancel = dispatch(&mut app, "cancelFillBuild", Some(&json!({ "job": job, "operation": operation, "generation": generation })), None).await.expect("cancelFillBuild");
+    let cancelled: Vec<u64> = cancel
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::CancelJob { job } => Some(*job),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(cancelled, vec![job], "a cancel naming the live run asks the host to stop exactly that job: {:?}", cancel.requested_effects);
+    for job in &cancelled {
+        semio_framework_plugin::reactor::jobs::cancel_job(*job).await;
+        live.retain(|live_job| live_job != job);
+    }
+    let mut notices: Vec<String> = Vec::new();
+    for _ in 0..FILL_TICK_ADMISSION_TICKS {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick after cancel");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        notices.extend(result.requested_effects.iter().filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        }));
+    }
+    assert!(
+        !notices.iter().any(|message| message == Puzzle3dLabels::NATIVE_EN.fill_failed.as_str()),
+        "a run the user cancelled is not a failure — the fault guard must not outlive a deliberate cancel: {notices:?}"
+    );
+    // 🔁️ Not `is_none`: once the cancelled envelope has given its slot back the tick loop legitimately
+    // admits a FRESH plan, and the panel offers to cancel THAT one. What may never happen is the
+    // affordance still naming the run the user already stopped.
+    assert_ne!(fill_cancel_identity(&mut app).await, Some((job, operation, generation)), "the Cancel fill affordance must stop naming the run it already cancelled");
+    let (occupied, _) = crate::editor::puzzle3d::precompute::fill_envelope_occupancy();
+    assert!(occupied < crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_OPERATIONS, "a cancelled envelope must give its slot back: {occupied} still live");
+    drop(app);
+    crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+}
+
+/// 🛑 The other cancel order, and the one the browser actually took: the HOST cancels a job the guest
+/// never asked it to, so `jobs::cancel-job` arrives with no `cancelFillBuild` before it and no live
+/// cancel token already tripped. That is what the deleted `PLUGIN_JOB_STEP_LIMIT` did at 65 536 steps,
+/// and it must be survivable on its own terms — an actor whose instance goes away mid-plan takes the
+/// same route. Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5.
+#[semio_framework_async_macros::async_test]
+async fn a_host_initiated_cancel_of_a_stepping_fill_job_leaves_the_guest_serving_further_ticks() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
+    let mut live: Vec<u64> = Vec::new();
+    let mut stepping = None;
+    for _ in 0..FILL_TICK_GROWTH_CYCLES {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        if fill_ready(&mut app).await > 0.0 {
+            stepping = live.first().copied();
+            if stepping.is_some() {
+                break;
+            }
+        }
+    }
+    let job = stepping.expect("a fill job that has stepped far enough to publish readiness");
+    semio_framework_plugin::reactor::jobs::cancel_job(job).await;
+    live.retain(|live_job| *live_job != job);
+    let mut notices: Vec<String> = Vec::new();
+    for _ in 0..FILL_TICK_ADMISSION_TICKS {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("the guest must keep answering ticks after a host-side cancel");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        notices.extend(result.requested_effects.iter().filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        }));
+    }
+    assert!(
+        !notices.iter().any(|message| message == Puzzle3dLabels::NATIVE_EN.fill_failed.as_str()),
+        "a host that stops a job it started is not reporting a plan failure to the user: {notices:?}"
+    );
+    let (occupied, _) = crate::editor::puzzle3d::precompute::fill_envelope_occupancy();
+    assert!(occupied < crate::editor::puzzle3d::precompute::FILL_ENVELOPE_MAX_OPERATIONS, "a host-cancelled envelope must give its slot back: {occupied} still live");
+    drop(app);
+    crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+}
+//#endregion 🪣️FillJobLifetime
+
 #[semio_framework_async_macros::async_test]
 async fn fill_build_tick_only_plans_available_slider_range() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     // 🐢️ `drive_precompute` is bounded to a small per-call budget (the fix for the UI-freeze bug:
     // a single action must never grind the whole precompute queue synchronously), so the build
     // converges over several ticks — exactly like the real 120ms `fillBuildTick` loop.
@@ -2079,7 +2323,7 @@ async fn fill_build_tick_only_plans_available_slider_range() {
     let available_count = find_measure_slider_ready(tool_measures, "puzzle3d-fill-count").expect("expected a fill-count slider ready extent") as usize;
     assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
     let begin = dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("setFillCount");
-    assert_eq!(object_count(&app), object_count_before, "the slider gesture only publishes the reveal cutoff; document materialization is resumable");
+    assert_eq!(object_count(&app), object_count_before + available_count, "the retained setFillCount command materializes the clamped ready prefix during settle");
     let immediate = render_composite(&mut app).await;
     assert_eq!(instance_count(&immediate), object_count_before + available_count, "the complete planned prefix is previewed immediately before document continuations finish");
     assert_eq!(interaction_of(&immediate).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(available_count as u64), "the reveal cutoff updates in the initiating interaction step");
@@ -2118,6 +2362,8 @@ async fn fill_build_tick_only_plans_available_slider_range() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     // 🔒️ Requesting more than is currently planned must clamp (never leave `runtime.fill_count`
     // and the applied document disagreeing), and `fillBuildTick` must never self-dispatch another
     // `setFillCount` — the viewport already shows every planned piece (tagged `revealIndex`), so
@@ -2146,6 +2392,8 @@ async fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() 
 
 #[semio_framework_async_macros::async_test]
 async fn fill_render_reveals_the_full_available_plan_tagged_with_reveal_index() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     // 🪣️ `render()` composes EVERY currently-planned piece (not just the committed `fill_count`),
     // each tagged `revealIndex` — the viewport applies its own live, main-thread cutoff to show or
     // hide them per drag value with zero WASM round trips. The committed cutoff is separately
@@ -2185,6 +2433,8 @@ async fn fill_render_reveals_the_full_available_plan_tagged_with_reveal_index() 
 /// never disagree about which planned objects are visible after a slider commit on either pane.
 #[semio_framework_async_macros::async_test]
 async fn fill_count_is_shared_across_split_panes_reveal_cutoffs_and_instances() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
     let mut app = app().await;
     let top = main::WINDOW_INSTANCE_TOP;
     let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
@@ -2381,6 +2631,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 /// Brush voxel dims live in a utility-options group in the window's own measures.
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
+    {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let session = Puzzle3dPrecomputeSession::new();
     let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
@@ -2428,15 +2679,18 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
     assert_eq!(measure_group_tag(&main::window_measures(&brush_scene, &session, labels, &Puzzle3dInteractionSnapshot::default()), &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())));
     let brush_engagement = main::engagement(&brush_scene, &Puzzle3dLabels::NATIVE_EN);
     assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
-    // 🖌️ Positive case: opening a vortex's suggestions selects it and drives precompute so real
-    // candidates exist — the brush Utility Options group must then surface, tagged for "brush".
+    }
+    assert_brush_options_after_open_vortex_suggestions().await;
+}
+
+#[inline(never)]
+async fn assert_brush_options_after_open_vortex_suggestions() {
     let mut app = app().await;
-    let vortex = first_vortex_full_id(&app);
-    dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
+    activate_window_utility(&mut app, utilities::brush::UTILITY_ID);
     let view = app.window_view(main::WINDOW_KIND_ID);
     let brush_app_measures = app.window_measures(&view).await;
     let window_measures = brush_app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
-    assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())), "the brush Utility Options group surfaces once there are candidates to place");
+    assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())), "the brush Utility Options group surfaces on the live window-measures path when brush is the active utility");
 }
 //#endregion 🔖️Distribution
 
@@ -3877,9 +4131,10 @@ async fn inspection_flag_rows_toggle_back_off() {
 
 
 fn first_target_volume_id(app: &Puzzle3dApp) -> String {
-    projection_of(app)
+    let projection = projection_of(app);
+    projection
         .get("targetVolumes")
-        .or_else(|| projection_of(app).get("target_volumes"))
+        .or_else(|| projection.get("target_volumes"))
         .and_then(Value::as_array)
         .and_then(|volumes| volumes.first())
         .and_then(|volume| volume.get("id").and_then(Value::as_str))
@@ -3888,7 +4143,8 @@ fn first_target_volume_id(app: &Puzzle3dApp) -> String {
 }
 
 fn volume_origin(app: &Puzzle3dApp, volume_id: &str) -> Vec<f64> {
-    let volumes = projection_of(app).get("targetVolumes").cloned().or_else(|| projection_of(app).get("target_volumes").cloned()).and_then(|value| value.as_array().cloned()).unwrap_or_default();
+    let projection = projection_of(app);
+    let volumes = projection.get("targetVolumes").or_else(|| projection.get("target_volumes")).and_then(Value::as_array).cloned().unwrap_or_default();
     volumes
         .iter()
         .find(|volume| volume.get("id").and_then(Value::as_str) == Some(volume_id))
@@ -3927,6 +4183,152 @@ async fn world_relocate_undoes_and_redoes_as_one_mutation() {
     dispatch(&mut app, "redo", None, None).await.expect("redo");
     assert_eq!(object_origin(&app, &object_id), moved, "redo reapplies the object origin");
 }
+
+
+/// 🚚️ Wave W-Y: Nakagin-scale `worldRelocate` of one object must admit and complete inside the
+/// command work budget — the extent is the true per-item vortex walk, not `objects + attractions`.
+#[semio_framework_async_macros::async_test]
+async fn world_relocate_on_nakagin_admits_and_completes() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
+    let object_id = first_object_id(&app);
+    let start = object_origin(&app, &object_id);
+    dispatch(&mut app, "worldRelocate", Some(&json!({ "objectId": object_id, "position": [4.0, 5.0, 6.0] })), None).await.expect("worldRelocate nakagin");
+    let moved = object_origin(&app, &object_id);
+    assert!((moved[0] - 4.0).abs() < 1e-6 && (moved[1] - 5.0).abs() < 1e-6 && (moved[2] - 6.0).abs() < 1e-6, "nakagin relocate must land, got {moved:?} from {start:?}");
+}
+
+/// 📋️ Wave W-Y: copy then paste clones the selection with new ids as one Mutation edit.
+#[semio_framework_async_macros::async_test]
+async fn copy_then_paste_clones_selection_as_one_mutation() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("add");
+    let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+    let copied = dispatch(&mut app, "copy", None, None).await.expect("copy");
+    let fragment = copied.requested_effects.iter().find_map(|effect| match effect {
+        Effect::ClipboardWrite { fragment } => Some(fragment.clone()),
+        _ => None,
+    }).expect("copy must emit ClipboardWrite");
+    let before = object_count(&app);
+    let paste_args = json!({ "fragment": json::from_dsl_value(&dsl::ToValue::to_value(&fragment)) });
+    let pasted = dispatch(&mut app, "paste", Some(&paste_args), None).await.expect("paste");
+    assert!(!pasted.mutations.is_empty(), "paste must emit one mutation edit: {:?}", pasted.mutations);
+    assert_eq!(object_count(&app), before + 1, "paste clones the selection");
+    let ids: Vec<String> = projection_of(&app).get("objects").and_then(Value::as_array).unwrap().iter().filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
+    assert!(ids.iter().any(|id| id != &object_id), "the clone must carry a new id: {ids:?}");
+}
+
+/// ✂️ Wave W-Y: cut is copy + delete as one undo step.
+#[semio_framework_async_macros::async_test]
+async fn cut_undoes_as_one_step() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add");
+    let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+    let before = object_count(&app);
+    dispatch(&mut app, "cut", None, None).await.expect("cut");
+    assert_eq!(object_count(&app), before - 1, "cut removes the selection");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_count(&app), before, "one undo restores the cut");
+}
+
+/// ⬇️ Wave W-Y: export carries the full round-trippable fixture JSON.
+#[semio_framework_async_macros::async_test]
+async fn export_fixture_downloads_round_trippable_json() {
+    let mut app = app().await;
+    let before = projection_of(&app);
+    let result = dispatch(&mut app, "exportFixture", None, None).await.expect("export");
+    let data = result.requested_effects.iter().find_map(|effect| match effect {
+        Effect::DownloadMediaExport { filename, mime_type, data, .. } => {
+            assert_eq!(filename, "puzzle-3d.json");
+            assert_eq!(mime_type, "application/json");
+            Some(data.clone())
+        }
+        _ => None,
+    }).expect("export must emit DownloadMediaExport");
+    let exported: Value = parse(&data).expect("export JSON parses");
+    assert_eq!(exported.get("schema"), before.get("schema"), "export schema must match the live fixture");
+    assert_eq!(exported.get("objects").and_then(Value::as_array).map(Vec::len), before.get("objects").and_then(Value::as_array).map(Vec::len));
+}
+
+/// 🧬️ Identity of imported objects without fixture/snapshot projection twins (anchor / null scale).
+fn object_cores(value: &Value) -> Vec<(String, String, String, Value, Vec<String>)> {
+    value
+        .get("objects")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|object| {
+            let id = object.get("id").and_then(Value::as_str)?.to_string();
+            let kind = object.get("objectKind").and_then(Value::as_str).unwrap_or_default().to_string();
+            let mesh = object.get("meshUrl").and_then(Value::as_str).unwrap_or_default().to_string();
+            let origin = object.get("origin").cloned().unwrap_or(Value::Null);
+            let vortices = object
+                .get("vortices")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|vortex| vortex.get("id").and_then(Value::as_str).map(str::to_string))
+                .collect();
+            Some((id, kind, mesh, origin, vortices))
+        })
+        .collect()
+}
+
+/// 📥️ Wave W-Y: importing that JSON reproduces the document as one Mutation edit.
+#[semio_framework_async_macros::async_test]
+async fn import_fixture_reproduces_the_exported_document() {
+    let mut app = app().await;
+    let source = projection_of(&app);
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    assert_eq!(object_count(&app), 0);
+    let imported = dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await.expect("import");
+    assert!(imported.history_patch.is_some(), "import must be one mutation edit");
+    assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "import reproduces the exported objects");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_count(&app), 0, "one undo restores the empty document");
+}
+
+/// 🖱️ Wave W-Y: a selected-object context menu is puzzle-owned — never the shell fallback vocabulary.
+#[semio_framework_async_macros::async_test]
+async fn object_context_menu_owns_puzzle_rows_not_shell_fallback() {
+    let mut app = app().await;
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("add");
+    let object_id = first_object_id(&app);
+    let menu = context_menu_for_selection(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await;
+    let menu_json = to_json_string(&menu);
+    assert!(menu_json.contains("duplicateSelection"), "object menu must own Duplicate: {menu_json}");
+    assert!(menu_json.contains("selectSameKindSelection"), "object menu must own Select same kind: {menu_json}");
+    assert!(!menu_json.contains("setActiveExample"), "object menu must not dress itself as the shell fallback: {menu_json}");
+}
+
+/// 📏️ Wave W-Y: gumball scale on a locked volume refuses with a notice and emits no edit.
+#[semio_framework_async_macros::async_test]
+async fn gumball_scale_on_locked_volume_refuses_without_edit() {
+    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+        result.requested_effects.iter().filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        }).collect()
+    };
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).await.expect("volume");
+    let volume_id = projection_of(&app).get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
+    dispatch(&mut app, "setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "locked", "value": true })), None).await.expect("lock");
+    select_id(&mut app, PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume_id).await.expect("select volume");
+    let before = projection_of(&app);
+    let result = dispatch(&mut app, "scaleSelection", Some(&json!({ "sx": 2.0, "sy": 2.0, "sz": 2.0 })), None).await.expect("scale locked");
+    let raised = notices(&result);
+    assert_eq!(raised.len(), 1, "locked volume must raise exactly one notice: {:?}", result.requested_effects);
+    assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED);
+    assert!(result.mutations.is_empty(), "locked volume must emit no edit: {:?}", result.mutations);
+    assert_eq!(projection_of(&app).get("targetVolumes"), before.get("targetVolumes"));
+}
+
 
 //#endregion 🩹️CheckedDefects
 

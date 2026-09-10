@@ -109,7 +109,7 @@ fn child_add_widget_rejects_an_explicit_identity_collision() {
     let content = SemioFlowSnapshot { nodes: vec![FlowNode { id: "taken".into(), kind: "inputNote".into(), label: "inputNote".into(), params: vec![], position: Default::default() }], ..Default::default() };
     let descriptor = flow::os_pack::json::from_json_str(r#"{"kind":"inputNote","id":"taken"}"#).expect("typed descriptor");
     let error = child_add_widget_mutation_from_descriptor(&content, &descriptor, None, 0.0, 0.0).expect_err("duplicate identity must fail");
-    assert!(error.to_string().contains("widget id already exists: taken"), "{error}");
+    assert!(error.message.contains("widget id already exists: taken"), "{error:?}");
 }
 
 #[semio_framework_async_macros::async_test]

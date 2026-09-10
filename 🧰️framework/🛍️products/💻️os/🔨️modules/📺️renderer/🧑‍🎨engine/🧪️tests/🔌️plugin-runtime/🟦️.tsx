@@ -7,9 +7,47 @@ import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecyc
 import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
+/** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as
+ * `dataAttributes` keyed `01`..`32` — the exact node shape `section_text_chunks`
+ * (`🔌️plugin/🦀️.rs`) publishes. */
+function packedCarrierLeaf(id: number, value: string, dataAttributes: { readonly [key: string]: string } | null): UiNodeRecord {
+  return {
+    id, key: `c${id - 1}`, component: { type: "text", value, emphasize: null, dataAttributes },
+    layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+    transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [],
+  } as UiNodeRecord;
+}
+
+/** 🧩️ The carrier root `paged_text_carrier` stamps with the reserved section body key. */
+function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNodeRecord {
+  return {
+    id: 0, key: bodyKey,
+    component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+    layout: { kind: "stack", axis: "vertical", gap: "none", padding: { all: "none" }, align: "stretch", justify: "start", grow: false, wrap: false },
+    style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+    transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [...children],
+  } as UiNodeRecord;
+}
+
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
+  describe("isolated job admission batch", () => {
+    it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
+      const { isolatedJobStepsPerSerializedAdmission } = dependencies;
+      expect(isolatedJobStepsPerSerializedAdmission(1)).toBe(1);
+      expect(isolatedJobStepsPerSerializedAdmission(32)).toBe(32);
+      expect(isolatedJobStepsPerSerializedAdmission(0)).toBe(1);
+    });
+    it("fails-before every step polls UI; passes-after a 128-step stride", () => {
+      const { isolatedJobUiPollEverySteps } = dependencies;
+      expect(isolatedJobUiPollEverySteps(1, 1), "fails-before: stride 1 polls every step").toBe(true);
+      expect(isolatedJobUiPollEverySteps(0)).toBe(false);
+      expect(isolatedJobUiPollEverySteps(127)).toBe(false);
+      expect(isolatedJobUiPollEverySteps(128)).toBe(true);
+      expect(isolatedJobUiPollEverySteps(256)).toBe(true);
+    });
+  });
   describe("shared context-menu ViewModel", () => {
     it("sends the same current locale and terminology to two mounted surfaces while preserving each window", async () => {
       const contextMenu = vi.fn(async () => []);
@@ -106,14 +144,63 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(desynced).toBe(false);
       const built = retainedSurfaceToBuiltNode(surface!);
       if (built === null) throw new Error("fixture surface has no root");
-      expect(sectionValueFromBuiltNode(measuresSection.bodyKey, built)).toEqual(measures);
-      expect(() => sectionValueFromBuiltNode("framework.section.tools", built)).toThrow("plugin-ui.section-root-mismatch");
+      expect(sectionValueFromBuiltNode(measuresSection.bodyKey, built, "instance 7")).toEqual(measures);
+      expect(() => sectionValueFromBuiltNode("framework.section.tools", built, "instance 7")).toThrow("plugin-ui.section-root-mismatch");
       const retained = new Map<string, RetainedSurface>([[retainedSurfaceId(7, measuresSection.bodyKey), surface!]]);
       const response = retainedUiRefreshResponse(7, { viewState: {}, measures: {}, tools: {} }, retained);
       expect(response.measures).toMatchObject({ key: "measures", value: measures });
       expect(response.measures?.hash).not.toBe("");
       expect(response.tools).toBeUndefined();
       console.info("[DEBUG] measures section projected from its retained chunk carrier into the shell refresh cache shape");
+    });
+
+    it("reassembles a PACKED carrier leaf — value plus every sorted dataAttributes slice — against the neutral paged-text-carrier fixture", async () => {
+      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      expect(carrier.slices.join("")).toBe(carrier.payload);
+      expect(carrier.payload.length).toBe(carrier.payloadBytes);
+      expect(carrier.payloadBytes).toBeGreaterThan(carrier.textMaxBytes);
+      expect(carrier.slices[0].length).toBe(carrier.textMaxBytes);
+      expect(() => JSON.parse(carrier.slices[0])).toThrow();
+      expect(carrier.slices.length).toBeGreaterThan(1);
+      expect(carrier.slices.length).toBeLessThanOrEqual(carrier.packSlices);
+      const dataAttributes = Object.fromEntries(carrier.slices.slice(1).map((slice: string, offset: number) => [String(offset + 1).padStart(2, "0"), slice]));
+      const { surface, desynced } = applyUiPatchToRetained(null, {
+        surface: carrier.rootKey, revision: 1, baseRevision: 0,
+        ops: [
+          { type: "upsert", ...packedCarrierLeaf(1, carrier.slices[0], dataAttributes) },
+          { type: "upsert", ...packedCarrierRoot(carrier.rootKey, [1]) },
+          { type: "setRoot", id: 0 },
+        ],
+      });
+      expect(desynced).toBe(false);
+      const built = retainedSurfaceToBuiltNode(surface!);
+      if (built === null) throw new Error("fixture surface has no root");
+      expect(sectionValueFromBuiltNode(carrier.rootKey, built, "instance 7")).toEqual(JSON.parse(carrier.payload));
+      console.info(`[DEBUG] packed carrier leaf reassembled ${carrier.payloadBytes} bytes from 1 value slice and ${carrier.slices.length - 1} dataAttributes slices`);
+    });
+
+    it("raises a typed fault naming the reserved section and its producer when a carrier's payload is not valid JSON", async () => {
+      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      const { surface } = applyUiPatchToRetained(null, {
+        surface: carrier.rootKey, revision: 1, baseRevision: 0,
+        ops: [
+          { type: "upsert", ...packedCarrierLeaf(1, carrier.slices[0], null) },
+          { type: "upsert", ...packedCarrierRoot(carrier.rootKey, [1]) },
+          { type: "setRoot", id: 0 },
+        ],
+      });
+      const built = retainedSurfaceToBuiltNode(surface!);
+      if (built === null) throw new Error("fixture surface has no root");
+      let raised: unknown;
+      try { sectionValueFromBuiltNode(carrier.rootKey, built, "procedural#1 instance 7"); } catch (error) { raised = error; }
+      expect(raised).toBeInstanceOf(SemioFaultError);
+      const fault = (raised as InstanceType<typeof SemioFaultError>).fault;
+      expect(fault.code).toBe("plugin-ui.section-payload-not-json");
+      expect(fault.scope.bodyKey).toBe(carrier.rootKey);
+      expect(fault.message).toContain("procedural#1 instance 7");
+      expect(fault.message).toContain(String(carrier.textMaxBytes));
+      expect(fault.causes?.[0]?.message ?? "").not.toBe("");
+      console.info(`[DEBUG] truncated carrier raised ${fault.code} naming ${fault.scope.bodyKey} and its producer instead of a bare SyntaxError`);
     });
   });
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
@@ -164,9 +251,57 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         }
       });
     });
-  
+
+    describe("host effect address decoding", () => {
+      it("reads every request-carrying effect out of its nested WIT params record", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const nested = (tag: string, req: number, params: Record<string, unknown>) => ({ tag, val: { req, params } });
+        const { req: dispatchReq, ...dispatchParams } = fixture.dispatchAction;
+        expect(wireEffectToFriendly(nested("dispatch-action", dispatchReq, dispatchParams))).toEqual({ dispatchAction: { req: dispatchReq, action: fixture.dispatchAction.action, args: undefined, delayMs: fixture.dispatchAction.delayMs } });
+        const { req: windowReq, ...windowParams } = fixture.openWindow;
+        expect(wireEffectToFriendly(nested("open-window", windowReq, windowParams))).toEqual({ openWindow: { req: windowReq, kind: fixture.openWindow.kind, params: undefined } });
+        const { req: dialogReq, ...dialogParams } = fixture.openDialog;
+        expect(wireEffectToFriendly(nested("open-dialog", dialogReq, dialogParams))).toEqual({ openDialog: { req: dialogReq, dialogId: fixture.openDialog.dialogId, args: undefined } });
+        const { req: spawnReq, ...spawnParams } = fixture.spawnPluginInstance;
+        expect(wireEffectToFriendly(nested("spawn-plugin-instance", spawnReq, spawnParams))).toEqual({ spawnPluginInstance: { req: spawnReq, ...spawnParams } });
+      });
+
+      it("drops a dispatch-action whose action id never survived the boundary", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        try {
+          // The pre-fix flat read: the payload sits at the top level, so `params.action` is absent.
+          expect(wireEffectToFriendly({ tag: "dispatch-action", val: { ...fixture.dispatchAction } })).toBeNull();
+          expect(wireEffectToFriendly({ tag: "dispatch-action", val: { req: fixture.dispatchAction.req, params: { action: "", delayMs: 0 } } })).toBeNull();
+          expect(warn).toHaveBeenCalledTimes(2);
+        } finally {
+          warn.mockRestore();
+        }
+      });
+
+      it("refuses an unaddressed invocation with a typed renderer fault naming its window kind", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const address = { pluginId: "procedural", appId: fixture.spawnPluginInstance.appId, windowKindId: fixture.windowKindId, actionId: "" };
+        let thrown: unknown;
+        try {
+          assertAddressedInvocation({ address, arguments: {} }, "action", fixture.instanceId);
+        } catch (error) {
+          thrown = error;
+        }
+        expect(thrown).toBeInstanceOf(SemioFaultError);
+        const fault = (thrown as InstanceType<typeof SemioFaultError>).fault;
+        expect(fault.code).toBe(fixture.unaddressedFaultCode);
+        expect(fault.origin).toBe(fixture.unaddressedFaultOrigin);
+        expect(fault.message).toContain(fixture.windowKindId);
+        expect(fault.scope.instanceId).toBe(String(fixture.instanceId));
+        expect(() => assertAddressedInvocation({ address: { ...address, actionId: fixture.dispatchAction.action } }, "action", fixture.instanceId)).not.toThrow();
+        expect(() => assertAddressedInvocation({ address: { commandId: "" } }, "command", fixture.instanceId)).toThrow(SemioFaultError);
+        expect(() => assertAddressedInvocation({ address: { commandId: "open" } }, "command", fixture.instanceId)).not.toThrow();
+      });
+    });
+
     describe("extension invocation completion publication", () => {
-      async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void; jobs?: { start?: (job: bigint, kind: string, input: Uint8Array) => void; step?: (job: bigint) => ShardJobStep; cancel?: (job: bigint) => void } } = {}): Promise<void> {
+      async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void; jobs?: { start?: (job: bigint, kind: string, input: Uint8Array) => void; step?: (job: bigint, budget: { fuel: bigint; deadlineMs: number }) => ShardJobStep; cancel?: (job: bigint) => void } } = {}): Promise<void> {
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const idle: WireTurnResult = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
@@ -183,7 +318,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         testState.sharedShardClient = {
           turn: dispatch,
           startJob: async (_actorId: string, job: bigint, kind: string, input: Uint8Array) => { hooks.jobs?.start?.(job, kind, input); },
-          stepJob: async (_actorId: string, job: bigint) => hooks.jobs?.step?.(job) ?? ({ status: "running" } as ShardJobStep),
+          stepJob: async (_actorId: string, job: bigint, budget: { fuel: bigint; deadlineMs: number }) => hooks.jobs?.step?.(job, budget) ?? ({ status: "running" } as ShardJobStep),
           cancelJob: async (_actorId: string, job: bigint) => { hooks.jobs?.cancel?.(job); },
           captureInstanceLifecycle: (actorId: string, instanceId: number) => {
             const activationGeneration = generation;
@@ -301,6 +436,58 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           jobs: {
             start: (job, kind, input) => { started.push({ job, kind, input: Array.from(input) }); },
             step: (job) => { stepped.push(job); return stepped.length < 3 ? { status: "running" } : { status: "done", value: new Uint8Array([1]) }; },
+          },
+        });
+      });
+
+      // ⛽️ Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5. W-J's driver bounded a job's LIFETIME at a
+      // constant `PLUGIN_JOB_STEP_LIMIT = 1 << 16` and cancelled whatever was still running there. A
+      // `semio.puzzle3d.fill` plan of up to 1 000 placements reaches that in ~40 s of ticking, and the
+      // cancel tore the guest's live envelope down mid-run (browser-measured 2026-09-10: `unreachable`
+      // → `shard 0 lost` → `actor-activation.revoked`). The native host bounds the same jobs PER SLICE
+      // and never over their lifetime — `ShardLoop::pump` grants one `job_budget_from_grant` per turn
+      // and has no step counter at all — so this driver must agree: same budget every slice, terminal
+      // only from the guest.
+      it("bounds a job per slice and never ends one the guest is still running", async () => {
+        const { encodeAppFrame } = await import("@semio-tech/framework-os");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const bytes = (value: unknown) => Array.from(encodePackValue(value));
+        const legacyHostLifetimeCap = 1 << 16;
+        const slicesBeforeTerminal = legacyHostLifetimeCap + 1_024;
+        const budgets = new Set<string>();
+        const cancelled: bigint[] = [];
+        const submitted: ShardEventEnvelope[][] = [];
+        let stepped = 0;
+        let instance = 0;
+        await withRequester(async (_actor, events) => {
+          submitted.push([...events]);
+          if (submitted.length > 1) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+          return {
+            uiPatches: [],
+            effects: [
+              { tag: "spawn-job", val: { job: 11n, kind: "semio.puzzle3d.fill", input: new Uint8Array([1]), placement: { tag: "isolated" } } },
+              { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [], mutations: [], inverse_group: [] } })) } },
+            ],
+            nextWake: null,
+            status: { tag: "idle" },
+          };
+        }, async (handle, opened) => {
+          instance = opened;
+          await handle.captureExtensionCompletion!(instance, BigInt(fixture.requestIds[2]!)).complete({ ok: encodePackValue(fixture.response) });
+          for (let turn = 0; turn < 4_096 && !submitted.some(events => events.some(event => event.kind === "job-completed")); turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect(stepped).toBe(slicesBeforeTerminal);
+          expect(cancelled).toEqual([]);
+          expect([...budgets]).toEqual([`${DEFAULT_SHARD_BUDGET.fuel}/${DEFAULT_SHARD_BUDGET.wallMs}`]);
+          const completion = submitted.flat().find(event => event.kind === "job-completed");
+          expect(completion?.payload).toEqual({ job: 11n, outcome: { tag: "ok", val: [9] } });
+        }, {
+          jobs: {
+            step: (_job, budget) => {
+              stepped += 1;
+              budgets.add(`${budget.fuel}/${budget.deadlineMs}`);
+              return stepped < slicesBeforeTerminal ? { status: "running" } : { status: "done", value: new Uint8Array([9]) };
+            },
+            cancel: (job) => { cancelled.push(job); },
           },
         });
       });
@@ -1759,7 +1946,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: bytes({ kind: "full" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
         ];
         const client = { command: async () => frames } as unknown as AppChannelClient;
-        const result = await performInvocation(client, 7, {}, "action", {});
+        const result = await performInvocation(client, 7, { address: { pluginId: "procedural", appId: "s.procedural.procedural3d@1/*#editor", windowKindId: "procedural-main", actionId: "commitFixture" }, arguments: {} }, "action", {});
         expect(result.output).toEqual({ operationId: fixture.wire.operation });
         expect(result.uiScope).toEqual({ kind: "full" });
       });

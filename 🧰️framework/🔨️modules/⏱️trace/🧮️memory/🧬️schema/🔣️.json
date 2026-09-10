@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/guest-memory/schema.json",
+  "title": "GuestLinearMemoryBudget",
+  "description": "Language-neutral linear-memory budget every Semio plugin component is linked and admitted under. `maximumBytes` is the wasm memory `maximum` the component's core module declares (`wasm-ld --max-memory`, set uniformly for `wasm32-wasip2` in `.cargo/config.toml`); `stackBytes` is the shadow stack carved out of it (`wasm-ld -zstack-size`, passed by the dev plugin build in `🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`); `installPeakPercent` is the share of `maximumBytes` the boot + contributions-install + first-mesh sequence may peak at before a law fails, so a growing extension closure is caught while headroom still exists rather than as a `rust_oom` trap in a browser tab; `contiguousRequestCeilingBytes` bounds the size of any single block a routine per-command or per-turn path may ask that memory for.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumBytes", "stackBytes", "installPeakPercent", "contiguousRequestCeilingBytes", "hostAnswerCeilingBytes"],
+  "properties": {
+    "maximumBytes": {
+      "const": 536870912,
+      "description": "Largest linear memory a plugin guest may grow to, in bytes — 512 MiB, the `maximum` in the component core module's memory section."
+    },
+    "stackBytes": {
+      "const": 8388608,
+      "description": "Shadow stack reserved inside the guest's linear memory, in bytes."
+    },
+    "installPeakPercent": {
+      "const": 60,
+      "description": "Share of `maximumBytes`, in percent, the boot + contributions-install + first-mesh sequence's retained-heap peak must stay under."
+    },
+    "contiguousRequestCeilingBytes": {
+      "const": 65536,
+      "description": "Largest contiguous block, in bytes, a routine per-command or per-turn guest path may request \u2014 one wasm page, the guest allocator's growth granularity. A larger request needs a pre-existing large free chunk or a multi-page grow, so it is the first request a fragmented or nearly-full guest refuses."
+    },
+    "hostAnswerCeilingBytes": {
+      "const": 8388608,
+      "description": "Largest ASSEMBLED answer, in bytes, the host may deliver into a guest for one outstanding request \u2014 the total an extension result, blob or stream may reach once its `contiguousRequestCeilingBytes` pages are joined. The pages bound what one lowering asks the guest allocator for; this bounds what the assembled buffer may grow to before the guest answers the request with a typed fault instead of allocating further."
+    }
+  }
+}

@@ -2,7 +2,7 @@
 import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
-import { flowWasmContract } from "../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts";
+import { flowWasmContract } from "../../../../🧪️tests/🌐️browser-declaration/🟦️.ts";
 
 //#region 🔣️SessionOwnership
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🧹️session-retirement/🔣️.json", import.meta.url)).json();

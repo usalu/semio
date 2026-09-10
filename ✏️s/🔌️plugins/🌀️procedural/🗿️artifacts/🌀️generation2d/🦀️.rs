@@ -152,6 +152,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 pub(crate) mod store_fixture;
 
 #[cfg(test)]
+#[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
+pub(crate) mod publication_authority;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
@@ -687,6 +691,8 @@ pub mod editor {
             pub mod enter_generate;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🦀️.rs"]
             pub mod flow_eval_resolve;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
+            pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🦀️.rs"]
             pub mod flow_eval_tick;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs"]

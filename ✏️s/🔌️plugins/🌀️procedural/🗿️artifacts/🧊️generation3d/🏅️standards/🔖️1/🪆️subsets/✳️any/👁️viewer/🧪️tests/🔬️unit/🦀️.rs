@@ -20,8 +20,12 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn every_viewer_tool_id_is_declared_in_all_four_tables() {
     let commands: std::collections::BTreeSet<&str> = Generation3dViewCommand::TOOL_JOB_IDS.iter().copied().collect();
-    let retained: std::collections::BTreeSet<&str> = GENERATION3D_VIEW_TOOL_IDS.iter().copied().collect();
-    let published: std::collections::BTreeSet<&str> = <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    let retained: std::collections::BTreeSet<&str> = GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter()).copied().collect();
+    let published: std::collections::BTreeSet<&str> = <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+        .iter()
+        .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .map(|contract| contract.tool_id)
+        .collect();
     let proved: std::collections::BTreeSet<String> = <Generation3dViewer as ArtifactViewer>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id().to_string()).collect();
     let proved: std::collections::BTreeSet<&str> = proved.iter().map(String::as_str).collect();
     assert_eq!(commands, retained, "command enum ids and retained tool ids must be a bijection");
@@ -32,7 +36,10 @@ fn every_viewer_tool_id_is_declared_in_all_four_tables() {
 /// 🔒️ The runtime half of the read-only guarantee: no viewer tool may publish on the document lane.
 #[test]
 fn no_viewer_tool_publishes_on_the_artifact_lane() {
-    for contract in <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+    for contract in <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+        .iter()
+        .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+    {
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
         assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::Artifact), "viewer tool {} must never publish on the artifact lane", contract.tool_id);
         assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::Draft), "viewer tool {} must never publish on the draft lane", contract.tool_id);
@@ -115,3 +122,39 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
         assert_eq!(testkit::snapshot(&app), before, "viewer action {id} must not mutate the document");
     }
 }
+
+//#region 📇️WindowActionLawTests
+/// 📇️ THE window-kind action law for the read-only surface (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// This viewer has ONE window kind, and its whole chrome — `setShowMode`/`setLodMode` and the sun group
+/// from `preview::preview_window_measures`, plus the world host's own `setCamera` — belongs to it, so the
+/// law here is an equality rather than a containment: every action the app declares is dispatched by that
+/// window, and the window declares every action it dispatches. `WindowKindDefinition.actions` is what
+/// `ShellHost`'s `declaredAction` gate reads before it will call `plugin.handleAction`
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5691`).
+#[semio_framework_async_macros::async_test]
+async fn every_emitted_action_is_declared_on_the_preview_window_kind() {
+    let _serial = crate::viewer::generation3d::testkit::lock();
+    let definition = create_generation3d_viewer();
+    let window = definition.window_kinds.iter().find(|kind| kind.id == preview::WINDOW_KIND_ID).expect("preview window kind");
+    let declared: std::collections::BTreeSet<String> = window.actions.iter().map(|action| action.id.clone()).collect();
+    let mut app = app().await;
+    let projection = render(&mut app, preview::BODY_KEY).await;
+    let mut emitted = crate::emitted_action_ids(&projection);
+    drop(app);
+    // 🎛️ `ArtifactViewer::window_measures` is an associated function over borrowed views, not a
+    // `PluginApp` method, so the chrome half of the law reads the SAME builder the trait impl calls.
+    emitted.extend(crate::measure_action_ids(&preview::preview_window_measures(&Generation3dViewConfig::default(), generation3d_view_action)));
+    // 📷️ `setCamera` is dispatched by the world host's own viewport gesture (`World3dHost/🟦️.tsx`), not by
+    // a measure or a `UiNode` binding, so the render/measure walk can never observe it — it is asserted
+    // against the declaration directly instead of being dropped from the law.
+    emitted.insert("setCamera".into());
+    println!("[STATS] window-actions kind={} declared={} emitted={} emits={emitted:?}", preview::WINDOW_KIND_ID, declared.len(), emitted.len());
+    for action in &emitted {
+        assert!(declared.contains(action), "{} emits {action} but never declares it — ShellHost's declaredAction gate drops it", preview::WINDOW_KIND_ID);
+    }
+    // 🧾️ Exactness, expressed against the APP-AUTHORED verbs only: `build_definition` also injects the
+    // framework's own history/clipboard/tutorial/interaction ids into every window kind, and those are
+    // never a plugin's to scope. `GENERATION3D_VIEW_TOOL_IDS` is this viewer's own action roster.
+    assert_eq!(emitted, GENERATION3D_VIEW_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<String>>(), "the viewer's one window kind must dispatch exactly the app's own view actions");
+}
+//#endregion 📇️WindowActionLawTests

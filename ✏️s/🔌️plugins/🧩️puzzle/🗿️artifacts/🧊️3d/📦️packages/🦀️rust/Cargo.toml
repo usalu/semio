@@ -53,5 +53,7 @@ js-sys = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+# 🧮️ The shared heap witness this artifact's growth laws weigh the tick loop with — test-only.
+semio-framework-trace = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

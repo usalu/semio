@@ -1,0 +1,3 @@
+(* ebnf procedural.assembly.mutations *)
+line = keyword, [ space, arguments ] ;
+keyword = 'create-slot' | 'delete-slot' | 'create-rule' | 'delete-rule' | 'change-weight' | 'remove-weight' | 'connect-slots' | 'disconnect-slots' | 'change-seed' ;

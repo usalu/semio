@@ -150,10 +150,10 @@ fn ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per
     let mut contents = UiTurnPatchContents::default();
     *contents.pending.source_mut().unwrap() = Some(owner);
     arena.handback(key, contents).unwrap();
-    assert!(arena.close_one());
+    assert!(arena.close_one(1, 4096));
     assert!(arena.slots[key.slot].reserved);
     for turn in 0..4096 {
-        arena.close_one();
+        arena.close_one(1, 4096);
         if !arena.slots[key.slot].reserved {
             break;
         }

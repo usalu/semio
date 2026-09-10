@@ -267,7 +267,7 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
         }
     }
 
-    let mut cursor = WorldTerrainMeshCursor::new("surface", 3, 4, 5, payload(), 50, 9, 9).expect("terrain cursor");
+    let mut cursor = WorldTerrainMeshCursor::new("surface", (3, 4, 5), payload(), 50, 9, 9).expect("terrain cursor");
     let mut turns = 0;
     loop {
         turns += 1;
@@ -299,7 +299,7 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
     }
     assert!(cursor.terminal_is_empty());
 
-    let mut interrupted = WorldTerrainMeshCursor::new("surface", 3, 4, 5, payload(), 70, 11, 11).expect("terrain cursor");
+    let mut interrupted = WorldTerrainMeshCursor::new("surface", (3, 4, 5), payload(), 70, 11, 11).expect("terrain cursor");
     assert!(matches!(interrupted.step(11, 11), WorldTerrainMeshStep::Pending));
     let mut close_turns = 0;
     while !interrupted.close_step() || !interrupted.terminal_is_empty() {
@@ -307,7 +307,7 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
         assert!(close_turns < 64);
     }
     assert!(interrupted.terminal_is_empty());
-    assert!(WorldTerrainMeshCursor::new("surface", 0, 0, 0, TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
+    assert!(WorldTerrainMeshCursor::new("surface", (0, 0, 0), TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
 }
 
 fn face_overlay_test_mesh_with_faces(generation: u64, revision: u64, face_ids: &[u32]) -> Mesh3dLease {
@@ -2757,3 +2757,147 @@ fn sync_world3d_state_captures_scene_bound_domain() {
     assert_eq!(resolved_domain_granularity_id(&state), "object");
 }
 //#endregion 🔖️WorldInteractionVerbs
+
+//#region 🌉️World3dSceneBridge
+/// 🌉️ The committed generation3d preview payload this lane drives the bridge with. Produced by the
+/// real pipeline (`parse_dsl` → `FlowHost::evaluate` → `tessellate_geometry(0.05)` →
+/// `preview_payload_from_eval`) in `s.procedural.generation3d`'s own example-geometry harness, whose
+/// `parry3d` oracle independently confirms the same solid's volume and extent — see the fixture's
+/// `provenance` block, and the twin assertion in that harness that keeps this file from rotting.
+const SCENE_BRIDGE_FIXTURE: &str = include_str!("../🌉️scene-bridge/🔣️.json");
+
+fn scene_bridge_fixture() -> serde_json::Value {
+    serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses")
+}
+
+/// 🎬️ Builds the exact `World3dScene` the generation3d preview window publishes for the fixture.
+fn scene_from_bridge_fixture(fixture: &serde_json::Value) -> UiComponentSceneNode {
+    let mut scene = scene_with_selection_and_domain("{}", Some((fixture["domainId"].as_str().expect("domain"), fixture["domainGranularityId"].as_str().expect("granularity"))));
+    let world = scene.world_3d.as_mut().expect("world scene");
+    world.meshes_json = fixture["meshesJson"].to_string();
+    world.instances_json = fixture["instancesJson"].to_string();
+    world.camera_json = fixture["cameraJson"].to_string();
+    world.selection_json = fixture["selectionJson"].to_string();
+    world.environment_json = Some(fixture["environmentJson"].to_string());
+    scene
+}
+
+/// 🌉️ Drives the staged bridge to its sealed lease, then the snapshot apply ladder to `Complete`.
+fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
+    sync_world3d_state(state, scene, bounds);
+    for turn in 0..4_096 {
+        match with_world_step_context(64, |context| step_world3d_scene_bridge(state, context)) {
+            World3dSceneBridgeStep::Complete => break,
+            World3dSceneBridgeStep::Pending => {}
+            step => panic!("scene bridge stopped at {step:?} on turn {turn} (fault {:?})", state.snapshot_fault),
+        }
+        assert!(turn < 4_095, "scene bridge did not seal within its turn ceiling");
+    }
+    sync_world3d_state(state, scene, bounds);
+    for turn in 0..4_096 {
+        assert_ne!(with_world_step_context(64, |context| step_world3d_draw_rebuild(state, context)), WorldDrawRebuildStep::Fault, "draw rebuild faulted on turn {turn}");
+        match with_world_step_context(64, |context| step_world3d_snapshot(state, context)) {
+            World3dSnapshotApplyStep::Complete | World3dSnapshotApplyStep::Idle => break,
+            World3dSnapshotApplyStep::Pending => {}
+            step => panic!("snapshot apply stopped at {step:?} on turn {turn} (fault {:?})", state.snapshot_fault),
+        }
+        assert!(turn < 4_095, "snapshot apply did not complete within its turn ceiling");
+    }
+    for _ in 0..4_096 {
+        if with_world_step_context(64, |context| step_world3d_draw_rebuild(state, context)) == WorldDrawRebuildStep::Complete {
+            break;
+        }
+    }
+}
+
+#[test]
+fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
+    let fixture = scene_bridge_fixture();
+    let scene = scene_from_bridge_fixture(&fixture);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+
+    let expect = &fixture["expect"];
+    assert_eq!(state.snapshot_fault, None, "the bridge must publish without faulting");
+    assert_eq!(state.draws.iter().count(), expect["draws"].as_u64().expect("draws") as usize, "one draw per mesh that actually carries triangles");
+    let draw = state.draws.get(0).expect("published draw");
+    assert_eq!(draw.mesh_key, expect["drawMeshKey"].as_str().expect("mesh key"));
+    let instance_ids: Vec<&str> = draw.instances.iter().map(|instance| instance.id.as_str()).collect();
+    let expected_instance_ids: Vec<&str> = expect["instanceIds"].as_array().expect("instance ids").iter().map(|id| id.as_str().expect("instance id")).collect();
+    assert_eq!(instance_ids, expected_instance_ids, "instance ids stay channel-qualified across the wire");
+
+    let mesh = *state.meshes.get(&draw.mesh_key).expect("published mesh geometry");
+    let schema = mesh.schema().expect("mesh schema");
+    assert_eq!(schema.indices / 3, expect["triangles"].as_u64().expect("triangles") as u32, "the bridged mesh carries the tessellated triangle count, not a placeholder box");
+    assert_eq!(schema.vertices, expect["vertices"].as_u64().expect("vertices") as u32);
+
+    for id in expect["wireOnlyMeshesDropped"].as_array().expect("dropped meshes") {
+        assert!(!state.meshes.contains_key(id.as_str().expect("mesh id")), "a wire-only preview mesh carries no triangles and must not become a draw");
+    }
+}
+
+#[test]
+fn scene_bridge_honours_selection_hover_camera_and_sun() {
+    let fixture = scene_bridge_fixture();
+    let scene = scene_from_bridge_fixture(&fixture);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+    apply_runtime_draw_flags(&mut state);
+
+    let expect = &fixture["expect"];
+    assert_eq!(state.selected_ids, expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_string()).collect::<Vec<_>>());
+    assert_eq!(state.local_hover_id.as_deref(), expect["hoveredId"].as_str());
+    let draw = state.draws.get(0).expect("published draw");
+    let instance = draw.instances.first().expect("published instance");
+    assert!(instance.selected, "the scene's own selection document must paint the instance selected");
+
+    let camera = state.orbit.to_camera();
+    let expected_camera = expect["cameraPosition"].as_array().expect("camera");
+    for axis in 0..3 {
+        assert!((f64::from(camera.position.to_array()[axis]) - expected_camera[axis].as_f64().expect("axis")).abs() < 1.0e-4, "camera axis {axis}: {:?}", camera.position);
+    }
+
+    let sun = environment_light_dir(&state.environment);
+    let expected_sun = expect["sunDirection"].as_array().expect("sun");
+    for axis in 0..3 {
+        assert!((f64::from(sun[axis]) - expected_sun[axis].as_f64().expect("axis")).abs() < 1.0e-5, "sun axis {axis}: {sun:?}");
+    }
+}
+
+#[test]
+fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
+    let fixture = scene_bridge_fixture();
+    let scene = scene_from_bridge_fixture(&fixture);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+    state.pick_bounds = bounds;
+
+    assert_eq!(resolved_domain_id(&state), fixture["domainId"].as_str().expect("domain"));
+    assert_eq!(resolved_domain_granularity_id(&state), fixture["domainGranularityId"].as_str().expect("granularity"));
+    let instance_id = state.draws.get(0).expect("published draw").instances.first().expect("published instance").id.clone();
+    assert_eq!(resolved_item_id(&state, &instance_id), instance_id, "a bound app domain addresses the bare channel-qualified id — never `surfaceId/id`");
+
+    // 🎯️ Aim through the fixture camera's own target, which is the centre of the prism's base face
+    // — the one point guaranteed both inside the solid and inside the 45° frustum.
+    let camera = state.orbit.to_camera();
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w / bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
+    let hit = pick_instance_at(&state, screen[0], screen[1], bounds);
+    assert_eq!(hit.as_deref(), Some(instance_id.as_str()), "the bridged geometry is what a world pick actually hits");
+    let select = pick_select_action(&state, screen[0], screen[1], bounds, false, false).expect("pick emits an action");
+    assert_eq!(select.action, "interactionSelect");
+    let args = select.args.expect("pick args");
+    assert_eq!(args["domainId"].as_str(), fixture["domainId"].as_str());
+    assert_eq!(args["targets"][0]["granularity"].as_str(), fixture["domainGranularityId"].as_str());
+    assert_eq!(args["targets"][0]["id"].as_str(), Some(instance_id.as_str()));
+
+    state.local_hover_id = None;
+    let hover = pick_hover_action(&mut state, screen[0], screen[1], bounds).expect("hover emits an action");
+    assert_eq!(hover.action, "interactionHover");
+    let args = hover.args.expect("hover args");
+    assert_eq!(args["domainId"].as_str(), fixture["domainId"].as_str());
+    assert_eq!(args["targets"][0]["id"].as_str(), Some(instance_id.as_str()));
+}
+//#endregion 🌉️World3dSceneBridge

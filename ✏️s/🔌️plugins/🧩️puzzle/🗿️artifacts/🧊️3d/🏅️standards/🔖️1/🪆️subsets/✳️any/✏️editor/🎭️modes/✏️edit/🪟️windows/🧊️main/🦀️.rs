@@ -19,7 +19,7 @@ use crate::editor::puzzle3d::{
     Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
-    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
+    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
@@ -156,6 +156,27 @@ pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+/// 🎯️ Padding `WorldAutoFit` frames a swapped document with — 1.25 leaves a quarter of the radius of
+/// air around the bounding sphere, matching the host's own default.
+pub const PUZZLE3D_FIT_PADDING: f64 = 1.25;
+
+/// 🎯️ Document IDENTITY for the world's `fit` lane: what this document IS (its schema, its domain and
+/// its kind catalogs), never what its geometry currently holds.
+///
+/// `WorldAutoFit` refits once per `${revision}:${meshes}` key, so this is the difference between
+/// "frame the new fixture when the user switches example" and "yank the camera every time an object
+/// moves": a catalog swap is a document swap, an object edit is not. Without the lane at all the
+/// camera after a swap is whatever the previous document left in `cameraJson` — Nakagin happens to
+/// sit inside Concrete Forest's framing, a fixture centred elsewhere would simply be off-screen
+/// (ticket 26/09/02 W-P5 §7).
+pub fn world_fit_revision(fixture: &Puzzle3dFixture) -> u32 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    fixture.schema.hash(&mut hasher);
+    fixture.domain.hash(&mut hasher);
+    dsl::os_pack::json::to_json_string(&fixture.meta).hash(&mut hasher);
+    (hasher.finish() >> 32) as u32
 }
 
 /// 🗄️ Cheap change key for everything the instance/mesh payloads (and the document tree) derive from.
@@ -522,6 +543,7 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
     scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
+    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.fixture), PUZZLE3D_FIT_PADDING));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): bound, so `World3dHost`'s generic
     // dispatch path emits `interactionSelect`/`interactionHover` for this domain
     // (`world3dSelectionActionArgs`/`world3dHoverActionArgs`) instead of the legacy

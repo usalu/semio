@@ -58,6 +58,12 @@ fn production_hex(bytes: &[u8]) -> String {
     value
 }
 
+/// 📸️ Every owned production projection this law holds is a CLOSING read — `fixture.layout` is a
+/// live `OrderedMap` root that aborts the process on a bare drop.
+fn production_read(snapshot: Generation2dSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead {
+    crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(snapshot)
+}
+
 fn production_semantic_digest(snapshot: &Generation2dSnapshot) -> [u8; 32] {
     let mut digest = store::ArtifactStoreInitializationDigest::new(b"generation2d.production-law.semantic");
     digest.observe(&crate::standards::v1::subsets::any::schema::snapshot::binary::encode(snapshot));
@@ -76,6 +82,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
     let mut expected = production_initial_snapshot(label);
     crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
     let expected_digest = production_semantic_digest(&expected);
+    crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_retire_mutations_cold(mutations);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": GENERATION_2D_SCHEMA,
         "id": "generation2d-production-mounted-law",
@@ -97,7 +104,20 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
         "conflicts": []
     }))
     .expect("schema-first P2 production fixture envelope");
+    snapshot.retire_cold();
     (wire, expected, expected_digest)
+}
+
+/// 🔐️ Releases the process-global publication lease on UNWIND too. The lease table is a fixed
+/// 4-slot registry (`GENERATION2D_PUBLICATION_SLOTS`), so a law that panics mid-drive strands a slot
+/// and every later `generation2d_admit_publication_authority` anywhere in the binary then fails
+/// `generation2d-publication.saturated` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+struct ProductionLease(semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle);
+
+impl Drop for ProductionLease {
+    fn drop(&mut self) {
+        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_publication_authority(self.0.operation, self.0.generation);
+    }
 }
 
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
@@ -133,19 +153,27 @@ fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    let mut accepted = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation2dPlayApp>>::new(EditorApp::default()).await;
+    // 🧹️ Registry-backed, never `VcsArtifactApp::new` — this app publishes
+    // `bounded_first_step_tool_proofs!`, so a registryless instance faults at construction with
+    // `interactive-job.catalog-authority` and its unwind aborts the binary.
+    let _serial = crate::publication_authority::lock();
+    let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
     let handle = admit_production_envelope(&mut accepted, &wire);
+    let lease = ProductionLease(handle);
     assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
-    let snapshot = accepted.snapshot().expect("accepted P2 production snapshot");
-    assert_eq!(&snapshot, &expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
+    let snapshot = production_read(accepted.snapshot().expect("accepted P2 production snapshot"));
+    let expected = production_read(expected);
+    assert_eq!(&*snapshot, &*expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
     assert_eq!(production_semantic_digest(&snapshot), expected_digest);
     assert!(snapshot.fixture.layout.contains_key("move-target"));
     assert!(!snapshot.fixture.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
     assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_publication_authority(handle.operation, handle.generation));
+    drop(lease);
+    close(accepted);
 
     use crate::standards::v1::subsets::any::schema::mutations::binary::Generation2dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
@@ -155,21 +183,24 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         (WrongBase, "generation2d-publication.wrong-base"),
         (WrongParent, "generation2d-publication.wrong-parent"),
     ] {
-        let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation2dPlayApp>>::new(EditorApp::default()).await;
-        let last_valid = app.snapshot().expect("last-valid P2 snapshot");
+        let mut app = app_with_registry().await;
+        let last_valid = production_read(app.snapshot().expect("last-valid P2 snapshot"));
         let last_valid_digest = production_semantic_digest(&last_valid);
         let base_generation = app.artifact_generation_now();
         let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
         let handle = admit_production_envelope(&mut app, &wire);
+        let lease = ProductionLease(handle);
         crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
-        let retained = app.snapshot().expect("last-valid P2 snapshot after rejected candidate");
+        let retained = production_read(app.snapshot().expect("last-valid P2 snapshot after rejected candidate"));
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);
-        assert_eq!(retained, last_valid);
+        assert_eq!(&*retained, &*last_valid);
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
         assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_publication_authority(handle.operation, handle.generation));
+        drop(lease);
+        close(app);
     }
 }
 
@@ -179,8 +210,12 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 21);
-    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 21);
+    assert_eq!(GENERATION2D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
+    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 22, "both factories' proofs, aggregated");
     assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 21);
+    assert_eq!(Generation2dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
+    assert!(GENERATION2D_CONTRIBUTIONS_TOOL_IDS.iter().all(|tool_id| !GENERATION2D_BOUNDED_TOOL_IDS.contains(tool_id)), "a tool id may be owned by exactly one factory");
+    assert!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES > GENERATION2D_RETAINED_RAW_BYTES, "the contributions route exists precisely because the gesture quota cannot carry it");
     assert_eq!(generation2d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation2d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION2D_BOUNDED_TOOL_IDS.iter().all(|tool_id| Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
@@ -188,7 +223,10 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
         assert!(GENERATION2D_BOUNDED_TOOL_IDS.contains(&migrated), "{migrated} must own an exact retained reducer route");
         assert!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().iter().any(|proof| proof.tool_id() == migrated), "{migrated} must carry its bounded first-step proof row");
     }
-    assert!(every_command().iter().all(|command| GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id())), "every declared command routes through the retained ladder");
+    assert!(
+        every_command().iter().all(|command| GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) || GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&command.command_id())),
+        "every declared command routes through one of the two retained ladders"
+    );
 }
 
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
@@ -248,7 +286,7 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 21, "every Generation2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), GENERATION2D_BOUNDED_TOOL_IDS.len() + GENERATION2D_CONTRIBUTIONS_TOOL_IDS.len(), "every Generation2dCommand row must be covered by every_command()");
 }
 
 #[test]
@@ -285,6 +323,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "select-generation",
         "flow-eval-tick",
         "flow-eval-resolve",
+        "set-contributions",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -318,6 +357,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: Some("g1".into()) }),
         Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
         Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 7, output_json: "{}".into() }),
+        Generation2dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -389,8 +429,12 @@ async fn two_instances_converge_disjoint_widget_moves() {
     close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-    semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>)>(
+    // 🧹️ The REGISTERED pair, never `assert_two_instances_converge` — this app publishes
+    // `bounded_first_step_tool_proofs!`, so a registryless instance faults with
+    // `interactive-job.catalog-authority` and its unwind aborts the binary.
+    semio_framework_plugin::testkit::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation2d-convergence",
+        || async { crate::editor::generation2d::testkit::generation2d_manifest_for_testkit() },
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
@@ -507,6 +551,53 @@ async fn import_params_in_patches_matching_input_slider() {
     assert_eq!(value, Some(42.0));
 }
 
+/// 🔐️ LAW: the app-owned resumable importer is the ONLY inbound media route, and it fails closed
+/// on every payload it does not own — an unknown port, a non-structured payload and a non-object
+/// JSON root all reject without publishing an operation.
+#[semio_framework_async_macros::async_test]
+async fn import_media_fails_closed_off_its_own_params_in_contract() {
+    let structured = |json: &str| semio_framework_plugin::Media {
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: json.into() },
+    };
+    for (port, media) in [
+        ("params:out", structured("{}")),
+        ("params:in", structured("[1, 2]")),
+        ("params:in", structured("not json")),
+        (
+            "params:in",
+            semio_framework_plugin::Media {
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                payload: semio_framework_plugin::MediaPayload::Binary { format_kind: "bin".into(), blob_hash: String::new() },
+            },
+        ),
+    ] {
+        let mut app = app().await;
+        let before = snapshot_read(&app).fixture.widgets.len();
+        let rejected = app.import_media(port, media, &semio_framework_plugin::testkit::meta("local")).await;
+        let after = snapshot_read(&app).fixture.widgets.len();
+        close(app);
+        assert!(rejected.is_err(), "generation2d import must reject '{port}' instead of publishing");
+        assert_eq!(after, before, "a rejected import must leave the document untouched");
+    }
+}
+
+/// 🔐️ LAW: an import whose keys match no `InputSlider` publishes nothing and leaves every widget
+/// exactly as it was — unmatched ids and non-numeric values are skipped, never faulted.
+#[semio_framework_async_macros::async_test]
+async fn import_params_skips_unmatched_keys_and_non_numeric_values() {
+    let mut app = app().await;
+    let before: Vec<String> = snapshot_read(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let media = semio_framework_plugin::Media {
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ "no-such-widget": 1.0, "another": "text" }).to_string() },
+    };
+    app.import_media("params:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
+    let after: Vec<String> = snapshot_read(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    close(app);
+    assert_eq!(after, before);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn media_ports_declare_params_in_and_drawing_out() {
     let ports = <Generation2dPlayApp as ArtifactEditor>::media_ports().await;
@@ -529,3 +620,49 @@ fn generation2d_io_declares_the_params_and_drawing_ports() {
     assert_eq!(drawing.kind_id.as_deref(), Some("2d.drawing"));
 }
 //#endregion 🔖️PortTests
+
+//#region 📇️WindowActionLawTests
+/// 📇️ THE window-kind action law, generation2d's half (ticket 26/09/09/PROCEDURAL-3D-END-TO-END) —
+/// the exact twin of generation3d's `every_emitted_action_is_declared_on_its_window_kind`, kept
+/// assertion-for-assertion identical so the two apps cannot drift.
+///
+/// Every action id a rendered `UiNode` binding of a window emits must appear in that window kind's
+/// `WindowKindDefinition.actions` — that list is what `ShellHost`'s `declaredAction` gate reads before
+/// it will call `plugin.handleAction`
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5691`) —
+/// and no window may declare a window-scoped action only some other window emits, which is what makes
+/// `.window_kind_action_refs(...)` mean anything against `build_definition`'s unowned-action fallback
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`).
+///
+/// The two generations are dispatched, not hand-built: the tree only emits
+/// `selectGeneration`/`renameGeneration`/`removeGeneration` and the form only emits
+/// `updateGenerationValues` once a roster exists.
+#[semio_framework_async_macros::async_test]
+async fn every_emitted_action_is_declared_on_its_window_kind() {
+    let definition = create_generation2d_app();
+    let windows: Vec<(String, String, std::collections::BTreeSet<String>)> =
+        definition.window_kinds.iter().map(|kind| (kind.id.clone(), kind.body_key.clone(), kind.actions.iter().map(|action| action.id.clone()).collect())).collect();
+    assert_eq!(windows.len(), 5, "generation2d declares five window kinds");
+    let mut app = app_with_registry().await;
+    for _ in 0..2 {
+        crate::editor::generation2d::testkit::dispatch(&mut app, Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await;
+    }
+    let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
+    for (kind_id, body_key, _) in &windows {
+        let projection = crate::editor::generation2d::testkit::render(&mut app, body_key).await;
+        emitted.insert(kind_id.clone(), crate::emitted_action_ids(&projection));
+    }
+    close(app);
+    let window_scoped: std::collections::BTreeSet<String> = emitted.values().flatten().cloned().collect();
+    for (kind_id, _, declared) in &windows {
+        let emitted_here = &emitted[kind_id];
+        println!("[STATS] window-actions kind={kind_id} declared={} emitted={} emits={emitted_here:?}", declared.len(), emitted_here.len());
+        for action in emitted_here {
+            assert!(declared.contains(action), "{kind_id} emits {action} but never declares it — ShellHost's declaredAction gate drops it");
+        }
+        for action in window_scoped.difference(emitted_here) {
+            assert!(!declared.contains(action), "{kind_id} declares {action}, a window-scoped action only another window emits");
+        }
+    }
+}
+//#endregion 📇️WindowActionLawTests

@@ -208,3 +208,97 @@ pub(crate) fn generation_form(
     }
     ui_build(root)
 }
+
+//#region 🔖️WindowActionLaw
+/// 📇️ Collects every action id a projected `UiNode` tree emits — the law shared by generation3d's and
+/// generation2d's `every_emitted_action_is_declared_on_its_window_kind` tests.
+///
+/// Walks the whole projection rather than only `BuiltNode.bindings`, because a tree row's menu
+/// actions (`Component::TreeItem.row_actions`, `generation_tree` above) live inside the serialized
+/// `component` and never reach `bindings`. Any object carrying `scope`/`name`/`version` is an
+/// [`semio_framework_plugin::plugin_app_close_prelude::ActionId`] wherever it appears.
+///
+/// The gate this feeds is `ShellHost`'s `declaredAction` check
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5691`).
+/// Shared by BOTH artifact crates through this file's `#[path]` mount, so each app uses only the half
+/// its own law needs — `#[allow(dead_code)]` is that asymmetry, not an unused helper.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn emitted_action_ids(projection: &str) -> std::collections::BTreeSet<String> {
+    fn walk(value: &serde_json::Value, found: &mut std::collections::BTreeSet<String>) {
+        match value {
+            serde_json::Value::Object(entries) => {
+                if entries.contains_key("scope") && entries.contains_key("version") {
+                    if let Some(name) = entries.get("name").and_then(serde_json::Value::as_str) {
+                        found.insert(name.to_owned());
+                    }
+                }
+                for entry in entries.values() {
+                    walk(entry, found);
+                }
+            }
+            serde_json::Value::Array(entries) => {
+                for entry in entries {
+                    walk(entry, found);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut found = std::collections::BTreeSet::new();
+    walk(&serde_json::from_str(projection).expect("projection json"), &mut found);
+    found
+}
+
+/// 🗂️ Seeds a two-entry generation roster with the first selected — the only state under which
+/// `generation_tree` emits `selectGeneration`/`renameGeneration`/`removeGeneration` and
+/// `generation_form` emits `updateGenerationValues`, so every window-action law test renders against
+/// it rather than against the bundled examples' empty roster.
+///
+/// Mutates the root in place through `cold_builder_mut`: a `GenerationPlayRoot` is an `Arc` newtype
+/// whose `Drop` panics on a nonempty unretired root, so a law test must never assign a fresh one over
+/// an existing one.
+/// Shared by BOTH artifact crates through this file's `#[path]` mount, so each app uses only the half
+/// its own law needs — `#[allow(dead_code)]` is that asymmetry, not an unused helper.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn seed_law_generations(root: &mut semio_framework_artifact_playbook_playbook::GenerationPlayRoot) {
+    let entry = |id: &str, name: &str| semio_framework_artifact_playbook_playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() };
+    let state = root.cold_builder_mut().expect("unique cold generation owner");
+    state.generations.clear();
+    state.generations.push(entry("generation-1", "Generation 1"));
+    state.generations.push(entry("generation-2", "Generation 2"));
+    state.selected_generation_id = Some("generation-1".into());
+}
+
+/// 🎛️ Collects every action id a window kind's `WindowMeasure` chrome dispatches — the measure half of
+/// the same law. `ActionDescriptor.action` is a plain `action` string field, so the walk keys on that
+/// rather than on the `scope`/`name`/`version` triple `emitted_action_ids` looks for.
+/// Shared by BOTH artifact crates through this file's `#[path]` mount, so each app uses only the half
+/// its own law needs — `#[allow(dead_code)]` is that asymmetry, not an unused helper.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn measure_action_ids(measures: &[semio_framework_plugin::WindowMeasure]) -> std::collections::BTreeSet<String> {
+    fn walk(value: &serde_json::Value, found: &mut std::collections::BTreeSet<String>) {
+        match value {
+            serde_json::Value::Object(entries) => {
+                if let Some(name) = entries.get("action").and_then(serde_json::Value::as_str) {
+                    found.insert(name.to_owned());
+                }
+                for entry in entries.values() {
+                    walk(entry, found);
+                }
+            }
+            serde_json::Value::Array(entries) => {
+                for entry in entries {
+                    walk(entry, found);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut found = std::collections::BTreeSet::new();
+    walk(&serde_json::to_value(measures).expect("measures json"), &mut found);
+    found
+}
+//#endregion 🔖️WindowActionLaw

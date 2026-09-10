@@ -1531,6 +1531,24 @@ export function parseDagMinimapWidgetCursor(stateJson: string): string | undefin
   }
 }
 
+/** 🖼️ Sizes one canvas' backing store to `logicalW`×`logicalH` at `dpr` and returns whether the store
+ * actually changed. Deliberately synchronous and free of any animation frame: a hidden/background tab
+ * never fires `requestAnimationFrame`, so a canvas whose size is only reached from a rAF tick stays at
+ * the HTML default 300×150 forever (`📓️runtime-verification-2026-09-09.md` boot #3). */
+export function resizeCanvasBackingStore(canvas: HTMLCanvasElement | null | undefined, logicalW: number, logicalH: number, dpr: number): boolean {
+  if (!canvas) return false;
+  const pixelW = Math.max(1, Math.round(logicalW * dpr));
+  const pixelH = Math.max(1, Math.round(logicalH * dpr));
+  const changed = canvas.width !== pixelW || canvas.height !== pixelH;
+  if (changed) {
+    canvas.width = pixelW;
+    canvas.height = pixelH;
+  }
+  canvas.style.width = `${Math.max(1, Math.round(logicalW))}px`;
+  canvas.style.height = `${Math.max(1, Math.round(logicalH))}px`;
+  return changed;
+}
+
 export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number, interaction: DagLabelOverlayInteraction): void {
   let state: { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number; readonly labels?: readonly DagLabelOverlayRow[] };
   try {
@@ -1540,14 +1558,7 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
   }
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  const pixelW = Math.max(1, Math.round(logicalW * dpr));
-  const pixelH = Math.max(1, Math.round(logicalH * dpr));
-  if (canvas.width !== pixelW || canvas.height !== pixelH) {
-    canvas.width = pixelW;
-    canvas.height = pixelH;
-  }
-  canvas.style.width = `${logicalW}px`;
-  canvas.style.height = `${logicalH}px`;
+  resizeCanvasBackingStore(canvas, logicalW, logicalH, dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, logicalW, logicalH);
   const zoom = Math.max(0.05, Number(state.camera?.zoom) || 1);
@@ -1920,6 +1931,7 @@ export function FlowGraphCanvasHost({
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const schedulerRef = useRef<ReturnType<typeof createDemandFrameScheduler> | null>(null);
   const surfaceReadyRef = useRef(false);
+  const drewOnceRef = useRef(false);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -2044,8 +2056,43 @@ export function FlowGraphCanvasHost({
     const session = sessionRef.current;
     const canvas = gpuCanvasRef.current;
     if (!session || !canvas || !flowSurfaceRenderAllowed(surfaceReadyRef.current)) return;
-    observeFlowTask(session, "renderCanvas", session.renderCanvas(canvas));
+    observeFlowTask(session, "renderCanvas", session.renderCanvas(canvas), () => {
+      if (drewOnceRef.current) return;
+      drewOnceRef.current = true;
+      console.log("[DEBUG] node-graph first draw surface=%s store=%sx%s", surfaceId, canvas.width, canvas.height);
+    });
+  }, [surfaceId]);
+
+  /** 📏️ Single owner of both canvases' backing-store size: measures the container and writes the
+   * device-pixel store synchronously, then forwards the logical size to the wasm surface when one is
+   * already attached. Session-independent on purpose — before this, the GPU canvas was only ever sized
+   * from inside `attachCanvas().then(...)` and the label canvas only from `paintOverlays`, so a boot
+   * where the surface attach is slow (or a hidden tab, where the shared `GraphWasmCanvas` layout wait
+   * never ticks) left both at the HTML default 300×150 in a 966×836 window. */
+  const syncSurfaceSize = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const dpr = globalThis.devicePixelRatio || 1;
+    resizeCanvasBackingStore(gpuCanvasRef.current, rect.width, rect.height, dpr);
+    resizeCanvasBackingStore(labelCanvasRef.current, rect.width, rect.height, dpr);
+    setContainerSize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
+    const session = sessionRef.current;
+    if (session && surfaceReadyRef.current) observeFlowTask(session, "setSize", session.setSize(Math.max(1, Math.round(rect.width)), Math.max(1, Math.round(rect.height)), dpr));
   }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    syncSurfaceSize();
+    const observer = new ResizeObserver(() => {
+      syncSurfaceSize();
+      renderFlow();
+      paintOverlays();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [paintOverlays, renderFlow, syncSurfaceSize]);
 
   const handleGesturePointerUp = useCallback(() => {
     isGestureActiveRef.current = false;
@@ -2081,13 +2128,17 @@ export function FlowGraphCanvasHost({
 
   useEffect(() => {
     let cancelled = false;
+    console.log("[DEBUG] node-graph host mount surface=%s hidden=%s", surfaceId, globalThis.document?.hidden);
     void createFlowSession().then((session) => {
       if (cancelled) {
         void session.free();
         return;
       }
       sessionRef.current = session;
+      console.log("[DEBUG] node-graph session ready surface=%s", surfaceId);
       setSessionReady(true);
+    }, (error: unknown) => {
+      console.warn("[DEBUG] node-graph session failed surface=%s %s", surfaceId, error instanceof Error ? error.message : String(error));
     });
     return () => {
       cancelled = true;
@@ -2099,7 +2150,7 @@ export function FlowGraphCanvasHost({
       }
       sessionRef.current = null;
     };
-  }, []);
+  }, [surfaceId]);
 
   // Attaches the GPU canvas exactly once per session (NOT per document edit — `scene` must stay out
   // of this effect's deps). It used to depend on `scene`, so it re-ran `attachCanvas` on every single
@@ -2116,24 +2167,21 @@ export function FlowGraphCanvasHost({
     const dpr = globalThis.devicePixelRatio || 1;
     let cancelled = false;
     let cleanupAttached: (() => void) | undefined;
+    console.log("[DEBUG] node-graph attach called surface=%s %sx%s dpr=%s", surfaceId, Math.round(rect.width), Math.round(rect.height), dpr);
     const attachment = session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr);
     const unsubscribeAttachment = attachment.subscribe(() => schedulerRef.current?.invalidate());
     void attachment.result
       .then(() => {
         if (cancelled) return;
         surfaceReadyRef.current = true;
+        console.log("[DEBUG] node-graph surface ready surface=%s nodes=%s edges=%s", surfaceId, sceneRef.current.nodes?.length ?? 0, sceneRef.current.edges?.length ?? 0);
         syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current, true);
         syncFlowCanvasTheme(session);
-        const resize = () => {
-          const next = container.getBoundingClientRect();
-          const nextDpr = globalThis.devicePixelRatio || 1;
-          observeFlowTask(session, "setSize", session.setSize(Math.round(next.width), Math.round(next.height), nextDpr));
-          renderFlow();
-          paintOverlays();
-        };
-        resize();
-        const ro = new ResizeObserver(resize);
-        ro.observe(container);
+        // 📏️ The container observer above already owns both backing stores; this only hands the freshly
+        // attached surface its first logical size and paints it.
+        syncSurfaceSize();
+        renderFlow();
+        paintOverlays();
         // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was an unconditional 60fps `requestAnimationFrame`
         // loop for the surface's entire lifetime — see `createDemandFrameScheduler`'s docstring.
         const scheduler = createDemandFrameScheduler(() => {
@@ -2143,13 +2191,15 @@ export function FlowGraphCanvasHost({
         schedulerRef.current = scheduler;
         scheduler.invalidate();
         cleanupAttached = () => {
-          ro.disconnect();
           scheduler.dispose();
           schedulerRef.current = null;
         };
       })
-      .catch(() => {
-        /* already attached (e.g. a stale re-run) or transient failure; nothing to clean up */
+      .catch((error: unknown) => {
+        // 🚨️ Was an anonymous swallow. A rejected attach leaves `surfaceReadyRef` false forever, so every
+        // later `renderFlow()` is a silent no-op and the window stays blank with nothing in the console.
+        if (cancelled) return;
+        console.warn("[DEBUG] node-graph attach failed surface=%s %s", surfaceId, error instanceof Error ? error.message : String(error));
       });
     return () => {
       cancelled = true;
@@ -2158,7 +2208,7 @@ export function FlowGraphCanvasHost({
       attachment.cancel();
       cleanupAttached?.();
     };
-  }, [sessionReady, paintOverlays, renderFlow]);
+  }, [sessionReady, paintOverlays, renderFlow, surfaceId, syncSurfaceSize]);
 
   useEffect(() => {
     const session = sessionRef.current;

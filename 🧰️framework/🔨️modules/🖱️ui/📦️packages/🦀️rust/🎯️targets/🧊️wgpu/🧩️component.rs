@@ -2872,6 +2872,7 @@ pub mod ui {
         DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene,
         World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
+        WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2958,6 +2959,26 @@ pub mod ui {
         serde_json::json!({
             "chunkSize": chunk_size,
             "maxDistance": max_distance,
+        })
+        .to_string()
+    }
+
+    /// 🎯️ The world-3d `fit` lane: ask the render host to frame the scene's own bounds ONCE per
+    /// `revision`, preserving the current view direction.
+    ///
+    /// `revision` is a producer-owned document identity, not a frame counter: `WorldAutoFit`
+    /// (`📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost`) keys its one-shot on
+    /// `${revision}:${meshes}` and never refits again while that key holds, so a producer that
+    /// derives the revision from what the DOCUMENT is (its catalogs, its domain) refits exactly on a
+    /// document swap, while a producer that derived it from the geometry would yank the camera on
+    /// every edit. Without a fit lane the camera after a document swap is whatever the previous
+    /// document left behind — a fixture centred elsewhere is simply off-screen (ticket 26/09/02 W-P5
+    /// §7, W-S2).
+    pub fn world3d_fit_json(revision: u32, padding: f64) -> String {
+        serde_json::json!({
+            "enabled": true,
+            "revision": revision,
+            "padding": padding,
         })
         .to_string()
     }

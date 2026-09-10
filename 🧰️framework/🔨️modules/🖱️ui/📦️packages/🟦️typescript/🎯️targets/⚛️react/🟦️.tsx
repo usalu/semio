@@ -6606,6 +6606,7 @@ import {
   panelTabChildren,
   findPanelTabNode,
   findPanelTabPath,
+  resolvePanelBranchBodyLeaf,
   progressPanelTabSelection,
   usePanelTabSelection,
   dockSkeletonOf,
@@ -6628,6 +6629,7 @@ export {
   panelTabChildren,
   findPanelTabNode,
   findPanelTabPath,
+  resolvePanelBranchBodyLeaf,
   progressPanelTabSelection,
   usePanelTabSelection,
   dockSkeletonOf,
@@ -7879,7 +7881,7 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
     return (
       <WindowChrome
         ref={ref}
-        active={false}
+        active={true}
         level="menu"
         stackSlot="context-menu-content"
         className={cn("z-menu w-auto min-w-[10rem] max-h-layout-command overflow-y-auto", className)}
@@ -7891,7 +7893,7 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
           </div>
         }
         body={children}
-        bodyClassName="p-single"
+        bodyClassName="pointer-events-auto p-single"
       />
     );
   },

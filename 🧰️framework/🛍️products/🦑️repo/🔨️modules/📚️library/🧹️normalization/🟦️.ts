@@ -906,6 +906,20 @@ function fixedExpiry(value: unknown, name: string): string | null {
   return expires;
 }
 
+/** @emoji 🚧️ The exact opaque subtrees `🔣️taxonomy.json` may declare, in order: two user-owned scratch
+ * trees plus the one tracked nested-repository gitlink (`git ls-files -s` mode `160000`), which must be
+ * filtered lexically here or `inventoryTaxonomyWithSourceParentPruning` refuses to classify anything at
+ * all. Mirrors `🔍️discovery/🟦️.ts`'s `OPAQUE_PATH_EXCLUSIONS`; the two files are separate bundles with
+ * no shared import path for a three-row table. The gitlink is named, never its parent `♻️mit-bestand/`,
+ * whose `📋️bericht`/`🖼️asset` subtrees are generator-contract outputs and may not sit inside an opaque
+ * subtree. */
+const TAXONOMY_OPAQUE_PATH_EXCLUSIONS: readonly (readonly [string, string])[] = [
+  ["compose", "compose/"],
+  ["temp-compose", "temp/compose/"],
+  ["mit-bestand-recherche", "♻️mit-bestand/🔎️recherche/"],
+];
+
+
 function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   const root = record(raw, "root");
   if (root.schemaVersion !== 7) throw new Error(`Taxonomy schemaVersion must be 7 at ${path}`);
@@ -1616,11 +1630,11 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     pathExclusions[id] = { path: excludedPath, mode: "opaque", reason: requiredString(spec.reason, `pathExclusions.${id}.reason`) };
     exclusions.push({ id, path: excludedPath });
   }
-  if (canonicalJson(Object.entries(pathExclusions).map(([id, spec]) => [id, spec.path])) !== canonicalJson([["compose", "compose"], ["temp-compose", "temp/compose"]])) throw new Error("Taxonomy v7 pathExclusions must contain exactly opaque compose and temp/compose");
+  if (canonicalJson(Object.entries(pathExclusions).map(([id, spec]) => [id, spec.path])) !== canonicalJson(TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id, path]) => [id, normalizeRelative(path)]))) throw new Error(`Taxonomy v7 pathExclusions must contain exactly opaque ${TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([, path]) => path).join(", ")}`);
   for (const id of stringArray(enforcement.opaquePathExclusionIds, "areaEnforcement.opaquePathExclusionIds")) {
     if (!pathExclusions[id]) throw new Error(`Taxonomy v7 areaEnforcement references unknown opaque exclusion ${id}`);
   }
-  if (canonicalJson(enforcement.opaquePathExclusionIds) !== canonicalJson(["compose", "temp-compose"])) throw new Error("Taxonomy v7 areaEnforcement must require compose and temp-compose in order");
+  if (canonicalJson(enforcement.opaquePathExclusionIds) !== canonicalJson(TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id]) => id))) throw new Error(`Taxonomy v7 areaEnforcement must require ${TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id]) => id).join(", ")} in order`);
   const opaquePaths = Object.values(pathExclusions).map((entry) => entry.path);
   const crossesOpaque = (value: string): boolean => opaquePaths.some((opaque) => value === opaque || value.startsWith(`${opaque}/`) || opaque.startsWith(`${value}/`));
   for (const [id, contract] of Object.entries(semanticPathProjectionReferenceConsumerContracts)) {

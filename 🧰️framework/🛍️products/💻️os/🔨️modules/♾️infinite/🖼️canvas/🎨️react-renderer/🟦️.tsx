@@ -57,6 +57,27 @@ export type CanvasInputModifiers = {
   readonly alt: boolean;
 };
 
+/** @emoji ⏳️ How long {@link GraphWasmCanvas} waits for a container that never reports a real layout
+ * size before attaching the GPU surface at whatever degenerate size it does report. */
+export const DEGENERATE_LAYOUT_ATTACH_MS = 2000;
+
+/** @emoji 🙈️ Frame period used while no animation clock is running. */
+export const HIDDEN_DEMAND_FRAME_MS = 32;
+
+/** @emoji 🎞️ Schedules one canvas frame. A hidden/background tab — and any DOM host without an
+ * animation clock, e.g. a jsdom test — never runs a frame callback, so an `requestAnimationFrame`-only
+ * loop silently stops repainting there; that is the class of defect a blank node-graph window in a
+ * hidden tab reduces to. Falls back to the timer clock, which keeps ticking while hidden. Shared by
+ * every wasm surface loop so the fallback lives in exactly one place. */
+export function scheduleDemandFrame(tick: () => void): { readonly cancel: () => void } {
+  if (globalThis.document?.hidden === true || typeof globalThis.requestAnimationFrame !== "function") {
+    const timer = setTimeout(tick, HIDDEN_DEMAND_FRAME_MS);
+    return { cancel: () => clearTimeout(timer) };
+  }
+  const frame = requestAnimationFrame(tick);
+  return { cancel: () => cancelAnimationFrame(frame) };
+}
+
 /** @emoji 🕸️ Minimal WASM graph session surface (attach, resize, RAF, optional pointer). */
 export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
@@ -81,7 +102,6 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const sessionRef = React.useRef<GraphWasmSession | null>(null);
-  const rafRef = React.useRef<number | null>(null);
 
   const renderFrame = React.useCallback(() => {
     try {
@@ -96,9 +116,10 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     const container = containerRef.current;
     if (!canvas || !container) return;
     let torndown = false;
-    let waitRaf: number | null = null;
-    let localRaf: number | null = null;
+    let localRaf: { readonly cancel: () => void } | null = null;
     let localRo: ResizeObserver | null = null;
+    let layoutRo: ResizeObserver | null = null;
+    let degenerateTimer: ReturnType<typeof setTimeout> | null = null;
     const session = sessionFactory();
     sessionRef.current = session;
     onSessionReady?.(session);
@@ -159,9 +180,9 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         localRo.observe(container);
         const tick = () => {
           renderFrame();
-          localRaf = requestAnimationFrame(tick);
+          localRaf = scheduleDemandFrame(tick);
         };
-        localRaf = requestAnimationFrame(tick);
+        localRaf = scheduleDemandFrame(tick);
         if (enablePointer) {
           canvas.addEventListener("pointerdown", onPointerDown);
           canvas.addEventListener("pointermove", onPointerMove);
@@ -176,26 +197,37 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     // attaching at a stale 1x1 rect (common on first paint, before flex/grid layout settles) leaves the
     // WebGPU surface configured at a bogus size; WebGPU surface errors are async/out-of-band and never
     // surface as a JS exception, so a botched first attach silently renders nothing forever after.
-    let attempts = 0;
-    const waitForLayout = () => {
-      if (torndown) return;
+    // The wait is driven by `ResizeObserver` (plus one synchronous measure), never by an animation
+    // frame: a hidden/background tab never ticks `requestAnimationFrame`, so the rAF poll this replaces
+    // never attached at all there and every canvas stayed at the HTML default 300x150.
+    const attachWhenLaidOut = (): boolean => {
+      if (torndown) return true;
       const rect = container.getBoundingClientRect();
-      const dpr = globalThis.devicePixelRatio || 1;
-      attempts += 1;
-      if (rect.width >= 8 && rect.height >= 8) {
-        attach(Math.round(rect.width), Math.round(rect.height), dpr);
-        return;
-      }
-      if (attempts > 120) {
-        attach(Math.max(1, Math.round(rect.width)), Math.max(1, Math.round(rect.height)), dpr);
-        return;
-      }
-      waitRaf = requestAnimationFrame(waitForLayout);
+      if (rect.width < 8 || rect.height < 8) return false;
+      attach(Math.round(rect.width), Math.round(rect.height), globalThis.devicePixelRatio || 1);
+      return true;
     };
-    waitForLayout();
+    if (!attachWhenLaidOut()) {
+      layoutRo = new ResizeObserver(() => {
+        if (!attachWhenLaidOut()) return;
+        layoutRo?.disconnect();
+        layoutRo = null;
+      });
+      layoutRo.observe(container);
+      // Last resort for a container that never reaches a real size (a permanently collapsed pane):
+      // attach at whatever it reports rather than leaving the surface unattached forever.
+      degenerateTimer = setTimeout(() => {
+        if (torndown || layoutRo === null) return;
+        layoutRo.disconnect();
+        layoutRo = null;
+        const rect = container.getBoundingClientRect();
+        attach(Math.max(1, Math.round(rect.width)), Math.max(1, Math.round(rect.height)), globalThis.devicePixelRatio || 1);
+      }, DEGENERATE_LAYOUT_ATTACH_MS);
+    }
     return () => {
       torndown = true;
-      if (waitRaf != null) cancelAnimationFrame(waitRaf);
+      if (degenerateTimer != null) clearTimeout(degenerateTimer);
+      layoutRo?.disconnect();
       localRo?.disconnect();
       if (enablePointer) {
         canvas.removeEventListener("pointerdown", onPointerDown);
@@ -205,7 +237,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.removeEventListener("dblclick", onDoubleClick);
         canvas.removeEventListener("wheel", onWheel);
       }
-      if (localRaf != null) cancelAnimationFrame(localRaf);
+      localRaf?.cancel();
       sessionRef.current?.detachGpu?.();
       sessionRef.current = null;
     };

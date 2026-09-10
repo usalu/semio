@@ -51,7 +51,12 @@ pub fn encode_mounted(document: &Generation3dSnapshot) -> Vec<u8> {
 
 //#region 🔖️MountedCanonicalPackSession
 const GENERATION3D_MOUNTED_PREFIX: [u8; 4] = *b"P3D3";
-const GENERATION3D_MOUNTED_TYPED_DEPTH: usize = 12;
+/// 📐️ The structural nesting bound this canonical route admits, kept equal to the mutation route's
+/// `GENERATION3D_RETAINED_STACK_CAPACITY`. A `Widget::Neuron`'s `params` is a neural `Dictionary`
+/// whose entries are themselves `Value::Dictionary`, and each such level costs several pack frames,
+/// so a bound in the low teens rejects documents the initializer copies happily
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION3D_MOUNTED_TYPED_DEPTH: usize = 64;
 const GENERATION3D_REQUIRED_SNAPSHOT_FIELDS: u16 = 0b1001_1111;
 
 #[derive(Default)]
@@ -93,12 +98,20 @@ enum Generation3dMountedDictionaryDestination {
     Value { parent: usize },
 }
 
+/// 🗂️ Where a decoded neural value belongs. A `Dictionary` reaches the wire either as a columnar
+/// `Table` (many rows) or as a `List` of one-entry records, and the retained owner has to write the
+/// value back into whichever of the two shapes it is standing in.
+enum Generation3dMountedNeuralOwner {
+    TableRow { table: usize, row: usize },
+    EntryRow { entries: usize, row: usize },
+}
+
 enum Generation3dMountedRecordOwner {
     Root,
     Camera(semio_framework_artifact_flow_flow::CameraJson),
     Layout { key: String, value: semio_framework_artifact_flow_flow::WidgetLayout },
     Widget(Generation3dMountedWidgetOwner),
-    NeuralValue { table: usize, row: usize, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
+    NeuralValue { owner: Generation3dMountedNeuralOwner, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
     Structural,
 }
 
@@ -110,6 +123,8 @@ enum Generation3dMountedContainerOwner {
     LayoutMap { key: Option<String> },
     Generations { rows: Vec<Generation3dMountedGenerationOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
     Dictionary { destination: Generation3dMountedDictionaryDestination, rows: Vec<Generation3dMountedDictionaryEntryOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
+    DictionaryEntries { destination: Generation3dMountedDictionaryDestination, rows: Vec<Generation3dMountedDictionaryEntryOwner> },
+    DictionaryEntry { entries: usize, row: usize, field: Option<u16> },
     Wire { table: usize, row: usize, roles: [u8; 6], roles_len: usize, role: usize, nodes: usize },
     Structural { kind: mounted::RetainedValueContainer, root_field: Option<u16> },
 }
@@ -124,6 +139,7 @@ enum Generation3dMountedStringTarget {
     LayoutKey(usize),
     Generation(usize, usize, u8),
     DictionaryKey(usize, usize),
+    DictionaryEntryKey(usize),
     NeuralText(usize),
     JsonKey,
     JsonValue,
@@ -218,7 +234,7 @@ impl Generation3dMountedTypedSnapshotOwner {
             Generation3dMountedContainerOwner::Synapses { .. } | Generation3dMountedContainerOwner::Wire { .. } => Some(3),
             Generation3dMountedContainerOwner::LayoutMap { .. } => Some(4),
             Generation3dMountedContainerOwner::Generations { .. } => Some(7),
-            Generation3dMountedContainerOwner::Dictionary { .. } => Some(2),
+            Generation3dMountedContainerOwner::Dictionary { .. } | Generation3dMountedContainerOwner::DictionaryEntries { .. } | Generation3dMountedContainerOwner::DictionaryEntry { .. } => Some(2),
             Generation3dMountedContainerOwner::Structural { root_field, .. } => *root_field,
         })
     }
@@ -240,6 +256,7 @@ impl Generation3dMountedTypedSnapshotOwner {
         match &mut self.stack[index] {
             Generation3dMountedContainerOwner::Record { root_field: None, field: Some(field), .. } => Ok(Generation3dMountedStringTarget::Root(*field)),
             Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { .. }, field: Some(4), .. } => Ok(Generation3dMountedStringTarget::NeuralText(index)),
+            Generation3dMountedContainerOwner::DictionaryEntry { field: Some(0), .. } => Ok(Generation3dMountedStringTarget::DictionaryEntryKey(index)),
             Generation3dMountedContainerOwner::Record { field: Some(field), .. } => Ok(Generation3dMountedStringTarget::Record(index, *field)),
             Generation3dMountedContainerOwner::Statements { keyword: None, .. } => Ok(Generation3dMountedStringTarget::StatementKeyword(index)),
             Generation3dMountedContainerOwner::Strings { .. } => Ok(Generation3dMountedStringTarget::Sequence(index)),
@@ -358,6 +375,19 @@ impl Generation3dMountedTypedSnapshotOwner {
                 Some(Generation3dMountedContainerOwner::Dictionary { rows, .. }) => rows.get_mut(row).ok_or("generation3d-mounted.dictionary-key-row")?.key = owner.value,
                 _ => return Err("generation3d-mounted.dictionary-key-owner"),
             },
+            Generation3dMountedStringTarget::DictionaryEntryKey(index) => {
+                let (entries, row) = match self.stack.get_mut(index) {
+                    Some(Generation3dMountedContainerOwner::DictionaryEntry { entries, row, field }) => {
+                        *field = None;
+                        (*entries, *row)
+                    }
+                    _ => return Err("generation3d-mounted.dictionary-entry-owner"),
+                };
+                match self.stack.get_mut(entries) {
+                    Some(Generation3dMountedContainerOwner::DictionaryEntries { rows, .. }) => rows.get_mut(row).ok_or("generation3d-mounted.dictionary-entry-row")?.key = owner.value,
+                    _ => return Err("generation3d-mounted.dictionary-entries-owner"),
+                }
+            }
             Generation3dMountedStringTarget::NeuralText(index) => match self.stack.get_mut(index) {
                 Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { value, .. }, field, .. }) if *field == Some(4) && value.is_none() => {
                     *value = Some(semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(owner.value)));
@@ -386,9 +416,9 @@ impl Generation3dMountedTypedSnapshotOwner {
                 };
                 match role {
                     0 => synapse.from = owner.value,
-                    1 => synapse.from_port = owner.value,
+                    2 => synapse.from_port = owner.value,
                     3 => synapse.to = owner.value,
-                    4 => synapse.to_port = owner.value,
+                    5 => synapse.to_port = owner.value,
                     _ => drop(owner.value),
                 }
             }
@@ -567,7 +597,18 @@ impl Generation3dMountedTypedSnapshotOwner {
             if let Some(Generation3dMountedContainerOwner::Dictionary { field: Some(1), present, next, .. }) = self.stack.get_mut(table) {
                 let row = (*next..present.len()).find(|row| present[*row]).ok_or("generation3d-mounted.dictionary-value-row")?;
                 *next = row + 1;
-                return self.push(Generation3dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation3dMountedRecordOwner::NeuralValue { table, row, value: None } });
+                let owner = Generation3dMountedNeuralOwner::TableRow { table, row };
+                return self.push(Generation3dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation3dMountedRecordOwner::NeuralValue { owner, value: None } });
+            }
+            if let Some(Generation3dMountedContainerOwner::DictionaryEntries { rows, .. }) = self.stack.get_mut(table) {
+                let row = rows.len();
+                rows.try_reserve(1).map_err(|_| "generation3d-mounted.dictionary-entry-preflight")?;
+                rows.push(Generation3dMountedDictionaryEntryOwner::default());
+                return self.push(Generation3dMountedContainerOwner::DictionaryEntry { entries: table, row, field: None });
+            }
+            if let Some(Generation3dMountedContainerOwner::DictionaryEntry { entries, row, field: Some(1) }) = self.stack.get_mut(table) {
+                let owner = Generation3dMountedNeuralOwner::EntryRow { entries: *entries, row: *row };
+                return self.push(Generation3dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation3dMountedRecordOwner::NeuralValue { owner, value: None } });
             }
         }
         let owner = if self.stack.is_empty() {
@@ -607,6 +648,12 @@ impl Generation3dMountedTypedSnapshotOwner {
             }
             mounted::RetainedValueContainer::List | mounted::RetainedValueContainer::Tuple if root_field == 2 => {
                 let (parent, field) = match self.stack.last() {
+                    Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { value: None, .. }, field: Some(5), .. }) => {
+                        let parent = self.stack.len() - 1;
+                        let mut rows = Vec::new();
+                        rows.try_reserve_exact(usize::try_from(count).map_err(|_| "generation3d-mounted.dictionary-entry-count")?).map_err(|_| "generation3d-mounted.dictionary-entry-preflight")?;
+                        return self.push(Generation3dMountedContainerOwner::DictionaryEntries { destination: Generation3dMountedDictionaryDestination::Value { parent }, rows });
+                    }
                     Some(Generation3dMountedContainerOwner::Record { field: Some(field), .. }) => (self.stack.len() - 1, *field),
                     _ => return Err("generation3d-mounted.sequence-owner"),
                 };
@@ -746,7 +793,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                     *field = None;
                 }
             }
-            Generation3dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation3dMountedRecordOwner::NeuralValue { table, row, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
+            Generation3dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation3dMountedRecordOwner::NeuralValue { owner: Generation3dMountedNeuralOwner::TableRow { table, row }, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
                 match self.stack.get_mut(table) {
                     Some(Generation3dMountedContainerOwner::Dictionary { rows, field: Some(1), .. }) => {
                         rows.get_mut(row).ok_or("generation3d-mounted.dictionary-value-row")?.value = Some(value);
@@ -754,6 +801,19 @@ impl Generation3dMountedTypedSnapshotOwner {
                     _ => return Err("generation3d-mounted.dictionary-value-table"),
                 }
             }
+            Generation3dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation3dMountedRecordOwner::NeuralValue { owner: Generation3dMountedNeuralOwner::EntryRow { entries, row }, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
+                match self.stack.get_mut(entries) {
+                    Some(Generation3dMountedContainerOwner::DictionaryEntries { rows, .. }) => {
+                        rows.get_mut(row).ok_or("generation3d-mounted.dictionary-entry-row")?.value = Some(value);
+                    }
+                    _ => return Err("generation3d-mounted.dictionary-entry-list"),
+                }
+                if let Some(Generation3dMountedContainerOwner::DictionaryEntry { field, .. }) = self.stack.last_mut() {
+                    *field = None;
+                }
+            }
+            Generation3dMountedContainerOwner::DictionaryEntry { field: None, .. } if kind == mounted::RetainedValueContainer::Record => {}
+            Generation3dMountedContainerOwner::DictionaryEntries { destination, rows } if matches!(kind, mounted::RetainedValueContainer::List | mounted::RetainedValueContainer::Tuple) => self.finish_dictionary(destination, rows)?,
             Generation3dMountedContainerOwner::Dictionary { destination, rows, field: Some(1), .. } if kind == mounted::RetainedValueContainer::Table => self.finish_dictionary(destination, rows)?,
             Generation3dMountedContainerOwner::Wire { .. } if kind == mounted::RetainedValueContainer::Wire => {}
             Generation3dMountedContainerOwner::Statements { .. } => {
@@ -815,6 +875,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                     *field = Some(value as u16);
                     *seen |= 1 << value;
                 }
+                Some(Generation3dMountedContainerOwner::DictionaryEntry { field, .. }) if field.is_none() => *field = Some(value as u16),
                 _ => return Err("generation3d-mounted.field-owner"),
             },
             Token::Unsigned { role: Role::TableRows, value } => self.pending_table_rows = Some(value),
@@ -1010,6 +1071,9 @@ pub struct Generation3dMountedPackSession {
     value: std::mem::ManuallyDrop<Option<mounted::RetainedValueCursor>>,
     typed: std::mem::ManuallyDrop<Option<Generation3dMountedTypedSnapshotOwner>>,
     catalog_value: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalog>>,
+    /// 🚦️ One-slot ingress backpressure between the catalog's document-byte stream and the value
+    /// producer: a byte the producer cannot take yet waits HERE instead of being handed back.
+    document_byte: Option<(u64, u8)>,
     source_complete: bool,
     segment_complete: bool,
     anchor_ready: bool,
@@ -1040,6 +1104,7 @@ impl Generation3dMountedPackSession {
             value: std::mem::ManuallyDrop::new(None),
             typed: std::mem::ManuallyDrop::new(None),
             catalog_value: std::mem::ManuallyDrop::new(None),
+            document_byte: None,
             source_complete: false,
             segment_complete: false,
             anchor_ready: false,
@@ -1135,6 +1200,13 @@ impl Generation3dMountedPackSession {
         if self.typed.as_mut().ok_or("generation3d-mounted.typed-owner")?.grant_symbol(self.catalog.as_ref().ok_or("generation3d-mounted.catalog-owner")?)? {
             return Ok(false);
         }
+        if let Some((index, byte)) = self.document_byte {
+            if self.value.as_ref().ok_or("generation3d-mounted.value-owner")?.ingress_ready() {
+                self.document_byte = None;
+                self.value.as_mut().expect("P3 value retained").admit_byte(index, byte).map_err(|_| "generation3d-mounted.value-backpressure")?;
+                return Ok(false);
+            }
+        }
         if !self.value_complete {
             if let Some(token) = self.value.as_mut().ok_or("generation3d-mounted.value-owner")?.grant().map_err(|_| "generation3d-mounted.value-malformed")? {
                 self.value_complete = matches!(token, mounted::RetainedValueToken::Complete { .. });
@@ -1148,14 +1220,14 @@ impl Generation3dMountedPackSession {
             self.value_sealed = true;
             return Ok(false);
         }
-        if !self.segment_complete && (self.segment.as_ref().ok_or("generation3d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
+        if self.document_byte.is_none() && !self.segment_complete && (self.segment.as_ref().ok_or("generation3d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
             if let Some(event) = self.segment.as_mut().expect("P3 segment retained").grant().map_err(|_| "generation3d-mounted.segment-malformed")? {
                 self.segment_complete = matches!(event, mounted::RetainedPackSegmentEvent::PackComplete { .. });
                 let catalog = self.catalog.as_mut().expect("P3 catalog retained");
                 catalog.admit(event).map_err(|_| "generation3d-mounted.catalog-backpressure")?;
                 if let Some(event) = catalog.grant().map_err(|_| "generation3d-mounted.catalog-malformed")? {
                     match event {
-                        mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.value.as_mut().expect("P3 value retained").admit_byte(index, value).map_err(|_| "generation3d-mounted.value-backpressure")?,
+                        mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.document_byte = Some((index, value)),
                         mounted::RetainedPackCatalogEvent::Complete => self.catalog_complete = true,
                         _ => {}
                     }
@@ -1219,6 +1291,9 @@ impl Generation3dMountedPackSession {
         if maximum_items == 0 || maximum_bytes < mounted::RETAINED_PACK_PAGE_BYTES {
             return Ok(false);
         }
+        if self.document_byte.take().is_some() {
+            return Ok(false);
+        }
         if let Some(catalog) = self.catalog_value.as_mut() {
             if catalog.symbols.pop().is_some() || catalog.chunks.pop().is_some() {
                 return Ok(false);
@@ -1269,7 +1344,7 @@ impl Generation3dMountedPackSession {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == Generation3dMountedPackPhase::Closed && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none()
+        self.phase == Generation3dMountedPackPhase::Closed && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none() && self.document_byte.is_none()
     }
 }
 

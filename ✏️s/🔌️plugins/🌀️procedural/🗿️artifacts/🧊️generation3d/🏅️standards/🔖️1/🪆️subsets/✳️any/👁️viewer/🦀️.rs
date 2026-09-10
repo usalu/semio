@@ -12,7 +12,7 @@
 //! app-owned bounded reducer, publishing on the CONFIG lane only. That publication contract is the
 //! runtime half of the read-only guarantee whose compile-time half is `ViewEmit`.
 
-use crate::viewer::generation3d::commands::{set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
+use crate::viewer::generation3d::commands::{set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use crate::viewer::generation3d::modes::view;
 use crate::viewer::generation3d::modes::view::windows::preview;
@@ -53,7 +53,8 @@ semio_framework_plugin::view_commands! {
         "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
         "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
-        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity}
+        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
+        "setContributions" as "set-contributions" => set_contributions::SetContributions}
 }
 
 impl Default for Generation3dViewCommand {
@@ -145,14 +146,18 @@ impl Generation3dViewCommandWork {
         Self { tool_id, emit: None, presence: Vec::new(), host: None, host_retirement: None, session: None, started: false, complete: false, closing: false }
     }
 
-    fn finish(&mut self, eval_text: Option<String>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    /// 📤️ Completes the command, publishing the evaluated geometry ONLY when this tick's eval JSON
+    /// differs from what the transient already retains — a republication of identical bytes costs a
+    /// fresh allocation now and a byte-proportional retirement later, for no repaint.
+    fn finish(&mut self, publication: &semio_framework_os_flow::FlowEvalPublication) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         self.complete = true;
         let emit = self.emit.take().ok_or_else(|| Fault::from("generation3d-view-emit-owner-absent"))?;
         let presence = std::mem::take(&mut self.presence);
-        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-            emit,
-            ephemeral: EphemeralEmit { presence, transient: vec![Generation3dViewTransientMutation::from(SetPreviewEval { eval_text })], window_transient: Vec::new() },
-        })
+        let transient = match publication {
+            semio_framework_os_flow::FlowEvalPublication::Retained => Vec::new(),
+            semio_framework_os_flow::FlowEvalPublication::Changed(eval_text) => vec![Generation3dViewTransientMutation::from(SetPreviewEval { eval_text: eval_text.clone() })],
+        };
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence, transient, window_transient: Vec::new() } })
     }
 }
 
@@ -185,7 +190,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             ];
             self.emit = Some(emit);
             let mut host = FlowHost::from_fixture(input.snapshot.fixture.clone());
-            host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
+            host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
             let mut session = FlowEvalSession::new();
             session.sync(&host);
             self.host = Some(host);
@@ -197,8 +202,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if session.tick(host) {
             return Ok(ArtifactCommandWorkStep::Progress { stage: "generation3d-view-preview-evaluation", preview: b"{\"en\":\"Evaluating preview geometry\",\"de\":\"Vorschaugeometrie wird ausgewertet\"}" });
         }
-        let eval_text = Some(session.eval_json().to_string());
-        self.finish(eval_text)
+        let retained_eval = input.context.and_then(|context| context.transient.preview_eval_text.as_deref());
+        let publication = session.eval_publication_for(retained_eval);
+        self.finish(&publication)
     }
 
     fn begin_close(&mut self) {
@@ -320,6 +326,147 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewBoundedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
+//#region 🧩️ContributionsRoute
+/// 🧩️ The host→guest contributions route on the READ-ONLY surface. The viewer's preview window
+/// evaluates its own geometry (`with_host(fixture, |host| host.evaluate())`), so it needs exactly
+/// the same contributed operators the editor does; the registry it installs into is process-wide,
+/// but a session that only ever opens this app is never handed the editor's own route
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
+const GENERATION3D_VIEW_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.3d.view-contributions-command.v1";
+/// 📐️ The REAL wire ceiling of one contributions page: the framework's own public-invocation string
+/// bound — which no tool contract can widen, because `validate_public_json_envelope` runs before the
+/// addressed tool's contract — at its worst-case escaped width, plus the addressed envelope.
+const GENERATION3D_VIEW_CONTRIBUTIONS_ENVELOPE_BYTES: usize = 4_096;
+const GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES * semio_framework::PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR + GENERATION3D_VIEW_CONTRIBUTIONS_ENVELOPE_BYTES;
+
+fn generation3d_view_contributions_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+/// 🧩️ Installs one contributions page. Publishes nothing at all — not even the config lane every
+/// other viewer tool writes.
+struct Generation3dViewContributionsWork {
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewContributionsWork {
+    fn tool_id(&self) -> &'static str {
+        "setContributions"
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        generation3d_view_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("generation3d-view-contributions-work-repeated"));
+        }
+        self.consumed = true;
+        let Generation3dViewCommand::SetContributions(payload) = input.command else {
+            return Err(Fault::from("generation3d-view-contributions-route-rejected"));
+        };
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        set_contributions::handle(payload, &doc, &cfg)?;
+        Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
+    }
+}
+
+struct Generation3dViewContributionsJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewContributionsJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewContributionsJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_CONTRIBUTIONS_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_contributions_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewContributionsJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+}
+
+struct Generation3dViewBoundedCommandJobFactoryProofs;
+
+impl Generation3dViewBoundedCommandJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        document_schema: "generation.3d",
+        factory: "Generation3dViewBoundedCommandJobFactory",
+        factory_type: Generation3dViewBoundedCommandJobFactory,
+        contract: generation3d_view_bounded_contract(),
+        tools: ["setShowMode", "setLodMode", "setCamera", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"]
+    }
+}
+
+struct Generation3dViewContributionsJobFactoryProofs;
+
+impl Generation3dViewContributionsJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        document_schema: "generation.3d",
+        factory: "Generation3dViewContributionsJobFactory",
+        factory_type: Generation3dViewContributionsJobFactory,
+        contract: generation3d_view_contributions_contract(),
+        tools: ["setContributions"]
+    }
+}
+//#endregion 🧩️ContributionsRoute
+
+
 //#region 🔖️InteractionTopology
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
@@ -406,18 +553,21 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(Generation3dViewBoundedCommandJobFactory::new(&controller))
+        registry.register(Generation3dViewBoundedCommandJobFactory::new(&controller))?;
+        registry.register(Generation3dViewContributionsJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !GENERATION3D_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !GENERATION3D_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) && !GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("generation3d-view-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> = Box::new(Generation3dViewCommandWork::new(tool_id));
+        let contributions = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
+        let work: Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> =
+            if contributions { Box::new(Generation3dViewContributionsWork { consumed: false }) } else { Box::new(Generation3dViewCommandWork::new(tool_id)) };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -438,28 +588,51 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 completion: request.completion,
             },
             Generation3dViewCommand::command_id,
-            GENERATION3D_VIEW_RAW_BYTES,
+            if contributions { GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES } else { GENERATION3D_VIEW_RAW_BYTES },
             GENERATION3D_VIEW_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: ViewerApp<Generation3dViewer>,
-        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
-        controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
-        factory: "Generation3dViewBoundedCommandJobFactory",
-        factory_type: Generation3dViewBoundedCommandJobFactory,
-        tools: {
-            "setShowMode" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLodMode" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "toggleSun" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunAzimuth" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunElevation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunIntensity" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+    /// 🧾️ BOTH factories' proofs, in registration order. The bounded rows now read their contract
+    /// off `generation3d_view_bounded_contract()` instead of respelling `8_192, 32, 32, …` seven
+    /// times — one declared quantity, one place.
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = Generation3dViewBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+        proofs.extend(Generation3dViewContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs
+    }
+
+    /// 🎯️ Maps the host's declared command id + JSON args onto this viewer's typed command — the
+    /// bridge `PluginApp::handle_command` takes for EVERY structurally addressed invocation
+    /// (`plugin_handle_command` → `A::command_from_action`). Without it the shell's own
+    /// `setContributions` push, and every chrome measure's `on_change`, fail closed with
+    /// `app.command.unsupported` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or_else(dsl::DslValue::null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(dsl::DslValue::as_f64)) };
+        let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
+        match action {
+            "setShowMode" => Ok(Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
+            "setLodMode" => Ok(Generation3dViewCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
+            "setCamera" => Ok(Generation3dViewCommand::SetCamera(set_camera::SetCamera {
+                camera: args
+                    .get("camera")
+                    .and_then(|camera| <crate::viewer::generation3d::config::Generation3dViewCamera as dsl::FromValue>::from_value(camera.clone()).ok())
+                    .unwrap_or_default(),
+            })),
+            "toggleSun" => Ok(Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {})),
+            "setSunAzimuth" => Ok(Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunElevation" => Ok(Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunIntensity" => Ok(Generation3dViewCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_arg(&["value"]).unwrap_or(1.0) })),
+            "setContributions" => Ok(Generation3dViewCommand::SetContributions(set_contributions::SetContributions {
+                json: str_arg(&["json"]).unwrap_or_default(),
+                page: u64_arg(&["page"]).unwrap_or_default(),
+                page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
+            })),
+            other => Err(Fault::from(format!("action '{other}' is not declared by the generation3d viewer"))),
         }
     }
 
@@ -592,6 +765,20 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
         .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+        // 🧩️ Not a view action: a hidden host COMMAND, because the host pushes it and no user ever
+        // invokes it. It publishes nothing at all, not even the config lane the seven above write.
+        .command({
+            let mut definition = semio_framework_plugin::CommandDefinition {
+                in_palette: false,
+                ..semio_framework_plugin::CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                    semio_framework_plugin::ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                    semio_framework_plugin::ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                    semio_framework_plugin::ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+                ])
+            };
+            definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+            definition
+        })
         // 🕹️ First-class hover/selection over the same flow-graph widget DAG the sibling surface
         // declares — read-only, but a viewer still hovers, selects and inspects. Selection stays
         // `broadcast: true` so a co-viewer sees what this one is looking at.
@@ -614,6 +801,22 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
             },
         })
         .window_kind_interactions(preview::WINDOW_KIND_ID, vec![InteractionRef::new("graph")])
+        // 📇️ Window-scoped action ownership (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). This viewer has
+        // exactly one window and exactly seven view actions, and that window's own chrome dispatches all
+        // seven — `setShowMode`/`setLodMode` and the sun group from `preview_window_measures`, `setCamera`
+        // from the world host's viewport gesture. Declaring them explicitly is what keeps
+        // `WindowKindDefinition.actions` a statement about this window rather than a copy of the app list
+        // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`). Asserted by
+        // `every_emitted_action_is_declared_on_the_preview_window_kind`.
+        .window_kind_action_refs(preview::WINDOW_KIND_ID, vec![
+            "setShowMode".into(),
+            "setLodMode".into(),
+            "setCamera".into(),
+            "toggleSun".into(),
+            "setSunAzimuth".into(),
+            "setSunElevation".into(),
+            "setSunIntensity".into(),
+        ])
         .build_definition()
 }
 //#endregion 🔖️Manifest

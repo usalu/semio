@@ -231,3 +231,142 @@ makes `toolMeasuresByToolId["fill"]` arrive, which is why deleting the in-tree t
 
 No `[DEBUG]` probe remains in the tree (the `onAction` funnel log used for §1.5 was removed and the
 typecheck/test runs above were made after its removal).
+
+## 8. W-G3 fix (wasm #31 empty tool body + remaining one-press defects)
+
+Wave: **W-G3** (2026-09-10). Fresh probe `🗑️generated/probe-2026-09-10T04-32-25.md` + screenshot
+`🗑️generated/probe-2026-09-10T04-32-25-fill-tab.png`: Tool panel open, Fill tab selected, **body empty**
+(no slider, no measures). Guest `tool_measures` always publishes `fill` (native bijection + fill family
+59/0). Packed reserved-section unpack (`sectionValueFromBuiltNode` + `packedTextLeaf`) already lands
+the tools JSON (`framework.section.tools`, 2581 B). The drop was **after** the cache write.
+
+### 8.1 Defect 1 — empty tool body
+
+**Cause.** `buildToolTabs` keeps tab object identity and lazy-reads `toolMeasuresByToolIdRef`. The
+desktop floating Tool pane is `PanelTreeUnitsPane` (`reactHostPort.memo`). First resolve (boot / tools
+surface not yet retained / first Fill select) sees `{}` and renders `tool.fill.options` with no items.
+W-G wired `treeContentRevision` only on the **mobile** panel. Desktop `buildPanelProps` never passed
+it, so when `SET_TOOL_MEASURES_BY_TOOL_ID` later merged the guest map the memoized pane never
+re-called `resolveTree`. Probe sliders/measures stayed `[]`.
+
+Not a packed-leaf drop: tools go through the same reserved-section walk W-X already packed/unpacked.
+Not a window/panel id keying bug: the leaf id is still `tool.fill` / measures key `fill`.
+
+**Fix.**
+
+| File | Lines | What |
+| --- | --- | --- |
+| `…/ShellHelpers` | :3943 | `toolPanelTreeContentRevision` — shared identity for desktop + mobile |
+| `…/ShellHost` | :8507, :9156 | mobile + **desktop** `buildPanelProps` pass that revision (`toolMeasuresByToolId` in deps) |
+
+**Law (fails before / passes after).** `late-arriving fill measures change the tool panel tree revision so the memoized pane re-resolves` — empty ref resolves to `[]` items; after the fill slider lands, the same tab's `resolveTree` has one item **and** the revision identity changes (the memo bust `buildPanelProps` was missing).
+
+### 8.2 Defect 2 — first press on `#tool.fill` must activate when inactive
+
+**Cause (still true after W-G).** `progressPanelTabSelection` treats a re-press of the already-selected
+leaf as a collapse (`path` walks up to `framework.category.tool`). W-G's `reconcileToolTabSelection`
+then sees `selected=null` and dispatches `setActiveTool {toolId:""}`. A follow-up pass before
+`activeToolId` actually updates also treated "pending activate fill" as "active moved to null" and
+bounced (`select null`).
+
+**Fix.**
+
+| File | Lines | What |
+| --- | --- | --- |
+| `…/ShellHelpers` | :3968 | `toolLeafInactiveRepress` — collapse of an **inactive** tool leaf keeps the previous path and names the tool to arm |
+| `…/ShellHost` | :8550 | `onActiveTabPathChange` applies that helper and dispatches `setActiveTool` |
+| `…/ShellHost` | :8454–:8477 | `pendingToolActivateRef` — do not re-enter reconcile until `activeToolId` matches the in-flight activate (or the user moves the path) |
+
+**Law.** `one press on an inactive selected Fill leaf arms the tool instead of collapsing it` — the
+ribbon collapse path is still `[framework.category.tool]`; the helper returns `{path: previous, toolId:"fill"}`
+when `activeToolId` is null, and `null` when Fill is already armed (so an armed re-press still folds).
+
+Existing W-G reconcile laws unchanged (self-heal / restore / program-select).
+
+### 8.3 Defect 3 — one press on `#framework.category.tool` opens with the Fill tab
+
+**Cause.** `usePanelTabSelection` on a **closed** host swallows a re-select of the current tail
+(`raw.last === resolved[raw.length-1]`) so the panel opens without running `progressPanelTabSelection`.
+A first-ever / category-only path (`["framework.category.tool"]`) therefore never memory-drilled or
+first-child-descended. Second press (now visible) was an active-root re-press and **folded**. That is
+the two-click. (A persisted-open category still folds on re-press — that is the ribbon rule; with
+defect 1 fixed the open panel is no longer an empty corpse.)
+
+**Fix.** Keep the swallow for a closed host whose path already has a leaf (existing UI laws). When the
+closed path is category-only **and** `drillOnOpen` is set (bottom-middle only):
+
+| File | Lines | What |
+| --- | --- | --- |
+| `…/PanelTabBar` | :178, :217–:219 | optional `drillOnOpen`; applied only on closed + `resolvedPath.length <= 1` |
+| `…/ShellHelpers` | :3956 | `toolCategoryOpenPath` — remembered child, else first tool leaf (`tool.fill`) |
+| `…/ShellHost` | :8577 | bottom-middle `drillOnOpen` → `toolCategoryOpenPath` |
+
+**Laws.** Existing `one press on the Tool category reveals its remembered tool leaf and arms that tool`
+(memory drill via `progressPanelTabSelection([], …)`). New `one press that opens the Tool category
+selects Fill when no leaf is remembered` — `progress` stays on the category; `toolCategoryOpenPath`
+appends `tool.fill`.
+
+UI regression check (must stay green): `press on a closed host opens it without changing the active path`,
+`unfolding restores the stored path`, `picking a tab opens a folded panel`, `PanelTreeUnitsPane re-resolves lazy trees` — **4 passed**.
+
+### 8.4 Verification (helpers — still green; did not close the browser loop)
+
+The §8.1–8.3 helpers remain required, but they modeled a path the **release browser did not take**.
+Measures already arrived and `resolveTree` already built Fill items. The pane never mounted because
+the selected path stayed on the Tool **branch**.
+
+### 8.6 Live :6014 loop — actual empty-body cause (browser-proven)
+
+Serve: `http://127.0.0.1:6014` (fresh vite, current renderer TS, wasm #31). Probe:
+
+`bun ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/PUZZLE-3D-END-TO-END/🔍️browser-probe.ts" --interact --fill --settle=10 --port=6014`
+
+Coordinator empty-body artifacts: `probe-2026-09-10T04-32-25*`, `probe-2026-09-10T04-56-02*`.
+
+DEBUG probe `🗑️generated/probe-2026-09-10T05-00-42.md` proved:
+
+1. Guest measures **do** arrive (`tools section admitted`, `fill: 2`).
+2. `resolveToolTree` builds `measureCount: 2, itemCount: 2`.
+3. `PanelTreeUnitsPane` resolves `{tabId: tool.fill}` only while the Fill **leaf** is active.
+4. Snapshot: `data-active-tab-id=framework.category.tool`, **h=47**, `treeItems=0` — chrome row only (`Tool | Command | Collapse | Fill`).
+
+`Panel` / `LayoutMobilePanel` mount trees only when `activeNode.kind === "leaf"`. A branch active node
+⇒ empty hugging strip. The empty strip is the Tool **panel body**, not a Command bar.
+
+`usePanelTabSelection` on a **closed** host with an **empty** current path (`resolvedPath=[]`):
+
+- swallow is `raw.last === resolvedPath[raw.length-1]` → `"framework.category.tool" === undefined` → **false**
+- `drillOnOpen` ran only inside that swallow branch
+- fallthrough `progressPanelTabSelection` does not auto-descend a branch with no memory → path stays `["framework.category.tool"]`
+- DEBUG: `handlePathChange closed {raw: Array(1), resolvedPath: Array(0), swallow: false, hasDrill: true}`
+
+`buildPanelProps` already spread `drillOnOpen`, but `Panel` dropped it and created its own hook without the callback.
+
+### 8.6.1 Fix
+
+| File | What |
+| --- | --- |
+| `…/PanelTabBar` | `drillOnOpen` on **every** closed-host open (swallow **and** empty-path fallthrough). Existing closed-host UI law unchanged (that test does not pass `drillOnOpen`). `resolvePanelBranchBodyLeaf` — a branch body is the remembered (else first) descendant leaf. |
+| `…/Panel` | Forwards `drillOnOpen`. Renders `bodyLeaf` trees when the active node is a branch. |
+| `…/Layout` | Same branch-body resolve for the mobile panel. |
+| `…/ui-react` barrel | Re-exports `resolvePanelBranchBodyLeaf`. |
+
+**Law.** `a Tool category branch still exposes the remembered Fill leaf trees as the panel body`.
+
+DEBUG confirmation `🗑️generated/probe-2026-09-10T05-08-05.md` + `probe-2026-09-10T05-08-05-tool-category.png` / `-fill-tab.png`: after **one** `#framework.category.tool` press, `tab=tool.fill`, `h=119`, `treeItems=3`, body text `Count | 0 | Hexagonal Cut Concrete Forest Left | 100% | Distribution`. Fill press kept the leaf (inactive-repress). `[DEBUG]` logs then stripped.
+
+### 8.7 Final clean probe + suite tails
+
+| command | result |
+| --- | --- |
+| renderer-react vitest tool-tab laws (incl. new branch-body law) | **12 passed** / 583 skipped. Foreign: `package-integration` `self is not defined` |
+| UI vitest closed-host / revision / fold | **4 passed** / 697 skipped. Foreign: storybook `bun:sqlite` |
+| `bun x tsc --noEmit` ui-react | **336 errors, 0 in touched files** (PanelTabBar / Panel / Layout) |
+| `bun x tsc --noEmit` renderer-react | **820-class errors, 0 new in touched files** after the `resolvePanelBranchBodyLeaf` annotation rewrite |
+| `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib -j 4 -- --test-threads=1` | **639 passed; 1 failed** — `two_instances_converge_disjoint_object_edits_via_backbone` (known foreign) |
+| Final clean probe | `🗑️generated/probe-2026-09-10T05-19-26.md` + `probe-2026-09-10T05-19-26-tool-category.png` / `-fill-tab.png` / `-fill-wait-ready.png` |
+
+Final probe (no `[DEBUG]`): one press `#framework.category.tool` → `tab=tool.fill`, `h=119`, `treeItems=3`, body `Count | 0 | Hexagonal Cut Concrete Forest Left | 100% | Distribution`. Same after `#tool.fill` and after 30s. `faults=0`.
+
+Open: probe `sliders`/`ranges` stay `[]`/`0` because Count is not `input[type=range]` (custom tree control). In-tree `toggle-group-item#tool.fill` stays absent (W-G removed the duplicate id). No wasm rebuild. `:6013` untouched.
+

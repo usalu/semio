@@ -4,7 +4,7 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowHost};
+use flow::{flow_neuron_kind_info_map, forms_bridge::flow_fixture_to_form_spec, FlowHost};
 use protocol::MutationDiff;
 use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
 use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
@@ -352,7 +352,7 @@ fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value)
 
 fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
     let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
@@ -419,7 +419,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
 /// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
 fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> Vec<String> {
     let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));

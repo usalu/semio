@@ -13,7 +13,10 @@ import browserAuthorityFixture from "../../🧫️fixtures/🧊️wgpu-browser-e
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { renderFrameWorker } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script";
 import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
-import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
@@ -310,6 +313,37 @@ describe("framework renderer wgpu generated worker", () => {
     expect(createHash("sha256").update(first.content).digest("hex")).toBe(subtle);
   });
 
+  it("renders byte-identical worker bytes from unrelated working directories and renderer environments, because the Nx generate target runs in the package directory while the dev lane checks from the repository root", async () => {
+    const bundleRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
+    let workspaceRoot = dirname(fileURLToPath(import.meta.url));
+    while (!existsSync(join(workspaceRoot, "nx.json"))) workspaceRoot = dirname(workspaceRoot);
+    const contexts = [
+      { cwd: workspaceRoot, env: {} },
+      { cwd: bundleRoot, env: { SEMIO_RENDERER: "wgpu", S_OS_PORT: "6118", CARGO_TARGET_DIR: join(workspaceRoot, "target-cross-context-probe") } },
+      { cwd: dirname(workspaceRoot), env: { SEMIO_RENDERER: "react", S_OS_PORT: "6018", NODE_ENV: "production" } },
+    ];
+    const callerCwd = process.cwd();
+    const renders: string[] = [];
+    try {
+      for (const context of contexts) {
+        const restored = Object.entries(context.env).map(([key, value]) => [key, process.env[key]] as const);
+        Object.assign(process.env, context.env);
+        process.chdir(context.cwd);
+        try {
+          renders.push((await renderFrameWorker(bundleRoot)).content);
+          expect(process.cwd()).toBe(context.cwd);
+        } finally {
+          for (const [key, value] of restored) if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
+      }
+    } finally {
+      process.chdir(callerCwd);
+    }
+    for (const render of renders) expect(createHash("sha256").update(render).digest("hex")).toBe(createHash("sha256").update(renders[0]!).digest("hex"));
+    expect(renders[0]).not.toMatch(/[0-9a-f]{64}/u);
+  });
+
   it("aligns digest-verified devcontainer and native Bun provisioning with the packageManager pin", () => {
     let repoRoot = dirname(fileURLToPath(import.meta.url));
     while (!existsSync(join(repoRoot, "nx.json"))) repoRoot = dirname(repoRoot);
@@ -341,6 +375,31 @@ describe("framework renderer wgpu generated worker", () => {
       const viaOracle = JSON.parse(`"${input}"`) as string;
       expect(decodeAstralEscapes(input)).toBe(viaOracle);
     }
+  });
+
+  it("settleFailedInstanceOpen runs the instance cleanup and still rejects with the ORIGINAL open fault, even when the cleanup itself throws — the masking that turned every guest first-step trap into create_app promise failed: wgpu-ui.native-owner-required", async () => {
+    const opened = new Error("shard 0 worker fault [handler/first-step] interactive-job.catalog-authority");
+    const ran: string[] = [];
+    await expect(settleFailedInstanceOpen(opened, async () => void ran.push("clean"))).rejects.toBe(opened);
+    await expect(
+      settleFailedInstanceOpen(opened, async () => {
+        ran.push("threw");
+        throw new Error("wgpu-ui.native-owner-required");
+      }),
+    ).rejects.toBe(opened);
+    expect(ran).toEqual(["clean", "threw"]);
+  });
+
+  it("hands the wgpu shell its generation3d boot plan in dependency order, so the requested plugin is never plugins[0] — the ordering the Rust boot selection (🧫️fixtures/🔬️wgpu-shell-boot-selection) must survive", () => {
+    const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, "generation3d");
+    const ids = boot.plugins.map((entry) => entry.pluginId);
+    expect(ids).toContain("procedural");
+    expect(ids).toContain("flow");
+    expect(ids.indexOf("flow")).toBeLessThan(ids.indexOf("procedural"));
+    expect(ids[0]).not.toBe("procedural");
+    const fixtureCase = bootSelectionFixture.cases.find((entry) => entry.id === "dependency-sorts-first");
+    expect(fixtureCase?.programs.map((program) => program.pluginId)).toEqual(["flow", "procedural"]);
+    expect(fixtureCase?.expected?.appId).toBe(boot.defaultAppId);
   });
 
   it("renders an astral-emoji-bearing browser entry (🟦️.ts, which references the \"🎞️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {

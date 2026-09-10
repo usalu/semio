@@ -1,0 +1,103 @@
+{
+  "schema": "semio.s.flow.flow.editor.interactive-job/v1",
+  "controller": "s.flow.flow@1/*#editor",
+  "documentSchema": "flow.fixture",
+  "note": "Every declared flow editor action, the exact app-owned factory that owns its retained route, and the publication lanes that route may write. The catalog-authority join (interactive-job.catalog-authority) requires this set to equal the manifest's Migrated declarations AND the aggregated bounded-first-step proof rows, exactly.",
+  "factories": [
+    {
+      "factory": "FlowDirectStoreJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "removeWidget",
+        "deleteSelection",
+        "disconnect",
+        "moveMediaNode",
+        "patchFlowWidgets",
+        "duplicateWidget",
+        "focusSelection",
+        "nodeGraphViewport",
+        "setLodMode",
+        "setProximityDistance",
+        "setGridVisible",
+        "setGridSnapEnabled",
+        "setGridFactor",
+        "setPreviewOff",
+        "setCatalogueSections",
+        "toggleExtension",
+        "addGeneration",
+        "removeGeneration",
+        "selectGeneration",
+        "renameGeneration",
+        "updateGenerationValues"
+      ]
+    },
+    {
+      "factory": "FlowChildGroupJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "addWidget"
+      ]
+    },
+    {
+      "factory": "FlowHostEffectJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "evaluate",
+        "contextMenuAt",
+        "openSpotlight",
+        "replaceImage",
+        "flowEvalTick",
+        "flowEvalResolve"
+      ]
+    },
+    {
+      "factory": "FlowGraphOperationJobFactory",
+      "rawWireBytes": 16384,
+      "tools": [
+        "connectMediaPorts",
+        "reorganize",
+        "renameFlowWidget",
+        "nodeGraphEdit",
+        "spotlightCommit",
+        "runExtensionAction"
+      ]
+    }
+  ],
+  "migrated": [
+    "addGeneration",
+    "addWidget",
+    "connectMediaPorts",
+    "contextMenuAt",
+    "deleteSelection",
+    "disconnect",
+    "duplicateWidget",
+    "evaluate",
+    "flowEvalResolve",
+    "flowEvalTick",
+    "focusSelection",
+    "moveMediaNode",
+    "nodeGraphEdit",
+    "nodeGraphViewport",
+    "openSpotlight",
+    "patchFlowWidgets",
+    "removeGeneration",
+    "removeWidget",
+    "renameFlowWidget",
+    "renameGeneration",
+    "reorganize",
+    "replaceImage",
+    "runExtensionAction",
+    "selectGeneration",
+    "setCatalogueSections",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setGridVisible",
+    "setLodMode",
+    "setPreviewOff",
+    "setProximityDistance",
+    "spotlightCommit",
+    "toggleExtension",
+    "updateGenerationValues"
+  ],
+  "batchOnlyPendingRewrite": []
+}

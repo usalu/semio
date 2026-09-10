@@ -25006,6 +25006,11 @@
       "path": "temp/compose/",
       "mode": "opaque",
       "reason": "Explicit recovered opaque subtree; filter lexically before every filesystem access"
+    },
+    "mit-bestand-recherche": {
+      "path": "♻️mit-bestand/🔎️recherche/",
+      "mode": "opaque",
+      "reason": "Explicit nested-repository gitlink; filter lexically before every filesystem access"
     }
   },
   "unicodeNormalization": {
@@ -25065,7 +25070,8 @@
     "undeclaredAreas": "enforce",
     "opaquePathExclusionIds": [
       "compose",
-      "temp-compose"
+      "temp-compose",
+      "mit-bestand-recherche"
     ]
   },
   "semanticManifestFileKindId": "json",

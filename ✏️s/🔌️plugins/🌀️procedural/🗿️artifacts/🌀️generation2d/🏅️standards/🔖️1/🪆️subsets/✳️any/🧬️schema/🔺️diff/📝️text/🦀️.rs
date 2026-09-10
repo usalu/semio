@@ -152,6 +152,18 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
             }
         }
     }
+
+    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
+    /// delta and throw it away; an inhabited `fixture` owns an `OrderedMap` root that aborts the
+    /// process on a bare drop, so the contract routes here.
+    fn retire_cold(self) {
+        Generation2dDiff::retire_cold(self);
+    }
+
+    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
+    fn retire_projection(projection: Generation2dSnapshot) {
+        projection.retire_cold();
+    }
 }
 //#endregion 🔖️Apply
 

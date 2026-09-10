@@ -2,7 +2,7 @@ import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFea
 import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
 import * as flowBrowser from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
 import { readFile } from "node:fs/promises";
-import { flowWasmContract } from "../../📦️packages/🟨️javascript/📜️script.ts";
+import { flowWasmContract } from "../../../🧪️tests/🌐️browser-declaration/🟦️.ts";
 import { deepStrictEqual } from "node:assert";
 import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 import { testFlowOpenOwnership } from "../🔓️open-ownership/🟦️.ts";
@@ -161,6 +161,24 @@ const attachedSurface = await attached.result;
 equal(attachedSurface.surfaceGeneration, 1, "surface-generation");
 equal(bridge.operations.includes(FlowOperation.surfaceStatus), true, "async-surface-status");
 await features.surface.surfaceStatus({ surface: attachedSurface.surface, surfaceGeneration: attachedSurface.surfaceGeneration, status: "cancelled" }).result;
+
+// 🙈️ A flow surface presents through a 2D canvas context and never touches the WebGPU device, so every
+// host without one — no `navigator.gpu`, a blocklisted adapter, an adapter that refuses a device —
+// must still reach `created` and hand back a usable surface. Before this, each of these threw
+// "Flow GPU adapter unavailable", the attach rejected, and the node-graph window stayed blank forever.
+for (const [law, deviceless] of [
+  ["absent-gpu-namespace", undefined],
+  ["absent-adapter", { requestAdapter: async () => null }],
+  ["absent-device", { requestAdapter: async () => ({ requestDevice: async () => null }) }],
+  ["throwing-adapter", { requestAdapter: async () => { throw new Error("blocklisted"); } }],
+]) {
+  const devicelessAttach = attachFlowSurface(features, {}, { width: 966, height: 836, dpr: 1, gpu: deviceless });
+  const devicelessSurface = await devicelessAttach.result;
+  equal(devicelessSurface.surfaceGeneration, 1, `deviceless-surface-generation:${law}`);
+  equal(devicelessSurface.device, null, `deviceless-surface-device:${law}`);
+  await features.surface.surfaceStatus({ surface: devicelessSurface.surface, surfaceGeneration: devicelessSurface.surfaceGeneration, status: "cancelled" }).result;
+}
+console.log("[DEBUG] Flow surface attachment reached created on four deviceless hosts without a WebGPU adapter");
 
 let releaseAdapter;
 const interruptedAttach = attachFlowSurface(features, {}, { width: 1, height: 1, gpu: { requestAdapter: () => new Promise((resolve) => { releaseAdapter = resolve; }) } });

@@ -257,6 +257,20 @@ export function isFlowSessionOpenRejected(error) {
 
 let nextSurfaceId = 1;
 
+/** 🎛️ Optional acceleration device for one flow surface. A flow surface **presents through a 2D canvas
+ * context** ({@link renderFlowCanvas}) and never touches this device, so a host without WebGPU — a
+ * headless/hidden tab, a browser that ships no `navigator.gpu`, a blocklisted adapter — must still
+ * reach `created`. Returns `null` instead of throwing whenever the device cannot be acquired; only a
+ * cancellation of the attachment itself is allowed to abort the surface. */
+async function requestFlowSurfaceDevice(gpu) {
+  try {
+    const adapter = await gpu?.requestAdapter?.();
+    return (await adapter?.requestDevice?.()) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function attachFlowSurface(features, canvas, { width, height, dpr = 1, gpu = globalThis.navigator?.gpu } = {}) {
   if (!canvas) return rejectedTask(new Error("Flow canvas is required"));
   const surface = nextSurfaceId++;
@@ -270,14 +284,13 @@ export function attachFlowSurface(features, canvas, { width, height, dpr = 1, gp
   const result = attached.result.then(async () => {
     if (cancelled) throw new Error("Flow surface attachment cancelled");
     try {
-      const adapter = await gpu?.requestAdapter?.();
-      if (!adapter) throw new Error("Flow GPU adapter unavailable");
-      const device = await adapter.requestDevice();
+      const device = await requestFlowSurfaceDevice(gpu);
       if (cancelled) throw new Error("Flow surface attachment cancelled");
       active = features.surface.surfaceStatus({ surface, surfaceGeneration, status: "created" });
       active.subscribe(notify);
       await active.result;
-      device.lost?.then(() => {
+      console.log("[DEBUG] flow surface created surface=%s %sx%s dpr=%s device=%s", surface, width, height, dpr, device ? "webgpu" : "none");
+      device?.lost?.then(() => {
         const lost = features.surface.surfaceStatus({ surface, surfaceGeneration, status: "device-lost" });
         const unsubscribeLost = lost.subscribe(notify);
         return lost.result.finally(unsubscribeLost);
@@ -427,14 +440,30 @@ export function decodeFlowVcsPage(bytes) {
 function mapTask(task, decode) { return { ...task, result: task.result.then(decode) }; }
 function rejectedTask(error) { return { requestId: undefined, result: Promise.reject(error), cancel: () => false, subscribe: () => () => {} }; }
 
+const flowPresentedCanvases = new WeakSet();
+
+function positiveFlowSize(value) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
 function renderFlowCanvas(canvas, state) {
   const context = canvas?.getContext?.("2d");
   if (!context) return;
-  const dpr = state?.dpr ?? 1;
-  const width = Math.max(1, state?.width ?? canvas.clientWidth ?? 1);
-  const height = Math.max(1, state?.height ?? canvas.clientHeight ?? 1);
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
+  if (canvas && typeof canvas === "object" && !flowPresentedCanvases.has(canvas)) {
+    flowPresentedCanvases.add(canvas);
+    console.log("[DEBUG] flow surface context created 2d %sx%s dpr=%s widgets=%s", state?.width, state?.height, state?.dpr, (state?.fixture?.widgets ?? []).length);
+  }
+  // 📏️ The frame's own size wins; without one the canvas keeps the backing store its host already owns.
+  // `clientWidth` is 0 for a canvas in a hidden tab or an unlaid-out pane, so the previous fallback
+  // collapsed a correctly sized surface to 1x1 and presented nothing.
+  const dpr = positiveFlowSize(state?.dpr) ?? globalThis.devicePixelRatio ?? 1;
+  const framed = positiveFlowSize(state?.width) !== undefined && positiveFlowSize(state?.height) !== undefined;
+  const width = framed ? state.width : Math.max(1, canvas.width / dpr);
+  const height = framed ? state.height : Math.max(1, canvas.height / dpr);
+  if (framed) {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+  }
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
   context.clearRect(0, 0, width, height);
   for (const widget of state?.fixture?.widgets ?? []) {

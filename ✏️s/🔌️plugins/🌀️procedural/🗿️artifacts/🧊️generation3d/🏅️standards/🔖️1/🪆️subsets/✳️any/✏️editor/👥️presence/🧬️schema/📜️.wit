@@ -1,0 +1,32 @@
+package semio:procedural-generation3d-editor-presence@1.0.0;
+
+/// 👥️ The language-neutral surface of `Generation3dPresence` — the three facets the 3D editor
+/// broadcasts. It is the config record minus what a peer has no business seeing: the sun and the
+/// level-of-detail mode are local rendering choices, the selected generation is a local edit cursor.
+interface presence {
+    /// 🕸️ The flow-graph camera a peer is looking through.
+    record graph-camera {
+        x: f64,
+        y: f64,
+        zoom: f64,
+    }
+
+    /// 📷️ The 3D preview camera a peer is looking through.
+    record preview-camera {
+        position: list<f64>,
+        target: list<f64>,
+        fov: f64,
+    }
+
+    /// 👥️ What a peer sees of another peer's 3D editor.
+    record editor-presence {
+        camera: graph-camera,
+        preview-camera: preview-camera,
+        show-mode: string,
+    }
+}
+
+/// 🌍️ The world one 3D editor instance's presence lane exports.
+world generation3d-editor-presence {
+    export presence;
+}

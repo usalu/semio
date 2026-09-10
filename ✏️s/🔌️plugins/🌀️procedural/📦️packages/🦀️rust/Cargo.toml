@@ -43,6 +43,9 @@ path = "../../🦀️.rs"
 # link error, and the embedding crate is the one that must own the entry point.
 default = ["plugin-entry"]
 plugin-entry = []
+# 🧮️ Installs `semio_framework_trace::HeapWitness` as this component's `#[global_allocator]` and
+# thereby arms the reactor's per-turn retention trace. Diagnostic builds only — see the static's doc.
+guest-heap-witness = ["dep:semio-framework-trace"]
 
 [dependencies]
 semio-s-artifact-procedural-assembly = { workspace = true }
@@ -51,6 +54,30 @@ semio-s-artifact-procedural-generation3d = { workspace = true, features = ["comp
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-trace = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
+
+# ⏱️ The guest-lifecycle boot deadline law runs from the crate's PUBLIC surface as its own `[[test]]`,
+# independent of the lib test target, so a peer's in-flight editor/viewer refactor can never hide a
+# first-step regression.
+[[test]]
+name = "boot_deadline"
+path = "../../🧪️tests/🔬️boot-deadline/🦀️.rs"
+
+# 🚪️ The instance close law for both procedural editors runs from the crate's PUBLIC surface as its
+# own `[[test]]`, so a close-ladder regression can never hide behind the lib test target.
+[[test]]
+name = "close_ladder"
+path = "../../🧪️tests/🚪️close-ladder/🦀️.rs"
+
+# 😴️ The idle-turn authority (settled status + zero retention) runs from the crate's PUBLIC surface
+# as its own `[[test]]` and installs its own `HeapWitness` global allocator, which no other test
+# target may carry.
+[[test]]
+name = "idle_turns"
+path = "../../🧪️tests/😴️idle-turns/🦀️.rs"

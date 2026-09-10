@@ -308,20 +308,23 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
         Some(10)
     }
     let generation = 7_001;
-    let mut zero = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("zero")), generation).expect("admitted");
-    let mut sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::allocate_operation_id(),
-        semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(0, u64::MAX),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-    );
-    assert_eq!(zero.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
-    let cursor = zero.state.as_ref().and_then(|state| state.cursor.as_ref()).expect("cursor retained");
-    assert!(cursor.pending_root.is_some());
-    assert!(cursor.held_node.is_none());
+    {
+        let mut zero = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("zero")), generation).expect("admitted");
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(
+            semio_framework_job::allocate_operation_id(),
+            semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(0, u64::MAX),
+            semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_us,
+            &mut sequence,
+        );
+        assert_eq!(zero.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
+        let cursor = zero.state.as_ref().and_then(|state| state.cursor.as_ref()).expect("cursor retained");
+        assert!(cursor.pending_root.is_some());
+        assert!(cursor.held_node.is_none());
+    }
+    super::drain_surface_reconcile_registry_until_idle();
 
     let generation = 7_002;
     let mut expired = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("deadline")), generation).expect("admitted");

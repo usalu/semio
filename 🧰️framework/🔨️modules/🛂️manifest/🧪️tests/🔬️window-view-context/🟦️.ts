@@ -1,6 +1,6 @@
 /** 🧪️ Runs the shared window-context vectors against the TypeScript implementation. */
 import assert from "node:assert/strict";
-import { panelViewContext, windowViewContext, type PluginViewState } from "../../🟦️.ts";
+import { hostArmedViewContext, panelViewContext, windowViewContext, type PluginViewState } from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔬️window-view-context/🔣️.json";
 
 export function testWindowViewContext(): void {
@@ -30,5 +30,14 @@ export function testWindowViewContext(): void {
   assert.equal(panel.activeModeId, view.activeModeId);
   assert.deepEqual(panel.activeUtilityByWindowId, view.activeUtilityByWindowId);
   assert.deepEqual(view, before);
-  console.log(`window-view-context cases=${fixture.cases.length} isolation=valid preferences=preserved`);
+  const windowOnly = windowViewContext(view, "left");
+  assert.equal(windowOnly?.activeToolId, undefined, "fails-before: windowed dispatch without host overlay drops the armed tool");
+  for (const test of fixture.hostArmed) {
+    const actual = hostArmedViewContext(view, test.hostActiveToolId, test.windowId ?? undefined);
+    assert(actual);
+    assert.equal(actual.activeToolId, test.activeToolId ?? undefined);
+    assert.equal(actual.activeUtilityId, test.activeUtilityId ?? undefined);
+  }
+  assert.deepEqual(view, before);
+  console.log(`window-view-context cases=${fixture.cases.length} hostArmed=${fixture.hostArmed.length} isolation=valid preferences=preserved`);
 }

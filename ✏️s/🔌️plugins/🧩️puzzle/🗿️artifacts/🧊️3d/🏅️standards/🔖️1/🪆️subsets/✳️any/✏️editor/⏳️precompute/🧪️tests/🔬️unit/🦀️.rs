@@ -481,7 +481,8 @@ fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
 
 fn close_fill_envelope(session: &mut Puzzle3dPrecomputeSession) {
     let request = session.fill_job.clone().expect("fill request");
-    assert!(session.cancel_fill_job());
+    let _ = session.cancel_fill_job();
+    request_fill_envelope_terminal(&request, FillEnvelopeTerminalReason::Closed);
     let _ = session.drive_fill_job(&request);
     let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
     while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
@@ -556,7 +557,8 @@ fn fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn() {
 fn fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase() {
     let _guard = fill_envelope_test_guard();
     let mut measuring = fill_worker_session(45);
-    assert!(measuring.enqueue_fill_job().is_none());
+    assert!(measuring.enqueue_fill_job_spending(1).is_none(), "one census unit leaves a multi-owner envelope in Measuring");
+    assert!(measuring.fill_admission.is_some(), "the 4096-unit production grant is what finishes the census, not the first owner");
     let measuring_request = measuring.fill_job.clone().expect("measuring request");
     let measuring_cursor = measuring.fill_admission.as_ref().map(|admission| admission.request.clone()).expect("measurement cursor");
     let mut producer = fill_worker_session(47);
@@ -744,7 +746,11 @@ fn fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_r
     close_fill_envelope(&mut session);
     assert_eq!(Arc::as_ptr(session.engine.fill.as_ref().expect("replacement survives old close")), replacement_pointer);
     let (_, replacement_token) = enqueue_measured_fill_job(&mut session).expect("replacement is independently re-censused and admitted");
-    assert_ne!(decode_fill_envelope_token(&replacement_token).expect("replacement request").registry_generation, request.registry_generation);
+    let replacement = decode_fill_envelope_token(&replacement_token).expect("replacement request");
+    assert_ne!(replacement, request, "the 4096-unit re-census admits a new identity, not the closed owner");
+    if replacement.slot == request.slot {
+        assert!(replacement.registry_generation > request.registry_generation, "same-slot reuse must bump the per-slot generation");
+    }
     close_fill_envelope(&mut session);
 }
 
@@ -752,7 +758,7 @@ fn fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_r
 fn fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once() {
     let _guard = fill_envelope_test_guard();
     let mut session = fill_worker_session(31);
-    assert!(session.enqueue_fill_job().is_none(), "the first grant only begins exact owner measurement");
+    assert!(session.enqueue_fill_job_spending(1).is_none(), "one census unit only begins exact owner measurement");
     let request = session.fill_job.clone().expect("measurement has a registered exact owner");
     assert!(session.fill_admission.is_some());
     let registry = fill_envelope_registry().lock().expect("registry contention");
@@ -760,6 +766,23 @@ fn fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once() {
     assert_eq!(fill_envelope_terminal_intents()[usize::from(request.slot)].reason.load(Ordering::Acquire), FillEnvelopeTerminalReason::Closed.code());
     drop(registry);
     drain_orphaned_fill_envelope(&request);
+}
+
+#[test]
+fn fill_admission_census_one_unit_is_pending_and_4096_units_spawn_once() {
+    let _guard = fill_envelope_test_guard();
+    let mut pending = fill_worker_session(33);
+    assert!(pending.enqueue_fill_job_spending(1).is_none(), "one owner-census unit cannot finish a prepared fill envelope");
+    assert!(pending.fill_admission.is_some());
+    let measuring = pending.fill_job.clone().expect("measuring identity");
+    assert_eq!(FILL_ENVELOPE_CENSUS_UNITS_PER_TURN, 4_096, "production census spend is the 4096-unit rule");
+    assert!(pending.enqueue_fill_job().is_some(), "one production turn of 4096 census units admits and spawns exactly once");
+    assert!(pending.fill_admission.is_none(), "the finished census hands the envelope to its bounded job");
+    assert_eq!(pending.fill_job.as_ref(), Some(&measuring), "the spawn keeps the measuring identity — it does not re-admit");
+    let mut second = fill_worker_session(35);
+    assert!(second.enqueue_fill_job().is_some(), "a fresh session on the same registry gets its own spawn under the four-slot cap");
+    drop(pending);
+    drop(second);
 }
 
 #[test]
@@ -1658,7 +1681,9 @@ async fn bounded_fill_job_reaches_done_publishing_its_envelope_token_as_progress
     let request = decode_fill_envelope_token(&input).expect("fill identity");
     let published = fill_envelope_registry().lock().expect("registry").observation(&request).expect("the finished envelope still publishes its observation");
     assert!(published.done, "the registry publication the session reads is what marks the plan finished");
-    drain_fill_envelope(&mut admitted, &request);
+    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some(), "Complete stays readable until the session closes it");
+    close_fill_envelope(&mut admitted);
+    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none(), "an explicit close vacates the slot the 4096-unit spawn occupied");
 }
 
 /// ♻️ Pumps ONE session's own terminal cursor until its envelope slot is empty — the mounted
@@ -1720,23 +1745,3 @@ fn a_faulted_fill_envelope_latches_one_notice_and_never_silently_retries() {
     assert_eq!(fill_envelope_registry().lock().expect("registry").aggregate_bytes, 0, "the faulted envelope returns its whole process byte credit");
 }
 //#endregion 💼️BoundedFillJob
-
-#[test]
-fn probe_precompute_member_sizes() {
-    macro_rules! show {
-        ($ty:ty) => {
-            println!("[DEBUG] size_of<{}> = {}", stringify!($ty), std::mem::size_of::<$ty>());
-        };
-    }
-    show!(Puzzle3dPrecomputeSession);
-    show!(Puzzle3dCollision);
-    show!(MountedFillWorker);
-    show!(RejectedFillWorker);
-    show!(StepOutcome);
-    show!(CollisionSpatialIndex);
-    show!(FillEnvelopeAdmissionCursor);
-    show!(FillEnvelopeTerminalHandle);
-    show!(BrushIndexSync);
-    show!(FillBuilder);
-    show!(FillBuilderOwnerCensusCursor);
-}

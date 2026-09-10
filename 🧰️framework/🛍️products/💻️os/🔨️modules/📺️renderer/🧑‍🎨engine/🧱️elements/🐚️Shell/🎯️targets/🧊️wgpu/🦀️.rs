@@ -15,7 +15,7 @@ use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPre
 
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
-use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
+use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 #[cfg(test)]
@@ -2220,6 +2220,51 @@ impl NativeDirectoryCommandQueueV1 {
     }
 }
 
+//#region 🧯️BootProgramSelection
+/// 🧯 One plugin whose boot activation faulted, kept as data so the shell can show WHICH plugin is
+/// unavailable instead of dying with the plugin. `detail` is the guest-side cause verbatim (a
+/// first-step trap message, a missing module, …) — never re-worded, so a browser status line and a
+/// console trace read the same.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ShellPluginFault {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub detail: String,
+}
+
+/// 🧯 One SURFACE whose `render_with_document` failed, kept as data for exactly the reason
+/// [`ShellPluginFault`] is: a surface that cannot be read is a per-surface fault, never a boot failure.
+/// Propagating it with `?` made `renderDocument promise failed: wgpu-ui.intake-budget-exhausted` become
+/// `shell-boot: …`, then `worker-boot-failed`, which closed the Worker and took its transferred
+/// `OffscreenCanvas` with it — one unreadable window body killed the whole renderer. `detail` is the
+/// cause verbatim, so the fault card and the console trace read the same.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ShellSurfaceFault {
+    pub surface_id: String,
+    pub body_key: String,
+    pub detail: String,
+}
+
+/// 🎯️ Which program + app a standalone (non-host) boot opens, resolved from the requested variant
+/// alone. `resolvePlaygroundBoot` hands the renderer its plugins in DEPENDENCY order, so the first
+/// entry is a dependency of the requested plugin (`flow` ahead of `procedural` for `generation3d`),
+/// never the requested plugin itself: taking `plugins.first()` booted a foreign plugin's first app
+/// and made that plugin's first-step trap the whole shell's boot failure. Falls back to the program
+/// that actually declares the requested app id, and only then to the requested program's first app;
+/// a variant whose plugin is absent resolves to `None` rather than to somebody else's app.
+pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str) -> Option<(usize, AppDefinition)> {
+    let registry_plugin_id = resolve_registry_plugin_id(plugin_filter);
+    let requested_app_id = resolve_playground_app_id(plugin_filter);
+    let index = programs
+        .iter()
+        .position(|(plugin_id, _)| *plugin_id == registry_plugin_id)
+        .or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
+    let manifest = programs[index].1;
+    let app = requested_app_id.and_then(|app_id| manifest.apps.iter().find(|app| app.id == app_id)).or_else(|| manifest.apps.first())?;
+    Some((index, app.clone()))
+}
+//#endregion 🧯️BootProgramSelection
+
 pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
     pub plugin_filter: String,
@@ -2252,10 +2297,28 @@ pub struct ShellState {
     pub pending_shell_uri_apply: bool,
     pub panel_resize_origin_width: f32,
     pub error: Option<String>,
+    /// 🧯 One entry per plugin whose boot activation faulted — the per-plugin status that replaces
+    /// the old "any `create_app` failure aborts the whole shell boot" rule. A trapped actor belongs
+    /// to exactly one plugin: every OTHER plugin, and the requested app itself, must still boot.
+    pub plugin_faults: Vec<ShellPluginFault>,
+    /// 🧯 One entry per surface whose document could not be rendered this refresh. The shell keeps
+    /// painting every OTHER surface and shows this one as a typed fault card, instead of failing the
+    /// boot — see [`ShellSurfaceFault`].
+    pub surface_faults: Vec<ShellSurfaceFault>,
     pub screen_w: f32,
     pub screen_h: f32,
     pub world3d_states: AdmittedSurfaceMap<World3dState>,
     pub node_graph_states: AdmittedSurfaceMap<NodeGraphSurface>,
+    /// 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once per instance
+    /// from the reserved `framework.section.catalogue` retained surface and pushed into every live
+    /// node-graph engine host. Mirrors the React shell's `appCatalogue`
+    /// (`🐚️Shell/🟦️.tsx`) and its `uiRefreshWantsCatalogue` "full scope only" rule: the payload is
+    /// app-static, so an instance fetches it exactly once and never on a scene change.
+    /// Never carried on a `NodeGraphScene` — see `ArtifactApp::app_catalogue_json`.
+    pub app_catalogue_json: String,
+    /// 🛍️ Which app instance [`Self::app_catalogue_json`] was fetched for — the cache key that makes
+    /// the fetch once-per-instance rather than once-per-refresh.
+    pub app_catalogue_instance: Option<u32>,
     pub tiled_map_states: AdmittedSurfaceMap<TiledMapSurface>,
     pub icon_render_states: HashMap<String, World3dState>,
     pub board2d_states: AdmittedSurfaceMap<Board2dSurface>,
@@ -2781,10 +2844,14 @@ impl ShellState {
             pending_shell_uri_apply: false,
             panel_resize_origin_width: DEFAULT_PANEL_WIDTH_PX,
             error: None,
+            plugin_faults: Vec::new(),
+            surface_faults: Vec::new(),
             screen_w: 1280.0,
             screen_h: 720.0,
             world3d_states: AdmittedSurfaceMap::default(),
             node_graph_states: AdmittedSurfaceMap::default(),
+            app_catalogue_json: String::new(),
+            app_catalogue_instance: None,
             tiled_map_states: AdmittedSurfaceMap::default(),
             icon_render_states: HashMap::new(),
             board2d_states: AdmittedSurfaceMap::default(),
@@ -3003,13 +3070,83 @@ impl ShellState {
         self.boot().await
     }
 
+    /// 🧯 Records one plugin's boot activation fault and refreshes the shell's status line. The shell
+    /// stays alive: a trapped guest is that plugin's failure, not the renderer's.
+    fn record_plugin_fault(&mut self, plugin_id: &str, app_id: &str, detail: String) {
+        eprintln!("[DEBUG] wgpu shell boot: plugin {plugin_id} app {app_id} faulted: {detail}");
+        self.plugin_faults.push(ShellPluginFault { plugin_id: plugin_id.to_string(), app_id: app_id.to_string(), detail });
+        self.error = self.fault_status();
+    }
+
+    /// 🧯 Records one surface's render fault and refreshes the shell's status line, WITHOUT failing the
+    /// refresh. A surface repeats across refreshes, so the same surface never accumulates two entries.
+    fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, detail: String) {
+        eprintln!("[DEBUG] wgpu shell refresh: surface {surface_id} body {body_key} faulted: {detail}");
+        if let Some(existing) = self.surface_faults.iter_mut().find(|fault| fault.surface_id == surface_id) {
+            existing.body_key = body_key.to_string();
+            existing.detail = detail;
+        } else {
+            self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail });
+        }
+        self.error = self.fault_status();
+    }
+
+    /// 🗣️ The per-plugin boot status, in English or German with no default language — `None` while
+    /// every plugin the boot asked for activated.
+    pub fn plugin_fault_status(&self) -> Option<String> {
+        if self.plugin_faults.is_empty() {
+            return None;
+        }
+        let is_de = self.locale_id == "de";
+        let label = shell_chrome_string("plugin.faulted", is_de);
+        Some(self.plugin_faults.iter().map(|fault| format!("{label}: {} ({}) — {}", fault.plugin_id, fault.app_id, fault.detail)).collect::<Vec<_>>().join(" · "))
+    }
+
+    /// 🗣️ The per-surface render status, in English or German with no default language — `None` while
+    /// every surface this refresh asked for published.
+    pub fn surface_fault_status(&self) -> Option<String> {
+        if self.surface_faults.is_empty() {
+            return None;
+        }
+        let is_de = self.locale_id == "de";
+        let label = shell_chrome_string("surface.faulted", is_de);
+        Some(self.surface_faults.iter().map(|fault| format!("{label}: {} ({}) — {}", fault.surface_id, fault.body_key, fault.detail)).collect::<Vec<_>>().join(" · "))
+    }
+
+    /// 🧯 Every live per-plugin and per-surface fault as one status line — the shell's typed fault card.
+    pub fn fault_status(&self) -> Option<String> {
+        let parts: Vec<String> = [self.plugin_fault_status(), self.surface_fault_status()].into_iter().flatten().collect();
+        (!parts.is_empty()).then(|| parts.join(" · "))
+    }
+
+    /// 🚪️ Opens one plugin's app for the boot session, isolating an activation fault as a per-plugin
+    /// status. Returns `None` when the plugin is not loaded or its actor refused to open.
+    async fn open_boot_instance(&mut self, plugin_id: &str, app_id: &str) -> Option<u32> {
+        let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
+            self.record_plugin_fault(plugin_id, app_id, "plugin is not loaded".to_string());
+            return None;
+        };
+        match program.create_app(app_id).await {
+            Ok(instance_id) => Some(instance_id),
+            Err(error) => {
+                self.record_plugin_fault(plugin_id, app_id, error);
+                None
+            }
+        }
+    }
+
     pub async fn boot(&mut self) -> Result<(), String> {
+        self.plugin_faults.clear();
+        self.error = None;
         if let Some(cfg) = self.host_config() {
-            let semio_s_plugin_space = self.plugins.iter().find(|p| p.plugin_id == cfg.plugin_id).ok_or("host program missing")?;
+            let host_plugin_id = cfg.plugin_id.to_string();
+            let semio_s_plugin_space = self.plugins.iter().find(|p| p.plugin_id == host_plugin_id).ok_or("host program missing")?;
             let s_app = semio_s_plugin_space.manifest.apps.iter().find(|app| app.id == cfg.landing_app_id).or_else(|| semio_s_plugin_space.manifest.apps.first()).ok_or("host program missing landing app")?.clone();
             let workflows = self.build_space_workflows();
             let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), workflows, spawned_apps: vec![], active_spawned_id: None };
-            let instance_id = semio_s_plugin_space.create_app(&s_app.id).await?;
+            let Some(instance_id) = self.open_boot_instance(&host_plugin_id, &s_app.id).await else {
+                return self.settle_boot().await;
+            };
             let view_state = ViewModel {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
@@ -3024,18 +3161,30 @@ impl ShellState {
                 active_utility_by_window_id: HashMap::new(),
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
-            let session = ActiveSession { plugin_id: semio_s_plugin_space.plugin_id.clone(), instance_id, app: s_app, view_state };
+            let session = ActiveSession { plugin_id: host_plugin_id, instance_id, app: s_app, view_state };
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.directory_home = Some(DirectoryHomeProjection::new(session.plugin_id.clone(), session.instance_id, session.app.clone(), session.view_state.clone()).map_err(|error| error.to_string())?);
             }
             self.session = Some(session);
-        } else if let Some(program) = self.plugins.first() {
-            let app = program.manifest.apps.iter().find(|app| Some(app.id.as_str()) == resolve_playground_app_id(&self.plugin_filter)).or_else(|| program.manifest.apps.first()).ok_or("plugin has no apps")?.clone();
-            let instance_id = program.create_app(&app.id).await?;
+        } else {
+            let selection = {
+                let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
+                select_boot_program(&programs, &self.plugin_filter)
+            };
+            let Some((index, app)) = selection else {
+                let plugin_id = resolve_registry_plugin_id(&self.plugin_filter).to_string();
+                let app_id = resolve_playground_app_id(&self.plugin_filter).unwrap_or("").to_string();
+                self.record_plugin_fault(&plugin_id, &app_id, "the requested plugin contributed no app to this boot".to_string());
+                return self.settle_boot().await;
+            };
+            let plugin_id = self.plugins[index].plugin_id.clone();
+            let Some(instance_id) = self.open_boot_instance(&plugin_id, &app.id).await else {
+                return self.settle_boot().await;
+            };
             self.active_window_id = Some(app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
-                plugin_id: program.plugin_id.clone(),
+                plugin_id,
                 instance_id,
                 app: app.clone(),
                 view_state: ViewModel {
@@ -3053,6 +3202,13 @@ impl ShellState {
                 },
             });
         }
+        self.settle_boot().await
+    }
+
+    /// 🏁️ The boot tail every path shares — chrome sync plus the first UI refresh. A boot that opened
+    /// no session (every requested plugin faulted) still runs it, so the shell paints its chrome and
+    /// its per-plugin status instead of leaving the page on the loader.
+    async fn settle_boot(&mut self) -> Result<(), String> {
         self.sync_dock();
         self.sync_session_chrome();
         // 📇️ ticket §1 — non-blocking (submits finite shared-pool turns and returns immediately, see
@@ -3169,13 +3325,18 @@ impl ShellState {
         let view_state = self.live_view_state(&session);
         let live_windows = self.dock.window_instances();
         let mut refresh_effects = Vec::new();
+        let mut faults: Vec<(String, String, String)> = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
-                let document = program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await?;
-                self.window_ui.insert(window_id, document);
+                match program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await {
+                    Ok(document) => {
+                        self.window_ui.insert(window_id, document);
+                    }
+                    Err(error) => faults.push((window_id, kind.body_key.clone(), error)),
+                }
             }
         }
         if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.panel_documents)) {
@@ -3186,14 +3347,19 @@ impl ShellState {
         let panel_view = view_state.for_panel();
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             let Some(body_key) = tab.body_key.as_deref() else { continue };
-            let document = program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await?;
-            self.panel_documents.insert(tab.id().to_string(), document);
+            match program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await {
+                Ok(document) => {
+                    self.panel_documents.insert(tab.id().to_string(), document);
+                }
+                Err(error) => faults.push((tab.id().to_string(), body_key.to_string(), error)),
+            }
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
         self.active_utilities = self.derive_utility_nodes(&session);
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
+        self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
         self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
         self.window_measures = program.window_measures(session.instance_id, &view_state).await.unwrap_or_default();
         if self.space_mode {
@@ -3222,7 +3388,10 @@ impl ShellState {
                                     return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
                                 }
                             }
-                            self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &spawned.id, &body_key, &view_state).await?);
+                            match spawn_plugin.render(spawned.instance_id, &spawned.id, &body_key, &view_state).await {
+                                Ok(document) => self.spawned_ui = Some(document),
+                                Err(error) => faults.push((spawned.id.clone(), body_key.clone(), error)),
+                            }
                         }
                     }
                 } else {
@@ -3236,7 +3405,122 @@ impl ShellState {
             }
         }
         self.queue_host_effects(&session.app.controller_id, refresh_effects);
+        self.settle_surface_faults(faults);
         Ok(())
+    }
+
+    /// 🧯 Replaces the live per-surface fault set with the one THIS refresh produced, so a surface that
+    /// recovered stops showing a card and one that faulted keeps showing the same typed card. The
+    /// refresh itself always succeeds: an unreadable surface is that surface's failure, never the
+    /// renderer's — see [`ShellSurfaceFault`].
+    fn settle_surface_faults(&mut self, faults: Vec<(String, String, String)>) {
+        self.surface_faults.clear();
+        for (surface_id, body_key, detail) in faults {
+            self.record_surface_fault(&surface_id, &body_key, detail);
+        }
+        self.error = self.fault_status();
+    }
+
+    /// 🛍️ Fetches the app-static operator/palette catalogue once per app instance and pushes it into
+    /// every live node-graph engine host, so the canvas spotlight and the full palette have the same
+    /// operator set the React shell threads through `AppCatalogueContext`.
+    ///
+    /// The catalogue rides the reserved `framework.section.catalogue` retained surface, which is the
+    /// ordinary `SurfaceVisible` → `AdvanceRetained` protocol every window body already uses — no
+    /// second channel, and no `UiDirtyScope` concept the native shell does not have. A fetch that
+    /// fails leaves the previous catalogue in place rather than blanking the palette.
+    async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel) {
+        if self.app_catalogue_instance == Some(instance_id) {
+            self.publish_app_catalogue();
+            return;
+        }
+        let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
+        let document = match program.render_with_document(instance_id, body_key, body_key, view_state, None, None).await {
+            Ok(document) => document,
+            Err(error) => {
+                eprintln!("[DEBUG] wgpu shell app catalogue fetch failed: {error}");
+                return;
+            }
+        };
+        let payload = crate::interpreter::read_paged_text_document(&document);
+        if let Err(document) = self.retain_document_for_close(document) {
+            drop(document);
+        }
+        match payload {
+            Ok(payload) => {
+                self.app_catalogue_json = payload;
+                self.app_catalogue_instance = Some(instance_id);
+                self.publish_app_catalogue();
+            }
+            Err(error) => eprintln!("[DEBUG] wgpu shell app catalogue reassembly failed: {error}"),
+        }
+    }
+
+    /// 🕸️ Mirrors the node-graph surfaces this frame's chrome walk attached into `node_graph_states`,
+    /// the map the OS event loop hit-tests pointer/wheel events against
+    /// (`node_graph_pointer_down_into` and siblings). The engine host itself is owned by the worker's
+    /// `ENGINE_SURFACES` registry; this side carries only the surface's screen bounds and the
+    /// controller its observations are addressed to. A surface that stopped painting drops out in the
+    /// same frame, so a hidden window is never pointer-dispatchable.
+    ///
+    /// A host constructed this frame is also the moment the app-static catalogue must land on it —
+    /// `refresh_app_catalogue` runs on the UI refresh, which for a freshly attached surface has
+    /// already happened.
+    pub fn sync_engine_surface_states(&mut self) {
+        let registrations = crate::engine_canvas::take_engine_surface_registrations();
+        let painted = |kind: fn(&crate::engine_canvas::EngineSurfaceKindDetail) -> bool, id: &String| registrations.iter().any(|entry| &entry.surface_id == id && kind(&entry.detail));
+        let stale_graphs: Vec<String> = self.node_graph_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph), id)).cloned().collect();
+        for id in stale_graphs {
+            self.node_graph_states.remove(&id);
+        }
+        let stale_maps: Vec<String> = self.tiled_map_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { .. }), id)).cloned().collect();
+        for id in stale_maps {
+            self.tiled_map_states.remove(&id);
+        }
+        let stale_boards: Vec<String> = self.board2d_states.keys().filter(|id| !painted(|detail| matches!(detail, crate::engine_canvas::EngineSurfaceKindDetail::Board2d { .. }), id)).cloned().collect();
+        for id in stale_boards {
+            self.board2d_states.remove(&id);
+        }
+        for registration in registrations {
+            let crate::engine_canvas::EngineSurfaceRegistration { surface_id, bounds, controller_id, detail, created } = registration;
+            match detail {
+                crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph => {
+                    if let Some(surface) = self.node_graph_states.get_or_insert_with(surface_id.clone(), || NodeGraphSurface { bounds, controller_id: controller_id.clone() }) {
+                        surface.bounds = bounds;
+                        surface.controller_id = controller_id;
+                    }
+                    if created && !self.app_catalogue_json.is_empty() {
+                        crate::engine_canvas::node_graph_set_catalogue_json(&surface_id, &self.app_catalogue_json);
+                    }
+                }
+                crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method } => {
+                    if let Some(surface) = self.tiled_map_states.get_or_insert_with(surface_id, || TiledMapSurface { bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone() }) {
+                        surface.bounds = bounds;
+                        surface.controller_id = controller_id;
+                        surface.selection_method = selection_method;
+                    }
+                }
+                crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json } => {
+                    if let Some(surface) = self.board2d_states.get_or_insert_with(surface_id, || Board2dSurface { bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone() }) {
+                        surface.bounds = bounds;
+                        surface.controller_id = controller_id;
+                        surface.fixture_json = fixture_json;
+                    }
+                }
+                crate::engine_canvas::EngineSurfaceKindDetail::World3d => {}
+            }
+        }
+    }
+
+    /// 🛍️ Installs the cached catalogue on every node-graph surface whose engine host does not
+    /// already carry it — the wgpu twin of React's `AppCatalogueContext` provider.
+    fn publish_app_catalogue(&self) {
+        if self.app_catalogue_json.is_empty() {
+            return;
+        }
+        for (surface_id, _) in self.node_graph_states.iter() {
+            crate::engine_canvas::node_graph_set_catalogue_json(surface_id, &self.app_catalogue_json);
+        }
     }
 
     fn retain_document_map_for_close(registry: &mut ShellDocumentRetirementRegistry, documents: HashMap<String, UiDocumentLease>) -> Result<(), HashMap<String, UiDocumentLease>> {
@@ -3646,6 +3930,14 @@ impl ShellState {
                 // nothing further to fold in here — matched explicitly so a future variant
                 // cannot be silently ignored by a catch-all.
                 ArtifactEvent::Session { .. } => {}
+                ArtifactEvent::DocumentBackbone { .. } => {
+                    // 🪢️ A canonical Hub batch addressed to a mounted guest document PORT, not to
+                    // this shell's own app instance. The native bridge has no port to hand it to:
+                    // `ProgramBridgeEntry::attach_backbone` is retired in channel v12 (see its own
+                    // doc) and no `EffectBackbone` replacement has landed, so there is nothing to
+                    // route this to yet. Matched explicitly rather than caught by a wildcard so the
+                    // next variant cannot be silently swallowed.
+                }
                 ArtifactEvent::Preview { .. } => {
                     // 👻️ Ephemeral peer previews (wire v2's uncredited preview lane) have no native
                     // wgpu shell UI yet — same documented-follow-up status as `Presence` above.
@@ -4130,6 +4422,9 @@ impl ShellState {
                 "setLocale" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         self.locale_id = value.to_string();
+                        if let Some(status) = self.plugin_fault_status() {
+                            self.error = Some(status);
+                        }
                         self.note_shell_setting_command("os.setLocale", Some(value)).await?;
                     }
                     return Ok(());
@@ -7050,6 +7345,10 @@ impl ShellState {
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-shell-input/🦀️.rs"]
 mod shell_input_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️wgpu-shell-boot-isolation/🦀️.rs"]
+mod shell_boot_isolation_tests;
 //#endregion ShellInput
 
 /// ✍️ Immediate-mode Shell chrome text — the non-retained sibling of {@link chrome_text_step}, used by
@@ -9757,7 +10056,7 @@ impl ShellChromeFrameCursor {
 
 impl ShellState {
     /// 🎭️ Advances one retained chrome child per worker opportunity.
-    pub(crate) fn render_chrome_step(&mut self, cursor: &mut ShellChromeFrameCursor, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
+    pub(crate) fn render_chrome_step(&mut self, cursor: &mut ShellChromeFrameCursor, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         let w = self.screen_w;
         let h = self.screen_h;
         let body = self.body_rect(theme);
@@ -9900,7 +10199,7 @@ impl ShellState {
                     Err(()) => return false,
                 };
                 let mut overlay_slot = Some(overlay);
-                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body);
+                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body, world_resources);
                 drop(binding);
                 if !complete {
                     return false;
@@ -9911,13 +10210,13 @@ impl ShellState {
                 cursor.advance(ShellChromeFramePhase::LeftPanel);
             }
             ShellChromeFramePhase::LeftPanel => {
-                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body) {
+                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body, world_resources) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::RightPanel);
             }
             ShellChromeFramePhase::RightPanel => {
-                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body) {
+                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body, world_resources) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Navbar);
@@ -10188,7 +10487,7 @@ impl ShellState {
         }
     }
 
-    fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect) -> bool {
+    fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         match cursor.phase {
             0 => {
                 draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
@@ -10235,9 +10534,10 @@ impl ShellState {
                 let collapsed_sections = &mut self.collapsed_sections;
                 let open_selects = &mut self.open_selects;
                 let widget_maps = &mut self.widget_maps;
+                let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
                 let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                 ctx.pick_clip = Some(rect);
-                if !render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str()) {
+                if !render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str(), &mut hosts) {
                     return false;
                 }
                 cursor.phase = 5;
@@ -10252,7 +10552,7 @@ impl ShellState {
         false
     }
 
-    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, left: bool, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
+    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, left: bool, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         match cursor.phase {
             0 => {
@@ -10315,9 +10615,10 @@ impl ShellState {
                 let collapsed_sections = &mut self.collapsed_sections;
                 let open_selects = &mut self.open_selects;
                 let widget_maps = &mut self.widget_maps;
+                let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources };
                 let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                 ctx.pick_clip = Some(content);
-                if !render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str()) {
+                if !render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), &mut hosts) {
                     return false;
                 }
                 cursor.phase = 9;
@@ -12166,6 +12467,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         // bundle React's `shellLabel`/`uiI18n.t` ultimately reads — that package isn't vendored in this
         // repo tree, so these are reasonable EN/DE pairs in the same terse register as the rest of this
         // curated subset, not a byte-identical trace like the entries above copied from `index.tsx:2898-3975`).
+        ("plugin.faulted", false) => "Plugin unavailable",
+        ("plugin.faulted", true) => "Plugin nicht verfügbar",
+        ("surface.faulted", false) => "Surface unavailable",
+        ("surface.faulted", true) => "Fläche nicht verfügbar",
         ("settings.tab.theme", false) => "Theme",
         ("settings.tab.theme", true) => "Design",
         ("settings.tab.commands", false) => "Commands",

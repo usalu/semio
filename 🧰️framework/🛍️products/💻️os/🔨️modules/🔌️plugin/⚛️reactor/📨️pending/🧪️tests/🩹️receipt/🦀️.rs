@@ -124,7 +124,7 @@ fn reactor_acknowledged_patch_slots_retire_without_instance_close() {
                 assert!(pending.apply_issued_ack(receipt, "7:window", 2, 65536, |_| unreachable!()).unwrap());
             }
             for turn in 0..1024 {
-                if pending.close_step().unwrap() {
+                if pending.close_step(1, 4096).unwrap() {
                     break;
                 }
                 assert!(turn < 1023);

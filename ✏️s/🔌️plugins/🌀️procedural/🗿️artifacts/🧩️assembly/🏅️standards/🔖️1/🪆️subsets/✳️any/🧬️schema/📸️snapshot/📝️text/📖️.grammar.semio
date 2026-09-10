@@ -1,0 +1,9 @@
+dialect grammar
+grammar assembly.snapshot
+extension assembly
+start document
+
+document = header body
+header = "schema" SP "procedural.assembly.snapshot" NL
+body = payload NL?
+payload = OCTET+

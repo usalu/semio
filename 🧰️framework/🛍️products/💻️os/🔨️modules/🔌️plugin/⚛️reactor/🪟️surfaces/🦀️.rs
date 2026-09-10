@@ -62,6 +62,13 @@ impl SurfaceContexts {
         Some(SurfaceContext { body_key: binding.body_key.clone(), view_state })
     }
 
+    /// 🪟️ The last host view this instance was refreshed or mounted with — the attached-window
+    /// roster an app needs to address window-scoped background work outside a render pass
+    /// (`ArtifactApp::pending_effects`). `None` until the first surface is mounted.
+    pub(crate) fn view(&self) -> Option<&ViewModel> {
+        self.view_state.as_ref()
+    }
+
     pub(crate) fn update_view(&mut self, view: &ViewModel) {
         self.prune_windows(view);
         self.view_state = Some(view.clone());

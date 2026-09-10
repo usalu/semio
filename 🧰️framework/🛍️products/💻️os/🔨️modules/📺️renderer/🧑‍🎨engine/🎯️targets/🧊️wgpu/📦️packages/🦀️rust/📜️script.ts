@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { strict as assert } from "node:assert";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import {
@@ -143,13 +143,18 @@ function ensureTrunk(): void {
   }
 }
 
+/** @emoji 🔁️ Publishes Trunk's wasm-bindgen pair under the stable names the React shell's
+ * `🎬️renderer-boot` requests (`/renderer-modules/wgpu/semio_framework_renderer_wgpu.js`). `Trunk.toml`
+ * pins `filehash = false`, so both emitted names ARE the crate id and are addressed by name; the
+ * previous scan for a `<crate>-` prefix could only ever match the content-hashed names Trunk no longer
+ * emits, and failed every non-serving build with "missing trunk wgpu renderer js artifact" after Trunk
+ * itself reported success. */
 function syncStableRendererArtifacts(): void {
-  const artifactPrefix = `${crateName}-`;
-  const js = readdirSync(outDir).find((name) => name.startsWith(artifactPrefix) && name.endsWith(".js"));
-  const wasm = readdirSync(outDir).find((name) => name.startsWith(artifactPrefix) && name.endsWith("_bg.wasm"));
-  if (!js) throw new Error("missing trunk wgpu renderer js artifact");
-  copyFileSync(join(outDir, js), join(outDir, "semio_framework_renderer_wgpu.js"));
-  if (wasm) copyFileSync(join(outDir, wasm), join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
+  const js = join(outDir, `${crateName}.js`);
+  const wasm = join(outDir, `${crateName}_bg.wasm`);
+  for (const artifact of [js, wasm]) if (!existsSync(artifact)) throw new Error(`missing trunk wgpu renderer artifact ${relative(repoRoot, artifact)}`);
+  copyFileSync(js, join(outDir, "semio_framework_renderer_wgpu.js"));
+  copyFileSync(wasm, join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
 }
 
 function assetServerBaseUrl(): string {
@@ -519,7 +524,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", ...segments], "vitest.config.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", ...segments], "vitest.config.ts");
   }
 }
 

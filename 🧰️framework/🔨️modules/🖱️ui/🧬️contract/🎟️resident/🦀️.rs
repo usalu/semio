@@ -286,6 +286,21 @@ impl UiResidentPermit {
         step.complete = ledger.snapshot.used_slots == 0;
         Ok(step)
     }
+
+    /// 🧹 After affine returns are drained, leftover occupied slots are orphaned process-global credit.
+    /// Safe only when no live [`UiResidentPermit`] remains (test-guard boundary).
+    pub fn reclaim_orphaned_slots() {
+        let mut ledger = RESIDENT_LEDGER.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for index in 0..UI_RESIDENT_SLOTS {
+            RETURNS[index].store(0, Ordering::Release);
+            let slot = ledger.slots[index];
+            if slot.owners != 0 {
+                ledger.slots[index] = ResidentSlot { epoch: slot.epoch, ..ResidentSlot::EMPTY };
+            }
+        }
+        ledger.snapshot = UiResidentSnapshot { items: 0, bytes: CONTRACT_BACKING_BYTES + ledger.runtime_backing, used_slots: 0 };
+        ledger.cursor = 0;
+    }
 }
 
 impl Drop for UiResidentPermit {

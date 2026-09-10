@@ -165,3 +165,23 @@ fn abandoned_patch_owner_moves_to_incremental_handback_and_reopens_capacity() {
     drop(replacement);
     while !close_ui_patch_owner_one() {}
 }
+
+/// 🧪️ Language-agnostic twin law: the Rust intake budget carries exactly the numbers
+/// `🧵️retained/🧫️fixtures/📥️intake/🔣️.json` declares, so the TypeScript twin
+/// (`RETAINED_UI_INTAKE_STEPS_PER_NODE`, `retainedUiIntakeStepCeiling`) cannot drift away from it.
+#[test]
+fn retained_ui_intake_budget_matches_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/🧫️fixtures/📥️intake/🔣️.json")).expect("intake fixture parses");
+    let budget = fixture.get("budget").expect("fixture declares budget");
+    assert_eq!(budget["stepsPerNode"].as_u64(), Some(RETAINED_UI_INTAKE_STEPS_PER_NODE as u64));
+    assert_eq!(budget["sliceSteps"].as_u64(), Some(RETAINED_UI_INTAKE_SLICE_STEPS as u64));
+    for ceiling in budget["ceilings"].as_array().expect("ceilings are a list") {
+        let max_nodes = ceiling["maxNodes"].as_u64().expect("maxNodes") as usize;
+        let limits = UiDocumentLimits { max_nodes, ..UiDocumentLimits::default() };
+        assert_eq!(limits.retained_ui_intake_step_ceiling() as u64, ceiling["steps"].as_u64().expect("steps"), "ceiling for {max_nodes} nodes");
+    }
+    let laws: Vec<&str> = fixture["laws"].as_array().expect("laws").iter().filter_map(|law| law.as_str()).collect();
+    assert!(laws.contains(&"budget-scales-with-node-quota"));
+    assert!(laws.contains(&"budget-slice-is-resumable"));
+    assert!(RETAINED_UI_INTAKE_SLICE_STEPS < UiDocumentLimits { max_nodes: 1, ..UiDocumentLimits::default() }.retained_ui_intake_step_ceiling());
+}

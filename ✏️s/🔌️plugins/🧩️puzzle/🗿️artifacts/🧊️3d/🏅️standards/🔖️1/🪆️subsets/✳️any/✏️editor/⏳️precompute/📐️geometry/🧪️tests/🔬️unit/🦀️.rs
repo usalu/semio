@@ -521,3 +521,42 @@ fn document_scale_capacities_are_derived_from_the_fill_ceiling_not_the_bookkeepi
         "fully occupied cells keep their lazily allocated member buckets bounded"
     );
 }
+
+/// ⚖️ LAW: an owner whose page allocation was REFUSED refuses every insert and reports zero
+/// capacity — it never traps.
+///
+/// 🧊️ `FixedOwnerVec::new`/`FixedOwnerMap::new` already answer a failed `try_reserve_exact` with a
+/// page-less owner instead of aborting, but the owner then reported the FULL declared capacity and
+/// `expect`ed its page on the first push. On build #29 of ticket 26/09/02 that is what turned a
+/// guest running out of linear memory into `panicked … live fixed owner page` → wasm `unreachable`
+/// → `shard 0 lost`, two seconds after the command-ingress prologue had already started answering
+/// `plugin.command-page-allocation`. A native suite cannot exhaust a 512 MiB linear memory, so the
+/// law reaches the state through the same constructor the refusal path returns.
+#[test]
+fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
+    let mut values = FixedOwnerVec::<u32, 8>::refused();
+    assert_eq!(values.capacity(), 0, "a refused owner holds nothing, whatever its declared width");
+    assert_eq!(values.len(), 0);
+    assert_eq!(values.try_push(7), Err(7), "a refused owner refuses its first push instead of trapping");
+    assert!(values.as_slice().is_empty() && values.pop().is_none() && values.backing_credit().is_none());
+    assert!(values.terminal_owners_empty(), "a refused owner is already terminal — there is no page to give back");
+    assert!(!values.retire_backing());
+
+    let mut entries = FixedOwnerMap::<String, u32, 8>::refused();
+    assert_eq!(entries.capacity(), 0);
+    let refused = entries.try_insert("a".to_string(), 3).expect_err("a refused map refuses its first insert");
+    assert_eq!(refused, ("a".to_string(), 3), "the refused entry is handed back whole");
+    assert!(entries.get("a").is_none() && !entries.contains_key("a") && entries.is_empty());
+    assert!(entries.pop_first().is_none() && entries.remove_entry("a").is_none());
+    assert!(entries.terminal_owners_empty());
+
+    let mut members = FixedOwnerSet::<String, 8>::refused();
+    assert_eq!(members.capacity(), 0);
+    assert_eq!(members.try_insert("a".to_string()).expect_err("a refused set refuses its first insert"), "a".to_string());
+    assert!(members.is_empty() && members.terminal_owners_empty());
+
+    let live = FixedOwnerVec::<u32, 8>::new();
+    assert_eq!(live.capacity(), 8, "an owner that got its page still reports its declared width");
+    assert_eq!(FixedOwnerMap::<String, u32, 8>::new().capacity(), 8);
+    assert_eq!(FixedOwnerSet::<String, 8>::new().capacity(), 8);
+}

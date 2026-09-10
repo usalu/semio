@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
-use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
+use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -44,6 +44,9 @@ struct NodeGraphSyncCache {
     eval_json: Option<String>,
     lod_json: Option<String>,
     viewport: Option<ui_wgpu::wgpu::NodeGraphViewport>,
+    viewport_pixels: Option<(u32, u32)>,
+    operator_ids: Option<Vec<String>>,
+    hover: Option<(String, String)>,
     scene_pack: Option<Vec<u8>>,
 }
 
@@ -81,7 +84,6 @@ struct EngineSurfaceId {
 }
 
 impl EngineSurfaceId {
-    #[cfg(test)]
     fn try_from_str(id: &str) -> Result<Self, ()> {
         if id.is_empty() || id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY {
             return Err(());
@@ -127,7 +129,6 @@ struct EngineSurfaceIdentity {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg(test)]
 struct EngineSurfaceSnapshot {
     identity: EngineSurfaceIdentity,
     metrics_generation: u64,
@@ -165,7 +166,6 @@ impl EngineSurfaceRegistry {
         self.slots.iter().position(|slot| slot.id.as_ref().is_some_and(|stored| stored.as_str() == id))
     }
 
-    #[cfg(test)]
     fn contains_key(&self, id: &str) -> bool {
         self.slot_index(id).is_some()
     }
@@ -185,7 +185,6 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
     }
 
-    #[cfg(test)]
     fn identity(&self, id: &str) -> Option<EngineSurfaceIdentity> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
@@ -193,7 +192,6 @@ impl EngineSurfaceRegistry {
 
 
 
-    #[cfg(test)]
     fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
         let Ok(id) = EngineSurfaceId::try_from_str(id) else {
             self.faulted = true;
@@ -218,7 +216,6 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceToken { slot: index as u16, generation: slot.generation })
     }
 
-    #[cfg(test)]
     fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) -> Result<(), EngineSurface> {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return Err(value);
@@ -436,11 +433,16 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.eval_json)
             || Self::close_string(&mut cache.lod_json)
             || cache.viewport.take().is_some()
+            || cache.viewport_pixels.take().is_some()
+            || cache.hover.take().is_some()
+            || cache.operator_ids.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(|id| id.pop().is_some()))
+            || cache.operator_ids.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_bytes(&mut cache.scene_pack)
         {
             return false;
         }
         cache.selection = None;
+        cache.operator_ids = None;
         true
     }
 
@@ -720,6 +722,68 @@ impl EngineCanvasPacket {
 
 const ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256;
 
+/// 🎨️ A painted engine surface waiting for the frame build's own packet phase to admit it. Paint
+/// happens deep inside the retained chrome walk, which owns no `EngineCanvasBuildContext`; staging
+/// here is the one seam between the two, and the newest paint for a surface replaces the older one
+/// so a frame that never drained cannot accumulate scenes.
+struct StagedEngineScene {
+    surface: EngineSurfaceSnapshot,
+    document_generation: u64,
+    scene_revision: u64,
+    scene: canvas::Scene,
+    clear: Color,
+    width: u32,
+    height: u32,
+}
+
+struct StagedEngineScenes {
+    slots: Box<[Option<StagedEngineScene>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
+    len: usize,
+    faulted: bool,
+}
+
+impl Default for StagedEngineScenes {
+    fn default() -> Self {
+        Self { slots: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]), len: 0, faulted: false }
+    }
+}
+
+impl StagedEngineScenes {
+    fn upsert(&mut self, staged: StagedEngineScene) {
+        if let Some(slot) = self.slots[..self.len].iter_mut().flatten().find(|slot| slot.surface.identity.id == staged.surface.identity.id) {
+            *slot = staged;
+            return;
+        }
+        if self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            self.faulted = true;
+            return;
+        }
+        self.slots[self.len] = Some(staged);
+        self.len += 1;
+    }
+
+    fn take_one(&mut self) -> Option<StagedEngineScene> {
+        let index = self.len.checked_sub(1)?;
+        self.len = index;
+        self.slots[index].take()
+    }
+}
+
+static STAGED_ENGINE_SCENES: WorkerCell<StagedEngineScenes> = WorkerCell::new();
+
+/// 📦️ One turn of the staged-paint → frame-packet transfer, driven from the frame build's own
+/// `EngineTransfer` phase. Returns `true` when nothing is left staged.
+pub(crate) fn stage_engine_packet_step(resources: &mut EngineCanvasBuildContext) -> bool {
+    let Some(staged) = STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().take_one()) else {
+        return true;
+    };
+    if let Err(staged) = resources.publish_staged(staged) {
+        STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().upsert(staged));
+        return true;
+    }
+    false
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg(test)]
 enum EngineCanvasPacketDestination {
@@ -789,6 +853,30 @@ impl EngineCanvasBuildContext {
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.len == 0 && self.rejected_len == 0 && self.reservation_sequence == self.published_reservation_sequence && self.outstanding_reservations == 0 && self.packets.iter().all(Option::is_none) && self.rejected.iter().all(Option::is_none)
+    }
+
+    /// 📦️ Admits one painted engine surface as a frame packet. The staged scene carries the surface's
+    /// OWN document/scene/metrics generations rather than the build context's, so the GPU freshness
+    /// gate (`engine_gpu_freshness_matches`) compares like with like and a graph that did not move
+    /// reuses its texture. Returns the scene back when the frame's packet credits are spent.
+    fn publish_staged(&mut self, staged: StagedEngineScene) -> Result<(), StagedEngineScene> {
+        if self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            return Err(staged);
+        }
+        self.packets[self.len] = Some(EngineCanvasPacket {
+            surface: staged.surface.identity,
+            document_generation: staged.document_generation,
+            scene_revision: staged.scene_revision,
+            metrics_generation: staged.surface.metrics_generation,
+            scene: staged.scene,
+            scene_retirement: None,
+            scene_retirement_faulted: false,
+            clear: staged.clear,
+            width: staged.width.max(1),
+            height: staged.height.max(1),
+        });
+        self.len += 1;
+        Ok(())
     }
 
 
@@ -1416,6 +1504,9 @@ fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
         && cache.eval_json.is_none()
         && cache.lod_json.is_none()
         && cache.viewport.is_none()
+        && cache.viewport_pixels.is_none()
+        && cache.operator_ids.is_none()
+        && cache.hover.is_none()
         && cache.scene_pack.is_none()
 }
 
@@ -1501,6 +1592,14 @@ static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new();
 #[cfg(test)]
 include!("../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");
 
+#[cfg(test)]
+#[path = "../../🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs"]
+mod engine_surface_attach_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🕸️wgpu-node-graph/🦀️.rs"]
+mod node_graph_attach_tests;
+
 
 
 
@@ -1553,8 +1652,43 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
     }
 }
 
-
-
+/// 🧱️ Reserves — or resizes — the one fixed registry slot a live scene surface owns, returning the
+/// generation-keyed snapshot a frame packet is admitted against. The single production entry into
+/// [`ENGINE_SURFACES`]: every per-kind attach path (`sync_node_graph_scene` today) goes through it,
+/// so a surface identity can never be published twice or outlive its slot generation.
+fn ensure_engine_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let needs_create = !map.contains_key(surface_id);
+        let needs_resize = map.get(surface_id).is_some_and(|entry| entry.width != pw.max(1) || entry.height != ph.max(1));
+        if needs_create {
+            let Some(token) = map.reserve(surface_id) else {
+                return None;
+            };
+            let surface = empty_engine_surface(pw, ph);
+            if map.publish_reserved(token, surface).is_err() {
+                map.faulted = true;
+                return None;
+            }
+        }
+        if needs_resize {
+            let Some(entry) = map.get_mut(surface_id) else {
+                map.faulted = true;
+                return None;
+            };
+            let Some(metrics_generation) = entry.metrics_generation.checked_add(1) else {
+                map.faulted = true;
+                return None;
+            };
+            entry.width = pw.max(1);
+            entry.height = ph.max(1);
+            entry.metrics_generation = metrics_generation;
+        }
+        let identity = map.identity(surface_id)?;
+        let metrics_generation = map.get(surface_id)?.metrics_generation;
+        Some(EngineSurfaceSnapshot { identity, metrics_generation })
+    })
+}
 
 
 
@@ -1613,6 +1747,663 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
 
 //#endregion Registry
 
+//#region 🧩️EngineSurfaceAttach
+/// 🧩️ The per-kind payload one attached surface projects into the shell's own bespoke pointer state
+/// map — `NodeGraphSurface`/`TiledMapSurface`/`Board2dSurface` each carry a different tail beyond
+/// bounds+controller, and `World3d` carries none because its host (`World3dState`) IS the shell's
+/// entry and keeps its own bounds.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum EngineSurfaceKindDetail {
+    NodeGraph,
+    TiledMap { selection_method: String },
+    Board2d { fixture_json: String },
+    World3d,
+}
+
+/// 🧩️ One live engine surface this frame's chrome walk attached, projected for the shell's own
+/// `node_graph_states`/`tiled_map_states`/`board2d_states` — the bounds its pointer/wheel dispatch
+/// hit-tests against and the controller every observation is addressed to. Ephemeral: rebuilt by the
+/// paint pass every frame and drained by the shell, so a window that stops painting its surface stops
+/// being pointer-dispatchable the same frame.
+#[derive(Clone, Debug)]
+pub struct EngineSurfaceRegistration {
+    pub surface_id: String,
+    pub bounds: Rect,
+    pub controller_id: String,
+    pub detail: EngineSurfaceKindDetail,
+    /// 🆕️ This attach is the one that constructed the engine host — the shell installs the
+    /// app-static catalogue on exactly these, instead of re-pushing ~100 kB every frame.
+    pub created: bool,
+}
+
+struct AttachedSurfaceRegistry {
+    slots: Box<[Option<EngineSurfaceRegistration>; ENGINE_SURFACE_CAPACITY]>,
+    len: usize,
+    faulted: bool,
+}
+
+impl Default for AttachedSurfaceRegistry {
+    fn default() -> Self {
+        Self { slots: Box::new([const { None }; ENGINE_SURFACE_CAPACITY]), len: 0, faulted: false }
+    }
+}
+
+impl AttachedSurfaceRegistry {
+    fn upsert(&mut self, registration: EngineSurfaceRegistration) {
+        if let Some(slot) = self.slots[..self.len].iter_mut().flatten().find(|slot| slot.surface_id == registration.surface_id) {
+            slot.bounds = registration.bounds;
+            slot.controller_id = registration.controller_id;
+            slot.detail = registration.detail;
+            slot.created |= registration.created;
+            return;
+        }
+        if self.len == ENGINE_SURFACE_CAPACITY {
+            self.faulted = true;
+            return;
+        }
+        self.slots[self.len] = Some(registration);
+        self.len += 1;
+    }
+
+    fn take(&mut self) -> Vec<EngineSurfaceRegistration> {
+        let taken = self.slots[..self.len].iter_mut().filter_map(Option::take).collect();
+        self.len = 0;
+        taken
+    }
+}
+
+static ATTACHED_SURFACES: WorkerCell<AttachedSurfaceRegistry> = WorkerCell::new();
+
+/// 🧩️ Drains the surfaces attached since the last drain, for the shell to mirror into its bespoke
+/// pointer state maps. Taking rather than reading keeps the projection exactly one frame old: a
+/// window that stopped painting its surface stops being pointer-dispatchable in the same frame.
+pub fn take_engine_surface_registrations() -> Vec<EngineSurfaceRegistration> {
+    ATTACHED_SURFACES.with(|cell| cell.borrow_mut().take())
+}
+
+/// 🕸️ Which engine a scene selects — the wgpu twin of React's
+/// `isFlowGraphScene(capabilitiesJson) || Boolean(fixtureJson)`.
+///
+/// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `NodeGraphHost`
+/// @see `🧱️elements/🪪️WasmSessionLoader/🟦️.tsx` — `isFlowGraphScene`
+fn node_graph_scene_uses_flow_engine(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
+    if graph.fixture_json.as_deref().is_some_and(|json| !json.trim().is_empty()) {
+        return true;
+    }
+    let Some(capabilities) = graph.capabilities_json.as_deref() else {
+        return false;
+    };
+    let Ok(value) = serde_json::from_str::<Value>(capabilities) else {
+        return false;
+    };
+    value.get("engine").and_then(Value::as_str) == Some("flow") || value.get("spotlight").and_then(Value::as_bool) == Some(true) || value.get("noteEdit").and_then(Value::as_bool) == Some(true)
+}
+
+fn node_graph_engine_from_scene(graph: &ui_wgpu::wgpu::NodeGraphScene, dark: bool) -> NodeGraphEngine {
+    if node_graph_scene_uses_flow_engine(graph) {
+        let fixture = graph.fixture_json.as_deref().and_then(|json| FlowHost::parse_fixture_json(json).ok()).unwrap_or_default();
+        let mut host = FlowHost::from_fixture(fixture);
+        host.set_canvas_theme_dark(dark);
+        return NodeGraphEngine::Flow(host);
+    }
+    let mut host = GraphHost::default();
+    host.set_canvas_theme_dark(dark);
+    NodeGraphEngine::Dag(host)
+}
+
+fn node_graph_lod_from_json(engine: &mut NodeGraphEngine, lod_json: &str) {
+    let Ok(value) = serde_json::from_str::<Value>(lod_json) else {
+        return;
+    };
+    let automatic = value.get("automatic").and_then(Value::as_bool) != Some(false);
+    let forced = value.get("forcedLabel").or_else(|| value.get("lod")).and_then(Value::as_str);
+    match engine {
+        NodeGraphEngine::Flow(host) => {
+            host.set_automatic_lod(automatic);
+            if let Some(label) = forced {
+                host.set_forced_draw_lod_label(label);
+            }
+        }
+        NodeGraphEngine::Dag(host) => {
+            host.dag.set_automatic_lod(automatic);
+            if let Some(label) = forced {
+                host.dag.set_forced_draw_lod_label(label);
+            }
+        }
+    }
+}
+
+fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, port_id: Option<&str>) {
+    match engine {
+        NodeGraphEngine::Flow(host) => match port_id {
+            Some(port) => host.set_hover_channel(node_id, Some(port)),
+            None => host.set_hover(node_id),
+        },
+        NodeGraphEngine::Dag(host) => match port_id {
+            Some(port) => host.dag.set_hover_channel(node_id, Some(port)),
+            None => host.dag.set_hover(node_id),
+        },
+    }
+}
+
+/// 🕸️ Feeds one `NodeGraphScene` into a live engine host, field by field, applying only what
+/// actually changed since the last frame — the wgpu twin of React's `syncFlowSessionFromScene`
+/// (structure, then selection/hover, then preview-off/lod/camera, then eval BEFORE computing chrome).
+/// Returns whether anything was applied, so the caller can bump the surface's scene revision and let
+/// the frame's engine packet rebuild.
+///
+/// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `syncFlowSessionStructureFromScene`/`syncFlowSessionEvalFromScene`
+fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
+    let mut changed = false;
+    if let NodeGraphEngine::Flow(host) = engine {
+        let operator_ids: Vec<String> = graph.operators.iter().map(|record| record.id.clone()).collect();
+        if !operator_ids.is_empty() && cache.operator_ids.as_ref() != Some(&operator_ids) {
+            host.set_neuron_kind_infos(&graph.operators);
+            cache.operator_ids = Some(operator_ids);
+            changed = true;
+        }
+        if cache.fixture_json.as_deref() != graph.fixture_json.as_deref() {
+            if let Some(fixture) = graph.fixture_json.as_deref().and_then(|json| FlowHost::parse_fixture_json(json).ok()) {
+                host.resync_fixture_from_scene(fixture);
+            }
+            cache.fixture_json = graph.fixture_json.clone();
+            changed = true;
+        }
+    }
+    if let NodeGraphEngine::Dag(host) = engine {
+        let payload = serde_json::to_vec(graph).unwrap_or_default();
+        if cache.scene_pack.as_deref() != Some(payload.as_slice()) {
+            if let Ok(json) = std::str::from_utf8(&payload) {
+                let _ = host.sync_from_scene_json(json);
+            }
+            cache.scene_pack = Some(payload);
+            changed = true;
+        }
+    }
+    if cache.selection.as_ref() != Some(&graph.selection) {
+        match engine {
+            NodeGraphEngine::Flow(host) => host.set_selection(&graph.selection),
+            NodeGraphEngine::Dag(host) => host.dag.set_selection(&graph.selection),
+        }
+        cache.selection = Some(graph.selection.clone());
+        changed = true;
+    }
+    let hover = graph.hover.as_ref().map(|hover| (hover.node_id.clone().unwrap_or_default(), hover.port_id.clone().unwrap_or_default()));
+    if cache.hover != hover {
+        let node_id = hover.as_ref().map(|(node, _)| node.as_str()).filter(|node| !node.is_empty());
+        let port_id = hover.as_ref().map(|(_, port)| port.as_str()).filter(|port| !port.is_empty());
+        node_graph_apply_hover(engine, node_id, port_id);
+        cache.hover = hover;
+        changed = true;
+    }
+    if cache.preview_off_json.as_deref() != graph.preview_off_json.as_deref() {
+        if let Some(json) = graph.preview_off_json.as_deref() {
+            match engine {
+                NodeGraphEngine::Flow(host) => host.set_preview_off_json(json),
+                NodeGraphEngine::Dag(host) => {
+                    if let Ok(ids) = serde_json::from_str::<Vec<String>>(json) {
+                        host.dag.set_dimmed(&ids);
+                    }
+                }
+            }
+        }
+        cache.preview_off_json = graph.preview_off_json.clone();
+        changed = true;
+    }
+    if cache.lod_json.as_deref() != graph.lod_json.as_deref() {
+        if let Some(json) = graph.lod_json.as_deref() {
+            node_graph_lod_from_json(engine, json);
+        }
+        cache.lod_json = graph.lod_json.clone();
+        changed = true;
+    }
+    if cache.viewport.as_ref() != graph.viewport.as_ref() {
+        if let Some(viewport) = graph.viewport.as_ref() {
+            match engine {
+                NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
+                NodeGraphEngine::Dag(host) => host.dag.set_camera(viewport.x, viewport.y, viewport.zoom),
+            }
+        }
+        cache.viewport = graph.viewport.clone();
+        changed = true;
+    }
+    changed | sync_node_graph_evaluation(engine, cache, graph)
+}
+
+/// 🧮️ The evaluation half of the scene sync, kept in its own pass for the ordering React documents:
+/// `applyEvalOutputsJson` clears computing chrome, so eval is applied BEFORE `statusJson`/
+/// `computingJson`, never after.
+fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
+    let mut changed = false;
+    if cache.eval_json.as_deref() != graph.eval_json.as_deref() {
+        if let (NodeGraphEngine::Flow(host), Some(json)) = (&mut *engine, graph.eval_json.as_deref()) {
+            host.apply_eval_outputs_json(json);
+        }
+        cache.eval_json = graph.eval_json.clone();
+        changed = true;
+    }
+    if cache.status_json.as_deref() != graph.status_json.as_deref() {
+        if let Some(json) = graph.status_json.as_deref() {
+            match engine {
+                NodeGraphEngine::Flow(host) => host.set_node_statuses_from_json(json),
+                NodeGraphEngine::Dag(host) => host.dag.set_node_statuses_from_json(json),
+            }
+        }
+        cache.status_json = graph.status_json.clone();
+        changed = true;
+    }
+    if cache.computing_json.as_deref() != graph.computing_json.as_deref() {
+        if let (None, Some(json)) = (graph.status_json.as_deref(), graph.computing_json.as_deref()) {
+            let value = serde_json::from_str::<Value>(json).unwrap_or(Value::Null);
+            let active = value.get("active").and_then(Value::as_str);
+            let stale: Vec<String> = value.get("stale").and_then(Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_owned)).collect()).unwrap_or_default();
+            match engine {
+                NodeGraphEngine::Flow(host) => host.set_computing_progress(active, &stale),
+                NodeGraphEngine::Dag(host) => host.dag.set_computing_progress(active, &stale),
+            }
+        }
+        cache.computing_json = graph.computing_json.clone();
+        changed = true;
+    }
+    changed
+}
+
+/// 🕸️ Attaches — and drives — the node-graph engine host behind one `SurfaceKind::NodeGraph` scene.
+/// Called from the retained scene paint (`scenes::render_component_scene_step`), so a window's first
+/// painted frame after `SurfaceVisible` is the frame the host is constructed on, and every later frame
+/// re-feeds only the scene fields that moved. Returns whether a live host now backs the surface.
+pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, bounds: Rect, panel: Rgba) -> bool {
+    let dark = 0.2126 * panel.r + 0.7152 * panel.g + 0.0722 * panel.b < 0.5;
+    let Some(graph) = scene.node_graph.as_ref() else {
+        return false;
+    };
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    if ensure_engine_surface(&scene.surface_id, width, height).is_none() {
+        return false;
+    }
+    let created = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return None;
+        };
+        let created = entry.node_graph.is_none();
+        if created {
+            entry.node_graph = Some(node_graph_engine_from_scene(graph, dark));
+        }
+        let Some(engine) = entry.node_graph.as_mut() else {
+            return None;
+        };
+        let cache = &mut entry.sync_cache;
+        let mut changed = created;
+        if cache.viewport_pixels != Some((width, height)) {
+            match engine {
+                NodeGraphEngine::Flow(host) => host.set_viewport(width, height, 1.0),
+                NodeGraphEngine::Dag(host) => host.set_viewport(width, height, 1.0),
+            }
+            cache.viewport_pixels = Some((width, height));
+            changed = true;
+        }
+        if sync_node_graph_engine(engine, cache, graph) || changed {
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        Some(created)
+    });
+    let Some(created) = created else {
+        return false;
+    };
+    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::NodeGraph, created);
+    true
+}
+
+/// 🧩️ Records one attached surface for the shell's per-frame mirror. Every kind goes through it —
+/// including `World3d`, whose host lives in the shell's own `world3d_states` — so the shell has ONE
+/// drained witness of what the chrome walk actually painted this frame.
+pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool) {
+    ATTACHED_SURFACES.with(|cell| cell.borrow_mut().upsert(EngineSurfaceRegistration { surface_id: scene.surface_id.clone(), bounds, controller_id: scene.controller_id.clone(), detail, created }));
+}
+
+/// 🎥️ A `{x, y, zoom}` camera document — the shape React's `parseCameraJson`/`parseBoardCamera` read
+/// and the shape both hosts' `set_camera` take.
+fn engine_camera_from_json(json: &str) -> Option<(f64, f64, f64)> {
+    let value = serde_json::from_str::<Value>(json).ok()?;
+    let x = value.get("x").and_then(Value::as_f64)?;
+    let y = value.get("y").and_then(Value::as_f64)?;
+    let zoom = value.get("zoom").and_then(Value::as_f64).filter(|zoom| *zoom > 0.0)?;
+    Some((x, y, zoom))
+}
+
+/// 🗺️ The wgpu twin of React's `resolveMapInteractionSync` — routes win over positions, and the hover
+/// only reaches the host when its kind matches the granularity the selection resolved to.
+///
+/// @see `🧱️elements/🧭️TiledMapHost/🟦️.tsx` — `resolveMapInteractionSync`
+fn map_interaction_from_scene(selection_json: &str, hover_json: &str) -> (&'static str, Vec<String>, Option<String>) {
+    let selection = serde_json::from_str::<Value>(selection_json).unwrap_or(Value::Null);
+    let ids = |key: &str| selection.get(key).and_then(Value::as_array).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_owned)).collect::<Vec<_>>()).unwrap_or_default();
+    let positions = ids("positions");
+    let routes = ids("routes");
+    let hover = parse_map_hover(hover_json);
+    let hover_kind = hover.get("kind").and_then(Value::as_str).map(str::to_owned);
+    let granularity = if !routes.is_empty() {
+        "route"
+    } else if !positions.is_empty() {
+        "position"
+    } else if hover_kind.as_deref() == Some("route") {
+        "route"
+    } else {
+        "position"
+    };
+    let selected = if granularity == "route" { routes } else { positions };
+    let hovered = (hover_kind.as_deref() == Some(granularity)).then(|| hover.get("id").and_then(Value::as_str).map(str::to_owned)).flatten();
+    (granularity, selected, hovered)
+}
+
+/// 🎨️ The map palette this shell theme implies, in the rgba8 document `MapHost::set_map_theme_from_json`
+/// reads — the wgpu twin of React's `serializeMapCanvasThemeJson`. Fields with no unambiguous shell
+/// counterpart are left out, so `MapPalette`'s own defaults stand for them exactly as they do in React.
+fn map_theme_json(theme: &Theme) -> String {
+    let rgba8 = |color: Rgba| json!([(color.r * 255.0).round() as u16, (color.g * 255.0).round() as u16, (color.b * 255.0).round() as u16, (color.a * 255.0).round() as u16]);
+    json!({
+        "surfaceClear": rgba8(theme.canvas_clear),
+        "labelFill": rgba8(theme.text),
+        "labelHalo": rgba8(theme.panel),
+        "selectionStroke": rgba8(theme.accent),
+        "hoverStroke": rgba8(theme.text_element),
+    })
+    .to_string()
+}
+
+/// 🗺️ Feeds one `TiledMapScene` into a live `MapHost`, field by field, applying only what changed —
+/// the wgpu twin of React's `TiledMapHost` effect ladder (descriptor, then render mode/vector style/
+/// lod, then layer documents, then interaction, then camera).
+///
+/// @see `🧱️elements/🧭️TiledMapHost/🟦️.tsx`
+fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::wgpu::TiledMapScene, theme: &Theme, width: u32, height: u32) -> bool {
+    let mut changed = false;
+    let size_key = format!("{width}x{height}");
+    if cache.size_key.as_deref() != Some(size_key.as_str()) {
+        host.set_size(width, height, 1.0);
+        cache.size_key = Some(size_key);
+        changed = true;
+    }
+    let theme_json = map_theme_json(theme);
+    if cache.theme_json.as_deref() != Some(theme_json.as_str()) {
+        let _ = host.set_map_theme_from_json(&theme_json);
+        cache.theme_json = Some(theme_json);
+        changed = true;
+    }
+    if cache.map_fixture_json.as_deref() != Some(map.map_fixture_json.as_str()) {
+        let _ = host.sync_map_json(&map.map_fixture_json);
+        cache.map_fixture_json = Some(map.map_fixture_json.clone());
+        changed = true;
+    }
+    if cache.render_mode.as_deref() != Some(map.render_mode.as_str()) {
+        host.set_render_mode(&map.render_mode);
+        cache.render_mode = Some(map.render_mode.clone());
+        changed = true;
+    }
+    if cache.vector_style.as_deref() != Some(map.vector_style.as_str()) {
+        host.set_vector_style(&map.vector_style);
+        cache.vector_style = Some(map.vector_style.clone());
+        changed = true;
+    }
+    if cache.lod_mode.as_deref() != Some(map.lod_mode.as_str()) {
+        host.set_lod_mode(&map.lod_mode);
+        cache.lod_mode = Some(map.lod_mode.clone());
+        changed = true;
+    }
+    if cache.layer_visibility_json.as_deref() != Some(map.layer_visibility_json.as_str()) {
+        let _ = host.set_layer_visibility_from_json(&map.layer_visibility_json);
+        cache.layer_visibility_json = Some(map.layer_visibility_json.clone());
+        changed = true;
+    }
+    if cache.layer_stroke_scale_json.as_deref() != Some(map.layer_stroke_scale_json.as_str()) {
+        let _ = host.set_layer_stroke_scale_from_json(&map.layer_stroke_scale_json);
+        cache.layer_stroke_scale_json = Some(map.layer_stroke_scale_json.clone());
+        changed = true;
+    }
+    if cache.selection_json.as_deref() != Some(map.selection_json.as_str()) || cache.hover_json.as_deref() != Some(map.hover_json.as_str()) {
+        let (granularity, selected, hovered) = map_interaction_from_scene(&map.selection_json, &map.hover_json);
+        host.sync_interaction(granularity, &selected, hovered.as_deref());
+        cache.selection_json = Some(map.selection_json.clone());
+        cache.hover_json = Some(map.hover_json.clone());
+        changed = true;
+    }
+    if cache.camera_json.as_deref() != Some(map.camera_json.as_str()) {
+        match engine_camera_from_json(&map.camera_json) {
+            Some((x, y, zoom)) => host.set_camera(x, y, zoom),
+            None => host.fit_world_camera(),
+        }
+        cache.camera_json = Some(map.camera_json.clone());
+        changed = true;
+    }
+    changed
+}
+
+/// 🗺️ Attaches — and drives — the `MapHost` behind one `SurfaceKind::TiledMap` scene, on the same
+/// production seam `sync_node_graph_scene` uses.
+pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+    let Some(map) = scene.tiled_map.as_ref() else {
+        return false;
+    };
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    if ensure_engine_surface(&scene.surface_id, width, height).is_none() {
+        return false;
+    }
+    let created = ENGINE_SURFACES.with(|cell| {
+        let mut map_registry = cell.borrow_mut();
+        let entry = map_registry.get_mut(&scene.surface_id)?;
+        let created = entry.map_host.is_none();
+        if created {
+            entry.map_host = Some(MapHost::new());
+        }
+        let host = entry.map_host.as_mut()?;
+        if sync_map_engine(host, &mut entry.map_sync_cache, map, theme, width, height) || created {
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        Some(created)
+    });
+    let Some(created) = created else {
+        return false;
+    };
+    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::TiledMap { selection_method: map.selection_method.clone() }, created);
+    true
+}
+
+/// 🎲️ Feeds one `Board2dScene` into a live `BoardHost`, field by field, applying only what changed.
+/// `parse_fixture_json` resets selection AND camera to the fixture's own defaults, so a fixture pass
+/// re-applies both silently right after — the rule React's `applyFixtureToSession` states explicitly.
+///
+/// @see `🧱️elements/🖥️Board2dHost/🟦️.tsx` — `applyFixtureToSession`
+fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &ui_wgpu::wgpu::Board2dScene, width: u32, height: u32) -> bool {
+    let mut changed = false;
+    let size_key = format!("{width}x{height}");
+    if cache.size_key.as_deref() != Some(size_key.as_str()) {
+        host.set_size(width, height, 1.0);
+        cache.size_key = Some(size_key);
+        changed = true;
+    }
+    let fixture_applied = cache.fixture_json.as_deref() != Some(board.fixture_json.as_str());
+    if fixture_applied {
+        host.parse_fixture_json(&board.fixture_json);
+        cache.fixture_json = Some(board.fixture_json.clone());
+        changed = true;
+    }
+    if cache.glyph_catalogs_json.as_deref() != Some(board.glyph_catalogs_json.as_str()) {
+        let _ = host.set_board_kind_catalogs_from_json(&board.glyph_catalogs_json);
+        cache.glyph_catalogs_json = Some(board.glyph_catalogs_json.clone());
+        changed = true;
+    }
+    if cache.placement_compatibility_json.as_deref() != Some(board.placement_compatibility_json.as_str()) {
+        let _ = host.set_handle_link_compat_from_json(&board.placement_compatibility_json);
+        cache.placement_compatibility_json = Some(board.placement_compatibility_json.clone());
+        changed = true;
+    }
+    if fixture_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) {
+        host.set_selection_options(&board.selection_method, "replace", true, true, true);
+        cache.selection_method = Some(board.selection_method.clone());
+        changed = true;
+    }
+    if fixture_applied || cache.selection_json.as_deref() != Some(board.selection_json.as_str()) {
+        let ids = serde_json::from_str::<Vec<String>>(&board.selection_json).unwrap_or_default();
+        host.set_selection_ids_silent(&ids);
+        cache.selection_json = Some(board.selection_json.clone());
+        changed = true;
+    }
+    if fixture_applied || cache.camera_json.as_deref() != Some(board.camera_json.as_str()) {
+        if let Some((x, y, zoom)) = engine_camera_from_json(&board.camera_json) {
+            host.set_camera_silent(x, y, zoom);
+        }
+        cache.camera_json = Some(board.camera_json.clone());
+        changed = true;
+    }
+    if cache.hovered_id.as_deref() != board.hovered_id.as_deref() {
+        host.set_hovered_id_silent(board.hovered_id.clone());
+        cache.hovered_id = board.hovered_id.clone();
+        changed = true;
+    }
+    let active_utility = board.active_utility.clone().unwrap_or_else(|| "select".into());
+    if cache.active_utility.as_deref() != Some(active_utility.as_str()) {
+        host.set_active_utility(&active_utility);
+        cache.active_utility = Some(active_utility);
+        changed = true;
+    }
+    if cache.grid_snap_enabled != Some(board.grid_snap_enabled) {
+        host.set_grid_snap_enabled(board.grid_snap_enabled);
+        cache.grid_snap_enabled = Some(board.grid_snap_enabled);
+        changed = true;
+    }
+    if cache.grid_factor != Some(board.grid_factor) {
+        let _ = host.set_grid_factor(board.grid_factor);
+        cache.grid_factor = Some(board.grid_factor);
+        changed = true;
+    }
+    if board.suggestion_offset > 0.0 && cache.suggestion_offset != Some(board.suggestion_offset) {
+        host.set_suggestion_offset(board.suggestion_offset);
+        cache.suggestion_offset = Some(board.suggestion_offset);
+        changed = true;
+    }
+    if cache.brush_weights_json.as_deref() != Some(board.brush_weights_json.as_str()) {
+        host.set_brush_kind_weights(&board.brush_weights_json);
+        cache.brush_weights_json = Some(board.brush_weights_json.clone());
+        changed = true;
+    }
+    if cache.lod_mode.as_deref() != Some(board.lod_mode.as_str()) {
+        if board.lod_mode == "automatic" {
+            host.set_automatic_lod(true);
+        } else {
+            host.set_automatic_lod(false);
+            host.set_forced_draw_lod_label(&board.lod_mode);
+        }
+        cache.lod_mode = Some(board.lod_mode.clone());
+        changed = true;
+    }
+    changed
+}
+
+/// 🎲️ Attaches — and drives — the `BoardHost` behind one `SurfaceKind::Board2d` scene.
+pub fn sync_board2d_scene(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
+    let Some(board) = scene.board2d.as_ref() else {
+        return false;
+    };
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    if ensure_engine_surface(&scene.surface_id, width, height).is_none() {
+        return false;
+    }
+    let created = ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let entry = registry.get_mut(&scene.surface_id)?;
+        let created = entry.board_host.is_none();
+        if created {
+            entry.board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default()));
+        }
+        let host = entry.board_host.as_mut()?;
+        if sync_board_engine(host, &mut entry.board_sync_cache, board, width, height) || created {
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        Some(created)
+    });
+    let Some(created) = created else {
+        return false;
+    };
+    register_engine_surface(scene, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created);
+    true
+}
+
+/// 🧩️ THE production attach entry: one call, every `SurfaceKind` whose engine host the wgpu shell
+/// composites through a vello texture. Called from the retained scene paint
+/// (`scenes::render_component_scene_step`), so a window's first painted frame after `SurfaceVisible`
+/// is the frame its host is constructed on, and every later frame re-feeds only what moved.
+/// `SurfaceKind::World3d` is NOT here: its host is `World3dState`, which lives in the shell's own
+/// `world3d_states` (the pick/asset/authority ladders address it there) and paints a real 3-D pass
+/// into the window draw list instead of a vello raster — `scenes` attaches it against that map and
+/// records it through [`register_engine_surface`] like every other kind.
+pub fn sync_engine_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+    match scene.component_kind {
+        SurfaceKind::NodeGraph => sync_node_graph_scene(scene, bounds, theme.panel),
+        SurfaceKind::TiledMap => sync_tiled_map_scene(scene, bounds, theme),
+        SurfaceKind::Board2d => sync_board2d_scene(scene, bounds),
+        _ => false,
+    }
+}
+
+/// 🎨️ Paints the attached host through its OWN vector renderer and stages the result as this frame's
+/// engine packet — the one paint entry for every vello-composited surface kind.
+pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clear: Rgba) -> bool {
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    let staged = ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let identity = registry.identity(&scene.surface_id)?;
+        let entry = registry.get_mut(&scene.surface_id)?;
+        let painted = match scene.component_kind {
+            SurfaceKind::NodeGraph => match entry.node_graph.as_ref()? {
+                NodeGraphEngine::Flow(host) => {
+                    let mut painted = canvas::Scene::new();
+                    host.paint_scene(&mut painted, width, height, 1.0);
+                    painted
+                }
+                NodeGraphEngine::Dag(host) => {
+                    let mut painted = canvas::Scene::new();
+                    host.paint_scene(&mut painted, width, height, 1.0);
+                    painted
+                }
+            },
+            SurfaceKind::TiledMap => {
+                let host = entry.map_host.as_mut()?;
+                host.prepare_visible_tiles();
+                host.build_vector_scene()
+            }
+            SurfaceKind::Board2d => entry.board_host.as_ref()?.build_vector_scene(),
+            _ => return None,
+        };
+        Some(StagedEngineScene {
+            surface: EngineSurfaceSnapshot { identity, metrics_generation: entry.metrics_generation },
+            document_generation: entry.document_generation,
+            scene_revision: entry.scene_revision,
+            scene: painted,
+            clear: Color::new([clear.r, clear.g, clear.b, clear.a]),
+            width,
+            height,
+        })
+    });
+    let Some(staged) = staged else {
+        return false;
+    };
+    STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().upsert(staged));
+    true
+}
+
+/// 🔑️ The raster key an engine surface's composited texture is published under — the same key
+/// `EngineGpuCandidate` reserves through `GpuContext::reserve_engine_texture`, so a retained
+/// `push_raster_quad` under it composites the vello-rendered graph into the window's draw list.
+pub fn engine_raster_key(surface_id: &str) -> Option<String> {
+    EngineSurfaceId::try_from_str(surface_id).ok().map(|id| id.with_raster_key(str::to_owned))
+}
+//#endregion 🧩️EngineSurfaceAttach
+
 //#region NodeGraph
 
 
@@ -1656,6 +2447,33 @@ pub fn node_graph_sync_caret_blink(visible: bool) {
             }
         }
     });
+}
+
+/// 🛍️ Installs the app-static operator/palette catalogue on one node-graph surface's engine host.
+/// Idempotent and cheap: an unchanged payload costs one string compare, which is what makes it safe
+/// to call from the shell's per-refresh `publish_app_catalogue` sweep. Returns whether a live host
+/// took it — `false` when the surface has no engine yet (the shell simply republishes next refresh).
+///
+/// @see `framework_surface_node_graph::node_graph::GraphHost::set_catalogue_json`
+/// @see `semio_framework_os_flow::FlowHost::set_host_catalogue_json`
+pub fn node_graph_set_catalogue_json(surface_id: &str, json: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let Some(entry) = surfaces.get_mut(surface_id) else { return false };
+        match entry.node_graph.as_mut() {
+            Some(NodeGraphEngine::Dag(host)) => {
+                if host.catalogue_json != json {
+                    host.set_catalogue_json(json);
+                }
+                true
+            }
+            Some(NodeGraphEngine::Flow(host)) => {
+                host.set_host_catalogue_json(json);
+                true
+            }
+            None => false,
+        }
+    })
 }
 
 fn node_graph_pan_gesture(button: i16, alt: bool, space_pressed: bool) -> bool {
@@ -1916,6 +2734,11 @@ pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: 
 struct GraphInteractionSnapshot {
     node_ids: Vec<String>,
     hovered_id: Option<String>,
+    /// 🔌️ The `"{nodeId}@{portId}"` channel under the pointer, when the pick landed on a port rather
+    /// than a node body. React qualifies its hover target the same way — `nodeGraphHoverActionArgs`
+    /// emits `granularity: "handle"` with exactly this id — which is what makes hover bidirectional
+    /// between the graph and a `World3d` preview keyed by the same channel id.
+    hovered_handle: Option<String>,
     viewport_json: String,
 }
 
@@ -1946,13 +2769,27 @@ fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> ui_wgpu::wgpu:
     }
 }
 
-fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
+fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
     let viewport_json = json!({ "x": camera[0], "y": camera[1], "zoom": camera[2] }).to_string();
-    let mut parts = Vec::with_capacity(node_ids.len() + 2);
-    parts.extend([hovered_id.as_deref().unwrap_or_default(), viewport_json.as_str()]);
+    let mut parts = Vec::with_capacity(node_ids.len() + 3);
+    parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default(), viewport_json.as_str()]);
     parts.extend(node_ids.iter().map(String::as_str));
     ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
-    Ok(GraphInteractionSnapshot { node_ids, hovered_id, viewport_json })
+    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, viewport_json })
+}
+
+/// 🔌️ The channel the DAG's own hit-test reports under a screen point, in the `"{nodeId}@{portId}"`
+/// pick-id grammar. A pure query on the live host — the bounded-action protocol has to know the
+/// payload BEFORE the plan is committed, so hover qualification cannot be read back off the commit.
+///
+/// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphPickChannel`
+fn graph_hovered_handle(engine: &NodeGraphEngine, sx: f64, sy: f64) -> Option<String> {
+    let targets = match engine {
+        NodeGraphEngine::Flow(host) => host.pick_targets_at_screen_json(sx, sy),
+        NodeGraphEngine::Dag(host) => host.pick_targets_at_screen_json(sx, sy),
+    };
+    let rows = serde_json::from_str::<Vec<Value>>(&targets).ok()?;
+    rows.iter().find(|row| row.get("domain").and_then(Value::as_str) == Some("handle")).and_then(|row| row.get("id").and_then(Value::as_str)).map(str::to_owned)
 }
 
 fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, ui_wgpu::wgpu::BoundedActionFault> {
@@ -1961,16 +2798,17 @@ fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent
         let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
             return Ok(None);
         };
+        let hovered_handle = graph_hovered_handle(engine, intent.x, intent.y);
         match engine {
             NodeGraphEngine::Flow(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
                 let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
-                Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
+                Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)?)))
             }
             NodeGraphEngine::Dag(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
                 let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
-                Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
+                Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)?)))
             }
         }
     })
@@ -2020,7 +2858,7 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
         }
         None => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
     };
-    graph_projection_snapshot(node_ids, hovered_id, camera.unwrap_or(current_camera))
+    graph_projection_snapshot(node_ids, hovered_id, None, camera.unwrap_or(current_camera))
 }
 
 fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: GraphInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
@@ -2036,7 +2874,12 @@ fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatch
         builder.end_container()
     })?;
     let hover_action = "interactionHover";
-    let hover_targets = serde_json::to_string(&snapshot.hovered_id.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let hover_target = match (snapshot.hovered_handle.as_ref(), snapshot.hovered_id.as_ref()) {
+        (Some(handle), _) => Some(json!({ "granularity": "handle", "id": handle })),
+        (None, Some(node)) => Some(json!({ "granularity": "node", "id": node })),
+        (None, None) => None,
+    };
+    let hover_targets = serde_json::to_string(&hover_target.into_iter().collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "domainId", "graph", "channel", "pointer", "targets", hover_targets.as_str()])?;
     batch.action(controller_id, hover_action, hover_bytes, |builder| {
         builder.begin_object(None)?;

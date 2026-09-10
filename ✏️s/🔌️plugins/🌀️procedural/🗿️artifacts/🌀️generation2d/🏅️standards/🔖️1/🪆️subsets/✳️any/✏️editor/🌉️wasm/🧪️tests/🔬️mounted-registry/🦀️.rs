@@ -413,6 +413,7 @@ mod mounted_laws {
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
 
+        let _serial = crate::publication_authority::lock();
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
             crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::standards::v1::subsets::any::schema::mutations::binary::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS }),

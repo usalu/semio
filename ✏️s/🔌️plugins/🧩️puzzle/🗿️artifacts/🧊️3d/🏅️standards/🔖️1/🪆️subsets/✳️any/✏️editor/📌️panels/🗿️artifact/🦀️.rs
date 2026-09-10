@@ -34,6 +34,9 @@ pub const SECTION_ROWS: usize = ui::UI_BUILT_CHILDREN_MAX - 1;
 /// 🗄️ Sections this outliner presents — objects, references, target volumes, attractions. Each is assembled
 /// with the sections after it reserved out of the shared page, so the first one cannot consume it whole.
 pub const SECTIONS: usize = 4;
+/// 🧱 Host reconcile credits one `FlatPresentedNode` per presented node (~0.46 MiB). The 8 MiB
+/// surface byte cap therefore admits at most 16 nodes; 18 Nakagin rows landed 30 KiB over.
+pub const PANEL_RECONCILE_NODE_BUDGET: usize = 16;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -202,6 +205,21 @@ pub fn page_rows() -> usize {
     semio_framework_plugin::panel_page_rows()
 }
 
+/// 🧱 Small documents keep the SDK page so nested vortices stay complete. A document past that
+/// page (Nakagin, 180 objects) uses the host reconcile envelope so the panel stays ≤16 nodes.
+fn page_rows_for(fixture: &Puzzle3dFixture) -> usize {
+    let entities = fixture.objects.len()
+        + fixture.objects.iter().map(|object| object.vortices.len()).sum::<usize>()
+        + fixture.references.len()
+        + fixture.target_volumes.len()
+        + fixture.attractions.len();
+    if entities <= semio_framework_plugin::panel_page_rows() {
+        semio_framework_plugin::panel_page_rows()
+    } else {
+        PANEL_RECONCILE_NODE_BUDGET.saturating_sub(1 + SECTIONS)
+    }
+}
+
 /// 🔒️ One page at a time under test. Every law that materialises a whole panel page draws on the
 /// process-global `UiValue` arena, so two of them running in parallel each observe a partly spent arena and
 /// page shorter than their own law expects. This guard is the unit-test stand-in for the reactor's
@@ -249,9 +267,10 @@ pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &HashMap<St
     let slice = &entries[offset..];
     let mut items = UiFixedList::<BuiltNode>::default();
     let quota = slice.len().min(SECTION_ROWS);
+    let truncated = slice.len() > SECTION_ROWS;
     let mut placed = 0;
     for entry in slice {
-        if placed == SECTION_ROWS || !budget.spend() {
+        if placed == SECTION_ROWS || (truncated && budget.remaining() <= 1) || !budget.spend() {
             break;
         }
         placed += 1;
@@ -269,8 +288,10 @@ pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &HashMap<St
         }
     }
     if placed < slice.len() {
-        if let Ok(more) = continuation_row_from(section_id, slice.len() - placed, Some(page as u32 + 1)) {
-            let _ = items.try_push(more);
+        if budget.spend() {
+            if let Ok(more) = continuation_row_from(section_id, slice.len() - placed, Some(page as u32 + 1)) {
+                let _ = items.try_push(more);
+            }
         }
     }
     Ok(items)
@@ -286,7 +307,7 @@ pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyR
 
 /// 📄 Same tree as [`render`], starting each section at its `setPanelPage` cursor.
 pub fn render_from(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> UiAssemblyResult<BuiltNode> {
-    let budget = &mut RowBudget::new(page_rows());
+    let budget = &mut RowBudget::new(page_rows_for(fixture));
     let objects = budget.nested(SECTIONS - 1, |share| paged_section_from(&format!("{ROOT}.objects"), &fixture.objects, pages, share, |object, share| object_row(object, labels, share)))?;
     let references = budget.nested(SECTIONS - 2, |share| paged_section_from(&format!("{ROOT}.references"), &fixture.references, pages, share, |reference, _| reference_row(reference, labels)))?;
     let target_volumes = budget.nested(SECTIONS - 3, |share| paged_section_from(&format!("{ROOT}.target-volumes"), &fixture.target_volumes, pages, share, |volume, _| target_volume_row(volume, labels)))?;

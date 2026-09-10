@@ -1,0 +1,25 @@
+package semio:procedural-generation2d-editor-presence@1.0.0;
+
+/// 👥️ The language-neutral surface of `Generation2dPresence` — everything the 2D editor broadcasts.
+/// It is the whole config record here, unlike the 3D editor's, because the 2D subset persists no
+/// local-only rendering choice a peer must not see.
+interface presence {
+    /// 🕸️ The flow-graph camera a peer is looking through.
+    record graph-camera {
+        x: f64,
+        y: f64,
+        zoom: f64,
+    }
+
+    /// 👥️ What a peer sees of another peer's 2D editor.
+    record editor-presence {
+        camera: graph-camera,
+        show-mode: string,
+        selected-generation-id: string,
+    }
+}
+
+/// 🌍️ The world one 2D editor instance's presence lane exports.
+world generation2d-editor-presence {
+    export presence;
+}

@@ -10,7 +10,7 @@ use semio_framework_os_flow::render_scene_json;
 
 use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
-use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
+use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -205,7 +205,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(feature = "component-app-assembly")]
 pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
     FlowHost::with_fixture(fixture, |host| {
-        host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+        host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
         body(host)
     })
 }

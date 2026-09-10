@@ -2471,6 +2471,10 @@ impl SurfaceReconcileRetained {
     }
 
     fn close_step(&mut self) -> bool {
+        self.close_step_with(None)
+    }
+
+    fn close_step_with(&mut self, mut registry: Option<&mut SurfaceReconcileHandbackRegistry>) -> bool {
         self.phase = SurfaceReconcileJobPhase::Closing;
         if self.fault.take().is_some() {
             return false;
@@ -2511,11 +2515,17 @@ impl SurfaceReconcileRetained {
             return false;
         }
         if let Some(handback) = self.handback.take() {
-            release_surface_reconcile_handback(handback);
+            match registry.as_deref_mut() {
+                Some(registry) => release_surface_reconcile_handback_in(registry, handback),
+                None => release_surface_reconcile_handback(handback),
+            }
             return false;
         }
         if let Some(handback) = self.output_handback.take() {
-            release_surface_reconcile_handback(handback);
+            match registry.as_deref_mut() {
+                Some(registry) => release_surface_reconcile_handback_in(registry, handback),
+                None => release_surface_reconcile_handback(handback),
+            }
             return false;
         }
         true
@@ -2691,7 +2701,7 @@ fn pending_surface_patch(patch: Option<ui_contract::UiPatch>) -> ui_contract::Ui
 fn close_surface_patch_owner(patch: &mut ui_contract::UiPendingPatch, credit: &mut Option<ui_contract::UiResidentPermit>, handback: &mut Option<SurfaceReconcileHandbackReservation>, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
     if items == 0 || bytes == 0 { return Ok(Default::default()); }
     if !patch.terminal_is_empty() {
-        let mut step = patch.close_step(1, bytes)?;
+        let mut step = patch.close_step(items, bytes)?;
         step.complete = false;
         return Ok(step);
     }
@@ -3348,19 +3358,29 @@ pub fn close_surface_reconcile_handback_one() -> Result<bool, &'static str> {
     if registry.retirement_len == 0 { return Ok(!ui_contract::UiResidentPermit::has_pending_returns()); }
     let head = registry.retirement_head;
     let index = registry.retirement[head];
-    let slot = registry.slots.get_mut(index).ok_or("surface retirement queue contains an invalid slot")?;
-    if !slot.queued { return Err("surface retirement queue lost its exact owner"); }
-    let complete = if let Some(state) = slot.state.as_mut() {
-        if state.handback.is_some() || state.current.as_ref().is_some_and(|owner| owner.handback.is_some()) || state.candidate.as_ref().is_some_and(|owner| owner.handback.is_some()) {
-            return Err("queued surface owner retains an external registry reservation");
+    {
+        let slot = registry.slots.get_mut(index).ok_or("surface retirement queue contains an invalid slot")?;
+        if !slot.queued { return Err("surface retirement queue lost its exact owner"); }
+    }
+    let mut owned = registry.slots[index].state.take();
+    let complete = if let Some(state) = owned.as_mut() {
+        if let Some(handback) = state.handback.take() {
+            release_surface_reconcile_handback_in(&mut registry, handback);
+        }
+        if let Some(handback) = state.current.as_mut().and_then(|owner| owner.handback.take()) {
+            release_surface_reconcile_handback_in(&mut registry, handback);
+        }
+        if let Some(handback) = state.candidate.as_mut().and_then(|owner| owner.handback.take()) {
+            release_surface_reconcile_handback_in(&mut registry, handback);
         }
         if state.fault.is_none() && !state.patch.terminal_is_empty() {
             state.phase = SurfaceReconcileJobPhase::Closing;
             state.patch.close_step(1, SURFACE_RECONCILE_PAGE_BYTES)?;
             false
-        } else { state.close_step() && state.terminal_is_empty() }
+        } else { state.close_step_with(Some(&mut registry)) && state.terminal_is_empty() }
     } else { true };
-    if complete && (slot.state.is_some() || !slot.reserved) && registry.free_len >= SURFACE_RECONCILE_HANDBACK_SLOTS { return Err("surface handback free list exhausted"); }
+    registry.slots[index].state = owned;
+    if complete && (registry.slots[index].state.is_some() || !registry.slots[index].reserved) && registry.free_len >= SURFACE_RECONCILE_HANDBACK_SLOTS { return Err("surface handback free list exhausted"); }
     registry.retirement[head] = usize::MAX;
     registry.retirement_head = (head + 1) % SURFACE_RECONCILE_HANDBACK_SLOTS;
     registry.retirement_len -= 1;
@@ -3399,15 +3419,44 @@ impl SurfaceReconcileRegistryTestGuard {
     fn acquire() -> Self {
         static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
         let lock = GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        drain_surface_reconcile_registry_until_idle();
+        isolate_surface_reconcile_registries();
         Self { _lock: lock }
     }
 }
 
 impl Drop for SurfaceReconcileRegistryTestGuard {
     fn drop(&mut self) {
-        drain_surface_reconcile_registry_until_idle();
+        isolate_surface_reconcile_registries();
     }
+}
+
+fn isolate_surface_reconcile_registries() {
+    drain_surface_reconcile_registry_until_idle();
+    reclaim_orphaned_handback_slots();
+    drain_surface_reconcile_registry_until_idle();
+}
+
+fn reclaim_orphaned_handback_slots() {
+    let mut orphaned = Vec::new();
+    {
+        let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut free_len = 0;
+        for index in 0..SURFACE_RECONCILE_HANDBACK_SLOTS {
+            let slot = &mut registry.slots[index];
+            if let Some(state) = slot.state.take() {
+                orphaned.push(state);
+            }
+            let epoch = slot.epoch;
+            *slot = SurfaceReconcileHandbackSlot { epoch, ..SurfaceReconcileHandbackSlot::default() };
+            registry.free[free_len] = SURFACE_RECONCILE_HANDBACK_SLOTS - 1 - index;
+            free_len += 1;
+        }
+        registry.free_len = free_len;
+        registry.retirement = [usize::MAX; SURFACE_RECONCILE_HANDBACK_SLOTS];
+        registry.retirement_head = 0;
+        registry.retirement_len = 0;
+    }
+    drop(orphaned);
 }
 
 fn drain_surface_reconcile_registry_until_idle() {
@@ -3423,8 +3472,10 @@ fn drain_surface_reconcile_registry_until_idle() {
             let _ = ui_contract::UiResidentPermit::drain_one();
         }
         let handback_idle = close_surface_reconcile_handback_one().unwrap_or(false);
-        if !output_pending && !resident_pending && handback_idle {
-            return;
+        let value_idle = ui_contract::close_ui_value_page_one();
+        let built_idle = ui_contract::close_built_node_page_one();
+        if !output_pending && !resident_pending && handback_idle && value_idle && built_idle {
+            break;
         }
     }
 }

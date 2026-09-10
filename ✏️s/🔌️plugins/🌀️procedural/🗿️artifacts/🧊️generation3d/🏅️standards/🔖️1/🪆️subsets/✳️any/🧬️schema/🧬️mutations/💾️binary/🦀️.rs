@@ -505,8 +505,6 @@ pub const GENERATION3D_RETAINED_MUTATION_OWNERS: [&str; GENERATION3D_MUTATION_VA
     "change-generation-value",
 ];
 
-/// 📐️ One structural opportunity is admitted per grant; combined nesting remains fixed.
-pub const GENERATION3D_RETAINED_COMBINED_DEPTH: usize = 12;
 pub const GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR: [u8; 4] = *b"P3D3";
 pub const GENERATION3D_FORBIDDEN_2D_DISCRIMINATOR: [u8; 4] = *b"P2D2";
 
@@ -853,6 +851,14 @@ enum Generation3dMutationDictionaryDestination {
     Value { parent: usize },
 }
 
+/// 🗂️ Where a decoded neural value belongs. A `Dictionary` reaches the wire either as a columnar
+/// `Table` (many rows) or as a `List` of one-entry records, and the retained owner has to write the
+/// value back into whichever of the two shapes it is standing in.
+enum Generation3dMutationNeuralOwner {
+    TableRow { table: usize, row: usize },
+    EntryRow { entries: usize, row: usize },
+}
+
 enum Generation3dMutationFrame {
     Root { field: Option<u16> },
     Statements { keyword: Option<String> },
@@ -862,7 +868,9 @@ enum Generation3dMutationFrame {
     Camera { field: Option<u16>, value: semio_framework_artifact_flow_flow::CameraJson },
     Generation { field: Option<u16>, id: String, name: String, values: Vec<(String, dsl::DslValue)> },
     Dictionary { destination: Generation3dMutationDictionaryDestination, rows: Vec<Generation3dMutationDictionaryEntryOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
-    NeuralValue { table: usize, row: usize, field: Option<u16>, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
+    DictionaryEntries { destination: Generation3dMutationDictionaryDestination, rows: Vec<Generation3dMutationDictionaryEntryOwner> },
+    DictionaryEntry { entries: usize, row: usize, field: Option<u16> },
+    NeuralValue { owner: Generation3dMutationNeuralOwner, field: Option<u16>, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
     Strings { parent: usize, field: u16, values: Vec<String> },
     Wire { parent: usize, roles: [u8; 6], roles_len: usize, role: usize, nodes: usize },
     Structural(store::mounted_pack_rt::RetainedValueContainer),
@@ -874,6 +882,7 @@ enum Generation3dMutationStringTarget {
     Widget(usize, u16),
     Generation(usize, u16),
     DictionaryKey(usize, usize),
+    DictionaryEntryKey(usize),
     NeuralText(usize),
     Sequence(usize),
     Statement(usize),
@@ -938,11 +947,11 @@ impl Generation3dRetainedMutationOwner {
             return Err("generation3d-mutation.variant");
         }
         let mut stack = Vec::new();
-        stack.try_reserve_exact(GENERATION3D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation3d-mutation.stack-preflight")?;
+        stack.try_reserve_exact(GENERATION3D_RETAINED_STACK_CAPACITY).map_err(|_| "generation3d-mutation.stack-preflight")?;
         let mut json_stack = Vec::new();
-        json_stack.try_reserve_exact(GENERATION3D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation3d-mutation.json-stack-preflight")?;
+        json_stack.try_reserve_exact(GENERATION3D_RETAINED_STACK_CAPACITY).map_err(|_| "generation3d-mutation.json-stack-preflight")?;
         let mut dsl_stack = Vec::new();
-        dsl_stack.try_reserve_exact(GENERATION3D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation3d-mutation.dsl-stack-preflight")?;
+        dsl_stack.try_reserve_exact(GENERATION3D_RETAINED_STACK_CAPACITY).map_err(|_| "generation3d-mutation.dsl-stack-preflight")?;
         Ok(Self {
             ordinal,
             stack,
@@ -1006,6 +1015,7 @@ impl Generation3dRetainedMutationOwner {
                 Ok(Generation3dMutationStringTarget::DictionaryKey(index, row))
             }
             Generation3dMutationFrame::NeuralValue { field: Some(4), .. } => Ok(Generation3dMutationStringTarget::NeuralText(index)),
+            Generation3dMutationFrame::DictionaryEntry { field: Some(0), .. } => Ok(Generation3dMutationStringTarget::DictionaryEntryKey(index)),
             Generation3dMutationFrame::Strings { .. } => Ok(Generation3dMutationStringTarget::Sequence(index)),
             Generation3dMutationFrame::Synapse { field: Some(0), .. } => Ok(Generation3dMutationStringTarget::SynapseId(index)),
             Generation3dMutationFrame::Wire { roles, roles_len, role, .. } if *role < *roles_len => {
@@ -1056,7 +1066,7 @@ impl Generation3dRetainedMutationOwner {
         match owner.target {
             Generation3dMutationStringTarget::Root(field) => {
                 let slot = match (self.ordinal, field) {
-                    (2 | 5 | 7 | 9 | 11, 0) => 0,
+                    (2 | 5 | 6 | 7 | 9 | 11, 0) => 0,
                     (12 | 13, 0) => 0,
                     (12 | 13, 1) => 1,
                     _ => return Err("generation3d-mutation.root-string-field"),
@@ -1094,6 +1104,19 @@ impl Generation3dRetainedMutationOwner {
                 Some(Generation3dMutationFrame::Dictionary { rows, .. }) => rows.get_mut(row).ok_or("generation3d-mutation.dictionary-key-row")?.key = owner.value,
                 _ => return Err("generation3d-mutation.dictionary-key-owner"),
             },
+            Generation3dMutationStringTarget::DictionaryEntryKey(index) => {
+                let (entries, row) = match self.stack.get_mut(index) {
+                    Some(Generation3dMutationFrame::DictionaryEntry { entries, row, field }) => {
+                        *field = None;
+                        (*entries, *row)
+                    }
+                    _ => return Err("generation3d-mutation.dictionary-entry-owner"),
+                };
+                match self.stack.get_mut(entries) {
+                    Some(Generation3dMutationFrame::DictionaryEntries { rows, .. }) => rows.get_mut(row).ok_or("generation3d-mutation.dictionary-entry-row")?.key = owner.value,
+                    _ => return Err("generation3d-mutation.dictionary-entries-owner"),
+                }
+            }
             Generation3dMutationStringTarget::NeuralText(index) => match self.stack.get_mut(index) {
                 Some(Generation3dMutationFrame::NeuralValue { field, value, .. }) if *field == Some(4) && value.is_none() => {
                     *value = Some(semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(owner.value)));
@@ -1123,9 +1146,9 @@ impl Generation3dRetainedMutationOwner {
                 };
                 match role {
                     0 => synapse.from = owner.value,
-                    1 => synapse.from_port = owner.value,
+                    2 => synapse.from_port = owner.value,
                     3 => synapse.to = owner.value,
-                    4 => synapse.to_port = owner.value,
+                    5 => synapse.to_port = owner.value,
                     _ => drop(owner.value),
                 }
             }
@@ -1302,7 +1325,17 @@ impl Generation3dRetainedMutationOwner {
         if let Some(Generation3dMutationFrame::Dictionary { field: Some(1), present, next, .. }) = self.stack.get_mut(table) {
             let row = (*next..present.len()).find(|row| present[*row]).ok_or("generation3d-mutation.dictionary-value-row")?;
             *next = row + 1;
-            return self.push(Generation3dMutationFrame::NeuralValue { table, row, field: None, value: None });
+            return self.push(Generation3dMutationFrame::NeuralValue { owner: Generation3dMutationNeuralOwner::TableRow { table, row }, field: None, value: None });
+        }
+        if let Some(Generation3dMutationFrame::DictionaryEntries { rows, .. }) = self.stack.get_mut(table) {
+            let row = rows.len();
+            rows.try_reserve(1).map_err(|_| "generation3d-mutation.dictionary-entry-preflight")?;
+            rows.push(Generation3dMutationDictionaryEntryOwner::default());
+            return self.push(Generation3dMutationFrame::DictionaryEntry { entries: table, row, field: None });
+        }
+        if let Some(Generation3dMutationFrame::DictionaryEntry { entries, row, field: Some(1) }) = self.stack.get_mut(table) {
+            let owner = Generation3dMutationNeuralOwner::EntryRow { entries: *entries, row: *row };
+            return self.push(Generation3dMutationFrame::NeuralValue { owner, field: None, value: None });
         }
         let root = self.root_field();
         let frame = match self.stack.last_mut() {
@@ -1381,6 +1414,12 @@ impl Generation3dRetainedMutationOwner {
             Token::Begin { kind: Container::Statements, .. } => self.push(Generation3dMutationFrame::Statements { keyword: None })?,
             Token::Begin { kind: Container::List | Container::Tuple, count } => {
                 let (parent, field) = match self.stack.last() {
+                    Some(Generation3dMutationFrame::NeuralValue { field: Some(5), value: None, .. }) => {
+                        let parent = self.stack.len() - 1;
+                        let mut rows = Vec::new();
+                        rows.try_reserve_exact(usize::try_from(count).map_err(|_| "generation3d-mutation.dictionary-entry-count")?).map_err(|_| "generation3d-mutation.dictionary-entry-preflight")?;
+                        return self.push(Generation3dMutationFrame::DictionaryEntries { destination: Generation3dMutationDictionaryDestination::Value { parent }, rows });
+                    }
                     Some(Generation3dMutationFrame::Widget { field: Some(field), .. }) => (self.stack.len() - 1, *field),
                     _ => {
                         self.push(Generation3dMutationFrame::Structural(Container::List))?;
@@ -1404,6 +1443,7 @@ impl Generation3dRetainedMutationOwner {
                     | Generation3dMutationFrame::Layout { field, .. }
                     | Generation3dMutationFrame::Camera { field, .. }
                     | Generation3dMutationFrame::Generation { field, .. }
+                    | Generation3dMutationFrame::DictionaryEntry { field, .. }
                     | Generation3dMutationFrame::NeuralValue { field, .. },
                 ) if field.is_none() => *field = Some(value as u16),
                 _ => return Err("generation3d-mutation.field-owner"),
@@ -1563,12 +1603,25 @@ impl Generation3dRetainedMutationOwner {
                     Generation3dMutationFrame::Generation { field: None, id, name, values } if kind == Container::Record => {
                         self.generation = Some(semio_framework_artifact_playbook_playbook::FormGeneration { id, name, values: values.into_iter().collect() });
                     }
-                    Generation3dMutationFrame::NeuralValue { table, row, field: None, value: Some(value) } if kind == Container::Record => match self.stack.get_mut(table) {
+                    Generation3dMutationFrame::NeuralValue { owner: Generation3dMutationNeuralOwner::TableRow { table, row }, field: None, value: Some(value) } if kind == Container::Record => match self.stack.get_mut(table) {
                         Some(Generation3dMutationFrame::Dictionary { rows, field: Some(1), .. }) => {
                             rows.get_mut(row).ok_or("generation3d-mutation.dictionary-value-row")?.value = Some(value);
                         }
                         _ => return Err("generation3d-mutation.dictionary-value-table"),
                     },
+                    Generation3dMutationFrame::NeuralValue { owner: Generation3dMutationNeuralOwner::EntryRow { entries, row }, field: None, value: Some(value) } if kind == Container::Record => {
+                        match self.stack.get_mut(entries) {
+                            Some(Generation3dMutationFrame::DictionaryEntries { rows, .. }) => {
+                                rows.get_mut(row).ok_or("generation3d-mutation.dictionary-entry-row")?.value = Some(value);
+                            }
+                            _ => return Err("generation3d-mutation.dictionary-entry-list"),
+                        }
+                        if let Some(Generation3dMutationFrame::DictionaryEntry { field, .. }) = self.stack.last_mut() {
+                            *field = None;
+                        }
+                    }
+                    Generation3dMutationFrame::DictionaryEntry { field: None, .. } if kind == Container::Record => {}
+                    Generation3dMutationFrame::DictionaryEntries { destination, rows } if matches!(kind, Container::List | Container::Tuple) => self.finish_dictionary(destination, rows)?,
                     Generation3dMutationFrame::Dictionary { destination, rows, field: Some(1), .. } if kind == Container::Table => self.finish_dictionary(destination, rows)?,
                     Generation3dMutationFrame::Strings { parent, field, values } => match self.stack.get_mut(parent) {
                         Some(Generation3dMutationFrame::Widget { field: active, owner }) => {
@@ -1776,7 +1829,7 @@ impl Generation3dMutationSession {
                         max_file_len: self.expected_bytes as u64,
                         max_segment_len: self.expected_bytes as u64,
                         max_symbols: self.maximum_items.min(GENERATION3D_MAXIMUM_DOMAIN_ITEMS) as u32,
-                        max_depth: GENERATION3D_RETAINED_COMBINED_DEPTH as u16,
+                        max_depth: GENERATION3D_RETAINED_STACK_CAPACITY as u16,
                         max_items: self.maximum_items.min(GENERATION3D_MAXIMUM_DOMAIN_ITEMS) as u64,
                         max_total_alloc: GENERATION3D_MAXIMUM_DOMAIN_BYTES as u64,
                     };
@@ -1786,7 +1839,8 @@ impl Generation3dMutationSession {
                 }
             }
             Generation3dMutationSessionPhase::Body => {
-                if let Some((_, byte)) = self.pending.take() {
+                if self.pending.is_some() && self.body.as_ref().ok_or("generation3d-mutation.body-owner")?.ingress_ready() {
+                    let (_, byte) = self.pending.take().ok_or("generation3d-mutation.body-input")?;
                     self.body.as_mut().ok_or("generation3d-mutation.body-owner")?.admit_byte(self.body_bytes, byte).map_err(|(_, byte)| if byte == 0 { "generation3d-mutation.body-handback-zero" } else { "generation3d-mutation.body-handback" })?;
                     self.body_bytes += 1;
                 }

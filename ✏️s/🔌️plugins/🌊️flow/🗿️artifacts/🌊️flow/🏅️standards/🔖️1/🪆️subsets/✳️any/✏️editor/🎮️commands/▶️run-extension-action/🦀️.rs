@@ -1,6 +1,7 @@
 //! 🧩️ 🧩️ Flow play app commands command — `run-extension-action`.
 
 use crate::editor::flow::commands::evaluate::evaluate_result;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::commands::reorganize::reorganize_operations;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -29,16 +30,23 @@ pub struct RunExtensionAction {
     pub action_id: String,
 }
 
-pub fn handle(payload: &RunExtensionAction, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+/// 🧩️ The extension effect against an already-resolved window config — the one body the batch
+/// `handle` below and the retained `FlowGraphOperationWork` route both run, so neither can drift
+/// from the other (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let Some((id, _, _, _, effect)) = FLOW_AUTOMATIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id) else {
-        return Ok(Emit::default());
+        return Emit::default();
     };
-    if !&crate::editor::flow::modes::edit::windows::main::config::current(cfg).automation_enabled().get(*id).copied().unwrap_or(false) {
-        return Ok(Emit::default());
+    if !config.automation_enabled().get(*id).copied().unwrap_or(false) {
+        return Emit::default();
     }
     match *effect {
-        "reorganize" => Ok(Emit::mutations(reorganize_operations(doc, cfg, session))),
-        "evaluate" => Ok(evaluate_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)),
-        _ => Ok(Emit::default()),
+        "reorganize" => Emit::mutations(reorganize_operations(snapshot, config, session)),
+        "evaluate" => evaluate_result(snapshot, config, session),
+        _ => Emit::default(),
     }
+}
+
+pub fn handle(payload: &RunExtensionAction, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    Ok(extension_action_result(payload, doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session))
 }

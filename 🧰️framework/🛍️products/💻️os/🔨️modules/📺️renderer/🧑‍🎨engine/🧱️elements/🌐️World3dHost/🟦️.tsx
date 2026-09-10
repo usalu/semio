@@ -117,7 +117,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -955,6 +955,54 @@ function WorldAutoFit({
   return null;
 }
 
+/** @emoji 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction. */
+export function world3dFrameCameraFromBounds(
+  center: readonly [number, number, number],
+  radius: number,
+  camera: WorldParsedCameraState,
+  padding = 1.8,
+): WorldParsedCameraState {
+  const fitted = fitCameraFromBounds(center, Math.max(radius, 0.5), camera, padding);
+  return { ...camera, position: fitted.position, target: fitted.target, zoom: fitted.zoom };
+}
+
+/** @emoji 📷️ Frames the orbit camera on instance centroids so table-scale vortex markers stay hittable. */
+function world3dTableScaleInstances(instances: readonly WorldInstanceRecord[]): readonly WorldInstanceRecord[] {
+  if (instances.length <= 1) return instances;
+  const points = instances.map((instance) => instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0]);
+  const mid = (values: number[]) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)] ?? 0;
+  };
+  const cx = mid(points.map((p) => p[0]));
+  const cy = mid(points.map((p) => p[1]));
+  const cz = mid(points.map((p) => p[2]));
+  const near = instances.filter((_, i) => {
+    const p = points[i]!;
+    return Math.hypot(p[0] - cx, p[1] - cy, p[2] - cz) <= 3.5;
+  });
+  return near.length > 0 ? near : instances;
+}
+
+export function world3dFrameCameraFromInstances(
+  instances: readonly WorldInstanceRecord[],
+  camera: WorldParsedCameraState,
+  padding = 1.35,
+): WorldParsedCameraState {
+  const seed = autofitCameraFromInstances(world3dTableScaleInstances(instances));
+  const dx = seed.position[0] - seed.target[0];
+  const dy = seed.position[1] - seed.target[1];
+  const dz = seed.position[2] - seed.target[2];
+  const length = Math.hypot(dx, dy, dz) || 1;
+  const distance = Math.max(length * (padding / 2.5), 1.4);
+  return {
+    ...camera,
+    position: [seed.target[0] + (dx / length) * distance, seed.target[1] + (dy / length) * distance, seed.target[2] + (dz / length) * distance],
+    target: seed.target,
+    zoom: camera.zoom,
+  };
+}
+
 function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): WorldParsedCameraState {
   if (instances.length === 0) {
     return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
@@ -1211,6 +1259,7 @@ export function mapContextMenuSpecs(
     const groupLabel = spec.label === undefined ? contextMenuGroupLabel(spec.id) : undefined;
     return {
       id: spec.id,
+      action: spec.action,
       label: spec.label === undefined ? groupLabel : wireLabel(spec.label),
       icon: spec.icon && isIconName(spec.icon) ? spec.icon : groupLabel === undefined ? undefined : "folder",
       color: spec.color,
@@ -1364,6 +1413,48 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
 /** @emoji 🚫️ Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
 export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
   return activeUtility === "fill" || activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
+}
+
+/** @emoji 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
+export function worldInstanceMeshRaycast(pickEnabled: boolean): (() => null) | undefined {
+  return pickEnabled ? undefined : () => null;
+}
+
+/** @emoji 🚫️ Walks a GLB/instance root and disables mesh raycasts when pick is blocked. */
+export function applyWorldInstanceMeshRaycast(
+  root: { readonly traverse: (fn: (object: { readonly isMesh?: boolean; raycast: unknown }) => void) => void },
+  pickEnabled: boolean,
+  meshRaycast: unknown,
+): void {
+  const raycast = pickEnabled ? meshRaycast : () => null;
+  root.traverse((object) => {
+    if (!object.isMesh) return;
+    object.raycast = raycast;
+  });
+}
+
+const WORLD_VORTEX_DEFAULT_RADIUS = 0.36;
+
+/** @emoji 🎯 Hit-proxy sphere stays `visible` so Three's raycaster does not skip it; radius is at least the published marker radius. */
+export function worldVortexHitProxy(radius?: number): { readonly visible: true; readonly radius: number } {
+  const published = radius ?? WORLD_VORTEX_DEFAULT_RADIUS;
+  return { visible: true, radius: Math.max(published, WORLD_VORTEX_DEFAULT_RADIUS) };
+}
+
+/** 📜️ Guest fill progress before the first `fillBuildTick` is `{ done: true, count: 0 }` — requiring
+ * `!done` starved the interval forever. Tick while Fill is the published interaction (or the host
+ * tool) until a completed plan exists (`done` and `count > 0`). */
+export function worldFillBuildShouldTick(activeUtility: string | undefined, fillBuild: { readonly done?: boolean; readonly count?: number } | undefined, activeToolId?: string | null): boolean {
+  if (activeUtility !== "fill" && activeToolId !== "fill") return false;
+  if (fillBuild == null) return true;
+  return !fillBuild.done || (fillBuild.count ?? 0) === 0;
+}
+
+/** ⏱️ While an Isolated fill job holds the actor lock, only a queued UI poll may dispatch fillBuildTick. */
+export function worldFillBuildHostTickAllowed(shouldTick: boolean, driving: boolean, pollDue: boolean): boolean {
+  if (!shouldTick) return false;
+  if (!driving) return true;
+  return pollDue;
 }
 
 /** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
@@ -1614,6 +1705,7 @@ function GlbInstanceMesh({
   material,
   shadowEnabled,
   revision,
+  pickEnabled,
 }: {
   readonly url: string;
   readonly color: string;
@@ -1624,6 +1716,7 @@ function GlbInstanceMesh({
   readonly material?: WorldEnvironmentMaterialRecord;
   readonly shadowEnabled?: boolean;
   readonly revision: MeshStyleKind;
+  readonly pickEnabled: boolean;
 }) {
   const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
   const invalidate = useThree((state) => state.invalidate);
@@ -1668,6 +1761,9 @@ function GlbInstanceMesh({
   useLayoutEffect(() => {
     invalidate();
   }, [invalidate, scene]);
+  useLayoutEffect(() => {
+    applyWorldInstanceMeshRaycast(scene, pickEnabled, Mesh.prototype.raycast);
+  }, [scene, pickEnabled]);
 
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
@@ -2088,6 +2184,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             styleKind={styleKind}
             textureBase64={paintTextureBase64}
             flatShading={flatShading}
+            raycast={worldInstanceMeshRaycast(instancePickEnabled)}
             onPointerDown={(event) => {
               if (onPaintAt || !faceDragActive || !onFaceDragStart || !event.face) return;
               if (!(targets.face && event.faceIndex != null && meshData.faceIds?.[event.faceIndex] != null)) return;
@@ -2305,11 +2402,13 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               material={environmentMaterial}
               shadowEnabled={environmentShadowEnabled}
               revision={styleKind}
+              pickEnabled={instancePickEnabled}
             />
           </Suspense>
         </group>
       ) : (
         <mesh
+          raycast={worldInstanceMeshRaycast(instancePickEnabled)}
           onPointerDown={(event) => {
             if (!instancePickEnabled && !lockedClickClears) return;
             event.stopPropagation();
@@ -2852,6 +2951,7 @@ function WorldVortexMarkers({
           onPointerOver: (event: { stopPropagation: () => void }) => {
             event.stopPropagation();
             onHover(vortex.fullId);
+            console.log("[DEBUG] vortex marker hover", vortex.fullId);
             if (connectSourceFullId) onConnectDragHover(vortex.position);
           },
           onPointerOut: (event: { stopPropagation: () => void }) => {
@@ -2893,14 +2993,15 @@ function WorldVortexMarkers({
           },
           onClick: (event: { stopPropagation: () => void }) => {
             event.stopPropagation();
+            console.log("[DEBUG] vortex marker click", vortex.fullId, brushMode);
             if (brushMode) onBrushPlace();
           },
         };
         return (
           <group key={vortex.fullId}>
-            <mesh position={vortex.position as [number, number, number]} visible={false} {...pointerHandlers}>
-              <sphereGeometry args={[radius, 16, 16]} />
-              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            <mesh position={vortex.position as [number, number, number]} visible={worldVortexHitProxy(radius).visible} {...pointerHandlers}>
+              <sphereGeometry args={[worldVortexHitProxy(radius).radius, 16, 16]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
             </mesh>
             <mesh position={vortex.position as [number, number, number]}>
               <sphereGeometry args={[layout.pointRadius, 12, 12]} />
@@ -3173,7 +3274,13 @@ export function suggestionMenuItems(
   }));
 }
 
-const MARQUEE_DRAG_THRESHOLD_PX = 4;
+export const WORLD3D_MARQUEE_DRAG_THRESHOLD_PX = 4;
+const MARQUEE_DRAG_THRESHOLD_PX = WORLD3D_MARQUEE_DRAG_THRESHOLD_PX;
+
+/** @emoji 🖱️ Marquee may steal the pointer only after the click slop — otherwise r3f never sees the click. */
+export function world3dMarqueePointerCaptureArmed(distancePx: number): boolean {
+  return distancePx > MARQUEE_DRAG_THRESHOLD_PX;
+}
 
 /** @emoji 🎯️ Generic add/remove/toggle/replace merge, mirrors `selectionMergeIds` from `@semio-tech/ui-react` for non-string id sets. */
 function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, current: readonly T[], incoming: readonly T[]): T[] {
@@ -3388,6 +3495,82 @@ function resolveMarqueeInstanceIds(
   return hits;
 }
 
+/** @emoji 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners. */
+export function world3dProjectedAabbContainsClick(
+  click: { readonly x: number; readonly y: number },
+  corners: readonly (readonly [number, number])[],
+): boolean {
+  if (corners.length === 0) return false;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of corners) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  return click.x >= minX && click.x <= maxX && click.y >= minY && click.y <= maxY;
+}
+
+/** @emoji 🖱️ Nearest projected AABB that contains the click; empty space returns null. */
+export function resolveClickInstanceIdFromProjected(
+  click: { readonly x: number; readonly y: number },
+  candidates: readonly { readonly id: string; readonly corners: readonly (readonly [number, number])[]; readonly depth: number }[],
+): string | null {
+  let bestId: string | null = null;
+  let bestDepth = Infinity;
+  for (const candidate of candidates) {
+    if (!world3dProjectedAabbContainsClick(click, candidate.corners)) continue;
+    if (candidate.depth < bestDepth) {
+      bestDepth = candidate.depth;
+      bestId = candidate.id;
+    }
+  }
+  return bestId;
+}
+
+function resolveClickInstanceId(
+  instances: readonly WorldInstanceRecord[],
+  meshes: readonly WorldMeshRecord[],
+  click: SelectionMarqueePoint,
+  rect: DOMRect,
+  camera: import("three").Camera,
+): string | null {
+  const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
+  const cam = camera.position;
+  const candidates: { id: string; corners: readonly (readonly [number, number])[]; depth: number }[] = [];
+  instances.forEach((instance, index) => {
+    if (isRevealCutoffHidden(instance)) return;
+    const meshId = instance.meshId ?? instance.id;
+    const meshData = meshById.get(meshId)?.data;
+    const position = (instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0]) as [number, number, number];
+    const scale = (instance.scale ?? [1, 1, 1]) as [number, number, number];
+    const rotation = instance.rotation;
+    const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+    const localCorners = meshData && (meshData.positions.length >= 3 || (meshData.edgePositions?.length ?? 0) >= 3)
+      ? meshBoundsCorners(meshData)
+      : ([[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [0.5, 0.5, 0.5]] as const);
+    const worldCorners = localCorners.map((corner) => {
+      const v = new Vector3(corner[0] * scale[0], corner[1] * scale[1], corner[2] * scale[2]);
+      if (quaternion) v.applyQuaternion(quaternion);
+      v.add(new Vector3(position[0], position[1], position[2]));
+      return [v.x, v.y, v.z] as const;
+    });
+    const points = worldCorners.map((corner) => {
+      const screen = projectWorldPoint(corner, [0, 0, 0], camera, rect);
+      return [screen.x, screen.y] as const;
+    });
+    candidates.push({
+      id: instance.id,
+      corners: points,
+      depth: Math.hypot(position[0] - cam.x, position[1] - cam.y, position[2] - cam.z),
+    });
+  });
+  return resolveClickInstanceIdFromProjected(click, candidates);
+}
+
 function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefObject<import("three").Camera | null> }) {
   const camera = useThree((state) => state.camera);
   useEffect(() => {
@@ -3509,6 +3692,36 @@ function RaycasterPickTuning() {
     raycaster.params.Line = { threshold: 0.12 };
     raycaster.params.Points = { threshold: 0.08 };
   }, [raycaster]);
+  return null;
+}
+
+function WorldVortexHitStamp({
+  vortices,
+  hostRef,
+}: {
+  readonly vortices: readonly WorldVortexRecord[];
+  readonly hostRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
+  useFrame(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    const hits = vortices.map((vortex) => {
+      const projected = new Vector3(vortex.position[0], vortex.position[1], vortex.position[2]).project(camera);
+      return {
+        fullId: vortex.fullId,
+        x: vortex.position[0],
+        y: vortex.position[1],
+        z: vortex.position[2],
+        sx: Math.round((projected.x * 0.5 + 0.5) * size.width),
+        sy: Math.round((-projected.y * 0.5 + 0.5) * size.height),
+        ndcZ: Number(projected.z.toFixed(3)),
+      };
+    });
+    const next = JSON.stringify(hits);
+    if (el.getAttribute("data-vortex-hits") !== next) el.setAttribute("data-vortex-hits", next);
+  });
   return null;
 }
 
@@ -3937,9 +4150,20 @@ export function world3dHoverActionArgs(domainId: string, granularity: string, id
   return { domainId, channel: "pointer", targets: JSON.stringify(targets) };
 }
 
+/** @emoji ✨ Alt+right-click opens suggestions only when a vortex marker is already hovered. */
+export function world3dSuggestionsGestureArmed(altKey: boolean, hoveredVortexFullId: string | null | undefined): boolean {
+  return Boolean(altKey && hoveredVortexFullId);
+}
+
 /** 🖱️ Mirrors `nodeGraphSelectionActionArgs` for a world window bound to a framework interaction
  * domain — `merge` is passed through as already resolved at the call site (marquee/click modifier
  * state), not recomputed here. */
+
+/** @emoji 🖱️ Instance picks join a scene interaction domain only when the instance names a topology id. */
+export function world3dInstancePickUsesInteractionDomain(record: { readonly interactionId?: string } | undefined): boolean {
+  return typeof record?.interactionId === "string" && record.interactionId.length > 0;
+}
+
 export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: string) {
   const targets = ids.map((id) => ({ granularity, id }));
   return { domainId, targets: JSON.stringify(targets), merge, method: "pick" };
@@ -4193,6 +4417,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
   const instancesRef = useRef(instances);
   instancesRef.current = instances;
+  const meshesRef = useRef(meshes);
+  meshesRef.current = meshes;
+  const marqueeStartRef = useRef<SelectionMarqueePoint | null>(null);
   const vorticesRef = useRef(vortices);
   vorticesRef.current = vortices;
   const wasMarqueeDragRef = useRef(false);
@@ -4226,12 +4453,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, method]);
 
   const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) =>
+    (action: string, args?: Record<string, unknown>) => {
       onAction({
         controllerId: node.controllerId,
         action,
         args: { surfaceId: node.surfaceId, ...args },
-      }),
+      });
+    },
     [node.controllerId, node.surfaceId, onAction],
   );
 
@@ -4435,11 +4663,32 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // not yet placed in the scene — otherwise suggestions stay pending and never emit a 3D preview.
   const brushMeshUrls = useMemo(() => [...new Set([...meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)), ...(brushPreview?.meshUrl ? [brushPreview.meshUrl] : [])])], [brushPreview?.meshUrl, meshes]);
 
+  const handleFrameVisibleInstances = useCallback(() => {
+    const group = instancesGroupRef.current;
+    if (group) {
+      const box = new Box3().setFromObject(group);
+      if (!box.isEmpty()) {
+        const center = box.getCenter(new Vector3());
+        const size = box.getSize(new Vector3());
+        const radius = Math.max(size.x, size.y, size.z) * 0.5;
+        adoptViewportCamera(world3dFrameCameraFromBounds([center.x, center.y, center.z], radius, cameraState), true);
+        return;
+      }
+    }
+    adoptViewportCamera(world3dFrameCameraFromInstances(instances, cameraState), true);
+  }, [adoptViewportCamera, cameraState, instances]);
+
   const handleZoomToSelection = useCallback(() => {
     const selectedIds = new Set(selection.ids ?? []);
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {
+      handleFrameVisibleInstances();
+      return;
+    }
     const selected = instances.filter((instance) => selectedIds.has(instance.id));
-    if (selected.length === 0) return;
+    if (selected.length === 0) {
+      handleFrameVisibleInstances();
+      return;
+    }
     let centerX = 0;
     let centerY = 0;
     let centerZ = 0;
@@ -4472,7 +4721,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       },
       true,
     );
-  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, instances, selection.ids]);
+  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, handleFrameVisibleInstances, instances, selection.ids]);
 
   const handleWorldMenuDispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -4515,7 +4764,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
-      if (event.altKey && hoveredVortexFullIdRef.current) {
+      if (world3dSuggestionsGestureArmed(event.altKey, hoveredVortexFullIdRef.current)) {
         setVortexPointerArm(null);
         setConnectDragSource(null);
         setConnectDragHoverPosition(null);
@@ -4571,14 +4820,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     }, 120);
   }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
-  const fillBuildPending = Boolean(interaction.fillBuild && !interaction.fillBuild.done);
+  const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild);
   useEffect(() => {
-    if (!(activeUtility === "fill" && fillBuildPending)) return;
+    if (!fillBuildShouldTick) return;
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
+      if (!worldFillBuildHostTickAllowed(true, isolatedJobDriveIsActive(), takeIsolatedJobUiPoll())) return undefined;
       return dispatch("fillBuildTick");
     }, 120);
-  }, [activeUtility, dispatch, fillBuildPending]);
+  }, [activeUtility, dispatch, fillBuildShouldTick, interaction.fillBuild]);
 
   const selectionArgs = useCallback(
     () => ({
@@ -4597,7 +4847,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       if (interactionDomainId) {
-        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, [record?.interactionId ?? id], merge));
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, "object", [record?.interactionId ?? id], merge));
         return;
       }
       if (selectionMode === "mesh" || selectionMode === "object") {
@@ -4660,6 +4910,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleVortexHover = useCallback(
     (fullId: string | null) => {
+      hoveredVortexFullIdRef.current = fullId;
       dispatchVortexHover(fullId);
     },
     [dispatchVortexHover],
@@ -4765,6 +5016,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleBrushPlace = useCallback(() => {
     const args = brushObjectPlacementArgs(brushPreview);
+    console.log("[DEBUG] world dispatch addBrushObject", args);
     if (!args) return;
     dispatch("addBrushObject", args);
   }, [brushPreview, dispatch]);
@@ -4991,8 +5243,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       }
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       marqueeFinalizeOnceRef.current = false;
-      setMarqueePath([toLocalPoint(event)]);
-      event.currentTarget.setPointerCapture?.(event.pointerId);
+      const start = toLocalPoint(event);
+      marqueeStartRef.current = start;
+      setMarqueePath([start]);
     },
     [dispatch, node.surfaceId, paintMode, selection.engagementSessionActive, toLocalPoint],
   );
@@ -5015,8 +5268,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       if (!marqueeDown) return;
+      const local = toLocalPoint(event);
+      const start = marqueeStartRef.current;
+      if (start && world3dMarqueePointerCaptureArmed(Math.hypot(local.x - start.x, local.y - start.y))) {
+        if (!event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        }
+      }
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
-      setMarqueePath((path) => [...path, toLocalPoint(event)]);
+      setMarqueePath((path) => [...path, local]);
     },
     [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint],
   );
@@ -5028,8 +5288,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     marqueeFinalizeOnceRef.current = true;
     if (preview.mergedInstanceIds?.length) {
       setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
+      const domainTargets = interactionTargetsForInstances(instancesRef.current, preview.mergedInstanceIds);
       const marqueeSelect = interactionDomainId
-        ? dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, interactionTargetsForInstances(instancesRef.current, preview.mergedInstanceIds), "replace"))
+        ? dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, "object", domainTargets, "replace"))
         : dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" });
       void Promise.resolve(marqueeSelect).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
@@ -5077,11 +5338,25 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       finalizeMarqueeSelection();
+      if (!marqueeDragActiveRef.current && !paintMode && !selection.engagementSessionActive && !worldInstancePickBlocked(activeUtility)) {
+        const host = hostRef.current;
+        const camera = cameraRef.current;
+        if (host && camera) {
+          const rect = host.getBoundingClientRect();
+          const local = toLocalPoint(event);
+          const id = resolveClickInstanceId(instancesRef.current, meshesRef.current, local, rect, camera);
+          if (id) {
+            const index = instancesRef.current.findIndex((entry) => entry.id === id);
+            handleInstancePointerDown(id, index < 0 ? 0 : index, event);
+          }
+        }
+      }
       if (paintStrokeActive) {
         dispatch("paintStrokeEnd");
         setPaintStrokeActive(false);
       }
       setMarqueePath([]);
+      marqueeStartRef.current = null;
       setVortexPointerArm(null);
       if (connectDropConsumedRef.current) {
         connectDropConsumedRef.current = false;
@@ -5089,7 +5364,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleConnectDragCancel();
       }
     },
-    [faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, node.surfaceId, paintStrokeActive],
+    [activeUtility, dispatch, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
   );
 
   useEffect(() => {
@@ -5284,6 +5559,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       data-meshes-json={scene.meshesJson ?? undefined}
       data-instances-json={scene.instancesJson ?? undefined}
+      data-vortices-json={scene.vorticesJson ?? undefined}
       data-status-json={scene.statusJson ?? undefined}
       onContextMenu={(event) => {
         if (event.altKey || !requestContextMenu) return;
@@ -5331,6 +5607,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           <>
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
             <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
+            <div className="pointer-events-auto absolute left-3 top-3 z-40" data-slot="world-frame-instances">
+              <button
+                id={`world3d-frame-instances-${windowInstanceId ?? node.surfaceId}`}
+                type="button"
+                className={cn("pointer-events-auto rounded px-2 py-1 text-xs shadow-sm", glassClass)}
+                data-level="pane"
+                onClick={handleFrameVisibleInstances}
+              >
+                Frame
+              </button>
+            </div>
             {computing ? (
               <div className={cn("pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded px-2 py-1 text-xs shadow-sm", glassClass)} data-level="pane" role="status" aria-busy="true">
                 <Spinner size="small" />
@@ -5392,6 +5679,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleAutoFitCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
+            <WorldVortexHitStamp vortices={displayVortices} hostRef={hostRef} />
             {windowInstanceId ? (
               <IntroductionWorldResolverBridge windowInstanceId={windowInstanceId} vortices={vortices} instances={instances} attractions={attractions} />
             ) : null}
@@ -5489,10 +5777,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           </WorldLodBridge>
         </WorldOrbitViewSnapGateProvider>
       </WorldCanvas>
-      {marqueeDragActive && marqueeStart && marqueeEnd ? (
-        method === "lasso" ? (
-          <SelectionMarquee coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
-        ) : (
+      {marqueeDragActive && marqueeStart && marqueeEnd && world3dMarqueeOverlayShape(method) === "polygon" ? (
+        <SelectionMarquee coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
+      ) : marqueeDragActive && marqueeStart && marqueeEnd && world3dMarqueeOverlayShape(method) === "rect" ? (
           <SelectionMarquee
             coverage={marqueeCoverage}
             shape="rect"
@@ -5503,7 +5790,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               height: Math.abs(marqueeEnd.y - marqueeStart.y),
             }}
           />
-        )
       ) : null}
       <ContextMenuController
         title={contextMenuTitleLabel}

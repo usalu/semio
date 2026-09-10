@@ -28,7 +28,7 @@ pub enum FlowNodeGraphEditOp {
 /// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
 /// `interaction_topology`.
-fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, NoConfigMutation> {
+pub fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, NoConfigMutation> {
     let artifact_mutations = host_operations(fixture, config, session, |host| {
         let mut changed = false;
         for sub_operation in operations {

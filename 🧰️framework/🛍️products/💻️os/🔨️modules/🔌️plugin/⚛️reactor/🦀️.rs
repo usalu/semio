@@ -362,6 +362,10 @@ struct ReactorCloseState {
     command_ingress_complete: bool,
     requests_complete: bool,
     resumes_complete: bool,
+    /// ✅️ `cancel_instance_tasks_step`'s own completion witness. The cursor alone cannot stand in
+    /// for it: the executor answers `Complete` without advancing its cursor whenever the sweep has
+    /// nothing left to visit, so a cursor-bound loop condition never terminates (26/09/09).
+    tasks_complete: bool,
     timers_complete: bool,
     metadata_complete: bool,
 }
@@ -731,12 +735,42 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
         Ok(dsl::DslValue::Object(object)) => object,
         _ => Vec::new(),
     };
-    fields.retain(|(key, _)| key != "ok" && key != "outputJson" && key != "faultCode" && key != "faultMessage");
-    match outcome {
-        Ok(bytes) => {
-            fields.push(("ok".to_string(), dsl::DslValue::Bool(true)));
-            fields.push(("outputJson".to_string(), dsl::DslValue::String(String::from_utf8_lossy(bytes).into_owned())));
+    fields.retain(|(key, value)| {
+        if key == "ok" || key == "outputJson" || key == "faultCode" || key == "faultMessage" {
+            return false;
         }
+        // 📏️ CORRELATION, not the body: the SDK echoes the app's own request fields back so the
+        // response action can find its node/window/handle again, and a request BODY (a serialized
+        // operator input, a geometry blob) is not correlation — echoing it would carry the payload
+        // into the guest a second time, on top of the outcome
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The bound is the one every structurally
+        // addressed argument already crosses: a string the shell could not have SENT as a command
+        // argument is not a string this may hand back as one.
+        let over_bound = matches!(value, dsl::DslValue::String(text) if text.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
+        if over_bound && semio_framework_trace::runtime_diagnostics_enabled() {
+            eprintln!("[DEBUG] extension response dropped the oversized request field {key:?} from the echoed correlation");
+        }
+        !over_bound
+    });
+    match outcome {
+        // 📦️ The ABI carries the answer as a `pack` (`🔌️plugin/🧬️schema/📜️.wit`'s `type pack =
+        // list<u8>`: "no JSON string … anywhere on this ABI's data path"), so the SDK DECODES it
+        // into the response action's declared `outputJson` text. Lossy-stringifying the container
+        // bytes instead — which is what this did — handed every browser-served answer to the app as
+        // mojibake, because the shell packs (`encodePackValue(JSON.parse(outputJson))`,
+        // `🏛️ShellHost/🟦️.tsx`) while only a native fixture ever sent raw JSON
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        Ok(bytes) => match store::pack_rt::decode_wire_value(bytes) {
+            Ok(value) => {
+                fields.push(("ok".to_string(), dsl::DslValue::Bool(true)));
+                fields.push(("outputJson".to_string(), dsl::DslValue::String(dsl::json::to_json_string(&value))));
+            }
+            Err(error) => {
+                fields.push(("ok".to_string(), dsl::DslValue::Bool(false)));
+                fields.push(("faultCode".to_string(), dsl::DslValue::String("extension.answer-not-a-pack".to_string())));
+                fields.push(("faultMessage".to_string(), dsl::DslValue::String(format!("{} answer bytes are not a pack wire value: {error}", bytes.len()))));
+            }
+        },
         Err(fault) => {
             fields.push(("ok".to_string(), dsl::DslValue::Bool(false)));
             fields.push(("faultCode".to_string(), dsl::DslValue::String(fault.code.0.clone())));
@@ -750,10 +784,21 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> Option<(u32, String, dsl::DslValue)> {
-    let continuation = REGISTRY.with(|registry| registry.take_continuation(req))?;
-    let args = extension_response_args(&continuation.request_json, outcome);
-    Some((continuation.instance, continuation.response_action, args))
+pub(crate) fn take_extension_response(
+    req: semio_framework::kernel::RequestId,
+    terminal: Result<Vec<u8>, semio_framework::Fault>,
+) -> Result<(u32, String, dsl::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+    let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
+    let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
+    Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
+}
+
+/// 📄️ Accumulates one PROLOGUE page of `req`'s answer — the door a host answer larger than one
+/// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives through, whose terminal page rides the
+/// `Event::Completed` that answers the request. `false` means `req` owns no continuation and the
+/// caller must fall through to the parked-future chunk path.
+pub(crate) fn append_extension_response_page(req: semio_framework::kernel::RequestId, bytes: &[u8]) -> bool {
+    REGISTRY.with(|registry| registry.append_continuation_chunk(req, bytes)) == requests::ContinuationChunkStep::Accumulated
 }
 //#endregion 🔖️ExtensionContinuation
 
@@ -916,6 +961,7 @@ fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), s
         command_ingress_complete: false,
         requests_complete: false,
         resumes_complete: false,
+        tasks_complete: false,
         timers_complete: false,
         metadata_complete: false,
     };
@@ -996,8 +1042,8 @@ fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
         } else if !state.resumes_complete {
             state.resumes_complete = TASK_RESUMES.with(|resumes| resumes.borrow_mut().cancel_instance_step(state.instance, &mut state.resume_remaining));
             false
-        } else if state.task_cursor < REACTOR_TASK_SLOTS {
-            cancel_instance_tasks_step(state.instance, &mut state.task_cursor);
+        } else if !state.tasks_complete {
+            state.tasks_complete = cancel_instance_tasks_step(state.instance, &mut state.task_cursor);
             false
         } else if !state.timers_complete {
             state.timers_complete = ARMED_TIMERS.with(|timers| timers.borrow_mut().cancel_instance_step(state.instance, &mut state.timer_cursor));
@@ -1123,6 +1169,8 @@ pub use wit_bridge::poll;
 #[path = "🔄️turn/🦀️.rs"]
 mod turn;
 pub use turn::poll_kernel;
+pub use turn::retained_command_ingress_occupancy;
+pub use turn::{last_turn_more_work_sources, TurnMoreWorkSources};
 
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 mod wit_bridge {

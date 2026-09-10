@@ -19,6 +19,22 @@ mod runtime_close_budget_tests {
         assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress));
     }
 
+    /// ⏳️ LAW: a pending close authority is a WAIT, never a fault — the close ladder keeps stepping
+    /// until its external owner lets go, and the wait never consumes structural livelock credit.
+    /// Before 2026-09-10 the close job turned `Blocked` into `StepOutcome::Fault`, which surfaced as
+    /// `plugin.reactor-close-authority: native close terminal unavailable` and left generation3d
+    /// unable to ever reach `Retired`.
+    #[test]
+    fn pending_close_authority_waits_without_consuming_structural_close_credit() {
+        for progress in [crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" }, crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" }] {
+            let stalled = AtomicU8::new(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT - 1);
+            for _ in 0..1_024 {
+                assert_eq!(runtime_close_nonterminal_status(false, Some(progress), &stalled), RuntimeCloseStatus::ExternalWait);
+            }
+            assert_eq!(stalled.load(Ordering::SeqCst), 0);
+        }
+    }
+
     #[test]
     fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
         let stalled = AtomicU32::new(0);

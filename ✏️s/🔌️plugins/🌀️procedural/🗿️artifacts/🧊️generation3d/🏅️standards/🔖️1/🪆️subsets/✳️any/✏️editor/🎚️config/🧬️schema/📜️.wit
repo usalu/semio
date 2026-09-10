@@ -1,0 +1,35 @@
+package semio:procedural-generation3d-editor-config@1.0.0;
+
+/// 🎚️ The language-neutral surface of `Generation3dConfig` — the persisted per-instance state of the
+/// 3D editor. Two cameras, not one: `camera` frames the flow graph window, `preview-camera` the 3D
+/// preview, and the two move independently.
+interface config {
+    /// 🕸️ The flow-graph camera (`CameraJson` in the artifact schema): a 2D pan/zoom frame.
+    record graph-camera {
+        x: f64,
+        y: f64,
+        zoom: f64,
+    }
+
+    /// 📷️ The 3D preview camera. `position` and `target` are exactly three doubles, in metres.
+    record preview-camera {
+        position: list<f64>,
+        target: list<f64>,
+        fov: f64,
+    }
+
+    /// 🎚️ The persisted editor state.
+    record editor-config {
+        lod-mode: string,
+        show-mode: string,
+        camera: graph-camera,
+        preview-camera: preview-camera,
+        sun-json: string,
+        selected-generation-id: string,
+    }
+}
+
+/// 🌍️ The world one 3D editor instance's configuration store exports.
+world generation3d-editor-config {
+    export config;
+}

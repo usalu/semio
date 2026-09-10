@@ -141,7 +141,7 @@ fn board_surface_close_freezes_registration_and_reaches_nonopaque_terminal() {
     let mut registry = EngineSurfaceRegistry::default();
     let token = registry.reserve("board-close").expect("fixed surface reservation");
     let mut surface = empty_engine_surface(800, 600);
-    surface.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::BoardHost::default()));
+    surface.board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default()));
     assert!(registry.publish_reserved(token, surface).is_ok());
     assert!(registry.begin_close(token));
     assert!(registry.get("board-close").is_none());
@@ -211,41 +211,6 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
 }
 
 #[cfg(test)]
-fn ensure_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let needs_create = !map.contains_key(surface_id);
-        let needs_resize = map.get(surface_id).is_some_and(|entry| entry.width != pw.max(1) || entry.height != ph.max(1));
-        if needs_create {
-            let Some(token) = map.reserve(surface_id) else {
-                return None;
-            };
-            let surface = empty_engine_surface(pw, ph);
-            if map.publish_reserved(token, surface).is_err() {
-                map.faulted = true;
-                return None;
-            }
-        }
-        if needs_resize {
-            let Some(entry) = map.get_mut(surface_id) else {
-                map.faulted = true;
-                return None;
-            };
-            let Some(metrics_generation) = entry.metrics_generation.checked_add(1) else {
-                map.faulted = true;
-                return None;
-            };
-            entry.width = pw.max(1);
-            entry.height = ph.max(1);
-            entry.metrics_generation = metrics_generation;
-        }
-        let identity = map.identity(surface_id)?;
-        let metrics_generation = map.get(surface_id)?.metrics_generation;
-        Some(EngineSurfaceSnapshot { identity, metrics_generation })
-    })
-}
-
-#[cfg(test)]
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
@@ -303,7 +268,7 @@ pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f3
 #[test]
 fn saturated_map_action_queue_preserves_host_revision_and_camera() {
     let surface_id = "map-plan-saturation";
-    ensure_surface(surface_id, 800, 600);
+    ensure_engine_surface(surface_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).unwrap().map_host = Some(MapHost::new()));
     let before = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut input = ui_wgpu::wgpu::InputState::default();
@@ -328,7 +293,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     }
 
     let graph_id = "graph-plan-saturation";
-    ensure_surface(graph_id, 800, 600);
+    ensure_engine_surface(graph_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(graph_id).unwrap().node_graph = Some(NodeGraphEngine::Dag(GraphHost::default())));
     let graph_before = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
@@ -358,8 +323,8 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     assert_eq!(graph_selection_after, graph_selection_before);
 
     let board_id = "board-plan-saturation";
-    ensure_surface(board_id, 800, 600);
-    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::BoardHost::default())));
+    ensure_engine_surface(board_id, 800, 600);
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default())));
     let board_before = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut board_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut board_input);

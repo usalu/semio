@@ -913,7 +913,7 @@ mod semantic_document_tests {
     }
 
     fn command_request(instance: u32, generation: u64, page_count: usize) -> KernelRequest {
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new(page_count).unwrap();
         for index in 0..page_count {
             let page = if index + 1 == page_count {
                 semio_framework::kernel::FixedCommandPage::try_copy_from(b"tail").unwrap()

@@ -2,22 +2,24 @@
 /** @emoji 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
 
 import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🔌️browser-interactive-job-port/🟦️.ts";
+import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict } from "../⏱️turn-budget/🟦️.ts";
+import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootSilence, evaluateBrowserBootLiveness, type BrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-/** @emoji ⏳️ A boot STALL bound, not a total-boot deadline: every `boot-progress` the Worker reports is
- * proof of liveness and rearms it. The `s` boot plan mounts 57 plugin modules one macrotask at a time, so a
- * healthy cold boot legitimately outruns any fixed total budget, while a Worker that stops reporting still
- * fails closed within this window. */
-/** @emoji ⏳️ Outer bound on a SILENT boot worker. Raised from 15 s so it stays above the browser-owned
- * step ceiling the worker enforces (30 s) — otherwise a single legitimate blocking step, which cannot post
- * `boot-liveness` while it blocks, trips this before its own budget. A worker that yields keeps re-arming
- * this via `boot-liveness`, so a genuinely wedged one still dies here. */
-export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 60_000;
+/** @emoji ⏳️ Outer bound on a Worker that is silent AND has declared no long phase — the only state that
+ * is really a wedged event loop. It is NOT a total-boot deadline and no longer a bare stall bound either:
+ * a Worker blocked inside a browser-owned compile cannot post anything, so silence alone was never
+ * evidence of death. The law, its per-phase ceilings and its diagnosis live in `../🫀️boot-liveness/🟦️.ts`;
+ * this mirror exists so a reader of the transport sees the ceiling its watchdog is priced against. */
+export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs;
 export const FRAME_WORKER_POINTER_CAPACITY = 16;
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
-export const FRAME_UI_TURN_BUDGET_MS = 2;
+/** @emoji ⏱️ Re-exported so a reader of the transport sees the ceiling its turns are priced against;
+ * the law itself — executing-time pricing and the sustained-run attribution — lives in
+ * `../⏱️turn-budget/🟦️.ts`. */
+export const FRAME_UI_TURN_BUDGET_MS = UI_TURN_BUDGET_MS;
 export const FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
 export const FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 10_000;
 
@@ -33,13 +35,38 @@ export type BrowserFrameWorkerFaultCode =
   | "worker-present-failed"
   | "worker-input-failed"
   | "worker-message-failed"
-  | "ui-turn-overrun"
+  | "ui-hook-failed"
+  | "interactive-job-violation"
   | "protocol-violation"
   | "replaceable-overflow"
   | "lossless-overflow"
   | "transport-closed";
 
 export type BrowserFrameWorkerStatus = "booting" | "ready" | "quarantined" | "faulted" | "closed";
+
+/** @emoji 🪂️ The surface's REAL fallback state, reported instead of asserting one. `uiThreadFrames` is
+ * `unavailable-offscreen-transferred` by construction on this path: `transferControlToOffscreen()`
+ * detaches the canvas from the UI isolate, so no UI-thread frame path exists to attempt afterwards —
+ * a fact the fault banner must state rather than imply a fallback was skipped by choice. The remaining
+ * fields say what the surface actually did: whether the Worker still holds the canvas, whether input is
+ * still admitted, and the surface's own UI-turn ledger. */
+export type BrowserFrameFallbackState = {
+  readonly surface: BrowserFrameWorkerStatus;
+  readonly uiThreadFrames: "unavailable-offscreen-transferred";
+  readonly workerTerminated: boolean;
+  readonly inputAccepted: boolean;
+  readonly deferredCadence: boolean;
+  readonly uiTurns: TurnLedgerSnapshot;
+  /** @emoji 🧵️ The frame Worker's own step ledger, so a banner reports which isolate ran long. */
+  readonly workerSteps: BrowserFrameWorkerStepReport;
+  /** @emoji 🧭️ The long boot phase the Worker had declared and not yet left, with how long it had been in
+   * flight — so a fault card names the work that was actually running instead of only the last stage that
+   * happened to fit into a `boot-progress` before the isolate blocked. */
+  readonly bootPhase: BrowserBootPhase | undefined;
+  readonly bootPhaseElapsedMs: number;
+  readonly bootStage: string;
+  readonly bootSilentForMs: number;
+};
 
 export type BrowserFramePointer = {
   readonly pointerId: number;
@@ -108,9 +135,26 @@ export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shar
 
 export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | { readonly kind: "close"; readonly lifecycle: number };
 
+/** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
+ * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
+ * (`../⏱️turn-budget/🟦️.ts`), so this is a MEASUREMENT the boot UI renders — never a verdict. */
+export type BrowserFrameWorkerStepReport = {
+  readonly degraded: boolean;
+  readonly recordedOverruns: number;
+  readonly sustainedOverruns: number;
+  readonly worstStepMs: number;
+  readonly worstStepSite: string;
+};
+
 export type BrowserFrameWorkerMessage =
-  | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number }
+  | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport }
   | { readonly kind: "boot-liveness"; readonly lifecycle: number }
+  /** @emoji 🧭️ The Worker DECLARING that it is about to block on one browser-owned phase, posted while its
+   * event loop still runs so the declaration always arrives — and withdrawing it when the phase ends. This
+   * is what lets the watchdog tell a busy Worker from a wedged one: a `WebAssembly` compile of the 76 MB
+   * renderer, `semioWgpuWorkerBootstrap`'s synchronous prologue and one Rust bootstrap phase all stop the
+   * Worker's liveness ticker dead, so silence during a declared phase proves nothing. */
+  | { readonly kind: "boot-phase"; readonly lifecycle: number; readonly phase: string; readonly state: "enter" | "leave"; readonly elapsedMs?: number }
   | { readonly kind: "booted"; readonly lifecycle: number }
   | { readonly kind: "wake"; readonly lifecycle: number }
   | {
@@ -123,6 +167,9 @@ export type BrowserFrameWorkerMessage =
       readonly requestFrame: boolean;
       readonly progress: number;
       readonly workerDurationMs: number;
+      /** @emoji ⏳️ The step's EXECUTING milliseconds — what the Worker's own ledger priced. */
+      readonly workerExecutingMs: number;
+      readonly workerStepVerdict: TurnVerdict;
       readonly quarantined?: boolean;
       readonly faultCode?: string;
       readonly faultDetail?: string;
@@ -156,9 +203,11 @@ export type BrowserFrameTransportOptions = {
   readonly setTimer?: (callback: () => void, delayMs: number) => number;
   readonly clearTimer?: (handle: number) => void;
   readonly onReady?: () => void;
-  readonly onProgress?: (stage: string, progress: number) => void;
+  readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
   readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
-  readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string) => void;
+  readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
+  /** @emoji 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
+  readonly onUiTurn?: (outcome: TurnOutcome) => void;
   readonly requestAnimationFrame?: (callback: FrameRequestCallback) => number;
   readonly cancelAnimationFrame?: (handle: number) => void;
 };
@@ -185,9 +234,14 @@ export class BrowserFrameTransport {
   private readonly clearTimer: (handle: number) => void;
   private readonly setTimer: (callback: () => void, delayMs: number) => number;
   private readonly onReady?: () => void;
-  private readonly onProgress?: (stage: string, progress: number) => void;
+  private readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
+  /** @emoji 🧵️ The frame Worker's last reported step ledger — a measurement the boot UI renders. */
+  private workerSteps: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
+  /** @emoji 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
+  private workerStepOverruns = 0;
   private readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
-  private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string) => void;
+  private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
+  private readonly onUiTurn?: (outcome: TurnOutcome) => void;
   private readonly requestRaf?: (callback: FrameRequestCallback) => number;
   private readonly cancelRaf?: (handle: number) => void;
   private readonly pointerIds = new Array<number>(FRAME_WORKER_POINTER_CAPACITY);
@@ -205,15 +259,27 @@ export class BrowserFrameTransport {
   private frameRequested = false;
   private rafHandle: number | undefined;
   private bootTimer: number | undefined;
+  /** @emoji 🫀️ The last instant ANY message arrived from the frame Worker — the clock silence is measured
+   * against. `NEGATIVE_INFINITY` until the Worker speaks for the first time, so "never sent a single
+   * message" stays distinguishable from "went quiet". */
+  private lastLivenessAtMs = Number.NEGATIVE_INFINITY;
+  private bootStage = "";
+  private bootPhase: BrowserBootPhase | undefined;
+  private bootStartedAtMs = 0;
+  private readonly locale: "en" | "de";
   private closeRequested = false;
-  private readonly uiTurnSamples = new Float64Array(64);
-  private uiTurnSampleCount = 0;
+  private readonly uiTurns = new TurnLedger();
+  private readonly uiTurnClock: TurnClock;
+  private deferredWork: (() => void)[] = [];
+  private deferredScheduled = false;
   private readonly introspections = new Map<number, { readonly resolve: (json: string | null) => void; readonly timer: number }>();
   private nextIntrospectionId = 1;
 
   constructor(options: BrowserFrameTransportOptions) {
     this.worker = options.worker;
     this.now = options.now ?? (() => performance.now());
+    this.locale = options.boot.locale === "de" ? "de" : "en";
+    this.bootStartedAtMs = this.now();
     const setTimer = options.setTimer ?? ((callback, delayMs) => window.setTimeout(callback, delayMs));
     this.setTimer = setTimer;
     this.clearTimer = options.clearTimer ?? ((handle) => window.clearTimeout(handle));
@@ -221,13 +287,15 @@ export class BrowserFrameTransport {
     this.onProgress = options.onProgress;
     this.onDirectives = options.onDirectives;
     this.onFault = options.onFault;
+    this.onUiTurn = options.onUiTurn;
+    this.uiTurnClock = new TurnClock(this.now);
     this.requestRaf = options.requestAnimationFrame;
     this.cancelRaf = options.cancelAnimationFrame;
-    this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("ui-turn-overrun", detail), (callback) => void this.setTimer(callback, 0));
+    this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("interactive-job-violation", detail), (callback) => void this.setTimer(callback, 0));
     this.worker.onmessage = (event) => this.receive(event.data);
     this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
     this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
-    this.armBootStallTimer();
+    this.armBootWatchdog(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs);
     try {
       this.worker.postMessage({ kind: "boot", lifecycle: this.lifecycle, ...options.boot }, [options.boot.canvas]);
     } catch (error) {
@@ -320,12 +388,12 @@ export class BrowserFrameTransport {
     const sequence = ++this.sequence;
     this.inFlight = true;
     try {
-      const startedAt = this.now();
+      this.uiTurnClock.enter();
       this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, sequence, generation: this.generation, timestampMs, replaceable, lossless });
-      const duration = this.now() - startedAt;
-      if (!this.observeUiTurn("frame-transfer", duration)) return false;
+      this.observeUiTurn("frame-transfer", this.uiTurnClock.leave());
       return true;
     } catch (error) {
+      this.uiTurnClock.leave();
       this.fail("worker-message-failed", error instanceof Error ? error.message : String(error));
       return false;
     }
@@ -370,29 +438,102 @@ export class BrowserFrameTransport {
     this.status = "closed";
   }
 
-  /** @emoji ⏱️ Records fixed-ring callback telemetry and quarantines the surface owner on budget breach. */
-  observeUiTurn(site: string, durationMs: number): boolean {
-    this.uiTurnSamples[this.uiTurnSampleCount % this.uiTurnSamples.length] = durationMs;
-    this.uiTurnSampleCount++;
-    if (durationMs < FRAME_UI_TURN_BUDGET_MS) return true;
-    if (this.status === "quarantined" || this.status === "faulted" || this.status === "closed") return false;
-    const detail = `${site} UI turn took ${durationMs.toFixed(3)} ms`;
-    if (this.status === "ready") this.quarantine("ui-turn-overrun", detail);
-    else this.fail("ui-turn-overrun", detail);
-    return false;
+  /** @emoji ⏱️ Prices ONE UI turn and records it. Never a verdict: an overrun cannot quarantine, fail or
+   * close this surface, because on the UI isolate a wall reading over the ceiling is as often the machine
+   * descheduling a hidden pane as it is the turn's own work — the attribution lives in `TurnLedger`'s
+   * sustained-run law, and its only consequence is deferred cadence. Answers whether the turn was
+   * admitted, so a caller may choose to defer its remaining work to the next frame. */
+  observeUiTurn(site: string, executingMs: number | undefined): boolean {
+    const outcome = this.uiTurns.admit(site, executingMs);
+    if (outcome.verdict !== "admitted" && outcome.verdict !== "clock-fault") this.onUiTurn?.(outcome);
+    return outcome.verdict === "admitted" || outcome.verdict === "clock-fault";
+  }
+
+  /** @emoji 🐢️ Whether the surface is running its turns on deferred cadence after a sustained run of
+   * overruns. Clears itself on the first turn that fits the ceiling again. */
+  degraded(): boolean {
+    return this.uiTurns.degraded();
+  }
+
+  /** @emoji 🪂️ The surface's real fallback state — what a fault banner must report instead of claiming
+   * a UI-thread frame path was or was not attempted. */
+  fallbackState(): BrowserFrameFallbackState {
+    return {
+      surface: this.status,
+      uiThreadFrames: "unavailable-offscreen-transferred",
+      workerTerminated: this.status === "faulted" || this.status === "closed",
+      inputAccepted: this.accepting(),
+      deferredCadence: this.uiTurns.degraded(),
+      uiTurns: this.uiTurns.snapshot(),
+      workerSteps: { ...this.workerSteps, sustainedOverruns: this.workerSteps.sustainedOverruns + this.workerStepOverruns },
+      bootPhase: this.bootPhase,
+      bootPhaseElapsedMs: this.bootPhase ? Math.max(0, this.now() - this.bootPhase.enteredAtMs) : 0,
+      bootStage: this.bootStage,
+      bootSilentForMs: Math.max(0, this.now() - (Number.isFinite(this.lastLivenessAtMs) ? this.lastLivenessAtMs : this.bootStartedAtMs)),
+    };
   }
 
   /** @emoji 📊 Returns bounded fixed-ring p99 telemetry outside the event callback path. */
   uiTurnP99Ms(): number {
-    const count = Math.min(this.uiTurnSampleCount, this.uiTurnSamples.length);
-    if (count === 0) return 0;
-    const samples = Array.from(this.uiTurnSamples.subarray(0, count)).sort((left, right) => left - right);
-    return samples[Math.min(count - 1, Math.ceil(count * 0.99) - 1)]!;
+    return this.uiTurns.p99Ms();
   }
 
-  private armBootStallTimer(): void {
+  /** @emoji ⏭️ Yields and continues: hands the remainder of an overrunning turn to the next macrotask so
+   * the isolate can paint and pump input between the pieces. Bounded by the caller's own queue — the
+   * transport enqueues at most one continuation per hook site. */
+  private deferToNextTurn(work: () => void): void {
+    this.deferredWork.push(work);
+    if (this.deferredScheduled) return;
+    this.deferredScheduled = true;
+    void this.setTimer(() => {
+      this.deferredScheduled = false;
+      const pending = this.deferredWork;
+      this.deferredWork = [];
+      for (const item of pending) {
+        if (this.status === "closed") return;
+        this.uiTurnClock.enter();
+        try {
+          item();
+        } catch (error) {
+          this.uiTurnClock.leave();
+          this.fail("ui-hook-failed", `deferred UI turn threw: ${error instanceof Error ? error.message : String(error)}`);
+          return;
+        }
+        this.observeUiTurn("deferred-hook", this.uiTurnClock.leave());
+      }
+    }, 0);
+  }
+
+  /** @emoji 🫀️ Arms ONE self-rescheduling watchdog wake. Nothing re-arms it on every inbound message any
+   * more: a message only stamps {@link lastLivenessAtMs}, and the wake below re-reads the whole window and
+   * schedules itself for the exact remaining time. One timer for the whole boot instead of one per
+   * `boot-progress`, and the deadline is exact rather than a whole window late. */
+  private armBootWatchdog(delayMs: number): void {
     if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
-    this.bootTimer = this.setTimer(() => this.fail("worker-boot-timeout", `Worker reported no boot progress for ${FRAME_WORKER_BOOT_STALL_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_STALL_TIMEOUT_MS);
+    this.bootTimer = this.setTimer(() => this.judgeBootLiveness(), Math.max(0, delayMs));
+  }
+
+  /** @emoji ⚖️ One watchdog window, decided by `../🫀️boot-liveness/🟦️.ts` and never here — so the same
+   * verdict replays from a timeline with no transport in the picture. A declared long phase inside its own
+   * ceiling is BUSY and re-arms; only an undeclared silence past the ceiling is a wedged event loop, and
+   * the fault it raises names the phase, its elapsed and its ceiling in the reader's tongue. */
+  private judgeBootLiveness(): void {
+    this.bootTimer = undefined;
+    if (this.status !== "booting") return;
+    const nowMs = this.now();
+    const window = { nowMs, lastLivenessAtMs: this.lastLivenessAtMs, silenceTimeoutMs: FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs, phase: this.bootPhase };
+    const decision = evaluateBrowserBootLiveness(window);
+    if (!decision.terminate) {
+      this.armBootWatchdog(decision.rearmInMs);
+      return;
+    }
+    const detail = describeBrowserBootSilence({ heard: Number.isFinite(this.lastLivenessAtMs), lastStage: this.bootStage, silentForMs: decision.silentForMs, silenceTimeoutMs: window.silenceTimeoutMs, phase: this.bootPhase, phaseElapsedMs: decision.phaseElapsedMs }, this.locale);
+    this.fail("worker-boot-timeout", detail);
+  }
+
+  /** @emoji 🫀️ Stamps the instant the Worker last proved it was running. */
+  private witnessWorker(): void {
+    this.lastLivenessAtMs = this.now();
   }
 
   private accepting(): boolean {
@@ -456,6 +597,8 @@ export class BrowserFrameTransport {
     if (message.kind === "booted") {
       if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
       this.bootTimer = undefined;
+      this.bootPhase = undefined;
+      this.witnessWorker();
       this.status = "ready";
       this.interactiveJobs.ready();
       if (!this.runUiHook("ready-hook", () => this.onReady?.())) return;
@@ -463,13 +606,24 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.kind === "boot-liveness") {
-      if (this.status === "booting") this.armBootStallTimer();
+      if (this.status === "booting") this.witnessWorker();
+      return;
+    }
+    if (message.kind === "boot-phase") {
+      if (this.status !== "booting") return;
+      this.witnessWorker();
+      if (message.state === "enter") this.bootPhase = { phase: message.phase, ceilingMs: bootPhaseCeilingMs(message.phase), enteredAtMs: this.now() };
+      else if (this.bootPhase?.phase === message.phase) this.bootPhase = undefined;
       return;
     }
     if (message.kind === "boot-progress") {
       if (this.status !== "booting") return;
-      this.armBootStallTimer();
-      this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
+      this.witnessWorker();
+      this.bootStage = message.stage;
+      this.workerSteps = message.worker;
+      const report = () => this.onProgress?.(message.stage, message.progress, message.worker);
+      if (this.degraded() || message.worker.degraded) this.deferToNextTurn(report);
+      else this.runUiHook("progress-hook", report);
       return;
     }
     if (message.kind === "wake") {
@@ -486,9 +640,10 @@ export class BrowserFrameTransport {
     }
     if (message.sequence <= this.acceptedSequence) return;
     this.inFlight = false;
-    if (message.quarantined || message.workerDurationMs >= 8) {
+    if (message.workerStepVerdict === "sustained-overrun") this.workerStepOverruns++;
+    if (message.quarantined) {
       const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : "worker-step-overrun";
-      this.quarantine(code, message.faultDetail ?? `worker frame step took ${message.workerDurationMs.toFixed(3)} ms`);
+      this.quarantine(code, message.faultDetail ?? `worker frame step executed ${message.workerExecutingMs.toFixed(3)} ms`);
       return;
     }
     if (message.generation === this.generation) {
@@ -508,7 +663,8 @@ export class BrowserFrameTransport {
     this.clearQueues();
     this.fault = { code, detail };
     this.status = "faulted";
-    this.runUiHook("fault-hook", () => this.onFault?.(code, detail));
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
   }
 
   private quarantine(code: BrowserFrameWorkerFaultCode, detail: string): void {
@@ -520,20 +676,25 @@ export class BrowserFrameTransport {
     this.clearQueues();
     this.fault = { code, detail };
     this.status = "quarantined";
-    this.runUiHook("fault-hook", () => this.onFault?.(code, detail));
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
   }
 
+  /** @emoji 🪝️ Runs one external UI hook inside the executing clock. A THROW is a real defect and still
+   * fails the surface (`ui-hook-failed`); a budget breach is only recorded, and the answer says whether
+   * the turn fitted so the caller can defer what is left. */
   private runUiHook(site: string, callback: () => void): boolean {
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       callback();
     } catch (error) {
+      this.uiTurnClock.leave();
       const detail = `${site} threw: ${error instanceof Error ? error.message : String(error)}`;
-      if (this.status === "ready") this.quarantine("ui-turn-overrun", detail);
-      else if (this.status !== "quarantined" && this.status !== "faulted" && this.status !== "closed") this.fail("ui-turn-overrun", detail);
+      if (this.status !== "faulted" && this.status !== "closed") this.fail("ui-hook-failed", detail);
       return false;
     }
-    return this.observeUiTurn(site, this.now() - startedAt);
+    this.observeUiTurn(site, this.uiTurnClock.leave());
+    return true;
   }
 
   private clearQueues(): void {

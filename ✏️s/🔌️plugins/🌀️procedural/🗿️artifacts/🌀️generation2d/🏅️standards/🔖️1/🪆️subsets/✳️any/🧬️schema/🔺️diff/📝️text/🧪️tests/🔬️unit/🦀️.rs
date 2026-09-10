@@ -31,3 +31,20 @@ fn diff_apply_updates_fixture_widgets() {
     let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced");
     assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
 }
+
+/// 🔐️ LAW: the generic replay seams reach this artifact through the `MutationDiff` CONTRACT, never
+/// through the inherent helper, so both cold-retirement hooks must be overridden — an inhabited
+/// `fixture` owns an `OrderedMap<WidgetLayout>` root whose bare drop aborts the process, which is
+/// exactly what `os_vcs::apply_mutation` did on every undone/redone 2d operation.
+#[test]
+fn the_mutation_diff_contract_retires_an_inhabited_layout_delta_and_its_scratch_projection() {
+    let base = empty_generation2d_snapshot();
+    let mut fixture = base.fixture.clone();
+    fixture.layout.insert("laid-out".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 });
+    let diff = Generation2dDiff { fixture: Some(fixture), generation: Some(base.generation.clone()), ..Default::default() };
+    let scratch = <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::apply(&diff, &base).expect("inhabited layout delta applies");
+    assert!(scratch.fixture.layout.contains_key("laid-out"));
+    <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_projection(scratch);
+    <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_cold(diff);
+    base.retire_cold();
+}

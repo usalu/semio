@@ -9,14 +9,14 @@ use crate::framework_surface_terrain::TerrainSessionCore;
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
 // itself `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`-gated instead.
 #[cfg(test)]
-use ui_wgpu::wgpu::{World3dSnapshotItem, screen_select_components, screen_select_instances};
+use ui_wgpu::wgpu::{screen_select_components, screen_select_instances};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
 use ui_wgpu::wgpu::{
     axis_rotate_angle, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
     Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
-    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotLease, World3dSnapshotPageKind,
+    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
 };
 
 //#region 📦️PreparedWorldResources
@@ -1365,6 +1365,17 @@ pub struct World3dState {
     snapshot_lease: Option<World3dSnapshotLease>,
     snapshot_apply: Option<World3dSnapshotApplyCursor>,
     snapshot_fault: Option<World3dSnapshotFault>,
+    /// 🌉️ The mesh-wire → snapshot bridge (`//#region 🌉️World3dSceneBridge`) that gives a producer
+    /// publishing only plain-JSON `meshes_json`/`instances_json` the same typed snapshot a
+    /// snapshot-native producer hands over.
+    scene_bridge: Option<World3dSceneBridgeCursor>,
+    scene_bridge_lease: Option<World3dSnapshotLease>,
+    scene_bridge_retired: Option<(World3dSnapshotLease, bool)>,
+    scene_bridge_generation: u64,
+    scene_bridge_digest: Option<u64>,
+    scene_camera_digest: Option<u64>,
+    scene_selection_digest: Option<u64>,
+    scene_mesh_digests: HashMap<String, u64>,
     prepared_status: [Option<World3dPreparedStatus>; 2],
     dynamic_blocked_owner: Option<WorldOpaqueOwner>,
     dynamic_mesh_close: Option<WorldDynamicEntry<Mesh3dLease>>,
@@ -1477,6 +1488,14 @@ impl World3dState {
             interaction_meshes: WorldInteractionMeshRegistry::default(),
             interaction_objects: WorldInteractionObjectRegistry::default(),
             snapshot_lease: None,
+            scene_bridge: None,
+            scene_bridge_lease: None,
+            scene_bridge_retired: None,
+            scene_bridge_generation: 0,
+            scene_bridge_digest: None,
+            scene_camera_digest: None,
+            scene_selection_digest: None,
+            scene_mesh_digests: HashMap::new(),
             snapshot_apply: None,
             snapshot_fault: None,
             prepared_status: [None; 2],
@@ -1504,6 +1523,20 @@ impl World3dState {
 
     pub fn dynamic_retirement_is_idle(&self) -> bool {
         self.dynamic_retirement.is_none()
+    }
+
+    /// 🚨️ The last snapshot fault this surface recorded, for a host that reports why a world window
+    /// went dark instead of guessing. `None` once a snapshot published, and `None` while a staged
+    /// scene bridge is still building.
+    pub fn snapshot_fault(&self) -> Option<World3dSnapshotFault> {
+        self.snapshot_fault
+    }
+
+    /// 🔺️ The published geometry one draw's `mesh_key` resolves to — the lease `render_world_3d`
+    /// itself hands to `World3dBuildContext::ensure_mesh`, so a host can read back the triangle and
+    /// vertex counts it is actually drawing.
+    pub fn mesh_lease(&self, mesh_key: &str) -> Option<Mesh3dLease> {
+        self.meshes.get(mesh_key).copied()
     }
 }
 
@@ -1535,6 +1568,9 @@ impl World3dDynamicRetirement {
 
     fn step(&mut self, state: &mut World3dState) -> bool {
         self.blocked = None;
+        if step_world3d_scene_bridge_close(state) {
+            return false;
+        }
         if state.dynamic_mesh_close.is_none() {
             if let Some(entry) = state.dynamic_blocked_mesh.take() {
                 state.dynamic_mesh_close = Some(entry);
@@ -1698,6 +1734,9 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
 
 pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> bool {
     state.dynamic_retirement.is_none()
+        && state.scene_bridge.is_none()
+        && state.scene_bridge_lease.is_none()
+        && state.scene_bridge_retired.is_none()
         && state.dynamic_blocked_owner.is_none()
         && state.dynamic_mesh_close.is_none()
         && state.dynamic_blocked_mesh.is_none()
@@ -1732,6 +1771,16 @@ pub fn begin_world3d_draw_rebuild(state: &mut World3dState, descriptor: WorldDra
     }
     state.draw_rebuild = Some(WorldDrawRebuildCursor::new(descriptor)?);
     Ok(())
+}
+
+/// 🔢️ The version `publish_world3d_mesh_lease` admitted this mesh key under. `mesh_versions` and
+/// `interaction_meshes` are written in ONE transaction there, so this is the freshness witness every
+/// interaction-registry lookup must match — never `SceneDraw3d::mesh_version`, which the typed
+/// snapshot apply admits before the mesh's own publication ladder has run and which therefore stays
+/// at its `0` placeholder for every bridged draw. Matching the stale field faulted the whole
+/// interaction authority — every pick, hover, orbit and wheel on that surface.
+fn live_world3d_mesh_version(state: &World3dState, mesh_key: &str) -> u64 {
+    state.mesh_versions.get(mesh_key).copied().unwrap_or(0)
 }
 
 pub fn world3d_draw_rebuild_admit_draw(state: &mut World3dState, mesh_key: &str, mesh_version: u64, instance_count: u16) -> Result<(), WorldDynamicFault> {
@@ -2234,7 +2283,7 @@ impl WorldInteractionRegistryBuildCursor {
                 }
                 let mesh_slot = (WorldInteractionMeshRegistry::hash(&draw.mesh_key) + usize::from(self.mesh_probe)) % WORLD_INTERACTION_MESH_CAPACITY;
                 let mesh = match state.interaction_meshes.slots[mesh_slot] {
-                    Some(entry) if entry.id.as_str() == draw.mesh_key && entry.version == draw.mesh_version => Some(WorldInteractionMeshToken { slot: mesh_slot as u16, generation: entry.generation }),
+                    Some(entry) if entry.id.as_str() == draw.mesh_key && entry.version == live_world3d_mesh_version(state, &draw.mesh_key) => Some(WorldInteractionMeshToken { slot: mesh_slot as u16, generation: entry.generation }),
                     Some(_) => {
                         self.mesh_probe += 1;
                         context.consume_fuel(1);
@@ -3630,7 +3679,7 @@ impl WorldRayPickCursor {
         let Some(admitted) = state.interaction_meshes.resolve(token) else {
             return WorldInteractionStep::Stale;
         };
-        if admitted.id.as_str() != draw.mesh_key || admitted.version != draw.mesh_version {
+        if admitted.id.as_str() != draw.mesh_key || admitted.version != live_world3d_mesh_version(state, &draw.mesh_key) {
             return WorldInteractionStep::Stale;
         }
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -3742,7 +3791,7 @@ impl WorldRayPickCursor {
         };
         let draw = state.draws.get(usize::from(hit.draw)).ok_or(WorldInteractionStep::Fault)?;
         let admitted = state.interaction_meshes.resolve(hit.mesh).ok_or(WorldInteractionStep::Stale)?;
-        if admitted.id.as_str() != draw.mesh_key || admitted.version != draw.mesh_version {
+        if admitted.id.as_str() != draw.mesh_key || admitted.version != live_world3d_mesh_version(state, &draw.mesh_key) {
             return Err(WorldInteractionStep::Stale);
         }
         let mesh = *state.meshes.get(&draw.mesh_key).ok_or(WorldInteractionStep::Fault)?;
@@ -5226,6 +5275,15 @@ impl WorldInteractionAuthority {
                 let dx = intent.x - start[0];
                 let dy = intent.y - start[1];
                 self.right_dragged |= (dx * dx + dy * dy).sqrt() > CLICK_DRAG_THRESHOLD_PX;
+            }
+            // 🖱️ Tracking the click/drag discrimination must NOT swallow the gesture: a right-drag is
+            // also how `plan_world3d_drag` reaches pan (`+shift`) and orbit (`+alt`/`+meta`). Retiring
+            // here unconditionally is what left the wgpu shell with zoom and middle-button pan only.
+            let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
+            if let Some(plan) = plan_world3d_drag(state, generation, intent.dx, intent.dy, intent.button, &modifiers) {
+                self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Pending;
             }
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
@@ -7137,9 +7195,42 @@ enum WorldPlaceholderOwner {
     Empty,
 }
 
+/// 🧊️ Where one in-flight mesh publication reads its vertices from: a generated marker primitive,
+/// or an inline `World3dScene.meshes_json` buffer set bridged in by [`stage_world3d_scene_bridge`].
+/// Both ride the identical fixed-credit `mesh3d_*` authority ladder below.
+enum WorldMeshSource {
+    Placeholder(WorldPlaceholderKind),
+    Inline(Box<WorldMeshBuffers>),
+}
+
+impl WorldMeshSource {
+    fn position(&self, item: u32) -> [f32; 3] {
+        match self {
+            Self::Placeholder(kind) => placeholder_triangle(*kind, item / 3)[(item % 3) as usize],
+            Self::Inline(buffers) => buffers.position(item),
+        }
+    }
+
+    fn normal(&self, item: u32) -> [f32; 3] {
+        match self {
+            Self::Placeholder(kind) => placeholder_triangle_normal(placeholder_triangle(*kind, item / 3)),
+            Self::Inline(buffers) => buffers.normal(item),
+        }
+    }
+
+    fn index(&self, item: u32) -> u32 {
+        match self {
+            Self::Placeholder(_) => item,
+            Self::Inline(buffers) => buffers.indices.get(item as usize).copied().unwrap_or(0),
+        }
+    }
+}
+
 struct WorldPlaceholderMeshCursor {
     key: String,
-    kind: WorldPlaceholderKind,
+    source: WorldMeshSource,
+    vertex_items: u32,
+    index_items: u32,
     phase: WorldPlaceholderMeshPhase,
     item: u32,
     owner: WorldPlaceholderOwner,
@@ -7155,12 +7246,28 @@ enum WorldPlaceholderMeshStep {
 
 impl WorldPlaceholderMeshCursor {
     fn new(key: &str, kind: WorldPlaceholderKind, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+        let items = kind.triangles().checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        Self::begin(key, WorldMeshSource::Placeholder(kind), items, items, generation, revision)
+    }
+
+    /// 🌉️ The inline-wire twin of [`Self::new`]: an already-welded `meshes_json` buffer set, whose
+    /// vertex and index counts are independent (the marker primitives above emit one vertex per
+    /// face corner, a tessellated preview mesh does not).
+    fn inline(key: &str, buffers: WorldMeshBuffers, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+        let vertex_items = u32::try_from(buffers.vertex_count()).map_err(|_| ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        let index_items = u32::try_from(buffers.indices.len()).map_err(|_| ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        if vertex_items == 0 || index_items == 0 || !index_items.is_multiple_of(3) || buffers.indices.iter().any(|index| *index >= vertex_items) {
+            return Err(ui_wgpu::wgpu::Mesh3dFault::Schema);
+        }
+        Self::begin(key, WorldMeshSource::Inline(Box::new(buffers)), vertex_items, index_items, generation, revision)
+    }
+
+    fn begin(key: &str, source: WorldMeshSource, vertex_items: u32, index_items: u32, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
         if key.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
             return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity);
         }
-        let items = kind.triangles().checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-        let owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, revision, Mesh3dSchema::triangle_mesh(items, items))?);
-        Ok(Self { key: key.to_owned(), kind, phase: WorldPlaceholderMeshPhase::Allocate, item: 0, owner, close_started: false, faulted: false })
+        let owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, revision, Mesh3dSchema::triangle_mesh(vertex_items, index_items))?);
+        Ok(Self { key: key.to_owned(), source, vertex_items, index_items, phase: WorldPlaceholderMeshPhase::Allocate, item: 0, owner, close_started: false, faulted: false })
     }
 
     fn token(&self) -> Result<Mesh3dWriteToken, ui_wgpu::wgpu::Mesh3dFault> {
@@ -7184,7 +7291,6 @@ impl WorldPlaceholderMeshCursor {
     }
 
     fn step_live(&mut self) -> Result<WorldPlaceholderMeshStep, ui_wgpu::wgpu::Mesh3dFault> {
-        let items = self.kind.triangles() * 3;
         match self.phase {
             WorldPlaceholderMeshPhase::Allocate => {
                 if mesh3d_allocate_step(self.token()?)? {
@@ -7192,27 +7298,25 @@ impl WorldPlaceholderMeshCursor {
                 }
             }
             WorldPlaceholderMeshPhase::Positions => {
-                let triangle = placeholder_triangle(self.kind, self.item / 3);
-                mesh3d_write_vec3(self.token()?, Mesh3dField::Positions, triangle[(self.item % 3) as usize])?;
+                mesh3d_write_vec3(self.token()?, Mesh3dField::Positions, self.source.position(self.item))?;
                 self.item += 1;
-                if self.item == items {
+                if self.item == self.vertex_items {
                     self.item = 0;
                     self.phase = WorldPlaceholderMeshPhase::Normals;
                 }
             }
             WorldPlaceholderMeshPhase::Normals => {
-                let triangle = placeholder_triangle(self.kind, self.item / 3);
-                mesh3d_write_vec3(self.token()?, Mesh3dField::Normals, placeholder_triangle_normal(triangle))?;
+                mesh3d_write_vec3(self.token()?, Mesh3dField::Normals, self.source.normal(self.item))?;
                 self.item += 1;
-                if self.item == items {
+                if self.item == self.vertex_items {
                     self.item = 0;
                     self.phase = WorldPlaceholderMeshPhase::Indices;
                 }
             }
             WorldPlaceholderMeshPhase::Indices => {
-                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, self.item)?;
+                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, self.source.index(self.item))?;
                 self.item += 1;
-                if self.item == items {
+                if self.item == self.index_items {
                     self.item = 0;
                     self.phase = WorldPlaceholderMeshPhase::Seal;
                 }
@@ -7398,7 +7502,7 @@ fn step_world_placeholder_mesh(state: &mut World3dState) {
 #[derive(Clone, Debug, PartialEq, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[cfg(test)]
+#[allow(dead_code)]
 struct WorldMeshBuffers {
     #[serde(default)]
     #[value(default)]
@@ -7433,10 +7537,25 @@ struct WorldMeshBuffers {
     paint_texture_base64: Option<String>,
 }
 
-#[cfg(test)]
 impl WorldMeshBuffers {
     fn vertex_count(&self) -> usize {
         self.positions.len() / 3
+    }
+
+    /// 📍️ One vertex position, zero-filled past the buffer so a short/ragged wire buffer degrades
+    /// to a degenerate triangle instead of faulting the whole frame.
+    fn position(&self, vertex: u32) -> [f32; 3] {
+        let base = vertex as usize * 3;
+        [self.positions.get(base).copied().unwrap_or(0.0), self.positions.get(base + 1).copied().unwrap_or(0.0), self.positions.get(base + 2).copied().unwrap_or(0.0)]
+    }
+
+    /// 🧭️ One vertex normal, falling back to +Z when the wire carried none for this vertex.
+    fn normal(&self, vertex: u32) -> [f32; 3] {
+        let base = vertex as usize * 3;
+        match (self.normals.get(base), self.normals.get(base + 1), self.normals.get(base + 2)) {
+            (Some(x), Some(y), Some(z)) => [*x, *y, *z],
+            _ => [0.0, 0.0, 1.0],
+        }
     }
 
     /// 🧭️ Per-triangle flat-shaded normals, accumulated per vertex and renormalized — same
@@ -8834,6 +8953,10 @@ struct World3dSnapshotApplyCursor {
     item: u8,
     staged_orbit: Option<OrbitController>,
     draw_started: bool,
+    /// 🧱️ Which draw the `Instance` items being applied right now belong to. A single-draw producer
+    /// (`Mesh` item flags `30`) leaves it at 0; a multi-draw one (flags `31`) re-points it at every
+    /// `Mesh` page, which is why those pages interleave with their own instance pages.
+    draw_index: u16,
     draw_permit: Option<World3dSnapshotDrawPermit>,
     faulted: bool,
     status: [Option<World3dPreparedStatus>; 2],
@@ -8841,7 +8964,7 @@ struct World3dSnapshotApplyCursor {
 
 impl World3dSnapshotApplyCursor {
     fn new(lease: World3dSnapshotLease) -> Self {
-        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, draw_permit: None, faulted: false, status: [None; 2] }
+        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, draw_index: 0, draw_permit: None, faulted: false, status: [None; 2] }
     }
 
     fn close_step(&mut self) -> bool {
@@ -8951,7 +9074,8 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             };
             begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::Box);
             let descriptor = WorldDrawRebuildDescriptor { generation: state.draw_generation.wrapping_add(1), revision: state.interaction_revision, draw_count: 1, instance_count, byte_count };
-            let admitted = begin_world3d_draw_rebuild(state, descriptor).and_then(|()| world3d_draw_rebuild_admit_draw(state, mesh_key, 0, u16::try_from(instance_count).map_err(|_| WorldDynamicFault::InstanceCapacity)?));
+            let mesh_version = live_world3d_mesh_version(state, mesh_key);
+            let admitted = begin_world3d_draw_rebuild(state, descriptor).and_then(|()| world3d_draw_rebuild_admit_draw(state, mesh_key, mesh_version, u16::try_from(instance_count).map_err(|_| WorldDynamicFault::InstanceCapacity)?));
             if admitted.is_err() {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
                 cursor.faulted = true;
@@ -8960,6 +9084,58 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             }
             cursor.draw_permit = Some(permit);
             cursor.draw_started = true;
+            cursor.draw_index = 0;
+        }
+        World3dSnapshotPageKind::Mesh if item.flags == 31 && item.index_len >= 6 => {
+            let Some(mesh_key) = id.as_deref() else {
+                state.snapshot_fault = Some(World3dSnapshotFault::PageState);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            let (own_instances, ordinal, total_draws, total_instances, total_bytes) = (item.indexes[0], item.indexes[2], item.indexes[3], item.indexes[4], item.indexes[5]);
+            let Ok(total_draws) = u16::try_from(total_draws) else {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            if ordinal == 0 {
+                let byte_count = total_bytes
+                    .checked_add(u32::from(total_draws).saturating_mul(size_of::<SceneDraw3d>() as u32))
+                    .and_then(|bytes| bytes.checked_add(total_instances.checked_mul(size_of::<Instance3d>() as u32)?));
+                let permit = byte_count.ok_or(World3dSnapshotFault::Capacity).and_then(|_| world3d_snapshot_claim_draw_permit(cursor.lease, total_draws, total_instances, total_bytes));
+                let (Some(byte_count), Ok(permit)) = (byte_count, permit) else {
+                    state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                    cursor.faulted = true;
+                    state.snapshot_apply = Some(cursor);
+                    return World3dSnapshotApplyStep::Fault;
+                };
+                let descriptor = WorldDrawRebuildDescriptor { generation: state.draw_generation.wrapping_add(1), revision: state.interaction_revision, draw_count: total_draws, instance_count: total_instances, byte_count };
+                if begin_world3d_draw_rebuild(state, descriptor).is_err() {
+                    state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                    cursor.faulted = true;
+                    state.snapshot_apply = Some(cursor);
+                    return World3dSnapshotApplyStep::Fault;
+                }
+                cursor.draw_permit = Some(permit);
+                cursor.draw_started = true;
+            }
+            let mesh_version = live_world3d_mesh_version(state, mesh_key);
+            let admitted = u16::try_from(own_instances).map_err(|_| WorldDynamicFault::InstanceCapacity).and_then(|count| world3d_draw_rebuild_admit_draw(state, mesh_key, mesh_version, count));
+            let Ok(ordinal) = u16::try_from(ordinal) else {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            if admitted.is_err() {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            }
+            cursor.draw_index = ordinal;
         }
         World3dSnapshotPageKind::Instance if item.number_len >= 14 && cursor.draw_started => {
             let Some(id) = id.as_deref() else {
@@ -8973,7 +9149,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             let scale = [item.numbers[7] as f32, item.numbers[8] as f32, item.numbers[9] as f32];
             let color = [item.numbers[10] as f32, item.numbers[11] as f32, item.numbers[12] as f32, item.numbers[13] as f32];
             let model = Instance3d::model_from_trs(position, rotation, scale);
-            if world3d_draw_rebuild_admit_instance(state, 0, id, model, color, false, false).is_err() {
+            if world3d_draw_rebuild_admit_instance(state, cursor.draw_index, id, model, color, false, false).is_err() {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
                 cursor.faulted = true;
                 state.snapshot_apply = Some(cursor);
@@ -9053,15 +9229,535 @@ pub fn close_world3d_snapshot_apply_step(state: &mut World3dState, context: &mut
     complete
 }
 
+//#region 🌉️World3dSceneBridge
+/// 🌉️ How many `mesh3d_*` authority writes one bridge step performs. That ladder writes ONE
+/// vec3/u32 per call, so a 20k-vertex preview would otherwise need 60k frames to publish; a batch
+/// keeps the publication inside the frame transaction's own fuel accounting while still finishing a
+/// typical procedural preview in a handful of turns.
+const WORLD3D_BRIDGE_MESH_WRITES_PER_STEP: u32 = 4_096;
+
+/// 🌉️ One `World3dScene.meshes_json` entry — `{"id": …, "data": {positions, normals, indices, …}}`,
+/// the shape every `World3d` producer publishes (generation3d's `preview_payload`, CAD, puzzle) and
+/// the React `🌐️World3dHost/🟦️.tsx` reads.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneMeshEntry {
+    id: String,
+    #[serde(default)]
+    data: WorldMeshBuffers,
+}
+
+/// 🌉️ One `World3dScene.instances_json` entry — a placement of one mesh, carrying the
+/// channel-qualified instance id every pick/hover observation is addressed by.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneInstanceEntry {
+    id: String,
+    mesh_id: String,
+    #[serde(default)]
+    position: Option<[f64; 3]>,
+    #[serde(default)]
+    rotation: Option<[f64; 4]>,
+    #[serde(default)]
+    scale: Option<[f64; 3]>,
+    #[serde(default)]
+    color: Option<String>,
+}
+
+/// 🎥️ `World3dScene.camera_json` — the window's own camera measure, authored host-side.
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneCameraRecord {
+    #[serde(default)]
+    position: Option<[f64; 3]>,
+    #[serde(default)]
+    target: Option<[f64; 3]>,
+    #[serde(default)]
+    up: Option<[f64; 3]>,
+    #[serde(default)]
+    fov: Option<f64>,
+}
+
+/// 🎯️ `World3dScene.selection_json` — both the plain-instance half (`ids`/`hoveredId`, what the
+/// framework `interactionSelect`/`interactionHover` verbs address) and the component half
+/// (`granularity`/`componentIds`/`hoveredComponent`, the unconverted `worldPick` mechanism).
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneSelectionRecord {
+    #[serde(default)]
+    method: Option<String>,
+    #[serde(default)]
+    ids: Vec<String>,
+    #[serde(default)]
+    hovered_id: Option<String>,
+    #[serde(default)]
+    granularity: Option<String>,
+    #[serde(default)]
+    component_ids: Vec<serde_json::Value>,
+    #[serde(default)]
+    hovered_component: Option<World3dSceneHoveredComponent>,
+    #[serde(default)]
+    targets: Option<WorldSelectionTargets>,
+    #[serde(default)]
+    active_object_id: Option<String>,
+    #[serde(default)]
+    show_edges: Option<bool>,
+}
+
+/// 🎯️ `selection_json.hoveredComponent` — the vertex/edge/face under the pointer, if any.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneHoveredComponent {
+    #[serde(default)]
+    object_id: Option<String>,
+    #[serde(default)]
+    mode: Option<String>,
+    #[serde(default)]
+    id: Option<serde_json::Value>,
+}
+
+/// 🔢️ A JSON scalar id (`10`, `"10"`) as the decimal string every component registry keys by.
+fn scene_component_id_text(value: &serde_json::Value) -> Option<String> {
+    match value {
+        serde_json::Value::String(text) => Some(text.clone()),
+        serde_json::Value::Number(number) => Some(number.to_string()),
+        _ => None,
+    }
+}
+
+/// 🔏️ FNV-1a over the payload lanes that decide whether a bridge rebuild is needed. Content
+/// addressing, not a clock: an app that republishes an identical scene must not cost a rebuild.
+fn world3d_scene_digest(parts: &[&str]) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    for part in parts {
+        for byte in part.as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum World3dSceneBridgePhase {
+    Parse,
+    Meshes,
+    Pages,
+}
+
+/// 🌉️ One in-flight `meshes_json`/`instances_json` → `World3dSnapshotLease` build. Parsing, mesh
+/// publication and page admission are three separately budgeted phases so a large preview never
+/// blocks a frame.
+struct World3dSceneBridgeCursor {
+    digest: u64,
+    camera_digest: u64,
+    meshes_json: String,
+    instances_json: String,
+    camera_json: String,
+    camera_changed: bool,
+    phase: World3dSceneBridgePhase,
+    meshes: Vec<World3dSceneMeshEntry>,
+    instances: Vec<World3dSceneInstanceEntry>,
+    camera: Option<World3dSceneCameraRecord>,
+    mesh_cursor: usize,
+    retiring_mesh: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dSceneBridgeStep {
+    Idle,
+    Pending,
+    Complete,
+    Fault,
+}
+
+/// 🌉️ Notes a scene whose producer published no typed snapshot of its own, so the next
+/// [`step_world3d_scene_bridge`] turns its plain-JSON mesh/instance lanes into one. Cheap and
+/// idempotent: an unchanged payload re-stages nothing.
+fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::World3dScene) {
+    let camera_digest = world3d_scene_digest(&[&world.camera_json]);
+    let digest = world3d_scene_digest(&[&world.meshes_json, &world.instances_json, &world.camera_json]);
+    if state.scene_bridge_digest == Some(digest) || state.scene_bridge.as_ref().is_some_and(|cursor| cursor.digest == digest) {
+        return;
+    }
+    if state.scene_bridge.is_some() {
+        return;
+    }
+    state.scene_bridge = Some(World3dSceneBridgeCursor {
+        digest,
+        camera_digest,
+        meshes_json: world.meshes_json.clone(),
+        instances_json: world.instances_json.clone(),
+        camera_json: world.camera_json.clone(),
+        camera_changed: state.scene_camera_digest != Some(camera_digest),
+        phase: World3dSceneBridgePhase::Parse,
+        meshes: Vec::new(),
+        instances: Vec::new(),
+        camera: None,
+        mesh_cursor: 0,
+        retiring_mesh: false,
+    });
+}
+
+/// ♻️ Drains one superseded bridge lease, or the whole staged build, one authority step at a time.
+/// Returns `true` when it did work — the retirement ladder polls it before anything else so a
+/// world that is being torn down never leaves a snapshot slot reserved.
+fn step_world3d_scene_bridge_close(state: &mut World3dState) -> bool {
+    if state.scene_bridge.take().is_some() {
+        return true;
+    }
+    let Some((lease, begun)) = state.scene_bridge_retired else {
+        let Some(lease) = state.scene_bridge_lease.take() else { return false };
+        state.scene_bridge_retired = Some((lease, false));
+        return true;
+    };
+    if !begun {
+        match ui_wgpu::wgpu::world3d_snapshot_begin_close(lease) {
+            Ok(()) => state.scene_bridge_retired = Some((lease, true)),
+            Err(_) => state.scene_bridge_retired = None,
+        }
+        return true;
+    }
+    match ui_wgpu::wgpu::world3d_snapshot_close_step(lease) {
+        Ok(true) | Err(_) => state.scene_bridge_retired = None,
+        Ok(false) => {}
+    }
+    true
+}
+
+/// 🌉️ One budgeted turn of the mesh-wire → snapshot bridge. Drives the staged payload through
+/// parse → per-mesh `mesh3d_*` publication → snapshot page admission, then hands the sealed lease to
+/// [`sync_world3d_state`], which feeds it to the very same apply ladder a typed producer's own
+/// snapshot rides.
+pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> World3dSceneBridgeStep {
+    if context.should_yield() {
+        return World3dSceneBridgeStep::Pending;
+    }
+    if state.scene_bridge_retired.is_some() && state.snapshot_apply.is_none() && state.scene_bridge_lease == state.snapshot_lease {
+        step_world3d_scene_bridge_close(state);
+        context.consume_fuel(1);
+        return World3dSceneBridgeStep::Pending;
+    }
+    let Some(mut cursor) = state.scene_bridge.take() else {
+        return World3dSceneBridgeStep::Idle;
+    };
+    context.consume_fuel(1);
+    match cursor.phase {
+        World3dSceneBridgePhase::Parse => {
+            cursor.meshes = serde_json::from_str::<Vec<World3dSceneMeshEntry>>(&cursor.meshes_json).unwrap_or_default();
+            cursor.instances = serde_json::from_str::<Vec<World3dSceneInstanceEntry>>(&cursor.instances_json).unwrap_or_default();
+            cursor.camera = serde_json::from_str::<World3dSceneCameraRecord>(&cursor.camera_json).ok();
+            cursor.meshes.retain(|mesh| mesh.data.vertex_count() > 0 && mesh.data.indices.len() >= 3);
+            for mesh in &mut cursor.meshes {
+                if mesh.data.normals.len() != mesh.data.positions.len() {
+                    mesh.data.compute_normals();
+                }
+            }
+            cursor.instances.retain(|instance| cursor.meshes.iter().any(|mesh| mesh.id == instance.mesh_id));
+            cursor.phase = World3dSceneBridgePhase::Meshes;
+            state.scene_bridge = Some(cursor);
+            World3dSceneBridgeStep::Pending
+        }
+        World3dSceneBridgePhase::Meshes => {
+            if state.dynamic_mesh_close.is_some() || state.dynamic_blocked_mesh.is_some() {
+                step_world3d_mesh_close(state);
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            }
+            if state.placeholder_build.is_some() {
+                step_world_placeholder_mesh_batch(state, WORLD3D_BRIDGE_MESH_WRITES_PER_STEP);
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            }
+            let Some(entry) = cursor.meshes.get(cursor.mesh_cursor) else {
+                cursor.phase = World3dSceneBridgePhase::Pages;
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            };
+            let digest = world3d_mesh_buffers_digest(&entry.data);
+            if state.scene_mesh_digests.get(&entry.id) == Some(&digest) && state.meshes.contains_key(&entry.id) {
+                cursor.mesh_cursor += 1;
+                cursor.retiring_mesh = false;
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            }
+            if state.meshes.contains_key(&entry.id) && !cursor.retiring_mesh {
+                cursor.retiring_mesh = true;
+                retire_world_mesh(state, &entry.id.clone());
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            }
+            let (id, buffers) = (entry.id.clone(), entry.data.clone());
+            state.placeholder_generation = state.placeholder_generation.wrapping_add(1).max(1);
+            match WorldPlaceholderMeshCursor::inline(&id, buffers, state.placeholder_generation, state.interaction_revision) {
+                Ok(build) => {
+                    state.placeholder_build = Some(build);
+                    state.scene_mesh_digests.insert(id, digest);
+                    cursor.mesh_cursor += 1;
+                    cursor.retiring_mesh = false;
+                    state.scene_bridge = Some(cursor);
+                    World3dSceneBridgeStep::Pending
+                }
+                Err(_) => {
+                    state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                    World3dSceneBridgeStep::Fault
+                }
+            }
+        }
+        World3dSceneBridgePhase::Pages => match publish_world3d_scene_bridge_snapshot(state, &cursor) {
+            Ok(lease) => {
+                if let Some(previous) = state.scene_bridge_lease.replace(lease) {
+                    state.scene_bridge_retired = Some((previous, false));
+                }
+                state.scene_bridge_digest = Some(cursor.digest);
+                if cursor.camera_changed {
+                    state.scene_camera_digest = Some(cursor.camera_digest);
+                }
+                World3dSceneBridgeStep::Complete
+            }
+            Err(fault) => {
+                state.snapshot_fault = Some(fault);
+                World3dSceneBridgeStep::Fault
+            }
+        },
+    }
+}
+
+/// 🔏️ Content digest of one mesh's buffers — what decides whether an already-published mesh key
+/// can be reused rather than rewritten through the authority ladder.
+fn world3d_mesh_buffers_digest(buffers: &WorldMeshBuffers) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    for value in &buffers.positions {
+        hash ^= u64::from(value.to_bits());
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    for value in &buffers.indices {
+        hash ^= u64::from(*value);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+/// 🧹️ One turn of the superseded-mesh close ladder — the same steps the full-state retirement runs,
+/// reachable outside a teardown so a live scene can replace a mesh key without wedging.
+fn step_world3d_mesh_close(state: &mut World3dState) {
+    if state.dynamic_mesh_close.is_none() {
+        if let Some(entry) = state.dynamic_blocked_mesh.take() {
+            state.dynamic_mesh_close = Some(entry);
+        }
+        return;
+    }
+    let Some(entry) = state.dynamic_mesh_close.as_mut() else { return };
+    match mesh3d_begin_close(entry.value) {
+        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => {}
+        Err(_) => {
+            entry.id.clear();
+            state.dynamic_mesh_close = None;
+            return;
+        }
+    }
+    if state.dynamic_mesh_close.as_ref().is_some_and(|entry| mesh3d_close_step(entry.value).is_ok_and(|complete| complete)) {
+        state.dynamic_mesh_close.as_mut().expect("mesh close owner retained above").id.clear();
+        state.dynamic_mesh_close = None;
+    }
+}
+
+/// 🧊️ Drains up to `budget` authority writes of the in-flight mesh publication.
+fn step_world_placeholder_mesh_batch(state: &mut World3dState, budget: u32) {
+    for _ in 0..budget {
+        if state.placeholder_build.is_none() {
+            return;
+        }
+        step_world_placeholder_mesh(state);
+    }
+}
+
+/// 🌉️ Builds and seals the snapshot the bridge publishes: one `Mesh` page per draw (flags `31`,
+/// carrying both this draw's and the whole snapshot's credits) followed by that draw's `Instance`
+/// pages, then a `Camera` page when the window's camera measure itself changed. Every page is built
+/// and validated BEFORE the store is touched, so admission can only fail on a bug.
+fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
+    let neutral = scene_bridge_neutral_color(state);
+    let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
+    for mesh in &cursor.meshes {
+        if !state.meshes.contains_key(&mesh.id) {
+            continue;
+        }
+        let instances: Vec<&World3dSceneInstanceEntry> = cursor.instances.iter().filter(|instance| instance.mesh_id == mesh.id).collect();
+        if !instances.is_empty() {
+            draws.push((mesh, instances));
+        }
+    }
+    let draw_count = u16::try_from(draws.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let instance_total = u32::try_from(draws.iter().map(|(_, instances)| instances.len()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let draw_bytes = u32::try_from(draws.iter().map(|(mesh, instances)| mesh.id.len() + instances.iter().map(|instance| instance.id.len()).sum::<usize>()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let mut pages: Vec<ui_wgpu::wgpu::World3dSnapshotPage> = Vec::new();
+    for (ordinal, (mesh, instances)) in draws.iter().enumerate() {
+        let own_instances = u32::try_from(instances.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
+        let own_bytes = u32::try_from(mesh.id.len() + instances.iter().map(|instance| instance.id.len()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Mesh);
+        let span = page.push_string(&mesh.id)?;
+        page.push_item(World3dSnapshotItem {
+            strings: [Some(span), None, None, None],
+            indexes: [own_instances, own_bytes, u32::try_from(ordinal).map_err(|_| World3dSnapshotFault::Capacity)?, u32::from(draw_count), instance_total, draw_bytes, 0, 0],
+            index_len: 6,
+            flags: 31,
+            ..Default::default()
+        })?;
+        page.seal()?;
+        pages.push(page);
+        for chunk in instances.chunks(ui_wgpu::wgpu::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY) {
+            let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Instance);
+            for instance in chunk {
+                let span = page.push_string(&instance.id)?;
+                let position = instance.position.unwrap_or([0.0; 3]);
+                let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                let scale = instance.scale.unwrap_or([1.0; 3]);
+                let color = instance.color.as_deref().map_or(neutral, parse_color);
+                page.push_item(World3dSnapshotItem {
+                    strings: [Some(span), None, None, None],
+                    numbers: [
+                        position[0],
+                        position[1],
+                        position[2],
+                        rotation[0],
+                        rotation[1],
+                        rotation[2],
+                        rotation[3],
+                        scale[0],
+                        scale[1],
+                        scale[2],
+                        f64::from(color[0]),
+                        f64::from(color[1]),
+                        f64::from(color[2]),
+                        f64::from(color[3]),
+                        0.0,
+                        0.0,
+                    ],
+                    number_len: 14,
+                    ..Default::default()
+                })?;
+            }
+            page.seal()?;
+            pages.push(page);
+        }
+    }
+    if let Some(camera) = cursor.camera.as_ref().filter(|_| cursor.camera_changed) {
+        let position = camera.position.unwrap_or([4.0, 4.0, 4.0]);
+        let target = camera.target.unwrap_or([0.0; 3]);
+        let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
+        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
+        page.push_item(World3dSnapshotItem {
+            numbers: [position[0], position[1], position[2], target[0], target[1], target[2], up[0], up[1], up[2], camera.fov.unwrap_or(45.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            number_len: 10,
+            ..Default::default()
+        })?;
+        page.seal()?;
+        pages.push(page);
+    }
+    if pages.is_empty() {
+        return Err(World3dSnapshotFault::Capacity);
+    }
+    let page_count = u16::try_from(pages.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let item_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::item_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let byte_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::byte_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    state.scene_bridge_generation = state.scene_bridge_generation.wrapping_add(1).max(1);
+    let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor {
+        revision: state.interaction_revision,
+        generation: state.scene_bridge_generation,
+        page_count,
+        item_count,
+        byte_count,
+        draw_count,
+        draw_instance_count: instance_total,
+        draw_byte_count: draw_bytes,
+    };
+    let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor)?;
+    for page in pages {
+        if let Err(rejected) = ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page) {
+            let fault = rejected.fault;
+            let _ = ui_wgpu::wgpu::world3d_snapshot_abort_write(token);
+            for _ in 0..usize::from(page_count) + 2 {
+                if ui_wgpu::wgpu::world3d_snapshot_abort_write_step(token).unwrap_or(true) {
+                    break;
+                }
+            }
+            return Err(fault);
+        }
+    }
+    ui_wgpu::wgpu::world3d_snapshot_seal(token)
+}
+
+/// 🎨️ The base color an instance without its own `color` paints with: the scene environment's
+/// neutral material override when it declares one, else a theme-independent neutral the shaded pass
+/// lights (the React reference resolves the same fallback from its `neutral` mesh-style palette).
+fn scene_bridge_neutral_color(state: &World3dState) -> [f32; 4] {
+    const NEUTRAL: [f32; 4] = [0.78, 0.79, 0.82, 1.0];
+    state.environment.material.as_ref().and_then(|material| material.color.as_deref()).map_or(NEUTRAL, parse_color)
+}
+
+/// 🎯️ Applies the scene's own selection document to this world's live selection/hover channels —
+/// only when the document itself changed, so an optimistic local preview between two identical
+/// refreshes is never clobbered (the rule the React host follows too).
+fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) {
+    let digest = world3d_scene_digest(&[selection_json]);
+    if state.scene_selection_digest == Some(digest) {
+        return;
+    }
+    state.scene_selection_digest = Some(digest);
+    let Ok(record) = serde_json::from_str::<World3dSceneSelectionRecord>(selection_json) else { return };
+    if let Some(method) = record.method {
+        state.selection_method = method;
+    }
+    state.selected_ids = record.ids;
+    state.local_hover_id = record.hovered_id;
+    if let Some(granularity) = record.granularity {
+        state.granularity = granularity;
+    }
+    if !record.component_ids.is_empty() {
+        state.component_ids = record.component_ids.iter().filter_map(scene_component_id_text).collect();
+    }
+    if let Some(hovered) = record.hovered_component {
+        state.hovered_component_object_id = hovered.object_id;
+        state.hovered_component_mode = hovered.mode;
+        state.hovered_component_id = hovered.id.as_ref().and_then(scene_component_id_text);
+    }
+    if let Some(targets) = record.targets {
+        state.selection_targets = targets;
+    }
+    if let Some(active) = record.active_object_id {
+        state.active_object_id = Some(active);
+    }
+    if let Some(show_edges) = record.show_edges {
+        state.show_edges = show_edges;
+    }
+}
+//#endregion 🌉️World3dSceneBridge
+
 pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
     state.bounds = bounds;
     let Some(world) = scene.world_3d.as_ref() else {
         state.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
         return;
     };
-    let Some(lease) = world.snapshot else {
-        state.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
-        return;
+    state.bound_domain_id = world.domain_id.clone();
+    state.bound_domain_granularity_id = world.domain_granularity_id.clone();
+    state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+    sync_world3d_scene_selection(state, &world.selection_json);
+    let lease = match world.snapshot {
+        Some(lease) => lease,
+        None => {
+            stage_world3d_scene_bridge(state, world);
+            let Some(lease) = state.scene_bridge_lease else {
+                if state.scene_bridge.is_none() {
+                    state.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
+                }
+                return;
+            };
+            lease
+        }
     };
     if state.snapshot_lease == Some(lease) || state.snapshot_apply.as_ref().is_some_and(|cursor| cursor.lease == lease) {
         return;

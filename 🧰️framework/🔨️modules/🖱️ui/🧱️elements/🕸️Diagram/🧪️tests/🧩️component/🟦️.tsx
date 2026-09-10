@@ -116,7 +116,7 @@ function runUntil(frames: ReturnType<typeof installFrames>, predicate: () => boo
 }
 
 afterEach(() => {
-  setInteractiveJobPort({ status: "unavailable", getSnapshot: () => ({ revision: 0, status: "unavailable" }), observeConsumerTurn: () => true, subscribe: () => () => {}, submit: () => undefined });
+  setInteractiveJobPort({ status: "unavailable", getSnapshot: () => ({ revision: 0, status: "unavailable" }), observeConsumerTurn: () => true, reportConsumerFault: () => {}, subscribe: () => () => {}, submit: () => undefined });
   diagramFrameStack = false;
   flowCapture.props = undefined;
   vi.restoreAllMocks();
@@ -175,7 +175,7 @@ function createTestInteractivePort(initialStatus: InteractiveJobPort["status"]):
     descriptors,
     get status() { return status; },
     getSnapshot: () => snapshot,
-    observeConsumerTurn: () => true,
+    observeConsumerTurn: () => true, reportConsumerFault: () => {},
     subscribe(listener) {
       observers.add(listener);
       return () => observers.delete(listener);
@@ -341,7 +341,7 @@ describe("owned Diagram directed layout", () => {
     setInteractiveJobPort({
       status: "ready",
       getSnapshot: () => ({ revision: 1, status: "ready" }),
-      observeConsumerTurn: () => true,
+      observeConsumerTurn: () => true, reportConsumerFault: () => {},
       subscribe: () => () => {},
       submit(nextDescriptor, nextConsumer) {
         descriptor = nextDescriptor;

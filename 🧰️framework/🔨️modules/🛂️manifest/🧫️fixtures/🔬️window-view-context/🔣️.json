@@ -3,22 +3,72 @@
     "activeModeId": "edit",
     "activeWindowKindId": "graph",
     "activeUtilityId": "pan",
-    "activeUtilityByWindowId": {"left": "pan", "right": "measure"},
+    "activeUtilityByWindowId": {
+      "left": "pan",
+      "right": "measure"
+    },
     "locale": "de",
     "terminology": "native",
     "windowId": "left",
     "windowInstances": [
-      {"id": "left", "windowKindId": "graph"},
-      {"id": "right", "windowKindId": "graph"},
-      {"id": "third", "windowKindId": "graph"},
-      {"id": "constructor", "windowKindId": "graph"}
+      {
+        "id": "left",
+        "windowKindId": "graph"
+      },
+      {
+        "id": "right",
+        "windowKindId": "graph"
+      },
+      {
+        "id": "third",
+        "windowKindId": "graph"
+      },
+      {
+        "id": "constructor",
+        "windowKindId": "graph"
+      }
     ]
   },
   "cases": [
-    {"windowId": "left", "activeUtilityId": "pan"},
-    {"windowId": "right", "activeUtilityId": "measure"},
-    {"windowId": "third", "activeUtilityId": null},
-    {"windowId": "constructor", "activeUtilityId": null},
-    {"windowId": "missing", "absent": true}
+    {
+      "windowId": "left",
+      "activeUtilityId": "pan"
+    },
+    {
+      "windowId": "right",
+      "activeUtilityId": "measure"
+    },
+    {
+      "windowId": "third",
+      "activeUtilityId": null
+    },
+    {
+      "windowId": "constructor",
+      "activeUtilityId": null
+    },
+    {
+      "windowId": "missing",
+      "absent": true
+    }
+  ],
+  "hostArmed": [
+    {
+      "hostActiveToolId": "fill",
+      "windowId": "left",
+      "activeToolId": "fill",
+      "activeUtilityId": "pan"
+    },
+    {
+      "hostActiveToolId": "fill",
+      "windowId": null,
+      "activeToolId": "fill",
+      "activeUtilityId": null
+    },
+    {
+      "hostActiveToolId": null,
+      "windowId": "left",
+      "activeToolId": null,
+      "activeUtilityId": "pan"
+    }
   ]
 }

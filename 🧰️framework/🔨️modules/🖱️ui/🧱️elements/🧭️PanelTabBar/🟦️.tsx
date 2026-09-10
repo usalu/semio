@@ -113,6 +113,31 @@ function panelTabSubtreeIds(node: PanelTabNode): string[] {
   return children ? [node.id, ...children.flatMap(panelTabSubtreeIds)] : [node.id];
 }
 
+/** 🌱️ A branch tab has no trees — the body is the remembered (else first) descendant leaf. */
+export function resolvePanelBranchBodyLeaf(node: PanelTabNode, memory: Readonly<Record<string, string>>): Extract<PanelTabNode, { kind: "leaf" }> | undefined {
+  if (node.kind === "leaf") return node;
+  const seen = new Set<string>();
+  let branch: Extract<PanelTabNode, { kind: "branch" }> = node;
+  while (true) {
+    if (seen.has(branch.id)) return undefined;
+    seen.add(branch.id);
+    const remembered: string | undefined = memory[branch.id];
+    let next: PanelTabNode | undefined;
+    if (remembered !== undefined) {
+      for (const candidate of branch.children) {
+        if (candidate.id === remembered) {
+          next = candidate;
+          break;
+        }
+      }
+    }
+    if (next === undefined) next = branch.children[0];
+    if (next === undefined) return undefined;
+    if (next.kind === "leaf") return next;
+    branch = next;
+  }
+}
+
 /** @emoji 🌱️ Result of interpreting one raw tab press: the next active path, the next per-branch drill-down memory, and whether the press should fold the hosting panel instead. */
 export interface PanelTabSelectionResult {
   readonly path: readonly string[];
@@ -174,17 +199,20 @@ export interface PanelTabSelectionOptions {
   /** @emoji 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
   readonly pathMemory?: Readonly<Record<string, string>>;
   readonly onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
+  /** 🛠️ Extra drill-down applied only when a closed host opens — Tool category lands on Fill in one press. */
+  readonly drillOnOpen?: (path: readonly string[], memory: Readonly<Record<string, string>>) => readonly string[];
 }
 
 /**
  * 🌱️ Shared fold/open/drill-down state machine for every {@link PanelTabBar} host: resolves the active path
  * against `tabs`, and interprets a raw tab press via {@link progressPanelTabSelection} — opening a closed host
- * on first press (swallowing that same press if it only re-selects the already-active leaf), folding it on an
- * active-root re-press, and otherwise advancing the path/memory (controlled when the matching `on*Change` is
- * given, else internal state). One instance of this state must back a single anchor's tabs, however many
- * hosts (panel chrome, navbar/footer chrome bar, mobile) render it — hosting is presentation-only.
+ * on first press from an empty current path so remembered drill-down (Fill under Tool) lands in that same
+ * press, folding it on an active-root re-press while already open, and otherwise advancing the path/memory
+ * (controlled when the matching `on*Change` is given, else internal state). One instance of this state must
+ * back a single anchor's tabs, however many hosts (panel chrome, navbar/footer chrome bar, mobile) render it
+ * — hosting is presentation-only.
  **/
-export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange }: PanelTabSelectionOptions): {
+export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, drillOnOpen }: PanelTabSelectionOptions): {
   readonly resolvedPath: readonly string[];
   readonly memory: Readonly<Record<string, string>>;
   readonly handlePathChange: (raw: readonly string[]) => void;
@@ -194,26 +222,42 @@ export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTab
   const memory = pathMemory ?? internalMemory;
   const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
 
+  const applyPath = (path: readonly string[], nextMemory: Readonly<Record<string, string>>) => {
+    if (onActiveTabPathChange) {
+      onActiveTabPathChange(path);
+    } else {
+      setInternalActivePath(path);
+    }
+    if (onPathMemoryChange) {
+      onPathMemoryChange(nextMemory);
+    } else {
+      setInternalMemory(nextMemory);
+    }
+  };
+
   const handlePathChange = (raw: readonly string[]) => {
     if (!visible) {
       onVisibleChange?.(true);
-      if (raw[raw.length - 1] === resolvedPath[raw.length - 1]) return;
+      const swallow = raw[raw.length - 1] === resolvedPath[raw.length - 1];
+      if (swallow) {
+        if (drillOnOpen && resolvedPath.length <= 1) {
+          const opened = progressPanelTabSelection(tabs, [], raw, memory);
+          applyPath(drillOnOpen(opened.path, opened.memory), opened.memory);
+        }
+        return;
+      }
+      if (drillOnOpen) {
+        const opened = progressPanelTabSelection(tabs, [], raw, memory);
+        applyPath(drillOnOpen(opened.path, opened.memory), opened.memory);
+        return;
+      }
     }
     const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
     if (visible && result.fold) {
       onVisibleChange?.(false);
       return;
     }
-    if (onActiveTabPathChange) {
-      onActiveTabPathChange(result.path);
-    } else {
-      setInternalActivePath(result.path);
-    }
-    if (onPathMemoryChange) {
-      onPathMemoryChange(result.memory);
-    } else {
-      setInternalMemory(result.memory);
-    }
+    applyPath(result.path, result.memory);
   };
 
   return { resolvedPath, memory, handlePathChange };

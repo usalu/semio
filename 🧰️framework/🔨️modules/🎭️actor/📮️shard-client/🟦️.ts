@@ -351,6 +351,9 @@ export interface ShardWorkerLike {
   terminate(): void;
   onmessage: ((event: { readonly data: unknown }) => void) | null;
   onerror: ((event: unknown) => void) | null;
+  /** 🩺️ Optional only so a test double may omit it; a real `Worker` always has it, and a shard that
+   * loses a message to a failed structured-clone deserialization otherwise just goes quiet. */
+  onmessageerror?: ((event: unknown) => void) | null;
 }
 
 export type CreateShardWorker = (shardIndex: number) => ShardWorkerLike;
@@ -378,7 +381,7 @@ type OutboundMessage =
 
 type InboundMessage =
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean }
   /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
    * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
    * the unconditional start-of-request beat. Diagnostic only — {@link evaluateShardLiveness} treats
@@ -412,6 +415,7 @@ export const SHARD_LIVENESS_POLICY = Object.freeze({
   heartbeatTimeoutMs: 5000,
   missedLimit: 3,
   progressIntervalMs: 1000,
+  firstTurnTimeoutMs: 30_000,
   pluginLoadIdleTimeoutMs: 30_000,
   pluginLoadCeilingMs: 300_000,
 });
@@ -423,6 +427,7 @@ const DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 type ShardHeartbeatState = {
   lastHeartbeatAtMs: number;
   lastHeartbeatTurnSeq: number;
+  lastHeartbeatPhase: string | null;
   lastLivenessAtMs: number;
   oldestPendingStartedAtMs: number | null;
   missedCount: number;
@@ -433,7 +438,7 @@ type ShardHeartbeatState = {
  * that starts in the very same tick as `spawnShard` doesn't spuriously count spawn-time as proof of
  * life for that turn's whole timeout window. */
 function freshHeartbeatState(nowMs: number): ShardHeartbeatState {
-  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
+  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastHeartbeatPhase: null, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
 }
 
 /** 🫀️ One watchdog window's worth of input — every field the rule below reads, and nothing else, so
@@ -445,6 +450,8 @@ export type ShardLivenessWindow = {
   readonly missedCount: number;
   readonly lastMissCountedAtMs: number;
   readonly heartbeatTimeoutMs: number;
+  readonly firstTurnTimeoutMs: number;
+  readonly oldestPendingIsFirstTurn: boolean;
 };
 
 export type ShardLivenessDecision = {
@@ -468,15 +475,29 @@ export type ShardLivenessDecision = {
  * looked healthy, while a worker legitimately busy inside one multi-second `await import()` of a
  * multi-MB wasm component (nothing to heartbeat about mid-turn) was killed the moment an unrelated
  * newer request became the oldest pending. That is the `shard 0 terminated` boot fault this rule
- * replaces: liveness is now proven CONTINUOUSLY by the worker's progress ticker (which can only fire
- * while its event loop is actually running), so "busy" keeps proving itself and "dead" — no messages
- * at all — still dies after exactly the same `missedLimit` windows. */
+ * replaces: liveness is now proven CONTINUOUSLY by the worker's progress ticker, so "busy" keeps
+ * proving itself and "dead" — no messages at all — still dies after exactly the same `missedLimit`
+ * windows.
+ *
+ * `firstTurnTimeoutMs` is the SECOND half of that rule, and it exists because the progress ticker's
+ * premise ("it can only fire while the worker's event loop is running", therefore silence means
+ * death) is FALSE for the one phase that matters at boot. A guest turn is synchronous on the
+ * worker's single thread: JSPI suspends only at a host import, so a compute-bound turn runs to
+ * completion with the event loop blocked and the `setInterval` ticker never fires. Measured
+ * headlessly against the live staged components (`🐍️shard-component-probe.mjs`, ticket
+ * `2026/09/09/PROCEDURAL-3D-END-TO-END`): every actor's FIRST `poll` after activation costs
+ * 2 964–3 362 ms with a 1 s ticker firing **0** times inside it, while its second poll costs 1–2 ms.
+ * The first turn carries one-off guest initialization; it is not a class of work the ordinary
+ * `heartbeatTimeoutMs` ladder can measure, and pricing it there is what terminated a perfectly
+ * healthy shard 0 mid-boot with no fault text at all. So an actor's first turn is measured against
+ * its own schema-owned ceiling, and everything after it is back on the ordinary ladder. */
 export function evaluateShardLiveness(window: ShardLivenessWindow): ShardLivenessDecision {
   const unchanged = { missedCount: window.missedCount, lastMissCountedAtMs: window.lastMissCountedAtMs, terminate: false };
   if (window.oldestPendingStartedAtMs === null) return unchanged;
+  const timeoutMs = window.oldestPendingIsFirstTurn ? Math.max(window.heartbeatTimeoutMs, window.firstTurnTimeoutMs) : window.heartbeatTimeoutMs;
   const provenAliveAtMs = Math.max(window.lastLivenessAtMs, window.oldestPendingStartedAtMs);
-  if (window.nowMs - provenAliveAtMs <= window.heartbeatTimeoutMs) return unchanged;
-  if (window.nowMs - window.lastMissCountedAtMs < window.heartbeatTimeoutMs) return unchanged;
+  if (window.nowMs - provenAliveAtMs <= timeoutMs) return unchanged;
+  if (window.nowMs - window.lastMissCountedAtMs < timeoutMs) return unchanged;
   const missedCount = window.missedCount + 1;
   return { missedCount, lastMissCountedAtMs: window.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
 }
@@ -506,6 +527,59 @@ export function describeShardWorkerError(event: unknown): string {
           : String(event);
   if (typeof record.filename !== "string" || record.filename.length === 0) return message;
   return `${message} at ${record.filename}:${typeof record.lineno === "number" ? record.lineno : "?"}:${typeof record.colno === "number" ? record.colno : "?"}`;
+}
+
+/** 🩺️ What one shard was doing when the watchdog gave up on it. Every field is state `ShardClient`
+ * already holds; the point is that `shard 0 terminated` on its own names neither the actor, the
+ * phase, nor how long the silence actually lasted — which is precisely how a boot-time termination
+ * reaches a console looking like a spontaneous, causeless worker death. */
+export type ShardSilenceReport = {
+  readonly shardIndex: number;
+  readonly nowMs: number;
+  readonly lastLivenessAtMs: number;
+  readonly lastHeartbeatPhase: string | null;
+  readonly inFlight: readonly { readonly kind: string; readonly actorId: string; readonly startedAtMs: number; readonly firstTurn: boolean }[];
+};
+
+/** 🩺️ Composes {@link ShardSilenceReport} into the one line the terminated shard's rejections carry.
+ * Keeps the `shard <n> terminated` prefix {@link isShardLostError} matches, then says how long the
+ * silence lasted, what the worker last reported, and every request that was still outstanding — so a
+ * host-side kill can never again be mistaken for a guest trap (or for nothing at all). */
+export function describeShardSilence(report: ShardSilenceReport): string {
+  const silence = Number.isFinite(report.lastLivenessAtMs) ? `silent for ${Math.max(0, Math.round(report.nowMs - report.lastLivenessAtMs))} ms` : "never sent a single message";
+  const phase = report.lastHeartbeatPhase ? `, last reported phase "${report.lastHeartbeatPhase}"` : "";
+  const requests = report.inFlight.length === 0
+    ? "no request was outstanding"
+    : report.inFlight
+        .map((entry) => `${entry.kind}${entry.firstTurn ? " (first turn)" : ""} ${entry.actorId || "<no actor>"} started ${Math.max(0, Math.round(report.nowMs - entry.startedAtMs))} ms ago`)
+        .join("; ");
+  return `shard ${report.shardIndex} terminated by the host watchdog: the worker was ${silence}${phase}; outstanding: ${requests}. A guest turn that never yields blocks the worker's event loop and its progress ticker with it, so this reads identically to a dead worker — check the guest's own turn cost before suspecting a crash.`;
+}
+
+/** 🧯 Settles a failed instance open: runs the instance's cleanup, then rejects with the ORIGINAL
+ * cause. A cleanup fault is reported on its own line and never becomes the caller's error — the
+ * message that reaches the shell must name the fault that actually happened (a guest trap, a
+ * terminated shard, a missing app) rather than whatever the teardown tripped over afterwards. Both
+ * plugin bridges route their failed `createApp` through this one function, because both had grown
+ * the same masking bug independently: a lifecycle captured before `open` leaves no UI owner behind,
+ * and the teardown's own `…-ui.native-owner-required` replaced every real cause with itself. */
+export async function settleFailedInstanceOpen(error: unknown, cleanup: () => Promise<void>): Promise<never> {
+  try {
+    await cleanup();
+  } catch (cleanupError) {
+    console.error(`[DEBUG] shard-client: cleanup after a failed instance open faulted: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`);
+  }
+  throw error;
+}
+
+/** 🩺️ A `messageerror` is the one worker event that is NEITHER a fault in the worker NOR a fault in
+ * this client: a message crossed the boundary and could not be deserialized, so a request silently
+ * never arrives (or a result silently never lands) and the shard simply goes quiet. Naming it is the
+ * whole fix — it was not observed at all before. */
+export function describeShardMessageError(shardIndex: number, event: unknown): string {
+  const record = (event ?? {}) as { readonly type?: unknown; readonly data?: unknown };
+  const shape = record.data === undefined ? "" : ` (undeserializable payload of type ${typeof record.data})`;
+  return `shard ${shardIndex} worker message error: a structured-clone message could not be deserialized${shape} — the request or result it carried is lost`;
 }
 
 /** 🩺️ One readable line out of a `worker-fault` payload — phase, actor, module URL and location, in
@@ -560,14 +634,31 @@ export function assertShardJspiAvailable(scope: ShardJspiScope = globalThis as S
  * clone across `postMessage` cannot carry an `Error` — which is exactly why the collaboration e2e's
  * `Maximum call stack size exceeded` was undiagnosable. The `[DEBUG] ` line is deliberate, permanent
  * diagnostic infrastructure the e2e log parses; it is not leftover scaffolding. */
-function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined): Error {
+function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined, retryableLifecycle?: boolean): Error {
   const error = new Error(reason);
   if (stack) error.stack = `${stack}\n    \u21b3 main: ${error.stack ?? ""}`;
+  if (retryableLifecycle === true) Object.defineProperty(error, RETRYABLE_LIFECYCLE_TURN, { value: true });
   console.log(`[DEBUG] program worker ${actorId || "unknown"} error type=${kind ?? "unknown"} framesBytes=${framesBytes ?? "n/a"}`);
   return error;
 }
 
-type PendingEntry = { readonly resolve: (value: unknown) => void; readonly reject: (error: unknown) => void; readonly slot: ShardSlot; readonly startedAtMs: number; readonly actorId: string; readonly output: OwnedActorTurnOutput | null };
+/** ⏱️ Marks a rejection the worker classified as a RETRYABLE guest lifecycle-turn deadline — the
+ * browser twin of the host's `retryable_lifecycle_turn` verdict (`🔌plugin/🖥host/🦀.rs`). The guest
+ * retained its receipt, so {@link ShardClient.sendInstanceLifecycle} replays the same events instead
+ * of failing the open; a symbol keeps the marker off every structured-clone and JSON path. */
+export const RETRYABLE_LIFECYCLE_TURN = Symbol("semio.actor.retryable-lifecycle-turn");
+
+/** ⏱️ Whether a rejection carries the {@link RETRYABLE_LIFECYCLE_TURN} marker. */
+export function isRetryableLifecycleTurn(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as Record<symbol, unknown>)[RETRYABLE_LIFECYCLE_TURN] === true;
+}
+
+/** ⏱️ How many times one lifecycle turn replays a retryable deadline before the open is failed.
+ * Native `ShardLoop::pump` re-grants without a bound because the shard scheduler is the bound there;
+ * in the browser the shard watchdog only sees a wedged worker, so the replay carries its own. */
+export const RETRYABLE_LIFECYCLE_TURN_ATTEMPTS = 16;
+
+type PendingEntry = { readonly resolve: (value: unknown) => void; readonly reject: (error: unknown) => void; readonly slot: ShardSlot; readonly startedAtMs: number; readonly actorId: string; readonly kind: string; readonly firstTurn: boolean; readonly output: OwnedActorTurnOutput | null };
 
 type ShardSlot = {
   index: number;
@@ -801,6 +892,10 @@ export interface ShardClientOptions {
    * `heartbeat` message is ALWAYS honored regardless, so correctness never depends on this. */
   readonly heartbeatSab?: SharedArrayBuffer;
   readonly heartbeatTimeoutMs?: number;
+  /** The window an actor's FIRST turn on an activation is measured against instead — see
+   * {@link evaluateShardLiveness} for why that turn is a different class of work (its one-off guest
+   * initialization runs synchronously and starves the worker's own progress ticker). */
+  readonly firstTurnTimeoutMs?: number;
   /** Cadence for {@link ShardClient.startWatchdog}'s self-tick when called with no explicit override.
    * Defaults to `heartbeatTimeoutMs` — the same cadence the pre-existing manual `checkHeartbeats()`
    * call pattern already assumed (see that method's own doc: "three consecutive timeout windows"). */
@@ -855,9 +950,15 @@ export class ShardClient {
   private readonly instanceLifecycles = new Map<number, ShardInstanceOwner>();
   private readonly instanceTurns = new WeakMap<object, { readonly owner: ShardInstanceOwner; readonly patches: WeakMap<object, OwnedNativeUiPatchAuthority> }>();
   private readonly pending = new Map<string, PendingEntry>();
+  /** 🫀️ Actors whose first turn on their CURRENT activation has already settled — the set
+   * {@link evaluateShardLiveness}'s `oldestPendingIsFirstTurn` reads. Cleared for an actor whenever
+   * it activates again, because a fresh activation is a fresh guest with the same one-off
+   * initialization cost in front of it. */
+  private readonly actorsPastFirstTurn = new Set<string>();
   private readonly exclusiveIndices: ReadonlySet<number>;
   private readonly heartbeatSabView: Int32Array | null;
   private readonly heartbeatTimeoutMs: number;
+  private readonly firstTurnTimeoutMs: number;
   private readonly watchdogIntervalMs: number;
   private readonly now: () => number;
   private readonly createWorker: CreateShardWorker;
@@ -882,6 +983,7 @@ export class ShardClient {
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
     this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? SHARD_LIVENESS_POLICY.heartbeatTimeoutMs;
+    this.firstTurnTimeoutMs = options.firstTurnTimeoutMs ?? SHARD_LIVENESS_POLICY.firstTurnTimeoutMs;
     this.watchdogIntervalMs = options.watchdogIntervalMs ?? this.heartbeatTimeoutMs;
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
@@ -1258,6 +1360,12 @@ export class ShardClient {
       console.error(`[DEBUG] shard ${index} worker error: ${detail}`, error);
       this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
+    worker.onmessageerror = (event) => {
+      if (this.shards[index] !== slot) return;
+      const detail = describeShardMessageError(index, event);
+      console.error(`[DEBUG] ${detail}`, event);
+      this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
+    };
     if (this.heartbeatSabView) worker.postMessage({ kind: "attachHeartbeatSab", shardIndex: index, sab: this.heartbeatSabView.buffer });
     return slot;
   }
@@ -1271,7 +1379,7 @@ export class ShardClient {
     if (!slot.available || this.shards[slot.index] !== slot) return;
     this.noteLiveness(slot, this.now());
     if (message.kind === "heartbeat") {
-      this.recordHeartbeat(slot, message.turnSeq, this.now());
+      this.recordHeartbeat(slot, message.turnSeq, this.now(), message.phase ?? null);
       return;
     }
     if (message.kind === "worker-fault") {
@@ -1295,9 +1403,10 @@ export class ShardClient {
     try {
       this.pending.delete(message.requestId);
       slot.pendingRequestIds.delete(message.requestId);
+      if (entry.kind === "turn" && entry.actorId !== "") this.actorsPastFirstTurn.add(entry.actorId);
       this.recomputeOldestPending(slot);
       if (message.ok) entry.resolve(message.value);
-      else entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes));
+      else entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes, message.retryableLifecycle));
     } catch (error) { entry.reject(error); }
   }
 
@@ -1422,7 +1531,9 @@ export class ShardClient {
     }
     return new Promise<T>((resolve, reject) => {
       const startedAtMs = this.now();
-      this.pending.set(requestId, { resolve: resolve as (value: unknown) => void, reject, slot, startedAtMs, actorId: "actorId" in message ? message.actorId : "", output });
+      const actorId = "actorId" in message ? message.actorId : "";
+      const firstTurn = message.kind === "turn" && actorId !== "" && !this.actorsPastFirstTurn.has(actorId);
+      this.pending.set(requestId, { resolve: resolve as (value: unknown) => void, reject, slot, startedAtMs, actorId, kind: message.kind, firstTurn, output });
       slot.pendingRequestIds.add(requestId);
       if (slot.heartbeat.oldestPendingStartedAtMs === null) slot.heartbeat.oldestPendingStartedAtMs = startedAtMs;
       try { slot.worker.postMessage(message); posted?.(); }
@@ -1444,6 +1555,7 @@ export class ShardClient {
     const activation: ShardActivation = { slot, actorId, generation, available: true, activated: false, teardownPosted: false, operationsAllowed: true, operationGeneration: 0n, lastGuestLifetime: 0n, lastReturnSequence: 0n, returned: null, instance: null, close: null };
     this.activationGeneration = generation;
     this.actorActivations.set(actorId, activation);
+    this.actorsPastFirstTurn.delete(actorId);
     await this.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, moduleUrl, caps, budget, assets }, requestId);
     activation.activated = true;
   }
@@ -1786,7 +1898,19 @@ export class ShardClient {
         this.cancelOneEffect(owner.cancellation);
         if (owner.cancellation.head === null) owner.cancellation = null;
       }
-      const result = await this.send<unknown>(slot, { kind: "turn", requestId, actorId: activation.actorId, activationGeneration: activation.generation, events, budget }, requestId, () => { posted = true; });
+      let result: unknown;
+      for (let attempt = 0; ; attempt += 1) {
+        try {
+          const attemptId = attempt === 0 ? requestId : this.nextRequestId();
+          result = await this.send<unknown>(slot, { kind: "turn", requestId: attemptId, actorId: activation.actorId, activationGeneration: activation.generation, events, budget }, attemptId, () => { posted = true; });
+          break;
+        } catch (error) {
+          if (!isRetryableLifecycleTurn(error) || attempt + 1 >= RETRYABLE_LIFECYCLE_TURN_ATTEMPTS) throw error;
+          console.log(`[DEBUG] shard client: replaying retryable lifecycle turn attempt=${attempt + 1} actor=${activation.actorId} events=${events.length}`);
+          posted = false;
+          if (!activation.available || !slot.available || this.shards[slot.index] !== slot) { owner.failure = "worker-lost"; throw new Error("actor-lifecycle.worker-lost"); }
+        }
+      }
       this.recordInstanceTurn(owner, result);
       if (!activation.available || !slot.available || this.shards[slot.index] !== slot) { owner.failure = "worker-lost"; throw new Error("actor-lifecycle.worker-lost"); }
       const status = result !== null && typeof result === "object" ? Reflect.get(result, "status") : undefined;
@@ -2156,10 +2280,22 @@ export class ShardClient {
     slot.heartbeat.lastMissCountedAtMs = atMs;
   }
 
-  private recordHeartbeat(slot: ShardSlot, turnSeq: number, atMs: number): void {
+  private recordHeartbeat(slot: ShardSlot, turnSeq: number, atMs: number, phase: string | null = slot.heartbeat.lastHeartbeatPhase): void {
     slot.heartbeat.lastHeartbeatAtMs = atMs;
     slot.heartbeat.lastHeartbeatTurnSeq = turnSeq;
+    slot.heartbeat.lastHeartbeatPhase = phase;
     this.noteLiveness(slot, atMs);
+  }
+
+  /** 🫀️ Every request still outstanding on `slot`, oldest first — the watchdog's whole view of what
+   * the worker is busy with, and the payload {@link describeShardSilence} turns into a cause. */
+  private outstandingRequests(slot: ShardSlot): readonly PendingEntry[] {
+    const entries: PendingEntry[] = [];
+    for (const requestId of slot.pendingRequestIds) {
+      const entry = this.pending.get(requestId);
+      if (entry) entries.push(entry);
+    }
+    return entries.sort((left, right) => left.startedAtMs - right.startedAtMs);
   }
 
   /** 🔭️ SAB path: polls every shard's `Atomics.load` slot and folds any advance into the SAME state
@@ -2186,6 +2322,7 @@ export class ShardClient {
    * `terminate()` + `rebuild()` and `onShardLost`. */
   checkHeartbeats(nowMs: number = this.now()): void {
     for (const slot of this.shards) {
+      const outstanding = this.outstandingRequests(slot);
       const decision = evaluateShardLiveness({
         nowMs,
         oldestPendingStartedAtMs: slot.heartbeat.oldestPendingStartedAtMs,
@@ -2193,12 +2330,22 @@ export class ShardClient {
         missedCount: slot.heartbeat.missedCount,
         lastMissCountedAtMs: slot.heartbeat.lastMissCountedAtMs,
         heartbeatTimeoutMs: this.heartbeatTimeoutMs,
+        firstTurnTimeoutMs: this.firstTurnTimeoutMs,
+        oldestPendingIsFirstTurn: outstanding[0]?.firstTurn ?? false,
       });
       slot.heartbeat.missedCount = decision.missedCount;
       slot.heartbeat.lastMissCountedAtMs = decision.lastMissCountedAtMs;
       if (!decision.terminate) continue;
       const actorIds = [...slot.actorIds];
-      this.terminate(slot.index);
+      const detail = describeShardSilence({
+        shardIndex: slot.index,
+        nowMs,
+        lastLivenessAtMs: slot.heartbeat.lastLivenessAtMs,
+        lastHeartbeatPhase: slot.heartbeat.lastHeartbeatPhase,
+        inFlight: outstanding.map((entry) => ({ kind: entry.kind, actorId: entry.actorId, startedAtMs: entry.startedAtMs, firstTurn: entry.firstTurn })),
+      });
+      console.error(`[DEBUG] ${detail}`);
+      this.terminate(slot.index, detail);
       this.rebuild(slot.index);
       this.onShardLost?.(slot.index, actorIds);
     }
@@ -2256,11 +2403,11 @@ export class ShardClient {
    * (`actorShard`) are left pointing at this now-dead index deliberately — `rebuild()` respawns a
    * fresh worker at the SAME index, so a caller's already-resolved `shardIndexFor(actorId)` stays
    * valid once the caller re-`activate()`s (from checkpoint) on the rebuilt shard. */
-  terminate(index: number): readonly string[] {
+  terminate(index: number, detail?: string): readonly string[] {
     const slot = this.shards[index];
     if (!slot) throw new Error(`[DEBUG] ShardClient.terminate: no shard ${index}`);
     const actorIds = [...slot.actorIds];
-    this.failShard(slot, new Error(`shard ${index} terminated`));
+    this.failShard(slot, new Error(detail ?? `shard ${index} terminated`));
     slot.worker.terminate();
     return actorIds;
   }
@@ -2291,10 +2438,16 @@ export class ShardClient {
 //#region 🧪️Tests
 export type { InboundMessage, OutboundMessage, PendingEntry, ShardInstanceOwner, ShardSlot };
 export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
-const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope });
+const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
+
+export type ShardClientRetryableLifecycleTestDependenciesV1 = ReturnType<typeof shardClientRetryableLifecycleTestDependenciesV1>;
+const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
 
 if (import.meta.vitest) {
+  const testSource = { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url };
   const { registerTests1 } = await import("./🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts");
-  await registerTests1(import.meta.vitest, shardClientTestDependenciesV1(), { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  await registerTests1(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
+  const { registerRetryableLifecycleDeadlineTests } = await import("./🧪️tests/⏱️retryable-lifecycle-deadline/🟦️.ts");
+  await registerRetryableLifecycleDeadlineTests(import.meta.vitest, shardClientRetryableLifecycleTestDependenciesV1(), testSource);
 }
 //#endregion 🧪️Tests

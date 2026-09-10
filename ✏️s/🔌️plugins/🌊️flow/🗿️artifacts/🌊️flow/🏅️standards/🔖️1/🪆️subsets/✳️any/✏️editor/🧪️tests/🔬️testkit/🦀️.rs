@@ -6,6 +6,57 @@ use store::ArtifactPack;
 
 pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
 
+/// 🧹️ A live app fixture that CLOSES itself. `VcsArtifactApp`'s `ArtifactStore` owns an
+/// `ArtifactStoreCursorDisposer` whose `Drop` asserts terminal-empty ownership, so a plainly-dropped
+/// fixture panics with "artifact store reached Drop without its exact terminal-empty shallow-shell
+/// witness". Dereferences to the app and drains the exact retained close ladder
+/// (`PluginApp::close_step`) on the way out — the same law the runtime uses. Mirrors generation3d's
+/// `Generation3dAppFixture` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub struct FlowAppFixture(FlowApp);
+
+impl std::ops::Deref for FlowAppFixture {
+    type Target = FlowApp;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for FlowAppFixture {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for FlowAppFixture {
+    fn drop(&mut self) {
+        for _ in 0..1_000_000 {
+            if self.0.close_terminal_is_empty() {
+                return;
+            }
+            if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
+                break;
+            }
+        }
+        assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Flow app fixture did not reach its terminal-empty close witness");
+    }
+}
+
+/// 🧪️ A self-closing app wired to the real manifest registry — the ONE construction a law that only
+/// proves boot/dispatch should use, so the store's own terminal-empty witness is honoured. It
+/// deliberately does NOT `register_content_child`: a registered child member keeps the child
+/// snapshot disposer "waiting on external ownership" forever, which is a separate, pre-existing
+/// testkit debt (`📓️flow-catalog-authority-2026-09-10.md` §7) and not something a boot law should
+/// have to carry. `FlowSnapshot::default()` already caches the working scene on its content handle,
+/// so every route that only reads the scene works without it.
+pub async fn flow_app_closing() -> FlowAppFixture {
+    install_first_party_light_flow_extensions_for_tests();
+    let definition = create_flow_app();
+    let registry = AppActionRegistry::from_definition(&definition);
+    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
+    app.bind_instance_id(meta("local").instance_id).await;
+    FlowAppFixture(app)
+}
+
 /// 🧪️ Installs a hand-authored `flow.extension` manifest fixture (a "math" module contributing the
 /// `math.add` operator) so tests exercising the catalogue/extension surfaces have something real
 /// installed — deliberately NOT the production `flow-extension-*` crates: flow-core must not
@@ -41,6 +92,12 @@ pub(crate) async fn register_content_child(app: &mut FlowApp) {
     let snapshot = app.snapshot().expect("Flow parent snapshot");
     let fixture = snapshot.to_fixture();
     let content = crate::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
+    // 🧹️ `FlowFixture` owns an `OrderedMap` layout root that rejects a bare drop ("ordered-map root
+    // must be explicitly retired before drop") — retired here so the shared fixture builder cannot
+    // abort a whole test binary (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
+    retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Fixture(fixture));
+    retirement.retire_cold();
     let dialect = snapshot.content.target.dialect.clone();
     let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
     app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");

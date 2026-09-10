@@ -43,7 +43,7 @@ fn guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_
         assert_eq!(bytes, first.as_bytes().len());
         assert!(pending.turn_handback.terminal_is_empty());
         assert!(!pending.close_instance_complete(key).unwrap());
-        pending.close_step().unwrap();
+        pending.close_step(1, 4096).unwrap();
         assert!(pending.close_instance_complete(key).unwrap());
         pending.release_close_instance(key).unwrap();
     }
@@ -65,7 +65,7 @@ fn guest_instance_lifecycle_pending_patch_unwind_keeps_the_exact_typed_cursor_mo
     assert_eq!(pending.slots[0].is_some(), fixture["pendingPatch"]["faultLeavesStructuralOwner"].as_bool().unwrap());
     assert!(!pending.close_instance_complete(key).unwrap());
     for turn in 0..4096 {
-        pending.close_step().unwrap();
+        pending.close_step(1, 4096).unwrap();
         if pending.close_instance_complete(key).unwrap() {
             break;
         }
@@ -87,15 +87,15 @@ fn instance_lifetime_pending_patch_keeps_scope_after_payload_surface_retires() {
         owner.source_mut().unwrap().as_mut().unwrap().surface = Default::default();
     }
     for turn in 0..1024 {
-        pending.close_step().unwrap();
+        pending.close_step(1, 4096).unwrap();
         if pending.slots[0].is_none() {
             break;
         }
         assert!(turn < 1023);
     }
     assert_eq!(pending.slots[0].is_none(), fixture["nativeCases"]["scopeAfterSurfaceClear"].as_bool().unwrap());
-    assert!(!pending.close_step().unwrap());
-    assert!(pending.close_step().unwrap());
+    assert!(!pending.close_step(1, 4096).unwrap());
+    assert!(pending.close_step(1, 4096).unwrap());
     assert!(pending.close_instance_complete(key).unwrap());
     pending.release_close_instance(key).unwrap();
     assert!(pending.close_instance_complete(key).is_err());

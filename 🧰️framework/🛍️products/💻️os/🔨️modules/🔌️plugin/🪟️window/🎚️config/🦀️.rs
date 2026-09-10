@@ -464,7 +464,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
-            self.partition(window_id).await?.store.reset(parsed.envelope, applied, redo).await.map(|_| ()).map_err(|error| error.into_fault())
+            self.partition(window_id).await?.store.reset(parsed.into_envelope(), applied, redo).await.map(|_| ()).map_err(|error| error.into_fault())
         })
     }
 

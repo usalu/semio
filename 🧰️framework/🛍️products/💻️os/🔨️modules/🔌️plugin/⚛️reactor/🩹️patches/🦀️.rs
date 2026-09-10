@@ -93,15 +93,15 @@ struct ReadySlot {
 }
 
 impl ReadySlot {
-    fn close_step(&mut self) -> Result<bool, &'static str> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
         self.closing = true;
         if let Some(reservation) = self.reservation.as_mut() {
-            if reservation.close_step(1)?.complete {
+            if reservation.close_step(items)?.complete {
                 self.reservation = None;
             }
             return Ok(false);
         }
-        Ok(self.outputs.close_step(1, 4096)?.complete && self.outputs.terminal_is_empty())
+        Ok(self.outputs.close_step(items, bytes)?.complete && self.outputs.terminal_is_empty())
     }
 }
 
@@ -807,14 +807,18 @@ impl PatchTracker {
         Ok(())
     }
 
-    pub fn close_step(&self) -> bool {
+    /// 🧹️ Retires one unit of the oldest closing owner against the caller's grant — see
+    /// [`super::pending::PendingPatchAuthority::close_step`] for why a retirement unit must be priced
+    /// per PAGE and not per item: every unit the reactor cannot finish this turn is answered as
+    /// `MoreWork`, and every `MoreWork` is one host round trip the user waits through.
+    pub fn close_step(&self, items: usize, bytes: usize) -> bool {
         let Ok(mut state) = self.state.try_borrow_mut() else { return false };
         if state.output_fault.is_some() {
             return false;
         }
         close_stranded_outputs(&mut state);
         if let Some(index) = state.ready.iter().position(|output| output.as_ref().is_some_and(|output| output.closing)) {
-            match state.ready[index].as_mut().expect("retained output close").close_step() {
+            match state.ready[index].as_mut().expect("retained output close").close_step(items, bytes) {
                 Ok(true) => state.ready[index] = None,
                 Ok(false) => {}
                 Err(fault) => state.output_fault = Some((state.ready[index].as_ref().expect("faulted retained output").key, fault, false)),

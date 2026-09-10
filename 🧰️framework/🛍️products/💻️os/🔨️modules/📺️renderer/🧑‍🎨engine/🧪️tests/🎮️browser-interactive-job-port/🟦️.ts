@@ -126,16 +126,41 @@ describe("browser interactive job port", () => {
     expect(pageFaults).toEqual(["interactive job page exceeded fixed credits"]);
   });
 
-  it("quarantines an exact consumer overrun and cursor-drains close", () => {
+  it("records a consumer overrun without quarantining and still answers the pull", () => {
+    const sent: InteractiveJobUiMessage[] = [];
     let now = 0;
-    const port = new BrowserInteractiveJobPort(1, () => {}, () => now, () => {});
+    const port = new BrowserInteractiveJobPort(1, (message) => sent.push(message), () => now, () => {});
     port.ready();
-    port.submit(descriptor(1), closeable({ readInputPage: () => { now = 2; return page(); }, onOutputPage: () => {}, onTerminal: () => {} }));
+    port.submit(descriptor(1), closeable({ readInputPage: () => { now += 50; return page(); }, onOutputPage: () => {}, onTerminal: () => {} }));
+    port.receive({ kind: "job-input-pull", lifecycle: 1, operation: 1, generation: 1, cursor: 0, maxItems: 1 });
+    expect(port.status).toBe("ready");
+    expect(sent.filter((message) => message.kind === "job-input-page")).toHaveLength(1);
+    expect(port.uiTurnSnapshot().recordedOverruns).toBe(1);
+    expect(port.uiTurnSnapshot().degraded).toBe(false);
+  });
+
+  it("quarantines a consumer that throws, and cursor-drains close", () => {
+    const faults: string[] = [];
+    const port = new BrowserInteractiveJobPort(1, () => {}, () => 0, (detail) => faults.push(detail));
+    port.ready();
+    port.submit(descriptor(1), closeable({ readInputPage: () => { throw new Error("boom"); }, onOutputPage: () => {}, onTerminal: () => {} }));
     port.receive({ kind: "job-input-pull", lifecycle: 1, operation: 1, generation: 1, cursor: 0, maxItems: 1 });
     expect(port.status).toBe("quarantined");
+    expect(faults).toEqual(["input consumer threw: boom"]);
     let turns = 0;
     while (!port.closeStep()) turns++;
     expect(turns).toBe(1);
+  });
+
+  it("asks the caller to yield only after a sustained run of consumer overruns", () => {
+    const port = new BrowserInteractiveJobPort(1, () => {}, () => 0, () => {});
+    port.ready();
+    expect([1, 2, 3].map((turn) => port.observeConsumerTurn(`turn-${turn}`, 50))).toEqual([true, true, true]);
+    expect(port.observeConsumerTurn("turn-4", 50)).toBe(false);
+    expect(port.status).toBe("ready");
+    expect(port.uiTurnSnapshot()).toMatchObject({ recordedOverruns: 4, sustainedOverruns: 1, degraded: true });
+    expect(port.observeConsumerTurn("turn-5", 0)).toBe(true);
+    expect(port.uiTurnSnapshot().degraded).toBe(false);
   });
 
   it("publishes bounded readiness snapshots to pre-boot subscribers", () => {

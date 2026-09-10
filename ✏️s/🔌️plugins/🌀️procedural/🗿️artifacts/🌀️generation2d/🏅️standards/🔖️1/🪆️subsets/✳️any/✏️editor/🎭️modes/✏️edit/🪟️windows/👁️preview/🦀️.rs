@@ -84,6 +84,6 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -7,6 +7,20 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
+//#region 🧮️GuestHeapWitness
+/// 🧮️ Weighs every allocation this GUEST makes, so a per-turn retention trace has real numbers to
+/// attribute inside a `wasm32-wasip2` component.
+///
+/// 🚫️ Never in a shipped plugin: two relaxed atomics per allocation is a measurement cost, and the
+/// reading the browser needs for free is one `memory.size`. Built with `--features
+/// guest-heap-witness` when a leak has to be attributed to a turn PHASE rather than merely observed
+/// as linear-memory growth — installing it also arms `⚛️reactor`'s phase trace, which routes its
+/// lines through the actor world's `log` import. See `📓️idle-turns-2026-09-10.md`.
+#[cfg(feature = "guest-heap-witness")]
+#[global_allocator]
+static PROCEDURAL_GUEST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+//#endregion 🧮️GuestHeapWitness
+
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
@@ -19,10 +33,53 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
+//#region 🎮️Commands
+#[path = "🎮️commands/🦀️.rs"]
+mod commands;
+//#endregion 🎮️Commands
+
+//#region 🌊️FlowExtensions
+/// 🌊️ `(slug, extension id, label, version)` for every flow extension this plugin installs. The
+/// slug is the only free variable in a declaration: the contribution id is
+/// `s.procedural.flow-extension.<slug>` and the native executable is
+/// `semio.s.plugin.flow.extension.<slug>`, so the table states each extension once instead of
+/// spelling those three strings out nine times. `🎮️commands` reads the same table to answer
+/// `listFlowExtensions`.
+pub(crate) const FLOW_EXTENSIONS: [(&str, &str, &str, &str); 9] = [
+    ("brep", "brep", "Brep", "0.3.0"),
+    ("math", "math", "Math", "0.1.0"),
+    ("primitive", "core", "Core", "0.1.0"),
+    ("logic", "logic", "Logic", "0.1.0"),
+    ("dictionary", "dictionary", "Dictionary", "0.1.0"),
+    ("list", "list", "List", "0.1.0"),
+    ("text", "text", "Text", "0.1.0"),
+    ("draw", "draw", "Draw", "0.1.0"),
+    ("bim", "bim", "Bim", "0.1.0"),
+];
+
+/// 🪪️ The stable contribution id one roster row is declared under.
+pub(crate) fn flow_extension_declaration_id(slug: &str) -> String {
+    format!("s.procedural.flow-extension.{slug}")
+}
+
+/// 🧩️ Builds every roster row's typed declaration, in table order.
+fn flow_extension_declarations() -> Result<Vec<FlowExtensionDeclaration>, PluginAssemblyError> {
+    FLOW_EXTENSIONS
+        .iter()
+        .map(|(slug, extension, label, version)| {
+            let native = format!("semio.s.plugin.flow.extension.{slug}");
+            FlowExtensionDeclaration::new(flow_extension_declaration_id(slug), FlowExtensionManifest::new(*extension, *label, *version)?, FlowExtensionExecutableIdentity::native(native.clone(), native, "register")?)
+        })
+        .collect()
+}
+//#endregion 🌊️FlowExtensions
+
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
+    #[cfg(feature = "guest-heap-witness")]
+    semio_framework_trace::set_runtime_diagnostics(true);
     semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production()).map_err(|error| PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
-    Plugin::<ProceduralApps>::builder("procedural")
+    let mut builder = Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
         .package_id("semio:procedural")
@@ -35,51 +92,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             semio_s_artifact_procedural_generation3d::GENERATION_3D_SCHEMA,
             semio_s_artifact_procedural_generation3d::editor::generation3d::generation3d_document_from_mesh,
         )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.brep",
-            FlowExtensionManifest::new("brep", "Brep", "0.3.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.brep", "semio.s.plugin.flow.extension.brep", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.math",
-            FlowExtensionManifest::new("math", "Math", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.math", "semio.s.plugin.flow.extension.math", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.primitive",
-            FlowExtensionManifest::new("core", "Core", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.primitive", "semio.s.plugin.flow.extension.primitive", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.logic",
-            FlowExtensionManifest::new("logic", "Logic", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.logic", "semio.s.plugin.flow.extension.logic", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.dictionary",
-            FlowExtensionManifest::new("dictionary", "Dictionary", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.dictionary", "semio.s.plugin.flow.extension.dictionary", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.list",
-            FlowExtensionManifest::new("list", "List", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.list", "semio.s.plugin.flow.extension.list", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.text",
-            FlowExtensionManifest::new("text", "Text", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.text", "semio.s.plugin.flow.extension.text", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.draw",
-            FlowExtensionManifest::new("draw", "Draw", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.draw", "semio.s.plugin.flow.extension.draw", "register")?,
-        )?)
-        .flow_extension(FlowExtensionDeclaration::new(
-            "s.procedural.flow-extension.bim",
-            FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
-            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
-        )?)
+        .plugin_command(commands::list_flow_extensions_command(), Box::new(commands::list_flow_extensions))
         .editor_with_examples::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app(), vec![semio_s_artifact_procedural_generation2d::examples::demo::source()])
         .editor_mutation_roster::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>()
         .viewer::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>(semio_s_artifact_procedural_generation2d::viewer::generation2d::create_generation2d_viewer())
@@ -104,8 +117,11 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             scope: "plugin".into(),
             reason: "persist generation2d/generation3d editor edits (flow graph parameter/node changes) to the open document".into(),
             optional: false,
-        })
-        .try_build()
+        });
+    for declaration in flow_extension_declarations()? {
+        builder = builder.flow_extension(declaration);
+    }
+    builder.try_build()
 }
 
 //#region 🧪️SurfaceTests

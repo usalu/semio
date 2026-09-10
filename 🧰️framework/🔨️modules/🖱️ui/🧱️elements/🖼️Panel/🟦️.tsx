@@ -23,7 +23,7 @@ import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surfa
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
-import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
+import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -222,6 +222,8 @@ export interface PanelProps {
    * memoized pane never re-calls `resolveTree`, so sibling distribution sliders stay visually stuck.
    */
   treeContentRevision?: unknown;
+  /** 🛠️ Extra drill-down applied only when a closed host opens (see {@link PanelTabSelectionOptions.drillOnOpen}). */
+  drillOnOpen?: PanelTabSelectionOptions["drillOnOpen"];
   minSize?: number;
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
@@ -398,6 +400,7 @@ const Panel: React.FC<PanelProps> = ({
   treeOpenStates,
   onTreeOpenStateChange,
   treeContentRevision,
+  drillOnOpen,
   minSize = 200,
   maxSize = 600,
   zIndex,
@@ -424,9 +427,10 @@ const Panel: React.FC<PanelProps> = ({
   const horizontal = anchorHorizontal(anchor);
   const isBottom = flow.block === "up";
   const isChromeHosted = tabBarHost === "chrome";
-  const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
+  const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, drillOnOpen });
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
-  const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
+  const bodyLeaf = activeNode?.kind === "leaf" ? activeNode : activeNode ? resolvePanelBranchBodyLeaf(activeNode, pathMemory ?? {}) : undefined;
+  const activeTabTrees = bodyLeaf?.trees ?? null;
   const firstDraggableAlias = visible && activeNode ? panelTabFirstDraggableElementId(activeNode.id) : null;
   useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
@@ -515,8 +519,8 @@ const Panel: React.FC<PanelProps> = ({
                   <div data-slot="panel-body-stack" className={cn("flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
                     <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
-                      {activeTabTrees && activeNode ? (
-                        <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
+                      {activeTabTrees && bodyLeaf ? (
+                        <PanelTreeUnitsPane anchor={anchor} tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                       ) : null}
                     </Scrollable>
                   </div>

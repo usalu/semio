@@ -213,7 +213,10 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     }
 
     /// ⏱️ Commits receipt consumption only after the exact turn has a successful real-clock verdict.
-    pub(crate) fn finish_turn(&mut self, started_us: Option<u64>, now_us: impl FnOnce() -> Option<u64>, succeeded: bool) -> Result<Option<ActorInstanceLifecycleReceipt>, &'static str> {
+    /// `executing_us` is the turn's EXECUTING time — wall time inside the guest's own polls, with
+    /// every suspension gap excluded (`⚛️reactor/🔄️turn`'s `guest_turn_executing_us`). `None` means
+    /// the host clock was missing or ran backward, which retains the receipt exactly like a deadline.
+    pub(crate) fn finish_turn(&mut self, executing_us: Option<u64>, succeeded: bool) -> Result<Option<ActorInstanceLifecycleReceipt>, &'static str> {
         if !succeeded {
             return Err("guest lifecycle turn failed; receipt retained");
         }
@@ -237,7 +240,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
         } else {
             None
         };
-        let elapsed = now_us().zip(started_us).and_then(|(end, start)| end.checked_sub(start)).ok_or("guest lifecycle clock missing or backward; receipt retained")?;
+        let elapsed = executing_us.ok_or("guest lifecycle clock missing or backward; receipt retained")?;
         if semio_framework_trace::guest_lifecycle_turn_contract_violated(elapsed) {
             return Err(GUEST_LIFECYCLE_TURN_DEADLINE);
         }
@@ -464,9 +467,9 @@ impl<PA: crate::app::PluginApp> NativeLifecycleRegistry<PA> {
         }
         Ok(slot.cell.retained_receipt())
     }
-    pub(crate) fn finish_turn(&mut self, instance: u32, started_us: Option<u64>) -> Result<(), &'static str> {
+    pub(crate) fn finish_turn(&mut self, instance: u32, executing_us: Option<u64>) -> Result<(), &'static str> {
         let slot = self.get_mut(instance).ok_or("turn lifecycle missing")?;
-        slot.cell.finish_turn(started_us, semio_framework_job::default_now_us, true)?;
+        slot.cell.finish_turn(executing_us, true)?;
         if slot.cell.is_released() {
             drop(self.slots.take(Self::index(instance)));
         }

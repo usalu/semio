@@ -257,7 +257,7 @@ function reply(requestId, value) {
 // most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
 // unless it isn't already a binary buffer, so a huge/cyclic payload can't itself blow the stack while
 // we're trying to report a stack overflow.
-function replyError(requestId, error, frames) {
+function replyError(requestId, error, frames, retryableLifecycle) {
   const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
   const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
   let stack;
@@ -283,7 +283,7 @@ function replyError(requestId, error, frames) {
   else if (error && typeof error === "object" && (typeof error.stack === "string" || typeof error.message === "string")) reason = String(error);
   else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
   else reason = String(error);
-  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes });
+  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true });
 }
 
 async function loadActor(actorId, activationGeneration, moduleUrl) {
@@ -340,6 +340,32 @@ function spliceInstanceOpenAssets(entry, events) {
     if (event.kind !== "instance-open") return event;
     return { kind: event.kind, payload: { ...event.payload, assets: [...(event.payload.assets ?? []), ...pending] } };
   });
+}
+
+// ⏱️ The browser twin of the host's own \`retryable_lifecycle_turn\` (\`🔌️plugin/🖥️host/🦀️.rs\`, driven
+// by \`🖥️host/🔁️lifecycle/🧫️fixtures/🔣️.json\`): a RETRYABLE \`plugin.reactor-turn-deadline\` on a turn
+// that carries at most one lifecycle event is a YIELD, not a death — the guest retained its receipt,
+// so the same events replay on the next tick and the open continues. Native \`ShardLoop::pump\` has
+// always re-granted these; without this the browser reported the identical verdict as a worker fault
+// and \`onActorTrap\` killed the actor on its very first step (ticket 26/09/09, boot #6).
+const LIFECYCLE_TURN_EVENT_KINDS = ["instance-open", "instance-close", "instance-lifecycle-ack"];
+const REACTOR_TURN_DEADLINE_CODE = "plugin.reactor-turn-deadline";
+
+function guestFaultRecord(error) {
+  for (const value of [error, error?.payload, error?.payload?.val, error?.val]) {
+    if (!value) continue;
+    if (typeof value.code === "string") return value;
+    if (value instanceof Uint8Array) {
+      try { return JSON.parse(new TextDecoder().decode(value)); } catch { return null; }
+    }
+  }
+  return null;
+}
+
+function retryableLifecycleTurn(error, events, commandPage) {
+  const fault = guestFaultRecord(error);
+  if (!fault || fault.code !== REACTOR_TURN_DEADLINE_CODE || fault.retryable !== true) return false;
+  return (commandPage === undefined || commandPage === null) && Array.isArray(events) && events.length <= 1 && events.every((entry) => entry && LIFECYCLE_TURN_EVENT_KINDS.includes(entry.kind));
 }
 
 self.addEventListener("message", async (event) => {
@@ -457,9 +483,12 @@ self.addEventListener("message", async (event) => {
   } catch (error) {
     // 🩺️ Reported on BOTH channels on purpose: \`replyError\` answers the one caller that is awaiting
     // this request, \`reportWorkerFault\` names the phase/actor/module to the shell's console for the
-    // boot faults nobody is awaiting a reply for.
-    reportWorkerFault("handler", error, null);
-    replyError(requestId, error, msg.events);
+    // boot faults nobody is awaiting a reply for. A retryable lifecycle-turn deadline is neither —
+    // it is a yield the client replays, so it never reaches \`onActorTrap\`.
+    const retryableLifecycle = kind === "turn" && retryableLifecycleTurn(error, msg.events, msg.commandPage);
+    if (retryableLifecycle) console.log(\`[DEBUG] shard worker: retryable lifecycle deadline on \${faultPhase} for actor \${actorId}; receipt retained, replaying next tick\`);
+    else reportWorkerFault("handler", error, null);
+    replyError(requestId, error, msg.events, retryableLifecycle);
   } finally {
     endRequest();
     faultPhase = "idle";

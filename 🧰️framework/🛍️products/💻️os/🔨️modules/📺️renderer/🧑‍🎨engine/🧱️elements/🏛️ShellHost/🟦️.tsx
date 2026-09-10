@@ -84,6 +84,7 @@ import {
   pendingPanelUiNode,
   pendingWindowUiNode,
   parseResolvedPluginViewState,
+  publicInvocationStringPages,
   type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
@@ -124,6 +125,7 @@ import {
   type UtilityNode,
   waitForEvent,
   windowElementId,
+  hostArmedViewContext,
   panelViewContext,
   windowViewContext,
   type WindowEngagement,
@@ -405,7 +407,6 @@ import {
   FRAMEWORK_CATEGORY_COMMAND_ID,
   FRAMEWORK_CATEGORY_DISPLAY_ID,
   FRAMEWORK_CATEGORY_TOOL_ID,
-  FRAMEWORK_RESERVED_ACTION_IDS,
   LAYOUT_CHANGE_SETTLE_MS,
   NOTE_WORLD_NAVIGATION_ACTION_ID,
   PANEL_TAB_BAR_HOSTS,
@@ -419,12 +420,16 @@ import {
   applyTutorialUiChangeToShell,
   applyTutorialUiSnapshotToShell,
   applyUiRefreshResponseToCache,
+  buildActiveExampleAction,
   buildActiveUtilityByWindowId,
   buildCommandCategoryTabs,
   buildNoteShellCommandAction,
   buildOsCommands,
   buildSpacePanelState,
   buildToolTabs,
+  toolCategoryOpenPath,
+  toolLeafInactiveRepress,
+  toolPanelTreeContentRevision,
   buildUiRefreshRequest,
   captureCurrentFrameworkLayout,
   captureTutorialUiSnapshot,
@@ -441,6 +446,7 @@ import {
   drainSegmentedMediaExport,
   downloadDataUrl,
   downloadMediaExport,
+  mediaExportEncodingText,
   filterDefinitionsForRole,
   flattenPanelTabLeaves,
   groupOpenWithEntries,
@@ -485,9 +491,13 @@ import {
   resolveFrameworkLayoutSeed,
   resolveIntroductionDefinition,
   resolveKeybindingIntent,
+  clipboardWriteFragmentFromEffect,
+  pasteActionWithRetainedFragment,
+  pasteArgsFragment,
   resolveManifestLabel,
   resolvePanelTabLabel,
   resolveUtilityActivation,
+  undeclaredActionDiagnostic,
   resolveUtilityNodes,
   resolveWindowEngagement,
   retitleWindowLayoutNode,
@@ -851,8 +861,18 @@ function encodeAppCommandInvocation(pluginId: string, app: AppDefinition, comman
 }
 
 /** 📋️ Tests whether an app explicitly opts into a host-pushed command. */
-function appOwnsCommand(app: AppDefinition, commandId: string): boolean {
+export function appOwnsCommand(app: AppDefinition, commandId: string): boolean {
   return (app.commands ?? []).some((command) => command.id === commandId);
+}
+
+/** @emoji 📄️ Tests whether the app's OWN declaration of a host-pushed command takes a page run — the
+ * shell sends exactly the arguments the addressed command declares, so an app whose `setContributions`
+ * is a single-`json` command is never handed a `page`/`pageCount` it would ignore while silently
+ * overwriting itself with the last page. The declaration is the contract, not this file's assumption
+ * about it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function appCommandTakesPageRun(app: AppDefinition, commandId: string): boolean {
+  const command = (app.commands ?? []).find((entry) => entry.id === commandId);
+  return (command?.args ?? []).some((arg) => arg.id === "pageCount");
 }
 
 //#region 🎥️TutorialOverlayHosts
@@ -1539,6 +1559,60 @@ function pluginInstallConcurrency(): number {
 }
 //#endregion 🧵️ConcurrencyHelpers
 
+//#region 🩺️RuntimeDiagnostics
+/** @emoji 🩺️ The ONE key that arms this shell's per-action runtime traces — the refresh/completion
+ * chatter a boot emits once per dispatched action. Off by default: a served boot of the
+ * hexagonal-mushroom-column printed these on every one of ~1440 typed-operation completions
+ * (`📓️runtime-verification-2026-09-09.md` boot #7), which is signal a perf run wants and an
+ * interactive boot must never pay for.
+ *
+ * 🪞️ Mirrors the guest-side switch `RUNTIME_DIAGNOSTICS_ENV`
+ * (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`) key for key, so one name arms both sides of the wire; the
+ * two cannot share a declaration across the language boundary, so
+ * `🧪️tests/🔬️engine-contract/🟦️.ts` pins the string instead
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export const RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+
+/** @emoji 🩺️ Armed by `1`/`true`/`on`/`yes`; anything else, including absent, leaves it off. */
+function runtimeDiagnosticsArmed(value: unknown): boolean {
+  return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
+}
+
+let runtimeDiagnosticsOverride: boolean | undefined;
+let runtimeDiagnosticsResolved: boolean | undefined;
+
+/** @emoji 🩺️ Arms or disarms the traces for this page, outranking build env and stored preference —
+ * the browser's counterpart to the guest's `set_runtime_diagnostics`. */
+export function setRuntimeDiagnostics(enabled: boolean | undefined): void {
+  runtimeDiagnosticsOverride = enabled;
+  runtimeDiagnosticsResolved = undefined;
+}
+
+/** @emoji 🩺️ Whether the shell's per-action traces may print. Resolved once per page: an explicit
+ * override wins, then the build's `VITE_SEMIO_RUNTIME_DIAGNOSTICS`, then a `localStorage` key of the
+ * same name so a live tab can be armed without a rebuild. Every reader is wrapped, because a
+ * sandboxed tab throws on `localStorage` and a non-Vite host has no `import.meta.env`. */
+export function runtimeDiagnosticsEnabled(): boolean {
+  if (runtimeDiagnosticsOverride !== undefined) return runtimeDiagnosticsOverride;
+  if (runtimeDiagnosticsResolved !== undefined) return runtimeDiagnosticsResolved;
+  let armed = false;
+  try {
+    armed = runtimeDiagnosticsArmed((import.meta as { readonly env?: Record<string, unknown> }).env?.[`VITE_${RUNTIME_DIAGNOSTICS_KEY}`]);
+  } catch {
+    armed = false;
+  }
+  if (!armed) {
+    try {
+      armed = runtimeDiagnosticsArmed(globalThis.localStorage?.getItem(RUNTIME_DIAGNOSTICS_KEY));
+    } catch {
+      armed = false;
+    }
+  }
+  runtimeDiagnosticsResolved = armed;
+  return armed;
+}
+//#endregion 🩺️RuntimeDiagnostics
+
 //#region 🔁️InvokeExtensionDispatch
 function captureExtensionCompletion(requestingPlugin: LoadedProgramState, instanceId: number, req: bigint): PluginExtensionCompletion {
   const capture = requestingPlugin.handle.captureExtensionCompletion;
@@ -1583,7 +1657,7 @@ async function runCapturedExtensionEffect(
   completion.assertActive();
   const response = await completion.complete(outcome);
   completion.assertActive();
-  console.log("[DEBUG] extension invocation completed", { extensionId, capability, instanceId, req, status: "ok" in outcome ? "ok" : "fault" });
+  if (!("ok" in outcome)) console.warn("[DEBUG] extension invocation faulted", { extensionId, capability, instanceId, req });
   return response;
 }
 
@@ -1592,7 +1666,17 @@ export async function runInvokeExtensionEffect(requestingPlugin: LoadedProgramSt
   return runCapturedExtensionEffect(captureExtensionCompletion(requestingPlugin, instanceId, req), extensionEntry, extensionId, capability, requestJson);
 }
 
-/** 📨️ Resolves an extension address and serializes requests belonging to one originating instance. */
+/** 📨️ Resolves an extension address and serializes requests belonging to one originating instance.
+ *
+ * 🪪️ `extensionId` IS a loaded program's `pluginId` — the one address this shell can resolve, and the
+ * one the framework's own fixture pins (`🧫️fixtures/🔣️extension-invocation.json`). A producer whose
+ * domain names extensions differently (flow calls the brep kernel `brep`, its plugin is
+ * `flow-extension-brep`) translates on ITS side, where the owning plugin id is known — never here:
+ * this shell stays domain-neutral and knows no topic vocabulary. The former fallback scanned
+ * `manifest.contributions` for an `extensionId` field, which no manifest has ever carried (that
+ * lane is `playbookBlockKind` rows; contributed extension payloads live under
+ * `manifest.topicContributions[].payload`), so it matched nothing and every flow evaluation faulted
+ * `extension.missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export async function dispatchInvokeExtensionEffect(
   plugins: readonly LoadedProgramState[],
   requester: Pick<ActiveSession, "pluginId" | "instanceId">,
@@ -1602,7 +1686,8 @@ export async function dispatchInvokeExtensionEffect(
   const { extensionId, capability, requestJson, req } = invocation;
   const requestingPlugin = plugins.find((entry) => entry.handle.pluginId === requester.pluginId);
   if (!requestingPlugin) throw new Error("extension.requester-unavailable");
-  const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((contribution) => "extensionId" in contribution && (contribution as { extensionId?: string }).extensionId === extensionId));
+  const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId);
+  if (!extensionEntry) console.warn("[DEBUG] invokeExtension unresolved", { extensionId, capability, req, loaded: plugins.map((entry) => entry.handle.pluginId) });
   const completion = captureExtensionCompletion(requestingPlugin, requester.instanceId, req);
   const response = await serializePerActor(`${requester.pluginId}:${requester.instanceId}`, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson));
   completion.assertActive();
@@ -1652,6 +1737,58 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   );
 }
 //#endregion 🐚️ShellMount
+
+//#region 🔖️BuiltNodeStoreCache
+/** 🦴 The one placeholder body every not-yet-refreshed window shares. Reference-stable on purpose:
+ * `pendingWindowUiNode()` allocates a fresh node per call, so calling it inside the shell's JSX made
+ * every render look like an authored-node change to {@link createBuiltNodeStoreCacheV1} and reloaded
+ * that window's store on each pass. */
+const PENDING_WINDOW_UI_NODE: BuiltNode = pendingWindowUiNode();
+
+/** 🧬️ One `📃️UiDocumentStore` per window/panel key, reloaded from its authored `BuiltNode` only when
+ * that node's own reference changed. `storeFor` is called from JSX during the shell's render, so it
+ * MUST NOT mutate a store that already has mounted `UiNodeView` subscribers: `loadSnapshot` notifies
+ * them, and a subscriber update raised while another component renders is exactly React's
+ * "Cannot update a component (`UiNodeView`) while rendering a different component
+ * (`FrameworkOsShellInner`)" warning (`📓️runtime-verification-2026-09-09.md` boot #3). A first load
+ * happens inline — a store nobody has subscribed to yet cannot notify anyone — and every later reload
+ * is queued for {@link BuiltNodeStoreCacheV1.flushPendingReloads}, which the shell calls from a layout
+ * effect (post-commit, pre-paint, so nothing renders stale). */
+export type BuiltNodeStoreCacheV1 = {
+  readonly storeFor: (key: string, node: BuiltNode) => UiDocumentStore;
+  readonly flushPendingReloads: () => void;
+  readonly pendingReloadKeys: () => readonly string[];
+};
+
+export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
+  const stores = new Map<string, { node: BuiltNode; readonly store: UiDocumentStore }>();
+  const pending = new Map<string, BuiltNode>();
+  return {
+    storeFor: (key, node) => {
+      const existing = stores.get(key);
+      if (!existing) {
+        const store = new UiDocumentStore(key);
+        store.loadSnapshot(builtNodeToSnapshot(key, node));
+        stores.set(key, { node, store });
+        return store;
+      }
+      if (existing.node === node) pending.delete(key);
+      else pending.set(key, node);
+      return existing.store;
+    },
+    flushPendingReloads: () => {
+      for (const [key, node] of pending) {
+        const entry = stores.get(key);
+        if (!entry) continue;
+        entry.store.loadSnapshot(builtNodeToSnapshot(key, node));
+        entry.node = node;
+      }
+      pending.clear();
+    },
+    pendingReloadKeys: () => [...pending.keys()],
+  };
+}
+//#endregion 🔖️BuiltNodeStoreCache
 
 function FrameworkOsShellInner({
   pluginFilter,
@@ -1793,6 +1930,7 @@ function FrameworkOsShellInner({
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const contributionsJsonRef = useRef<string | null>(null);
+  const clipboardFragmentRef = useRef<unknown>(undefined);
   const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
@@ -1894,18 +2032,12 @@ function FrameworkOsShellInner({
    * `BuiltNode` reference-stable across a `refreshUi` cycle, so this rarely reloads). Plain ref-backed
    * memoization, not a custom hook — the call sites live inside `useMemo` callbacks over `.map()`,
    * where a hook call would violate the Rules of Hooks. */
-  const builtNodeStoresRef = useRef(new Map<string, { readonly node: BuiltNode; readonly store: UiDocumentStore }>());
-  /** 🧬️ Get-or-create the `📃️UiDocumentStore` for `key`, reloading it from `node` only when `node`'s own
-   * reference changed since the last call — see `builtNodeStoresRef`'s doc above. */
-  const builtNodeStoreFor = useCallback((key: string, node: BuiltNode): UiDocumentStore => {
-    const cache = builtNodeStoresRef.current;
-    const existing = cache.get(key);
-    if (existing && existing.node === node) return existing.store;
-    const store = existing?.store ?? new UiDocumentStore(key);
-    store.loadSnapshot(builtNodeToSnapshot(key, node));
-    cache.set(key, { node, store });
-    return store;
-  }, []);
+  const builtNodeStoreCacheRef = useRef(createBuiltNodeStoreCacheV1());
+  const builtNodeStoreFor = useCallback((key: string, node: BuiltNode): UiDocumentStore => builtNodeStoreCacheRef.current.storeFor(key, node), []);
+  // 🎬️ Drains the reloads `storeFor` deferred out of this render — a layout effect, so the store is
+  // current before the browser paints, and the `UiNodeView` subscribers it notifies are updated from a
+  // committed tree instead of from inside `FrameworkOsShellInner`'s render.
+  useLayoutEffect(() => builtNodeStoreCacheRef.current.flushPendingReloads());
   //#endregion 🔖️BuiltNodeStores
   const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
   const uiTheme: UiTheme = useMemo(() => {
@@ -4130,12 +4262,35 @@ function FrameworkOsShellInner({
             if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, nextSession.pluginId, hostMode)) continue;
             const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
             const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
-            if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand) continue;
-            const instanceId = isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId);
-            if (instanceId == null) continue;
+            const instanceId = targetApp ? (isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
+            // 🩺️ The push has four independent gates and a silent `continue` on each, so a boot where
+            // the closure never reached the guest was indistinguishable from one where it did — boot
+            // #11 could not tell "no push ran" from "the push ran and nothing re-armed"
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Gated, so a normal boot pays nothing.
+            const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
+            const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
+            if (runtimeDiagnosticsEnabled()) {
+              const pageCount = skipped !== undefined ? 0 : takesPageRun ? publicInvocationStringPages(contributionsJson).length : 1;
+              console.log(
+                "[DEBUG] contributions push",
+                JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount, chars: contributionsJson.length, skipped: skipped ?? null }),
+              );
+            }
+            if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand || instanceId == null) continue;
+            const pages = takesPageRun ? publicInvocationStringPages(contributionsJson) : [contributionsJson];
+            // 📄️ The closure cannot cross whole: the guest's own public-invocation envelope caps EVERY
+            // string in a command body at `PUBLIC_INVOCATION_STRING_BYTES` (4 KiB) BEFORE the addressed
+            // tool's `max_raw_wire_bytes` is consulted, so no tool contract can widen it and a 293 KiB
+            // contributions payload was silently refused as `command contains an oversized string`. The
+            // page budget is read off that one framework bound (mirrored from
+            // `🎛️public-invocation/🧬️schema/🔣️.json`), never spelled here
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             try {
-              const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", { json: contributionsJson });
-              await pluginEntry.handle.handleCommand(instanceId, wire, nextSession.viewState);
+              for (const [page, json] of pages.entries()) {
+                const args = takesPageRun ? { json, page, pageCount: pages.length } : { json };
+                const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
+                await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
+              }
             } catch (error) {
               console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
             }
@@ -4151,7 +4306,7 @@ function FrameworkOsShellInner({
           if (pluginEntry?.handle.handleCommand && appOwnsCommand(nextSession.app, "setAppRegistrations")) {
             try {
               const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
-              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
+              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, resolvedTargetViewState(nextSession));
             } catch (error) {
               console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
             }
@@ -4540,6 +4695,10 @@ function FrameworkOsShellInner({
           if (effect.notify.message) showTransientNoticeRef.current(effect.notify.message, "warning");
           continue;
         }
+        if ("clipboardWrite" in effect) {
+          clipboardFragmentRef.current = clipboardWriteFragmentFromEffect(effect);
+          continue;
+        }
         if ("setPanel" in effect) {
           nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
           continue;
@@ -4606,14 +4765,15 @@ function FrameworkOsShellInner({
         }
         if ("downloadMediaExport" in effect) {
           const { filename, mimeType, data, encoding } = effect.downloadMediaExport;
-          if (encoding?.startsWith(SEGMENTED_DOWNLOAD_MARKER_PREFIX)) {
+          const encodingText = mediaExportEncodingText(encoding);
+          if (encodingText?.startsWith(SEGMENTED_DOWNLOAD_MARKER_PREFIX)) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (!pluginEntry) throw new Error(`segmented-download-plugin-missing:${baseSession.pluginId}`);
-            await drainSegmentedMediaExport(filename, mimeType, data, encoding, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
+            await drainSegmentedMediaExport(filename, mimeType, data, encodingText, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
               signal: segmentedDownloadAbortRef.current.signal,
             });
           } else {
-            downloadMediaExport(filename, mimeType, data, encoding);
+            downloadMediaExport(filename, mimeType, data, encodingText);
           }
           continue;
         }
@@ -4872,10 +5032,10 @@ function FrameworkOsShellInner({
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
-        console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ scope: uiScope, viewStateSame: nextViewState === baseSession.viewState }));
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ scope: uiScope, viewStateSame: nextViewState === baseSession.viewState }));
         await refreshUi(nextSession, uiScope);
       } else {
-        console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: uiScope }));
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: uiScope }));
       }
     },
     [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, session, setActiveUtilityForWindow, hostMode],
@@ -4900,7 +5060,7 @@ function FrameworkOsShellInner({
         settleOperation(completion.operation);
         applyHistoryPatch(completion.historyPatch);
         const owner = captureEffectOwner(target, captureDialogOrigin(target));
-        console.warn("[DEBUG] completion apply", JSON.stringify({ operation: completion.operation, scope: completion.uiScope, historyPatch: completion.historyPatch !== undefined, ownerCurrent: isCurrentEffectOwner(owner), sessionCurrent: shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, target), targetInstance: target.instanceId, currentInstance: shellStateRef.current.pluginRuntime.session?.instanceId }));
+        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] completion apply", JSON.stringify({ operation: completion.operation, scope: completion.uiScope, historyPatch: completion.historyPatch !== undefined, ownerCurrent: isCurrentEffectOwner(owner), sessionCurrent: shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, target), targetInstance: target.instanceId, currentInstance: shellStateRef.current.pluginRuntime.session?.instanceId }));
         void applyHostEffects(completion.requestedEffects, target, resolveUiDirtyScope(completion.uiScope), owner).catch((error) => console.error("[DEBUG] typed-operation completion effects failed", error));
       });
     } catch (error) {
@@ -5250,7 +5410,8 @@ function FrameworkOsShellInner({
   );
 
   const onAction = useCallback(
-    (action: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false) => {
+    (requested: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false) => {
+      const action = pasteActionWithRetainedFragment(requested, clipboardFragmentRef.current);
       if (action.controllerId === "recovery") {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
         const pluginId = args.pluginId ?? primaryPluginId;
@@ -5412,9 +5573,8 @@ function FrameworkOsShellInner({
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
-              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
+              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
             })
-            .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
         return;
       }
@@ -5533,11 +5693,14 @@ function FrameworkOsShellInner({
         windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
       };
-      const dispatchViewState = dispatchWindowId ? windowViewContext(baseDispatchViewState, dispatchWindowId) : panelViewContext(injectActiveTool(baseDispatchViewState));
+      const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
       if (!dispatchViewState) return;
-      const declaredAction = targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action));
-      if (!declaredAction && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.action)) {
-        console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
+      // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
+      // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
+      // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
+      if (undeclared) {
+        console.error(undeclared.message, undeclared);
         return;
       }
       // 👁️✏️ Client-side half of the read-only guarantee (contract freeze §2.3/§5) — the SDK-side
@@ -7311,6 +7474,11 @@ function FrameworkOsShellInner({
           // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
           // form is already expanded in the active window — treat the hotkey as Execute (with validation).
           if (actionRequiresStagedForm(definition)) {
+            const retainedPaste = pasteActionWithRetainedFragment({ action: definition.id }, clipboardFragmentRef.current);
+            if (pasteArgsFragment(retainedPaste) !== undefined) {
+              onAction({ controllerId: session.app.controllerId, action: retainedPaste.action, args: retainedPaste.args });
+              return;
+            }
             const windowId = activeWindowIdRef.current;
             if (!windowId) return;
             const expanded = actionPaneExpandedByWindowIdRef.current[windowId] ?? null;
@@ -7327,6 +7495,19 @@ function FrameworkOsShellInner({
           onAction(binding.action);
           return;
         }
+      }
+      // ⏪️ Framework-universal undo/redo chords — apps shadow them via their own keybindings above;
+      // routed through the same `onAction` funnel as the History panel's Undo/Redo tree rows, so the
+      // remote/local routing in the `action === "undo"` branch applies identically.
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        onAction({ controllerId: session.app.controllerId, action: event.shiftKey ? "redo" : "undo" });
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        onAction({ controllerId: session.app.controllerId, action: "redo" });
+        return;
       }
     },
     [onAction, session],
@@ -7772,7 +7953,7 @@ function FrameworkOsShellInner({
       if (!session) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin) return;
-      onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+      void onAction(buildActiveExampleAction(session.app.controllerId, exampleId));
     },
     [applyHostEffects, injectActiveUtility, loadedPlugins, onAction, session],
   );
@@ -8391,6 +8572,7 @@ function FrameworkOsShellInner({
    * root, so an armed tool survives browsing the Command palette and is reconciled again on re-entry.
    */
   const toolTabSelectionRef = useRef<ToolTabSelection | null>(null);
+  const pendingToolActivateRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     if (!session) return;
     const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
@@ -8399,9 +8581,21 @@ function FrameworkOsShellInner({
     if (!branchPath) return;
     const path = mobile ? mobilePanelPath : panelActivePaths[toolAnchor];
     if (branchPath.some((segment, index) => path[index] !== segment)) return;
-    const { next, effect } = reconcileToolTabSelection(toolTabSelectionRef.current, activeToolId, toolIdFromPanelTabId(path[path.length - 1]));
+    const selectedToolId = toolIdFromPanelTabId(path[path.length - 1]);
+    if (pendingToolActivateRef.current !== undefined) {
+      const pending = pendingToolActivateRef.current;
+      if ((pending ?? "") === (activeToolId ?? "")) {
+        pendingToolActivateRef.current = undefined;
+      } else if (selectedToolId === pending) {
+        return;
+      } else {
+        pendingToolActivateRef.current = undefined;
+      }
+    }
+    const { next, effect } = reconcileToolTabSelection(toolTabSelectionRef.current, activeToolId, selectedToolId);
     toolTabSelectionRef.current = next;
     if (effect.kind === "activate") {
+      pendingToolActivateRef.current = effect.toolId;
       onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: effect.toolId ?? "" } });
       return;
     }
@@ -8431,7 +8625,7 @@ function FrameworkOsShellInner({
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
       // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
-      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
+      treeContentRevision: toolPanelTreeContentRevision(activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey),
     };
   }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, hostMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
 
@@ -8473,7 +8667,13 @@ function FrameworkOsShellInner({
       },
       activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
-        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
+        const previous = panelActivePaths[anchor] ?? [];
+        const inactiveRepress = toolLeafInactiveRepress(previous, path, activeToolId ?? null);
+        if (inactiveRepress && session) {
+          path = inactiveRepress.path;
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: inactiveRepress.toolId } });
+        }
+        const pathChanged = previous.join("/") !== path.join("/");
         dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
         // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
         // next hierarchy level up only makes sense under its own category's command list (mirrors the old
@@ -8495,8 +8695,9 @@ function FrameworkOsShellInner({
       },
       pathMemory: panelPathMemory,
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+      drillOnOpen: anchor === "bottom-middle" ? (path, memory) => toolCategoryOpenPath(path, memory, toolTabs.map((tab) => tab.id)) : undefined,
     }),
-    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand],
+    [activeToolId, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs],
   );
   //#endregion 🎛️PanelTabBarHosting
 
@@ -8722,7 +8923,7 @@ function FrameworkOsShellInner({
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                 {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, intent); }} />
+                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, intent); }} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -8768,7 +8969,7 @@ function FrameworkOsShellInner({
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
+                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} />
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
@@ -9073,8 +9274,9 @@ function FrameworkOsShellInner({
       tabBarHost: (PANEL_TAB_BAR_HOSTS[anchor] ? "chrome" : "panel") as "panel" | "chrome",
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+      treeContentRevision: toolPanelTreeContentRevision(activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey),
     }),
-    [buildPanelSelectionProps, panels, treeOpenStates],
+    [actionPaneStagedArgsByKey, activeToolId, buildPanelSelectionProps, panels, toolMeasuresByToolId, treeOpenStates],
   );
 
   // #region 🔖️ReadinessBeacon

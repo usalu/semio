@@ -1,0 +1,26 @@
+semio procedural.assembly.dsl v1
+schema=s.assembly seed=7 modules=[ child_id=room target="room!s.stdio.semio@v1/kit" child_id=corridor target="corridor!s.stdio.semio@v1/kit" ]
+slots [id:TEXT x:NUM y:NUM z:NUM pinned:TEXT] {
+  room-a 0 0 0 _
+  corridor 1 0 0 _
+  room-b 2 0 0 _
+}
+edges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT] {
+  edge-a-corridor room-a corridor
+  edge-corridor-b corridor room-b
+}
+weights [module-id:TEXT weight:NUM] {
+  room 2
+  corridor 1
+}
+rules [id:TEXT module-a-id:TEXT module-b-id:TEXT allowed:BOOL params:VAL] {
+  rule-room-corridor room corridor true {
+    kind="null"
+  }
+  rule-room-room room room false {
+    kind="null"
+  }
+  rule-corridor-corridor corridor corridor false {
+    kind="null"
+  }
+}

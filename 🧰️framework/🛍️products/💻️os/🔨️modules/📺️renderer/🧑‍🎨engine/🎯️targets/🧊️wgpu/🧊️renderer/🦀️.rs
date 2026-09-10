@@ -108,8 +108,8 @@ pub mod parallel_runtime;
 
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
-    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset,
-    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
+    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
+    take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
     WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 #[cfg(not(target_arch = "wasm32"))]
@@ -11416,6 +11416,15 @@ impl FrameTransaction {
                     context.consume_fuel(1);
                     return AppFrameTransactionStep::Pending;
                 }
+                match step_world3d_scene_bridge(state, context) {
+                    World3dSceneBridgeStep::Pending => return AppFrameTransactionStep::Pending,
+                    World3dSceneBridgeStep::Fault => {
+                        runtime.record_frame_fault("world3d scene mesh-wire bridge faulted");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    World3dSceneBridgeStep::Idle | World3dSceneBridgeStep::Complete => {}
+                }
                 match step_world3d_draw_rebuild(state, context) {
                     WorldDrawRebuildStep::Pending => return AppFrameTransactionStep::Pending,
                     WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault => {
@@ -13115,7 +13124,9 @@ impl AppRuntime {
                 if cursor.world_resources.is_none() { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") }
                 let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
-                if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme) {
+                let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
+                if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, world_resources) {
+                    interaction.shell.sync_engine_surface_states();
                     cursor.phase = FrameBuildPhase::JobProgressTake;
                 }
             }
@@ -13174,6 +13185,9 @@ impl AppRuntime {
             }
             FrameBuildPhase::EngineTransfer => {
                 let Some(resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost engine resources") };
+                if !engine_canvas::stage_engine_packet_step(resources) {
+                    return FrameBuildBoundaryStep::Pending;
+                }
                 match resources.take_packet_step() {
                     Ok(Some(packet)) => {
                         if let Err(rejected) = cursor.engine_packets.try_push(packet) {

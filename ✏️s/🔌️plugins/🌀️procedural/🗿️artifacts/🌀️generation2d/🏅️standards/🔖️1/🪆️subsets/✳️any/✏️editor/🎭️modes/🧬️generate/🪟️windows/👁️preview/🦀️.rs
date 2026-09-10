@@ -55,6 +55,6 @@ pub fn render(config: &Generation2dConfig, preview_text: Option<&str>, labels: &
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

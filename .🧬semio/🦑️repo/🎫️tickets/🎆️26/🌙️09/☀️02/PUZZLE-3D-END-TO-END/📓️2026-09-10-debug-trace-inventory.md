@@ -89,3 +89,20 @@ Every `[DEBUG]` addition and every docstring naming "ticket 26/09/02/PUZZLE-3D-E
 - Traces added (`+` lines, §1): **29** matched lines → **28 real traces + 1 explanatory comment** (row 25, not itself a trace).
 - Pre-existing `[DEBUG]` lines in the same 7 touched files (§2, not to be removed here): **133** (4 + 16 + 0 + 72 + 38 + 3 + 0).
 - Unguarded (prefix-less) additions (§3): **2**, both intentionally permanent per adjacent docstring, not accidental omissions.
+
+## 4. Refresh 07:30 — counts after waves U3/X/Y/F2c/G3 landed (close-out sweep targets)
+
+Scoped `rg -c '\[DEBUG\] '` on the fleet-touched RUNTIME files (tests excluded from the sweep; test-file
+`[DEBUG]` prints inside our new laws may stay if the law reads them, otherwise strip too):
+
+| File | lines | Note |
+|---|---:|---|
+| renderer `🏛️ShellHost/🟦️.tsx` | 76 | grew from 6 at 00:00 — the per-refresh `applyHostEffects`/`completion apply` chatter visible in every probe console tail; biggest target |
+| renderer `🔌️PluginRuntime/🟦️.tsx` | 41 | grew from 2; includes job-budget warnings (some may deserve un-prefixed permanence per §3) |
+| plugin host `🔌️plugin/🦀️.rs` | 9 | host-side traces from waves |
+| guest `🎮️commands/🪣️fill-build-tick/🦀️.rs` | 1 | W-U3 eprintln — **currently load-bearing for W-G3's browser diagnosis; strip LAST, needs a wasm rebuild** |
+| guest editor `✏️editor/🦀️.rs` | 0 | clean |
+
+Sweep order at close-out: TS files first (vite hot-reloads, re-probe to confirm no behavior change),
+then host Rust, then the guest eprintln inside the final wasm rebuild. Re-run the scoped grep before
+sweeping — waves W-G3/W-Z are still active and may add/remove traces.

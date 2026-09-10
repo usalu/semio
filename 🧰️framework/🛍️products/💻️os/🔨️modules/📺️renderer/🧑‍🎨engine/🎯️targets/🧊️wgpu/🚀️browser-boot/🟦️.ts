@@ -1,8 +1,10 @@
 //#region 🧲️PlatformBoot
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
-import { BrowserFrameTransport, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts";
+import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
+import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
 const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
@@ -15,6 +17,20 @@ await new Promise<void>((resolve) => {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => resolve(), { once: true });
   else resolve();
 });
+
+/** @emoji 🩺️ Resolves a stored `SEMIO_RUNTIME_DIAGNOSTICS` preference and hands it to the UI-turn
+ * ledger. The read lives HERE, in the UI isolate, and not in `../⏱️turn-budget/🟦️.ts`: that module is
+ * also bundled into `🎞️frame-worker.js`, whose carrier census forbids every storage carrier. Wrapped
+ * because a sandboxed page throws on `localStorage`; an absent value leaves the build-time switch to
+ * decide. */
+function armUiTurnDiagnostics(): void {
+  try {
+    const stored = globalThis.localStorage?.getItem(TURN_DIAGNOSTICS_KEY);
+    if (stored !== null && stored !== undefined) setTurnDiagnostics(["1", "true", "on", "yes"].includes(stored.trim().toLowerCase()));
+  } catch {
+    setTurnDiagnostics(undefined);
+  }
+}
 
 function locale(): "en" | "de" {
   return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
@@ -81,11 +97,51 @@ function statusElement(root: HTMLElement): HTMLElement {
   return status;
 }
 
-function renderFault(root: HTMLElement, code: string, detail: string): void {
+/** @emoji 🪂️ The REAL fallback state in words. The banner used to assert a static
+ * "No UI-thread frame fallback was attempted", which was both untrue as a claim about intent and
+ * useless as a diagnosis: once `transferControlToOffscreen()` succeeds there IS no UI-thread frame path
+ * to attempt, and what the reader needs instead is what the surface actually did — who owns the canvas
+ * now, whether input is still admitted, and what the UI-turn ledger measured. */
+function fallbackLines(state: BrowserFrameFallbackState | undefined, tongue: "en" | "de"): string {
+  if (!state) {
+    return tongue === "de"
+      ? "Oberfläche: vor der Übergabe der Zeichenfläche an den Worker gescheitert. Kein Frame-Pfad war je aktiv."
+      : "Surface: failed before the canvas reached the Worker. No frame path was ever live.";
+  }
+  const turns = state.uiTurns;
+  const steps = state.workerSteps;
+  const ledger = `${turns.recordedOverruns}/${turns.sustainedOverruns} (p99 ${turns.p99Ms.toFixed(3)} ms, worst ${turns.worstExecutingMs.toFixed(3)} ms @ ${turns.worstSite || "—"})`;
+  const workerLedger = `${steps.recordedOverruns}/${steps.sustainedOverruns} (worst ${steps.worstStepMs.toFixed(3)} ms @ ${steps.worstStepSite || "—"})`;
+  const phaseLine = describeBrowserBootPhase(state.bootPhase, state.bootPhaseElapsedMs, tongue);
+  if (tongue === "de") {
+    return [
+      `Oberfläche: ${state.surface}${state.deferredCadence ? " · verzögerte Taktung" : ""}`,
+      `Boot-Stufe: ${state.bootStage || "—"} · still seit ${Math.round(state.bootSilentForMs)} ms`,
+      phaseLine,
+      `UI-Thread-Frames: nicht verfügbar — die Zeichenfläche gehört dem Frame-Worker (OffscreenCanvas übergeben)`,
+      `Worker beendet: ${state.workerTerminated ? "ja" : "nein"} · Eingaben angenommen: ${state.inputAccepted ? "ja" : "nein"}`,
+      `UI-Takte über dem Budget (erfasst/anhaltend): ${ledger}`,
+      `Worker-Schritte über dem Budget (erfasst/anhaltend): ${workerLedger}${steps.degraded ? " · verzögerte Taktung" : ""}`,
+    ].join("\n");
+  }
+  return [
+    `Surface: ${state.surface}${state.deferredCadence ? " · deferred cadence" : ""}`,
+    `Boot stage: ${state.bootStage || "—"} · silent for ${Math.round(state.bootSilentForMs)} ms`,
+    phaseLine,
+    `UI-thread frames: unavailable — the canvas belongs to the frame Worker (OffscreenCanvas transferred)`,
+    `Worker terminated: ${state.workerTerminated ? "yes" : "no"} · input accepted: ${state.inputAccepted ? "yes" : "no"}`,
+    `UI turns over budget (recorded/sustained): ${ledger}`,
+    `Worker steps over budget (recorded/sustained): ${workerLedger}${steps.degraded ? " · deferred cadence" : ""}`,
+  ].join("\n");
+}
+
+function renderFault(root: HTMLElement, code: string, detail: string, state?: BrowserFrameFallbackState): void {
   const banner = document.createElement("div");
   banner.setAttribute("role", "alert");
   banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0acc;color:#ffb4b4;font:14px monospace;white-space:pre-wrap;overflow:auto;z-index:9999;";
-  banner.textContent = `wgpu renderer fault:\n\n${code}: ${detail}\n\nNo UI-thread frame fallback was attempted.`;
+  const tongue = locale();
+  const title = tongue === "de" ? "wgpu-Renderer-Fehler" : "wgpu renderer fault";
+  banner.textContent = `${title}:\n\n${code}: ${detail}\n\n${fallbackLines(state, tongue)}`;
   root.appendChild(banner);
 }
 //#endregion 🧲️PlatformBoot
@@ -173,6 +229,7 @@ function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport):
 
 //#region 🧵️WorkerLifecycle
 async function mount(root: HTMLElement): Promise<void> {
+  armUiTurnDiagnostics();
   const descriptor = bootDescriptor();
   if (typeof Worker === "undefined") throw new Error("worker-unavailable: Dedicated Worker is not supported");
   const canvas = canvasElement();
@@ -203,7 +260,12 @@ async function mount(root: HTMLElement): Promise<void> {
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
     requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
-    onProgress: (stage, progress) => { status.textContent = `${stage} ${Math.round(progress * 100)}%`; },
+    onProgress: (stage, progress, worker) => {
+      status.textContent = `${stage} ${Math.round(progress * 100)}%${worker.degraded ? (locale() === "de" ? " · verzögerte Taktung" : " · deferred cadence") : ""}`;
+      status.dataset.workerDegraded = worker.degraded ? "true" : "false";
+      status.dataset.workerStepOverruns = String(worker.recordedOverruns);
+    },
+    onUiTurn: (outcome) => { canvas.dataset.uiTurn = `${outcome.verdict}:${outcome.site}:${outcome.executingMs.toFixed(3)}`; },
     onReady: () => {
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
@@ -216,10 +278,10 @@ async function mount(root: HTMLElement): Promise<void> {
       if (fullscreen === true) void canvas.requestFullscreen().catch(() => {});
       if (fullscreen === false && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     },
-    onFault: (code: BrowserFrameWorkerFaultCode, detail) => {
+    onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
       cleanupInput();
       detachIntrospection();
-      renderFault(root, code, detail);
+      renderFault(root, code, detail, fallback);
     },
   });
   const previousInteractiveJobPort = setInteractiveJobPort(transport.interactiveJobs);

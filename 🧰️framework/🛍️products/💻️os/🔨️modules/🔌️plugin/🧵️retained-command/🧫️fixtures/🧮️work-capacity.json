@@ -1,0 +1,17 @@
+{
+  "format": "semio.retained-command.work-capacity",
+  "version": 1,
+  "invertibleRowsPerItem": 2,
+  "note": "One declared quantity per retained route, in staged edit rows: the preflight ceiling a payload carries as maximumWorkItems, the extent a work answers, and the rows one durable item's store footprint declares are all read off the same capacity.",
+  "cases": [
+    { "name": "one point-invertible item is one forward row plus one inverse row", "invertibleItems": 1, "items": 1, "rows": 2, "workItems": 2, "admitted": true },
+    { "name": "a one-item route refuses a two-item gesture", "invertibleItems": 1, "items": 2, "rows": 4, "workItems": 2, "admitted": false },
+    { "name": "an empty gesture is never admitted", "invertibleItems": 32, "items": 0, "rows": 0, "workItems": 64, "admitted": false },
+    { "name": "generation3d's declared route capacity carries one item", "invertibleItems": 32, "items": 1, "rows": 2, "workItems": 64, "admitted": true },
+    { "name": "generation3d's declared route capacity carries a full-fixture gesture", "invertibleItems": 32, "items": 9, "rows": 18, "workItems": 64, "admitted": true },
+    { "name": "generation3d's declared route capacity is exact at its ceiling", "invertibleItems": 32, "items": 32, "rows": 64, "workItems": 64, "admitted": true },
+    { "name": "generation3d's declared route capacity refuses one item past its ceiling", "invertibleItems": 32, "items": 33, "rows": 66, "workItems": 64, "admitted": false },
+    { "name": "the framework-reserved ceiling is the store's own one-item maximum", "invertibleItems": 32768, "items": 32768, "rows": 65536, "workItems": 65536, "admitted": true },
+    { "name": "the framework-reserved ceiling refuses what the store could never fold", "invertibleItems": 32768, "items": 32769, "rows": 65538, "workItems": 65536, "admitted": false }
+  ]
+}

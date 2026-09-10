@@ -89,7 +89,11 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
             items.push((inverse_rows, footprint.work_items));
             base = Generation3dSnapshotRead::new(post);
         }
-        assert_eq!(base.fixture, target.fixture, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own fixture");
+        assert_eq!(base.fixture.widgets, target.fixture.widgets, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own widgets — in THIS order");
+        assert_eq!(base.fixture.synapses, target.fixture.synapses, "example {example_id}: the replayed gesture does not reach the example's own synapses");
+        assert_eq!(base.fixture.layout, target.fixture.layout, "example {example_id}: the replayed gesture leaves the PREVIOUS example's orphaned layout overrides behind");
+        assert_eq!(base.fixture.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).fixture.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_example_load` carries it on the Config lane");
+        assert_eq!(base.fixture.schema, target.fixture.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
         let (rows, declared) = folded_rows_against_declaration(&items);
         assert!(rows <= declared, "example {example_id}: the staged gesture folds {rows} rows against a declared envelope of {declared}");
         eprintln!("[DEBUG] fold envelope {previous} -> {example_id}: {} items, {rows} rows, {declared} declared", items.len());
@@ -131,25 +135,45 @@ fn both_durable_lanes_declare_through_the_one_shared_footprint_builder() {
     assert!(!source.contains("ArtifactStoreOneItemFootprint { work_items"), "a durable lane regained a hand-written work-items literal");
 }
 
-/// 🎯️ `setActiveExample` PUBLISHES for every bundled example, driven through the real retained typed
-/// path (`dispatch_typed` + the host's bounded publication/ACK protocol), and the document actually
-/// swaps. Before the fold-envelope fix every one of these retired without publishing
+/// 🎬️ Boots ONE app, publishes `setActiveExample` through the real retained path (the host's bounded
+/// publication/ACK protocol), and asserts the document actually became that example's fixture.
+/// Before the fold-envelope fix every one of these retired without publishing
 /// (`typed-operation publication turn=… operations=["27:Retiring:true:true"] latest_wins_empty=true`).
-#[semio_framework_async_macros::async_test]
-async fn set_active_example_publishes_and_swaps_the_document_for_every_bundled_example() {
-    let _serial = test_support::lock();
-    let mut signatures = std::collections::BTreeSet::new();
-    for example_id in BUNDLED_EXAMPLES {
-        let mut app = app_with_registry().await;
-        let before = live_widget_ids(&app);
-        let receipt = testkit::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() })).await;
-        assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{example_id} published a fault lane");
-        let after = live_widget_ids(&app);
-        assert_eq!(after, bundled_widget_ids(example_id), "{example_id} did not reach the store: the published document is not the example's fixture");
-        assert!(after != before || example_id == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{example_id} left the document untouched");
-        assert!(signatures.insert(format!("{after:?}")), "duplicate published fixture signature for {example_id}");
-        eprintln!("[DEBUG] setActiveExample {example_id} published: lanes={:?} effects={} widgets={}", receipt.lanes, receipt.effects.len(), after.len());
-    }
+/// 🎯️ One law PER bundled example, and the body EXPANDED into each — never one walk over all eight
+/// and never an awaited helper: a live `Generation3dApp` plus the host's publication machine is a
+/// multi-megabyte future, so nesting even two of those states in one test future overflows the test
+/// thread's 8 MiB stack. Each example therefore gets its own test thread holding exactly one, and the
+/// picker's whole roster stays covered.
+macro_rules! set_active_example_publishes {
+    ($($name:ident => $example:expr,)+) => {
+        $(
+            #[semio_framework_async_macros::async_test]
+            async fn $name() {
+                let _serial = test_support::lock();
+                let mut app = app_with_registry().await;
+                let before = live_widget_ids(&app);
+                app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::testkit::meta("local")).await.expect("setActiveExample dispatches");
+                let receipt = testkit::settle(&mut app).await;
+                assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{} published a fault lane", $example);
+                let after = live_widget_ids(&app);
+                assert_eq!(after, bundled_widget_ids($example), "{} did not reach the store: the published document is not the example's fixture", $example);
+                assert!(after != before || $example == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{} left the document untouched", $example);
+                eprintln!("[DEBUG] setActiveExample {} published: lanes={:?} effects={} widgets={}", $example, receipt.lanes, receipt.effects.len(), after.len());
+                semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+            }
+        )+
+    };
+}
+
+set_active_example_publishes! {
+    set_active_example_publishes_hex_column => PROCEDURAL_EXAMPLE_HEX_COLUMN,
+    set_active_example_publishes_rect_extrude => PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
+    set_active_example_publishes_sphere_torus => PROCEDURAL_EXAMPLE_SPHERE_TORUS,
+    set_active_example_publishes_box_fillet => PROCEDURAL_EXAMPLE_BOX_FILLET,
+    set_active_example_publishes_sphere_box_fuse => PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE,
+    set_active_example_publishes_face_sweep_extrude => PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE,
+    set_active_example_publishes_rectangle_wire => PROCEDURAL_EXAMPLE_RECTANGLE_WIRE,
+    set_active_example_publishes_box_shell => PROCEDURAL_EXAMPLE_BOX_SHELL,
 }
 
 /// 🕹️ The framework-owned local-interaction route publishes on the same machine: `interactionSelect`

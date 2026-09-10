@@ -229,6 +229,7 @@
       "ok": null,
       "fields": [
         "kind",
+        "requestId",
         "actorId",
         "job"
       ]
@@ -305,7 +306,8 @@
         "error",
         "stack",
         "type",
-        "framesBytes"
+        "framesBytes",
+        "retryableLifecycle"
       ]
     },
     {

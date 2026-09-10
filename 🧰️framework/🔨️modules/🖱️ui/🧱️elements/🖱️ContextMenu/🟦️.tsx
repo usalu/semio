@@ -24,10 +24,10 @@ const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-t
 const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
 
 /** @emoji 🪟️ Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
-function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
+export function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(
     floatingMenuItemClass,
-    "whitespace-nowrap data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    "pointer-events-auto whitespace-nowrap data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
     item.destructive && "text-destructive focus:bg-destructive/10 hover:bg-destructive/10",
     ...extra,
     item.checked && "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized",
@@ -47,6 +47,7 @@ export interface ContextMenuItem {
   separator?: boolean;
   checked?: boolean;
   destructive?: boolean;
+  action?: string;
   onSelect?: (event: Event) => void;
   onHover?: () => void;
   onHoverEnd?: () => void;
@@ -426,12 +427,14 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
       onPointerLeave={clearHoverTimer}
     >
       <button
+        id={item.id}
         aria-disabled={item.disabled}
         aria-expanded={submenuOpen}
         className={contextMenuItemClassName(item)}
         data-active={isActive ? "true" : undefined}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
+        data-menu-action={item.action}
         disabled={item.disabled}
         onClick={toggleSubmenu}
         onPointerEnter={() => item.onHover?.()}
@@ -496,12 +499,14 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
     return (
       <button
         key={item.id}
+        id={item.id}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
         className={contextMenuItemClassName(item)}
         data-active={isActive ? "true" : undefined}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
+        data-menu-action={item.action}
         disabled={item.disabled}
         onClick={(event) => {
           item.onSelect?.(event.nativeEvent);

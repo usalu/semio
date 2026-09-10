@@ -1372,7 +1372,7 @@ impl UiTurnPatchRetireArena {
         Ok(())
     }
 
-    fn close_one(&mut self) -> bool {
+    fn close_one(&mut self, items: usize, bytes: usize) -> bool {
         for offset in 0..UI_TURN_PATCH_RETIRE_SLOTS {
             let Some(index) = self.close_cursor.checked_add(offset).map(|index| index % UI_TURN_PATCH_RETIRE_SLOTS) else { return false };
             let slot = &mut self.slots[index];
@@ -1382,7 +1382,7 @@ impl UiTurnPatchRetireArena {
             let Some(next) = index.checked_add(1) else { return false };
             self.close_cursor = next % UI_TURN_PATCH_RETIRE_SLOTS;
             let contents = slot.contents.as_mut().expect("selected returned patch owner");
-            if contents.close_step(1, 4096).expect("exact returned patch retirement").complete && contents.terminal_is_empty() {
+            if contents.close_step(items, bytes).expect("exact returned patch retirement").complete && contents.terminal_is_empty() {
                 slot.contents = None;
                 slot.reserved = false;
             }
@@ -1399,6 +1399,19 @@ fn with_ui_turn_patch_retire_arena<T>(f: impl FnOnce(&mut UiTurnPatchRetireArena
 }
 
 pub fn close_ui_turn_patch_owner_one() -> bool {
+    close_ui_turn_patch_owner_with_grant(1, 4096)
+}
+
+/// ♻️ One retirement unit of a returned turn patch, against the caller's grant.
+///
+/// The grant is what keeps a document-scaled publication off the round-trip ladder: the patch a
+/// 180-object world-3d document swap returns here needs 1 091 retirement units, and the reactor
+/// spends one turn — one host round trip — per unit it cannot finish (ticket 26/09/02 W-S2, measured
+/// 2026-09-10: 24.3 s and 8 799 worker messages for one example switch).
+pub fn close_ui_turn_patch_owner_with_grant(items: usize, bytes: usize) -> bool {
+    if items == 0 || bytes == 0 {
+        return false;
+    }
     let mut arena = match UI_TURN_PATCH_RETIRE_ARENA.try_lock() {
         Ok(arena) => arena,
         Err(std::sync::TryLockError::WouldBlock) => return false,
@@ -1415,7 +1428,7 @@ pub fn close_ui_turn_patch_owner_one() -> bool {
             return true;
         }
     }
-    arena.close_one()
+    arena.close_one(items, bytes)
 }
 
 pub const UI_TURN_PATCH_TRANSPORT_SLOTS: usize = 64;

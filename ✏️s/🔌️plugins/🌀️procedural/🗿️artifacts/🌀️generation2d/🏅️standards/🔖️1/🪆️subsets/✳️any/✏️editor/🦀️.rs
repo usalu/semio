@@ -9,7 +9,7 @@
 
 use crate::editor::generation2d::commands::{
     add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_resolve, flow_eval_tick, generation, move_media_node, node_graph_edit, node_graph_viewport, remove_generation,
-    remove_widget, rename_generation, reorganize, select_generation, set_eval_outputs, set_show_mode, update_generation_values,
+    remove_widget, rename_generation, reorganize, select_generation, set_contributions, set_eval_outputs, set_show_mode, update_generation_values,
 };
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::editor::generation2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -21,10 +21,12 @@ use crate::editor::generation2d::transient::{Generation2dTransient, Generation2d
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
+    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion,
     ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
     InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
@@ -79,7 +81,16 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         self
     }
 
+    /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
+    /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
+    /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
     fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        if !self.closing {
+            return Ok(semio_framework_plugin::PluginCloseStep::Complete);
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         let Some(session) = self.eval_session.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
         let step = session.close_step(maximum_items, maximum_bytes);
         if session.terminal_is_empty() {
@@ -169,7 +180,8 @@ semio_framework_plugin::app_commands! {
         "canvasWheel" as "canvas-wheel" => canvas_wheel::CanvasWheel,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve}
+        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "setContributions" as "set-contributions" => set_contributions::SetContributions}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -203,18 +215,26 @@ const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] = &[
 const GENERATION2D_PREVIEW_TOOL_IDS: &[&str] = &["addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
 const GENERATION2D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.2d.tool-command.v1";
 const GENERATION2D_RETAINED_RAW_BYTES: usize = 8_192;
-/// 🎟️ The fixed semantic work budget every retained 2d command is admitted against — the preview
-/// ladder walks one item per fixture widget plus its own two framing steps, so a per-tool `1` would
-/// refuse every generation command on a non-trivial document.
-const GENERATION2D_RETAINED_WORK_ITEMS: usize = 32;
+/// 🧮️ The ONE declared quantity of every generation2d retained route: at most 32 point-invertible
+/// durable items per gesture. The preflight ceiling below, every `extent` a work answers, both
+/// durable lanes' one-item store footprint and the bounded proof's work units are all read off it —
+/// never spelled again. The preview ladder walks one item per fixture widget plus its own two
+/// framing steps, which is why the declaration is 32 items and not one
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION2D_RETAINED_CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(32);
+const GENERATION2D_RETAINED_WORK_ITEMS: usize = GENERATION2D_RETAINED_CAPACITY.work_items();
+/// 🧾️ Decoded JSON items one retained command's args may carry — a WIRE bound, deliberately NOT the
+/// work capacity.
+const GENERATION2D_RETAINED_DECODED_ITEMS: usize = 64;
 
+/// 🧾️ The ONE execution contract all 21 routes publish — the factory's `execution_contract()` and
+/// every row of `bounded_first_step_tool_proofs!` alike.
 fn generation2d_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(GENERATION2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(GENERATION2D_RETAINED_RAW_BYTES, GENERATION2D_RETAINED_DECODED_ITEMS, GENERATION2D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
-#[expect(clippy::unnecessary_wraps, reason = "BoundedArtifactCommandWork requires an optional extent callback")]
 fn generation2d_bounded_extent(_command: &Generation2dCommand, _snapshot: &Generation2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
+    GENERATION2D_RETAINED_CAPACITY.rows_for_items(1)
 }
 
 #[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
@@ -311,7 +331,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreview
         _interaction: &protocol::InteractionState,
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
-        snapshot.fixture.widgets.len().checked_add(2).filter(|extent| *extent <= GENERATION2D_RETAINED_WORK_ITEMS)
+        GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.fixture.widgets.len().checked_add(2)?)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
@@ -461,6 +481,167 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
 
 //#endregion 🧵️RetainedCommands
 
+//#region 🧩️ContributionsRoute
+/// 🧩️ The host→guest contributions route — the exact twin of generation3d's
+/// (`…/🧊️generation3d/…/✏️editor/🦀️.rs`), and for the same reason: the shell's whole
+/// `flow.extension` closure is what makes this app's operators resolvable, and it is far too large
+/// for the 8 KiB gesture quota the other 21 routes share.
+const GENERATION2D_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
+const GENERATION2D_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.2d.contributions-command.v1";
+/// 📐️ The REAL wire ceiling of one contributions page: the framework's own public-invocation string
+/// bound — which no tool contract can widen, because `validate_public_json_envelope` runs first —
+/// at its worst-case escaped width, plus the addressed envelope.
+const GENERATION2D_CONTRIBUTIONS_ENVELOPE_BYTES: usize = 4_096;
+const GENERATION2D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES * semio_framework::PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR + GENERATION2D_CONTRIBUTIONS_ENVELOPE_BYTES;
+
+fn generation2d_contributions_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION2D_CONTRIBUTIONS_RAW_BYTES, GENERATION2D_RETAINED_DECODED_ITEMS, GENERATION2D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+/// 🧩️ Installs one contributions page against the app instance's retained session.
+struct Generation2dContributionsWork {
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContributionsWork {
+    fn tool_id(&self) -> &'static str {
+        "setContributions"
+    }
+
+    fn extent(
+        &self,
+        command: &Generation2dCommand,
+        snapshot: &Generation2dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    ) -> Option<usize> {
+        generation2d_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("generation2d-contributions-work-repeated"));
+        }
+        self.consumed = true;
+        let Generation2dCommand::SetContributions(payload) = input.command else {
+            return Err(Fault::from("generation2d-contributions-route-rejected"));
+        };
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::handle(payload, &doc, &cfg, session))?)?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+}
+
+struct Generation2dContributionsJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation2dContributionsJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION2D_CONTRIBUTIONS_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Generation2dContributionsJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Generation2dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Generation2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION2D_CONTRIBUTIONS_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation2d_contributions_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION2D_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation2d contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dContributionsJobFactory {
+    type Owner = EditorApp<Generation2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION2D_CONTRIBUTIONS_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+}
+
+struct Generation2dBoundedCommandJobFactoryProofs;
+
+impl Generation2dBoundedCommandJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<Generation2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.procedural.generation2d@1/*#editor",
+        document_schema: "generation.2d",
+        factory: "Generation2dBoundedCommandJobFactory",
+        factory_type: Generation2dBoundedCommandJobFactory,
+        contract: generation2d_bounded_contract(),
+        tools: [
+            "nodeGraphViewport",
+            "setShowMode",
+            "generate",
+            "canvasPointerDown",
+            "canvasPointerMove",
+            "canvasPointerUp",
+            "canvasWheel",
+            "addGeneration",
+            "removeGeneration",
+            "renameGeneration",
+            "updateGenerationValues",
+            "selectGeneration",
+            "flowEvalTick",
+            "flowEvalResolve",
+            "nodeGraphEdit",
+            "moveMediaNode",
+            "addWidget",
+            "removeWidget",
+            "connectMediaPorts",
+            "reorganize",
+            "setEvalOutputs",
+        ]
+    }
+}
+
+struct Generation2dContributionsJobFactoryProofs;
+
+impl Generation2dContributionsJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<Generation2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.procedural.generation2d@1/*#editor",
+        document_schema: "generation.2d",
+        factory: "Generation2dContributionsJobFactory",
+        factory_type: Generation2dContributionsJobFactory,
+        contract: generation2d_contributions_contract(),
+        tools: ["setContributions"]
+    }
+}
+//#endregion 🧩️ContributionsRoute
+
 //#region 📬️ArtifactStorePreparation
 /// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the two lanes differ only in `M`
 /// and their id prefix, so this one generic helper replaces two copies of the same literal.
@@ -498,19 +679,22 @@ fn generation2d_artifact_mutation_retained_bytes(mutation: &Generation2dMutation
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation2d-artifact-mutation-encode-failed".to_string())
 }
 
-/// 🎟️ TWO work items per mutation: one forward and one inverse slot. `ArtifactStore`'s batch fold
+/// 🧺️ The ONE fold-contract footprint BOTH durable lanes declare, straight off the route capacity:
+/// one forward row plus the one row `Mutation::inverse` yields. `ArtifactStore::fold_batch_item`
 /// sizes the staged inverse vector as `footprint.work_items - admitted_items`
-/// (`🧰️framework/…/🏪️store/🦀️.rs`'s `fold_batch_item`), so a `work_items: 1` footprint leaves ZERO
-/// inverse capacity and refuses every undoable mutation. Every `Generation2dMutation` inverse is
-/// `Vec` of length 0 or 1 (`🧬️mutations/*/↩️inverse/🦀️.rs`), so two is exact, not a margin.
-const GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION: usize = 2;
+/// (`🧰️framework/…/🏪️store/🦀️.rs`), so a `work_items: 1` footprint leaves ZERO inverse capacity and
+/// refuses every undoable mutation. Every `Generation2dMutation` inverse is a `Vec` of length 0 or 1
+/// (`🧬️mutations/*/↩️inverse/🦀️.rs`), so this is exact, not a margin.
+fn generation2d_one_item_footprint(retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
+    GENERATION2D_RETAINED_CAPACITY.one_item_footprint(retained_bytes)
+}
 
 fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = generation2d_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("generation2d-artifact-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION, retained_bytes })
+    Ok(generation2d_one_item_footprint(retained_bytes))
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation2dDiff` owns the
@@ -675,7 +859,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
             return Err("generation2d-config-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: GENERATION2D_ARTIFACT_STORE_WORK_ITEMS_PER_MUTATION, retained_bytes: generation2d_config_publication_bytes(mutation)? })
+        Ok(generation2d_one_item_footprint(generation2d_config_publication_bytes(mutation)?))
     }
 
     fn begin(
@@ -825,6 +1009,200 @@ mod generation2d_config_preparation_laws;
 //#endregion 🧪️PreparationLaws
 //#endregion 📬️ConfigStorePreparation
 
+//#region 🎞️ReservedImport
+const GENERATION2D_IMPORT_TOOL_ID: &str = "import-media";
+const GENERATION2D_IMPORT_PORT: &str = "params:in";
+
+/// 🎞️ The ONE concrete resumable importer this app owns. The framework registers the reserved
+/// `import-media` factory for every app (`register_framework_reserved_factories`) but never a
+/// concrete job, so `VcsArtifactApp::import_media` fails closed with
+/// `interactive-job.missing-reserved-builder` until the app hands one back here. Two bounded steps:
+/// decode the `params:in` object into `replace-widget` rows, then publish them through the
+/// completion authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+struct Generation2dImportJob {
+    port: String,
+    media_json: Option<String>,
+    snapshot: Option<std::sync::Arc<Generation2dSnapshot>>,
+    mutations: Vec<Generation2dMutation>,
+    decoded: bool,
+    completed: bool,
+    closing: bool,
+    completion: Option<ArtifactToolCompletion<EditorApp<Generation2dPlayApp>>>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
+}
+
+fn generation2d_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
+    match cx.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(stream)
+        }
+    }
+}
+
+fn generation2d_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
+    let bytes = detail.as_bytes();
+    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+    StepOutcome::Fault(JobFault { detail: generation2d_job_payload(cx, JobPayloadStream::Fault, bounded) })
+}
+
+impl Generation2dImportJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>, port: String, media: semio_framework_plugin::Media) -> Self {
+        let media_json = match media.payload {
+            semio_framework_plugin::MediaPayload::Structured { json, .. } => Some(json),
+            semio_framework_plugin::MediaPayload::Binary { .. } => None,
+        };
+        Self { port, media_json, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+    }
+
+    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+        if self.port != GENERATION2D_IMPORT_PORT {
+            return Some(generation2d_job_fault(cx, "generation2d import only implements params:in"));
+        }
+        let Some(media_json) = self.media_json.as_ref() else {
+            return Some(generation2d_job_fault(cx, "generation2d params:in requires a structured payload"));
+        };
+        let Ok(parsed) = dsl::json::parse(media_json) else {
+            return Some(generation2d_job_fault(cx, "generation2d params:in payload is not valid json"));
+        };
+        let Some(object) = parsed.as_object() else {
+            return Some(generation2d_job_fault(cx, "generation2d params:in payload must be a JSON object"));
+        };
+        let Some(snapshot) = self.snapshot.as_ref() else {
+            return Some(generation2d_job_fault(cx, "generation2d import lost its snapshot authority"));
+        };
+        let mut rows = Vec::new();
+        for (widget_id_key, value) in object.iter() {
+            let Some(number) = value.as_f64() else { continue };
+            let Some(semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. }) = snapshot.fixture.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
+            rows.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
+                id: id.clone(),
+                label: label.clone(),
+                value: number,
+                min: *min,
+                max: *max,
+                step: *step,
+            }));
+        }
+        self.mutations = rows;
+        self.decoded = true;
+        None
+    }
+}
+
+impl InteractiveJob for Generation2dImportJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return generation2d_job_fault(cx, "generation2d import completion remains rejected");
+        }
+        if !self.decoded {
+            cx.set_stage("generation2d-import-decode");
+            if let Some(outcome) = self.decode(cx) {
+                return outcome;
+            }
+            cx.consume_fuel(1);
+            return StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+        }
+        cx.set_stage("generation2d-import-publish");
+        if !self.completed {
+            let mutations = std::mem::take(&mut self.mutations);
+            let Some(completion) = self.completion.as_ref() else {
+                return generation2d_job_fault(cx, "generation2d import lost its completion authority");
+            };
+            if !completion.has_mounted_consumer() {
+                return generation2d_job_fault(cx, "generation2d import completion consumer is absent");
+            }
+            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
+                let message = rejected.fault.message.clone();
+                self.pending_completion_rejection = Some(rejected);
+                return generation2d_job_fault(cx, &message);
+            }
+            self.completed = true;
+        }
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for Generation2dImportJob {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, _maximum_bytes) {
+                    return Ok(step);
+                }
+            }
+            self.pending_completion_rejection = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(mutation) = self.mutations.pop() {
+            crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_retire_mutation_cold(mutation);
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.mutations.capacity() > 0 {
+            self.mutations = Vec::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.media_json.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.port.is_empty() || self.port.capacity() > 0 {
+            self.port = String::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media_json.is_none()
+            && self.snapshot.is_none()
+            && self.mutations.is_empty()
+            && self.mutations.capacity() == 0
+            && self.completion.is_none()
+            && self.pending_completion_rejection.is_none()
+    }
+}
+//#endregion 🎞️ReservedImport
+
 //#region 🔖️Generation2dPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Generation2dConfig`],
 /// written through [`Generation2dConfigMutation`]s. The eval session is the one piece of state that is
@@ -938,53 +1316,55 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<Generation2dPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.procedural.generation2d@1/*#editor",
-        document_schema: "generation.2d",
-        factory: "Generation2dBoundedCommandJobFactory",
-        factory_type: Generation2dBoundedCommandJobFactory,
-        tools: {
-            "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setShowMode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "generate" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasWheel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "addGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "removeGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "renameGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "updateGenerationValues" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "flowEvalResolve" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "nodeGraphEdit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "moveMediaNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "addWidget" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "removeWidget" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "connectMediaPorts" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "reorganize" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setEvalOutputs" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        }
+    /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this
+    /// catalogue against the registered factories exactly.
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = Generation2dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+        proofs.extend(Generation2dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(Generation2dBoundedCommandJobFactory::new(&controller))
+        registry.register(Generation2dBoundedCommandJobFactory::new(&controller))?;
+        registry.register(Generation2dContributionsJobFactory::new(&controller))
+    }
+
+    /// 🎞️ `import-media` is the only reserved route generation2d owns. The framework registers the
+    /// reserved factory but never a concrete importer, so every inbound `params:in` delivery is
+    /// routed exclusively through this builder (`dispatch_import_media` →
+    /// `build_artifact_reserved_media_job`); `copy`/`cut`/`paste` stay on the framework's own
+    /// reserved factories.
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if request.tool_id.as_str() != GENERATION2D_IMPORT_TOOL_ID {
+            return Ok(None);
+        }
+        if !request.raw_wire.is_empty() {
+            return Err(Fault::from("generation2d import-media admits a decoded media value, never a wire payload"));
+        }
+        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
+            return Err(Fault::from("generation2d import-media requires media input"));
+        };
+        let (port, media) = (port.clone(), media.clone());
+        Ok(Some(ArtifactReservedToolJob::new(Generation2dImportJob::new(request, port, media))))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) && !GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("generation2d-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> =
-            if GENERATION2D_PREVIEW_TOOL_IDS.contains(&tool_id) { Box::new(Generation2dPreviewCommandWork::new(tool_id)) } else { Box::new(Generation2dSessionCommandWork::new(tool_id, request.instance_operation_owner)) };
+        let contributions = GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> = if contributions {
+            Box::new(Generation2dContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
+        } else if GENERATION2D_PREVIEW_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation2dPreviewCommandWork::new(tool_id))
+        } else {
+            Box::new(Generation2dSessionCommandWork::new(tool_id, request.instance_operation_owner))
+        };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -1005,7 +1385,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 completion: request.completion,
             },
             Generation2dCommand::command_id,
-            GENERATION2D_RETAINED_RAW_BYTES,
+            if contributions { GENERATION2D_CONTRIBUTIONS_RAW_BYTES } else { GENERATION2D_RETAINED_RAW_BYTES },
             GENERATION2D_RETAINED_WORK_ITEMS,
             work,
         )?;
@@ -1080,6 +1460,11 @@ impl ArtifactEditor for Generation2dPlayApp {
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
             })),
+            "setContributions" => Ok(Generation2dCommand::SetContributions(set_contributions::SetContributions {
+                json: str_arg(&["json"]).unwrap_or_default(),
+                page: u64_arg(&["page"]).unwrap_or_default(),
+                page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
+            })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -1145,10 +1530,19 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
-    fn pending_effects(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>) -> Vec<Effect> {
+    ///
+    /// 🪟️ Unlike generation3d's, this tick is a `HostOnly` route: it publishes into no window
+    /// transient, declares no `retained_window_transient_target`, and therefore carries no window id
+    /// — but it is still pointless before the first `Event::SurfaceVisible`, when `view` is `None`
+    /// and nothing is mounted to render what it computes, so the chain waits instead of spinning
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn pending_effects(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+        if view.is_none_or(|view| view.window_instances.is_empty()) {
+            return Vec::new();
+        }
         let mut session = FlowEvalSession::new();
         let pending = crate::standards::v1::subsets::any::schema::with_host_session(&doc.snapshot.fixture, &mut session, |host, session| session.sync(host));
-        let effects = if pending { vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+        let effects = if pending { vec![flow_eval_tick::rearm(101)] } else { Vec::new() };
         close_flow_session(&mut session);
         effects
     }
@@ -1330,6 +1724,15 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
         .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)
+        .command(migrated_command(CommandDefinition {
+            in_palette: false,
+            ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+            ])
+        }))
+        .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -1366,6 +1769,19 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_interactions(flow_window::GENERATION2D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("graph")])
         .window_kind_interactions(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, vec![InteractionRef::new("graph")])
         .window_kind_interactions(generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
+        // 📇️ Window-scoped action ownership — the generation2d twin of generation3d's own block
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END), asserted by
+        // `every_emitted_action_is_declared_on_its_window_kind`. The node-graph host's two verbs on the
+        // flow window, the canvas host's four pointer verbs on the two Canvas2d scene windows, the
+        // generation tree's four row verbs on the Generations window, the form's one change verb on the
+        // Form window. Everything else — `setShowMode`, `generate`, `addWidget`, `reorganize`,
+        // `setEvalOutputs`, the framework's history ids — is app-scoped, stays unowned, and is therefore
+        // copied onto every window by `build_definition`.
+        .window_kind_action_refs(flow_window::GENERATION2D_PLAY_WINDOW_MAIN, vec!["nodeGraphEdit".into(), "nodeGraphViewport".into()])
+        .window_kind_action_refs(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, vec!["canvasPointerDown".into(), "canvasPointerMove".into(), "canvasPointerUp".into(), "canvasWheel".into()])
+        .window_kind_action_refs(generations::GENERATION2D_PLAY_WINDOW_GENERATIONS, vec!["addGeneration".into(), "selectGeneration".into(), "renameGeneration".into(), "removeGeneration".into()])
+        .window_kind_action_refs(form::GENERATION2D_PLAY_WINDOW_GENERATE_FORM, vec!["updateGenerationValues".into()])
+        .window_kind_action_refs(generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, vec!["canvasPointerDown".into(), "canvasPointerMove".into(), "canvasPointerUp".into(), "canvasWheel".into()])
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .config(Generation2dPlayApp::config_spec())

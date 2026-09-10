@@ -6,17 +6,26 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 //#region 🧪️RetainedPayloads
-fn retire_diff(diff: FlowDiff) {
-    for delta in diff.deltas {
-        match delta {
-            FlowDelta::Widgets(delta) => {
-                for (_, widget) in delta.inserted { widget.retire_cold(); }
-                for (_, widget) in delta.replaced { widget.retire_cold(); }
-            }
-            FlowDelta::Fixture(fixture) => fixture.retire_cold(),
-            _ => {}
-        }
-    }
+fn retire_diff(diff: FlowDiff) { MutationDiff::retire_cold(diff); }
+
+/// 🧊️ Every delta variant must survive the generic cold-retirement seam the store's replay and
+/// history folds use (`os_store::replay_mutations`), including the `Fixture` variant whose
+/// `OrderedMap<WidgetLayout>` root aborts the process on a bare drop.
+#[test]
+fn every_delta_variant_retires_cold_without_a_bare_drop() {
+    let vectors = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json")).unwrap();
+    let base: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
+    let widget = base.widgets.first().cloned().unwrap();
+    let synapse = base.synapses.first().cloned().unwrap();
+    let deltas = vec![
+        FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, widget.clone())], replaced: vec![(widget.id().clone(), widget)] }),
+        FlowDelta::Synapses(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, synapse.clone())], replaced: vec![(synapse.id.clone(), synapse)] }),
+        FlowDelta::Layout(base.layout.iter().map(|(id, layout)| FlowLayoutEntry { id: id.clone(), layout: Some(layout.clone()) }).collect()),
+        FlowDelta::Fixture(base.clone()),
+    ];
+    assert_eq!(deltas.len(), 4);
+    MutationDiff::retire_cold(FlowDiff { deltas });
+    <FlowDiff as MutationDiff<FlowFixture>>::retire_projection(base);
 }
 
 #[test]

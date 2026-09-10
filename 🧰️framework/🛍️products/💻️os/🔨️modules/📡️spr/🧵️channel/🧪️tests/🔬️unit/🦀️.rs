@@ -522,7 +522,7 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owner() {
     let page = FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x80, 0x10]).unwrap();
-    let mut pages = CommandPageSet::try_new().unwrap();
+    let mut pages = CommandPageSet::try_new(1).unwrap();
     pages.try_push(page).unwrap();
     let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
     assert!(cursor.step().unwrap().is_none());
@@ -535,7 +535,7 @@ async fn paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owne
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_retains_first_field_when_middle_field_is_truncated() {
     let page = FixedCommandPage::try_copy_from(&[1, 1, 1, 9, 5, 7]).unwrap();
-    let mut pages = CommandPageSet::try_new().unwrap();
+    let mut pages = CommandPageSet::try_new(1).unwrap();
     pages.try_push(page).unwrap();
     let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
     assert!(cursor.step().unwrap().is_none());
@@ -549,7 +549,7 @@ async fn paged_generic_decoder_retains_first_field_when_middle_field_is_truncate
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_retains_terminal_fields_when_trailing_bytes_fault() {
     let page = FixedCommandPage::try_copy_from(&[3, 1, 1, 9, 0xFF]).unwrap();
-    let mut pages = CommandPageSet::try_new().unwrap();
+    let mut pages = CommandPageSet::try_new(1).unwrap();
     pages.try_push(page).unwrap();
     let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
     assert!(cursor.step().unwrap().is_none());

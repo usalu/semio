@@ -239,11 +239,13 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     let edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
     let has_selection = !nodes.is_empty() || !edges.is_empty();
     let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| config.preview_off_node_ids.contains(id));
+    let live = fixture.to_fixture();
     let is_image = nodes.len() == 1
-        && fixture.to_fixture().widgets.iter().any(|widget| match widget {
+        && live.widgets.iter().any(|widget| match widget {
             Widget::InputImage { id, .. } => id == &nodes[0],
             _ => false,
         });
+    live.retire_cold();
     let primary = hits.first();
     let hit_node = primary.filter(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
 
@@ -747,10 +749,17 @@ fn duplicate_edge_id(source: &str, target: &str) -> String {
 }
 
 fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
-    let fixture_json = dsl::json::to_json_string(&fixture.to_fixture());
+    let live = fixture.to_fixture();
+    let fixture_json = dsl::json::to_json_string(&live);
     let values: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
     let patched = flow::forms_bridge::apply_generation_values_to_fixture(&fixture_json, &values);
-    let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.to_fixture());
+    let patched_fixture = match FlowHost::parse_fixture_json(&patched) {
+        Ok(parsed) => {
+            live.retire_cold();
+            parsed
+        }
+        Err(_) => live,
+    };
     let mut host = FlowHost::from_fixture(patched_fixture);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     host.evaluate().unwrap_or_default()
@@ -781,7 +790,9 @@ fn generation_window_transient(
         ),
         _ => return Ok(None),
     };
-    let spec = flow::forms_bridge::flow_fixture_to_form_spec(&fixture.to_fixture());
+    let live = fixture.to_fixture();
+    let spec = flow::forms_bridge::flow_fixture_to_form_spec(&live);
+    live.retire_cold();
     let mut generation = current.generation();
     if !crate::playbook::handle_generation_action(action, args.as_ref(), &mut generation, &spec, FLOW_PLAY_APP_ID) {
         return Ok(None);
@@ -1300,6 +1311,13 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 }
 
+/// 🧾️ The ONE execution contract the direct-Store route declares — returned by the factory and
+/// proved by `FlowDirectStoreJobFactoryProofs`, so `validate_tool_job_rows`' `registration.contract
+/// == row.contract` join can never drift from a hand-copied literal.
+fn flow_direct_store_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::resumable(FLOW_DIRECT_STORE_RAW_BYTES, 256, FLOW_STORE_MAX_MUTATION_ITEMS as u64, 16_384, 7_500, 1, 1)
+}
+
 struct FlowDirectStoreJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
@@ -1327,7 +1345,7 @@ impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        semio_framework::ToolExecutionContract::resumable(FLOW_DIRECT_STORE_RAW_BYTES, 256, FLOW_STORE_MAX_MUTATION_ITEMS as u64, 16_384, 7_500, 1, 1)
+        flow_direct_store_contract()
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
@@ -1756,6 +1774,264 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 }
 //#endregion 🧵️HostOnlyRetainedRoutes
 
+//#region 🧵️GraphOperationRetainedRoute
+/// 🕸️ The whole-graph routes: each runs one `FlowHost` operation (or the rename's pure fixture
+/// rewrite) against the live scene and publishes ONE batched artifact-lane edit. Retained rather
+/// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
+/// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
+/// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "nodeGraphEdit", "spotlightCommit", "runExtensionAction"];
+const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
+/// 🧮️ The ONE capacity this route declares — its survey walks at most every widget of an admitted
+/// scene, plus the single apply step (`📓️work-capacity-2026-09-10.md`).
+const FLOW_GRAPH_OPERATION_CAPACITY: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity =
+    semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(FLOW_STORE_MAX_SCENE_ITEMS + 1);
+
+/// 🕸️ The widget ids one graph operation references, resolved by the survey walk before the host
+/// runs — `[source, target]` for `connectMediaPorts`, `[old, trimmed new]` for `renameFlowWidget`,
+/// none for the whole-graph routes.
+fn flow_graph_operation_references(command: &FlowCommand) -> [Option<&str>; 2] {
+    match command {
+        FlowCommand::ConnectMediaPorts(payload) => [Some(payload.source_node_id.as_str()), Some(payload.target_node_id.as_str())],
+        FlowCommand::RenameFlowWidget(payload) => [Some(payload.old_id.as_str()), Some(payload.value.trim())],
+        _ => [None, None],
+    }
+}
+
+/// 🧾️ Every graph-operation payload bound this route admits, in one place — a payload over any of
+/// them refuses at `extent` (`None`) instead of reaching the host.
+fn flow_graph_operation_payload_admitted(command: &FlowCommand) -> bool {
+    let text_bytes = flow_graph_operation_references(command).iter().flatten().map(|reference| reference.len()).fold(0, usize::saturating_add);
+    if text_bytes > FLOW_STORE_MAX_TEXT_BYTES {
+        return false;
+    }
+    match command {
+        FlowCommand::NodeGraphEdit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
+        FlowCommand::SpotlightCommit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
+        FlowCommand::RunExtensionAction(payload) => payload.action_id.len() <= FLOW_STORE_MAX_TEXT_BYTES,
+        FlowCommand::ConnectMediaPorts(payload) => payload.source_port_id.len().saturating_add(payload.target_port_id.len()) <= FLOW_STORE_MAX_TEXT_BYTES,
+        FlowCommand::Reorganize(_) | FlowCommand::RenameFlowWidget(_) => true,
+        _ => false,
+    }
+}
+
+struct FlowGraphOperationWork {
+    tool_id: &'static str,
+    instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    cursor: usize,
+    replay_target: usize,
+    resolved: [bool; 2],
+    completed: bool,
+    closing: bool,
+}
+
+impl FlowGraphOperationWork {
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner: Some(instance_owner), cursor: 0, replay_target: 0, resolved: [false, false], completed: false, closing: false }
+    }
+
+    fn replaying(&self) -> bool {
+        self.cursor < self.replay_target
+    }
+
+    fn apply(&self, command: &FlowCommand, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, interaction: &protocol::InteractionState) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+        let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-graph-instance-owner"))?;
+        let (nodes, _edges) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
+        let resolved = self.resolved;
+        instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
+            owner.with_session(|session| match command {
+                FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => Ok(Emit::mutations(connect_media_ports::connect_operations(payload, snapshot, config, session))),
+                FlowCommand::ConnectMediaPorts(_) => Ok(Emit::default()),
+                FlowCommand::Reorganize(_) => Ok(Emit::mutations(reorganize::reorganize_operations(snapshot, config, session))),
+                FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
+                FlowCommand::RenameFlowWidget(_) => Ok(Emit::default()),
+                FlowCommand::NodeGraphEdit(payload) => Ok(node_graph_edit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes)),
+                FlowCommand::SpotlightCommit(payload) => Ok(spotlight_commit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes)),
+                FlowCommand::RunExtensionAction(payload) => Ok(run_extension_action::extension_action_result(payload, snapshot, config, session)),
+                _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
+            })?
+        })
+    }
+}
+
+impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowGraphOperationWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &FlowCommand,
+        snapshot: &FlowSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+    ) -> Option<usize> {
+        if self.closing || self.completed || command.command_id() != self.tool_id || !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&self.tool_id) || !flow_graph_operation_payload_admitted(command) {
+            return None;
+        }
+        let scene = snapshot.content.local_owner::<FlowWorkingScene>()?;
+        if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+            return None;
+        }
+        FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(scene.widgets.len().saturating_add(1))
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
+        if self.completed || self.closing {
+            return Err(Fault::from("flow-retained-graph-work-terminal"));
+        }
+        if command.command_id() != self.tool_id || !flow_graph_operation_payload_admitted(command) {
+            return Err(Fault::from("flow-retained-graph-payload-capacity"));
+        }
+        let context = context.ok_or_else(|| Fault::from("flow-retained-graph-context-required"))?;
+        let config = main::config::from_snapshot(context.window_config.as_ref());
+        let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
+        if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
+            return Err(Fault::from("flow-retained-scene-capacity"));
+        }
+        if let Some(widget) = scene.widgets.get(self.cursor) {
+            let id = flow_widget_id(widget);
+            for (slot, reference) in flow_graph_operation_references(command).into_iter().enumerate() {
+                if reference.is_some_and(|reference| reference == id) {
+                    self.resolved[slot] = true;
+                }
+            }
+            self.cursor += 1;
+            return Ok(if self.replaying() {
+                ArtifactCommandWorkStep::Replay { stage: "flow-graph-survey-replay", preview: br#"{"en":"Restoring graph survey","de":"Graph-Erhebung wird wiederhergestellt"}"# }
+            } else {
+                ArtifactCommandWorkStep::Progress { stage: "flow-graph-survey", preview: br#"{"en":"Surveying the graph","de":"Graph wird erhoben"}"# }
+            });
+        }
+        self.completed = true;
+        self.apply(command, snapshot, &config, interaction).map(ArtifactCommandWorkStep::Complete)
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 9 {
+            return Err(Fault::from("flow-retained-graph-checkpoint-capacity"));
+        }
+        target[0] = u8::from(self.completed);
+        target[1..9].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        Ok(9)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 9 || checkpoint[0] > 1 {
+            return Err(Fault::from("flow-retained-graph-checkpoint-invalid"));
+        }
+        self.completed = checkpoint[0] == 1;
+        self.replay_target = usize::try_from(u64::from_le_bytes(checkpoint[1..9].try_into().map_err(|_| Fault::from("flow-retained-graph-checkpoint-invalid"))?)).map_err(|_| Fault::from("flow-retained-graph-checkpoint-invalid"))?;
+        self.cursor = 0;
+        self.resolved = [false, false];
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if self.instance_owner.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.instance_owner.is_none()
+    }
+}
+
+struct FlowGraphOperationJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl FlowGraphOperationJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FLOW_GRAPH_OPERATION_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+fn flow_graph_operation_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::resumable(FLOW_GRAPH_OPERATION_RAW_BYTES, 256, FLOW_GRAPH_OPERATION_CAPACITY.work_items() as u64, 16_384, 7_500, 1, 1)
+}
+
+impl semio_framework::ToolJobFactory for FlowGraphOperationJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FLOW_DOCUMENT_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        flow_graph_operation_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FLOW_GRAPH_OPERATION_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((semio_framework::ToolJobFactoryError::new("Flow graph operation job rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowGraphOperationJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FLOW_GRAPH_OPERATION_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameFlowWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spotlightCommit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "runExtensionAction", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    ];
+}
+
+struct FlowGraphOperationJobFactoryProofs;
+
+impl FlowGraphOperationJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.flow.flow@1/*#editor",
+        document_schema: "flow.fixture",
+        factory: "FlowGraphOperationJobFactory",
+        factory_type: FlowGraphOperationJobFactory,
+        contract: flow_graph_operation_contract(),
+        tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "nodeGraphEdit", "spotlightCommit", "runExtensionAction"]
+    }
+}
+//#endregion 🧵️GraphOperationRetainedRoute
+
 struct FlowDirectStoreJobFactoryProofs;
 
 impl FlowDirectStoreJobFactoryProofs {
@@ -1766,27 +2042,30 @@ impl FlowDirectStoreJobFactoryProofs {
         document_schema: "flow.fixture",
         factory: "FlowDirectStoreJobFactory",
         factory_type: FlowDirectStoreJobFactory,
-        tools: {
-            "removeWidget" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "deleteSelection" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "disconnect" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "moveMediaNode" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "patchFlowWidgets" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setLodMode" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setProximityDistance" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setGridVisible" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setGridSnapEnabled" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setGridFactor" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setPreviewOff" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setCatalogueSections" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "toggleExtension" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "addGeneration" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "removeGeneration" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "selectGeneration" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "renameGeneration" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "updateGenerationValues" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-        }
+        contract: flow_direct_store_contract(),
+        tools: [
+            "removeWidget",
+            "deleteSelection",
+            "disconnect",
+            "moveMediaNode",
+            "patchFlowWidgets",
+            "duplicateWidget",
+            "focusSelection",
+            "nodeGraphViewport",
+            "setLodMode",
+            "setProximityDistance",
+            "setGridVisible",
+            "setGridSnapEnabled",
+            "setGridFactor",
+            "setPreviewOff",
+            "setCatalogueSections",
+            "toggleExtension",
+            "addGeneration",
+            "removeGeneration",
+            "selectGeneration",
+            "renameGeneration",
+            "updateGenerationValues",
+        ]
     }
 }
 
@@ -1966,6 +2245,7 @@ impl ArtifactEditor for FlowPlayApp {
         let mut proofs = FlowDirectStoreJobFactoryProofs::bounded_first_step_tool_proofs();
         proofs.extend(FlowHostEffectJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs.extend(FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(FlowGraphOperationJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs
     }
 
@@ -1973,20 +2253,30 @@ impl ArtifactEditor for FlowPlayApp {
         let controller = registry.controller_id().to_string();
         registry.register(FlowChildGroupJobFactory::new(&controller))?;
         registry.register(FlowHostEffectJobFactory::new(&controller))?;
+        registry.register(FlowGraphOperationJobFactory::new(&controller))?;
         registry.register(FlowDirectStoreJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) && !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str()) && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str())
+        {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
         }
-        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             let tool_id = request.command.command_id();
-            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> =
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { Box::new(FlowChildGroupWork::new(request.instance_operation_owner)) } else { Box::new(FlowDirectStoreWork::new(tool_id)) };
+            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowChildGroupWork::new(request.instance_operation_owner))
+            } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
+            } else {
+                Box::new(FlowDirectStoreWork::new(tool_id))
+            };
             let operation_context = semio_framework_plugin::AppOperationContext {
                 app_instance_id: request.app_instance_id,
                 parent_document_id: request.parent_document_id,
@@ -2007,8 +2297,20 @@ impl ArtifactEditor for FlowPlayApp {
                     completion: request.completion,
                 },
                 FlowCommand::command_id,
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { FLOW_CHILD_GROUP_RAW_BYTES } else { FLOW_DIRECT_STORE_RAW_BYTES },
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { 1 } else { FLOW_STORE_MAX_MUTATION_ITEMS },
+                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                    FLOW_CHILD_GROUP_RAW_BYTES
+                } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
+                    FLOW_GRAPH_OPERATION_RAW_BYTES
+                } else {
+                    FLOW_DIRECT_STORE_RAW_BYTES
+                },
+                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                    1
+                } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
+                    FLOW_GRAPH_OPERATION_CAPACITY.work_items()
+                } else {
+                    FLOW_STORE_MAX_MUTATION_ITEMS
+                },
                 work,
             )?;
             return Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
@@ -2052,7 +2354,11 @@ impl ArtifactEditor for FlowPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FlowMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id()) || FLOW_HOST_ONLY_TOOL_IDS.contains(&command.command_id()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&command.command_id()) {
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id())
+            || FLOW_HOST_ONLY_TOOL_IDS.contains(&command.command_id())
+            || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&command.command_id())
+            || FLOW_DIRECT_STORE_TOOL_IDS.contains(&command.command_id())
+        {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.legacy-dispatch"), "Flow retained routes execute only through their exact app-owned job factory"));
         }
         let mut session = FlowEvalSession::new();
@@ -2078,6 +2384,7 @@ impl ArtifactEditor for FlowPlayApp {
         let live = doc.snapshot.to_fixture();
         let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
+        live.retire_cold();
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
@@ -2086,7 +2393,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Vec<Effect> {
+    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         evaluate::evaluate_result(doc.snapshot, &main::config::current(cfg), &mut FlowEvalSession::new()).effects
     }
 
@@ -2181,7 +2488,9 @@ pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowMainWindowConfig) 
 /// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
 /// single entry point every command handler and every window renderer goes through.
 pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> FlowHost {
-    let mut host = flow_host_with_session(&fixture.to_fixture(), session);
+    let live = fixture.to_fixture();
+    let mut host = flow_host_with_session(&live, session);
+    live.retire_cold();
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
     host
@@ -2192,9 +2501,14 @@ pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowMainWindowConfig,
 pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
     let mut host = host_from_snapshot(snapshot, config, session);
     if !mutate(&mut host) {
+        host.retire_cold();
         return Vec::new();
     }
-    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).unwrap_or_default().into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()
+    let live = snapshot.to_fixture();
+    let operations = flow_fixture_operations(&live, &host.fixture).unwrap_or_default();
+    live.retire_cold();
+    host.retire_cold();
+    operations.into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()
 }
 //#endregion 🔖️Host
 
@@ -2293,19 +2607,19 @@ pub fn create_flow_app() -> AppDefinition {
         .default_value(&"inputSlider")])
         .action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("removeWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("patchFlowWidgets", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("renameFlowWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("spotlightCommit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("runExtensionAction", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("renameFlowWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("spotlightCommit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("runExtensionAction", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("evaluate", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("setLodMode", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("setProximityDistance", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -2318,11 +2632,11 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("replaceImage", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("setCatalogueSections", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("toggleExtension", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_interactive_job("addGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("selectGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("renameGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("updateGenerationValues", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("selectGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("updateGenerationValues", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .keybinding("mod+z", "undo")
@@ -2387,6 +2701,10 @@ pub(crate) mod testkit;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️interactive-job/🦀️.rs"]
+mod interactive_job_tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

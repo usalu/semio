@@ -33,7 +33,7 @@ pub struct FlowExtensionInfo {
     pub plugin_id: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct ContributedFlowExtension {
     plugin_id: String,
     manifest_json: String,
@@ -75,28 +75,47 @@ pub fn register_linked_flow_extension_installer(extension_id: impl Into<String>,
     LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").insert(extension_id.into(), install);
 }
 
+/// 🔗 Retires the in-process installer registered for `extension_id`, answering the installer that
+/// was removed. Registration is not one-way: a process that LINKS an extension pack is a different
+/// process from one that only ever receives it as a host contribution, and a law about the second
+/// one has no other way to reach that state from inside the first — the served guest links nothing
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Takes effect on the next registry replacement, the
+/// same way [`register_linked_flow_extension_installer`] does.
+pub fn unregister_linked_flow_extension_installer(extension_id: &str) -> Option<LinkedFlowExtensionInstall> {
+    LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").remove(extension_id)
+}
+
 /// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
 pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
     // Light/draw/brep operator packs are runtime-installable packaged extensions.
 }
 
+/// 📮️ A contributed operator whose real implementation lives in another plugin's actor.
+///
+/// `invocation_address` is the id the HOST resolves an extension actor by, which is the contributing
+/// plugin's own `pluginId` (`flow-extension-math`) — NOT the flow manifest's `id` (`math`). The
+/// framework's invocation contract addresses extensions by plugin id
+/// (`🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json`, `dispatchInvokeExtensionEffect`), so the
+/// translation from the flow domain's own extension id has to happen here, where the owning plugin
+/// id is known — raising `manifest.id` instead made every browser evaluation fault
+/// `extension.missing` and stall the tick chain (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 struct ContributedExtensionStub {
-    extension_id: String,
+    invocation_address: String,
     operator_id: String,
 }
 
 impl neural::Operator for ContributedExtensionStub {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = neural::node_hash(&self.operator_id, input);
-        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+        Err(EvalError::PendingExtension { extension_id: self.invocation_address.clone(), operator_id: self.operator_id.clone(), node_hash })
     }
 
-    fn retirement_is_empty(&self) -> bool { self.extension_id.is_empty() && self.operator_id.is_empty() }
+    fn retirement_is_empty(&self) -> bool { self.invocation_address.is_empty() && self.operator_id.is_empty() }
 
     fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, values: &mut neural::ValueRetirement) -> Result<neural::ValueRetirementStep, &'static str> {
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(neural::ValueRetirementStep::Blocked); }
         if self.retirement_is_empty() { return Ok(neural::ValueRetirementStep::Complete); }
-        values.text(std::mem::take(&mut self.extension_id));
+        values.text(std::mem::take(&mut self.invocation_address));
         values.text(std::mem::take(&mut self.operator_id));
         Ok(neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
     }
@@ -112,11 +131,10 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
             info.retire_cold();
             continue;
         }
-        let extension_id = manifest.id.clone();
+        let invocation_address = plugin_id.to_string();
         let operator_id = info.id.clone();
-        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }], &[]);
+        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { invocation_address, operator_id }) }], &[]);
     }
-    let _ = plugin_id;
     registry.finalize();
 }
 
@@ -226,28 +244,129 @@ const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
 /// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
 /// 🔌️ Installs or refreshes contributed flow.extension manifests from host-pushed contributionsJson.
 /// 🗂️ Reads the open `TopicContribution` (`"flow.extension"` topic) shape per entry.
-pub fn sync_host_flow_extension_contributions(contributions_json: &str) -> Result<(), &'static str> {
-    use std::sync::Mutex;
-    static LAST: Mutex<String> = Mutex::new(String::new());
-    let mut last = LAST.lock().expect("flow contributions lock");
-    if *last == contributions_json {
+/// 🪶️ Takes the payload BY VALUE and folds it into the typed map, then drops it before a registry is
+/// built: the guest runs in one fixed linear memory
+/// ([`semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES`]), so the assembled JSON, the parsed
+/// manifests and a new registry must never be resident at the same time.
+///
+/// 🪶️ De-duplication is on the FOLDED map, not on a retained copy of the JSON. An earlier witness
+/// held the whole `contributionsJson` in a process-wide `static` for the life of the guest — 293 642
+/// bytes of a payload whose parsed form the registry already owns — and it was never even exact for
+/// a re-ordered push. The typed map is exact and costs nothing extra, because it is the state the
+/// registry is rebuilt from anyway (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn sync_host_flow_extension_contributions(contributions_json: String) -> Result<(), &'static str> {
+    let contributed = fold_host_flow_extension_contributions(contributions_json)?;
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
+    if state.contributed == contributed {
         return Ok(());
     }
-    let entries = semio_framework::parse_contributions(contributions_json);
+    let admission = begin_flow_registry_replacement(&mut state)?;
+    let registry = build_flow_extension_registry(&contributed);
+    admission.state.contributed = contributed;
+    admission.publish(registry);
+    Ok(())
+}
+
+/// 🍂️ Folds one assembled `contributionsJson` into the typed contribution map and releases every
+/// byte of the JSON that is not part of it — the payload itself, and each entry's non-manifest
+/// fields. The manifest text a fold KEEPS is the one copy the registry is rebuilt from; nothing
+/// else survives this call.
+fn fold_host_flow_extension_contributions(contributions_json: String) -> Result<BTreeMap<String, ContributedFlowExtension>, &'static str> {
+    let entries = semio_framework::parse_contributions(&contributions_json);
+    drop(contributions_json);
     let mut contributed = BTreeMap::new();
     for entry in entries {
         let Some(topic) = entry.topic_contribution.filter(|topic| topic.topic == FLOW_EXTENSION_TOPIC) else { continue; };
         let payload = topic.decode::<FlowExtensionTopicPayload>().map_err(|_| "flow.extension-contribution-invalid")?;
         let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
-        contributed.insert(manifest.id, ContributedFlowExtension { plugin_id: entry.plugin_id, manifest_json: payload.manifest_json });
+        let mut manifest_json = payload.manifest_json;
+        manifest_json.shrink_to_fit();
+        contributed.insert(manifest.id, ContributedFlowExtension { plugin_id: entry.plugin_id, manifest_json });
     }
-    let mut state = flow_extension_state().lock().expect("flow extension registry");
-    let admission = begin_flow_registry_replacement(&mut state)?;
-    let registry = build_flow_extension_registry(&contributed);
-    admission.state.contributed = contributed;
-    admission.publish(registry);
-    *last = contributions_json.to_string();
-    Ok(())
+    Ok(contributed)
+}
+
+/// 📏️ Largest assembled contributions payload the page assembler will hold. The generation3d
+/// closure's nine flow extension manifests are 293 642 characters today (`flow-extension-brep`
+/// alone is 190 656), so this is real headroom for a growing closure and not a rubber stamp — it is
+/// also the ONLY unbounded quantity in the paged route, every page itself being bounded by
+/// `semio_framework::PUBLIC_INVOCATION_STRING_BYTES`.
+pub const FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
+
+/// 📄️ Largest page run one contributions payload may claim — the maximum payload divided by the
+/// smallest page a producer can usefully send, so a malformed `pageCount` is refused before any
+/// buffer is reserved.
+pub const FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_PAGES: u32 = 4_096;
+
+/// 🧺️ The one in-flight page run. Process-wide exactly like [`FLOW_EXTENSION_STATE`] and
+/// `sync_host_flow_extension_contributions`'s own de-duplication witness, because the registry the
+/// run installs into is itself process-wide: every app in a plugin component shares it.
+static CONTRIBUTIONS_ASSEMBLY: Mutex<FlowContributionsAssembly> = Mutex::new(FlowContributionsAssembly { buffer: String::new(), next_page: 0, page_count: 0 });
+
+struct FlowContributionsAssembly {
+    buffer: String,
+    next_page: u32,
+    page_count: u32,
+}
+
+impl FlowContributionsAssembly {
+    fn reset(&mut self) {
+        self.buffer.clear();
+        self.buffer.shrink_to_fit();
+        self.next_page = 0;
+        self.page_count = 0;
+    }
+}
+
+/// 📄️ Admits ONE page of a host-pushed `contributionsJson` and installs the assembled payload the
+/// moment its last page lands.
+///
+/// The host cannot push the payload whole: `validate_public_json_envelope` caps every string in a
+/// public command invocation at `semio_framework::PUBLIC_INVOCATION_STRING_BYTES` (4 KiB) before the
+/// addressed tool's own wire contract is consulted, so a 293 KiB closure crosses as a 72-page run.
+/// Pages are strictly ordered — page 0 restarts the run, any gap discards it — and only the final
+/// page reaches [`sync_host_flow_extension_contributions`], which then de-duplicates the whole
+/// payload against the last one installed, so a boot that re-pushes an unchanged closure rebuilds
+/// no registry and burns no replacement generation.
+pub fn sync_host_flow_extension_contributions_page(page: u32, page_count: u32, chunk: &str) -> Result<(), &'static str> {
+    if page_count == 0 || page_count > FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_PAGES || page >= page_count {
+        return Err("flow.contributions-page-address-invalid");
+    }
+    let mut assembly = CONTRIBUTIONS_ASSEMBLY.lock().map_err(|_| "flow.contributions-assembly-poisoned")?;
+    if page == 0 {
+        assembly.reset();
+        assembly.page_count = page_count;
+    } else if assembly.page_count != page_count || assembly.next_page != page {
+        assembly.reset();
+        return Err("flow.contributions-page-out-of-order");
+    }
+    if assembly.buffer.len().saturating_add(chunk.len()) > FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_BYTES {
+        assembly.reset();
+        return Err("flow.contributions-payload-envelope");
+    }
+    assembly.buffer.push_str(chunk);
+    assembly.next_page = page + 1;
+    if assembly.next_page < page_count {
+        return Ok(());
+    }
+    let payload = std::mem::take(&mut assembly.buffer);
+    assembly.reset();
+    drop(assembly);
+    sync_host_flow_extension_contributions(payload)
+}
+
+/// 🧹️ Discards any half-assembled page run — the retirement the app instance owning the paged route
+/// calls when it closes, so a run abandoned mid-flight holds no bytes past its owner's lifetime.
+pub fn reset_host_flow_extension_contributions_pages() {
+    if let Ok(mut assembly) = CONTRIBUTIONS_ASSEMBLY.lock() {
+        assembly.reset();
+    }
+}
+
+/// 📏️ Bytes a half-assembled page run currently retains — the witness the close ladder and the
+/// paging law read instead of guessing at the private buffer.
+pub fn host_flow_extension_contributions_pending_bytes() -> usize {
+    CONTRIBUTIONS_ASSEMBLY.lock().map(|assembly| assembly.buffer.len()).unwrap_or(0)
 }
 
 pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) -> Result<(), &'static str> {
@@ -294,13 +413,59 @@ pub fn flow_extension_registry() -> neural::SharedRegistry {
     flow_extension_state().lock().expect("flow extension registry").registry.clone()
 }
 
+/// 🔢 Which replacement of the flow extension registry is installed right now. Bumped exactly once
+/// per `FlowRegistryReplacement::commit`, so a derived projection of the registry (the operator
+/// catalogue a `FlowHost` indexes) can be cached against it instead of rebuilt per evaluation tick.
+pub fn flow_extension_registry_generation() -> u64 {
+    flow_extension_state().lock().expect("flow extension registry").generation
+}
+
 pub(crate) fn flow_registry() -> neural::SharedRegistry {
     flow_extension_registry()
 }
 
-/// 🔌️ Resolves the contributor plugin id for an installed contributed extension.
-pub fn flow_extension_plugin_id(extension_id: &str) -> Option<String> {
-    installed_flow_extensions().into_iter().find(|info| info.id == extension_id).and_then(|info| info.plugin_id)
+/// 🪪️ Why a flow-domain extension id could not be turned into an invocation address, naming BOTH
+/// sides of the translation: the flow manifest id that was asked for, and every
+/// `<manifest id> → <owning plugin id>` pair the live contribution table actually carries. A
+/// producer that drops this on the floor (the old `flowTessellate skipped: …` `eprintln!`) turns a
+/// missing contribution into console noise the surface never learns about
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FlowExtensionAddressMiss {
+    pub extension_id: String,
+    pub contributed: Vec<(String, String)>,
+}
+
+impl FlowExtensionAddressMiss {
+    /// 🏷️ The one wire code every surface projects this miss under.
+    pub const CODE: &'static str = "flow.extension-not-contributed";
+
+    /// 🌍 English and German, with no default language — surfaces carry both.
+    pub fn labels(&self) -> (String, String) {
+        (
+            format!("No loaded plugin contributes the flow extension {:?}", self.extension_id),
+            format!("Kein geladenes Plugin steuert die Flow-Erweiterung {:?} bei", self.extension_id),
+        )
+    }
+}
+
+/// 🪪️ The ONE flow-manifest-id → owning-plugin-id translation in the repository.
+///
+/// `Effect::InvokeExtension.extension_id` is resolved by the host against a loaded program's
+/// `pluginId` (`flow-extension-brep`), never against the flow manifest's own id (`brep`), so every
+/// producer of an invocation — the contributed operator stub's `EvalError::PendingExtension`, the
+/// preview tessellate producer, and any status projection that reports on them — must translate
+/// here and nowhere else. Unresolvable is a typed [`FlowExtensionAddressMiss`], not an `Option`:
+/// the caller owes its surface a fault naming both ids.
+pub fn flow_extension_invocation_address(extension_id: &str) -> Result<String, FlowExtensionAddressMiss> {
+    let installed = installed_flow_extensions();
+    if let Some(address) = installed.iter().find(|info| info.id == extension_id).and_then(|info| info.plugin_id.clone()) {
+        return Ok(address);
+    }
+    Err(FlowExtensionAddressMiss {
+        extension_id: extension_id.to_string(),
+        contributed: installed.into_iter().filter_map(|info| info.plugin_id.map(|plugin_id| (info.id, plugin_id))).collect(),
+    })
 }
 
 /// 🌱️ Seeds a shared neural cache entry from a host-mediated extension eval response.

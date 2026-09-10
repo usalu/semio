@@ -55,9 +55,16 @@ pub fn render(
     marks: &PreviewInteractionMarks,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let payload = match selected_generation(generation) {
+        // 🧹️ `generation_fixture_for` CLONES the document fixture, so the patched copy owns its own
+        // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the
+        // plugin actor with `ordered-map root must be explicitly retired before drop`. Reachable only
+        // once a generation is selected, which is why no earlier render test ever hit it
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);
-            preview_payload(generation_preview_text.unwrap_or_default(), &gen_fixture, cfg, None, marks)
+            let payload = preview_payload(generation_preview_text.unwrap_or_default(), &gen_fixture, cfg, None, marks);
+            gen_fixture.retire_cold();
+            payload
         }
         None => PreviewPayload::default(),
     };
@@ -83,6 +90,6 @@ pub fn render(
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

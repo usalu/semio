@@ -7,6 +7,7 @@ export * from "../../🔨️modules/🧬️schema/🟦️.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️.ts";
 export * from "../../🔨️modules/🔺️mesh/🟦️.ts";
 export * from "../../🔨️modules/🛂️manifest/🟦️.ts";
+export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…
 // family is already re-exported above via `🛂️manifest` (owned-schema-generated mirror of the same Rust types),
 // so a second blanket export of the module root would collide; only its presence-broadcast leaf types,

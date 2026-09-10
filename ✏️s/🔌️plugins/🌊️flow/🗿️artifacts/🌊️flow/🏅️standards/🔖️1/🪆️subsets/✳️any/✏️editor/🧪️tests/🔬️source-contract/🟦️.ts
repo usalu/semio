@@ -492,3 +492,46 @@ console.log("[DEBUG] Flow source fixtures=" + fixture.cases.length + " hostileRe
 console.log("[DEBUG] Flow slider label fixtures=" + labels.cases.length + " hostileRejections=3 runtimeClaims=0");
 console.log("[DEBUG] Flow canonical widgetVariants=9 mutationVariants=10 hostileRejections=5 runtimeClaims=0");
 console.log("[DEBUG] Flow content identity cases=5 grants=1,64,4096 runtimeClaims=0");
+
+//#region 🧮️InteractiveJobCatalog
+/**
+ * ⚖️ Language-neutral oracle for the interactive-job catalog: this TS pass derives the manifest
+ * classifications and the four retained tool-id lists straight from the Rust source and must land on
+ * exactly the fixture the Rust law (`🧪️tests/🔬️interactive-job/🦀️.rs`) is measured against. A
+ * `BatchOnlyPendingRewrite` row here is what faulted `FlowPlayApp` at construction with
+ * `interactive-job.catalog-authority` on every host that instantiates the flow editor
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ */
+const interactiveJob = await Bun.file(new URL("../../🧫️fixtures/🧮️interactive-job/🔣️.json", import.meta.url)).json();
+const editorSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+const classifiedRows = [...editorSource.matchAll(/\.action_interactive_job\("([A-Za-z0-9]+)",\s*semio_framework_plugin::InteractiveJobClassification::([A-Za-z]+)\)/g)];
+const classified = new Map(classifiedRows.map((row) => [row[1], row[2]]));
+assert.equal(classified.size, classifiedRows.length, "an action may carry at most one interactive-job classification");
+assert.deepEqual([...classified.keys()].sort(), [...interactiveJob.migrated].sort(), "every declared action must appear in the fixture");
+assert.deepEqual([...classified.entries()].filter(([, job]) => job !== "Migrated").map(([id]) => id), interactiveJob.batchOnlyPendingRewrite, "no action may stay batch-only");
+const toolIdList = (name: string) => {
+  const block = editorSource.match(new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\];`));
+  assert(block, `${name} must be a declared tool-id list`);
+  return [...block[1].matchAll(/"([A-Za-z0-9]+)"/g)].map((row) => row[1]);
+};
+const factoryToolIds = {
+  FlowDirectStoreJobFactory: toolIdList("FLOW_DIRECT_STORE_TOOL_IDS"),
+  FlowChildGroupJobFactory: toolIdList("FLOW_CHILD_GROUP_TOOL_IDS"),
+  FlowHostEffectJobFactory: toolIdList("FLOW_HOST_ONLY_TOOL_IDS"),
+  FlowGraphOperationJobFactory: toolIdList("FLOW_GRAPH_OPERATION_TOOL_IDS"),
+};
+const owned = new Map<string, string>();
+for (const row of interactiveJob.factories) {
+  assert.deepEqual(factoryToolIds[row.factory as keyof typeof factoryToolIds], row.tools, `${row.factory} tool ids must equal the fixture`);
+  for (const tool of row.tools) {
+    assert(!owned.has(tool), `tool ${tool} is owned by more than one factory`);
+    owned.set(tool, row.factory);
+  }
+}
+assert.deepEqual([...owned.keys()].sort(), [...interactiveJob.migrated].sort(), "the four factories must partition every migrated id exactly");
+for (const hostile of [
+  { ...interactiveJob, migrated: interactiveJob.migrated.slice(1) },
+  { ...interactiveJob, batchOnlyPendingRewrite: ["addGeneration"] },
+]) assert.notDeepEqual(JSON.parse(stableStringify(hostile)), JSON.parse(stableStringify(interactiveJob)));
+console.log("[DEBUG] Flow interactive-job oracle: " + owned.size + " tool ids over " + interactiveJob.factories.length + " factories, batchOnly=" + interactiveJob.batchOnlyPendingRewrite.length + " runtimeClaims=0");
+//#endregion 🧮️InteractiveJobCatalog

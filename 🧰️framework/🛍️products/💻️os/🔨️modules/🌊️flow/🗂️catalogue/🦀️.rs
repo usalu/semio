@@ -196,26 +196,70 @@ pub fn flow_app_catalogue() -> FlowAppCatalogue {
     FlowAppCatalogue { operators: flow_operator_catalogue_records(), sections: flow_palette_catalogue_sections() }
 }
 
-/// 🛍️ [`flow_app_catalogue`] as the canonical JSON an `ArtifactApp::app_catalogue_json` override returns.
-pub fn flow_app_catalogue_json() -> String {
-    crate::os_pack::json::to_json_string(&flow_app_catalogue())
+/// 🛍️ [`flow_app_catalogue`] as the canonical JSON an `ArtifactApp::app_catalogue_json` override
+/// returns, SHARED: the catalogue is a pure projection of the extension registry, so it is built and
+/// serialized exactly once per [`flow_extension_registry_generation`] and every app instance after
+/// that clones an `Arc<str>` instead of re-deriving ~108 kB of operator records and re-serializing
+/// them. Six panes of one component used to pay that six times over into one fixed guest linear
+/// memory (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn flow_app_catalogue_json_shared() -> std::sync::Arc<str> {
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<str>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+    let generation = flow_extension_registry_generation();
+    let mut cache = CACHE.lock().expect("flow app catalogue cache");
+    if let Some((cached_generation, json)) = cache.as_ref() {
+        if *cached_generation == generation {
+            return std::sync::Arc::clone(json);
+        }
+    }
+    let json: std::sync::Arc<str> = std::sync::Arc::from(crate::os_pack::json::to_json_string(&flow_app_catalogue()).into_boxed_str());
+    *cache = Some((generation, std::sync::Arc::clone(&json)));
+    json
 }
 
-/// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
+/// 🛍️ [`flow_app_catalogue_json_shared`] as the owned `String` the `ArtifactApp::app_catalogue_json`
+/// signature returns — ONE copy of the shared text per instance, never a rebuild.
+pub fn flow_app_catalogue_json() -> String {
+    flow_app_catalogue_json_shared().to_string()
+}
+
+/// 🧠️ Serializes operator catalogue entries for neuron port layout seeding — the WIRE form, for a
+/// consumer that lives across a boundary (the browser's node-graph surface). An in-process caller
+/// takes [`flow_neuron_kind_info_map`] instead: this catalogue is ~108 kB of JSON, and serializing
+/// it here only to parse it back one call later cost 11-26 ms of every single evaluation tick
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn flow_neuron_kind_infos_json() -> String {
     let registry = flow_extension_registry();
     crate::os_pack::json::to_json_string(&registry.operator_infos().cloned().collect::<Vec<_>>())
+}
+
+/// 🧠️ The same operator catalogue as the id-keyed map a `FlowHost` actually indexes, built straight
+/// off the registry with no JSON in between, and SHARED: the map is a pure projection of the
+/// registry, so it is rebuilt exactly once per [`flow_extension_registry_generation`] and every host
+/// after that clones an `Arc`, not 108 kB of operator records.
+pub fn flow_neuron_kind_info_map() -> std::sync::Arc<std::collections::HashMap<String, OperatorInfo>> {
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<std::collections::HashMap<String, OperatorInfo>>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+    let generation = flow_extension_registry_generation();
+    let mut cache = CACHE.lock().expect("flow neuron kind info cache");
+    if let Some((cached_generation, infos)) = cache.as_ref() {
+        if *cached_generation == generation {
+            return infos.clone();
+        }
+    }
+    let registry = flow_extension_registry();
+    let infos = std::sync::Arc::new(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
+    *cache = Some((generation, std::sync::Arc::clone(&infos)));
+    infos
 }
 
 /// 🌊️ Default LOD mode id for automatic camera-driven detail.
 pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 /// 🌊️ Flow-backed NodeGraphScene fields required for wgpu FlowHost sync.
-#[derive(Clone, Debug)]
 ///
 /// 🛍️ Deliberately carries NEITHER the operator records NOR the catalogue sections: both are
 /// app-static and ride [`FlowAppCatalogue`] on the reserved catalogue surface exactly once per app
 /// instance. See that type for the byte measurement that forced the split.
+#[derive(Clone, Debug)]
 pub struct FlowBackedNodeGraphExtras {
     pub fixture_json: Option<String>,
     pub capabilities_json: Option<String>,
@@ -305,11 +349,12 @@ pub(crate) fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::wgpu
 
 /// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `session`, when set, contributes
 /// `eval_json`/`status_json` from the in-process [`FlowEvalSession`] (never persisted in config).
+///
+/// 🧹️ [`flow_host_with_session`] CLONES `fixture` into the host, and `FlowFixture::layout` is an
+/// `OrderedMap` root that rejects a bare drop, so the status host is retired here rather than left to
+/// drop glue (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
-    // 🧹️ `flow_host_with_session` CLONES `fixture` into the host, and `FlowFixture.layout` is an
-    // `OrderedMap` root that rejects a bare drop — close the host, never let drop glue take it
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let status_json = session.map(|session| {
         let host = flow_host_with_session(fixture, session);
         let status = session.status_json_for_host(&host);

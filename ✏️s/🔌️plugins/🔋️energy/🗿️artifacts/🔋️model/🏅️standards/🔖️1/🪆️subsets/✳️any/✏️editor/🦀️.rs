@@ -1247,7 +1247,7 @@ impl ArtifactEditor for EnergyModelEditor {
         reduce(command, doc)
     }
 
-    fn pending_effects(doc: &ArtifactView<'_, EnergyModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Vec<semio_framework_plugin::kernel::Effect> {
+    fn pending_effects(doc: &ArtifactView<'_, EnergyModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::kernel::Effect> {
         simulation_session::reconcile(doc)
     }
 

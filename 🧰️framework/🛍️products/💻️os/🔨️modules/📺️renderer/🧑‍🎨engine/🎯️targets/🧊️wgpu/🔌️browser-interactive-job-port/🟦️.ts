@@ -1,10 +1,14 @@
 // #region 🔖️Protocol
+import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot } from "../⏱️turn-budget/🟦️.ts";
+
 export const INTERACTIVE_JOB_SLOT_CAPACITY = 16;
 export const INTERACTIVE_JOB_INPUT_ITEM_CAPACITY = 65_536;
 export const INTERACTIVE_JOB_INPUT_BYTE_CAPACITY = 256 * 1024 * 1024;
 export const INTERACTIVE_JOB_PAGE_ITEM_CAPACITY = 128;
 export const INTERACTIVE_JOB_PAGE_BYTE_CAPACITY = 16 * 1024;
-export const INTERACTIVE_JOB_UI_BUDGET_MS = 2;
+/** @emoji ⏱️ One consumer turn's ceiling — the same ceiling every other UI turn on this isolate is
+ * priced against, and priced by the same executing-time/sustained-run law (`../⏱️turn-budget/🟦️.ts`). */
+export const INTERACTIVE_JOB_UI_BUDGET_MS = UI_TURN_BUDGET_MS;
 export const INTERACTIVE_JOB_OBSERVER_CAPACITY = 32;
 export const INTERACTIVE_JOB_PORT_ITEM_CAPACITY = 262_144;
 export const INTERACTIVE_JOB_PORT_BYTE_CAPACITY = 256 * 1024 * 1024;
@@ -58,7 +62,8 @@ export class BrowserInteractiveJobPort {
   private observerNotifyScheduled = false;
   private statusRevision = 0;
   private statusSnapshot: InteractiveJobPortSnapshot = { status: "unavailable", revision: 0 };
-  private readonly now: () => number;
+  private readonly uiTurns = new TurnLedger();
+  private readonly uiTurnClock: TurnClock;
 
   constructor(
     private readonly lifecycle: number,
@@ -67,7 +72,7 @@ export class BrowserInteractiveJobPort {
     private readonly quarantineConsumer: (detail: string) => void,
     private readonly schedule: (callback: () => void) => void = (callback) => setTimeout(callback, 0),
   ) {
-    this.now = now;
+    this.uiTurnClock = new TurnClock(now);
   }
 
   ready(): void {
@@ -81,10 +86,21 @@ export class BrowserInteractiveJobPort {
     return this.statusSnapshot;
   }
 
+  /** @emoji ⏱️ Prices one foreign consumer turn. Never a verdict: an overrun records and asks the caller
+   * to YIELD, it does not quarantine the port. Answers `false` only to request deferred cadence. */
   observeConsumerTurn(site: string, durationMs: number): boolean {
-    if (durationMs < INTERACTIVE_JOB_UI_BUDGET_MS) return true;
-    this.quarantine(`${site} took ${durationMs.toFixed(3)} ms`);
-    return false;
+    return this.uiTurns.admit(site, durationMs).verdict !== "sustained-overrun";
+  }
+
+  /** @emoji 💥️ A consumer that THREW is a real defect and still quarantines the port — the budget path
+   * above never does, so the two can no longer be confused for one another. */
+  reportConsumerFault(site: string, detail: string): void {
+    this.quarantine(`${site} threw: ${detail}`);
+  }
+
+  /** @emoji 📊️ This port's UI-turn ledger, for the surface owner's fallback report. */
+  uiTurnSnapshot(): TurnLedgerSnapshot {
+    return this.uiTurns.snapshot();
   }
 
   subscribe(listener: () => void): () => void {
@@ -140,15 +156,16 @@ export class BrowserInteractiveJobPort {
         this.quarantine("interactive job pull exceeded fixed credits");
         return true;
       }
-      const startedAt = this.now();
+      this.uiTurnClock.enter();
       let page: InteractiveJobPage;
       try {
         page = slot.consumer.readInputPage(message.cursor, Math.min(message.maxItems, slot.descriptor.inputPageItems));
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`input consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt, "input consumer")) return true;
+      this.observe("input consumer");
       if (!this.admitPage(slot, page, true)) return true;
       slot.inputCursor += page.itemCount;
       try {
@@ -160,14 +177,15 @@ export class BrowserInteractiveJobPort {
     }
     if (message.kind === "job-output-page") {
       if (!this.admitPage(slot, message.page, false)) return true;
-      const startedAt = this.now();
+      this.uiTurnClock.enter();
       try {
         slot.consumer.onOutputPage(message.page);
       } catch (error) {
+        this.uiTurnClock.leave();
         this.quarantine(`output consumer threw: ${error instanceof Error ? error.message : String(error)}`);
         return true;
       }
-      if (!this.observe(startedAt, "output consumer")) return true;
+      this.observe("output consumer");
       return true;
     }
     if (message.status !== "complete" && message.status !== "cancelled" && message.status !== "fault") {
@@ -175,17 +193,18 @@ export class BrowserInteractiveJobPort {
       return true;
     }
     const terminal = { operation: message.operation, generation: message.generation, status: message.status, ...(message.detail === undefined ? {} : { detail: message.detail }) } satisfies InteractiveJobTerminal;
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       slot.consumer.onTerminal(terminal);
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`terminal consumer threw: ${error instanceof Error ? error.message : String(error)}`);
       slot.closing = true;
       this.scheduleClose();
       return true;
     }
     slot.closing = true;
-    if (!this.observe(startedAt, "terminal consumer")) return true;
+    this.observe("terminal consumer");
     this.scheduleClose();
     return true;
   }
@@ -208,16 +227,17 @@ export class BrowserInteractiveJobPort {
     while (this.closeCursor < this.slots.length && (!this.slots[this.closeCursor] || !this.slots[this.closeCursor]!.closing)) this.closeCursor++;
     if (this.closeCursor === this.slots.length) return true;
     const slot = this.slots[this.closeCursor]!;
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     let complete = false;
     try {
       complete = slot.consumer.closeStep();
       if (complete) complete = slot.consumer.terminalIsEmpty();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`consumer close threw: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
-    if (!this.observe(startedAt, "consumer close")) return false;
+    this.observe("consumer close");
     if (complete) {
       this.releaseSlot(this.closeCursor);
       this.closeCursor++;
@@ -275,11 +295,11 @@ export class BrowserInteractiveJobPort {
     return true;
   }
 
-  private observe(startedAt: number, site: string): boolean {
-    const duration = this.now() - startedAt;
-    if (duration < INTERACTIVE_JOB_UI_BUDGET_MS) return true;
-    this.quarantine(`${site} took ${duration.toFixed(3)} ms`);
-    return false;
+  /** @emoji ⏱️ Closes the executing span opened by {@link enterConsumerTurn} and records it. Answers
+   * `false` only when the port has now overrun {@link SUSTAINED_TURN_OVERRUN_TURNS} turns in a row and
+   * the caller should yield the rest of its drain to the next macrotask — never that the port is dead. */
+  private observe(site: string): boolean {
+    return this.uiTurns.admit(site, this.uiTurnClock.leave()).verdict !== "sustained-overrun";
   }
 
   private quarantine(detail: string): void {
@@ -310,14 +330,15 @@ export class BrowserInteractiveJobPort {
     while (this.observerCursor < this.observers.length && !this.observers[this.observerCursor]) this.observerCursor++;
     if (this.observerCursor === this.observers.length) return;
     const observer = this.observers[this.observerCursor++]!;
-    const startedAt = this.now();
+    this.uiTurnClock.enter();
     try {
       observer();
     } catch (error) {
+      this.uiTurnClock.leave();
       this.quarantine(`status observer threw: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
-    if (!this.observe(startedAt, "status observer")) return;
+    this.observe("status observer");
     this.observerNotifyScheduled = true;
     this.schedule(() => this.notifyOneObserver());
   }

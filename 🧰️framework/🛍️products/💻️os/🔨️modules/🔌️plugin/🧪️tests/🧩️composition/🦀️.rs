@@ -339,3 +339,131 @@ async fn retained_composed_replacement_rejects_a_real_live_child_generation_chan
     eprintln!("[DEBUG] recursive replacement fenced a real child-content generation change and retired its unpublished candidate without changing parent, child view, graph, or windows");
 }
 //#endregion 🧬️ComposedParentFixture
+
+//#region 📨️EnvelopeDecodeLadder
+/// 🐢️ Field owner that yields a fixed number of decode steps before it completes, so the decode
+/// ladder is measurable without a domain field catalog. `budget` steps of `Pending` on the same
+/// token exercise exactly the redelivery loop the real fresh decoder runs.
+struct SlowEnvelopeFieldDecoder {
+    budget: usize,
+    steps: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl SlowEnvelopeFieldDecoder {
+    fn new(budget: usize, steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> Self {
+        Self { budget, steps: std::sync::Arc::clone(steps) }
+    }
+}
+
+impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, NoConfigMutation> for SlowEnvelopeFieldDecoder {
+    fn accept_field_token(
+        &mut self,
+        _field_id: u16,
+        _token: store::OwnedSchemaToken,
+        _terminal: bool,
+        _source: &store::OwnedSchemaRecordCursor,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+        self.steps.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        cx.consume_fuel(1);
+        if self.budget == 0 {
+            return Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete);
+        }
+        self.budget -= 1;
+        Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+    }
+
+    fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(store::ArtifactEnvelopeFieldDecodeStep::RecordComplete)
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        true
+    }
+}
+
+fn envelope_law_pages() -> store::OwnedSchemaDecodePages {
+    let wire = br#"{"schema":"semio.composed-test/v1","id":"envelope-decode-law","vcs":{}}"#;
+    let chunks = wire.chunks(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
+    let mut pages =
+        store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: wire.len() }).expect("envelope law page credits");
+    for chunk in chunks {
+        pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded envelope law page")).unwrap_or_else(|_| panic!("pre-admitted envelope law page"));
+    }
+    pages.seal().expect("sealed envelope law page set");
+    pages
+}
+
+fn install_slow_envelope_decode(
+    app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
+    operation: u64,
+    budget: usize,
+    steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>,
+) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+    let operation = semio_framework_job::OperationId(operation);
+    let generation = semio_framework_job::Generation(app.store.generation_now());
+    app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowEnvelopeFieldDecoder::new(budget, steps)), store::ArtifactEnvelopeDecodeCompletion::new())
+        .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
+}
+
+/// 🚿️ Drives one live envelope decode to its terminal poll through the reactor-turn pump, so the
+/// app can close with every field lease returned.
+async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+    let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
+    for _ in 0..100_000 {
+        PluginApp::advance_typed_operation_publication(app).await.expect("one reactor turn drives the envelope decode worker");
+        poll = app.advance_artifact_envelope_load(handle).expect("envelope load advancement");
+        if poll != crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending {
+            return poll;
+        }
+        semio_framework_async::yield_once().await;
+    }
+    poll
+}
+
+/// ⚖️ LAW: a decode that has not finished is reported as `Pending`, never as a terminal `Fault`.
+/// The store replacement it will hand to does not exist until the decode is `Ready`, and reading
+/// that absent job here made every in-progress document load fail closed at the first turn
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[semio_framework_async_macros::async_test]
+async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fault() {
+    let mut app = live_composed_replacement_app().await;
+    let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let handle = install_slow_envelope_decode(&mut app, 811, 64, &steps);
+    assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending);
+    assert_eq!(
+        app.advance_artifact_envelope_load(handle).expect("live decode advancement"),
+        crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending,
+        "an unfinished decode is pending, not a terminal fault"
+    );
+    assert_eq!(
+        app.poll_artifact_store_replacement(handle),
+        crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault,
+        "no replacement job exists yet, which is exactly the reading that must not leak out of the load API"
+    );
+    drain_envelope_decode(&mut app, handle).await;
+    close_member_admission_app(&mut app);
+}
+
+/// ⚖️ LAW: the reactor turn pumps the envelope decode worker to its terminal poll.
+/// `ActiveArtifactEnvelopeDecode::drive` only SUBMITS a step to the process pool, and the pool runs
+/// a submitted step on wasm solely when it is pumped; before this the ONLY driver was the
+/// cooperative-maintenance rotation, so a document load never advanced inside an interactive turn.
+#[semio_framework_async_macros::async_test]
+async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll() {
+    let mut app = live_composed_replacement_app().await;
+    let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let handle = install_slow_envelope_decode(&mut app, 812, 256, &steps);
+    assert!(PluginApp::has_runnable_typed_operations(&app), "a live envelope decode is runnable reactor-turn work");
+    let poll = drain_envelope_decode(&mut app, handle).await;
+    let driven = steps.load(std::sync::atomic::Ordering::SeqCst);
+    assert_ne!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending, "the reactor-turn pump left the decode pending after {driven} steps");
+    assert!(driven >= 256, "the reactor-turn pump drove only {driven} decode steps");
+    assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
+    close_member_admission_app(&mut app);
+}
+//#endregion 📨️EnvelopeDecodeLadder

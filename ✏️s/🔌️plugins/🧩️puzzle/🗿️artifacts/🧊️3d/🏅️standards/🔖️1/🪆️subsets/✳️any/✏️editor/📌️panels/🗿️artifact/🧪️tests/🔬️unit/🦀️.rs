@@ -137,7 +137,6 @@ fn the_outliner_pages_a_document_scale_fixture_without_exceeding_the_fixed_page(
             assert_eq!(*row_actions, 2, "object row {key} lost its hide/lock row actions");
         }
         assert!(continuations >= 1, "{objects} objects truncated the objects section yet emitted no continuation row");
-        eprintln!("[DEBUG] outliner page objects={objects} vortices={vortices} interactive={interactive} continuations={continuations} object-rows={}", object_rows.len());
         drop(page);
     }
     drain_retired_ui_owners();
@@ -158,7 +157,6 @@ fn a_document_that_fits_the_page_keeps_every_nested_vortex_row() {
     let interactive = rows.iter().filter(|(_, _, bindings, _)| *bindings > 0).count();
     assert_eq!(interactive, 15, "a document that fits keeps every object row AND every vortex child");
     assert_eq!(rows.iter().filter(|(key, _, _, _)| key.ends_with(".more")).count(), 0, "a document that fits truncates nothing");
-    eprintln!("[DEBUG] outliner page objects=5 vortices=2 interactive={interactive}");
     drop(page);
     drain_retired_ui_owners();
 }
@@ -175,7 +173,6 @@ fn the_outliner_renders_the_nakagin_example() {
     let mut rows = Vec::new();
     walk(&page, &mut rows);
     assert_eq!(page.children.len(), 4, "the outliner keeps its four document sections");
-    eprintln!("[DEBUG] nakagin outliner objects={} rows={}", fixture.objects.len(), rows.len());
     drop(page);
     drain_retired_ui_owners();
 }
@@ -254,7 +251,6 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
         for expected in ["object-1", "reference-1", "volume-1"] {
             assert_eq!(rows.iter().filter(|(key, _, _)| key == expected).count(), 2, "row {expected} lost a hide/lock action: {rows:?}");
         }
-        eprintln!("[DEBUG] outliner flag rows flagged={flagged} rows={rows:?}");
         drop(page);
     }
     drain_retired_ui_owners();
@@ -310,7 +306,6 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
             assert_eq!(asked, expected, "the outliner's {flag} row must ask for {expected} while the object is {}", !expected);
             crate::editor::puzzle3d::apply_puzzle3d_selection_flag(&mut fixture, "object", &["object-1".to_string()], flag, asked);
             assert_eq!(state(&fixture, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
-            eprintln!("[DEBUG] outliner flag round trip flag={flag} asked={asked} state={}", state(&fixture, flag));
         }
     }
     drain_retired_ui_owners();
@@ -330,10 +325,9 @@ fn pressing_the_outliner_continuation_reveals_the_next_page() {
     let first = super::render_from(&fixture, native, &HashMap::new()).expect("page 0");
     let mut rows = Vec::new();
     walk(&first, &mut rows);
-    let more = rows.iter().find(|(key, _, bindings, _)| key.ends_with(".more") && key.contains("objects")).expect("page 0 must close the objects section with +N");
-    assert!(more.2 > 0, "the continuation row must carry setPanelPage, got bindings={}", more.2);
+    let _more = rows.iter().find(|(key, _, bindings, _)| key.ends_with(".more") && key.contains("objects") && *bindings > 0).expect("page 0 must close the objects section with a setPanelPage +N");
     assert!(rows.iter().any(|(key, _, _, _)| key == "object-0"), "page 0 starts at object-0: {rows:?}");
-    assert!(!rows.iter().any(|(key, _, _, _)| key == format!("object-{rows_per}")), "page 0 must not already show the next-page head");
+    assert!(!rows.iter().any(|(key, _, _, _)| *key == format!("object-{rows_per}")), "page 0 must not already show the next-page head");
     drop(first);
     drain_retired_ui_owners();
     let mut pages = HashMap::new();
@@ -341,7 +335,7 @@ fn pressing_the_outliner_continuation_reveals_the_next_page() {
     let second = super::render_from(&fixture, native, &pages).expect("page 1");
     rows.clear();
     walk(&second, &mut rows);
-    assert!(rows.iter().any(|(key, _, _, _)| key == format!("object-{rows_per}")), "page 1 must start at object-{rows_per}: {rows:?}");
+    assert!(rows.iter().any(|(key, _, _, _)| *key == format!("object-{rows_per}")), "page 1 must start at object-{rows_per}: {rows:?}");
     assert!(!rows.iter().any(|(key, _, _, _)| key == "object-0"), "page 1 must not keep page 0's head");
     drop(second);
     drain_retired_ui_owners();
@@ -352,5 +346,25 @@ fn pressing_the_outliner_continuation_reveals_the_next_page() {
     walk(&tail, &mut rows);
     assert_eq!(rows.iter().filter(|(key, _, _, _)| key.ends_with(".more") && key.contains("objects")).count(), 0, "the last objects page must drop +N: {rows:?}");
     drop(tail);
+    drain_retired_ui_owners();
+}
+
+
+/// 🧱 Wave W-X §6: Nakagin's host artifact panel must stay inside the 16-node reconcile envelope.
+/// 18 presented nodes credited 8.42 MiB and refused `framework.panel.artifact` after the switch.
+#[test]
+fn nakagin_artifact_panel_fits_reconcile_node_envelope() {
+    let _page = page_guard();
+    let native = labels_for(semio_framework_plugin::Terminology::Native);
+    drain_retired_ui_owners();
+    let fixture = crate::editor::puzzle3d::nakagin_fixture();
+    let page = super::render(&fixture, native).expect("the Nakagin outliner page must be admitted");
+    fn count(node: &super::BuiltNode) -> usize {
+        1 + node.children.iter().map(count).sum::<usize>()
+    }
+    let nodes = count(&page);
+    assert!(nodes <= super::PANEL_RECONCILE_NODE_BUDGET, "Nakagin artifact panel presented {nodes} nodes over the host reconcile envelope");
+    eprintln!("[DEBUG] Nakagin artifact panel presented {nodes} nodes (budget {})", super::PANEL_RECONCILE_NODE_BUDGET);
+    drop(page);
     drain_retired_ui_owners();
 }

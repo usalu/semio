@@ -27,7 +27,15 @@ enum Slot {
     /// `Event::Completed { req, .. }` for this id is answered by dispatching `response_action` back
     /// into the owning app instance with the outcome, not by waking anything — see
     /// `RequestRegistry::request_continuation`.
-    Continuation { response_action: String, request_json: String },
+    ///
+    /// 📄️ `partial` is the answer's PROLOGUE pages: a host answer larger than
+    /// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` arrives as `Event::HttpChunk` pages
+    /// (`append_continuation_chunk`) and the terminal page rides the `Event::Completed` that
+    /// answers the request, so `Event::Completed` stays THE one completion door for a `req`.
+    /// `Err` is a POISONED accumulator — the pages already overran
+    /// `GUEST_HOST_ANSWER_CEILING_BYTES`, and that fault is what the completion delivers instead of
+    /// the assembled bytes.
+    Continuation { response_action: String, request_json: String, partial: Result<Vec<u8>, Fault> },
 }
 
 const REQUEST_SLOTS: usize = 1_024;
@@ -171,6 +179,40 @@ pub struct ExtensionContinuation {
     pub instance: u32,
     pub response_action: String,
     pub request_json: String,
+    partial: Result<Vec<u8>, Fault>,
+}
+
+impl ExtensionContinuation {
+    /// 📄️ Joins the prologue pages this request already accumulated with the terminal page the
+    /// completion carries. A poisoned accumulator wins over both — the answer overran the declared
+    /// ceiling and the app must see that fault, not a truncated body — and an untouched accumulator
+    /// hands `terminal` straight back, so the ordinary one-page answer allocates nothing extra.
+    pub fn into_response(self, terminal: Result<Vec<u8>, Fault>) -> (u32, String, String, Result<Vec<u8>, Fault>) {
+        let Self { instance, response_action, request_json, partial } = self;
+        (instance, response_action, request_json, Self::assemble(partial, terminal))
+    }
+
+    fn assemble(partial: Result<Vec<u8>, Fault>, terminal: Result<Vec<u8>, Fault>) -> Result<Vec<u8>, Fault> {
+        let pages = match partial {
+            Err(poisoned) => return Err(poisoned),
+            Ok(pages) if pages.is_empty() => return terminal,
+            Ok(pages) => pages,
+        };
+        terminal.map(|tail| {
+            let mut assembled = pages;
+            assembled.extend_from_slice(&tail);
+            assembled
+        })
+    }
+}
+
+/// 📄️ What [`RequestRegistry::append_continuation_chunk`] did with one prologue page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ContinuationChunkStep {
+    /// 🚫️ `id` names no continuation — the caller falls through to the parked-future chunk path.
+    Foreign,
+    /// 📄️ The page was accumulated (or refused into the slot's poison, which the completion reports).
+    Accumulated,
 }
 
 pub struct RequestCloseCursor {
@@ -240,9 +282,42 @@ impl RequestRegistry {
             return Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.capacity"), "fixed request authority is saturated"));
         }
         let effect = build(RequestId(raw));
-        inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Continuation { response_action, request_json } });
+        inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Continuation { response_action, request_json, partial: Ok(Vec::new()) } });
         inner.outbound.push_back((self.instance, effect));
         Ok(RequestId(raw))
+    }
+
+    /// 📄️ Accumulates ONE prologue page of `id`'s answer, refusing a page over
+    /// [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`] and an assembled body over
+    /// [`semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES`] into the slot's poison rather than
+    /// growing the guest further. Returns [`ContinuationChunkStep::Foreign`] when `id` is not a
+    /// continuation, which is the caller's signal to fall through to [`Self::append_chunk`].
+    ///
+    /// 🧨️ The page bound is the reason this exists: the host lowers a `pack` into the guest with
+    /// ONE `cabi_realloc`, and a block the guest allocator refuses is not a fault anybody can
+    /// report — it aborts the actor before guest code runs
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A refused page here is a fault the app SEES.
+    pub fn append_continuation_chunk(&self, id: RequestId, bytes: &[u8]) -> ContinuationChunkStep {
+        let mut inner = self.inner.borrow_mut();
+        let Some(Slot::Continuation { partial, .. }) = inner.get_mut(id.0).map(|entry| &mut entry.value) else {
+            return ContinuationChunkStep::Foreign;
+        };
+        let refusal = if bytes.len() > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES {
+            Some(format!("answer page of {} B exceeds the {}-byte contiguous-request ceiling", bytes.len(), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES))
+        } else if partial.as_ref().map_or(0, |pages| pages.len()).saturating_add(bytes.len()) > semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES {
+            Some(format!("assembled answer exceeds the {}-byte host-answer ceiling", semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES))
+        } else {
+            None
+        };
+        match refusal {
+            Some(reason) => *partial = Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.answer-too-large"), reason)),
+            None => {
+                if let Ok(pages) = partial {
+                    pages.extend_from_slice(bytes);
+                }
+            }
+        }
+        ContinuationChunkStep::Accumulated
     }
 
     /// 🔁️ Removes and returns `id`'s continuation, if it has one. `None` for a parked-future slot,
@@ -256,7 +331,7 @@ impl RequestRegistry {
         let entry = inner.take(id.0)?;
         let instance = entry.instance;
         match entry.value {
-            Slot::Continuation { response_action, request_json } => Some(ExtensionContinuation { instance, response_action, request_json }),
+            Slot::Continuation { response_action, request_json, partial } => Some(ExtensionContinuation { instance, response_action, request_json, partial }),
             _ => None,
         }
     }

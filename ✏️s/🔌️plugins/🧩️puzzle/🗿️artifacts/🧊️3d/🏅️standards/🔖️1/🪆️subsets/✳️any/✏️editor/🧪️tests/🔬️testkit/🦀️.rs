@@ -304,11 +304,29 @@ pub fn puzzle3d_manifest_for_testkit() -> App {
 /// fails closed with `interactive-job.catalog-authority` before any dispatch is attempted. The bound
 /// instance id is what `advance_typed_operation_publication`/`maintenance_step` and the local
 /// interaction query authority key their live-runtime bookkeeping on, exactly as the host binds it.
+/// 🧱 Builds the action registry on its own frame and drops the definition before `with_registry`.
+#[inline(never)]
+fn puzzle3d_action_registry() -> semio_framework_plugin::AppActionRegistry {
+    let definition = create_puzzle3d_app();
+    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&definition);
+    drop(definition);
+    registry
+}
+
 pub async fn app() -> Puzzle3dApp {
-    let mut app = testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit).await;
+    crate::editor::puzzle3d::precompute::drain_fill_envelope_registry_for_test();
+    let registry = puzzle3d_action_registry();
+    let mut app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry).await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..Default::default() };
     Puzzle3dApp { raw: Some(Box::new(app)), view, maintenance: Box::new(MaintenanceStageBudget::default()) }
+}
+
+/// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
+#[inline(never)]
+pub fn activate_window_utility(app: &mut Puzzle3dApp, utility_id: &str) {
+    app.ensure_window(main::WINDOW_KIND_ID);
+    app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), main::WINDOW_KIND_ID);
 }
 
 /// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
@@ -465,7 +483,7 @@ pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>,
     settle_into(app, typed).await
 }
 
-/// 🪤️ `dispatch` up to the point the host has minted the typed operation and NOT one continuation
+/// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
 /// turn further: the operation is mounted, its worker session holds one of the process-wide
 /// [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admissions, and nothing has retired it. Dropping
 /// the fixture here is exactly what a closed tab, a cancelled command or a torn-down app does, which
@@ -551,6 +569,10 @@ pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) 
     (widest, semio_framework_ui_contract::UI_FIXED_BYTES)
 }
 
+fn count_built_nodes(node: &semio_framework_ui_contract::BuiltNode) -> usize {
+    1 + node.children.iter().map(count_built_nodes).sum::<usize>()
+}
+
 //#region 🚚️WorldSceneCarrierCensus
 /// 🚚️ One out-of-doc payload lane as it was actually published: the carrier's measured shape next to
 /// what the spine declared about it.
@@ -571,6 +593,7 @@ pub struct WorldSceneLaneCensus {
 pub struct WorldSceneCarrierCensus {
     pub doc_bytes: usize,
     pub capacity: usize,
+    pub nodes: usize,
     pub lanes: Vec<WorldSceneLaneCensus>,
     pub assembled: semio_framework_ui_scene::World3dScene,
 }
@@ -628,7 +651,7 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
                         declared_hash: reference.map_or_else(String::new, |reference| reference.hash.clone()),
                     });
                 }
-                census = Some(WorldSceneCarrierCensus { doc_bytes: surface.doc.bytes.as_slice().len(), capacity: semio_framework_ui_contract::UI_FIXED_BYTES, lanes, assembled: testkit::built_surface_scene(node).expect("assemble world scene") });
+                census = Some(WorldSceneCarrierCensus { doc_bytes: surface.doc.bytes.as_slice().len(), capacity: semio_framework_ui_contract::UI_FIXED_BYTES, nodes: count_built_nodes(node), lanes, assembled: testkit::built_surface_scene(node).expect("assemble world scene") });
                 break;
             }
         }
@@ -653,6 +676,7 @@ pub async fn render_composite(app: &mut Puzzle3dApp) -> Value {
 pub fn projection_of(app: &Puzzle3dApp) -> Value {
     parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
 }
+
 
 pub fn object_count(app: &Puzzle3dApp) -> usize {
     projection_of(app).get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
@@ -779,6 +803,22 @@ pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
     app.tool_measures(&view).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
 }
 
+/// 🛑 The `(job, operation, generation)` triple the Fill panel's own `Cancel fill` affordance carries,
+/// read off the published measure exactly as the host reads it before dispatching `cancelFillBuild` —
+/// `None` while no run is planning, which is also when the affordance itself is absent.
+pub async fn fill_cancel_identity(app: &mut Puzzle3dApp) -> Option<(u64, u64, u64)> {
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    let measures = app.tool_measures(&view).await;
+    let toggle_id = format!("{}-fill-cancel", crate::editor::puzzle3d::PUZZLE3D_PLAY_CONTROLLER_ID);
+    let descriptor = measures.get(fill_tool::TOOL_ID)?.iter().find_map(|measure| match measure {
+        WindowMeasure::Toggle { id, on_change, .. } if *id == toggle_id => Some(on_change.clone()),
+        _ => None,
+    })?;
+    let args = dsl::os_pack::json::from_dsl_value(descriptor.args.as_ref()?);
+    let field = |key: &str| args.get(key).and_then(dsl::os_pack::json::Value::as_u64);
+    Some((field("job")?, field("operation")?, field("generation")?))
+}
+
 /// ⚙️ Steps isolated `FILL_JOB_KIND` jobs the same way the React host does after a guest turn:
 /// `start_job` once per `SpawnJob`, then `step_job` until `Done`/`Failed` or the per-tick slice
 /// budget. `drive_enqueued_fill_job_for_test` is a different empty `Puzzle3dPlayApp` than the
@@ -855,63 +895,27 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
 
 //#region 🧮️HeapWitness
 /// 🧮️ The test binary's own allocator, counting retained bytes across the WHOLE PROCESS. The guest
-/// heap this artifact ships into is a fixed 512 MiB wasm linear memory (`.cargo/config.toml`'s
-/// `--max-memory=536870912`) with ONE allocator and no threads at all, so an owner the tick loop
-/// never frees is a hard trap in production and nothing at all in a native suite — the only way a
-/// law can state the growth bound is to weigh the heap itself.
+/// heap this artifact ships into is a fixed `GUEST_LINEAR_MEMORY_MAXIMUM_BYTES` wasm linear memory
+/// with ONE allocator and no threads at all, so an owner the tick loop never frees is a hard trap in
+/// production and nothing at all in a native suite — the only way a law can state the growth bound
+/// is to weigh the heap itself.
 ///
 /// 🧵️ Process-wide, deliberately NOT per-thread: natively a mounted worker session allocates its
 /// owners on a pool thread and the tick loop frees them on the caller's, so a per-thread counter
 /// reads a growing leak as a NEGATIVE number on the law's own thread and reports the exact opposite
 /// of the truth. A growth law therefore runs its ticks with the fill registry guard held
 /// ([`crate::editor::puzzle3d::precompute::fill_envelope_test_guard`]) and differences this counter.
-struct Puzzle3dHeapWitness;
-
-/// 🧮️ Bytes the process has allocated and not yet freed. Signed, because a `realloc` shrink and a
-/// free of memory allocated before this counter existed both legitimately push it down; a law reads
-/// DIFFERENCES of it, never its absolute value.
-static PUZZLE3D_RETAINED_BYTES: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::new(0);
-
-fn record_retained(delta: isize) {
-    PUZZLE3D_RETAINED_BYTES.fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
-}
-
-/// 🧮️ Retained bytes in the whole process right now — the reading a growth law differences.
-pub fn retained_heap_bytes() -> isize {
-    PUZZLE3D_RETAINED_BYTES.load(std::sync::atomic::Ordering::Relaxed)
-}
-
-unsafe impl std::alloc::GlobalAlloc for Puzzle3dHeapWitness {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        let pointer = unsafe { std::alloc::System.alloc(layout) };
-        if !pointer.is_null() {
-            record_retained(layout.size() as isize);
-        }
-        pointer
-    }
-
-    unsafe fn alloc_zeroed(&self, layout: std::alloc::Layout) -> *mut u8 {
-        let pointer = unsafe { std::alloc::System.alloc_zeroed(layout) };
-        if !pointer.is_null() {
-            record_retained(layout.size() as isize);
-        }
-        pointer
-    }
-
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
-        record_retained(-(layout.size() as isize));
-        unsafe { std::alloc::System.dealloc(pointer, layout) }
-    }
-
-    unsafe fn realloc(&self, pointer: *mut u8, layout: std::alloc::Layout, new_size: usize) -> *mut u8 {
-        let grown = unsafe { std::alloc::System.realloc(pointer, layout, new_size) };
-        if !grown.is_null() {
-            record_retained(new_size as isize - layout.size() as isize);
-        }
-        grown
-    }
-}
-
+///
+/// 🧬️ The instrument itself is `semio_framework_trace::HeapWitness`, shared with the procedural
+/// artifact's guest-memory laws instead of written twice
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[global_allocator]
-static PUZZLE3D_HEAP_WITNESS: Puzzle3dHeapWitness = Puzzle3dHeapWitness;
+static PUZZLE3D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+/// 🧮️ Retained bytes in the whole process right now — the reading a growth law differences. Signed,
+/// because a `realloc` shrink and a free of memory allocated before this counter existed both
+/// legitimately push it down; a law reads DIFFERENCES of it, never its absolute value.
+pub fn retained_heap_bytes() -> isize {
+    semio_framework_trace::retained_heap_bytes()
+}
 //#endregion 🧮️HeapWitness

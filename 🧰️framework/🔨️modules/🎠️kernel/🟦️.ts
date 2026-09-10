@@ -2389,38 +2389,111 @@ export type PlaygroundBoot = {
   readonly dependencyErrors: readonly PluginGraphError[];
 };
 
+/** @emoji 🧱️ How many catalog rows one {@link PlaygroundBootPlanner} chunk projects. Sized so a chunk
+ * stays an order of magnitude under the frame Worker's 8 ms step ceiling even on the slowest target: the
+ * whole 59-row projection executes in 46 µs natively, so a 16-row chunk is ~12 µs. */
+export const PLUGIN_GRAPH_CHUNK_ROWS = 16;
+
+/** @emoji ⏳️ The playground boot plan as a RESUMABLE unit of work, so a caller that owns an interactive
+ * budget — the wgpu frame Worker's `plugin-graph` boot step — can hand its isolate back between chunks
+ * instead of holding it for the whole graph. {@link resolvePlaygroundBoot} is this planner driven to
+ * completion in one turn; there is exactly one implementation of the graph.
+ *
+ * 🧮️ Chunks, in order: `rows` ({@link PLUGIN_GRAPH_CHUNK_ROWS} catalog rows per step), `closure`
+ * (dependency expansion), `order` (activation order). Each `step()` performs one and answers whether
+ * more remains. */
+export class PlaygroundBootPlanner {
+  private readonly targets: readonly PluginCatalogTarget[];
+  private readonly defaultAppId: string | undefined;
+  private readonly registryPluginId: string;
+  private readonly hostMode: boolean;
+  private readonly rows: PluginRegistryEntry[] = [];
+  private readonly reused: PlaygroundBoot | undefined;
+  private cursor = 0;
+  private phase: "rows" | "closure" | "order" | "done" = "rows";
+  private expanded: readonly PluginRegistryEntry[] = [];
+  private order: readonly PluginRegistryEntry[] = [];
+  private errors: readonly PluginGraphError[] = [];
+
+  constructor(
+    private readonly catalog: PluginCatalog,
+    private readonly variant: string,
+    session?: PlaygroundBootSession,
+  ) {
+    this.defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
+    this.registryPluginId = resolvePluginRegistryId(catalog, variant);
+    this.hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
+    this.targets = [...catalog.plugins, ...catalog.extensions];
+    if (session?.variant === variant) {
+      this.reused = { variant, defaultAppId: session.defaultAppId ?? this.defaultAppId, plugins: session.plugins, dependencyErrors: [] };
+      this.phase = "done";
+    }
+  }
+
+  /** @emoji 🏷️ The chunk `step()` will perform next, as a boot-progress stage id. */
+  stage(): string {
+    return this.phase === "rows" ? `plugin-graph:rows ${Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length)}/${this.targets.length}` : `plugin-graph:${this.phase}`;
+  }
+
+  /** @emoji 🧮️ How far the plan is, in `[0, 1]` — a boot-progress share, not a fuel reading. */
+  completion(): number {
+    if (this.phase === "done") return 1;
+    if (this.phase === "rows") return this.targets.length === 0 ? 0.8 : (this.cursor / this.targets.length) * 0.8;
+    return this.phase === "closure" ? 0.85 : 0.95;
+  }
+
+  /** @emoji ⏭️ Performs ONE chunk and answers whether the plan needs more. Never throws: a dependency
+   * fault leaves its entry out of the plan and is reported through `dependencyErrors`. */
+  step(): boolean {
+    if (this.phase === "rows") {
+      const end = Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length);
+      for (; this.cursor < end; this.cursor++) {
+        const target = this.targets[this.cursor]!;
+        this.rows.push({
+          pluginId: target.pluginId,
+          moduleUrl: target.role === "extension" ? this.catalog.extensionModuleUrl(target.pluginId) : this.catalog.moduleUrl(target.pluginId),
+          contributes: target.contributes,
+          consumes: target.consumes,
+          dependencies: dependsOnToPluginDependencies(target.dependsOn),
+        });
+      }
+      if (this.cursor >= this.targets.length) this.phase = "closure";
+      return true;
+    }
+    if (this.phase === "closure") {
+      this.expanded = expandPluginRegistry(this.rows, this.hostMode ? undefined : this.registryPluginId, this.hostMode);
+      this.phase = "order";
+      return true;
+    }
+    if (this.phase === "order") {
+      // 🎯️ Boot activates in dependency order, not array order (scout-2 §4) — entries a dependency-graph
+      // fault blocks are simply left out of THIS list (best-effort degrade, contract freeze §4 rule 5);
+      // the caller surfaces `errors` through `pluginGraphErrorMessage` for the dependency-fault UI rather
+      // than this resolver throwing and taking the whole boot down with it.
+      const resolved = orderPluginRegistryEntries(this.expanded);
+      this.order = resolved.order;
+      this.errors = resolved.errors;
+      for (const error of this.errors) console.error(`[DEBUG] resolvePlaygroundBoot(${this.variant}): ${pluginGraphErrorMessage(error, "en")}`);
+      this.phase = "done";
+      return false;
+    }
+    return false;
+  }
+
+  /** @emoji 🏁️ The finished plan. Drives any remaining chunks itself, so a caller that stops slicing
+   * still gets a complete plan. */
+  finish(): PlaygroundBoot {
+    while (this.phase !== "done") this.step();
+    return this.reused ?? { variant: this.variant, defaultAppId: this.defaultAppId, plugins: this.order, dependencyErrors: this.errors };
+  }
+}
+
 /** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when the on-disk
  * `generated/🟦️session.ts` was overwritten by another concurrent dev variant, rebuilds from the injected
- * {@link PluginCatalog} instead of trusting the stale program rows. */
+ * {@link PluginCatalog} instead of trusting the stale program rows. One-turn drive of
+ * {@link PlaygroundBootPlanner} for callers that own no interactive budget. */
 export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
-  const defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
-  if (session?.variant === variant) {
-    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins, dependencyErrors: [] };
-  }
-  const registryPluginId = resolvePluginRegistryId(catalog, variant);
-  const hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
-  const catalogPlugins: PluginRegistryEntry[] = [...catalog.plugins, ...catalog.extensions].map((target) => ({
-    pluginId: target.pluginId,
-    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId) : catalog.moduleUrl(target.pluginId),
-    contributes: target.contributes,
-    consumes: target.consumes,
-    dependencies: dependsOnToPluginDependencies(target.dependsOn),
-  }));
-  const expanded = expandPluginRegistry(catalogPlugins, hostMode ? undefined : registryPluginId, hostMode);
-  // 🎯️ Boot activates in dependency order, not array order (scout-2 §4) — entries a dependency-graph
-  // fault blocks are simply left out of THIS list (best-effort degrade, contract freeze §4 rule 5);
-  // the caller surfaces `errors` through `pluginGraphErrorMessage` for the dependency-fault UI rather
-  // than this resolver throwing and taking the whole boot down with it.
-  const { order, errors } = orderPluginRegistryEntries(expanded);
-  if (errors.length > 0) {
-    for (const error of errors) console.error(`[DEBUG] resolvePlaygroundBoot(${variant}): ${pluginGraphErrorMessage(error, "en")}`);
-  }
-  return {
-    variant,
-    defaultAppId,
-    plugins: order,
-    dependencyErrors: errors,
-  };
+  return new PlaygroundBootPlanner(catalog, variant, session).finish();
 }
 
 //#region 🏠️🧳️PluginHostConfig

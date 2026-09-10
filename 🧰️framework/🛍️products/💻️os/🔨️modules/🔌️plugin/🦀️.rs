@@ -1,5 +1,17 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+//#region 🧮️HeapWitness
+/// 🧮️ Weighs what ONE reactor turn RETAINS, in this crate's own test binary only. The wasm harness
+/// (`🖥️host/🧪️tests/🔬️poll-turn-memory`) measured 4 437 B of guest linear memory per `poll` turn
+/// against a live instance — app-independent and render-independent — and the guest has one fixed
+/// linear memory with no process to restart. `semio_framework_trace::HeapWitness` is the shared
+/// instrument (two relaxed atomics per allocation, TEST BINARIES ONLY) the puzzle-3d and
+/// generation3d editors already install; the turn-retention law below reads it.
+#[cfg(test)]
+#[global_allocator]
+static PLUGIN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+//#endregion 🧮️HeapWitness
+
 //#region 📄️DeclarationFixtureMutationMount
 #[cfg(test)]
 #[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
@@ -374,16 +386,23 @@ pub mod app {
     /// because `try_build` stamps every unparented builder with the SAME `"#0"` fallback, which siblings
     /// may not share.
     // 🚫️async: E1 pure node construction consumed synchronously by `section_text_chunks` — see R9.
-    fn section_leaf(value: Label, index: usize) -> UiAssemblyResult<BuiltNode> {
-        text(value).try_id(format!("c{index}")).map_err(|_| ui_assembly_error("section-chunk-id"))?.try_build().map_err(|_| ui_assembly_error("section-chunk-build"))
+    fn section_leaf(value: Label, index: usize, attributes: Option<UiFixedMap<UiText>>) -> UiAssemblyResult<BuiltNode> {
+        let mut node = text(value).try_id(format!("c{index}")).map_err(|_| ui_assembly_error("section-chunk-id"))?.try_build().map_err(|_| ui_assembly_error("section-chunk-build"))?;
+        if let (Some(attributes), Component::Text(props)) = (attributes, &mut node.component) {
+            props.data_attributes = Some(attributes);
+        }
+        Ok(node)
     }
 
-    /// 🧩️ Splits one reserved section's canonical JSON into `Component::Text` leaves that each fit the
-    /// contract's fixed `UI_TEXT_MAX_BYTES` label capacity, cut on UTF-8 character boundaries so a
-    /// German label never straddles two leaves as invalid UTF-8.
+    /// 🧩️ Packs UTF-8 slices that each fit `UI_TEXT_MAX_BYTES` into ONE text node: the first slice is
+    /// `TextProps.value`, the rest ride as ascending `data_attributes` (`01`..`32`) so a leaf holds
+    /// `UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS)` bytes without another tree node. A 512-byte
+    /// leaf per slice made Nakagin's instances lane ~112 nodes and the world surface one over
+    /// `UI_DOCUMENT_NODES`.
     // 🚫️async: E1 pure in-memory projection consumed synchronously by `section_component_tree` — see R9.
     fn section_text_chunks(payload: &str) -> UiAssemblyResult<Vec<BuiltNode>> {
-        let mut chunks = Vec::with_capacity(payload.len().div_ceil(UI_TEXT_MAX_BYTES).max(1));
+        let pack = 1 + UI_FIXED_LIST_ITEMS;
+        let mut slices = Vec::with_capacity(payload.len().div_ceil(UI_TEXT_MAX_BYTES).max(1));
         let mut start = 0;
         while start < payload.len() {
             let mut end = (start + UI_TEXT_MAX_BYTES).min(payload.len());
@@ -393,30 +412,41 @@ pub mod app {
             if end == start {
                 return Err(ui_assembly_error("section-chunk-boundary"));
             }
-            let Ok(value) = Label::try_from(payload[start..end].to_string()) else { return Err(ui_assembly_error("section-chunk-label")) };
-            chunks.push(section_leaf(value, chunks.len())?);
+            slices.push(payload[start..end].to_string());
             start = end;
         }
-        if chunks.is_empty() {
-            let Ok(value) = Label::try_from(String::new()) else { return Err(ui_assembly_error("section-chunk-label")) };
-            chunks.push(section_leaf(value, 0)?);
+        if slices.is_empty() {
+            slices.push(String::new());
+        }
+        let mut chunks = Vec::with_capacity(slices.len().div_ceil(pack));
+        for pack_slices in slices.chunks(pack) {
+            let Ok(value) = Label::try_from(pack_slices[0].clone()) else { return Err(ui_assembly_error("section-chunk-label")) };
+            let mut attributes = UiFixedMap::default();
+            for (offset, slice) in pack_slices.iter().enumerate().skip(1) {
+                let Some(key) = UiText::try_from_str(&format!("{offset:02}")) else { return Err(ui_assembly_error("section-chunk-attr-key")) };
+                let Some(attr) = UiText::try_from_str(slice) else { return Err(ui_assembly_error("section-chunk-attr")) };
+                attributes.try_push(key, attr).map_err(|_| ui_assembly_error("section-chunk-attr-order"))?;
+            }
+            chunks.push(section_leaf(value, chunks.len(), if attributes.is_empty() { None } else { Some(attributes) })?);
         }
         Ok(chunks)
     }
 
     /// 🧩️ Builds ONE paged text carrier: a root container keyed by `root_key`, over a balanced
-    /// `UI_BUILT_CHILDREN_MAX`-ary tree of text leaves whose depth-first concatenation is `payload`.
+    /// `UI_BUILT_CHILDREN_MAX`-ary tree of packed text leaves whose depth-first concatenation is
+    /// `payload`.
     ///
     /// The payload rides as text rather than as a `Component::Extension`'s `UiValue` because
     /// `UiValue`'s owned collections are capped at `UI_VALUE_MAX_ITEMS` entries each and are credited
     /// against the ONE live arena page (`UI_VALUE_LIVE_PAGES`) the virtualised panel author needs — a
-    /// whole measures map would either fail admission or starve that author. Text leaves cost nothing
-    /// but their own bytes, and because each leaf is its own node the reconciler pages them through
-    /// `SURFACE_RECONCILE_PAGE_BYTES` exactly like any other subtree instead of truncating.
+    /// whole measures map would either fail admission or starve that author. Each leaf is still a
+    /// node so the reconciler pages it through `SURFACE_RECONCILE_PAGE_BYTES`, but packing
+    /// `data_attributes` keeps the node envelope `O(lanes + ceil(bytes / pack))` so a Nakagin-scale
+    /// world surface stays inside `UI_DOCUMENT_NODES`.
     ///
     /// Two carriers share this one shape: a reserved refresh section (`section_component_tree`) and a
     /// world-3d scene lane (`scene_surface`'s out-of-doc payloads). Both are bounded by their number
-    /// of pages, never by a fixed byte ceiling.
+    /// of packed pages, never by a fixed byte ceiling.
     // 🚫️async: E1 pure in-memory projection called from `plugin_render_surface`'s locked instance — see R9.
     pub fn paged_text_carrier(root_key: &str, payload: &str) -> UiAssemblyResult<BuiltNode> {
         let mut level = section_text_chunks(payload)?;
@@ -6509,7 +6539,7 @@ pub mod app {
             }
             for current in order {
                 if let semio_framework_ui_contract::Component::Text(text) = &current.component {
-                    payload.push_str(text.value.0.as_str());
+                    payload.push_str(&text.packed_payload());
                 }
             }
             payload
@@ -6532,9 +6562,18 @@ pub mod app {
             }
             for current in order {
                 if current["component"]["type"].as_str() == Some("text") {
-                    if let Some(value) = current["component"]["value"].as_str() {
-                        payload.push_str(value);
+                    let value = current["component"]["value"].as_str().unwrap_or("");
+                    let mut attributes = Vec::new();
+                    if let Some(map) = current["component"]["dataAttributes"].as_object() {
+                        let mut keys: Vec<&String> = map.keys().collect();
+                        keys.sort();
+                        for key in keys {
+                            if let Some(slice) = map[key].as_str() {
+                                attributes.push(slice);
+                            }
+                        }
                     }
+                    payload.push_str(&semio_framework_ui_contract::packed_text_leaf(value, attributes));
                 }
             }
             payload
@@ -6602,7 +6641,9 @@ pub mod app {
         /// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
         pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App) -> VcsArtifactApp<A> {
             let definition = manifest().definition;
-            VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition)).await
+            let registry = AppActionRegistry::from_definition(&definition);
+            drop(definition);
+            VcsArtifactApp::with_registry(A::default(), registry).await
         }
 
         /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture.
@@ -6698,31 +6739,51 @@ pub mod app {
         /// through the same `PluginApp::handle_command` seam, settling each redispatch. Returns how
         /// many invocations were answered, so a caller can loop until the chain quiesces
         /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        pub async fn settle_extension_invocations<P: PluginApp>(app: &mut P, receiver: u32, serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, super::Fault>) -> Result<usize, super::Fault> {
+        /// 🔁️ What one settled round of extension answers produced: how many invocations were
+        /// answered, and every `Effect` the redispatched response actions emitted in turn — a
+        /// continuation that re-arms its own chain (e.g. `flowEvalResolve` → `flowEvalTick`) is only
+        /// observable to the caller through these (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        pub struct SettledExtensionInvocations {
+            pub answered: usize,
+            pub effects: Vec<semio_framework::kernel::Effect>,
+        }
+
+        pub async fn settle_extension_invocations<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta, serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, super::Fault>) -> Result<SettledExtensionInvocations, super::Fault> {
             use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-            let mut answered = 0;
+            let mut settled = SettledExtensionInvocations { answered: 0, effects: Vec::new() };
             for effect in crate::reactor::drain_queued_effects(receiver) {
                 let semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } = effect else { continue };
                 let pending = PendingExtensionInvocation { extension_id, capability, request_json };
-                let outcome = serve(&pending);
-                let Some((instance, action, args)) = crate::reactor::take_extension_response(req, &outcome) else { continue };
+                // 📦️ Exactly what `runCapturedExtensionEffect` (`🏛️ShellHost/🟦️.tsx`) does with the
+                // capability's own JSON answer before it crosses the ABI:
+                // `encodePackValue(JSON.parse(outputJson))`. A fixture that handed the raw JSON
+                // bytes over instead was green against a shape the shell never sends
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                let outcome = serve(&pending).and_then(|json| {
+                    let text = String::from_utf8(json).map_err(|error| super::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), error.to_string()))?;
+                    let value = dsl::json::from_json_str::<super::DslValue>(&text)
+                        .map_err(|error| super::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), format!("the served capability answer is not JSON: {error}")))?;
+                    Ok(store::pack_rt::encode_wire_value(&value))
+                });
+                let Ok((instance, action, args)) = crate::reactor::take_extension_response(req, outcome) else { continue };
                 let arguments = match args {
                     super::DslValue::Object(entries) => entries.into_iter().collect(),
                     _ => std::collections::BTreeMap::new(),
                 };
                 let app_id = app.app_id().await.to_string();
                 let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action }, arguments };
-                let meta = ActionMeta { instance_id: instance, ..meta("local") };
+                let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
                 app.handle_command(&invocation, None, &meta).await?;
-                settle_registered_typed_operation(app, receiver).await?;
-                answered += 1;
+                settled.effects.extend(settle_registered_typed_operation(app, receiver).await?.effects);
+                settled.answered += 1;
             }
-            Ok(answered)
+            Ok(settled)
         }
 
         /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
         pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A) {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            let mut pending_authority = None;
             while std::time::Instant::now() < deadline {
                 if app.close_terminal_is_empty() {
                     return;
@@ -6734,12 +6795,14 @@ pub mod app {
                             std::thread::yield_now();
                         }
                     }
-                    super::PluginCloseStep::AwaitingInput { reason } => panic!("registered fixture close awaited input: {reason}"),
-                    super::PluginCloseStep::Blocked { reason } => panic!("registered fixture close blocked: {reason}"),
+                    super::PluginCloseStep::AwaitingInput { reason } | super::PluginCloseStep::Blocked { reason } => {
+                        pending_authority = Some(reason);
+                        std::thread::yield_now();
+                    }
                     super::PluginCloseStep::Complete => break,
                 }
             }
-            assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness");
+            assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default());
         }
 
         /// 🔗️ Two registry-less store-only instances joined by an in-memory backbone on `channel`.
@@ -7162,8 +7225,8 @@ pub mod app {
                 V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
             }
 
-            fn pending_effects(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>) -> Vec<super::Effect> {
-                V::pending_effects(doc, cfg)
+            fn pending_effects(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view: Option<&super::ViewModel>) -> Vec<super::Effect> {
+                V::pending_effects(doc, cfg, view)
             }
 
             fn window_engagements(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view_state: &super::ViewModel) -> std::collections::HashMap<String, super::WindowEngagement> {
@@ -9834,7 +9897,7 @@ pub mod app {
         }) {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
             let label =
-                if entry.count > 1 { UiText::try_format(format_args!("{} x{}", entry.label, entry.count)).ok_or_else(|| ui_assembly_error("history-panel.command-label"))? } else { ui_text(entry.label.clone(), "history-panel.command-label")? };
+                if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
             let label = Label(label);
             let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
             let mut builder = ui::tree_item(label).icon(ui_text(history_panel_icon_id(entry.kind).await.as_str(), "history-panel.command-icon")?);
@@ -11157,7 +11220,13 @@ pub mod app {
         async fn app_catalogue_json() -> String {
             String::from("{}")
         }
-        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        /// ⏱️ Background work the host should dispatch after this pass. `view` is the host's own
+        /// attached-window roster — the ONLY place an app can learn which concrete window instance owns
+        /// a window-scoped self-dispatch chain, so an armed `Effect::DispatchAction` can carry that
+        /// window's id in its `args` instead of landing on whichever window happens to be current
+        /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `None` means no surface is mounted yet: an app
+        /// with window-scoped work must arm NOTHING and wait for the first `Event::SurfaceVisible`.
+        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         // 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
@@ -11720,7 +11789,7 @@ pub mod app {
             String::from("{}")
         }
         /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
-        async fn pending_effects(&mut self) -> Vec<Effect> {
+        async fn pending_effects(&mut self, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
@@ -12939,10 +13008,11 @@ pub mod app {
 
     pub const TYPED_OPERATION_RESULT_PAGE_BYTES: usize = 4_096;
     pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
-    /// 🏃️ Upper bound on worker pump iterations one reactor turn spends on a single Worker-stage typed operation.
-    pub const TYPED_OPERATION_WORKER_PUMPS_PER_TURN: usize = 256;
-    /// ⏱️ Wall-clock slice one reactor turn spends driving a Worker-stage typed operation (half the interactive lane ceiling).
-    pub const TYPED_OPERATION_WORKER_WALL_US: u64 = 4_000;
+    /// 🏃️ Upper bound on worker pump iterations one reactor turn spends on a single mounted worker
+    /// session — a Worker-stage typed operation or a live artifact-envelope decode.
+    pub const INTERACTIVE_TURN_WORKER_PUMPS: usize = 256;
+    /// ⏱️ Wall-clock slice one reactor turn spends driving one mounted worker session (half the interactive lane ceiling).
+    pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
 
@@ -14466,6 +14536,18 @@ pub mod app {
     /// of the route is layered on top (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     /// `📓️selection-overflow-2026-09-09.md`). `copy`/`cut`/`paste` reach it only when the app declares
     /// no reserved job of its own.
+    /// 🧮️ The ONE work capacity every framework-reserved route declares. Its durable lane is a
+    /// bounded config store whose preflight ([`admit_bounded_config_mutation`]) declares one
+    /// POINT-INVERTIBLE item — a forward row plus an inverse row — so a reserved gesture of `n`
+    /// items costs `n` × that, in the very unit `ArtifactStore::fold_batch_item` measures. The
+    /// ceiling is the store's own one-item maximum expressed in items, so a gesture this refuses is
+    /// one the store could never admit either. `interactionSelect` and its five interaction siblings
+    /// used to declare ONE work item against that TWO-row footprint, which is the same
+    /// declaration-vs-arithmetic split `📓️fold-contract-2026-09-10.md` fixed one layer down
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    const FRAMEWORK_RESERVED_ROUTE_CAPACITY: crate::retained_command::ArtifactRetainedWorkCapacity =
+        crate::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS / store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+
     fn framework_reserved_route_job(action: &str, raw: Vec<u8>, work_items: usize) -> Result<ArtifactReservedToolJob, Fault> {
         Ok(match action {
             "undo" => ArtifactReservedToolJob::new(FrameworkUndoJob::new(raw, work_items)),
@@ -17305,6 +17387,12 @@ pub mod app {
             }
         }
 
+        /// 🏃️ Whether one more `drive` can advance this decode. `Ready` is the sole parked state —
+        /// it awaits the exact consumer publication, never another worker step.
+        fn has_runnable_work(&self) -> bool {
+            self.state != ActiveArtifactEnvelopeDecodeState::Ready
+        }
+
         fn poll(&self) -> ArtifactEnvelopeDecodeOperationPoll {
             match self.state {
                 ActiveArtifactEnvelopeDecodeState::Active => ArtifactEnvelopeDecodeOperationPoll::Pending,
@@ -18489,6 +18577,32 @@ pub mod app {
     /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
     const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
 
+    pub(crate) fn is_framework_reserved_action_id(action: &str) -> bool {
+        HISTORY_ACTION_IDS.contains(&action)
+            || CLIPBOARD_ACTION_IDS.contains(&action)
+            || INTERACTION_ACTION_IDS.contains(&action)
+            || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
+    }
+
+    pub(crate) fn framework_reserved_action_kind(action: &str) -> Option<ActionKind> {
+        if !is_framework_reserved_action_id(action) {
+            return None;
+        }
+        if CLIPBOARD_ACTION_IDS.contains(&action) {
+            return Some(ActionKind::Clipboard);
+        }
+        if INTERACTION_ACTION_IDS.contains(&action) {
+            return Some(ActionKind::Interaction);
+        }
+        if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
+            return Some(ActionKind::View);
+        }
+        if action == NOTE_SHELL_COMMAND_ACTION_ID {
+            return Some(ActionKind::Shell);
+        }
+        Some(ActionKind::History)
+    }
+
     /// ⏱️ M2 (ticket 26/08/17 `design-unified.md`): default TTL for every `PresenceUpdate`
     /// `stamp_and_cache_interaction_ui` derives — a peer mark not refreshed within this window ages
     /// out on the reactor's `PresenceHub` with no goodbye message (matches the design's decided
@@ -18542,8 +18656,8 @@ pub mod app {
         }
 
         /// 🏃️ On wasm the process pool has no threads: this loop is driven synchronously under
-        /// `resolve_ready`, so a submitted step only runs if the loop pumps the pool itself (measured
-        /// 2026-09-09: `noteShellCommand` polled `Submitted` 4096+ times inside one reactor turn).
+        /// `drive_self_waking_ready` (one host poll), so a submitted step only runs if the loop pumps
+        /// the pool itself. `resolve_ready` samples once and would drop the first `plugin_job_yield_once`.
         async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
             &mut self,
             verb: &str,
@@ -18833,6 +18947,13 @@ pub mod app {
 
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
+
+        /// 🧱 Runs `initial_snapshot` on its own frame so fixture sync cannot nest inside envelope construction.
+        #[inline(never)]
+        async fn isolate_artifact_app_initial_snapshot() -> A::Snapshot {
+            A::initial_snapshot().await
+        }
+
         pub async fn with_registry(app: A, registry: AppActionRegistry) -> Self {
             Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new()).await
         }
@@ -18840,7 +18961,8 @@ pub mod app {
         /// 🫂️ Activates an app controller against Platform's injected shared production registry.
         pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus) -> Self {
             let app_id = app.instance_id().await.to_string();
-            let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, A::initial_snapshot().await, None);
+            let snapshot = Self::isolate_artifact_app_initial_snapshot().await;
+            let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None);
             envelope.dialect = Some(A::DIALECT.into());
             let config_id = format!("{}-config", app_id);
             let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema().await, &config_id, A::initial_config().await, None);
@@ -19258,7 +19380,11 @@ pub mod app {
             }
         }
 
-        /// 🔄️ Advances decode-to-initializer handoff without running either job inline.
+        /// 🔄️ Advances decode-to-initializer handoff without running either job inline. A decode that
+        /// has not reached [`ArtifactEnvelopeDecodeOperationPoll::Ready`] reports its OWN poll — the
+        /// store replacement it will hand to does not exist yet, and reading that absent job here
+        /// turned every in-progress decode into a terminal `Fault` for all eight plugin loops
+        /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         pub fn advance_artifact_envelope_load(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<ArtifactEnvelopeDecodeOperationPoll, Fault> {
             if let Some(active) = self.store_replacement_jobs.get(handle.operation.0) {
                 if active.operation != handle.operation || active.generation != handle.generation {
@@ -19270,7 +19396,11 @@ pub mod app {
                 if active.operation != handle.operation || active.generation != handle.generation {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.stale-handle"), "envelope decode handle is stale"));
                 }
-                if active.poll() == ArtifactEnvelopeDecodeOperationPoll::Ready && !self.try_begin_artifact_store_replacement(handle)? {
+                let decode = active.poll();
+                if decode != ArtifactEnvelopeDecodeOperationPoll::Ready {
+                    return Ok(decode);
+                }
+                if !self.try_begin_artifact_store_replacement(handle)? {
                     return Ok(ArtifactEnvelopeDecodeOperationPoll::Progress);
                 }
                 return Ok(self.poll_artifact_store_replacement(handle));
@@ -19307,9 +19437,26 @@ pub mod app {
                 return Err(pages);
             }
             let Some(bundle) = A::build_envelope_decode_owner_bundle() else { return Err(pages) };
-            let record = store::artifact_envelope_decode_record(operation, generation, pages)?;
             let completion = store::ArtifactEnvelopeDecodeCompletion::new();
             let fields = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&self.envelope_completed_records), std::sync::Arc::clone(&completion));
+            self.admit_artifact_envelope_decode_owner(operation, generation, pages, fields, completion)
+        }
+
+        /// 📥️ Admits one exact envelope decode against a caller-supplied field owner. The domain
+        /// route builds that owner from its declared catalog; the framework's own decode-ladder laws
+        /// supply a bare one so the ladder is provable without a domain field catalog.
+        pub(crate) fn admit_artifact_envelope_decode_owner(
+            &mut self,
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+            pages: store::OwnedSchemaDecodePages,
+            fields: Box<dyn store::ArtifactEnvelopeFieldDecoder<A::Snapshot, A::Mutation>>,
+            completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
+        ) -> Result<ArtifactEnvelopeDecodeOperationHandle, store::OwnedSchemaDecodePages> {
+            if !self.envelope_decode_jobs.can_insert(operation.0) {
+                return Err(pages);
+            }
+            let record = store::artifact_envelope_decode_record(operation, generation, pages)?;
             let active = match store::ArtifactEnvelopeDecodeAuthority::try_new(record, &self.envelope_field_decoders, fields) {
                 Ok(decode) => ActiveArtifactEnvelopeDecode::admitted(operation, generation, decode, completion),
                 Err((record, _fault, fields)) => ActiveArtifactEnvelopeDecode::rejected(operation, generation, Box::new(store::ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields)), completion),
@@ -19692,6 +19839,10 @@ pub mod app {
                 maximum_items,
                 maximum_bytes,
             )?;
+            #[cfg(target_arch = "wasm32")]
+            if let Some(now_ms) = semio_framework_job::default_now_ms() {
+                pool.pump(now_ms);
+            }
             if self.envelope_decode_jobs.get(operation_id).is_some_and(|active| active.terminal_is_empty(&self.envelope_completed_records)) {
                 let active = self.envelope_decode_jobs.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "terminal envelope operation changed before exact removal"))?;
                 drop(active);
@@ -21790,7 +21941,17 @@ pub mod app {
             Ok(())
         }
 
+        /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
+        /// runtime is counted in — never the bare item count the route used to hand its job, which
+        /// no longer matched the two-row footprint its own config preflight declares.
         async fn framework_reserved_work_items(&mut self, action: &str, args: Option<&DslValue>) -> Result<usize, Fault> {
+            let items = self.framework_reserved_route_items(action, args).await?;
+            FRAMEWORK_RESERVED_ROUTE_CAPACITY
+                .rows_for_items(items)
+                .ok_or_else(|| plugin_sdk_fault(format!("framework reserved route '{action}' declares {items} items beyond its exact work capacity")))
+        }
+
+        async fn framework_reserved_route_items(&mut self, action: &str, args: Option<&DslValue>) -> Result<usize, Fault> {
             match action {
                 "commitCheckpoint" | "checkoutCheckpoint" => Ok(self.children.len().saturating_add(1)),
                 REVERT_TO_COMMAND_ACTION_ID => {
@@ -22053,15 +22214,11 @@ pub mod app {
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
-            let definition = self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
-            validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
-            if HISTORY_ACTION_IDS.contains(&action)
-                || CLIPBOARD_ACTION_IDS.contains(&action)
-                || INTERACTION_ACTION_IDS.contains(&action)
-                || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
-            {
+            if is_framework_reserved_action_id(action) {
                 return self.dispatch_framework_reserved_action(action, args, meta).await;
             }
+            let definition = self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
+            validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
             if let Some(config_mutation) = A::host_configuration_mutation(action, args)? {
                 let admission = self.admit_host_configuration_json(action, args).await?;
                 self.require_tool_operation_authority(&admission)?;
@@ -22146,11 +22303,11 @@ pub mod app {
         /// cooperative-maintenance cadence (`maintenance_step` stage 0 of 21, one call per ~8 reactor
         /// turns) — measured 2026-09-09: 3 interactive job steps in 4 096 reactor turns, every action
         /// exhausting the host's continuation budget with `more-work`. Bounded by
-        /// [`TYPED_OPERATION_WORKER_PUMPS_PER_TURN`] and [`TYPED_OPERATION_WORKER_WALL_US`].
+        /// [`INTERACTIVE_TURN_WORKER_PUMPS`] and [`INTERACTIVE_TURN_WORKER_WALL_US`].
         fn drive_typed_operation_worker(&mut self, operation_id: u64) -> Result<(), Fault> {
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             let started_us = semio_framework_job::default_now_us();
-            for _ in 0..TYPED_OPERATION_WORKER_PUMPS_PER_TURN {
+            for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
                 let Some(operation) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
                 if operation.stage != MountedTypedCommandFullOperationStage::Worker {
                     return Ok(());
@@ -22164,11 +22321,45 @@ pub mod app {
                     return Ok(());
                 }
                 let Some(started_us) = started_us else { return Ok(()) };
-                if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= TYPED_OPERATION_WORKER_WALL_US) {
+                if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US) {
                     return Ok(());
                 }
             }
             Ok(())
+        }
+
+        /// 🏃️ Drives the live artifact-envelope decode workers for a bounded slice of this turn, the
+        /// same reactor-turn pump [`Self::drive_typed_operation_worker`] gives a Worker-stage typed
+        /// operation. `ActiveArtifactEnvelopeDecode::drive` only SUBMITS a step to the process pool;
+        /// on wasm that pool has no threads and runs a step solely when it is pumped, and the only
+        /// driver was the cooperative-maintenance cadence (`maintenance_step` stage 11 of
+        /// [`MAINTENANCE_STAGES`], one visit per rotation), so opening or replacing a document never
+        /// advanced inside an interactive turn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Bounded by
+        /// [`INTERACTIVE_TURN_WORKER_PUMPS`] and [`INTERACTIVE_TURN_WORKER_WALL_US`]. The two return
+        /// pumps belong to the SAME ladder — a decode parks in release until its field-decoder lease
+        /// and completed record are reclaimed — so pumping only the worker would stall every load.
+        fn drive_artifact_envelope_decode_worker(&mut self) -> Result<(), Fault> {
+            let started_us = semio_framework_job::default_now_us();
+            for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
+                if !self.has_runnable_artifact_envelope_decode() {
+                    return Ok(());
+                }
+                self.drive_envelope_decode_jobs(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                self.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                self.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                let Some(started_us) = started_us else { return Ok(()) };
+                if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US) {
+                    return Ok(());
+                }
+            }
+            Ok(())
+        }
+
+        /// 🔎️ Whether any live envelope decode still has a step this turn can run. A decode that
+        /// reached `Ready` is excluded: it awaits its exact consumer publication, not a worker step,
+        /// so it must never hold the reactor in `more-work`.
+        fn has_runnable_artifact_envelope_decode(&self) -> bool {
+            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.envelope_decode_jobs.entry(index).is_some_and(|(_, active)| active.has_runnable_work()))
         }
 
         async fn advance_typed_operation_publication_one(&mut self) -> Result<(), Fault> {
@@ -22789,7 +22980,8 @@ pub mod app {
                             HistoryLane::Document,
                             self.artifact_one_item_factory.as_ref(),
                         ) {
-                            Ok(publication) => {
+                            Ok(mut publication) => {
+                                publication.set_coalesce_key(emit.coalesce_key.take());
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
                                 return Ok(());
                             }
@@ -23697,8 +23889,6 @@ pub mod app {
 
     /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    /// 🐞️ `[DEBUG]` typed-operation publication turn counter — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
-    static TYPED_PUBLICATION_TRACE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
         async fn bind_instance_id(&mut self, instance_id: u32) {
@@ -24697,19 +24887,7 @@ pub mod app {
         }
 
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault> {
-            let trace_turn = TYPED_PUBLICATION_TRACE.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
-            if trace_turn.is_power_of_two() || trace_turn.is_multiple_of(4096) {
-                let operations: Vec<String> =
-                    (0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| self.tool_operations.entry(index)).map(|(id, operation)| format!("{id}:{:?}:{}:{}", operation.stage, operation.has_runnable_work(), operation.result_page_presented)).collect();
-                eprintln!(
-                    "[DEBUG] typed-operation publication turn={trace_turn} operations={operations:?} latest_wins_empty={} effects={} events={} ui={} query={}",
-                    self.latest_wins_commands.is_empty(),
-                    self.typed_effect_outbox.len(),
-                    self.typed_event_outbox.len(),
-                    self.typed_ui_outbox.len(),
-                    self.local_interaction_query.as_ref().map_or_else(|| "none".to_string(), |query| query.debug_state())
-                );
-            }
+            self.drive_artifact_envelope_decode_worker()?;
             if self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
                 self.local_interaction_query_turn = !self.local_interaction_query_turn;
                 if self.local_interaction_query_turn {
@@ -24732,6 +24910,7 @@ pub mod app {
 
         fn has_runnable_typed_operations(&self) -> bool {
             (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.tool_operations.entry(index).is_some_and(|(_, operation)| operation.has_runnable_work()))
+                || self.has_runnable_artifact_envelope_decode()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
                 || self.typed_event_outbox.len() != 0
@@ -24902,18 +25081,19 @@ pub mod app {
             if address.window_instance_id.trim().is_empty() {
                 return Err(plugin_sdk_fault("action window instance id must be non-empty"));
             }
-            if !self.registry.has_mode(&address.mode_id).await {
-                return Err(plugin_sdk_fault(format!("unknown action mode owner {}", address.mode_id)));
+            let reserved_kind = framework_reserved_action_kind(&address.action_id);
+            if reserved_kind.is_none() {
+                if !self.registry.has_mode(&address.mode_id).await {
+                    return Err(plugin_sdk_fault(format!("unknown action mode owner {}", address.mode_id)));
+                }
+                if active_mode_id != Some(address.mode_id.as_str()) {
+                    return Err(plugin_sdk_fault(format!("action {} belongs to inactive mode {}", address.action_id, address.mode_id)));
+                }
             }
-            if active_mode_id != Some(address.mode_id.as_str()) {
-                return Err(plugin_sdk_fault(format!("action {} belongs to inactive mode {}", address.action_id, address.mode_id)));
-            }
-            let kind = self
-                .registry
-                .window_action(&address.window_kind_id, &address.action_id)
-                .await
-                .map(|definition| definition.kind)
-                .ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?;
+            let kind = match self.registry.window_action(&address.window_kind_id, &address.action_id).await {
+                Some(definition) => definition.kind,
+                None => reserved_kind.ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?,
+            };
             let mut arguments = invocation.arguments.clone();
             arguments.insert("windowId".into(), DslValue::String(address.window_instance_id.clone()));
             let args = DslValue::Object(arguments.into_iter().collect());
@@ -25129,7 +25309,7 @@ pub mod app {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
-            self.draft_store.reset(parsed.envelope, applied, redo).await.map_err(|error| error.into_fault())?;
+            self.draft_store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
             Ok(())
         }
 
@@ -25241,7 +25421,7 @@ pub mod app {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
-            self.config_store.reset(parsed.envelope, applied, redo).await.map_err(|error| error.into_fault())?;
+            self.config_store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -25283,7 +25463,7 @@ pub mod app {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).await.map_err(|error| error.into_fault())?;
             let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             let window_reset = self.prepare_document_window_reset()?;
-            self.store.reset(parsed.envelope, applied, Vec::new()).await.map_err(|error| error.into_fault())?;
+            self.store.reset(parsed.into_envelope(), applied, Vec::new()).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
             Ok(())
@@ -25303,7 +25483,7 @@ pub mod app {
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
             let window_reset = self.prepare_document_window_reset()?;
-            self.store.reset(parsed.envelope, applied, redo).await.map_err(|error| error.into_fault())?;
+            self.store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
             Ok(())
@@ -25462,7 +25642,7 @@ pub mod app {
             A::app_catalogue_json().await
         }
 
-        async fn pending_effects(&mut self) -> Vec<Effect> {
+        async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
@@ -25483,7 +25663,7 @@ pub mod app {
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await;
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-            A::pending_effects(&doc, &cfg).await
+            A::pending_effects(&doc, &cfg, view).await
         }
 
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
@@ -26707,7 +26887,7 @@ pub mod app {
         fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
@@ -27060,7 +27240,7 @@ pub mod app {
             let _ = (transient, interaction);
             Self::render(body_key, doc, cfg, view_state)
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
             Vec::new()
         }
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
@@ -27388,8 +27568,8 @@ pub mod app {
         async fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             E::paste_operations(doc, fragment, placement)
         }
-        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
-            E::pending_effects(doc, cfg)
+        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
+            E::pending_effects(doc, cfg, view)
         }
         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             E::render(body_key, doc, cfg, view_state)
@@ -27662,8 +27842,8 @@ pub mod app {
         ) -> UiAssemblyResult<ComponentTree> {
             V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
         }
-        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
-            V::pending_effects(doc, cfg)
+        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
+            V::pending_effects(doc, cfg, view)
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg, view_state)
@@ -27728,7 +27908,7 @@ pub mod app {
     impl Viewer {
         pub fn builder(dialect: Dialect) -> ViewerBuilder {
             let dialect: ArtifactDialect = dialect.into();
-            let inner = resolve_ready(AppBuilder::new(surface_app_id(&dialect, AppRole::Viewer), LocalizedLabel::native("Viewer", "Betrachter")));
+            let inner = Box::new(resolve_ready(AppBuilder::new(surface_app_id(&dialect, AppRole::Viewer), LocalizedLabel::native("Viewer", "Betrachter"))));
             ViewerBuilder { inner, dialect }
         }
     }
@@ -27736,7 +27916,7 @@ pub mod app {
     impl Editor {
         pub fn builder(dialect: Dialect) -> EditorBuilder {
             let dialect: ArtifactDialect = dialect.into();
-            let inner = resolve_ready(AppBuilder::new(surface_app_id(&dialect, AppRole::Editor), LocalizedLabel::native("Editor", "Editor")));
+            let inner = Box::new(resolve_ready(AppBuilder::new(surface_app_id(&dialect, AppRole::Editor), LocalizedLabel::native("Editor", "Editor"))));
             EditorBuilder { inner, dialect }
         }
     }
@@ -27745,32 +27925,41 @@ pub mod app {
     /// `.mutation(...)`, which does not exist on this type: calling it is a compile error, not a
     /// runtime rejection.
     pub struct ViewerBuilder {
-        inner: AppBuilder,
+        inner: Box<AppBuilder>,
         dialect: ArtifactDialect,
     }
 
     /// ✏️ Fluent editor surface builder (contract §2.4) — every `AppBuilder` method, `.mutation(...)`
     /// included.
+    /// 📦️ `inner` is BOXED on purpose. Every fluent method takes `self` by value and returns a new
+    /// surface builder, so an unoptimized build gives each step of a chain its own stack slot for the
+    /// whole returned value: a real app manifest chains ~250 steps, and an inline `AppBuilder` made
+    /// that 400 KiB of one frame — 20 % of a 2 MiB test thread spent before the app even exists, which
+    /// is why every whole-app law in `puzzle3d` ran at 70–95 % of its stack and the heaviest one
+    /// overflowed (ticket 26/09/02 wave F). Behind a `Box` a chain step costs a pointer, and the
+    /// `AppBuilder` value itself only ever lives in the frame of the one method that moves it.
     pub struct EditorBuilder {
-        inner: AppBuilder,
+        inner: Box<AppBuilder>,
         dialect: ArtifactDialect,
     }
 
     impl ViewerBuilder {
+        #[inline(never)]
         pub fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
         {
-            self.inner = self.inner.document(document);
+            self.inner = Box::new((*self.inner).document(document));
             self
         }
+        #[inline(never)]
         pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
-            self.inner = resolve_ready(self.inner.terminology_document(id, document));
+            self.inner = Box::new(resolve_ready((*self.inner).terminology_document(id, document)));
             self
         }
         pub fn build_definition(self) -> AppDefinition {
-            let mut definition = self.inner.build_definition();
+            let mut definition = (*self.inner).build_definition();
             definition.role = AppRole::Viewer;
             definition.dialect = self.dialect;
             definition
@@ -27778,25 +27967,28 @@ pub mod app {
     }
 
     impl EditorBuilder {
+        #[inline(never)]
         pub fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
         {
-            self.inner = self.inner.document(document);
+            self.inner = Box::new((*self.inner).document(document));
             self
         }
+        #[inline(never)]
         pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
-            self.inner = resolve_ready(self.inner.terminology_document(id, document));
+            self.inner = Box::new(resolve_ready((*self.inner).terminology_document(id, document)));
             self
         }
         /// @emoji ✏️ Declares a document-mutating action — the one method `ViewerBuilder` doesn't have.
+        #[inline(never)]
         pub fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.inner = resolve_ready(self.inner.mutation(id, label));
+            self.inner = Box::new(resolve_ready((*self.inner).mutation(id, label)));
             self
         }
         pub fn build_definition(self) -> AppDefinition {
-            let mut definition = self.inner.build_definition();
+            let mut definition = (*self.inner).build_definition();
             definition.role = AppRole::Editor;
             definition.dialect = self.dialect;
             definition
@@ -27816,8 +28008,9 @@ pub mod app {
         ( @type $Type:ident; { $( $name:ident ( $( $arg:ident : $ty:ty ),* ) ),+ $(,)? } ) => {
             impl $Type {
                 $(
+                    #[inline(never)]
                     pub fn $name(mut self, $( $arg: $ty ),* ) -> Self {
-                        self.inner = resolve_ready(self.inner.$name( $( $arg ),* ));
+                        self.inner = Box::new(resolve_ready((*self.inner).$name( $( $arg ),* )));
                         self
                     }
                 )+
@@ -29354,9 +29547,10 @@ pub mod plugin_runtime {
             cx.consume_fuel(1);
             #[cfg(any(test, target_arch = "wasm32"))]
             cell.maintenance_probe_entries.fetch_add(1, Ordering::Relaxed);
-            let maintenance_started_us = semio_framework_job::default_now_us();
+            let traced = semio_framework_trace::runtime_diagnostics_enabled();
+            let maintenance_started_us = traced.then(semio_framework_job::default_now_us).flatten();
             let maintenance = instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP);
-            if let (Some(started_us), Some(finished_us)) = (maintenance_started_us, semio_framework_job::default_now_us()) {
+            if let (Some(started_us), Some(finished_us)) = (maintenance_started_us, maintenance_started_us.and_then(|_| semio_framework_job::default_now_us())) {
                 if finished_us.saturating_sub(started_us) >= 2_000 {
                     eprintln!("[DEBUG] maintenance stage={} elapsed_us={} outcome={:?}", crate::app::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), finished_us - started_us, maintenance.as_ref().map(|_| ()).map_err(|fault| fault.message.clone()));
                 }
@@ -29440,7 +29634,9 @@ pub mod plugin_runtime {
         let verdict = match elapsed {
             Err(cause) => RuntimeMaintenanceStatus::Fault(cause),
             Ok(elapsed_us) if semio_framework_trace::interactive_step_contract_violated(elapsed_us) => {
-                eprintln!("[DEBUG] cooperative maintenance callback overran the interactive ceiling for instance {} (elapsed {elapsed_us}us) — recorded, not fatal: the callback clock measures wall time including descheduling and the pumped foreign job step; the job-level step contract quarantines slow steps", cell.id);
+                if semio_framework_trace::runtime_diagnostics_enabled() {
+                    eprintln!("[DEBUG] cooperative maintenance callback overran the interactive ceiling for instance {} (elapsed {elapsed_us}us) — recorded, not fatal: the callback clock measures wall time including descheduling and the pumped foreign job step; the job-level step contract quarantines slow steps", cell.id);
+                }
                 status
             }
             Ok(_) => status,
@@ -29601,7 +29797,9 @@ pub mod plugin_runtime {
                 let progress = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                 runtime_close_phase(&state, 11);
                 match progress {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => self.progress = Some(crate::app::PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                        self.progress = Some(crate::app::PluginCloseStep::Pending { released_items, released_bytes });
+                    }
                     semio_framework_job::InteractiveJobCloseStep::Blocked => self.contended = true,
                     semio_framework_job::InteractiveJobCloseStep::Complete => {}
                 }
@@ -29638,10 +29836,15 @@ pub mod plugin_runtime {
                     semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close step exceeded its item or byte contract") })
                 }
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { reason }) => {
+                    runtime_close_pending_authority(reason);
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()) })
+                    semio_framework_job::StepOutcome::Yield
                 }
-                Ok(crate::app::PluginCloseStep::AwaitingInput { reason }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()) }),
+                Ok(progress @ crate::app::PluginCloseStep::AwaitingInput { reason }) => {
+                    runtime_close_pending_authority(reason);
+                    self.progress = Some(progress);
+                    semio_framework_job::StepOutcome::Yield
+                }
                 Ok(crate::app::PluginCloseStep::Complete) => {
                     if !instance.app.close_terminal_is_empty() {
                         return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
@@ -29689,6 +29892,10 @@ pub mod plugin_runtime {
     fn runtime_close_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU8) -> RuntimeCloseStatus {
         if contended {
             return RuntimeCloseStatus::Ready;
+        }
+        if matches!(progress, Some(crate::app::PluginCloseStep::Blocked { .. } | crate::app::PluginCloseStep::AwaitingInput { .. })) {
+            stalled_steps.swap(0, Ordering::SeqCst);
+            return RuntimeCloseStatus::ExternalWait;
         }
         let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })) || progress.is_none();
         let stalled = if zero_progress {
@@ -29772,6 +29979,19 @@ pub mod plugin_runtime {
             }
         }
     }
+
+    /// ⏳️ A close authority that is not yet releasable is a WAIT, never a fault: the ladder keeps
+    /// stepping until its external owner lets go (mirrors the live cleanup job, which has always
+    /// yielded on `Blocked`). Reported on a doubling cadence so a genuinely stuck owner is visible
+    /// without flooding a close that clears after a few turns.
+    fn runtime_close_pending_authority(reason: &'static str) {
+        let seen = RUNTIME_CLOSE_PENDING_AUTHORITY_TURNS.fetch_add(1, Ordering::Relaxed).saturating_add(1);
+        if seen.is_power_of_two() {
+            eprintln!("[DEBUG] runtime close pending authority turn={seen} reason={reason}");
+        }
+    }
+
+    static RUNTIME_CLOSE_PENDING_AUTHORITY_TURNS: AtomicU64 = AtomicU64::new(0);
 
     fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, cause: RuntimeCleanupFault) -> RuntimeCloseStatus {
         #[cfg(test)]
@@ -30198,9 +30418,15 @@ pub mod plugin_runtime {
         .await
     }
 
-    const MAX_PUBLIC_ACTION_BODY_BYTES: usize = 262_144;
-    const MAX_PUBLIC_ACTION_STRING_BYTES: usize = 4_096;
-    const MAX_PUBLIC_ACTION_DEPTH: usize = 64;
+    /// 📏️ The ONE public invocation envelope, read off the language-neutral contract
+    /// (`🛂️manifest/🎛️public-invocation/🧬️schema/🔣️.json`) the shell's pager reads too — never a
+    /// second literal here. `MAX_PUBLIC_ACTION_STRING_BYTES` in particular is checked BEFORE the
+    /// addressed tool's own `max_raw_wire_bytes`, so no tool contract can widen it and every
+    /// oversized host push must be paged by its producer
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    const MAX_PUBLIC_ACTION_BODY_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
+    const MAX_PUBLIC_ACTION_STRING_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
+    const MAX_PUBLIC_ACTION_DEPTH: usize = semio_framework::PUBLIC_INVOCATION_DEPTH;
 
     fn dff_interactive_wire_limit(owner: crate::app::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[crate::app::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
         let registration = app_contracts.iter().find(|registration| registration.controller_id == addressed_controller_id && registration.tool_id == command_id);
@@ -30407,6 +30633,18 @@ pub mod plugin_runtime {
         Ok(projected)
     }
 
+    /// 🎯️ Window projection for a catalog action, or the unprojected view for a framework-reserved verb.
+    /// Actor ingress (`AppCommand::Command`) and `plugin_handle_action` share this rule so undo/redo
+    /// reach `dispatch_framework_reserved_action` when the chrome addresses a window that does not
+    /// declare the verb (or is absent from `window_instances`).
+    pub(crate) fn admit_addressed_action_view(view: &ViewModel, invocation: &ManifestActionInvocation) -> Result<ViewModel, Fault> {
+        match addressed_action_view(view, invocation) {
+            Ok(projected) => Ok(projected),
+            Err(_) if crate::app::is_framework_reserved_action_id(&invocation.address.action_id) => Ok(view.clone()),
+            Err(fault) => Err(fault),
+        }
+    }
+
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_handle_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
         validate_public_json_envelope(action_json, "action")?;
@@ -30421,13 +30659,13 @@ pub mod plugin_runtime {
             return Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)));
         }
         let view = context.get("viewState").cloned().and_then(|value| serde_json::from_value::<ViewModel>(value).ok()).ok_or_else(|| plugin_internal_fault("action context is missing a valid viewState"))?;
-        let view = addressed_action_view(&view, &invocation)?;
+        let view = admit_addressed_action_view(&view, &invocation)?;
         let active_mode_id = view.active_mode_id.clone();
         let meta = ActionMeta { actor, instance_id, view_state: Some(view) };
         let cell = runtime_instance_cell(runtime, instance_id)?;
         let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
         instance.surface_contexts.update_view(meta.view_state.as_ref().expect("addressed UI action has host context"));
-        instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await
+        drive_self_waking_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
     }
 
     /// @emoji 🎛️ Dispatches a structurally addressed command to its actual owner. Plugin commands
@@ -31030,7 +31268,7 @@ pub mod plugin_runtime {
             // chain's `computing_json` must be fresh by the time this same pass renders the graph, or a
             // cold-start load would render one full refresh cycle behind (nothing flagged as computing
             // until the *next* refresh).
-            let mut response = RefreshResponse { requested_effects: resolve_ready(instance.app.pending_effects()), ..RefreshResponse::default() };
+            let mut response = RefreshResponse { requested_effects: resolve_ready(instance.app.pending_effects(Some(&request.view_state))), ..RefreshResponse::default() };
 
             for entry in &request.windows {
                 // 🪟️ Stamp this window's instance id and its own active utility into the view state before
@@ -31363,7 +31601,20 @@ pub mod plugin_runtime {
         Ok(output)
     }
 
-    fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, start: usize) -> Result<(Option<(usize, u32)>, bool), Fault> {
+    /// 🔁️ What a typed-operation scan found: a runnable instance, or only a busy one.
+    ///
+    /// A busy instance is NOT runnable work — it is another owner holding the same lock — and the two
+    /// used to fold into one `bool` that the reactor turn reported as `MoreWork` either way. An idle
+    /// app that answers `MoreWork` because a mounted worker session held the lock for a microsecond
+    /// costs the host a whole turn round trip for nothing, so the turn now weighs them separately.
+    /// See `📓️idle-turns-2026-09-10.md`.
+    #[derive(Clone, Copy, Default)]
+    pub struct TypedOperationScan {
+        pub runnable: bool,
+        pub contended: bool,
+    }
+
+    fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, start: usize) -> Result<(Option<(usize, u32)>, TypedOperationScan), Fault> {
         let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut cursor = start;
         let mut first = None;
@@ -31379,28 +31630,28 @@ pub mod plugin_runtime {
                 continue;
             }
             match cell.instance.try_lock() {
-                Ok(instance) if instance.app.has_runnable_typed_operations() => return Ok((Some((index, id)), true)),
+                Ok(instance) if instance.app.has_runnable_typed_operations() => return Ok((Some((index, id)), TypedOperationScan { runnable: true, contended })),
                 Ok(_) => {}
                 Err(std::sync::TryLockError::WouldBlock) => contended = true,
                 Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {id}"))),
             }
         }
-        Ok((None, contended))
+        Ok((None, TypedOperationScan { runnable: false, contended }))
     }
 
     /// 📮️ Publishes one admitted operation without requiring another user command.
-    pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<(Option<(u32, PluginExchangeOutput)>, bool), Fault> {
-        let (next, pending) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
-        let Some((index, instance)) = next else { return Ok((None, pending)) };
+    pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<(Option<(u32, PluginExchangeOutput)>, TypedOperationScan), Fault> {
+        let (next, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+        let Some((index, instance)) = next else { return Ok((None, scan)) };
         runtime.typed_continuation_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
         let cell = runtime_instance_cell(runtime, instance)?;
         let output = match cell.instance.try_lock() {
             Ok(mut active) => advance_typed_operation_output(&mut active.app, instance)?,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok((None, true)),
+            Err(std::sync::TryLockError::WouldBlock) => return Ok((None, TypedOperationScan { runnable: false, contended: true })),
             Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}"))),
         };
-        let (_, more_work) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
-        Ok((Some((instance, output)), more_work))
+        let (_, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+        Ok((Some((instance, output)), scan))
     }
     //#endregion 🔁️TypedOperationContinuation
 
@@ -31716,6 +31967,32 @@ pub mod plugin_runtime {
         .await
     }
 
+    /// 🏃️ Drives a self-waking guest future to completion inside one wasm poll. `resolve_ready`
+    /// samples once; framework-reserved routes yield through [`plugin_job_yield_once`] before their
+    /// commit, so a single poll would drop the job and the host would see `command-complete` without
+    /// [`commit_framework_history_route`].
+    pub fn drive_self_waking_ready<F: std::future::Future>(fut: F) -> F::Output {
+        use std::task::{Context, Poll, Waker};
+        let waker = Waker::noop();
+        let mut cx = Context::from_waker(&waker);
+        let mut fut = std::pin::pin!(fut);
+        for _ in 0..1_048_576 {
+            match fut.as_mut().poll(&mut cx) {
+                Poll::Ready(value) => return value,
+                Poll::Pending => continue,
+            }
+        }
+        panic!("drive_self_waking_ready: exceeded the self-wake bound");
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn drive_self_waking_ready_completes_a_plugin_job_yield() {
+        drive_self_waking_ready(async {
+            crate::app::plugin_job_yield_once().await;
+        });
+    }
+
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
@@ -31871,7 +32148,7 @@ pub mod plugin_runtime {
                     .await?;
                     let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command).await {
                         Ok(invocation) => {
-                            let addressed_view = meta.view_state.as_ref().ok_or_else(|| plugin_internal_fault("action context is missing viewState")).and_then(|view| addressed_action_view(view, &invocation));
+                            let addressed_view = meta.view_state.as_ref().ok_or_else(|| plugin_internal_fault("action context is missing viewState")).and_then(|view| admit_addressed_action_view(view, &invocation));
                             let view = match addressed_view {
                                 Ok(view) => view,
                                 Err(fault) => {
@@ -31887,7 +32164,7 @@ pub mod plugin_runtime {
                             } else {
                                 let cell = runtime_instance_cell(runtime, instance_id)?;
                                 let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
-                                instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await
+                                drive_self_waking_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
                             }
                         }
                         Err(_) => match decode_wire_serialized::<ManifestCommandInvocation>(&command).await {
@@ -32001,7 +32278,7 @@ pub mod plugin_runtime {
                         let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
                         let dispatched = with_instances_mut(runtime, |list| {
                             let mut instance = find_instance(list, instance_id)?;
-                            resolve_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
+                            drive_self_waking_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
                         });
                         match dispatched.await {
                             Ok(result) => {
@@ -32354,7 +32631,8 @@ pub mod plugin_runtime {
         if mutated {
             let effects = with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                Ok(resolve_ready(instance.app.pending_effects()))
+                let view = instance.surface_contexts.view().cloned();
+                Ok(resolve_ready(instance.app.pending_effects(view.as_ref())))
             })
             .await
             .unwrap_or_default();
@@ -32428,7 +32706,7 @@ pub mod plugin_runtime {
                     budget: $crate::component::wasip2::exports::semio::framework::reactor::Budget,
                 ) -> Result<$crate::component::wasip2::exports::semio::framework::reactor::TurnResult, $crate::component::wasip2::semio::framework::types::PluginError> {
                     $ensure();
-                    $runtime.with(|runtime| $crate::reactor::poll(runtime, events, command_page, cold_pair_page, budget)).await.map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                    $runtime.with(|runtime| $crate::plugin_runtime::drive_self_waking_ready($crate::reactor::poll(runtime, events, command_page, cold_pair_page, budget))).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
                 }
             }
 
@@ -32528,7 +32806,7 @@ pub mod plugin_runtime {
                 __semio_ensure_plugin_runtime();
                 let result = match input {
                     Ok(input) => {
-                        __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.cold_pair_page, input.budget))).map_err(|fault| $crate::encode_fault_bytes(&fault))
+                        __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::plugin_runtime::drive_self_waking_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.cold_pair_page, input.budget))).map_err(|fault| $crate::encode_fault_bytes(&fault))
                     }
                     Err(error) => Err(error),
                 };

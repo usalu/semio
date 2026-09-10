@@ -103,12 +103,12 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     let maximum = fixture["maximumGeneration"].as_str().unwrap().parse::<u64>().unwrap();
     flow_extension_state().lock().unwrap().generation = maximum;
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-generation-exhausted"));
-    assert_eq!(sync_host_flow_extension_contributions("[]"), Err("flow.registry-generation-exhausted"));
+    assert_eq!(sync_host_flow_extension_contributions("[]".to_string()), Err("flow.registry-generation-exhausted"));
     assert_eq!(flow_extension_state().lock().unwrap().generation, maximum);
     assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
     assert!(flow_extension_state().lock().unwrap().retired.is_empty());
     flow_extension_state().lock().unwrap().generation = generation;
-    sync_host_flow_extension_contributions("[]").unwrap();
+    sync_host_flow_extension_contributions("[]".to_string()).unwrap();
     assert!(flow_extension_registry().schema("owned").is_none());
     for _ in 0..100_000 {
         if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
@@ -116,3 +116,44 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     assert!(flow_extension_state().lock().unwrap().retired.is_empty());
 }
 //#endregion 🧪️RetainedReplacement
+
+//#region 🪪️InvocationAddress
+/// ⚖️ LAW: a contributed operator's pending-extension request is addressed by the CONTRIBUTING
+/// PLUGIN's id, never by the flow manifest's own extension id.
+///
+/// The host resolves an extension actor by `pluginId` alone (`dispatchInvokeExtensionEffect`,
+/// `🏛️ShellHost/🟦️.tsx`), and the framework's own invocation fixture
+/// (`🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json`) pins that same shape. Raising
+/// `manifest.id` here made every browser evaluation fault `extension.missing` and stall the tick
+/// chain at its first extension node (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn contributed_operators_are_addressed_by_their_contributing_plugin_id() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let plugin_id = fixture["pluginId"].as_str().unwrap();
+    let flow_extension_id = fixture["manifest"]["id"].as_str().unwrap();
+    let operator_id = fixture["manifest"]["contributes"]["operators"][0]["id"].as_str().unwrap();
+    assert_ne!(plugin_id, flow_extension_id, "the fixture must keep the two ids distinct or this law proves nothing");
+    install_flow_extension_manifest(plugin_id, &fixture["manifest"].to_string()).unwrap();
+    let registry = flow_extension_registry();
+    let input = neural::ColdOwner::new(Dictionary::new());
+    let pending = registry.dispatch(operator_id, &input).expect_err("a contributed operator must defer to its owning plugin");
+    match pending {
+        EvalError::PendingExtension { extension_id, operator_id: pending_operator, .. } => {
+            assert_eq!(extension_id, plugin_id, "the invocation address must be the contributing plugin id, not the flow extension id");
+            assert_eq!(pending_operator, operator_id);
+        }
+        other => panic!("expected a pending-extension deferral, got {other:?}"),
+    }
+    assert_eq!(flow_extension_invocation_address(flow_extension_id).as_deref(), Ok(plugin_id));
+    let miss = flow_extension_invocation_address("not-contributed").expect_err("an uncontributed extension id has no invocation address");
+    assert_eq!(miss.extension_id, "not-contributed");
+    assert!(miss.contributed.contains(&(flow_extension_id.to_string(), plugin_id.to_string())), "the miss names every live translation: {:?}", miss.contributed);
+    let (english, german) = miss.labels();
+    assert!(english.contains("not-contributed") && german.contains("not-contributed"), "both languages name the extension id");
+    drop(registry);
+    uninstall_flow_extension(flow_extension_id).unwrap();
+    for _ in 0..100_000 {
+        if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
+    }
+}
+//#endregion 🪪️InvocationAddress

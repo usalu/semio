@@ -66,7 +66,7 @@ fn scope_capabilities_to_parent_is_empty_when_the_parent_grants_nothing() {
 }
 
 fn presence_driver(pages: &[&[u8]], item_count: usize) -> CommandBatchDriver {
-    let mut page_set = CommandPageSet::try_new().unwrap();
+    let mut page_set = CommandPageSet::try_new(pages.len().max(1)).unwrap();
     if pages.is_empty() {
         page_set.try_push(FixedCommandPage::try_copy_from(&[]).unwrap()).unwrap();
     } else {
@@ -82,7 +82,7 @@ fn presence_driver(pages: &[&[u8]], item_count: usize) -> CommandBatchDriver {
 }
 
 fn generic_driver(first: &[u8], last: &[u8]) -> CommandBatchDriver {
-    let mut page_set = CommandPageSet::try_new().unwrap();
+    let mut page_set = CommandPageSet::try_new(2).unwrap();
     page_set.try_push(FixedCommandPage::try_copy_from(first).unwrap()).unwrap();
     page_set.try_push(FixedCommandPage::try_copy_from(last).unwrap()).unwrap();
     let command = PagedCommand::try_from_pages(page_set).unwrap();
@@ -178,7 +178,7 @@ fn retained_batch_arena_has_no_nested_page_or_descriptor_destructor() {
     assert!(!std::mem::needs_drop::<FixedCommandPage>());
     let mut commands = CommandEnvelopeSet::try_new().unwrap();
     for seq in 0..COMMAND_BATCH_MAXIMUM_ITEMS as u64 {
-        let mut pages = CommandPageSet::try_new().unwrap();
+        let mut pages = CommandPageSet::try_new(1).unwrap();
         pages.try_push(FixedCommandPage::try_copy_from(&[3]).unwrap()).unwrap();
         commands.try_push(CommandEnvelope { instance: 1, seq, command: PagedCommand::try_from_pages(pages).unwrap() }).unwrap();
     }
@@ -200,13 +200,13 @@ fn fault_after_last_page_ack_closes_the_empty_descriptor_shell_without_page_rele
 
 #[test]
 fn rejected_command_build_registry_retains_collision_and_releases_one_exact_page() {
-    let mut rejected_pages = CommandPageSet::try_new().unwrap();
+    let mut rejected_pages = CommandPageSet::try_new(1).unwrap();
     rejected_pages.try_push(FixedCommandPage::try_copy_from(b"rejected").unwrap()).unwrap();
     let rejected = CommandEnvelope { instance: 1, seq: 2, command: PagedCommand::try_from_pages(rejected_pages).unwrap() };
     let mut registry = RejectedCommandBuildRegistry::<1>::new();
     registry.try_insert(1, RejectedCommandBuild::new(CommandEnvelopeSet::try_new().unwrap(), rejected)).unwrap();
 
-    let mut colliding_pages = CommandPageSet::try_new().unwrap();
+    let mut colliding_pages = CommandPageSet::try_new(1).unwrap();
     colliding_pages.try_push(FixedCommandPage::try_copy_from(b"collision").unwrap()).unwrap();
     let collision = RejectedCommandBuild::new(CommandEnvelopeSet::try_new().unwrap(), CommandEnvelope { instance: 1, seq: 3, command: PagedCommand::try_from_pages(colliding_pages).unwrap() });
     let (_, mut collision) = registry.try_insert(2, collision).unwrap_err();

@@ -40,6 +40,10 @@ semio_framework_plugin::app_labels! {
         placement_unavailable: native_en "No placement available here", native_de "Hier ist keine Platzierung möglich", reuse_en "No placement available here", reuse_de "Hier ist keine Platzierung möglich";
         placement_occupied: native_en "That connection point is already taken", native_de "Dieser Verbindungspunkt ist bereits belegt", reuse_en "That connection point is already taken", reuse_de "Dieser Verbindungspunkt ist bereits belegt";
         nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
+        selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
+        import_invalid: native_en "That file is not a puzzle 3D document", native_de "Diese Datei ist kein Puzzle-3D-Dokument", reuse_en "That file is not a puzzle 3D document", reuse_de "Diese Datei ist kein Puzzle-3D-Dokument";
+        export_fixture: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
+        import_fixture: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";

@@ -51,6 +51,13 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
 
     assert_ne!(before_eval, after_eval, "slider mutation must invalidate the evaluated flow");
     assert_ne!(before_meshes, after_meshes, "slider mutation must change the tessellated preview mesh");
+    // 🧹️ Both owners reject a live drop: `FlowEvalSession` demands the explicit close boundary its
+    // production owner walks, and a cloned `FlowFixture` carries the fail-closed
+    // `OrderedMap<WidgetLayout>` root (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    testkit::retire_flow_eval_session(after_session);
+    testkit::retire_flow_eval_session(before_session);
+    after_fixture.retire_cold();
+    before_fixture.retire_cold();
 }
 
 #[semio_framework_async_macros::async_test]

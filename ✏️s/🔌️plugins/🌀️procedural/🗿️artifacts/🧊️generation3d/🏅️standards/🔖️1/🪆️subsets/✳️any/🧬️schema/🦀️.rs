@@ -356,7 +356,7 @@ pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlay
 #[cfg(feature = "component-app-assembly")]
 pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
     FlowHost::with_fixture(fixture, |host| {
-        host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
+        host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
         body(host)
     })
 }
@@ -427,7 +427,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framewo
     let patched = apply_generation_values_to_fixture_json(&fixture_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
-    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
+    host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();
     evaluated

@@ -32,7 +32,12 @@ use store::mounted_pack_rt as mounted;
 
 //#region 🔖️MountedCanonicalPackSession
 const GENERATION2D_MOUNTED_PREFIX: [u8; 4] = *b"P2D2";
-const GENERATION2D_MOUNTED_TYPED_DEPTH: usize = 12;
+/// 📐️ The structural nesting bound this canonical route admits, kept equal to the mutation route's
+/// `GENERATION2D_RETAINED_STACK_CAPACITY`. A `Widget::Neuron`'s `params` is a neural `Dictionary`
+/// whose entries are themselves `Value::Dictionary`, and each such level costs several pack frames,
+/// so a bound in the low teens rejects documents the initializer copies happily
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION2D_MOUNTED_TYPED_DEPTH: usize = 64;
 const GENERATION2D_REQUIRED_SNAPSHOT_FIELDS: u16 = 0b1001_1111;
 
 #[derive(Default)]
@@ -74,12 +79,20 @@ enum Generation2dMountedDictionaryDestination {
     Value { parent: usize },
 }
 
+/// 🗂️ Where a decoded neural value belongs. A `Dictionary` reaches the wire either as a columnar
+/// `Table` (many rows) or as a `List` of one-entry records, and the retained owner has to write the
+/// value back into whichever of the two shapes it is standing in.
+enum Generation2dMountedNeuralOwner {
+    TableRow { table: usize, row: usize },
+    EntryRow { entries: usize, row: usize },
+}
+
 enum Generation2dMountedRecordOwner {
     Root,
     Camera(semio_framework_artifact_flow_flow::CameraJson),
     Layout { key: String, value: semio_framework_artifact_flow_flow::WidgetLayout },
     Widget(Generation2dMountedWidgetOwner),
-    NeuralValue { table: usize, row: usize, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
+    NeuralValue { owner: Generation2dMountedNeuralOwner, value: Option<semio_framework_artifact_flow_flow::neural::Value> },
     Structural,
 }
 
@@ -91,6 +104,8 @@ enum Generation2dMountedContainerOwner {
     LayoutMap { key: Option<String> },
     Generations { rows: Vec<Generation2dMountedGenerationOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
     Dictionary { destination: Generation2dMountedDictionaryDestination, rows: Vec<Generation2dMountedDictionaryEntryOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
+    DictionaryEntries { destination: Generation2dMountedDictionaryDestination, rows: Vec<Generation2dMountedDictionaryEntryOwner> },
+    DictionaryEntry { entries: usize, row: usize, field: Option<u16> },
     Wire { table: usize, row: usize, roles: [u8; 6], roles_len: usize, role: usize, nodes: usize },
     Structural { kind: mounted::RetainedValueContainer, root_field: Option<u16> },
 }
@@ -105,6 +120,7 @@ enum Generation2dMountedStringTarget {
     LayoutKey(usize),
     Generation(usize, usize, u8),
     DictionaryKey(usize, usize),
+    DictionaryEntryKey(usize),
     NeuralText(usize),
     JsonKey,
     JsonValue,
@@ -186,7 +202,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             Generation2dMountedContainerOwner::Synapses { .. } | Generation2dMountedContainerOwner::Wire { .. } => Some(3),
             Generation2dMountedContainerOwner::LayoutMap { .. } => Some(4),
             Generation2dMountedContainerOwner::Generations { .. } => Some(7),
-            Generation2dMountedContainerOwner::Dictionary { .. } => Some(2),
+            Generation2dMountedContainerOwner::Dictionary { .. } | Generation2dMountedContainerOwner::DictionaryEntries { .. } | Generation2dMountedContainerOwner::DictionaryEntry { .. } => Some(2),
             Generation2dMountedContainerOwner::Structural { root_field, .. } => *root_field,
         })
     }
@@ -208,6 +224,7 @@ impl Generation2dMountedTypedSnapshotOwner {
         match &mut self.stack[index] {
             Generation2dMountedContainerOwner::Record { root_field: None, field: Some(field), .. } => Ok(Generation2dMountedStringTarget::Root(*field)),
             Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { .. }, field: Some(4), .. } => Ok(Generation2dMountedStringTarget::NeuralText(index)),
+            Generation2dMountedContainerOwner::DictionaryEntry { field: Some(0), .. } => Ok(Generation2dMountedStringTarget::DictionaryEntryKey(index)),
             Generation2dMountedContainerOwner::Record { field: Some(field), .. } => Ok(Generation2dMountedStringTarget::Record(index, *field)),
             Generation2dMountedContainerOwner::Statements { keyword: None, .. } => Ok(Generation2dMountedStringTarget::StatementKeyword(index)),
             Generation2dMountedContainerOwner::Strings { .. } => Ok(Generation2dMountedStringTarget::Sequence(index)),
@@ -326,6 +343,19 @@ impl Generation2dMountedTypedSnapshotOwner {
                 Some(Generation2dMountedContainerOwner::Dictionary { rows, .. }) => rows.get_mut(row).ok_or("generation2d-mounted.dictionary-key-row")?.key = owner.value,
                 _ => return Err("generation2d-mounted.dictionary-key-owner"),
             },
+            Generation2dMountedStringTarget::DictionaryEntryKey(index) => {
+                let (entries, row) = match self.stack.get_mut(index) {
+                    Some(Generation2dMountedContainerOwner::DictionaryEntry { entries, row, field }) => {
+                        *field = None;
+                        (*entries, *row)
+                    }
+                    _ => return Err("generation2d-mounted.dictionary-entry-owner"),
+                };
+                match self.stack.get_mut(entries) {
+                    Some(Generation2dMountedContainerOwner::DictionaryEntries { rows, .. }) => rows.get_mut(row).ok_or("generation2d-mounted.dictionary-entry-row")?.key = owner.value,
+                    _ => return Err("generation2d-mounted.dictionary-entries-owner"),
+                }
+            }
             Generation2dMountedStringTarget::NeuralText(index) => match self.stack.get_mut(index) {
                 Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value, .. }, field, .. }) if *field == Some(4) && value.is_none() => {
                     *value = Some(semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String(owner.value)));
@@ -354,9 +384,9 @@ impl Generation2dMountedTypedSnapshotOwner {
                 };
                 match role {
                     0 => synapse.from = owner.value,
-                    1 => synapse.from_port = owner.value,
+                    2 => synapse.from_port = owner.value,
                     3 => synapse.to = owner.value,
-                    4 => synapse.to_port = owner.value,
+                    5 => synapse.to_port = owner.value,
                     _ => drop(owner.value),
                 }
             }
@@ -535,7 +565,18 @@ impl Generation2dMountedTypedSnapshotOwner {
             if let Some(Generation2dMountedContainerOwner::Dictionary { field: Some(1), present, next, .. }) = self.stack.get_mut(table) {
                 let row = (*next..present.len()).find(|row| present[*row]).ok_or("generation2d-mounted.dictionary-value-row")?;
                 *next = row + 1;
-                return self.push(Generation2dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation2dMountedRecordOwner::NeuralValue { table, row, value: None } });
+                let owner = Generation2dMountedNeuralOwner::TableRow { table, row };
+                return self.push(Generation2dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation2dMountedRecordOwner::NeuralValue { owner, value: None } });
+            }
+            if let Some(Generation2dMountedContainerOwner::DictionaryEntries { rows, .. }) = self.stack.get_mut(table) {
+                let row = rows.len();
+                rows.try_reserve(1).map_err(|_| "generation2d-mounted.dictionary-entry-preflight")?;
+                rows.push(Generation2dMountedDictionaryEntryOwner::default());
+                return self.push(Generation2dMountedContainerOwner::DictionaryEntry { entries: table, row, field: None });
+            }
+            if let Some(Generation2dMountedContainerOwner::DictionaryEntry { entries, row, field: Some(1) }) = self.stack.get_mut(table) {
+                let owner = Generation2dMountedNeuralOwner::EntryRow { entries: *entries, row: *row };
+                return self.push(Generation2dMountedContainerOwner::Record { root_field, field: None, seen: 0, owner: Generation2dMountedRecordOwner::NeuralValue { owner, value: None } });
             }
         }
         let owner = if self.stack.is_empty() {
@@ -575,6 +616,12 @@ impl Generation2dMountedTypedSnapshotOwner {
             }
             mounted::RetainedValueContainer::List | mounted::RetainedValueContainer::Tuple if root_field == 2 => {
                 let (parent, field) = match self.stack.last() {
+                    Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value: None, .. }, field: Some(5), .. }) => {
+                        let parent = self.stack.len() - 1;
+                        let mut rows = Vec::new();
+                        rows.try_reserve_exact(usize::try_from(count).map_err(|_| "generation2d-mounted.dictionary-entry-count")?).map_err(|_| "generation2d-mounted.dictionary-entry-preflight")?;
+                        return self.push(Generation2dMountedContainerOwner::DictionaryEntries { destination: Generation2dMountedDictionaryDestination::Value { parent }, rows });
+                    }
                     Some(Generation2dMountedContainerOwner::Record { field: Some(field), .. }) => (self.stack.len() - 1, *field),
                     _ => return Err("generation2d-mounted.sequence-owner"),
                 };
@@ -714,7 +761,7 @@ impl Generation2dMountedTypedSnapshotOwner {
                     *field = None;
                 }
             }
-            Generation2dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation2dMountedRecordOwner::NeuralValue { table, row, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
+            Generation2dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation2dMountedRecordOwner::NeuralValue { owner: Generation2dMountedNeuralOwner::TableRow { table, row }, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
                 match self.stack.get_mut(table) {
                     Some(Generation2dMountedContainerOwner::Dictionary { rows, field: Some(1), .. }) => {
                         rows.get_mut(row).ok_or("generation2d-mounted.dictionary-value-row")?.value = Some(value);
@@ -722,6 +769,19 @@ impl Generation2dMountedTypedSnapshotOwner {
                     _ => return Err("generation2d-mounted.dictionary-value-table"),
                 }
             }
+            Generation2dMountedContainerOwner::Record { root_field: Some(2), field: None, owner: Generation2dMountedRecordOwner::NeuralValue { owner: Generation2dMountedNeuralOwner::EntryRow { entries, row }, value: Some(value) }, .. } if kind == mounted::RetainedValueContainer::Record => {
+                match self.stack.get_mut(entries) {
+                    Some(Generation2dMountedContainerOwner::DictionaryEntries { rows, .. }) => {
+                        rows.get_mut(row).ok_or("generation2d-mounted.dictionary-entry-row")?.value = Some(value);
+                    }
+                    _ => return Err("generation2d-mounted.dictionary-entry-list"),
+                }
+                if let Some(Generation2dMountedContainerOwner::DictionaryEntry { field, .. }) = self.stack.last_mut() {
+                    *field = None;
+                }
+            }
+            Generation2dMountedContainerOwner::DictionaryEntry { field: None, .. } if kind == mounted::RetainedValueContainer::Record => {}
+            Generation2dMountedContainerOwner::DictionaryEntries { destination, rows } if matches!(kind, mounted::RetainedValueContainer::List | mounted::RetainedValueContainer::Tuple) => self.finish_dictionary(destination, rows)?,
             Generation2dMountedContainerOwner::Dictionary { destination, rows, field: Some(1), .. } if kind == mounted::RetainedValueContainer::Table => self.finish_dictionary(destination, rows)?,
             Generation2dMountedContainerOwner::Wire { .. } if kind == mounted::RetainedValueContainer::Wire => {}
             Generation2dMountedContainerOwner::Statements { .. } => {
@@ -783,6 +843,7 @@ impl Generation2dMountedTypedSnapshotOwner {
                     *field = Some(value as u16);
                     *seen |= 1 << value;
                 }
+                Some(Generation2dMountedContainerOwner::DictionaryEntry { field, .. }) if field.is_none() => *field = Some(value as u16),
                 _ => return Err("generation2d-mounted.field-owner"),
             },
             Token::Unsigned { role: Role::TableRows, value } => self.pending_table_rows = Some(value),

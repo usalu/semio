@@ -1205,7 +1205,17 @@ pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: R
 
 //#region RenderEntry
 /// 🎞️ Advances one retained scene identifier scalar or one pre-admitted chrome output item.
-pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
+/// 🧩️ The per-frame engine state the retained scene paint needs beyond its own draw list: the shell's
+/// `World3dState` map (a `World3d` surface's host, addressed there by every pick/asset/authority
+/// ladder) and this frame's `World3dBuildContext` (built in `FrameBuildPhase::WorldResources`, drained
+/// again in `FrameBuildPhase::WorldTransfer`). Borrowed for exactly one chrome walk and never stored —
+/// the same reason `Ui::frame` takes its `SceneHost` as a parameter rather than owning one.
+pub struct SceneEngineHosts<'a> {
+    pub world3d_states: &'a mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    pub world_resources: &'a mut infinite_world::world::World3dBuildContext,
+}
+
+pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
     match cursor.phase() {
         0 => {
             if scene.surface_id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
@@ -1254,10 +1264,86 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
             }
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
+        4 => {
+            if scene.component_kind == SurfaceKind::World3d {
+                return render_world3d_surface_step(scene, bounds, ctx, cursor, hosts);
+            }
+            if !engine_canvas::sync_engine_scene(scene, bounds, ctx.theme) {
+                return cursor.finish();
+            }
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        5 => {
+            if !engine_canvas::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
+                return cursor.finish();
+            }
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        6 => {
+            let Some(key) = engine_canvas::engine_raster_key(&scene.surface_id) else {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            };
+            if ctx.draw.try_reserve_retained_items(1).is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ctx.draw.push_raster_quad(&key, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+            if cursor.advance_item().is_err() || cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        7 => {
+            if scene.component_kind != SurfaceKind::NodeGraph {
+                return cursor.finish();
+            }
+            engine_canvas::paint_node_graph_labels(ctx, scene, bounds);
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        8 => {
+            engine_canvas::paint_node_graph_overlays(ctx, scene, bounds);
+            cursor.finish()
+        }
         _ => cursor.finish(),
     }
 }
 
+
+/// 🎨️ The colour a composited engine texture clears to before its host paints — the panel behind a
+/// node graph, the canvas ground behind a map or a board, exactly as each React host's own
+/// `clear_color` resolves it.
+fn engine_surface_clear(kind: SurfaceKind, theme: &ui_wgpu::wgpu::Theme) -> ui_wgpu::wgpu::Rgba {
+    match kind {
+        SurfaceKind::TiledMap | SurfaceKind::Board2d => theme.canvas_clear,
+        _ => theme.panel,
+    }
+}
+
+/// 🌍️ Attaches — and paints — the `World3dState` behind one `SurfaceKind::World3d` scene. Unlike the
+/// vello-composited kinds this host paints a real 3-D pass straight into the window's own retained
+/// draw list (`render_world_3d` → `DrawList::push_scene_pass`), so there is no engine texture and no
+/// raster key: attach, paint and composite are the same step. The state lives in the shell's
+/// `world3d_states` because every downstream ladder — asset fetch, snapshot apply, bounded pick/hover
+/// authority, the OS event loop's orbit/wheel dispatch — addresses it there.
+fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
+    let created = !hosts.world3d_states.contains_key(&scene.surface_id);
+    let surface_id = scene.surface_id.clone();
+    let controller_id = scene.controller_id.clone();
+    let Some(state) = hosts.world3d_states.get_or_insert_with(surface_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
+        return ui_wgpu::wgpu::ScenePaintStep::Fault;
+    };
+    infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
+    engine_canvas::register_engine_surface(scene, bounds, engine_canvas::EngineSurfaceKindDetail::World3d, created);
+    cursor.finish()
+}
 
 /** @emoji 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
 pub(crate) fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {

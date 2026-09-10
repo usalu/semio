@@ -133,7 +133,6 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} nodeGraph.hover"), &serde_json::to_string(&graph.hover).unwrap_or_default(), limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.previewOff"), &graph.preview_off_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.lod"), &graph.lod_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.catalogue"), &graph.catalogue_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.controls"), &graph.controls_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.clusters"), &graph.clusters_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.computing"), &graph.computing_json, limits)?;
@@ -1036,6 +1035,10 @@ struct FrameworkSceneHost<'ctx> {
     scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
     open_selects: &'ctx mut std::collections::HashMap<String, bool>,
+    /// 🌍️ The shell's own `World3dState` map and this frame's world build context — the two pieces a
+    /// `SurfaceKind::World3d` slot needs and a `Ui`-owned `Box<dyn SceneHost>` could never hold.
+    world3d_states: &'ctx mut crate::scenes::AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -1059,8 +1062,9 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
             Err(_) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
         }
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
+        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources };
         match &slot.content {
-            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor),
+            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts),
             ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
         }
     }
@@ -1119,7 +1123,7 @@ pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
 
-pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str) -> bool {
+pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str, hosts: &mut crate::scenes::SceneEngineHosts<'_>) -> bool {
     let Ok(header) = document.header() else {
         cursor.phase = UiDocumentFramePhase::Fault;
         return false;
@@ -1183,6 +1187,8 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     scroll_offsets: ctx.scroll_offsets,
                     collapsed_sections: ctx.collapsed_sections,
                     open_selects: ctx.open_selects,
+                    world3d_states: &mut *hosts.world3d_states,
+                    world_resources: &mut *hosts.world_resources,
                 };
                 match engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
                     ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
@@ -1197,11 +1203,51 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
 }
 
 
+/// 🛍️ Reassembles a retained document published as a `paged_text_carrier` back into its payload —
+/// the depth-first concatenation of every `Component::Text` leaf, which is exactly what
+/// `semio_framework_plugin::app::paged_text_carrier` split it from. The reserved
+/// `UiRefreshSection` surfaces (`framework.section.catalogue` and its three siblings) are the only
+/// documents shaped this way; a window/panel body goes through the widget engine above instead.
+///
+/// The walk is driven by the record graph rather than by page order, so a producer that pages its
+/// nodes in any other order still reassembles byte-identically.
+pub fn read_paged_text_document(document: &UiDocumentLease) -> Result<String, String> {
+    let header = document.header().map_err(|_| "section document lease is stale".to_string())?;
+    let mut records = std::collections::HashMap::with_capacity(header.node_count);
+    for index in 0..header.node_count {
+        let Ok(Some(page)) = document.read_node_page(index) else {
+            return Err(format!("section document page {index} of {} is unreadable", header.node_count));
+        };
+        let record = page.into_record();
+        records.insert(record.id, record);
+    }
+    let mut payload = String::new();
+    let mut stack = vec![header.root];
+    let mut visited = 0usize;
+    while let Some(id) = stack.pop() {
+        let Some(record) = records.get(&id) else { continue };
+        visited += 1;
+        if visited > header.node_count {
+            return Err("section document record graph is cyclic".to_string());
+        }
+        if let ui_contract::Component::Text(text) = &record.component {
+            payload.push_str(&text.packed_payload());
+        }
+        for child in record.children.iter().rev() {
+            stack.push(*child);
+        }
+    }
+    Ok(payload)
+}
 //#endregion 📄️RetainedDocumentConsumer
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs"]
 mod ui_command_wiring_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🛍️wgpu-app-catalogue/🦀️.rs"]
+mod app_catalogue_tests;
 //#endregion RetainedEngineCutover
 
 //#region UiImageLoading

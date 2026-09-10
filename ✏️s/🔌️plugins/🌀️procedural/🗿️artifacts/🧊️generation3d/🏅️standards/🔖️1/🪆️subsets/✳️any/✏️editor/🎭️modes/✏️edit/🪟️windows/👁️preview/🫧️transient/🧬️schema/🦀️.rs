@@ -7,6 +7,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.generation.3d.window.procedural-preview.transient")]
 pub struct Generation3dPreviewWindowTransient {
-    #[state(ephemeral_local_window)]
+    #[state(transient)]
     pub preview_eval_text: Option<String>,
 }

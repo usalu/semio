@@ -69,10 +69,18 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
         let mut page: Vec<MaybeUninit<T>> = Vec::new();
         if page.try_reserve_exact(N).is_err() {
-            return Self { page: None, len: 0 };
+            return Self::refused();
         }
         page.resize_with(N, MaybeUninit::uninit);
         Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
+    }
+
+    /// 🚫️ The owner a guest that could not spare the page hands back: no backing, zero capacity,
+    /// every insert refused. Production reaches it through [`FixedOwnerVec::new`]'s failed
+    /// reservation; a law reaches it directly, because a native suite cannot exhaust a 512 MiB
+    /// linear memory to get there.
+    pub(crate) const fn refused() -> Self {
+        Self { page: None, len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
@@ -102,11 +110,20 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         unsafe { std::slice::from_raw_parts_mut(page.as_mut_ptr().cast::<T>(), self.len) }
     }
 
+    /// 📏️ Slots this owner can actually hold. An owner whose page allocation was REFUSED
+    /// ([`FixedOwnerVec::new`] returns `page: None` rather than aborting) holds nothing at all, so
+    /// its capacity is zero — reporting `N` there is the lie that turned an out-of-memory refusal
+    /// into a guest trap (`live fixed owner page`, ticket 26/09/02 build #29).
+    pub(crate) const fn capacity(&self) -> usize {
+        if self.page.is_some() { N } else { 0 }
+    }
+
     pub(crate) fn try_push(&mut self, value: T) -> Result<(), T> {
-        if self.len == N {
+        if self.len == self.capacity() {
             return Err(value);
         }
-        self.page.as_mut().expect("live fixed owner page")[self.len].write(value);
+        let Some(page) = self.page.as_mut() else { return Err(value) };
+        page[self.len].write(value);
         self.len += 1;
         Ok(())
     }
@@ -173,18 +190,27 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
         let mut page: Vec<Option<(K, V)>> = Vec::new();
         if page.try_reserve_exact(N).is_err() {
-            return Self { page: None, len: 0 };
+            return Self::refused();
         }
         page.resize_with(N, || None);
         Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
+    }
+
+    /// 🚫️ The owner a guest that could not spare the page hands back — see [`FixedOwnerVec::refused`].
+    pub(crate) const fn refused() -> Self {
+        Self { page: None, len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
         size_of::<[Option<(K, V)>; N]>()
     }
 
+    /// 📏️ Slots this owner can actually hold — zero when its page allocation was refused, for the
+    /// same reason as [`FixedOwnerVec::capacity`]. Every collision-mutation preflight compares
+    /// `len()` against this, so an honest answer turns an exhausted guest into a refused mutation
+    /// instead of an `unreachable!` two frames later.
     pub(crate) const fn capacity(&self) -> usize {
-        N
+        if self.page.is_some() { N } else { 0 }
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -256,11 +282,11 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         if self.index_of(&key).is_some() {
             return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });
         }
-        if self.len == N {
+        if self.len == self.capacity() {
             return Err((key, value));
         }
         let insert_at = self.iter().position(|(candidate, _)| candidate > &key).unwrap_or(self.len);
-        let page = self.page.as_mut().expect("live fixed owner page");
+        let Some(page) = self.page.as_mut() else { return Err((key, value)) };
         for index in (insert_at..self.len).rev() {
             page[index + 1] = page[index].take();
         }
@@ -325,8 +351,15 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
         Self { values: FixedOwnerMap::new() }
     }
 
+    /// 🚫️ The owner a guest that could not spare the page hands back — see [`FixedOwnerVec::refused`].
+    /// Production reaches the state through [`FixedOwnerSet::new`]'s inner map; only the law names it.
+    #[cfg(test)]
+    pub(crate) const fn refused() -> Self {
+        Self { values: FixedOwnerMap::refused() }
+    }
+
     pub(crate) const fn capacity(&self) -> usize {
-        N
+        self.values.capacity()
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -1177,6 +1210,13 @@ impl CollisionSpatialIndex {
                         mutation.cursor += 1;
                         if self.cells.get(&cell).is_none() {
                             let bucket = FixedOwnerSet::new();
+                            // 🧊️ The one owner the preflight cannot weigh: a cell's member bucket does
+                            // not exist yet, so its page is allocated HERE. A guest that refuses it
+                            // hands back a zero-capacity bucket, and the mutation is refused rather
+                            // than pushed into an owner that cannot hold it.
+                            if bucket.capacity() == 0 {
+                                return Self::reject_mutation(mutation);
+                            }
                             match self.cells.try_insert(cell, bucket) {
                                 Ok(FixedOwnerMapInsert::Inserted) => {}
                                 Ok(FixedOwnerMapInsert::Occupied { .. }) | Err(_) => unreachable!("preflighted fixed collision cell"),

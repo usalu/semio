@@ -19,7 +19,7 @@ fn drain(pending: &mut PendingPatchAuthority, key: NativeCloseKey, bytes: usize)
         if step.complete { break; }
         assert!(turn < 4095);
     }
-    pending.close_step().unwrap();
+    pending.close_step(1, 4096).unwrap();
     assert!(pending.close_instance_complete(key).unwrap());
     pending.release_close_instance(key).unwrap();
     released

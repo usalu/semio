@@ -98,6 +98,65 @@ pub struct ArtifactCommandInputs<'a, A: ArtifactApp> {
     pub operation: &'a AppOperationContext,
 }
 
+/// 🧮️ The ONE quantity a retained route declares, in the store's OWN unit: staged edit ROWS.
+///
+/// A route used to spell that quantity three times and in two different units — the store footprint
+/// its preflight declared (rows, via [`store::ArtifactStoreOneItemFootprint`]), the extent its work
+/// answered [`ArtifactRetainedCommandPhase::Preflight`] with (items), and the `maximum_work_items`
+/// its payload carried (items) — so nothing could compare them and the three drifted freely. They
+/// are one declaration now: `work_items()` IS the preflight ceiling, `rows(1)` IS the footprint one
+/// durable item declares, and `rows_for_items(n)` IS what an `extent` returns. Every comparison the
+/// runtime makes — preflight's `extent <= maximum_work_items`, `ArtifactStore::fold_batch_item`'s
+/// `forwards.len() + inverse.len() <= footprint.work_items` — therefore measures the same thing
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactRetainedWorkCapacity {
+    invertible_items: usize,
+}
+
+impl ArtifactRetainedWorkCapacity {
+    /// 🧾️ Declares a route that folds at most `invertible_items` point-invertible durable items.
+    pub const fn for_invertible_items(invertible_items: usize) -> Self {
+        Self { invertible_items }
+    }
+
+    pub const fn invertible_items(self) -> usize {
+        self.invertible_items
+    }
+
+    /// 🧺️ Staged edit rows `items` point-invertible durable items fold — one forward row each plus
+    /// the one row each `Mutation::inverse` yields.
+    pub const fn rows(self, items: usize) -> usize {
+        items.saturating_mul(store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS)
+    }
+
+    /// 🧾️ The preflight ceiling this route's payload carries as `maximum_work_items`.
+    pub const fn work_items(self) -> usize {
+        self.rows(self.invertible_items)
+    }
+
+    /// 🧮️ The extent an `ArtifactCommandWork` answers for a gesture of `items` durable items, or
+    /// `None` once the route's own declared capacity is exceeded.
+    pub const fn rows_for_items(self, items: usize) -> Option<usize> {
+        let rows = self.rows(items);
+        if self.admits(rows) {
+            Some(rows)
+        } else {
+            None
+        }
+    }
+
+    /// 🧺️ The store footprint one durable item of this route declares — the same rows
+    /// [`Self::rows`] counts, so a preflight and an extent can never disagree again.
+    pub fn one_item_footprint(self, retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
+        store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes)
+    }
+
+    pub const fn admits(self, extent: usize) -> bool {
+        extent != 0 && extent <= self.work_items()
+    }
+}
+
 pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
     /// 🧰 Stable identity of the factory-provided mutable workspace retained by this job.
@@ -443,7 +502,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 let (Some(command), Some(snapshot), Some(interaction), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.interaction_state.as_ref(), self.work.as_ref()) else {
                     return self.fault(cx, b"retained command preflight owner is absent");
                 };
-                if !work.extent(command, snapshot, interaction, self.context.as_deref()).is_some_and(|extent| extent != 0 && extent <= self.maximum_work_items) {
+                let Some(extent) = work.extent(command, snapshot, interaction, self.context.as_deref()) else {
+                    return self.fault(cx, b"retained command work refused the command before any capacity was measured");
+                };
+                if extent == 0 || extent > self.maximum_work_items {
                     return self.fault(cx, b"retained command exceeds semantic work capacity");
                 }
                 self.phase = ArtifactRetainedCommandPhase::Work;

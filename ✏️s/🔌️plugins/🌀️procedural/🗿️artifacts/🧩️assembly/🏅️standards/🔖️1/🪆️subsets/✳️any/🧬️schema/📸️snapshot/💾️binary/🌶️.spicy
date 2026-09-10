@@ -1,0 +1,4 @@
+module Procedural_assembly_snapshot;
+type Document = unit {
+    payload: bytes &eod;
+};

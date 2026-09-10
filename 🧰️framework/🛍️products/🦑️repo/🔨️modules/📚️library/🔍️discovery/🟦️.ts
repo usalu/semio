@@ -3739,6 +3739,19 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
   return true;
 }
 
+/** @emoji 🚧️ The only opaque subtrees the taxonomy admits, in their declared order: two user-owned
+ * scratch trees, and the one tracked nested-repository gitlink (`git ls-files -s` mode `160000`),
+ * which must be filtered lexically before source admission or `inventoryTaxonomyWithSourceParentPruning`
+ * refuses to classify anything at all. Every entry here is a whole opaque subtree, so nothing the
+ * repository generates may live under one — which is why the gitlink itself is named, not its parent
+ * `♻️mit-bestand/`, whose `📋️bericht`/`🖼️asset` subtrees are generator-contract outputs. */
+const OPAQUE_PATH_EXCLUSIONS: readonly (readonly [string, string])[] = [
+  ["compose", "compose/"],
+  ["temp-compose", "temp/compose/"],
+  ["mit-bestand-recherche", "♻️mit-bestand/🔎️recherche/"],
+];
+
+
 /**
  * 🚦️ Internal-consistency audit of the vocabulary itself: the completeness/structural artifact lists must
  * stay in their superset relation, direct mutation ownership must name one Rust component kind and only optional facets,
@@ -4610,9 +4623,15 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (contractIds.join("\0") !== [...contractIds].sort().join("\0")) problems.push("generatorContracts ids must be lexically ordered.");
     const opaqueRoots = Object.values(taxonomy.pathExclusions ?? {}).map((entry) => entry.path.replace(/\/$/u, ""));
     const exactTouchesOpaque = (value: string): boolean => opaqueRoots.some((opaque) => value === opaque || value.startsWith(`${opaque}/`) || opaque.startsWith(`${value}/`));
+    // 🚧️ A pattern crosses an opaque boundary when it is lexically under (or over) an opaque root, or
+    // when a wildcard sits at or above that root's own depth and could therefore expand into it. An
+    // exact literal path that merely SHARES a first segment with a deeper opaque root — `♻️mit-bestand/
+    // 📋️bericht/…` beside the `♻️mit-bestand/🔎️recherche/` gitlink — reaches nothing opaque and is
+    // admitted; anything glob-shaped above the root still is not.
     const patternTouchesOpaque = (value: string): boolean => {
-      const first = value.split("/")[0]!;
-      return /[*?\[]/u.test(first) || opaqueRoots.some((opaque) => opaque.split("/")[0] === first);
+      if (exactTouchesOpaque(value)) return true;
+      const segments = value.split("/");
+      return opaqueRoots.some((opaque) => segments.slice(0, opaque.split("/").length).some((segment) => /[*?\[]/u.test(segment)));
     };
     const nxTarget = (value: unknown, key: string): value is string => {
       const valid = typeof value === "string" && /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*:[a-z0-9][a-z0-9._-]*$/u.test(value);
@@ -4776,11 +4795,11 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
 
   if (record(taxonomy.pathExclusions, "pathExclusions")) {
     const entries = Object.entries(taxonomy.pathExclusions);
-    if (entries.map(([id]) => id).join("\0") !== "compose\0temp-compose") problems.push('pathExclusions must contain exactly ordered "compose" and "temp-compose" contracts.');
-    const compose = taxonomy.pathExclusions.compose;
-    if (!compose || compose.path !== "compose/" || compose.mode !== "opaque" || !compose.reason) problems.push('pathExclusions.compose must be the exact opaque "compose/" contract.');
-    const tempCompose = taxonomy.pathExclusions["temp-compose"];
-    if (!tempCompose || tempCompose.path !== "temp/compose/" || tempCompose.mode !== "opaque" || !tempCompose.reason) problems.push('pathExclusions.temp-compose must be the exact opaque "temp/compose/" contract.');
+    if (entries.map(([id]) => id).join("\0") !== OPAQUE_PATH_EXCLUSIONS.map(([id]) => id).join("\0")) problems.push(`pathExclusions must contain exactly ordered ${OPAQUE_PATH_EXCLUSIONS.map(([id]) => JSON.stringify(id)).join(", ")} contracts.`);
+    for (const [id, path] of OPAQUE_PATH_EXCLUSIONS) {
+      const contract = taxonomy.pathExclusions[id];
+      if (!contract || contract.path !== path || contract.mode !== "opaque" || !contract.reason) problems.push(`pathExclusions.${id} must be the exact opaque ${JSON.stringify(path)} contract.`);
+    }
   }
   if (taxonomy.unicodeNormalization?.form !== "NFC" || taxonomy.unicodeNormalization?.caseFold !== "lower" || taxonomy.unicodeNormalization?.locale !== "und") problems.push("unicodeNormalization must be NFC/lower/und.");
   if (taxonomy.variationSelectorPolicy?.selector !== "\uFE0F" || taxonomy.variationSelectorPolicy?.requiredAfterEmoji !== true || taxonomy.variationSelectorPolicy?.comparison !== "ignore-selector") problems.push("variationSelectorPolicy is invalid.");
@@ -4792,7 +4811,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   if (taxonomy.collisionPolicy?.maxPathBytes !== 240 || taxonomy.collisionPolicy?.rejectWindowsReservedNames !== true || taxonomy.collisionPolicy?.rejectTrailingDotsAndSpaces !== true) problems.push("collisionPolicy platform constraints must retain maxPathBytes 240 and reject reserved/trailing names.");
   if (taxonomy.areaEnforcement?.requiredState !== "clean" || taxonomy.areaEnforcement?.undeclaredAreas !== "enforce") problems.push("areaEnforcement must enforce clean declared and undeclared areas.");
   ids(taxonomy.areaEnforcement?.opaquePathExclusionIds, taxonomy.pathExclusions, "areaEnforcement.opaquePathExclusionIds");
-  if (taxonomy.areaEnforcement?.opaquePathExclusionIds?.join("\0") !== "compose\0temp-compose") problems.push('areaEnforcement.opaquePathExclusionIds must be exactly ["compose", "temp-compose"].');
+  if (taxonomy.areaEnforcement?.opaquePathExclusionIds?.join("\0") !== OPAQUE_PATH_EXCLUSIONS.map(([id]) => id).join("\0")) problems.push(`areaEnforcement.opaquePathExclusionIds must be exactly [${OPAQUE_PATH_EXCLUSIONS.map(([id]) => JSON.stringify(id)).join(", ")}].`);
   const exemptAreaRoots = [...(taxonomy.pathEmojiPolicy?.reservedSubtreeDirectoryNames ?? []), ...Object.values(taxonomy.pathExclusions ?? {}).map((exclusion) => exclusion.path.replaceAll("\\", "/").replace(/\/+$/u, ""))];
   if (record(taxonomy.areas, "areas")) for (const [area, state] of Object.entries(taxonomy.areas)) {
     if (area === "compose" || area.startsWith("compose/") || area === "temp/compose" || area.startsWith("temp/compose/")) problems.push("Opaque compose prefixes must exist only in pathExclusions.");
@@ -7894,20 +7913,39 @@ export interface RustCargoManifestFacts {
   readonly crateName: string | null;
   readonly libPath: string | null;
   readonly dependencies: readonly string[];
+  readonly targetPaths: readonly string[];
   readonly valid: boolean;
+}
+
+/** 🎯️ Every explicitly-pathed non-library Cargo target (`[[bin]]`/`[[test]]`/`[[bench]]`/`[[example]]`).
+ * Each one is a compilation root Cargo owns exactly as it owns `[lib]`, so module membership proved
+ * from it is membership in the manifest. */
+const RUST_CARGO_TARGET_TABLES = ["bin", "test", "bench", "example"] as const;
+
+/** 🧱️ Collects an array-of-tables' bodies without a TOML parser, for the lexical manifest reader. */
+function rustCargoArrayTableBodies(source: string, name: string): string[] {
+  const out: string[] = [];
+  for (const start of source.matchAll(new RegExp(`^\\s*\\[\\[${name}\\]\\]\\s*$`, "gmu"))) {
+    if (start.index === undefined) continue;
+    const remainder = source.slice(start.index + start[0].length), end = /^\s*\[{1,2}[^\]]+\]{1,2}\s*$/mu.exec(remainder);
+    out.push(end?.index === undefined ? remainder : remainder.slice(0, end.index));
+  }
+  return out;
 }
 
 /** 📋️ Reads the exact package/lib tables, rejecting ambiguous ownership declarations. */
 export function inspectRustCargoManifest(source: string, strict = false): RustCargoManifestFacts {
+  const acceptableTargetPath = (value: unknown): value is string => typeof value === "string" && !posix.isAbsolute(value) && !/^[A-Za-z]:/u.test(value) && !value.includes("\\");
   if (strict) {
     try {
-      const parsed = cargoProviderTomlParser.parse(source) as { package?: { name?: unknown }; lib?: { name?: unknown; path?: unknown }; dependencies?: Record<string, unknown> };
+      const parsed = cargoProviderTomlParser.parse(source) as { package?: { name?: unknown }; lib?: { name?: unknown; path?: unknown }; dependencies?: Record<string, unknown> } & Record<string, unknown>;
       const packageName = typeof parsed.package?.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.package.name) ? parsed.package.name : null;
       const libName = parsed.lib?.name === undefined ? null : typeof parsed.lib.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.lib.name) ? parsed.lib.name : undefined;
       const libPath = parsed.lib?.path === undefined ? null : typeof parsed.lib.path === "string" ? parsed.lib.path : undefined;
       const valid = packageName !== null && libName !== undefined && libPath !== undefined && (libPath === null || !posix.isAbsolute(libPath) && !/^[A-Za-z]:/u.test(libPath) && !libPath.includes("\\"));
-      return { crateName: libName ?? packageName, libPath: libPath ?? null, dependencies: Object.keys(parsed.dependencies ?? {}).map((name) => name.replaceAll("-", "_")).sort(), valid };
-    } catch { return { crateName: null, libPath: null, dependencies: [], valid: false }; }
+      const targetPaths = RUST_CARGO_TARGET_TABLES.flatMap((table) => (Array.isArray(parsed[table]) ? (parsed[table] as { path?: unknown }[]) : [])).map((row) => row.path).filter(acceptableTargetPath);
+      return { crateName: libName ?? packageName, libPath: libPath ?? null, dependencies: Object.keys(parsed.dependencies ?? {}).map((name) => name.replaceAll("-", "_")).sort(), targetPaths, valid };
+    } catch { return { crateName: null, libPath: null, dependencies: [], targetPaths: [], valid: false }; }
   }
   let valid = true;
   const section = (name: string): string | null => {
@@ -7928,7 +7966,8 @@ export function inspectRustCargoManifest(source: string, strict = false): RustCa
   const packageName = value(packageSection, "name", "[A-Za-z0-9_-]+"), libName = value(libSection, "name", "[A-Za-z0-9_-]+"), libPath = value(libSection, "path", "[^\"\\\\]+"), crateName = libName ?? packageName;
   if (!packageName || libPath !== null && (posix.isAbsolute(libPath) || /^[A-Za-z]:/u.test(libPath))) valid = false;
   const dependencies = [...(dependencySection ?? "").matchAll(/^\s*([A-Za-z0-9_-]+)\s*=/gmu)].map((match) => match[1]!.replaceAll("-", "_")).sort();
-  return { crateName, libPath, dependencies, valid };
+  const targetPaths = RUST_CARGO_TARGET_TABLES.flatMap((table) => rustCargoArrayTableBodies(source, table)).map((body) => /^\s*path\s*=\s*"([^"\\]+)"\s*$/mu.exec(body)?.[1]).filter(acceptableTargetPath);
+  return { crateName, libPath, dependencies, targetPaths, valid };
 }
 
 /** 🧬️ One proven lexical module context and its Cargo ownership, if declared. */
@@ -7961,7 +8000,9 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
     if (!facts.valid) invalidManifests.add(manifest);
     if (options.strictManifests && !facts.valid) return [];
     const entry = posix.normalize(posix.join(posix.dirname(manifest), facts.libPath ?? "src/lib.rs"));
-    return sourceFiles.has(entry) ? [{ path: entry, manifestPath: manifest, crateName: facts.crateName, dependencies: facts.dependencies }] : [];
+    const library = sourceFiles.has(entry) ? [{ path: entry, manifestPath: manifest, crateName: facts.crateName, dependencies: facts.dependencies }] : [];
+    const targets = facts.targetPaths.map((target) => posix.normalize(posix.join(posix.dirname(manifest), target))).filter((path) => path !== entry && sourceFiles.has(path)).map((path) => ({ path, manifestPath: manifest, crateName: null, dependencies: facts.dependencies }));
+    return [...library, ...targets];
   });
   const conventionalRoots = options.conventionalRoots ? [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path)).map((path) => ({ path, manifestPath: null, crateName: null, dependencies: [] as string[] })) : [];
   const addContext = (path: string, context: RustModuleContext): boolean => {

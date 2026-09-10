@@ -13,8 +13,8 @@
 //! (`puzzle3d_operations_from_fixture_change`) turning the old fixture into the new one.
 
 use crate::editor::puzzle3d::commands::{
-    accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
-    engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
+    accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_fixture,
+    engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, import_fixture, open_import_fixture, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
     scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_overlap_budget, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
     set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_panel_page, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, suggestions_tick,
     translate_selection, world_relocate,
@@ -25,20 +25,22 @@ use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::panels::{catalogue, document, inspection, settings as settings_panel};
-use crate::editor::puzzle3d::precompute::{Puzzle3dCollisionSession, Puzzle3dPrecomputeSession};
+use crate::editor::puzzle3d::precompute::{Puzzle3dCollisionSession, Puzzle3dFillSession, Puzzle3dPrecomputeSession};
 use crate::editor::puzzle3d::presence;
 use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
 use crate::editor::puzzle3d::window as window_ownership;
 use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::Puzzle3dEngineCommand;
 use crate::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
+use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::{
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, PluginCloseStep,
     MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
     WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
 };
@@ -50,6 +52,7 @@ use store::EngineHandles;
 // at that crate's root alongside `InteractionWrite`, and this path keeps the module-qualified spelling
 // the other reference implementations (`process3d`, `generation3d`) use.
 use dsl::json;
+use dsl::FromValue;
 use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
 use std::collections::{HashMap, HashSet};
@@ -290,6 +293,100 @@ pub fn empty_fixture() -> Puzzle3dFixture {
     Puzzle3dFixture { schema: PUZZLE3D_FIXTURE_SCHEMA.into(), domain: "architecture".into(), meta: Puzzle3dFixtureMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
 }
 
+const PUZZLE3D_CLIPBOARD_SCHEMA: &str = "puzzle.3d.clipboard.v1";
+
+fn puzzle3d_fixture_from_doc(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Puzzle3dFixture {
+    puzzle3d_fixture_from_play_snapshot(doc.snapshot)
+}
+
+fn puzzle3d_fixture_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzle3dFixture {
+    puzzle3d_fixture_from_snapshot(snapshot.typed())
+}
+
+fn puzzle3d_mutations_between(before: &Puzzle3dFixture, after: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
+    puzzle3d_operations_from_values(&puzzle3d_projection_value(dsl::ToValue::to_value(before)), &puzzle3d_projection_value(dsl::ToValue::to_value(after)))
+}
+
+fn puzzle3d_selected_objects(fixture: &Puzzle3dFixture, interaction: &InteractionView<'_>) -> Vec<Puzzle3dObject> {
+    puzzle3d_selected_objects_from(&Puzzle3dInteractionSnapshot::from_interaction(interaction), fixture)
+}
+
+fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, fixture: &Puzzle3dFixture) -> Vec<Puzzle3dObject> {
+    let ids = snapshot.selected_object_ids();
+    fixture.objects.iter().filter(|object| ids.contains(&object.id)).cloned().collect()
+}
+
+/// 📋️ Copies the selected objects as a fixture-shaped fragment.
+fn puzzle3d_copy_fragment(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+    let fixture = puzzle3d_fixture_from_doc(doc);
+    puzzle3d_copy_fragment_from(&fixture, puzzle3d_selected_objects(&fixture, interaction))
+}
+
+fn puzzle3d_copy_fragment_from(fixture: &Puzzle3dFixture, objects: Vec<Puzzle3dObject>) -> Result<ClipboardFragment, ClipboardError> {
+    let _ = fixture;
+    if objects.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let mut clip = empty_fixture();
+    clip.schema = PUZZLE3D_CLIPBOARD_SCHEMA.into();
+    clip.objects = objects;
+    Ok(ClipboardFragment {
+        schema: PUZZLE3D_CLIPBOARD_SCHEMA.into(),
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
+        dsl_text: to_json_string(&puzzle3d_projection_value(dsl::ToValue::to_value(&clip))),
+        pack_bytes: None,
+        source_app: PUZZLE3D_PLAY_APP_ID.into(),
+        label: format!("{} objects", clip.objects.len()),
+    })
+}
+
+/// ✂️ Copies then deletes the selected objects as one mutation list.
+fn puzzle3d_cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+    let before = puzzle3d_fixture_from_doc(doc);
+    puzzle3d_cut_operations_from(&before, &Puzzle3dInteractionSnapshot::from_interaction(interaction))
+}
+
+fn puzzle3d_cut_operations_from(before: &Puzzle3dFixture, marks: &Puzzle3dInteractionSnapshot) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+    let objects = puzzle3d_selected_objects_from(marks, before);
+    if objects.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let ids: HashSet<String> = objects.into_iter().map(|object| object.id).collect();
+    let mut after = before.clone();
+    after.objects.retain(|object| !ids.contains(&object.id));
+    after.attractions.retain(|attraction| !ids.iter().any(|id| attraction.attracting.starts_with(&format!("{id}:")) || attraction.attracted.starts_with(&format!("{id}:"))));
+    Ok(puzzle3d_mutations_between(before, &after))
+}
+
+/// 📋 Clones a copied fixture fragment with fresh ids.
+fn puzzle3d_paste_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+    puzzle3d_paste_operations_on(&puzzle3d_fixture_from_doc(doc), fragment, placement)
+}
+
+fn puzzle3d_paste_operations_on(before: &Puzzle3dFixture, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+    let expected = MediaType { class: MediaClass::ThreeD, form: MediaForm::Design };
+    if fragment.media_type != expected {
+        return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
+    }
+    let value = parse(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+    let clip = Puzzle3dFixture::from_value(json::to_dsl_value(&value)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+    if clip.objects.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let mut after = before.clone();
+    let offset = placement.position.unwrap_or([0.5, 0.5, 0.0]);
+    for object in clip.objects {
+        let mut clone = object;
+        clone.id = next_object_id();
+        clone.origin[0] += offset[0];
+        clone.origin[1] += offset[1];
+        clone.origin[2] += offset[2];
+        after.objects.push(clone);
+    }
+    Ok(puzzle3d_mutations_between(before, &after))
+}
+
+
 pub fn default_fixture() -> Puzzle3dFixture {
     CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()
 }
@@ -303,7 +400,7 @@ pub fn nakagin_fixture() -> Puzzle3dFixture {
 /// own first-party `Value` via `DslValue` without ever naming the foreign crate: `T`'s only caller
 /// is `snapshot.value(): &serde_json::Value`, resolved structurally through the `DslValue: From<T>`
 /// bound rather than a spelled-out type.
-fn puzzle3d_projection_value<T>(value: T) -> Value
+pub(crate) fn puzzle3d_projection_value<T>(value: T) -> Value
 where
     dsl::DslValue: From<T>,
 {
@@ -351,6 +448,74 @@ pub fn puzzle3d_fixture_from_snapshot(document: &Puzzle3dSnapshot) -> Puzzle3dFi
         attractions: document.attractions.iter().map(fixture_attraction_from_snapshot).collect(),
         target_volumes: document.target_volumes.iter().map(fixture_target_volume_from_snapshot).collect(),
         references: document.references.iter().map(fixture_reference_from_snapshot).collect(),
+    }
+}
+
+/// 🧬️ Inverse of [`puzzle3d_fixture_from_snapshot`] — the document delta must compare typed snapshots,
+/// not a camelCase fixture `ToValue` re-parsed as `Puzzle3dSnapshot` (that FromValue fails closed to empty).
+pub fn puzzle3d_snapshot_from_fixture(fixture: &Puzzle3dFixture) -> Puzzle3dSnapshot {
+    Puzzle3dSnapshot {
+        schema: fixture.schema.clone(),
+        domain: fixture.domain.clone(),
+        meta: crate::Puzzle3dMeta {
+            kind_catalogs: fixture.meta.kind_catalogs.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
+            kind_compatibility: fixture.meta.kind_compatibility.clone().and_then(|value| dsl::FromValue::from_value(value).ok()).unwrap_or_default(),
+        },
+        objects: fixture.objects.iter().map(snapshot_object_from_fixture).collect(),
+        attractions: fixture.attractions.iter().map(snapshot_attraction_from_fixture).collect(),
+        target_volumes: fixture.target_volumes.iter().map(snapshot_target_volume_from_fixture).collect(),
+        references: fixture.references.iter().map(snapshot_reference_from_fixture).collect(),
+    }
+}
+
+fn snapshot_object_from_fixture(object: &Puzzle3dObject) -> crate::Puzzle3dObject {
+    crate::Puzzle3dObject {
+        id: object.id.clone(),
+        label: object.label.clone(),
+        object_kind: object.object_kind.clone(),
+        anchor: crate::Puzzle3dObjectAnchor::default(),
+        origin: object.origin,
+        orientation: object.orientation,
+        scale: object.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
+        mesh_url: object.mesh_url.clone(),
+        vortices: object.vortices.iter().map(snapshot_vortex_from_fixture).collect(),
+        hidden: object.hidden,
+        locked: object.locked,
+    }
+}
+
+fn snapshot_vortex_from_fixture(vortex: &Puzzle3dVortex) -> crate::Puzzle3dVortex {
+    crate::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: None, position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
+}
+
+fn snapshot_attraction_from_fixture(attraction: &Puzzle3dAttraction) -> crate::Puzzle3dAttraction {
+    crate::Puzzle3dAttraction {
+        id: attraction.id.clone(),
+        attracting: attraction.attracting.clone(),
+        attracted: attraction.attracted.clone(),
+        gap: attraction.gap,
+        shift: attraction.shift,
+        rise: attraction.rise,
+        rotation: attraction.rotation,
+        turn: attraction.turn,
+        tilt: attraction.tilt,
+        x: 0.0,
+        y: 0.0,
+    }
+}
+
+fn snapshot_target_volume_from_fixture(volume: &Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume {
+    crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()), hidden: volume.hidden, locked: volume.locked }
+}
+
+fn snapshot_reference_from_fixture(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
+    crate::Puzzle3dReference {
+        id: reference.id.clone(),
+        source: crate::Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
+        origin: reference.origin,
+        width_world: reference.width_world,
+        locked: reference.locked,
+        hidden: reference.hidden,
     }
 }
 
@@ -403,37 +568,16 @@ fn fixture_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzz
     }
 }
 
-struct Puzzle3dExampleOperations {
-    before: Value,
-    after: Puzzle3dFixture,
-    operations: Vec<Puzzle3dMutation>,
-}
-
-static PUZZLE3D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle3dExampleOperations>> = LazyLock::new(|| {
-    let raw = vec![empty_fixture(), default_fixture(), nakagin_fixture()];
-    let mut resolved = raw.clone();
-    for fixture in &mut resolved {
-        resolve_puzzle3d_attractions(fixture);
-    }
-    let mut before_values: Vec<Value> = raw.iter().chain(&resolved).map(|fixture| json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
-    before_values.dedup();
-    let after_values: Vec<Value> = resolved.iter().map(|fixture| json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
-    let mut entries = Vec::new();
-    for before in before_values {
-        for (after, after_value) in resolved.iter().zip(&after_values) {
-            entries.push(Puzzle3dExampleOperations { operations: puzzle3d_operations_from_values(&before, after_value), before: before.clone(), after: after.clone() });
-        }
-    }
-    entries
-});
-
 /// 🧮️ Document operations for a fixture mutation through the typed semantic delta vocabulary.
 pub fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
-    if let Some(entry) = PUZZLE3D_EXAMPLE_OPERATIONS.iter().find(|entry| &entry.before == before && &entry.after == after_fixture) {
-        return entry.operations.clone();
+    let before_fixture: Puzzle3dFixture = dsl::FromValue::from_value(json::to_dsl_value(before)).unwrap_or_else(|_| empty_fixture());
+    let before_snapshot = puzzle3d_snapshot_from_fixture(&before_fixture);
+    let after_snapshot = puzzle3d_snapshot_from_fixture(after_fixture);
+    if before_snapshot == after_snapshot {
+        return Vec::new();
     }
-    let after = json::from_dsl_value(&dsl::ToValue::to_value(after_fixture));
-    puzzle3d_operations_from_values(before, &after)
+    let ops = puzzle3d_snapshot_mutations(&before_snapshot, &after_snapshot);
+    ops
 }
 
 /// 🔌️ `kit:in` seam helper: keyed UPSERT of `incoming` rows (each shaped `{"id": "...", ...}`) into
@@ -536,6 +680,7 @@ fn puzzle3d_action_document_intent(action: &str) -> bool {
             | "setTargetVolumeFlag"
             | "addBrushObject"
             | "acceptSuggestion"
+            | "importFixture"
     )
 }
 
@@ -2051,11 +2196,12 @@ pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
         "fillBuildTick" | "cancelFillBuild" => Puzzle3dScopeClass::FillBuild,
         "setObjectKindWeight" | "setVortexKindWeight" => Puzzle3dScopeClass::FillOptions,
         "suggestionsTick" => Puzzle3dScopeClass::SuggestionsTick,
-        "registerBrushMesh" => Puzzle3dScopeClass::Quiet,
+        "registerBrushMesh" | "exportFixture" | "openImportFixture" => Puzzle3dScopeClass::Quiet,
         "selectSameKindSelection" => Puzzle3dScopeClass::Selection,
         "duplicateSelection" | "deleteSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "patchInspector" | "setSelectionFlag" | "setTargetVolumeFlag" | "deleteAttraction" | "deleteTargetVolume" | "createAttraction"
-        | "worldRelocate" | "relocateTargetVolume" | "addObjectKind" | "addTargetVolume" => Puzzle3dScopeClass::Document,
+        | "worldRelocate" | "relocateTargetVolume" | "addObjectKind" | "addTargetVolume" | "importFixture" => Puzzle3dScopeClass::Document,
         "setFillCount" => Puzzle3dScopeClass::FillApply,
+        "setActiveExample" => Puzzle3dScopeClass::Chrome,
         _ => Puzzle3dScopeClass::Chrome,
     }
 }
@@ -2154,6 +2300,9 @@ puzzle3d_command_variants! {
     AddObjectKind = "addObjectKind",
     DeleteSelection = "deleteSelection",
     DuplicateSelection = "duplicateSelection",
+    ExportFixture = "exportFixture",
+    ImportFixture = "importFixture",
+    OpenImportFixture = "openImportFixture",
     SelectSameKindSelection = "selectSameKindSelection",
     SetCamera = "setCamera",
     SetProjection = "setProjection",
@@ -2223,6 +2372,9 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "addObjectKind",
         "deleteSelection",
         "duplicateSelection",
+        "exportFixture",
+        "importFixture",
+        "openImportFixture",
         "selectSameKindSelection",
         "setCamera",
         "setProjection",
@@ -2607,6 +2759,7 @@ struct Puzzle3dSessionState {
     fill_display: Option<FillDisplayMemo>,
     document_tree: Option<(Puzzle3dDocumentTreeKey, Box<BuiltNode>)>,
     collision: Option<Puzzle3dCollisionSession>,
+    fill: Option<Puzzle3dFillSession>,
 }
 
 impl Puzzle3dSessionState {
@@ -2617,6 +2770,7 @@ impl Puzzle3dSessionState {
             .saturating_add(self.fill_display.as_ref().map_or(0, |_| size_of::<FillDisplayMemo>()))
             .saturating_add(self.document_tree.as_ref().map_or(0, |_| size_of::<BuiltNode>()))
             .saturating_add(self.collision.as_ref().map_or(0, Puzzle3dCollisionSession::bytes))
+            .saturating_add(self.fill.as_ref().map_or(0, Puzzle3dFillSession::bytes))
     }
 }
 
@@ -2758,8 +2912,14 @@ fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, a
     *app.geometry_cache.lock().expect("geometry cache") = state.geometry;
     *app.fill_display_memo.lock().expect("fill display memo") = state.fill_display;
     *app.document_tree_cache.lock().expect("document cache") = state.document_tree;
-    if let Some(collision) = state.collision {
-        app.precompute.borrow_mut().install_collision_session(collision);
+    {
+        let mut session = app.precompute.borrow_mut();
+        if let Some(collision) = state.collision {
+            session.install_collision_session(collision);
+        }
+        if let Some(fill) = state.fill {
+            session.install_fill_session(fill);
+        }
     }
     Some(lease)
 }
@@ -2767,11 +2927,16 @@ fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, a
 /// 🎟️ Returns the app's caches to their slot. A stale lease (the slot was retired or re-keyed mid-call)
 /// is rejected and the state simply dropped.
 fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp) {
+    let (collision, fill) = {
+        let mut session = app.precompute.borrow_mut();
+        (Some(session.take_collision_session()), Some(session.take_fill_session()))
+    };
     let state = Puzzle3dSessionState {
         geometry: app.geometry_cache.lock().expect("geometry cache").take(),
         fill_display: app.fill_display_memo.lock().expect("fill display memo").take(),
         document_tree: app.document_tree_cache.lock().expect("document cache").take(),
-        collision: Some(app.precompute.borrow_mut().take_collision_session()),
+        collision,
+        fill,
     };
     if let Ok(mut registry) = puzzle3d_session_registry().try_lock() {
         registry.check_in(lease, state);
@@ -2830,7 +2995,7 @@ thread_local! {
 }
 
 pub struct Puzzle3dPlayApp {
-    pub(crate) precompute: std::cell::RefCell<Puzzle3dPrecomputeSession>,
+    pub(crate) precompute: std::cell::RefCell<Box<Puzzle3dPrecomputeSession>>,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
     geometry_cache: Mutex<Option<(u64, String, String)>>,
     /// 🌳️ Boxed on purpose: `BuiltNode` is ~36 KiB by value, and this app object is built on the stack on
@@ -2841,7 +3006,7 @@ pub struct Puzzle3dPlayApp {
 
 impl Default for Puzzle3dPlayApp {
     fn default() -> Self {
-        Self { precompute: std::cell::RefCell::new(Puzzle3dPrecomputeSession::new()), fill_display_memo: Mutex::new(None), geometry_cache: Mutex::new(None), document_tree_cache: Mutex::new(None) }
+        Self { precompute: std::cell::RefCell::new(Box::new(Puzzle3dPrecomputeSession::new())), fill_display_memo: Mutex::new(None), geometry_cache: Mutex::new(None), document_tree_cache: Mutex::new(None) }
     }
 }
 
@@ -3141,6 +3306,9 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "addObjectKind" => add_object_kind::add_object_kind(ctx, args),
         "deleteSelection" => delete_selection::delete_selection(ctx),
         "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
+        "exportFixture" => export_fixture::export_fixture(ctx),
+        "importFixture" => import_fixture::import_fixture(ctx, args),
+        "openImportFixture" => open_import_fixture::open_import_fixture(ctx),
         "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
         "patchInspector" => patch_inspector::patch_inspector(ctx, args),
         "createAttraction" => create_attraction::create_attraction(ctx, args),
@@ -3256,6 +3424,9 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "deleteSelection",
     "deleteTargetVolume",
     "duplicateSelection",
+    "exportFixture",
+    "importFixture",
+    "openImportFixture",
     "patchInspector",
     "rotateSelection",
     "scaleSelection",
@@ -4182,6 +4353,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let Some(volume) = snapshot.typed().target_volumes.get(self.volume_cursor) else {
                     self.stage = Puzzle3dScaleStage::Complete;
                     let mutations = std::mem::take(&mut self.mutations);
+                    if mutations.is_empty() && !self.volumes.is_empty() && self.objects.is_empty() {
+                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+                    }
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }));
                 };
                 self.volume_cursor += 1;
@@ -5132,6 +5306,9 @@ enum Puzzle3dSetActiveExampleStage {
 /// law asserts `iterations <= extent`), so it has to carry all of them; it declared `3`, which is short
 /// by ten and made a real example load overrun its own declared envelope.
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
+const PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 8;
+const PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY: &str = "set-active-example";
+const PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION: &str = "Set Active Example";
 
 struct Puzzle3dSetActiveExampleWork {
     stage: Puzzle3dSetActiveExampleStage,
@@ -5169,6 +5346,16 @@ impl Puzzle3dSetActiveExampleWork {
         }
         self.mutations.push(mutation);
         Ok(())
+    }
+
+    fn take_chunk(cursor: &mut usize, len: usize) -> std::ops::Range<usize> {
+        if *cursor >= len {
+            return *cursor..*cursor;
+        }
+        let end = cursor.saturating_add(PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK).min(len);
+        let range = *cursor..end;
+        *cursor = end;
+        range
     }
 
     fn advance(&mut self, stage: Puzzle3dSetActiveExampleStage) {
@@ -5212,45 +5399,60 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         let Some(target) = Self::target(command) else { return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default())) };
         match self.stage {
             Puzzle3dSetActiveExampleStage::DeleteAttractions => {
-                if let Some(attraction) = snapshot.typed().attractions.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_vortices(attraction.id.clone()))?;
+                let items = &snapshot.typed().attractions;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for attraction in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_vortices(attraction.id.clone()))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-delete-attraction", "Removing old attraction", "Alte Anziehung wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteObjects);
                 Ok(Self::progress("puzzle3d-example-delete-object", "Removing old object", "Altes Objekt wird entfernt"))
             }
             Puzzle3dSetActiveExampleStage::DeleteObjects => {
-                if let Some(object) = snapshot.typed().objects.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::delete_object(object.id.clone()))?;
+                let items = &snapshot.typed().objects;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for object in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::delete_object(object.id.clone()))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-delete-object", "Removing old object", "Altes Objekt wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteVolumes);
                 Ok(Self::progress("puzzle3d-example-delete-volume", "Removing old target volume", "Altes Zielvolumen wird entfernt"))
             }
             Puzzle3dSetActiveExampleStage::DeleteVolumes => {
-                if let Some(volume) = snapshot.typed().target_volumes.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::delete_target_volume(volume.id.clone()))?;
+                let items = &snapshot.typed().target_volumes;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for volume in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::delete_target_volume(volume.id.clone()))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-delete-volume", "Removing old target volume", "Altes Zielvolumen wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteReferences);
                 Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"))
             }
             Puzzle3dSetActiveExampleStage::DeleteReferences => {
-                if let Some(reference) = snapshot.typed().references.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::delete_reference(reference.id.clone()))?;
-                    return Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"));
+                let items = &snapshot.typed().references;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for reference in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::delete_reference(reference.id.clone()))?;
+                    }
+                    return Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"))
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteCompatibility);
                 Ok(Self::progress("puzzle3d-example-delete-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle3dSetActiveExampleStage::DeleteCompatibility => {
-                if let Some(row) = snapshot.typed().meta.kind_compatibility.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()))?;
+                let items = &snapshot.typed().meta.kind_compatibility;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for row in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-delete-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::Domain);
@@ -5268,64 +5470,79 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"))
             }
             Puzzle3dSetActiveExampleStage::CreateObjects => {
-                if let Some(object) = target.objects.get(self.cursor) {
-                    self.cursor += 1;
-                    let value = dsl::ToValue::to_value(object);
-                    let object = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None))?;
+                let items = &target.objects;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for object in &items[range] {
+                        let value = dsl::ToValue::to_value(object);
+                        let object = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateAttractions);
                 Ok(Self::progress("puzzle3d-example-create-attraction", "Adding example attraction", "Beispielanziehung wird hinzugefügt"))
             }
             Puzzle3dSetActiveExampleStage::CreateAttractions => {
-                if let Some(attraction) = target.attractions.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(
-                        attraction.id.clone(),
-                        attraction.attracting.clone(),
-                        attraction.attracted.clone(),
-                        attraction.gap,
-                        attraction.shift,
-                        attraction.rise,
-                        attraction.rotation,
-                        attraction.turn,
-                        attraction.tilt,
-                        0.0,
-                        0.0,
-                    ))?;
+                let items = &target.attractions;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for attraction in &items[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(
+                            attraction.id.clone(),
+                            attraction.attracting.clone(),
+                            attraction.attracted.clone(),
+                            attraction.gap,
+                            attraction.shift,
+                            attraction.rise,
+                            attraction.rotation,
+                            attraction.turn,
+                            attraction.tilt,
+                            0.0,
+                            0.0,
+                        ))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-create-attraction", "Adding example attraction", "Beispielanziehung wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateVolumes);
                 Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"))
             }
             Puzzle3dSetActiveExampleStage::CreateVolumes => {
-                if let Some(volume) = target.target_volumes.get(self.cursor) {
-                    self.cursor += 1;
-                    let value = dsl::ToValue::to_value(volume);
-                    let volume = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None))?;
+                let items = &target.target_volumes;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for volume in &items[range] {
+                        let value = dsl::ToValue::to_value(volume);
+                        let volume = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateReferences);
                 Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"))
             }
             Puzzle3dSetActiveExampleStage::CreateReferences => {
-                if let Some(reference) = target.references.get(self.cursor) {
-                    self.cursor += 1;
-                    let value = dsl::ToValue::to_value(reference);
-                    let reference = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::create_reference(reference, None))?;
+                let items = &target.references;
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for reference in &items[range] {
+                        let value = dsl::ToValue::to_value(reference);
+                        let reference = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::create_reference(reference, None))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateCompatibility);
                 Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"))
             }
             Puzzle3dSetActiveExampleStage::CreateCompatibility => {
-                if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
-                    self.cursor += 1;
-                    let row: crate::Puzzle3dKindCompatibility = dsl::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                let items = Self::compatibility_rows(target);
+                let range = Self::take_chunk(&mut self.cursor, items.len());
+                if !range.is_empty() {
+                    for row in items[range].iter().cloned() {
+                        let row: crate::Puzzle3dKindCompatibility = dsl::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                    }
                     return Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::Publish);
@@ -5333,7 +5550,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dSetActiveExampleStage::Publish => {
                 self.stage = Puzzle3dSetActiveExampleStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("setActiveExample")), ..Default::default() }))
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations: Vec::new(),
+                    ui_scope: puzzle3d_scope(Puzzle3dScopeClass::Chrome),
+                    description: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION.into()),
+                    coalesce_key: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY.into()),
+                    ..Default::default()
+                }))
             }
             Puzzle3dSetActiveExampleStage::Complete => Err(Fault::from("puzzle3d-set-active-example-complete-repolled")),
             Puzzle3dSetActiveExampleStage::Closing => Err(Fault::from("puzzle3d-set-active-example-closing")),
@@ -6436,19 +6660,26 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dPrecomputeCommandStage::FillPlan => {
                 let precompute = self.fill_precompute.as_mut().ok_or_else(|| Fault::from("puzzle3d-fill-plan-owner"))?;
-                precompute.precompute_step_lane(crate::standards::v1::subsets::any::schema::PrecomputeLane::Fill, 1);
-                let required = self.requested_count.max(config.fill_count);
-                if precompute.fill_available_count() >= required || precompute.fill_is_done() {
-                    self.requested_count = self.requested_count.min(precompute.fill_available_count());
+                let available = precompute.fill_available_count();
+                if available > 0 || precompute.fill_is_done() {
+                    self.requested_count = self.requested_count.min(available);
                     self.stage = Puzzle3dPrecomputeCommandStage::FillApply;
+                } else {
+                    precompute.precompute_step_lane(crate::standards::v1::subsets::any::schema::PrecomputeLane::Fill, 1);
+                    let required = self.requested_count.max(config.fill_count);
+                    if precompute.fill_available_count() >= required || precompute.fill_is_done() {
+                        self.requested_count = self.requested_count.min(precompute.fill_available_count());
+                        self.stage = Puzzle3dPrecomputeCommandStage::FillApply;
+                    }
                 }
                 Ok(Self::progress("puzzle3d-fill-plan", "Advancing retained fill plan", "Beibehaltener Füllplan wird fortgesetzt"))
             }
             Puzzle3dPrecomputeCommandStage::FillApply => {
                 let precompute = self.fill_precompute.as_mut().ok_or_else(|| Fault::from("puzzle3d-fill-apply-owner"))?;
                 let (applied, mutations) = set_fill_count::apply_chunk(precompute, self.requested_count).ok_or_else(|| Fault::from("puzzle3d-fill-apply-unavailable"))?;
+                let progressed = !mutations.is_empty();
                 self.fill_mutations.extend(mutations);
-                if applied == self.requested_count {
+                if applied == self.requested_count || !progressed {
                     self.stage = Puzzle3dPrecomputeCommandStage::Publish;
                 }
                 Ok(Self::progress("puzzle3d-fill-apply", "Applying one retained fill placement", "Eine beibehaltene Füllplatzierung wird angewendet"))
@@ -6540,13 +6771,20 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 }
 
+const PUZZLE3D_IMPORT_RAW_BYTES: usize = 262_144;
+const PUZZLE3D_IMPORT_DECODED_ITEMS: usize = 16_384;
+
 struct Puzzle3dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
+    contract: semio_framework::ToolExecutionContract,
 }
 
 impl Puzzle3dRetainedCommandJobFactory {
     fn new(controller_id: &str) -> Self {
-        Self { keys: PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        Self {
+            keys: PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect(),
+            contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
+        }
     }
 }
 
@@ -6567,7 +6805,7 @@ impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        crate::retained_command::puzzle_command_contract()
+        self.contract
     }
 
     fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
@@ -6581,7 +6819,7 @@ impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+        if input.declared_bytes() > self.contract.max_raw_wire_bytes {
             return Err((ToolJobFactoryError::new("Puzzle 3d retained command rejects an oversized wire owner"), input, checkpoint));
         }
         match checkpoint {
@@ -6616,6 +6854,9 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "deleteTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importFixture", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "openImportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -6870,7 +7111,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
 // `protocol::Mutation`/`protocol::MutationDiff` rather than an allowlist match, because
 // `setActiveExample`'s work loop (`Puzzle3dSetActiveExampleWork`) emits many different mutation
 // kinds (delete/create object, attraction, target volume, reference, compatibility, domain,
-// catalogs) one per store commit turn.
+// catalogs). Each kind is batched to `PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK` and the Complete emit
+// is one coalesced document-replacement gesture (`set-active-example`), not one store commit per item.
 struct Puzzle3dArtifactStorePreparationFactory;
 
 struct Puzzle3dArtifactStorePreparation {
@@ -7045,11 +7287,11 @@ impl Puzzle3dRetainedCommandProofs {
         document_schema: "puzzle.3d.fixture",
         factory: "Puzzle3dRetainedCommandJobFactory",
         factory_type: Puzzle3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
+        contract: semio_framework::ToolExecutionContract::resumable(262_144, 16_384, 1, 262_144, 7_500, 1, 1),
         tools: [
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
-            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
             "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "cancelFillBuild", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setPanelPage", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
         ]
     }
@@ -7074,6 +7316,109 @@ impl Puzzle3dHostConfigurationProofs {
     }
 }
 //#endregion 📜️ToolProofs
+
+
+/// 📋️ One-step reserved copy/cut/paste job — the framework route is an empty stub unless the app owns this producer.
+struct Puzzle3dClipboardJob {
+    tool_id: String,
+    snapshot: std::sync::Arc<Puzzle3dPlaySnapshot>,
+    raw_wire: Vec<u8>,
+    input: Option<ArtifactReservedToolInput>,
+    completion: Option<semio_framework_plugin::app::ArtifactToolCompletion<EditorApp<Puzzle3dPlayApp>>>,
+    closing: bool,
+}
+
+impl Puzzle3dClipboardJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle3dPlayApp>>) -> Self {
+        Self { tool_id: request.tool_id, snapshot: request.snapshot, raw_wire: request.raw_wire, input: Some(request.input), completion: Some(request.completion), closing: false }
+    }
+
+    fn emit(&mut self) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation, NoDraftMutation> {
+        let ArtifactReservedToolInput::Action { args, interaction, hover } = self.input.take().expect("puzzle3d clipboard input") else {
+            return Emit::default();
+        };
+        let fixture = puzzle3d_fixture_from_play_snapshot(self.snapshot.as_ref());
+        let marks = Puzzle3dInteractionSnapshot::from_state(&interaction, &hover);
+        match self.tool_id.as_str() {
+            "copy" => match puzzle3d_copy_fragment_from(&fixture, puzzle3d_selected_objects_from(&marks, &fixture)) {
+                Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
+                Err(_) => Emit::default(),
+            },
+            "cut" => {
+                let objects = puzzle3d_selected_objects_from(&marks, &fixture);
+                let Ok(fragment) = puzzle3d_copy_fragment_from(&fixture, objects) else { return Emit::default() };
+                let mutations = puzzle3d_cut_operations_from(&fixture, &marks).unwrap_or_default();
+                Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() }
+            },
+            "paste" => {
+                let Some(args) = args else { return Emit::default() };
+                let Some(fragment) = args.get("fragment").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
+                let placement = PastePlacement::default();
+                match puzzle3d_paste_operations_on(&fixture, &fragment, &placement) {
+                    Ok(mutations) => Emit { artifact_mutations: mutations, ..Default::default() },
+                    Err(_) => Emit::default(),
+                }
+            }
+            _ => Emit::default(),
+        }
+    }
+}
+
+impl InteractiveJob for Puzzle3dClipboardJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        let emit = self.emit();
+        let Some(completion) = self.completion.as_ref() else { return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+        if completion.complete(Ok(emit), EphemeralEmit::default()).is_err() {
+            return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+        }
+        let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, &self.raw_wire).unwrap_or_else(|rejected| {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(JobPayloadStream::CommitOutput)
+        });
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.closing = true;
+        if !self.raw_wire.is_empty() {
+            if maximum_items == 0 || maximum_bytes == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let released_bytes = self.raw_wire.len().min(maximum_bytes);
+            self.raw_wire.truncate(self.raw_wire.len() - released_bytes);
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
+        if self.input.take().is_some() || self.completion.take().is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.raw_wire.is_empty() && self.input.is_none() && self.completion.is_none()
+    }
+}
+
+impl ArtifactReservedJob for Puzzle3dClipboardJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(match InteractiveJob::close_step(self, maximum_items, maximum_bytes) {
+            InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+            InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "puzzle3d clipboard route close is blocked" },
+            InteractiveJobCloseStep::Complete => PluginCloseStep::Complete,
+        })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        InteractiveJob::terminal_is_empty(self)
+    }
+}
 
 impl ArtifactEditor for Puzzle3dPlayApp {
     const DIALECT: Dialect = crate::PUZZLE3D_DIALECT;
@@ -7171,7 +7516,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(Puzzle3dRetainedCommandJobFactory::new(&controller))
+        registry.register(Puzzle3dRetainedCommandJobFactory::new(&controller))?;
+        Ok(())
     }
 
     fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
@@ -7258,7 +7604,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
         LazyLock::force(&NAKAGIN_EXAMPLE_FIXTURE);
-        LazyLock::force(&PUZZLE3D_EXAMPLE_OPERATIONS);
         let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into());
         let config = Puzzle3dRuntime::default();
         let active_utility = puzzle3d_scene_active_utility(&config, None, None);
@@ -7266,6 +7611,29 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let app = Puzzle3dPlayApp::default();
         sync_precompute_session(&mut app.precompute.borrow_mut(), &scene);
         snapshot
+    }
+
+    fn clipboard_media_type() -> Option<MediaType> {
+        Some(MediaType { class: MediaClass::ThreeD, form: MediaForm::Design })
+    }
+
+    fn copy_fragment(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+        puzzle3d_copy_fragment(doc, interaction)
+    }
+
+    fn cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle3dMutation> {
+        puzzle3d_cut_operations(doc, interaction).unwrap_or_default()
+    }
+
+    fn paste_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+        puzzle3d_paste_operations(doc, fragment, placement)
+    }
+
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if !matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
+            return Ok(None);
+        }
+        Ok(Some(ArtifactReservedToolJob::new(Puzzle3dClipboardJob::new(request))))
     }
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.
@@ -7734,6 +8102,9 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
+            .action_with(ActionDefinition::bounded_catalog("exportFixture", LocalizedLabel::native("Export", "Exportieren"), ActionKind::Shell).category("file"))
+            .action_with(ActionDefinition::bounded_catalog("importFixture", LocalizedLabel::native("Import", "Importieren"), ActionKind::Mutation).category("file"))
+            .action_with(ActionDefinition::bounded_catalog("openImportFixture", LocalizedLabel::native("Import…", "Importieren…"), ActionKind::Shell).category("file"))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
@@ -7916,6 +8287,9 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("importFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openImportFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -7984,4 +8358,8 @@ pub(crate) mod testkit;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️example-switch/🦀️.rs"]
+mod example_switch;
 //#endregion 🧪️Tests

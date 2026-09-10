@@ -1,0 +1,26 @@
+package semio:procedural-generation3d-viewer-presence@1.0.0;
+
+/// 👥️ The language-neutral surface of `Generation3dViewPresence` — the two facets the 3D viewer
+/// broadcasts to its peers. Hover and selection are deliberately absent: they travel through the
+/// framework's own `PresenceInteraction`/`InteractionState`, never through an app's presence record.
+/// `view-camera` restates the sibling config facet's record rather than importing it, so this file
+/// resolves on its own exactly as `🔣️.json` does through its `$ref`.
+interface presence {
+    /// 📷️ A preview camera. `position` and `target` are exactly three doubles, in metres.
+    record view-camera {
+        position: list<f64>,
+        target: list<f64>,
+        fov: f64,
+    }
+
+    /// 👥️ What a peer sees of another peer's 3D viewer.
+    record view-presence {
+        preview-camera: view-camera,
+        show-mode: string,
+    }
+}
+
+/// 🌍️ The world one 3D viewer instance's presence lane exports.
+world generation3d-viewer-presence {
+    export presence;
+}

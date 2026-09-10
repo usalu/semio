@@ -923,7 +923,37 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
 /// 🧱️ Base64 characters per continuation chunk. One `flowTessellateResolve` dispatch carries at most
 /// this much of the mesh body, so a dense mesh streams across turns instead of blowing one turn's
 /// intake budget on a single oversized continuation.
-pub const MESH_PACK_CHUNK_BASE64_CHARS: usize = 48 * 1024;
+///
+/// 48 KiB was NOT a real intake unit: the response action is an ordinary interactive retained route
+/// whose declared wire bound is 8 KiB (generation3d's `GENERATION3D_RETAINED_RAW_BYTES` and every
+/// `bounded_first_step(8_192, …)` proof beside it — one factory registers ONE contract for all its
+/// keys, so this route cannot be widened on its own). A single-chunk mesh therefore arrived as
+/// 38 770 raw bytes and the bus rejected it before decoding, leaving every preview handle pending
+/// forever. Sized against [`tessellate_envelope_maximum_bytes`], which the consumer pins to its own
+/// declared bound (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const MESH_PACK_CHUNK_BASE64_CHARS: usize = 4 * 1024;
+
+/// 📏️ Largest `tessellate` step envelope [`tessellate_step_envelope_json`] can emit: one full
+/// [`MESH_PACK_CHUNK_BASE64_CHARS`] chunk plus the widest progress/accounting header. Every consumer
+/// that declares a wire bound for its `flowTessellateResolve`-shaped response action asserts against
+/// this, so the transfer unit and the bound can never drift apart.
+pub fn tessellate_envelope_maximum_bytes() -> usize {
+    use crate::os_pack::json::{object, Value};
+    crate::os_pack::json::to_string(&object([
+        ("done".to_string(), Value::Bool(true)),
+        ("cancellable".to_string(), Value::Bool(false)),
+        ("phase".to_string(), Value::String("complete".to_string())),
+        ("unitsDone".to_string(), Value::from(u64::MAX)),
+        ("unitsTotal".to_string(), Value::from(u64::MAX)),
+        ("facesDone".to_string(), Value::from(u64::MAX)),
+        ("facesTotal".to_string(), Value::from(u64::MAX)),
+        ("chunk".to_string(), Value::from(u64::MAX)),
+        ("chunks".to_string(), Value::from(u64::MAX)),
+        ("packBytes".to_string(), Value::from(u64::MAX)),
+        ("meshPack".to_string(), Value::String("A".repeat(MESH_PACK_CHUNK_BASE64_CHARS))),
+    ]))
+    .len()
+}
 
 /// 🧱️ Splits a base64 mesh body into intake-sized chunks (never an empty vector — an empty mesh
 /// still transfers as exactly one empty chunk so the receiver's chunk accounting is uniform).

@@ -1,0 +1,12 @@
+import { clipboardWriteFragmentFromEffect, pasteActionWithRetainedFragment, pasteArgsFragment } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+const fragment = { objects: [{ id: "slab-1" }] };
+if (clipboardWriteFragmentFromEffect({ notify: { message: "x" } }) !== undefined) throw new Error("notify must be undefined");
+if (clipboardWriteFragmentFromEffect({ clipboardWrite: { fragment } }) !== fragment) throw new Error("fragment not retained");
+if (JSON.stringify(pasteActionWithRetainedFragment({ action: "copy" }, fragment)) !== JSON.stringify({ action: "copy" })) throw new Error("copy mutated");
+if (JSON.stringify(pasteActionWithRetainedFragment({ action: "paste" }, undefined)) !== JSON.stringify({ action: "paste" })) throw new Error("empty paste mutated");
+if (JSON.stringify(pasteActionWithRetainedFragment({ action: "paste", args: { fragment: { kept: true } } }, fragment)) !== JSON.stringify({ action: "paste", args: { fragment: { kept: true } } })) throw new Error("explicit fragment overwritten");
+const injected = pasteActionWithRetainedFragment({ action: "paste" }, fragment);
+if (JSON.stringify(injected) !== JSON.stringify({ action: "paste", args: { fragment } })) throw new Error("inject failed");
+if (pasteArgsFragment({ args: { fragment } }) !== fragment) throw new Error("pasteArgsFragment miss");
+if (pasteArgsFragment({ args: {} }) !== undefined) throw new Error("pasteArgsFragment empty");
+console.log("PASS clipboard_write_effect_is_retained_and_next_paste_dispatch_carries_fragment");

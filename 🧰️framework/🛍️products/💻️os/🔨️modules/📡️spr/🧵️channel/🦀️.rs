@@ -142,23 +142,47 @@ impl<'de> serde::Deserialize<'de> for FixedCommandPage {
     }
 }
 
+/// 📄️ One command's page authority, reserved ONCE for exactly the pages that command DECLARES.
+///
+/// 🧊️ The reservation is `declared * size_of::<FixedCommandPage>()` contiguous bytes and it is taken
+/// on the guest's own fixed linear memory, once per command, on the reactor's command-ingress
+/// prologue. Reserving the 64-page ceiling regardless of the declared count asked for 262 272 B for
+/// a one-page command — the single largest routine allocation on a 4 Hz command stream, and the
+/// first request a fragmented or exhausted guest heap refuses (`plugin.command-page-allocation`,
+/// ticket 26/09/02 build #29). The declared count is validated `1..=COMMAND_MAXIMUM_PAGES` by the
+/// caller's cursor and is identical for every page of one command, so an exact reservation still
+/// admits every page without a second allocation.
 #[derive(Debug, PartialEq)]
 pub struct CommandPageSet {
     pages: std::collections::VecDeque<FixedCommandPage>,
+    declared: usize,
     byte_len: usize,
     generic_shape_valid: bool,
     all_nonempty: bool,
 }
 
 impl CommandPageSet {
-    pub fn try_new() -> Result<Self, crate::Fault> {
+    pub fn try_new(declared: usize) -> Result<Self, crate::Fault> {
+        if declared == 0 || declared > COMMAND_MAXIMUM_PAGES {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "a command page authority is declared for 1..=64 pages"));
+        }
         let mut pages = std::collections::VecDeque::new();
-        pages.try_reserve_exact(COMMAND_MAXIMUM_PAGES).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "fixed command page authority could not reserve its exact 64 slots"))?;
-        Ok(Self { pages, byte_len: 0, generic_shape_valid: true, all_nonempty: true })
+        pages.try_reserve_exact(declared).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "declared command page authority could not reserve its exact page slots"))?;
+        Ok(Self { pages, declared, byte_len: 0, generic_shape_valid: true, all_nonempty: true })
+    }
+
+    /// 📏️ Contiguous bytes a `declared`-page authority reserves — what the reactor's footprint law
+    /// compares against `semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`.
+    pub const fn reservation_bytes(declared: usize) -> usize {
+        declared * size_of::<FixedCommandPage>()
+    }
+
+    pub fn declared(&self) -> usize {
+        self.declared
     }
 
     pub fn try_push(&mut self, page: FixedCommandPage) -> Result<(), (crate::Fault, FixedCommandPage)> {
-        if self.pages.len() == COMMAND_MAXIMUM_PAGES {
+        if self.pages.len() == self.declared {
             return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command page authority is saturated"), page));
         }
         let Some(byte_len) = self.byte_len.checked_add(page.len()).filter(|total| *total <= COMMAND_MAXIMUM_BYTES) else {
@@ -2057,8 +2081,11 @@ struct CommandPageWriter {
 }
 
 impl CommandPageWriter {
+    /// ✍️ The generic encoder is the ONE authority that cannot declare its page count up front — it
+    /// discovers it while writing — so it declares the whole 64-page ceiling. It runs on a host, not
+    /// on the guest's fixed linear memory: the guest never encodes, it only admits pages.
     fn try_new() -> Result<Self, crate::Fault> {
-        Ok(Self { pages: CommandPageSet::try_new()?, current: [0; COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
+        Ok(Self { pages: CommandPageSet::try_new(COMMAND_MAXIMUM_PAGES)?, current: [0; COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
     }
 
     fn flush(&mut self) -> Result<(), crate::Fault> {
@@ -2137,7 +2164,7 @@ impl CommandPageWriter {
 /// 📄️ Produces the exact pre-admitted page owner consumed by reactor command batches.
 pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, crate::Fault> {
     if let AppCommand::Presence { own_color, peers, .. } = command {
-        let mut pages = CommandPageSet::try_new()?;
+        let mut pages = CommandPageSet::try_new(peers.len().max(1))?;
         for peer in peers.iter() {
             pages.try_push(FixedCommandPage::try_copy_from(peer)?).map_err(|(fault, _page)| fault)?;
         }

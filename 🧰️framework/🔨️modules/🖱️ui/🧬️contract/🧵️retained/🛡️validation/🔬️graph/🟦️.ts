@@ -70,4 +70,27 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     if (!((yield* marks.lookup(id)) ?? 0)) yield* violation({ type: "danglingRoot", node: id }, frontier, violations);
   }
 }
+
+/** 🎯️ Re-checks ONLY the records a shape-preserving delta replaced, against an already-validated base.
+ *
+ * Every state an `OwnedUiSurface` publishes passed {@link retainedUiGraphValidation}, so a candidate
+ * differs from a proven-valid graph by exactly the delta. When each replacement kept its sibling `key`,
+ * its `children` edges and its section role — what the operation cursor certifies as
+ * `shapePreserving` — the candidate's node set, edge set and root are IDENTICAL to the base's. Then
+ * `danglingRoot`, `cycle`, `depthQuota`, `orphanChild`, `duplicateSiblingKey` and `sectionNested` are
+ * all decided by structure the base already proved, and the single invariant a payload can still break
+ * is `nonFiniteNumber` on a replaced record. So this costs one index lookup per touched node instead of
+ * the base walk's three persistent-index writes per document node: measured 163 284 → 159 steps on the
+ * Nakagin-scale 145-node scene surface (`📃️UiDocumentStore/🧪️tests/🧪️typedwire`'s re-publish law).
+ *
+ * `nodeQuota` is still checked because it is the one invariant a same-shape candidate could violate
+ * were the base itself minted at the quota edge. */
+export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, touched: RetainedUiNumericTable<true>, limits: UiDocumentLimits, violations: RetainedUiNumericTable<UiContractViolation>, frontier: RetainedUiGraphFrontier): Program<void> {
+  if (nodes.size > limits.maxNodes) { yield* violation({ type: "nodeQuota", count: nodes.size, max: limits.maxNodes }, frontier, violations); return; }
+  for (const entry of touched.entries()) {
+    if (typeof entry === "number") { yield entry; continue; }
+    const record = yield* nodes.lookup(entry[0]);
+    if (record && !finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
+  }
+}
 //#endregion 🚶️GraphTraversal

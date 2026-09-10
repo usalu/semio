@@ -341,6 +341,12 @@ impl EpochTicker {
 /// `budget.memory_bytes` etc. with a one-line call once it lands.
 pub struct BudgetLimiter {
     pub max_memory_bytes: usize,
+    /// 📈️ High-water mark of the guest's linear memory, in bytes — the host-side twin of the
+    /// guest's own `semio_framework_trace::guest_linear_memory_bytes` (`memory.size`). Wasm memory
+    /// never shrinks, so this equals the CURRENT size and every `memory.grow` updates it. It is
+    /// what turns "the actor trapped on a failed allocation" into a per-turn growth curve — see
+    /// `📓️poll-task-leak-2026-09-10.md`.
+    pub peak_memory_bytes: usize,
     pub max_table_elements: u32,
     pub max_instances: usize,
     pub max_tables: usize,
@@ -359,13 +365,17 @@ pub struct BudgetLimiter {
 /// rather than re-guess if a legitimate component ever trips it.
 impl Default for BudgetLimiter {
     fn default() -> Self {
-        Self { max_memory_bytes: 512 * 1024 * 1024, max_table_elements: 100_000, max_instances: 256, max_tables: 128, max_memories: 128 }
+        Self { max_memory_bytes: 512 * 1024 * 1024, peak_memory_bytes: 0, max_table_elements: 100_000, max_instances: 256, max_tables: 128, max_memories: 128 }
     }
 }
 
 impl ResourceLimiter for BudgetLimiter {
     fn memory_growing(&mut self, _current: usize, desired: usize, _maximum: Option<usize>) -> wasmtime::Result<bool> {
-        Ok(desired <= self.max_memory_bytes)
+        let admitted = desired <= self.max_memory_bytes;
+        if admitted {
+            self.peak_memory_bytes = self.peak_memory_bytes.max(desired);
+        }
+        Ok(admitted)
     }
 
     fn table_growing(&mut self, _current: usize, desired: usize, _maximum: Option<usize>) -> wasmtime::Result<bool> {
@@ -480,6 +490,18 @@ impl std::fmt::Debug for CompiledHandle {
 pub struct GuestInstance {
     pub actor: RuntimeActorId,
     state: GuestInstanceState,
+}
+
+impl GuestInstance {
+    /// 📈️ The guest's linear-memory size in bytes, read off the store's own [`BudgetLimiter`]
+    /// witness — `None` for a mock instance, which owns no wasm memory. Wasm memory never shrinks,
+    /// so sampling this once per turn IS the growth curve a leak law needs.
+    pub fn guest_linear_memory_bytes(&self) -> Option<usize> {
+        match &self.state {
+            GuestInstanceState::Wasmtime(state) => Some(state.store.data().limiter.peak_memory_bytes),
+            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) => None,
+        }
+    }
 }
 
 /// 🧬️ Shallow, actor-id-only — `WasmtimeInstanceState.store: Store<ActorHostState>` and
@@ -6826,6 +6848,10 @@ impl OpeningResolver {
 #[path = "🧪️tests/🔬️opening-resolver/🦀️.rs"]
 mod opening_resolver_tests;
 //#endregion 🔖️OpeningResolver
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️poll-turn-memory/🦀️.rs"]
+mod poll_turn_memory_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

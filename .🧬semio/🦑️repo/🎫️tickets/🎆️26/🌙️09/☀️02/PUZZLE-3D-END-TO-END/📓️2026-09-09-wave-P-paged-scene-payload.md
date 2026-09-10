@@ -99,12 +99,90 @@ TS twins: `WORLD3D_SCENE_LANES` / `world3dSceneFromLanes` in the mesh module. Th
 
 ## 5 Commands + tails
 
-Envelope: `RUSTC_WRAPPER="" RUST_MIN_STACK=134217728 CARGO_TARGET_DIR=/private/tmp/claude-501/-Users-ueli-Documents-semio/9e1e818a-6033-494e-beec-7c9a689f4b82/scratchpad/target-p3d` plus `-j 4`. Tails filled after the verification run.
+W-P2c verification, 2026-09-10. Envelope on every Rust command: `RUSTC_WRAPPER="" RUST_MIN_STACK=134217728 CARGO_TARGET_DIR=/private/tmp/claude-501/-Users-ueli-Documents-semio/9e1e818a-6033-494e-beec-7c9a689f4b82/scratchpad/target-p3d` plus `-j 4`. No source edits this wave — every law was already landed and ran green. Intake budget / zero-progress is present in PluginRuntime (`pluginUiIntakeBudget` + `plugin-ui.intake-budget-exhausted` + 4096 same-phase `plugin-ui.intake-zero-progress`) and in UiDocumentStore intake (64 KiB × 8 floor, 32-step zero-byte `intake-zero-progress` reject).
+
+### 5.1 semio-framework-ui-scene lane laws
+
+```
+cargo test -p semio-framework-ui-scene -j 4 --lib world3d_scene -- --nocapture
+```
+
+```
+running 8 tests
+[DEBUG] world-3d spine packs to 599 bytes carrying 4 lane refs
+[DEBUG] world-3d scene split into 4 lanes and merged back byte-exactly
+[DEBUG] a selection edit moved exactly 1 of 4 lane refs; a camera move moved none
+test scenes::tests::world3d_scene_spine_survives_the_pack_and_value_codecs_with_its_lane_manifest ... ok
+test scenes::tests::world3d_scene_splits_into_the_declared_lanes_and_merges_back ... ok
+test scenes::tests::world3d_scene_lanes_mirror_the_language_neutral_declaration ... ok
+test scenes::tests::world3d_scene_spine_changes_only_for_the_lanes_that_changed ... ok
+[DEBUG] Nakagin-scale scene packed 73439 bytes into a 866-byte spine plus 9 lane pages
+test scenes::tests::a_nakagin_scale_world3d_scene_pages_per_lane_and_reassembles_losslessly ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 108 filtered out; finished in 0.04s
+```
+
+Nakagin-scale: 73 439 B unsplit → 866 B spine (≤ 32 KiB) + 9 lane pages.
+
+### 5.2 semio-framework-plugin scene_surface paging laws
+
+```
+cargo test -p semio-framework-plugin -j 4 --lib world3d_scene_surface -- --nocapture
+```
+
+```
+running 3 tests
+[DEBUG] one 114001-byte instances lane paged into 223 bounded text leaves at depth 2
+test ...::world3d_scene_surface_pages_one_oversized_lane_instead_of_faulting ... ok
+[DEBUG] world-3d scene of 71189 packed bytes published a 669-byte spine plus 6 lane carriers holding 70815 payload bytes
+test ...::world3d_scene_surface_pages_every_lane_beside_a_spine_that_fits_the_fixed_doc ... ok
+[DEBUG] a camera move republished 0 of 6 lanes; a selection edit republished exactly 1
+test ...::world3d_scene_surface_republishes_only_the_lanes_that_changed ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 606 filtered out; finished in 0.05s
+```
+
+### 5.3 cargo check -p semio-framework-plugin
+
+```
+Finished `dev` profile [unoptimized] target(s) in 1m 49s
+```
+
+One pre-existing dead_code warning on `framework_reserved_job!::new`. Exit 0.
+
+### 5.4 cargo check --target wasm32-wasip2 -p semio-s-plugin-puzzle
+
+```
+Finished `dev` profile [unoptimized] target(s) in 3m 43s
+```
+
+Guest lane half type-checks. Exit 0. Did not rebuild component-release / component-dev / touch :6013.
+
+### 5.5 TS surface-scene-lanes + intake
+
+`SEMIO_TEST_LEVEL=standard` against the renderer-react vitest.config.ts does **not** collect these suites (`include` is the engine corpus; `includeSource` is empty until `long`). Ran them from the react package with a ticket-local includeSource of Interpreter + intake:
+
+```
+SEMIO_TEST_LEVEL=standard bun x vitest run --config <ticket>/🗑️generated/vitest.wave-p2c.config.ts -t "world-3d paged scene carrier|paged scene-lane intake" --reporter=verbose
+```
+
+```
+ ✓ intake ... > credits a one-op nested lane tree enough steps to finish a 57 KiB payload
+[DEBUG] Nakagin-scale 72542 lane bytes reassembled from 5 carriers
+[DEBUG] hover republished only the interaction lane
+ ✓ Interpreter ... > reassembles a Nakagin-scale multi-lane carrier without dropping a leaf
+ ✓ Interpreter ... > a hover-only interaction change republishes only that lane
+ Test Files  2 passed (2)
+      Tests  9 passed | 65 skipped (74)
+```
+
+Full `world-3d paged scene carrier` suite (8) + intake (1) green. PluginRuntime in-source tests were not re-run (they are the existing plugin-runtime registerTests1 corpus, not an intake suite); the intake law lives in UiDocumentStore intake and PluginRuntime calls `pluginUiIntakeBudget`.
+
+### 5.6 bun x tsc --noEmit -p tsconfig.json
+
+From the renderer-react package. 1017 pre-existing diagnostics (report baseline ~820). Zero errors in PluginRuntime, intake, surface-scene-lanes, or mesh. Touched-file hits that are **not** new: Interpreter and UiDocumentStore `import.meta.dir` (bun-only, pre-existing test registration).
 
 ## 6 Not verified
 
-- Browser rebuild #27 + Nakagin example switch (coordinator). Must confirm: no `ui.fixed-capacity` at `scene-surface.encode`, no `plugin-ui.intake-budget-exhausted` / `intake-zero-progress` on `puzzle3d-main-perspective`, world body updates, pick/inspection/context-menu unblocked.
-- Served wasm is still #26 (this wave must not rebuild `component-release` / `component-dev` or touch :6013). The Rust guest half is already in #26; the TS intake/budget/staging fixes ride HMR / the next serve.
-- `World3dHost` was not edited (only foreign W-H brush-mesh). Assembly happens in the Interpreter before the host sees the scene.
-- End-to-end native intake of a real wasm patch (needs a live `OwnedNativeUiPatchAuthority` from a shard turn). Covered by budget + zero-progress laws and the existing typedwire intake suite.
-
+- **Browser still required (coordinator rebuild #27+).** Laws prove a Nakagin-scale scene publishes as a ≤32 KiB spine + leaf pages and that intake budget / zero-progress fail loudly in unit tests. They do **not** prove the live perspective window: switch to Nakagin and confirm no `ui.fixed-capacity` at `scene-surface.encode`, no `plugin-ui.intake-budget-exhausted` / `intake-zero-progress` on `puzzle3d-main-perspective`, world body updates off Concrete Forest, pick / inspection / context-menu unblocked.
+- Served wasm is still #26. This wave did not rebuild `component-release` / `component-dev` or touch :6013. The Rust guest half is already in the checked wasm crate; the TS intake/budget/staging fixes ride HMR / the next serve.
+- World3dHost was not edited. Assembly happens in the Interpreter (`PagedSurfaceView` + `world3dSceneFromLanes`) before the host sees the scene.
+- End-to-end native intake of a real wasm patch (live `OwnedNativeUiPatchAuthority` from a shard turn) was not driven. Covered by the budget + zero-progress laws and the existing typedwire intake suite.

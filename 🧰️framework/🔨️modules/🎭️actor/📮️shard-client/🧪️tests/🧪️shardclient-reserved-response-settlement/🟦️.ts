@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
-  const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
+  const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
   type ActorInstanceLifecycleReceipt = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
   type ActorInstanceLifetime = import("../../../🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
   type InboundMessage = import("../../🟦️.ts").InboundMessage;
@@ -532,6 +532,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     readonly index: number;
     onmessage: ((event: { readonly data: unknown }) => void) | null = null;
     onerror: ((event: unknown) => void) | null = null;
+    onmessageerror: ((event: unknown) => void) | null = null;
     readonly sent: unknown[] = [];
     terminated = false;
     constructor(index: number) {
@@ -2487,7 +2488,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("terminates + rebuilds after 3 consecutive missed-heartbeat windows on a stuck turn", async () => {
       const lost: Array<{ index: number; actorIds: readonly string[] }> = [];
-      const { client, workers, advance, setNow } = harness(1, { heartbeatTimeoutMs: 1000, onShardLost: (index, actorIds) => lost.push({ index, actorIds }) });
+      // 🫀️ `firstTurnTimeoutMs` collapsed onto the ordinary window: this test is about the ordinary
+      // ladder, and a stuck FIRST turn is priced against its own ceiling (see the first-turn test).
+      const { client, workers, advance, setNow } = harness(1, { heartbeatTimeoutMs: 1000, firstTurnTimeoutMs: 1000, onShardLost: (index, actorIds) => lost.push({ index, actorIds }) });
       setNow(0);
       const activatePromise = client.activate("stuck", "https://x/stuck.js", [], BUDGET);
       const activateMsg = workers[0]!.sent[0] as { readonly requestId: string };
@@ -2536,6 +2539,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     type LivenessScenario = {
       readonly id: string;
       readonly heartbeatTimeoutMs: number;
+      readonly firstTurnTimeoutMs: number;
       readonly timeline: readonly { readonly atMs: number; readonly event: string }[];
       readonly expected: { readonly missesAtCheck: readonly number[]; readonly terminatedAtMs: number | null };
     };
@@ -2562,6 +2566,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
      * recorded expectations and the real client is what makes the rule trustworthy. */
     function simulateLiveness(scenario: LivenessScenario, missedLimit: number): { readonly missesAtCheck: number[]; readonly terminatedAtMs: number | null } {
       let pendingSince: number | null = null;
+      let pendingFirstTurn = false;
       let livenessAtMs = 0;
       let missed = 0;
       let lastMissAtMs = 0;
@@ -2569,15 +2574,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       let terminatedAtMs: number | null = null;
       for (const step of scenario.timeline) {
         if (terminatedAtMs !== null) break;
-        if (step.event === "pending") { pendingSince ??= step.atMs; continue; }
+        if (step.event === "pending" || step.event === "pending-first-turn") {
+          if (pendingSince === null) { pendingSince = step.atMs; pendingFirstTurn = step.event === "pending-first-turn"; }
+          continue;
+        }
         if (step.event === "idle" || step.event === "liveness") {
-          if (step.event === "idle") pendingSince = null;
+          if (step.event === "idle") { pendingSince = null; pendingFirstTurn = false; }
           livenessAtMs = step.atMs;
           missed = 0;
           lastMissAtMs = step.atMs;
           continue;
         }
-        const silent = pendingSince !== null && step.atMs - Math.max(livenessAtMs, pendingSince) > scenario.heartbeatTimeoutMs && step.atMs - lastMissAtMs >= scenario.heartbeatTimeoutMs;
+        const timeoutMs = pendingFirstTurn ? Math.max(scenario.heartbeatTimeoutMs, scenario.firstTurnTimeoutMs) : scenario.heartbeatTimeoutMs;
+        const silent = pendingSince !== null && step.atMs - Math.max(livenessAtMs, pendingSince) > timeoutMs && step.atMs - lastMissAtMs >= timeoutMs;
         if (silent) { missed += 1; lastMissAtMs = step.atMs; }
         missesAtCheck.push(missed);
         if (missed >= missedLimit) terminatedAtMs = step.atMs;
@@ -2644,12 +2653,92 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       client.disposeAll();
     });
 
+    it("surfaces a worker messageerror as a named shard loss instead of going quiet", async () => {
+      expect(describeShardMessageError(0, { type: "messageerror", data: { bad: true } })).toContain("could not be deserialized");
+      expect(isShardLostError(new Error(describeShardMessageError(0, { type: "messageerror" }).replace("shard 0 worker message error", "shard 0 worker crashed")))).toBe(true);
+      const { client, workers } = harness(1);
+      let rejection: unknown = null;
+      const activation = client.activate("mangled", "https://x/c.js", [], BUDGET).catch((error: unknown) => { rejection = error; });
+      workers[0]!.onmessageerror?.({ type: "messageerror" });
+      await activation;
+      expect(rejection).toBeInstanceOf(Error);
+      expect((rejection as Error).message).toContain("could not be deserialized");
+      client.disposeAll();
+    });
+
+    it("names the silence, the phase and every outstanding request when the watchdog kills a shard", async () => {
+      const detail = describeShardSilence({
+        shardIndex: 0,
+        nowMs: 15_003,
+        lastLivenessAtMs: 0,
+        lastHeartbeatPhase: "progress",
+        inFlight: [{ kind: "turn", actorId: "procedural#1", startedAtMs: 0, firstTurn: true }, { kind: "checkpoint", actorId: "flow#1", startedAtMs: 5_200, firstTurn: false }],
+      });
+      expect(isShardLostError(new Error(detail))).toBe(true);
+      expect(detail).toContain("silent for 15003 ms");
+      expect(detail).toContain('last reported phase "progress"');
+      expect(detail).toContain("turn (first turn) procedural#1 started 15003 ms ago");
+      expect(detail).toContain("checkpoint flow#1 started 9803 ms ago");
+      expect(describeShardSilence({ shardIndex: 2, nowMs: 9, lastLivenessAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatPhase: null, inFlight: [] })).toContain("never sent a single message");
+      // 🩺️ The live boot's whole evidence was `shard 0 terminated`. Every rejection the watchdog
+      // hands back must now carry the cause instead, or the console is back where it started.
+      const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: 1000, firstTurnTimeoutMs: 1000 });
+      setNow(0);
+      const activate = client.activate("silent", "https://x/s.js", [], BUDGET);
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent.find((message) => (message as { kind: string }).kind === "activate") as { requestId: string }).requestId, ok: true, value: undefined });
+      await activate;
+      let turnFault: unknown = null;
+      const turn = client.turn("silent", [], BUDGET).catch((error: unknown) => { turnFault = error; });
+      for (const atMs of [1001, 2002, 3003, 4004]) { setNow(atMs); client.checkHeartbeats(); }
+      await turn;
+      expect((turnFault as Error).message).toContain("terminated by the host watchdog");
+      expect((turnFault as Error).message).toContain("turn (first turn) silent started");
+      client.disposeAll();
+    });
+
+    it("prices an actor's first turn against firstTurnTimeoutMs and every later turn against the ordinary window", async () => {
+      const first = { nowMs: 20_000, oldestPendingStartedAtMs: 0, lastLivenessAtMs: 0, missedCount: 0, lastMissCountedAtMs: 0, heartbeatTimeoutMs: 5_000, firstTurnTimeoutMs: 30_000 };
+      expect(evaluateShardLiveness({ ...first, oldestPendingIsFirstTurn: true })).toEqual({ missedCount: 0, lastMissCountedAtMs: 0, terminate: false });
+      expect(evaluateShardLiveness({ ...first, oldestPendingIsFirstTurn: false }).missedCount).toBe(1);
+      const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: 1000, firstTurnTimeoutMs: 10_000 });
+      setNow(0);
+      const activate = client.activate("slowboot", "https://x/s.js", [], BUDGET);
+      const activateId = (workers[0]!.sent.find((message) => (message as { kind: string }).kind === "activate") as { requestId: string }).requestId;
+      workers[0]!.deliver({ kind: "result", requestId: activateId, ok: true, value: undefined });
+      await activate;
+      // 🫀️ First turn: 4 s of total silence — three ordinary windows, zero first-turn windows.
+      const firstTurn = client.turn("slowboot", [], BUDGET);
+      const firstTurnId = (workers[0]!.sent.at(-1) as { requestId: string }).requestId;
+      for (const atMs of [1001, 2002, 3003, 4004]) { setNow(atMs); client.checkHeartbeats(); }
+      expect(workers[0]!.terminated).toBe(false);
+      workers[0]!.deliver({ kind: "result", requestId: firstTurnId, ok: true, value: undefined });
+      await firstTurn;
+      // 🫀️ Second turn on the same activation: the one-off initialization is spent, so the same 4 s
+      // of silence is now three misses and a dead shard.
+      let lost = 0;
+      const second = client.turn("slowboot", [], BUDGET).catch(() => { lost += 1; });
+      for (const atMs of [5005, 6006, 7007, 8008]) { setNow(atMs); client.checkHeartbeats(); }
+      await second;
+      expect(workers[0]!.terminated).toBe(true);
+      expect(lost).toBe(1);
+      client.disposeAll();
+    });
+
+    it("settleFailedInstanceOpen rejects with the ORIGINAL open fault even when the cleanup throws the owner guard", async () => {
+      const cleanups: string[] = [];
+      const original = new Error("shard 0 terminated by the host watchdog: …");
+      await expect(settleFailedInstanceOpen(original, async () => { cleanups.push("ran"); throw new Error("plugin-ui.native-owner-required"); })).rejects.toBe(original);
+      expect(cleanups).toEqual(["ran"]);
+      await expect(settleFailedInstanceOpen(original, async () => { cleanups.push("clean"); })).rejects.toBe(original);
+      expect(cleanups).toEqual(["ran", "clean"]);
+    });
+
     it("agrees with the independent oracle and the fixture on every watchdog timeline", async () => {
       const fixture = await livenessFixture();
       const observed: string[] = [];
       for (const scenario of fixture.scenarios) {
         const lost: number[] = [];
-        const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: scenario.heartbeatTimeoutMs, onShardLost: (index) => lost.push(index) });
+        const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: scenario.heartbeatTimeoutMs, firstTurnTimeoutMs: scenario.firstTurnTimeoutMs, onShardLost: (index) => lost.push(index) });
         setNow(0);
         const activatePromise = client.activate("live", "https://x/live.js", [], BUDGET);
         const activateId = (workers[0]!.sent.find((message) => (message as { kind: string }).kind === "activate") as { requestId: string }).requestId;
@@ -2664,6 +2753,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           setNow(step.atMs);
           if (step.event === "pending") {
             void client.checkpoint("live").catch(() => {});
+            outstanding.push((workers[0]!.sent.at(-1) as { requestId: string }).requestId);
+            continue;
+          }
+          // 🫀️ A REAL `turn` on a freshly activated actor — the only request the client classifies as
+          // a first turn, and the one whose synchronous guest initialization provably cannot beat.
+          if (step.event === "pending-first-turn") {
+            void client.turn("live", [], BUDGET).catch(() => {});
             outstanding.push((workers[0]!.sent.at(-1) as { requestId: string }).requestId);
             continue;
           }
@@ -2821,6 +2917,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             return worker;
           },
           heartbeatTimeoutMs: 1000,
+          firstTurnTimeoutMs: 1000,
           onShardLost: (index, actorIds) => lost.push({ index, actorIds }),
         });
 

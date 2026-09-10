@@ -273,10 +273,60 @@ export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "fillBuildTick",
 ]);
 
+/** 🪟️ The shape `undeclaredActionDiagnostic` reads a session app's window kinds through — the manifest's
+ * own `WindowKindDefinition` structurally satisfies it, and nothing outside this codebase appears in it. */
+export type WindowKindActionDeclaration = { readonly id: string; readonly actions?: readonly { readonly id: string }[] };
+
+/** 🚨️ One rejected action dispatch, fully described. `onAction` drops any action no window kind of the
+ * target app declares (`WindowKindDefinition.actions`, populated by `.window_kind_actions()` /
+ * `.window_kind_action_refs()` or by `build_definition`'s unowned-action fallback) — a silent drop that
+ * makes a wired button look inert with no fault anywhere. This is that drop, typed and named. */
+export type UndeclaredActionDiagnostic = {
+  readonly appId: string;
+  readonly action: string;
+  /** 🪟️ The window kind the dispatch came from, when the host could resolve one — `null` for a
+   * chrome/navbar/keybinding dispatch that belongs to no window instance. */
+  readonly windowKindId: string | null;
+  /** 🪟️ Every window kind of the app, so the message says what WAS on offer, not just what was not. */
+  readonly windowKindIds: readonly string[];
+  readonly message: string;
+};
+
+/** 🚨️ Decides whether one dispatch is an undeclared-action drop, and describes it. Returns `null` when the
+ * action is declared on ANY window kind of the app (the gate is app-wide on purpose: a context menu, a
+ * palette entry or a keybinding may dispatch a window-owned action from anywhere) or when it is one of the
+ * framework's own reserved verbs. Pure, so the message is testable without a session
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function undeclaredActionDiagnostic(appId: string, action: string, windowKinds: readonly WindowKindActionDeclaration[], windowKindId?: string | null): UndeclaredActionDiagnostic | null {
+  if (FRAMEWORK_RESERVED_ACTION_IDS.has(action)) return null;
+  if (windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action))) return null;
+  const windowKindIds = windowKinds.map((kind) => kind.id);
+  const from = windowKindId ? ` dispatched from window kind "${windowKindId}"` : "";
+  return {
+    appId,
+    action,
+    windowKindId: windowKindId ?? null,
+    windowKindIds,
+    message: `semio: app "${appId}" dropped action "${action}"${from}: no window kind declares it (window kinds: ${windowKindIds.join(", ") || "none"}). Declare it with .window_kind_actions()/.window_kind_action_refs() on the window that dispatches it.`,
+  };
+}
+
 /** 🧭️ Builds the `noteShellCommand` action descriptor `noteShellCommand` (the component helper) dispatches
  * through the standard `onAction` funnel — pure so it's testable without a session/component. */
 export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>): ActionDescriptor {
   return { controllerId, action: NOTE_SHELL_COMMAND_ACTION_ID, args: { commandId, label, ...(detail ? { detail } : {}) } };
+}
+
+/** 🎨️ The program action the navbar example picker dispatches. */
+export const SET_ACTIVE_EXAMPLE_ACTION_ID = "setActiveExample";
+
+/** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
+ * `onAction` funnel — pure so the dispatched id is testable without a session/component. The picker's own
+ * `SET_ACTIVE_EXAMPLE_ID` reducer write only moves the LABEL; this descriptor is the only thing that
+ * reaches the program, and an empty selection means "the app's default document", never "no argument"
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function buildActiveExampleAction(controllerId: string, exampleId: string): ActionDescriptor {
+  return { controllerId, action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: exampleId || "" } };
 }
 
 /** 🧭️ Action ids the tutorial recorder never captures (see `onAction`'s recorder tap) — telemetry/chrome
@@ -385,6 +435,14 @@ export function useUIHistory(initialUri = "/", syncBrowser = false) {
   return { uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate, syncUri };
 }
 
+export const DOWNLOAD_MEDIA_EXPORT_REVOKE_MS = 10_000;
+
+/** @emoji 📥️ Guest `encoding` is only a segmented-download marker when it is a string prefix. */
+export function mediaExportEncodingText(encoding: unknown): string | undefined {
+  return typeof encoding === "string" ? encoding : undefined;
+}
+
+/** @emoji 📥️ Host download of guest `download-media-export` — the anchor must be in the document and the object URL must outlive the click or the browser drops the file. */
 export function downloadMediaExport(filename: string, mimeType: string, data: string, encoding?: string): void {
   if (typeof document === "undefined") return;
   const payload = encoding === "base64" ? Uint8Array.from(atob(data), (char) => char.charCodeAt(0)) : data;
@@ -393,8 +451,13 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
 }
 
 export {
@@ -2465,6 +2528,14 @@ export function isRevealCutoffHidden(instance: Pick<WorldInstanceRecord, "reveal
   const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID);
   return cutoff !== undefined && instance.revealIndex >= cutoff;
 }
+
+/** @emoji 🖱️ Overlay chrome for a world-3d marquee method. `rectangle` draws a box; `lasso` draws a
+ * polygon; `pick` has no drag chrome. */
+export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" | null {
+  if (method === "lasso") return "polygon";
+  if (method === "rectangle") return "rect";
+  return null;
+}
 //#endregion RevealCutoffStore
 
 /**
@@ -2496,6 +2567,8 @@ export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayM
     disposeTimer();
   };
 }
+
+export { beginIsolatedJobDrive, endIsolatedJobDrive, requestIsolatedJobUiPoll, takeIsolatedJobUiPoll, isolatedJobDriveIsActive, subscribeIsolatedJobDrive, isolatedJobDriveSnapshot } from "../🔌️PluginRuntime/🟦️.tsx";
 
 /**
  * @emoji 🎯️ Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one
@@ -3185,6 +3258,32 @@ export function resolveKeybindingIntent(definition: Pick<ActionDefinition, "id" 
     if (unresolvedActionArgs(definition.args, effective).length === 0) return { kind: "execute", actionId: definition.id, args: effective };
   }
   return { kind: "open", actionId: definition.id };
+}
+
+/** 📋 Fragment carried by a guest `clipboardWrite` host effect, or undefined when the effect is not that variant. */
+export function clipboardWriteFragmentFromEffect(effect: unknown): unknown | undefined {
+  if (effect === null || typeof effect !== "object" || !("clipboardWrite" in effect)) return undefined;
+  const write = (effect as { clipboardWrite?: { fragment?: unknown } }).clipboardWrite;
+  return write?.fragment;
+}
+
+export type ClipboardActionDescriptor = { readonly action: string; readonly args?: unknown };
+
+/** 📋 Named `fragment` on a paste descriptor, when the args object carries one. */
+export function pasteArgsFragment(action: { readonly args?: unknown }): unknown | undefined {
+  const args = action.args;
+  if (args === undefined || args === null || typeof args !== "object" || Array.isArray(args)) return undefined;
+  if (!("fragment" in args)) return undefined;
+  return (args as { fragment?: unknown }).fragment;
+}
+
+/** 📋 Injects a host-retained copy fragment onto paste when `args.fragment` is missing. */
+export function pasteActionWithRetainedFragment<T extends ClipboardActionDescriptor>(action: T, fragment: unknown | undefined): T {
+  if (action.action !== "paste" || fragment === undefined) return action;
+  if (pasteArgsFragment(action) !== undefined) return action;
+  const args = action.args;
+  const base = args !== undefined && typeof args === "object" && args !== null && !Array.isArray(args) ? (args as Record<string, unknown>) : {};
+  return { ...action, args: { ...base, fragment } };
 }
 
 /** 🧰️ Pure P5 activation decision: an empty request, or re-requesting the already-active utility, deactivates (null); otherwise the requested utility becomes active. */
@@ -3880,7 +3979,8 @@ export function buildToolTabs(tools: readonly ResolvedToolDefinition[], toolMeas
       name: tool.label,
       tree: {
         resolveTree: () => {
-          const tree = buildToolTree(tool, toolMeasuresByToolIdRef.current[tool.id], onAction);
+          const measures = toolMeasuresByToolIdRef.current[tool.id];
+          const tree = buildToolTree(tool, measures, onAction);
           return { sections: tree.sections, sortableSections: tree.sortableSections };
         },
       },
@@ -3924,6 +4024,44 @@ export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
   if (!tabId?.startsWith("tool.")) return null;
   const toolId = tabId.slice("tool.".length);
   return toolId.length > 0 ? toolId : null;
+}
+
+/**
+ * ♻️ Identity the desktop and mobile Tool panels share so a late `framework.section.tools` admission
+ * re-resolves lazy `resolveTree` sources. `buildToolTabs` keeps tab object identity across measure
+ * ticks (the tree reads a ref); {@link PanelTreeUnitsPane} is memoized, so without this revision the
+ * Fill body stays the empty section from the first resolve after the guest's packed tools carrier lands.
+ */
+export function toolPanelTreeContentRevision<TStaged>(
+  activeToolId: string | null,
+  toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>,
+  actionPaneStagedArgsByKey: TStaged,
+): { readonly activeToolId: string | null; readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>; readonly actionPaneStagedArgsByKey: TStaged } {
+  return { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey };
+}
+
+/**
+ * 🛠️ One press that opens the Tool category must land on a tool leaf (remembered, else the first
+ * declared tool). `progressPanelTabSelection` does not auto-descend a branch with no memory; the
+ * closed-panel open path used to swallow that press entirely, so Fill never became the selected leaf.
+ */
+export function toolCategoryOpenPath(path: readonly string[], memory: Readonly<Record<string, string>>, toolTabIds: readonly string[]): readonly string[] {
+  if (path.length !== 1 || path[0] !== FRAMEWORK_CATEGORY_TOOL_ID || toolTabIds.length === 0) return path;
+  const remembered = memory[FRAMEWORK_CATEGORY_TOOL_ID];
+  const child = remembered && toolTabIds.includes(remembered) ? remembered : toolTabIds[0]!;
+  return [...path, child];
+}
+
+/**
+ * 🛠️ A re-press of a selected `tool.<id>` leaf while that tool is inactive must arm it, not collapse
+ * the leaf. `progressPanelTabSelection` treats the press as an active-segment re-press and walks up;
+ * the host keeps the previous path and returns the tool id that `setActiveTool` must receive.
+ */
+export function toolLeafInactiveRepress(previousPath: readonly string[], nextPath: readonly string[], activeToolId: string | null): { readonly path: readonly string[]; readonly toolId: string } | null {
+  const previousToolId = toolIdFromPanelTabId(previousPath[previousPath.length - 1]);
+  const nextToolId = toolIdFromPanelTabId(nextPath[nextPath.length - 1]);
+  if (!previousToolId || nextToolId || (activeToolId ?? null) === previousToolId) return null;
+  return { path: previousPath, toolId: previousToolId };
 }
 //#endregion 🛠️ToolRegistry
 
@@ -4081,7 +4219,10 @@ export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: P
   applyUiRefreshSectionsToCache(cache, "panel", response.panels);
   if (response.engagements?.value !== undefined) cache.set("engagements", { hash: response.engagements.hash, value: response.engagements.value });
   if (response.measures?.value !== undefined) cache.set("measures", { hash: response.measures.hash, value: response.measures.value });
-  if (response.tools?.value !== undefined) cache.set("tools", { hash: response.tools.hash, value: response.tools.value });
+  if (response.tools?.value !== undefined) {
+    cache.set("tools", { hash: response.tools.hash, value: response.tools.value });
+    const tools = response.tools.value as Record<string, unknown> | undefined;
+  }
   if (response.catalogue?.value !== undefined) cache.set("catalogue", { hash: response.catalogue.hash, value: response.catalogue.value });
   if (response.labels?.value !== undefined) cache.set("labels", { hash: response.labels.hash, value: response.labels.value });
 }

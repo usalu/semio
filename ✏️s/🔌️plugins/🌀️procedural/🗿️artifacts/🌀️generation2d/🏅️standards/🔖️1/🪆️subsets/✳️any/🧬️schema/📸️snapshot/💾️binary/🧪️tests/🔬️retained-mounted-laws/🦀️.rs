@@ -70,6 +70,8 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     assert_eq!(actual.fixture.synapses.last(), expected.fixture.synapses.last(), "typed synapse owner must retain the exact non-empty appended row");
     assert_eq!(synapse_digest(actual.fixture.synapses.last().expect("typed retained synapse")), synapse_digest(expected.fixture.synapses.last().expect("expected retained synapse")));
     assert_eq!(actual, expected, "all typed snapshot owners must round-trip exactly");
+    actual.retire_cold();
+    expected.retire_cold();
     close(&mut session);
 }
 

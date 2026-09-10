@@ -3,6 +3,7 @@
   "requestId": 41,
   "requestIds": ["1", "9007199254740993", "18446744073709551615"],
   "extensionId": "flow-extension-text",
+  "foreignAddress": "text",
   "capability": "evaluate",
   "request": { "operatorId": "text.upper", "inputJson": "{\"text\":\"hi\"}" },
   "genericRequests": [

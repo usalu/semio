@@ -106,6 +106,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../🧪️tests/👁️preview/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

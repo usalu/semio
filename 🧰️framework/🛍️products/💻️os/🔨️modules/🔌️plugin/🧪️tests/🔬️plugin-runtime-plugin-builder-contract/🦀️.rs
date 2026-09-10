@@ -1419,7 +1419,8 @@ mod plugin_builder_contract_tests {
         let mut receipts = 0;
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, more) = super::plugin_continue_typed_operations(&runtime).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime).await.unwrap();
+            let more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
                 if let Some(page) = output.typed_operation_result {
@@ -1506,7 +1507,8 @@ mod plugin_builder_contract_tests {
                     pump.faulted
                 );
             }
-            let (output, mut more) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
+            let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
                 if let Some(page) = output.typed_operation_result {
@@ -2461,6 +2463,10 @@ mod plugin_builder_contract_tests {
     }
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs"));
+
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs"));
+
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs"));
 
     async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAssemblyError> {
         Plugin::<TestRuntimeApps>::builder("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
@@ -3494,6 +3500,75 @@ mod plugin_builder_contract_tests {
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_invocation_does_not_require_window_ownership() {
+        use semio_framework::manifest::{ActionAddress, ActionInvocation};
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        let invocation = ActionInvocation {
+            address: ActionAddress {
+                plugin_id: "test".into(),
+                app_id: TestApp::<false>::APP_ID.into(),
+                mode_id: "edit".into(),
+                window_kind_id: "window-without-undo".into(),
+                window_instance_id: "main-instance".into(),
+                action_id: "undo".into(),
+            },
+            arguments: Default::default(),
+        };
+        let result = app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("reserved undo without window ownership");
+        assert!(result.mutations.is_empty());
+        for _ in 0..100_000 {
+            match app.close_step(1, 4096).expect("reserved undo fixture closes") {
+                crate::app::PluginCloseStep::Complete => break,
+                crate::app::PluginCloseStep::Pending { .. } => {}
+                other => panic!("reserved undo fixture close stalled: {other:?}"),
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_actor_ingress_admits_undeclared_window_kind() {
+        use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewWindowInstance};
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        app.test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .await
+            .expect("seed document edit");
+        assert_eq!(app.test_snapshot().await.count, 1);
+        let before = app.test_store().await.applied_edit_ids().len();
+        let view = ViewModel {
+            active_mode_id: Some("edit".into()),
+            window_instances: vec![ViewWindowInstance { id: "world-1".into(), window_kind_id: "world".into() }],
+            ..Default::default()
+        };
+        let invocation = ActionInvocation {
+            address: ActionAddress {
+                plugin_id: "test".into(),
+                app_id: TestApp::<false>::APP_ID.into(),
+                mode_id: "edit".into(),
+                window_kind_id: "window-without-undo".into(),
+                window_instance_id: "missing-instance".into(),
+                action_id: "undo".into(),
+            },
+            arguments: Default::default(),
+        };
+        assert!(super::addressed_action_view(&view, &invocation).is_err(), "strict window projection rejects a missing instance");
+        let admitted = super::admit_addressed_action_view(&view, &invocation).expect("reserved undo is admitted without window ownership");
+        let meta = ActionMeta { view_state: Some(admitted), ..meta() };
+        let result = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta)).expect("actor reserved undo");
+        assert!(result.mutations.is_empty());
+        assert_eq!(app.test_snapshot().await.count, 0, "history order must regress through actor ingress");
+        assert!(app.test_store().await.applied_edit_ids().len() < before);
+        for _ in 0..100_000 {
+            match app.close_step(1, 4096).expect("actor reserved undo fixture closes") {
+                crate::app::PluginCloseStep::Complete => break,
+                crate::app::PluginCloseStep::Pending { .. } => {}
+                other => panic!("actor reserved undo fixture close stalled: {other:?}"),
+            }
+        }
+    }
+
     //#region 🔖️CommandLogTests
     #[semio_framework_async_macros::async_test]
     async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
@@ -3684,6 +3759,39 @@ mod plugin_builder_contract_tests {
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
         assert!(description.ends_with(UI_TEXT_CLIP_MARK));
+    }
+
+    /// 🏷️ A command label is authored copy that can carry the whole argument form of an edit; a folded
+    /// row appends ` xN` on top. Both must clip on a char boundary instead of failing the admission of
+    /// every panel in the refresh (seen 2026-09-10: `duplicateSelection` on the puzzle 3d Perspective
+    /// window failed `refreshUi` with `history-panel.command-label`).
+    #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_clips_an_oversized_command_label_and_its_folded_count() {
+        let long_label = format!("Duplicate {}", "seed-left-001 ".repeat(64));
+        let entry = |seq: u64, count: u32| CommandView {
+            seq,
+            action_id: "duplicateSelection".into(),
+            label: long_label.clone(),
+            kind: ActionKind::Mutation,
+            timestamp: "0".into(),
+            edit_id: Some("e1".into()),
+            config_edit_id: None,
+            child_edit_ids: Vec::new(),
+            op_lines: Vec::new(),
+            applied: true,
+            revertible: true,
+            count,
+            inverse: None,
+        };
+        let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
+        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("an oversized command label must not fail admission");
+        for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
+            let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
+            let label = props.label.0.as_str();
+            assert!(label.starts_with("Duplicate seed-left-001 "), "{label}");
+            assert!(label.ends_with(expected_tail), "{label}");
+            assert!(label.len() <= UI_TEXT_MAX_BYTES, "{label}");
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4102,18 +4210,71 @@ mod plugin_builder_contract_tests {
                 let value = node["component"]["value"].as_str().unwrap();
                 assert!(value.len() <= UI_TEXT_MAX_BYTES);
                 chunks.push(value.to_string());
+                if let Some(attributes) = node["component"]["dataAttributes"].as_object() {
+                    let mut keys: Vec<&String> = attributes.keys().collect();
+                    keys.sort();
+                    for key in keys {
+                        let attr = attributes[key].as_str().unwrap();
+                        assert!(attr.len() <= UI_TEXT_MAX_BYTES);
+                        chunks.push(attr.to_string());
+                    }
+                }
             }
             assert!(node["children"].as_array().unwrap().len() <= UI_BUILT_CHILDREN_MAX);
             for child in node["children"].as_array().unwrap().iter().rev() {
                 frontier.push((child.clone(), level + 1));
             }
         }
-        assert!(depth > 1, "a payload past one node of children must page into a nested carrier");
+        let pack = UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS);
+        assert_eq!(testkit::fixture_carrier_text(&projected), payload);
         assert_eq!(chunks.concat(), payload);
-        eprintln!("[DEBUG] section carrier paged {} bytes into {} bounded text leaves at depth {depth}", payload.len(), chunks.len());
+        let leaves = count_projected_text_leaves(&projected);
+        assert!(leaves <= payload.len().div_ceil(pack).max(1) + 2, "packed leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", payload.len());
+        assert!(count_projected_nodes(&projected) <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a reserved measures carrier must fit the document node table");
+        eprintln!("[DEBUG] section carrier packed {} bytes into {} text leaves at depth {depth} ({} nodes)", payload.len(), chunks.len(), count_projected_nodes(&projected));
+    }
+
+    /// 🧩️ Pins the pack this producer writes against the language-neutral fixture the TypeScript
+    /// reader (`sectionValueFromBuiltNode` in `📺️renderer/…/🔌️PluginRuntime/🟦️.tsx`) reassembles from —
+    /// a reader that read only `value` handed `JSON.parse` an exact 512-byte prefix, see ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END `📓️json-512-truncation-2026-09-10.md`.
+    #[semio_framework_async_macros::async_test]
+    async fn packed_section_carrier_matches_the_neutral_fixture_slices() {
+        let fixture: Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️paged-text-carrier/🔣️.json")).unwrap();
+        assert_eq!(fixture["textMaxBytes"].as_u64().unwrap() as usize, UI_TEXT_MAX_BYTES);
+        assert_eq!(fixture["packSlices"].as_u64().unwrap() as usize, 1 + UI_FIXED_LIST_ITEMS);
+        let payload = fixture["payload"].as_str().unwrap();
+        assert_eq!(payload.len(), fixture["payloadBytes"].as_u64().unwrap() as usize);
+        let slices: Vec<&str> = fixture["slices"].as_array().unwrap().iter().map(|slice| slice.as_str().unwrap()).collect();
+        assert_eq!(slices.concat(), payload);
+        assert!(slices.len() > 1 && slices.len() <= 1 + UI_FIXED_LIST_ITEMS, "the fixture must be one packed leaf past a single slice");
+        let section = UiRefreshSection::from_body_key(fixture["rootKey"].as_str().unwrap()).unwrap();
+        let projected: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(section_component_tree(section, payload).unwrap()).unwrap()).unwrap();
+        assert_eq!(projected["key"].as_str().unwrap(), fixture["rootKey"].as_str().unwrap());
+        assert_eq!(count_projected_text_leaves(&projected), 1, "a payload inside one pack must ride on exactly one leaf");
+        let leaf = &projected["children"][0];
+        assert_eq!(leaf["component"]["value"].as_str().unwrap(), slices[0]);
+        let attributes = leaf["component"]["dataAttributes"].as_object().unwrap();
+        assert_eq!(attributes.len(), slices.len() - 1);
+        for (offset, slice) in slices.iter().enumerate().skip(1) {
+            assert_eq!(attributes[&format!("{offset:02}")].as_str().unwrap(), *slice);
+        }
+        assert_eq!(testkit::fixture_carrier_text(&projected), payload);
+        eprintln!("[DEBUG] neutral fixture pinned: {} bytes packed into 1 value slice and {} dataAttributes slices", payload.len(), slices.len() - 1);
     }
 
     //#region 🚚️World3dSceneLaneCarriers
+
+    /// 🧱 Presented-node census of a projected builder tree (surface + every descendant).
+    fn count_projected_nodes(node: &Value) -> usize {
+        1 + node["children"].as_array().map(|children| children.iter().map(count_projected_nodes).sum()).unwrap_or(0)
+    }
+
+    fn count_projected_text_leaves(node: &Value) -> usize {
+        let here = usize::from(node["component"]["type"] == "text");
+        here + node["children"].as_array().map(|children| children.iter().map(count_projected_text_leaves).sum()).unwrap_or(0)
+    }
+
     /// 🚚️ Projects one built surface node and returns `(projection, lane subtree by carrier key)`.
     fn project_scene_surface(node: crate::app::BuiltNode) -> (Value, BTreeMap<String, Value>) {
         let projection: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(crate::app::built_to_component_tree(node)).unwrap()).unwrap();
@@ -4218,8 +4379,9 @@ mod plugin_builder_contract_tests {
         let scene = semio_framework_ui_scene::World3dScene::base("{}".into(), "[]".into(), instances.clone(), "{}".into());
         let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
         let (leaves, depth) = assert_lane_carrier(lanes.get(semio_framework_ui_scene::World3dSceneLane::Instances.body_key()).unwrap(), &instances);
-        assert!(depth > 1, "a lane past one node of children must page into a nested carrier");
-        eprintln!("[DEBUG] one {}-byte instances lane paged into {leaves} bounded text leaves at depth {depth}", instances.len());
+        let pack = UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS);
+        assert!(leaves <= instances.len().div_ceil(pack).max(1) + 2, "packed instances leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", instances.len());
+        eprintln!("[DEBUG] one {}-byte instances lane packed into {leaves} text leaves at depth {depth}", instances.len());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4230,6 +4392,28 @@ mod plugin_builder_contract_tests {
         assert_eq!(projection["component"]["type"], "surface");
         assert_eq!(testkit::decode_fixture_scene_with_lanes::<semio_framework_ui_scene::TableScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn nakagin_scale_world3d_surface_fits_document_node_cap() {
+        let scene = oversized_world_scene("{}", r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#);
+        let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let (projection, _) = project_scene_surface(node);
+        let nodes = count_projected_nodes(&projection);
+        assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");
+        eprintln!("[DEBUG] Nakagin-scale world-3d surface presented {nodes} nodes (cap {})", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_100kib_measures_section_fits_document_node_cap() {
+        let payload = serde_json::to_string(&(0..2_400).map(|index| (format!("window-{index:04}"), format!("measure-{index:04}"))).collect::<BTreeMap<_, _>>()).unwrap();
+        assert!(payload.len() > UI_TEXT_MAX_BYTES * 128, "unpacked 512-byte leaves of this payload would overflow UI_DOCUMENT_NODES");
+        let tree = section_component_tree(UiRefreshSection::Measures, &payload).unwrap();
+        let projected: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
+        let nodes = count_projected_nodes(&projected);
+        assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a 100 KiB measures section presented {nodes} nodes over UI_DOCUMENT_NODES");
+        eprintln!("[DEBUG] 100 KiB measures section presented {nodes} nodes for {} bytes", payload.len());
+    }
+
     //#endregion 🚚️World3dSceneLaneCarriers
 
     #[semio_framework_async_macros::async_test]

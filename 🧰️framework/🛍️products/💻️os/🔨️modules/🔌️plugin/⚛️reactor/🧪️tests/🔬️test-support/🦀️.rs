@@ -24,7 +24,7 @@ pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
         |result| {
             receipt = result.ui_patch_receipt;
             if late_clock {
-                std::thread::sleep(std::time::Duration::from_millis(9));
+                turn::charge_turn_execution_us(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US);
                 Ok(())
             } else {
                 Err(reactor_close_fault("injected output conversion failure"))

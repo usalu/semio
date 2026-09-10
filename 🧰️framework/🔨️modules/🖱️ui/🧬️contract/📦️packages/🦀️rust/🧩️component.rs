@@ -222,6 +222,25 @@ pub struct TextProps {
     pub data_attributes: Option<crate::UiFixedMap<crate::UiText>>,
 }
 
+/// 🧩️ Concatenates one packed text leaf: `value` then attribute values in the caller's key order.
+pub fn packed_text_leaf(value: &str, attribute_values: impl IntoIterator<Item = impl AsRef<str>>) -> String {
+    let mut payload = String::from(value);
+    for attribute in attribute_values {
+        payload.push_str(attribute.as_ref());
+    }
+    payload
+}
+
+impl TextProps {
+    /// 🧩️ Inverse of the 33-slice pack: `value` then ascending `data_attributes`.
+    pub fn packed_payload(&self) -> String {
+        match &self.data_attributes {
+            Some(attributes) => packed_text_leaf(self.value.0.as_str(), attributes.iter().map(|(_, value)| value.as_str())),
+            None => packed_text_leaf(self.value.0.as_str(), std::iter::empty::<&str>()),
+        }
+    }
+}
+
 /// 🔘️ Props for `Component::Button`. `action` moved to the record's `bindings` (keyed by
 /// `Trigger::Activate`); `style` moved to the record's `crate::StyleSpec`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

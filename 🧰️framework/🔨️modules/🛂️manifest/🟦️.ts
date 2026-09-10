@@ -806,6 +806,63 @@ export type PluginViewState = {
 
 export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
 
+//#region 📏️PublicInvocationCapacity
+/** @emoji 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy
+ * on the way into a plugin process — `🎛️public-invocation/🧬️schema/🔣️.json`'s `maxBodyBytes`, the
+ * Rust mirror being `PUBLIC_INVOCATION_BODY_BYTES` (`🛂️manifest/🦀️.rs`). */
+export const PUBLIC_INVOCATION_BODY_BYTES = 262_144;
+
+/** @emoji 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`, counted as
+ * escaped bytes minus their leading backslashes.
+ *
+ * This is the bound that actually sizes a host→guest push, and NO tool execution contract can widen
+ * it: `validate_public_json_envelope` runs before the addressed tool's own `max_raw_wire_bytes` is
+ * ever consulted. Any payload larger than this must be paged by its producer — see
+ * {@link publicInvocationStringPages}. */
+export const PUBLIC_INVOCATION_STRING_BYTES = 4_096;
+
+/** @emoji 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`. */
+export const PUBLIC_INVOCATION_DEPTH = 64;
+
+/** @emoji 📐️ What ONE character of a raw string costs against {@link PUBLIC_INVOCATION_STRING_BYTES}
+ * once the JSON encoder has written it — the exact accounting the guest performs, which skips a
+ * leading `\` and counts every byte after it. Non-ASCII is charged at its `\uXXXX` escape (five per
+ * UTF-16 unit), never at its shorter raw UTF-8 form, so a page cut with this function is admitted
+ * whether or not the encoder escapes above U+007F. */
+export function publicInvocationCharCost(character: string): number {
+  const code = character.codePointAt(0) ?? 0;
+  if (character === '"' || character === "\\" || character === "\n" || character === "\r" || character === "\t" || code === 0x08 || code === 0x0c) return 1;
+  if (code < 0x20) return 5;
+  if (code < 0x80) return 1;
+  return (code > 0xffff ? 2 : 1) * 5;
+}
+
+/** @emoji 📄️ Cuts one oversized string into the page run a public invocation can actually carry —
+ * each page filled to, and never past, {@link PUBLIC_INVOCATION_STRING_BYTES} as
+ * {@link publicInvocationCharCost} measures it, split only on code-point boundaries.
+ *
+ * The twin of `public_invocation_string_pages` (`🛂️manifest/🦀️.rs`); the two must cut the same
+ * payload identically. An empty input yields one empty page, so a producer always sends at least one
+ * addressed page. */
+export function publicInvocationStringPages(text: string): readonly string[] {
+  const pages: string[] = [];
+  let page = "";
+  let cost = 0;
+  for (const character of text) {
+    const next = publicInvocationCharCost(character);
+    if (cost + next > PUBLIC_INVOCATION_STRING_BYTES) {
+      pages.push(page);
+      page = "";
+      cost = 0;
+    }
+    page += character;
+    cost += next;
+  }
+  pages.push(page);
+  return pages;
+}
+//#endregion 📏️PublicInvocationCapacity
+
 /** 🪟️ Admits an explicit host projection before it crosses a process boundary. */
 export function parseResolvedPluginViewState(value: unknown): ResolvedPluginViewState {
   const object = (input: unknown): Record<string, unknown> => {
@@ -854,6 +911,15 @@ export function windowViewContext(view: PluginViewState, windowId: string): Plug
 /** 📌️ Projects app-level panels without binding their controls to a window. */
 export function panelViewContext(view: PluginViewState): PluginViewState {
   return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined };
+}
+
+/** 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
+ * Windowed `handleAction` must use this — {@link windowViewContext} alone keeps a stale/absent
+ * session `activeToolId`, so retained tool jobs (`fillBuildTick`) never see the armed tool. */
+export function hostArmedViewContext(view: PluginViewState, hostActiveToolId: string | null | undefined, windowId?: string): PluginViewState | undefined {
+  const activeToolId = hostActiveToolId ?? undefined;
+  const armed = view.activeToolId === activeToolId ? view : { ...view, activeToolId };
+  return windowId ? windowViewContext(armed, windowId) : panelViewContext(armed);
 }
 
 /** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */

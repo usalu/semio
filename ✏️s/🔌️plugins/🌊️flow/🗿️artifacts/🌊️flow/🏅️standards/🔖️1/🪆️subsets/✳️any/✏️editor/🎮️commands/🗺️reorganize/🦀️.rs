@@ -3,6 +3,7 @@
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::host_operations;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -15,8 +16,8 @@ pub const REORGANIZE_OPTIONS_JSON: &str = r#"{"orientation":"leftRight"}"#;
 
 /// 🔄️ The reorganize document operations, extracted so the extension action can reuse them without
 /// round-tripping through the command enum.
-pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
-    host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
+pub fn reorganize_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Vec<FlowMutation> {
+    host_operations(snapshot, config, session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
 }
 //#endregion 🔖️Reorganize
 
@@ -24,7 +25,7 @@ pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigV
 pub struct Reorganize {}
 
 pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(reorganize_operations(doc, cfg, session)))
+    Ok(Emit::mutations(reorganize_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)))
 }
 
 //#region 🧪️Tests

@@ -2284,6 +2284,167 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
       const receipt = await native.answer(native.lease.submitUiAcknowledgement(source, token, native.budget), { status: { tag: "idle" } }); expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(true); expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(false); expect(finish(intake)).toBe("ready"); const view = intake.takeSurface()!; expect(view.view).toMatchObject(produce({ root: fields.root, revision: 1 }, () => {})); expect(intake.takeSurface()).toBeNull(); close(intake); expect(owner.terminalIsEmpty()).toBe(false); expect(view.view.root).toBe(fields.root); close(owner); close(foreign); native.client.disposeAll();
     });
 
+    it("OwnedIntake drives a Nakagin-scale paged scene-lane surface patch to acknowledgement inside the credited budget", async () => {
+      const { OwnedUiPatchIntake, retainedUiIntakeStepCeiling, RETAINED_UI_INTAKE_STEPS_PER_NODE } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+      const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { leafBytes, childrenMax, measuredFaultBytes } = contract.carrier;
+      const nodes: UiNodeRecord[] = []; const laneRoots: number[] = []; const laneRecords: UiNodeRecord[][] = []; let nextId = 1; const laneBytes = Math.ceil(measuredFaultBytes / contract.lanes.length);
+      for (const lane of contract.lanes) {
+        const own: UiNodeRecord[] = []; let level: number[] = [];
+        for (let offset = 0; offset < laneBytes; offset += leafBytes) { const id = nextId++; own.push({ ...leaf(id, `c${level.length}`), component: { type: "text", value: "x".repeat(Math.min(leafBytes, laneBytes - offset)), emphasize: null, dataAttributes: null } }); level.push(id); }
+        for (let generation = 0; level.length > childrenMax; generation += 1) { const paged: number[] = []; for (let start = 0; start < level.length; start += childrenMax) { const id = nextId++; own.push(container(id, `p${generation}-${paged.length}`, level.slice(start, start + childrenMax))); paged.push(id); } level = paged; }
+        const laneRoot = nextId++; own.push(container(laneRoot, lane.bodyKey, level)); laneRoots.push(laneRoot); nodes.push(...own); laneRecords.push(own);
+      }
+      const surfaceRoot = nextId++; nodes.push(container(surfaceRoot, "puzzle3d-main-perspective", laneRoots));
+      const ops = [...nodes.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), { tag: "set-root", val: BigInt(surfaceRoot) }];
+      const carried = nodes.reduce((total, node) => total + (node.component.type === "text" ? node.component.value.length : 0), 0);
+      expect(carried).toBeGreaterThanOrEqual(measuredFaultBytes); expect(ops.length).toBeLessThanOrEqual(DEFAULT_UI_DOCUMENT_LIMITS.maxPatchOps);
+      const native = await nativeInstanceFixture(); const owner = new OwnedUiInstance(native.activation, native.lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner);
+      const budget = retainedUiIntakeStepCeiling(DEFAULT_UI_DOCUMENT_LIMITS); const uiGrant = { maxItems: 256, maxBytes: 65_536 };
+      const drive = async (operations: readonly unknown[], baseRevision: number, revision: number) => {
+        const source = await native.source(operations, baseRevision, revision); const intake = new OwnedUiPatchIntake(owner, source);
+        let phase = ""; let samePhaseRun = 0; let longestSamePhaseRun = 0; let idleRun = 0; let longestIdleRun = 0; let steps = 0; let validation = 0;
+        while (!intake.peekAcknowledgement()) {
+          steps += 1; expect(steps, `${phase} exhausted the credited budget`).toBeLessThanOrEqual(budget);
+          const current = intake.advance(uiGrant); expect(current.kind, intake.failure ?? current.phase).not.toBe("rejected");
+          if (current.phase === "validation") validation += 1;
+          if (current.kind === "blocked") expect(intake.peekAcknowledgement(), current.phase).not.toBeNull();
+          if (current.phase === phase) samePhaseRun += 1; else { phase = current.phase; samePhaseRun = 1; }
+          longestSamePhaseRun = Math.max(longestSamePhaseRun, samePhaseRun);
+          if (current.kind === "pending" && current.bytes === 0 && current.items === 0) idleRun += 1; else idleRun = 0;
+          longestIdleRun = Math.max(longestIdleRun, idleRun);
+        }
+        const token = intake.peekAcknowledgement()!; const receipt = await native.answer(native.lease.submitUiAcknowledgement(source, token, native.budget), { status: { tag: "idle" } });
+        expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(true); expect(finish(intake)).toBe("ready"); const view = intake.takeSurface()!;
+        intake.beginClose(); let closeSteps = 0;
+        while (!intake.terminalIsEmpty()) { closeSteps += 1; expect(closeSteps).toBeLessThan(500_000); expect(intake.closeStep(uiGrant).kind, intake.failure ?? "intake-close").not.toBe("rejected"); }
+        expect(closeSteps, "PluginRuntime retires an intake within PLUGIN_UI_CONTINUATION_LIMIT steps or throws plugin-ui.intake-close-budget-exhausted").toBeLessThanOrEqual(4_096);
+        return { steps, longestSamePhaseRun, longestIdleRun, validation, view };
+      };
+      const first = await drive(ops, 0, 1);
+      expect(first.longestSamePhaseRun, "a phase-name-only progress guard would reject this patch").toBeGreaterThan(4_096);
+      expect(first.longestIdleRun, "the intake's own byte-aware progress detector must never fire").toBeLessThan(32);
+      expect(first.steps, "a first publication mints every node and re-roots the surface, so it pays the whole-graph walk").toBeLessThanOrEqual(retainedUiIntakeStepCeiling({ maxNodes: nodes.length })); expect(first.steps).toBeGreaterThan(RETAINED_UI_INTAKE_STEPS_PER_NODE);
+      expect(first.validation, "re-rooting the surface must fall to the authoritative whole-graph walk").toBeGreaterThan(10 * nodes.length);
+      expect(first.view.view.root).toBe(surfaceRoot); expect(first.view.view.revision).toBe(1); const published = first.view.view.hash;
+      const relane = laneRecords[0]!.map((node) => (node.component.type === "text" ? { ...node, component: { ...node.component, value: "y".repeat(node.component.value.length) } } : node));
+      const second = await drive(relane.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), 1, 2);
+      expect(second.view.view.revision).toBe(2); expect(second.view.view.root).toBe(surfaceRoot); expect(second.view.view.hash).not.toBe(published);
+      expect(second.validation, "a same-shape delta re-checks only the records it replaced").toBeLessThan(40 * relane.length);
+      expect(second.steps * 10, "one lane of an unchanged 145-node document must cost a delta, not a document").toBeLessThan(first.steps);
+      close(owner); native.client.disposeAll();
+    });
+
+    /** 🧩️ The law above builds UNPACKED `leafBytes` leaves, which is what a small document publishes.
+     * A Nakagin-scale one does not: `section_text_chunks` (`💻️os/🔨️modules/🔌️plugin/🦀️.rs`) puts slice 0
+     * in `TextProps.value` and slices 1…`packChunks - 1` in `data_attributes`, `packBytes` per leaf,
+     * because a leaf per slice put the world surface over `UI_DOCUMENT_NODES` (128). Every host
+     * consumer of a carrier — `PagedSurfaceView`'s lane walk and `sectionValueFromBuiltNode` alike —
+     * reads the leaf back through `packedTextLeaf`, so an intake that admitted the node but dropped
+     * the 32 attribute slices would hand `JSON.parse` an exact 512-byte prefix and nothing else: the
+     * `Unterminated string in JSON at position 512` of ticket 26/09/09/PROCEDURAL-3D-END-TO-END. This
+     * drives one packed carrier through the REAL intake and reads the published record back the way
+     * `PluginRuntime.projectOwnedUiSurface` does. */
+    it("OwnedIntake publishes a packed scene-lane leaf whose data-attribute slices all survive the wire", async () => {
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+      const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { packedTextLeaf } = await import("../../../🔌️PluginRuntime/packed-text.ts");
+      const { leafBytes, packChunks, packBytes } = contract.carrier; expect(packBytes).toBe(leafBytes * packChunks);
+      const lane = contract.lanes.find((entry) => entry.lane === "instances")!;
+      const payload = `[${Array.from({ length: 512 }, (_, index) => `{"id":"capsule-${String(index).padStart(4, "0")}","meshId":"mesh:box","position":[${index},0,0]}`).join(",")}]`;
+      expect(payload.length).toBeGreaterThan(packBytes);
+      const slices: string[] = []; for (let start = 0; start < payload.length; start += leafBytes) slices.push(payload.slice(start, start + leafBytes));
+      const nodes: UiNodeRecord[] = []; const laneChildren: number[] = []; let nextId = 1;
+      for (let offset = 0; offset < slices.length; offset += packChunks) {
+        const group = slices.slice(offset, offset + packChunks); const dataAttributes: Record<string, string> = {};
+        for (let index = 1; index < group.length; index += 1) dataAttributes[String(index).padStart(2, "0")] = group[index]!;
+        const id = nextId++; nodes.push({ ...leaf(id, `c${laneChildren.length}`), component: { type: "text", value: group[0]!, emphasize: null, dataAttributes: Object.keys(dataAttributes).length > 0 ? dataAttributes : null } }); laneChildren.push(id);
+      }
+      expect(nodes).toHaveLength(Math.ceil(slices.length / packChunks)); expect(nodes.length).toBeGreaterThan(1);
+      const laneRoot = nextId++; nodes.push(container(laneRoot, lane.bodyKey, laneChildren));
+      const surfaceRoot = nextId++; nodes.push(container(surfaceRoot, "puzzle3d-main-perspective", [laneRoot]));
+      const operations = [...nodes.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), { tag: "set-root", val: BigInt(surfaceRoot) }];
+
+      const native = await nativeInstanceFixture(); const owner = new OwnedUiInstance(native.activation, native.lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner);
+      const uiGrant = { maxItems: 256, maxBytes: 65_536 }; const source = await native.source(operations, 0, 1); const intake = new OwnedUiPatchIntake(owner, source);
+      for (let step = 1; !intake.peekAcknowledgement(); step += 1) { expect(step).toBeLessThan(4_000_000); expect(intake.advance(uiGrant).kind, intake.failure ?? "intake").not.toBe("rejected"); }
+      const receipt = await native.answer(native.lease.submitUiAcknowledgement(source, intake.peekAcknowledgement()!, native.budget), { status: { tag: "idle" } });
+      expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(true); expect(finish(intake)).toBe("ready"); const published = intake.takeSurface()!;
+      intake.beginClose(); for (let step = 1; !intake.terminalIsEmpty(); step += 1) { expect(step).toBeLessThan(500_000); expect(intake.closeStep(uiGrant).kind, intake.failure ?? "intake-close").not.toBe("rejected"); }
+
+      const readRecord = (id: number) => {
+        const subscription = published.subscribeNode(id, () => {});
+        try { while (owner.maintenancePending) owner.advanceMaintenance(uiGrant); const current = subscription.snapshot; expect(current?.record, `node ${id}`).toBeTruthy(); published.acknowledgeRead(subscription, current!); return current!.record!; } finally { published.unsubscribeNode(subscription); while (owner.maintenancePending) owner.advanceMaintenance(uiGrant); }
+      };
+      const laneRecord = readRecord(laneRoot); expect(String(laneRecord.key)).toBe(lane.bodyKey);
+      let reassembled = "";
+      for (const childId of laneRecord.children) { const record = readRecord(Number(childId)); expect(record.component.type).toBe("text"); reassembled += packedTextLeaf((record.component as { readonly value: string }).value, (record.component as { readonly dataAttributes?: Record<string, string> | null }).dataAttributes); }
+      expect(reassembled, "a packed leaf that loses its data-attribute slices hands JSON.parse a 512-byte prefix").toBe(payload);
+      expect(JSON.parse(reassembled)).toHaveLength(512);
+      console.info(`[DEBUG] ${payload.length} lane bytes crossed the intake in ${nodes.length - 2} packed leaves of up to ${packChunks} slices and reassembled byte-exactly`);
+      close(owner); native.client.disposeAll();
+    });
+
+    /** 🚚️ Wave W-S2 (ticket 26/09/02): the host's intake cost for a whole world-3d LANE SET, on the
+     * shape production actually publishes. The W-P4/W-R law above builds UNPACKED `leafBytes` leaves
+     * and measured 669 403 steps for a Nakagin-scale surface; the guest packs 33 slices per leaf
+     * (`section_text_chunks`), so the real surface is 26 nodes (measured on the guest:
+     * `Nakagin world-3d surface presented 26 nodes`) and costs 105 416 — 1.86 steps per carried byte
+     * against 11.7 unpacked. That ratio is the property worth pinning: an intake priced per NODE
+     * silently absorbs a shape regression (unpacking the leaves keeps the per-node cost and multiplies
+     * the node count), an intake priced per carried BYTE does not, and 512-byte-per-node leaves are
+     * one `if` away in the producer. Second clause: re-publishing ONE lane of an otherwise unchanged
+     * document must stay a delta (W-R), measured 18 565 steps against the first publication's 105 416.
+     */
+    it("OwnedIntake takes a whole packed world-3d lane set in at a bounded cost per carried byte", async () => {
+      const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+      const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { leafBytes, packChunks, childrenMax } = contract.carrier;
+      /** 📏️ The lane byte counts the puzzle 3d editor publishes for the Nakagin Capsule Tower,
+       * measured on the guest 2026-09-10 (`Nakagin world-3d surface presented 26 nodes … `). */
+      const measured: Record<string, number> = { meshes: 907, instances: 55154, selection: 212, vortices: 2, attractions: 2, targetVolumes: 2, references: 2, interaction: 256, lod: 125, chunking: 40, environment: 92 };
+      const carried = Object.values(measured).reduce((total, bytes) => total + bytes, 0);
+      const build = (slicesPerLeaf: number) => {
+        const nodes: UiNodeRecord[] = []; const laneRoots: number[] = []; const laneRecords: Record<string, UiNodeRecord[]> = {}; let nextId = 1;
+        for (const [name, bytes] of Object.entries(measured)) {
+          const lane = contract.lanes.find((entry) => entry.lane === name)!;
+          const payload = "x".repeat(bytes); const own: UiNodeRecord[] = []; let level: number[] = [];
+          const slices: string[] = []; for (let start = 0; start < payload.length; start += leafBytes) slices.push(payload.slice(start, start + leafBytes));
+          for (let offset = 0; offset < slices.length; offset += slicesPerLeaf) {
+            const group = slices.slice(offset, offset + slicesPerLeaf); const dataAttributes: Record<string, string> = {};
+            for (let index = 1; index < group.length; index += 1) dataAttributes[String(index).padStart(2, "0")] = group[index]!;
+            const id = nextId++; own.push({ ...leaf(id, `c${level.length}`), component: { type: "text", value: group[0]!, emphasize: null, dataAttributes: Object.keys(dataAttributes).length > 0 ? dataAttributes : null } }); level.push(id);
+          }
+          for (let generation = 0; level.length > childrenMax; generation += 1) { const paged: number[] = []; for (let start = 0; start < level.length; start += childrenMax) { const id = nextId++; own.push(container(id, `p${generation}-${paged.length}`, level.slice(start, start + childrenMax))); paged.push(id); } level = paged; }
+          const laneRoot = nextId++; own.push(container(laneRoot, lane.bodyKey, level)); laneRoots.push(laneRoot); nodes.push(...own); laneRecords[name] = own;
+        }
+        const surfaceRoot = nextId++; nodes.push(container(surfaceRoot, "puzzle3d-main-perspective", laneRoots));
+        return { nodes, surfaceRoot, laneRecords, operations: [...nodes.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), { tag: "set-root", val: BigInt(surfaceRoot) }] };
+      };
+      const packed = build(packChunks);
+      expect(packed.nodes.length, "the production surface packs into a couple of dozen nodes").toBeLessThanOrEqual(32);
+
+      const native = await nativeInstanceFixture(); const owner = new OwnedUiInstance(native.activation, native.lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner);
+      const uiGrant = { maxItems: 256, maxBytes: 65_536 };
+      const drive = async (operations: readonly unknown[], baseRevision: number, revision: number) => {
+        const source = await native.source(operations, baseRevision, revision); const intake = new OwnedUiPatchIntake(owner, source);
+        let steps = 0;
+        while (!intake.peekAcknowledgement()) { steps += 1; expect(steps).toBeLessThan(4_000_000); const current = intake.advance(uiGrant); expect(current.kind, intake.failure ?? current.phase).not.toBe("rejected"); }
+        const receipt = await native.answer(native.lease.submitUiAcknowledgement(source, intake.peekAcknowledgement()!, native.budget), { status: { tag: "idle" } });
+        expect(intake.acceptAcknowledgement(receipt.receipt)).toBe(true); expect(finish(intake)).toBe("ready"); const view = intake.takeSurface()!;
+        intake.beginClose(); while (!intake.terminalIsEmpty()) expect(intake.closeStep(uiGrant).kind, intake.failure ?? "close").not.toBe("rejected");
+        return { steps, view };
+      };
+      const first = await drive(packed.operations, 0, 1);
+      expect(first.view.view.root).toBe(packed.surfaceRoot);
+      expect(first.steps, `a packed lane set must cost a bounded number of steps per carried byte; ${first.steps} steps for ${carried} bytes`).toBeLessThanOrEqual(3 * carried);
+      const relane = packed.laneRecords.instances!.map((node) => (node.component.type === "text" ? { ...node, component: { ...node.component, value: "y".repeat(node.component.value.length) } } : node));
+      const second = await drive(relane.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), 1, 2);
+      expect(second.view.view.revision).toBe(2);
+      expect(second.steps * 4, "re-publishing one lane of an unchanged document must stay a delta").toBeLessThan(first.steps);
+      console.info(`[DEBUG] packed world lane set: ${packed.nodes.length} nodes, ${carried} carried bytes, ${first.steps} intake steps (${(first.steps / carried).toFixed(2)}/byte), one-lane republish ${second.steps}`);
+      close(owner); native.client.disposeAll();
+    });
+
     it("OwnedIntake cancellation retires each accepted prefix without closing the whole instance", async () => {
       const { OwnedUiPatchIntake } = await import("../../📥️intake/🟦️.ts"); const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts"); const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📥️intake/🔣️.json"); const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📨️wire-operations/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
       for (const prefix of fixture.cancelPrefixes) {

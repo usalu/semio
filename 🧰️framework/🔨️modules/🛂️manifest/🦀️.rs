@@ -4350,6 +4350,15 @@ impl ViewModel {
             ..self.clone()
         })
     }
+
+    /// 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
+    pub fn for_host_armed_action(&self, host_active_tool_id: Option<&str>, window_id: Option<&str>) -> Option<Self> {
+        let armed = Self { active_tool_id: host_active_tool_id.map(str::to_string), ..self.clone() };
+        match window_id {
+            Some(id) => armed.for_window_instance(id),
+            None => Some(armed.for_panel()),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -4408,6 +4417,70 @@ pub const MAX_SURFACE_BODY_KEY_BYTES: usize = VIEW_CONTEXT_IDENTIFIER_CHARS * VI
 #[path = "🧪️tests/🔬️view-context-capacity/🦀️.rs"]
 mod view_context_capacity_tests;
 //#endregion 📏️ViewContextCapacity
+
+//#region 📏️PublicInvocationCapacity
+/// 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy on
+/// the way into a plugin process — `🎛️public-invocation/🧬️schema/🔣️.json`'s `maxBodyBytes`.
+pub const PUBLIC_INVOCATION_BODY_BYTES: usize = 262_144;
+/// 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`. Counted as escaped
+/// bytes minus their leading backslashes, so `\"` costs one and `A` costs five.
+///
+/// This is the bound that actually sizes a host→guest push, and NO tool execution contract can
+/// widen it: `validate_public_json_envelope` runs before the addressed tool's own
+/// `max_raw_wire_bytes` is ever consulted. Any payload larger than this must be paged by its
+/// producer (`🏛️ShellHost/🟦️.tsx`'s `publicInvocationStringPages`).
+pub const PUBLIC_INVOCATION_STRING_BYTES: usize = 4_096;
+/// 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`.
+pub const PUBLIC_INVOCATION_DEPTH: usize = 64;
+/// 📐️ Wire bytes one counted string byte may occupy — `escapePairWireFactor`. A two-character
+/// escape pair (`\"`, `\\`, `\n`) counts ONE against [`PUBLIC_INVOCATION_STRING_BYTES`] and occupies
+/// TWO on the wire; every longer escape (`\u00XX`, six bytes) counts five, a smaller ratio. So a
+/// page filled to the string bound occupies at most twice its counted extent, which is what a tool
+/// carrying such a page must declare as its `max_raw_wire_bytes`.
+pub const PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR: usize = 2;
+
+/// 📐️ What ONE character of a raw string costs against [`PUBLIC_INVOCATION_STRING_BYTES`] once the
+/// JSON encoder has written it — the exact accounting `validate_public_json_envelope` performs,
+/// which skips a leading `\` and counts every byte after it. Non-ASCII is charged at its `\uXXXX`
+/// escape (five per UTF-16 unit), never at its shorter raw UTF-8 form, so a page cut with this
+/// function is admitted whether or not the encoder escapes above U+007F.
+pub fn public_invocation_char_cost(character: char) -> usize {
+    match character {
+        '"' | '\\' | '\n' | '\r' | '\t' | '\u{8}' | '\u{c}' => 1,
+        character if (character as u32) < 0x20 => 5,
+        character if character.is_ascii() => 1,
+        character => character.len_utf16() * 5,
+    }
+}
+
+/// 📄️ Cuts one oversized string into the page run a public invocation can actually carry — each
+/// page filled to, and never past, [`PUBLIC_INVOCATION_STRING_BYTES`] as
+/// [`public_invocation_char_cost`] measures it, split only on character boundaries.
+///
+/// The twin of `publicInvocationStringPages` in `🛠️ShellHelpers/🟦️.tsx`; the two must cut the same
+/// payload identically, which `🔬️engine-contract/🟦️.ts` and this module's own capacity law pin.
+/// An empty input yields one empty page, so a producer always sends at least one addressed page.
+pub fn public_invocation_string_pages(text: &str) -> Vec<String> {
+    let mut pages = Vec::new();
+    let mut page = String::new();
+    let mut cost = 0usize;
+    for character in text.chars() {
+        let next = public_invocation_char_cost(character);
+        if cost + next > PUBLIC_INVOCATION_STRING_BYTES {
+            pages.push(std::mem::take(&mut page));
+            cost = 0;
+        }
+        page.push(character);
+        cost += next;
+    }
+    pages.push(page);
+    pages
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️public-invocation-capacity/🦀️.rs"]
+mod public_invocation_capacity_tests;
+//#endregion 📏️PublicInvocationCapacity
 
 //#region 🔖️UiRefreshSection
 /// 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own retained

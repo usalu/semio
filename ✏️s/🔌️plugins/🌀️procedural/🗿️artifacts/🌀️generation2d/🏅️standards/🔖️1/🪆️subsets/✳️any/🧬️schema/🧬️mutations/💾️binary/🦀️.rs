@@ -197,6 +197,12 @@ mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️RetainedMountedIngress
 const GENERATION2D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+/// 📐️ The ONE structural nesting bound this artifact declares. The retained ingress cursor's
+/// `PackLimits::max_depth`, the retained owner's own frame stacks and the initializer's
+/// `generation2d_copy_*` guards all read it, so the wire can never reject nesting the initializer
+/// would happily copy. A `Widget::Neuron`'s `params` is a neural `Dictionary` whose entries are
+/// themselves `Value::Dictionary`, and each such level costs several pack frames — a two-level
+/// dictionary already spends more than a dozen (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const GENERATION2D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION2D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const GENERATION2D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
@@ -500,8 +506,6 @@ pub const GENERATION2D_RETAINED_MUTATION_OWNERS: [&str; GENERATION2D_MUTATION_VA
     "change-generation-value",
 ];
 
-/// 📐️ One structural opportunity is admitted per grant; combined nesting remains fixed.
-pub const GENERATION2D_RETAINED_COMBINED_DEPTH: usize = 12;
 pub const GENERATION2D_RETAINED_SCHEMA_DISCRIMINATOR: [u8; 4] = *b"P2D2";
 pub const GENERATION2D_FORBIDDEN_3D_DISCRIMINATOR: [u8; 4] = *b"P3D3";
 
@@ -941,11 +945,11 @@ impl Generation2dRetainedMutationOwner {
             return Err("generation2d-mutation.variant");
         }
         let mut stack = Vec::new();
-        stack.try_reserve_exact(GENERATION2D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation2d-mutation.stack-preflight")?;
+        stack.try_reserve_exact(GENERATION2D_RETAINED_STACK_CAPACITY).map_err(|_| "generation2d-mutation.stack-preflight")?;
         let mut json_stack = Vec::new();
-        json_stack.try_reserve_exact(GENERATION2D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation2d-mutation.json-stack-preflight")?;
+        json_stack.try_reserve_exact(GENERATION2D_RETAINED_STACK_CAPACITY).map_err(|_| "generation2d-mutation.json-stack-preflight")?;
         let mut dsl_stack = Vec::new();
-        dsl_stack.try_reserve_exact(GENERATION2D_RETAINED_COMBINED_DEPTH).map_err(|_| "generation2d-mutation.dsl-stack-preflight")?;
+        dsl_stack.try_reserve_exact(GENERATION2D_RETAINED_STACK_CAPACITY).map_err(|_| "generation2d-mutation.dsl-stack-preflight")?;
         Ok(Self {
             ordinal,
             stack,
@@ -1060,7 +1064,7 @@ impl Generation2dRetainedMutationOwner {
         match owner.target {
             Generation2dMutationStringTarget::Root(field) => {
                 let slot = match (self.ordinal, field) {
-                    (2 | 5 | 7 | 9 | 11, 0) => 0,
+                    (2 | 5 | 6 | 7 | 9 | 11, 0) => 0,
                     (12 | 13, 0) => 0,
                     (12 | 13, 1) => 1,
                     _ => return Err("generation2d-mutation.root-string-field"),
@@ -1140,9 +1144,9 @@ impl Generation2dRetainedMutationOwner {
                 };
                 match role {
                     0 => synapse.from = owner.value,
-                    1 => synapse.from_port = owner.value,
+                    2 => synapse.from_port = owner.value,
                     3 => synapse.to = owner.value,
-                    4 => synapse.to_port = owner.value,
+                    5 => synapse.to_port = owner.value,
                     _ => drop(owner.value),
                 }
             }
@@ -1826,7 +1830,7 @@ impl Generation2dMutationSession {
                         max_file_len: self.expected_bytes as u64,
                         max_segment_len: self.expected_bytes as u64,
                         max_symbols: self.maximum_items.min(GENERATION2D_MAXIMUM_DOMAIN_ITEMS) as u32,
-                        max_depth: GENERATION2D_RETAINED_COMBINED_DEPTH as u16,
+                        max_depth: GENERATION2D_RETAINED_STACK_CAPACITY as u16,
                         max_items: self.maximum_items.min(GENERATION2D_MAXIMUM_DOMAIN_ITEMS) as u64,
                         max_total_alloc: GENERATION2D_MAXIMUM_DOMAIN_BYTES as u64,
                     };
@@ -1836,21 +1840,15 @@ impl Generation2dMutationSession {
                 }
             }
             Generation2dMutationSessionPhase::Body => {
-                // 🚦️ The byte STAYS in this session's ingress slot until the record-body cursor —
-                // and, through it, the value producer it feeds — can actually take it. A single
-                // admitted byte costs several `grant` turns whenever the producer has control frames
-                // to pop first, so handing the next one down on a fixed cadence is what the cursor
-                // rejects as `value producer handback`.
                 if self.pending.is_some() && self.body.as_ref().ok_or("generation2d-mutation.body-owner")?.ingress_ready() {
                     let (_, byte) = self.pending.take().ok_or("generation2d-mutation.body-input")?;
                     self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.admit_byte(self.body_bytes, byte).map_err(|(_, byte)| if byte == 0 { "generation2d-mutation.body-handback-zero" } else { "generation2d-mutation.body-handback" })?;
                     self.body_bytes += 1;
                 }
-                if let Some(store::mounted_pack_rt::RetainedRecordBodyToken::Value(token)) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|error| { eprintln!("[DEBUG] body-malformed error={error:?}"); "generation2d-mutation.body-malformed" })? {
+                if let Some(store::mounted_pack_rt::RetainedRecordBodyToken::Value(token)) = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?.grant().map_err(|_| "generation2d-mutation.body-malformed")? {
                     let complete = matches!(token, store::mounted_pack_rt::RetainedValueToken::Complete { .. });
                     let body = self.body.as_ref().expect("P2 retained mutation body");
-                    let debug = format!("{token:?}");
-                    self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body).inspect_err(|error| eprintln!("[DEBUG] accept token={debug} err={error}")).inspect(|()| eprintln!("[DEBUG] accept token={debug}"))?;
+                    self.owner.as_mut().expect("P2 retained mutation owner").accept(token, body)?;
                     if complete {
                         self.phase = Generation2dMutationSessionPhase::Ready;
                         return Ok(true);

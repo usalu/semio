@@ -157,7 +157,11 @@ pub struct FlowHost {
     pub last_eval_json: String,
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
-    kind_infos: HashMap<String, OperatorInfo>,
+    /// 🧠️ The operator catalogue this host indexes, SHARED with every other live host: it is a pure
+    /// projection of the extension registry, ~108 kB of it, and an evaluation tick that rebuilt its
+    /// own copy paid 11-26 ms per tick for a map nobody had changed
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    kind_infos: Arc<HashMap<String, OperatorInfo>>,
     neural_cache: Arc<NeuralCache>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
@@ -182,6 +186,15 @@ pub struct FlowHost {
     pending_extension_eval: Option<neural::PendingExtensionEval>,
     interaction_revision: u64,
     interaction_projection: Option<dag::DagInteractionProjection>,
+    /// 🧹️ Cold owner for neural values this host DISPLACES while it is live — the previous tick's
+    /// `outputs` map and `previous_channels`, and the parameter bag a `set_neuron_params` merge
+    /// replaces. Those roots are SHARED with [`NeuralCache`] and with the current tick's own
+    /// evaluation, so they may not be retired at the moment they are displaced; they wait here and
+    /// are drained at the START of the next evaluation (`drain_displaced`) or, if none follows, when
+    /// the host itself closes ([`FlowHostRetirement::new`] takes this frontier over). The frontier
+    /// therefore holds at most one tick's displacement and never outlives the host
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️unit-suite-3d-2026-09-09.md` §5).
+    displaced: neural::ValueRetirement,
 }
 
 impl Default for FlowHost {
@@ -198,7 +211,15 @@ impl FlowHost {
     /// 🧠️ Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
     /// stateless request/response program boundary that reconstructs `FlowHost` on every call)
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
-    pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
+    pub fn from_fixture_with_cache(fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
+        Self::from_fixture_with_cache_and_infos(fixture, neural_cache, Arc::default())
+    }
+
+    /// 🏠️ Builds a host that ALREADY indexes `kind_infos`. The ONE construction path for a caller
+    /// that would set the operator catalogue immediately afterwards: the bare constructor builds its
+    /// dag against an empty catalogue, and the setter's own `rebuild_dag` then throws that work away
+    /// — twice per evaluation tick (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn from_fixture_with_cache_and_infos(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HashMap<String, OperatorInfo>>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
         let mut host = Self {
             fixture,
@@ -208,7 +229,7 @@ impl FlowHost {
             last_eval_json: String::new(),
             eval_bridge: None,
             host_catalogue_json: String::new(),
-            kind_infos: HashMap::new(),
+            kind_infos,
             neural_cache,
             previous_snapshot: None,
             previous_channels: None,
@@ -226,6 +247,7 @@ impl FlowHost {
             pending_extension_eval: None,
             interaction_revision: 0,
             interaction_projection: None,
+            displaced: neural::ValueRetirement::default(),
         };
         host.rebuild_dag();
         host.refresh_interaction_projection();
@@ -256,11 +278,8 @@ impl FlowHost {
         fixture.camera = camera;
         std::mem::replace(&mut self.fixture, fixture).retire_cold();
         if !preserve_eval {
-            self.outputs.clear();
-            self.export_payloads.clear();
+            self.displace_eval_state();
             self.last_eval_json.clear();
-            self.previous_snapshot = None;
-            self.previous_channels = None;
         }
         self.pan_anchor = None;
         self.ghost_node = None;
@@ -300,13 +319,22 @@ impl FlowHost {
     }
 
     pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
-        self.kind_infos = if json.trim().is_empty() { HashMap::new() } else { crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() };
+        self.kind_infos = Arc::new(if json.trim().is_empty() { HashMap::new() } else { crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() });
+        self.rebuild_dag();
+    }
+
+    /// 🧠️ Same as `set_neuron_kind_infos_json` but over the already-built id-keyed map — the ONE
+    /// in-process path, because the JSON form of this catalogue is ~108 kB and an evaluation tick
+    /// that serialized and re-parsed it spent 11-26 ms per tick doing nothing else
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn set_neuron_kind_info_map(&mut self, infos: Arc<HashMap<String, OperatorInfo>>) {
+        self.kind_infos = infos;
         self.rebuild_dag();
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the typed `NodeGraphScene.operators` records.
     pub fn set_neuron_kind_infos(&mut self, infos: &[ui_wgpu::wgpu::NodeGraphOperatorRecord]) {
-        self.kind_infos = infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect();
+        self.kind_infos = Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect());
         self.rebuild_dag();
     }
 
@@ -338,11 +366,14 @@ impl FlowHost {
         seeds.retire_cold();
         self.last_eval_json = json.to_string();
         if converged {
-            self.outputs = channels.outputs.clone();
+            let displaced_outputs = std::mem::replace(&mut self.outputs, channels.outputs.clone());
+            self.displaced.push_dictionaries(displaced_outputs);
             self.apply_preview_outputs(&channels.outputs);
             self.apply_export_outputs(&channels.outputs);
             self.previous_snapshot = Some(snapshot);
-            self.previous_channels = Some(channels);
+            if let Some(displaced_channels) = self.previous_channels.replace(channels) {
+                self.displaced.push_channels(displaced_channels);
+            }
             self.dag.clear_computing();
         } else {
             channels.retire_cold();
@@ -366,11 +397,37 @@ impl FlowHost {
     /// 🧵️ Installs a durable eval baseline from an off-thread driver onto this ephemeral host.
     pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>) {
         self.previous_snapshot = snapshot;
-        self.previous_channels = channels;
-        // Receiverless ArtifactApp rebuilds a fresh FlowHost per call; restore outputs so
-        // blocked-port status and preview wiring see the last completed eval channels.
-        if let Some(channels) = self.previous_channels.as_ref() {
-            self.outputs = channels.outputs.clone();
+        if let Some(displaced_channels) = std::mem::replace(&mut self.previous_channels, channels) {
+            self.displaced.push_channels(displaced_channels);
+        }
+        if let Some(restored) = self.previous_channels.as_ref().map(|channels| channels.outputs.clone()) {
+            let displaced_outputs = std::mem::replace(&mut self.outputs, restored);
+            self.displaced.push_dictionaries(displaced_outputs);
+        }
+    }
+
+    /// 🧹️ Hands every value displaced since the last drain to the artifact's bounded retirement
+    /// ladder. Called at the START of an evaluation tick, so a root the CURRENT tick's `NeuralCache`
+    /// or `previous_channels` still reads is never torn down under it — the frontier therefore holds
+    /// at most one tick's displacement, and what is left when the host closes is taken over by
+    /// [`FlowHostRetirement::new`].
+    fn drain_displaced(&mut self) {
+        while !matches!(self.displaced.close_step(64, 65_536), neural::ValueRetirementStep::Complete) {}
+    }
+
+    /// 🧹️ Displaces the whole evaluation baseline — `outputs`, `export_payloads`, the tree snapshot
+    /// and the channel pair — onto the frontier. `BTreeMap<String, Dictionary>::clear` is a bare drop
+    /// of every `Dictionary` in it, which aborts the worker as soon as one of them is a final owner.
+    fn displace_eval_state(&mut self) {
+        let outputs = std::mem::take(&mut self.outputs);
+        self.displaced.push_dictionaries(outputs);
+        let export_payloads = std::mem::take(&mut self.export_payloads);
+        self.displaced.push_dictionaries(export_payloads);
+        if let Some(snapshot) = self.previous_snapshot.take() {
+            self.displaced.push_snapshot(snapshot);
+        }
+        if let Some(channels) = self.previous_channels.take() {
+            self.displaced.push_channels(channels);
         }
     }
 
@@ -865,11 +922,13 @@ impl FlowHost {
     pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let patch: Dictionary = crate::os_pack::json::from_json_str(params_json)?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
-        let Widget::Neuron { params, .. } = widget else {
-            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
+        let merged = match self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id) {
+            Some(Widget::Neuron { params, .. }) => Ok(std::mem::replace(params, params.merge(&patch))),
+            Some(_) => Err(FlowCoreError::NotNeuron(widget_id.to_string())),
+            None => Err(FlowCoreError::UnknownWidget(widget_id.to_string())),
         };
-        *params = params.merge(&patch);
+        self.displaced.push_dictionary(patch);
+        self.displaced.push_dictionary(merged?);
         self.sync_dag_display_from_widgets();
         Ok(())
     }
@@ -1013,6 +1072,7 @@ impl FlowHost {
     /// entries swept early by that other call's completion; the next tick simply recomputes them —
     /// extra work, never a wrong result.
     pub fn evaluate_step(&mut self, budget: usize) -> Vec<String> {
+        self.drain_displaced();
         self.pending_extension_eval = None;
         let tree = self.build_tree();
         let seeds = self.build_seeds();
@@ -1039,7 +1099,8 @@ impl FlowHost {
         match budgeted {
             Ok(BudgetedEval { channels, remaining, pending_extension }) => {
                 self.pending_extension_eval = pending_extension;
-                self.outputs = channels.outputs.clone();
+                let displaced_outputs = std::mem::replace(&mut self.outputs, channels.outputs.clone());
+                self.displaced.push_dictionaries(displaced_outputs);
                 self.apply_preview_outputs(&channels.outputs);
                 self.apply_export_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
@@ -1056,7 +1117,9 @@ impl FlowHost {
                 // failed evaluation keeps diffing against the last known-good state next time,
                 // which is always a safe (never under-dirty) baseline.
                 self.previous_snapshot = Some(snapshot);
-                self.previous_channels = Some(channels);
+                if let Some(displaced_channels) = self.previous_channels.replace(channels) {
+                    self.displaced.push_channels(displaced_channels);
+                }
                 Vec::new()
             }
             Err(err) => {
@@ -1966,12 +2029,24 @@ impl FlowHost {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
+    /// 🧾️ Lazily seeds the undo/redo store from `baseline`.
+    ///
+    /// ⚠️ `baseline` is CONSUMED only on the first call — the store is seeded once, and every later
+    /// `flush_pending_change` hands in a fresh `FlowFixture` clone this function does not need. A
+    /// `FlowFixture` owns the fail-closed `OrderedMap<WidgetLayout>` root, so that surplus clone is
+    /// RETIRED through the artifact's own bounded frontier instead of dropped; the bare drop aborted
+    /// the pool worker on the second discrete edit of any session
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️unit-suite-3d-2026-09-09.md` §5).
     fn history_store_from_baseline(&mut self, baseline: FlowFixture) -> Option<&mut FlowStore> {
-        if self.history_store.is_none() {
-            let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
-            store.install_member_store_owners_exact(FlowFixture::member_store_owners());
-            self.history_store = Some(store);
+        if self.history_store.is_some() {
+            let mut retirement = crate::retained::FlowRetirement::default();
+            retirement.push(crate::retained::FlowOwner::Fixture(baseline));
+            retirement.retire_cold();
+            return self.history_store.as_mut();
         }
+        let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
+        store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+        self.history_store = Some(store);
         self.history_store.as_mut()
     }
 
@@ -2082,7 +2157,7 @@ pub struct FlowHostRetirementState {
     last_eval_json: String,
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
-    kind_infos: HashMap<String, OperatorInfo>,
+    kind_infos: Arc<HashMap<String, OperatorInfo>>,
     neural_cache: Option<neural::NeuralCacheRetirement>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
@@ -2146,6 +2221,7 @@ impl FlowHostRetirement {
             pending_extension_eval,
             interaction_revision: _,
             interaction_projection,
+            displaced,
         } = host;
         let mut dag = dag::DagHostRetirement::new(dag);
         if let Some(node) = ghost_node {
@@ -2169,7 +2245,7 @@ impl FlowHostRetirement {
                 pending_extension_eval,
                 interaction_projection,
                 domain: crate::retained::FlowRetirement::default(),
-                neural: neural::ValueRetirement::default(),
+                neural: displaced,
                 terminal: false,
                 faulted: false,
             }),
@@ -2231,9 +2307,14 @@ impl FlowHostRetirement {
             state.domain.text(std::mem::take(&mut state.last_eval_json));
         } else if state.host_catalogue_json.capacity() != 0 {
             state.domain.text(std::mem::take(&mut state.host_catalogue_json));
-        } else if let Some((key, value)) = state.kind_infos.extract_if(|_, _| true).next() {
-            state.neural.text(key);
-            state.neural.push_operator(value);
+        } else if !state.kind_infos.is_empty() {
+            match Arc::get_mut(&mut state.kind_infos).and_then(|infos| infos.extract_if(|_, _| true).next()) {
+                Some((key, value)) => {
+                    state.neural.text(key);
+                    state.neural.push_operator(value);
+                }
+                None => state.kind_infos = Arc::default(),
+            }
         } else if let Some(snapshot) = state.previous_snapshot.take() {
             state.neural.push_snapshot(snapshot);
         } else if let Some(channels) = state.previous_channels.take() {
@@ -2394,10 +2475,102 @@ pub struct FlowEvalSessionState {
     tessellate_chunks_by_hash: BTreeMap<u64, String>,
     /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
     preview_diagnostics_by_handle: BTreeMap<String, String>,
+    /// 🔢 Which replacement of the process-wide flow extension registry every result this session
+    /// still holds was computed against. A contributed operator that no plugin had contributed yet
+    /// evaluates to a fault, and the fault is CACHED — in the neural cache, in the incremental
+    /// baseline and in the tessellation ledger — so a later contribution install has to be able to
+    /// say "everything in here predates the registry you can now address"
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    flow_extension_generation: u64,
     retiring_cache: Option<neural::NeuralCacheRetirement>,
     retirement: neural::ValueRetirement,
     retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
     closing: bool,
+}
+
+/// 📊️ What the preview-eval publication gate saw and what it let through, since the last reset.
+/// `considered`/`considered_bytes` is exactly what an ungated tick chain WOULD have published (one
+/// full serialization per tick), so one measured boot reports both the before and the after.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct FlowEvalPublicationLedger {
+    pub considered: u64,
+    pub considered_bytes: u64,
+    pub published: u64,
+    pub published_bytes: u64,
+}
+
+/// 📊️ Four relaxed atomic counters, no formatting and no allocation — "how many bytes did this boot
+/// publish" is the quantity the hot-path budget is written in, and a log line cannot be asserted on.
+/// Process-wide, not thread-local: a retained command's work step runs on whatever thread the host
+/// pumps it from, which is never the thread that reads the ledger back.
+static FLOW_EVAL_PUBLICATION_COUNTERS: [AtomicU64; 4] = [AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)];
+
+/// 📊️ The preview-eval publication ledger since the last reset.
+pub fn flow_eval_publication_ledger() -> FlowEvalPublicationLedger {
+    FlowEvalPublicationLedger {
+        considered: FLOW_EVAL_PUBLICATION_COUNTERS[0].load(AtomicOrdering::Relaxed),
+        considered_bytes: FLOW_EVAL_PUBLICATION_COUNTERS[1].load(AtomicOrdering::Relaxed),
+        published: FLOW_EVAL_PUBLICATION_COUNTERS[2].load(AtomicOrdering::Relaxed),
+        published_bytes: FLOW_EVAL_PUBLICATION_COUNTERS[3].load(AtomicOrdering::Relaxed),
+    }
+}
+
+/// 📊️ Zeroes the publication ledger, so one measurement starts from a known point.
+pub fn reset_flow_eval_publication_ledger() {
+    for counter in &FLOW_EVAL_PUBLICATION_COUNTERS {
+        counter.store(0, AtomicOrdering::Relaxed);
+    }
+}
+
+/// 📊️ One evaluation tick's measured wall cost, recorded only while the runtime-diagnostics switch
+/// is armed (`semio_framework_job::set_runtime_diagnostics`) — the interactive-step observable for a
+/// perf run, absent from a normal boot.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct FlowEvalStepLedger {
+    pub steps: u64,
+    /// ⏱️ The CHEAPEST tick measured. Wall time on a machine that is also compiling only ever grows,
+    /// so the minimum is this machine's real capability and the only sample a budget law can assert
+    /// on without asserting the scheduler.
+    pub best_us: u64,
+    pub worst_us: u64,
+    pub total_us: u64,
+}
+
+static FLOW_EVAL_STEP_COUNTERS: [AtomicU64; 4] = [AtomicU64::new(0), AtomicU64::new(u64::MAX), AtomicU64::new(0), AtomicU64::new(0)];
+
+/// 📊️ The evaluation-step ledger since the last reset.
+pub fn flow_eval_step_ledger() -> FlowEvalStepLedger {
+    FlowEvalStepLedger {
+        steps: FLOW_EVAL_STEP_COUNTERS[0].load(AtomicOrdering::Relaxed),
+        best_us: FLOW_EVAL_STEP_COUNTERS[1].load(AtomicOrdering::Relaxed),
+        worst_us: FLOW_EVAL_STEP_COUNTERS[2].load(AtomicOrdering::Relaxed),
+        total_us: FLOW_EVAL_STEP_COUNTERS[3].load(AtomicOrdering::Relaxed),
+    }
+}
+
+/// 📊️ Zeroes the evaluation-step ledger.
+pub fn reset_flow_eval_step_ledger() {
+    FLOW_EVAL_STEP_COUNTERS[0].store(0, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[1].store(u64::MAX, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[2].store(0, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[3].store(0, AtomicOrdering::Relaxed);
+}
+
+/// 📊️ Records one evaluation tick's wall cost.
+pub fn record_flow_eval_step(elapsed_us: u64) {
+    FLOW_EVAL_STEP_COUNTERS[0].fetch_add(1, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[1].fetch_min(elapsed_us, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[2].fetch_max(elapsed_us, AtomicOrdering::Relaxed);
+    FLOW_EVAL_STEP_COUNTERS[3].fetch_add(elapsed_us, AtomicOrdering::Relaxed);
+}
+
+/// 📤️ What one tick owes the surface's retained preview-eval publication.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FlowEvalPublication {
+    /// ♻️ The retained publication already carries exactly these bytes — publish nothing this tick.
+    Retained,
+    /// 📤️ The eval JSON changed; `None` clears the preview because nothing is evaluated yet.
+    Changed(Option<String>),
 }
 
 enum SessionCollectionOwner {
@@ -2460,6 +2633,7 @@ impl FlowEvalSession {
                 preview_diagnostics_by_handle: BTreeMap::new(),
                 retiring_cache: None,
                 retirement: neural::ValueRetirement::default(),
+                flow_extension_generation: flow_extension_registry_generation(),
                 retiring_collections: std::collections::LinkedList::new(),
                 closing: false,
             }),
@@ -2523,6 +2697,13 @@ impl FlowEvalSession {
         &self.eval_json
     }
 
+    /// 📤️ What this session owes ONE surface whose retained preview publication currently holds
+    /// `retained`. See [`flow_eval_publication_for`] — the decision is per PUBLICATION TARGET, never
+    /// per session: two preview windows on one instance each own their own retained bytes.
+    pub fn eval_publication_for(&self, retained: Option<&str>) -> FlowEvalPublication {
+        flow_eval_publication_for(self, retained)
+    }
+
     pub fn status_json(&self) -> &str {
         &self.status_json
     }
@@ -2560,6 +2741,40 @@ impl FlowEvalSession {
 
     pub fn pending(&self) -> bool {
         self.tick_scheduled
+    }
+
+    /// 🔢 Which flow extension registry replacement this session's held results were computed
+    /// against — the invalidation key, readable so a surface can state it rather than infer it.
+    pub fn flow_extension_generation(&self) -> u64 {
+        self.flow_extension_generation
+    }
+
+    /// 🔄️ Re-arms this session against the flow extension registry as it is NOW.
+    ///
+    /// A node whose operator no plugin had contributed yet does not merely stall: its miss is
+    /// retained everywhere a result is retained — the neural cache entry, the incremental
+    /// baseline (`previous_snapshot`/`previous_channels`), the published `eval_json`/`status_json`,
+    /// and the tessellation ledger whose `phase` a surface projects as
+    /// `PreviewTessellatePhase::Faulted`. Installing the contribution AFTERWARDS therefore changes
+    /// nothing a surface can see until somebody says those results predate the registry, and
+    /// `tick_scheduled` is still `true` from the chain that gave up, so `sync` refuses to arm a new
+    /// one. This is that statement, and the REGISTRY GENERATION is its key: any later contribution
+    /// change bumps it too, so a re-push of an unchanged closure (whose generation is unmoved)
+    /// invalidates nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// Answers whether anything was actually invalidated, so the caller only re-arms a chain it
+    /// owes.
+    pub fn invalidate_for_flow_extension_registry(&mut self, generation: u64) -> bool {
+        if self.state.flow_extension_generation == generation {
+            return false;
+        }
+        self.state.flow_extension_generation = generation;
+        if let Some(cache) = self.state.neural_cache.as_ref() {
+            cache.begin_epoch();
+            cache.sweep();
+        }
+        self.set_eval_json(String::new());
+        true
     }
 
     pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
@@ -2870,7 +3085,13 @@ pub enum PreviewTessellatePhase {
     Complete,
     Cancelled,
     Invalid,
+    /// 💥️ The kernel itself answered with a failure.
     Failed,
+    /// 🪪️ No kernel could even be addressed — the geometry extension this preview needs is not
+    /// contributed by any loaded plugin, so no invocation was ever emitted. Boundary-only, like
+    /// `Invalid`/`Failed`: a kernel never reports it, the producing app raises it from its own
+    /// `flow_extension_invocation_address` miss (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    Faulted,
 }
 
 impl PreviewTessellatePhase {
@@ -2886,6 +3107,7 @@ impl PreviewTessellatePhase {
             Self::Cancelled => "cancelled",
             Self::Invalid => "invalid",
             Self::Failed => "failed",
+            Self::Faulted => "faulted",
         }
     }
 
@@ -2900,6 +3122,7 @@ impl PreviewTessellatePhase {
             "cancelled" => Self::Cancelled,
             "invalid" => Self::Invalid,
             "failed" => Self::Failed,
+            "faulted" => Self::Faulted,
             _ => Self::Idle,
         }
     }
@@ -2921,6 +3144,7 @@ impl PreviewTessellatePhase {
             Self::Cancelled => ("Cancelled", "Abgebrochen"),
             Self::Invalid => ("Invalid geometry", "Ungültige Geometrie"),
             Self::Failed => ("Failed", "Fehlgeschlagen"),
+            Self::Faulted => ("Geometry extension unavailable", "Geometrie-Erweiterung nicht verfügbar"),
         }
     }
 }
@@ -2989,6 +3213,31 @@ impl PreviewTessellateOutcome {
 }
 
 /// 🧬 Stable `nodeHash` for an extension tessellate request (mirrored through ShellHost).
+/// 📤️ The publication one surface owes, given the evaluation bytes it ALREADY retains.
+///
+/// Every caller that used to write `session.eval_json().to_string()` unconditionally goes through
+/// here. A `flowEvalTick` self-redispatches until the graph settles, and most of those ticks move no
+/// node at all — republishing identical bytes costs a fresh `String` now and a 4096-bytes-per-
+/// rotation retirement later, and since the retirement cursor is byte-proportional while the
+/// maintenance rotation revisits the transient store only once per 24 turns, an unconditional
+/// republication queues retirement faster than the rotation can drain it (the multi-millisecond
+/// stage-22 outliers in `📓️runtime-hotpath-audit-2026-09-10.md` §2).
+pub fn flow_eval_publication_for(session: &FlowEvalSession, retained: Option<&str>) -> FlowEvalPublication {
+    let evaluated = (!session.eval_json().is_empty()).then(|| session.eval_json());
+    let bytes = evaluated.map_or(0, str::len) as u64;
+    let unchanged = retained == evaluated;
+    FLOW_EVAL_PUBLICATION_COUNTERS[0].fetch_add(1, AtomicOrdering::Relaxed);
+    FLOW_EVAL_PUBLICATION_COUNTERS[1].fetch_add(bytes, AtomicOrdering::Relaxed);
+    if !unchanged {
+        FLOW_EVAL_PUBLICATION_COUNTERS[2].fetch_add(1, AtomicOrdering::Relaxed);
+        FLOW_EVAL_PUBLICATION_COUNTERS[3].fetch_add(bytes, AtomicOrdering::Relaxed);
+    }
+    if unchanged {
+        return FlowEvalPublication::Retained;
+    }
+    FlowEvalPublication::Changed(evaluated.map(str::to_string))
+}
+
 pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -2999,8 +3248,7 @@ pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
 
 /// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
 pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
-    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), session.neural_cache());
-    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    let mut host = FlowHost::from_fixture_with_cache_and_infos(fixture.clone(), session.neural_cache(), flow_neuron_kind_info_map());
     session.install_baseline_into(&mut host);
     if !session.eval_json().is_empty() {
         host.last_eval_json = session.eval_json().to_string();

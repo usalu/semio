@@ -42,7 +42,7 @@ fn ack(cell: &mut GuestLifecycleCell<Owner>) {
     let receipt = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
     cell.release_owner_step(1, 4096).unwrap();
-    cell.finish_turn(Some(100), || Some(101), true).unwrap();
+    cell.finish_turn(Some(1), true).unwrap();
 }
 
 #[test]
@@ -80,10 +80,10 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     cell.install_owner(DropOwner { clock: clock.clone(), drops: drops.clone(), work_us: law["destructorWorkUs"].as_u64().unwrap() }).unwrap_or_else(|_| panic!("fresh owner"));
     let captured = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt: captured }).unwrap();
-    cell.finish_turn(Some(100), || Some(clock.get()), true).unwrap();
+    cell.finish_turn(Some(clock.get() - started), true).unwrap();
     cell.record_close_admission(ActorInstanceCloseRequest { lifetime: cell.lifetime(), request_sequence: 9 }, 51).unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt: cell.retained_receipt().unwrap() }).unwrap();
-    cell.finish_turn(Some(100), || Some(clock.get()), true).unwrap();
+    cell.finish_turn(Some(clock.get() - started), true).unwrap();
     cell.prepare_retired().unwrap();
     let receipt = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
@@ -91,12 +91,12 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     assert_eq!(drops.get(), 0);
     cell.release_owner_step(1, 4096).unwrap();
     assert_eq!(drops.get(), 1);
-    assert_eq!(cell.finish_turn(Some(started), || Some(clock.get()), true).is_ok(), law["firstAckAccepted"].as_bool().unwrap());
+    assert_eq!(cell.finish_turn(Some(clock.get() - started), true).is_ok(), law["firstAckAccepted"].as_bool().unwrap());
     assert_eq!(cell.retained_receipt(), Some(receipt));
     assert!(!cell.is_released());
     assert!(cell.owner().is_none());
     cell.release_owner_step(1, 4096).unwrap();
-    cell.finish_turn(Some(clock.get()), || Some(clock.get()), true).unwrap();
+    cell.finish_turn(Some(0), true).unwrap();
     assert!(cell.is_released());
     assert_eq!(drops.get(), law["destructionsAfterRetry"].as_u64().unwrap() as usize);
 }
@@ -112,15 +112,15 @@ fn close(cell: &mut GuestLifecycleCell<Owner>) {
 
 #[test]
 fn guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner() {
-    for (start, end, succeeded) in [(Some(10), None, true), (None, Some(11), true), (Some(10), Some(9), true), (Some(10), Some(8010), true), (Some(10), Some(11), false)] {
+    for (executing_us, succeeded) in [(None, true), (Some(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US), true), (Some(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US + 1), true), (Some(11), false)] {
         let mut cell = captured();
         let receipt = cell.retained_receipt().unwrap();
         cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
-        assert!(cell.finish_turn(start, || end, succeeded).is_err());
+        assert!(cell.finish_turn(executing_us, succeeded).is_err());
         assert_eq!(cell.retained_receipt(), Some(receipt));
         assert!(cell.owner().is_some());
         assert!(!cell.is_live());
-        cell.finish_turn(Some(100), || Some(101), true).unwrap();
+        cell.finish_turn(Some(1), true).unwrap();
         assert!(cell.is_live());
         let request = ActorInstanceCloseRequest { lifetime: cell.lifetime(), request_sequence: 9 };
         cell.record_close_admission(request, 51).unwrap();
@@ -155,7 +155,7 @@ fn guest_instance_lifecycle_partial_close_unwind_never_drops_structural_owner() 
     assert!(cell.is_released());
     assert!(cell.owner().is_none());
     cell.stage_ack(ActorInstanceLifecycleAck { receipt: retired }).unwrap();
-    assert_eq!(cell.finish_turn(Some(10), || Some(11), true).unwrap(), None);
+    assert_eq!(cell.finish_turn(Some(1), true).unwrap(), None);
 }
 
 #[test]

@@ -45,6 +45,17 @@ const FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024;
 const FILL_ENVELOPE_MAX_PAGES: usize = 256;
 pub(crate) const FILL_ENVELOPE_MAX_BYTES: usize = FILL_ENVELOPE_PAGE_BYTES * FILL_ENVELOPE_MAX_PAGES;
 pub(crate) const FILL_ENVELOPE_MAX_ITEMS: usize = 65_536;
+
+/// 🧮️ Admission-census units one `fillBuildTick` turn spends. The census is a resumable walk over
+/// every owner a `FillBuilder` retains, and it must finish before the envelope can be handed to its
+/// bounded job — so a cursor that advanced ONE unit per turn (what shipped) needed one 120 ms tick
+/// per retained owner and never admitted a real document's plan at all: `enqueue_fill_job` returned
+/// `None` forever, no `Effect::SpawnJob` was ever requested, and the fill-count slider stayed at
+/// `ready: 0, loading: true` while each superseding edit re-admitted a fresh envelope. Budgeting a
+/// turn in UNITS instead is the same discipline `precompute_step_lane` already runs on the brush
+/// lane, and keeps one turn far below the interactive ceiling
+/// (`fill_build_tick_every_step_stays_below_the_interactive_ceiling_for_nakagin`).
+pub(crate) const FILL_ENVELOPE_CENSUS_UNITS_PER_TURN: usize = 4_096;
 pub(crate) const FILL_ENVELOPE_MAX_OPERATIONS: usize = 4;
 const FILL_ENVELOPE_PROCESS_BYTES: usize = FILL_ENVELOPE_MAX_BYTES * FILL_ENVELOPE_MAX_OPERATIONS;
 const FILL_ENVELOPE_TOKEN_BYTES: usize = 56;
@@ -410,9 +421,68 @@ fn fill_envelope_registry() -> &'static Mutex<FillEnvelopeRegistry> {
 /// Owned here rather than in either tests module, because both the session laws and the whole-app
 /// tick laws have to take the SAME mutex for it to serialize anything.
 #[cfg(test)]
-pub(crate) fn fill_envelope_test_guard() -> std::sync::MutexGuard<'static, ()> {
+pub(crate) struct FillEnvelopeTestGuard(std::sync::MutexGuard<'static, ()>);
+
+#[cfg(test)]
+impl Drop for FillEnvelopeTestGuard {
+    fn drop(&mut self) {
+        drain_fill_envelope_registry_for_test();
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn fill_envelope_test_guard() -> FillEnvelopeTestGuard {
     static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
-    GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    let inner = GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    drain_fill_envelope_registry_for_test();
+    FillEnvelopeTestGuard(inner)
+}
+
+/// 🧹️ Drains every envelope the process-wide registry still holds, so one whole-app law cannot
+/// leave a live plan standing in one of the four slots and starve the next law of an admission.
+/// Test-only: production never wants a blanket close — an envelope belongs to the session that
+/// admitted it, and `Drop for Puzzle3dPrecomputeSession` retires exactly that one.
+#[cfg(test)]
+pub(crate) fn drain_fill_envelope_registry_for_test() {
+    let standing: Vec<FillJobRequest> = {
+        let Ok(registry) = fill_envelope_registry().lock() else { return };
+        registry.slots.iter().filter_map(|slot| slot.as_ref().map(|authority| authority.request.clone())).collect()
+    };
+    for request in &standing {
+        terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed);
+    }
+    if let Ok(mut registry) = fill_envelope_registry().lock() {
+        for authority in registry.slots.iter_mut().flatten() {
+            apply_fill_envelope_terminal_intent(authority);
+            authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed);
+            authority.observation.done = true;
+            authority.checked_out.store(false, Ordering::Release);
+        }
+    }
+    let mut session = Puzzle3dPrecomputeSession::new();
+    let mut stalled = 0_usize;
+    for _ in 0..FILL_ENVELOPE_SESSION_CLOSE_TURNS {
+        if fill_envelope_occupancy().0 == 0 {
+            break;
+        }
+        if session.pump_fill_terminal_step() {
+            stalled = 0;
+            continue;
+        }
+        stalled += 1;
+        if stalled > 8 {
+            break;
+        }
+    }
+    if let Ok(mut registry) = fill_envelope_registry().lock() {
+        let mut released = 0_usize;
+        for slot in registry.slots.iter_mut() {
+            if let Some(authority) = slot.take() {
+                released = released.saturating_add(authority.reserved_bytes);
+            }
+        }
+        registry.aggregate_bytes = registry.aggregate_bytes.saturating_sub(released);
+    }
 }
 
 /// 🧮️ How many of [`FILL_ENVELOPE_MAX_OPERATIONS`] envelope slots are occupied right now, and how
@@ -425,6 +495,22 @@ pub(crate) fn fill_envelope_occupancy() -> (usize, u64) {
         return (usize::MAX, u64::MAX);
     };
     (registry.slots.iter().filter(|slot| slot.is_some()).count(), registry.generations.iter().sum())
+}
+
+#[cfg(test)]
+pub(crate) fn fill_envelope_available_count() -> u32 {
+    let Ok(registry) = fill_envelope_registry().try_lock() else {
+        return 0;
+    };
+    registry
+        .slots
+        .iter()
+        .filter_map(Option::as_ref)
+        .filter_map(|authority| authority.fill.as_ref())
+        .filter_map(|fill| fill.try_lock().ok())
+        .map(|fill| fill.sequence.len() as u32)
+        .max()
+        .unwrap_or(0)
 }
 
 fn fill_envelope_token(request: &FillJobRequest) -> [u8; FILL_ENVELOPE_TOKEN_BYTES] {
@@ -557,6 +643,12 @@ impl FillEnvelopeRegistry {
         (authority.request == *request).then(|| authority.token_page.as_ref().map(|page| page[..authority.token_len].to_vec())).flatten()
     }
 
+    /// ▶️ Whether `request` still names a run that can be advanced — an envelope that has terminalized
+    /// or entered its close cursor is finished, however much of its plan is still readable.
+    fn is_live(&self, request: &FillJobRequest) -> bool {
+        self.slots.get(usize::from(request.slot)).and_then(Option::as_ref).is_some_and(|authority| authority.request == *request && matches!(authority.phase, FillEnvelopePhase::Measuring | FillEnvelopePhase::Admitted))
+    }
+
     fn observation(&self, request: &FillJobRequest) -> Option<FillObservation> {
         let authority = self.slots.get(usize::from(request.slot))?.as_ref()?;
         (authority.request == *request).then_some(authority.observation)
@@ -638,6 +730,14 @@ impl FillEnvelopeJobEntryCursor {
     fn into_guard(mut self) -> FillEnvelopeWorkerFaultGuard {
         std::mem::replace(&mut self.terminal_guard, FillEnvelopeWorkerFaultGuard { request: None })
     }
+
+    /// 🛑 A cancel that arrives before the envelope was ever bound to its job. The envelope still has
+    /// to terminalize — nothing else will ever drive it — but as the deliberate stop it is, not as the
+    /// fault the armed guard reports for a worker that died.
+    fn cancel(&mut self) {
+        let Some(request) = self.terminal_guard.request.take() else { return };
+        request_fill_envelope_terminal(&request, FillEnvelopeTerminalReason::Cancelled);
+    }
 }
 
 fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
@@ -709,7 +809,7 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
                     return FillEnvelopeDrive::Stale;
                 };
                 match &outcome {
-                    StepOutcome::CheckpointReady(_) => authority.steps_remaining = authority.steps_remaining.saturating_sub(1),
+                    StepOutcome::CheckpointReady(_) => {}
                     StepOutcome::Complete(_) => {
                         authority.steps_remaining = 0;
                         authority.worker_terminal = true;
@@ -742,7 +842,7 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
     }) else {
         return FillEnvelopeDrive::Advanced(FillJobSlice { progress: None, done: authority.observation.done });
     };
-    let done = authority.steps_remaining == 0 || fill_done;
+    let done = fill_done;
     if done && matches!(authority.phase, FillEnvelopePhase::Admitted) {
         authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
         authority.worker_terminal = true;
@@ -1299,7 +1399,7 @@ pub(crate) struct Puzzle3dCollision {
     fill_steps_remaining: usize,
     pub(crate) fill: Option<SharedFillBuilder>,
     fill_worker: Option<OwnedFillWorker>,
-    fill_rejected_worker: Option<RejectedFillWorker>,
+    fill_rejected_worker: Option<Box<RejectedFillWorker>>,
     fill_worker_outcome: Option<OwnedFillOutcome>,
     fill_worker_terminal: bool,
     fill_cancel: CancelToken,
@@ -1315,7 +1415,7 @@ pub(crate) struct Puzzle3dCollision {
 impl Drop for Puzzle3dCollision {
     fn drop(&mut self) {
         if let Some(rejected) = self.fill_rejected_worker.take() {
-            retire_rejected_fill_worker(rejected);
+            retire_rejected_fill_worker(*rejected);
         }
     }
 }
@@ -1535,8 +1635,8 @@ impl Puzzle3dCollision {
                 Ok(worker) => self.fill_worker = Some(worker),
                 Err(mut rejected) => {
                     rejected.begin_close();
-                    if let Some(previous) = self.fill_rejected_worker.replace(rejected) {
-                        retire_rejected_fill_worker(previous);
+                    if let Some(previous) = self.fill_rejected_worker.replace(Box::new(rejected)) {
+                        retire_rejected_fill_worker(*previous);
                     }
                     self.fill_steps_remaining = 0;
                 }
@@ -1547,7 +1647,7 @@ impl Puzzle3dCollision {
             self.fill = None;
             self.fill_worker = None;
             if let Some(rejected) = self.fill_rejected_worker.take() {
-                retire_rejected_fill_worker(rejected);
+                retire_rejected_fill_worker(*rejected);
             }
             self.fill_worker_outcome = None;
             self.fill_worker_terminal = false;
@@ -2278,6 +2378,12 @@ pub(crate) struct Puzzle3dFillSession {
     fill_applied_count: u32,
     fill_faulted: bool,
     fill_fault_notice: bool,
+    /// 🛑 The cancel token the admitted envelope holds a clone of. It has to travel WITH the cursor:
+    /// it used to live only on the per-call `Puzzle3dCollision`, so the very dispatch that admitted a
+    /// plan cancelled it again on drop, every later `supersede_admitted_fill`/`cancel_fill_job_for`
+    /// cancelled a fresh token nobody was listening to, and `drive_fill_envelope` read
+    /// `is_cancelled_now()` on its first slice and terminalized the run before it placed anything.
+    fill_cancel: Option<CancelToken>,
     last_emitted_fill_checkpoint: Vec<u8>,
 }
 
@@ -2291,6 +2397,7 @@ impl Default for Puzzle3dFillSession {
             fill_applied_count: 0,
             fill_faulted: false,
             fill_fault_notice: false,
+            fill_cancel: None,
             last_emitted_fill_checkpoint: Vec::new(),
         }
     }
@@ -2338,12 +2445,21 @@ impl Puzzle3dPrecomputeSession {
 
     fn read_fill<R>(&self, read: impl FnOnce(&FillBuilder) -> R) -> Option<R> {
         if let Some(request) = &self.fill_job {
-            let registry = fill_envelope_registry().try_lock().ok()?;
-            let authority = registry.slots.get(usize::from(request.slot))?.as_ref().filter(|authority| authority.request == *request)?;
-            let fill = authority.fill.as_ref()?.try_lock().ok()?;
+            if let Ok(registry) = fill_envelope_registry().try_lock() {
+                if let Some(fill) = registry.slots.get(usize::from(request.slot)).and_then(Option::as_ref).filter(|authority| authority.request == *request).and_then(|authority| authority.fill.as_ref()).and_then(|fill| fill.try_lock().ok()) {
+                    return Some(read(&fill));
+                }
+            }
+        }
+        if let Some(fill) = self.engine.fill.as_ref().and_then(|fill| fill.try_lock().ok()) {
             return Some(read(&fill));
         }
-        let fill = self.engine.fill.as_ref()?.try_lock().ok()?;
+        let registry = fill_envelope_registry().try_lock().ok()?;
+        let live: Vec<&FillEnvelopeAuthority> = registry.slots.iter().filter_map(Option::as_ref).collect();
+        if live.len() != 1 {
+            return None;
+        }
+        let fill = live[0].fill.as_ref()?.try_lock().ok()?;
         Some(read(&fill))
     }
 
@@ -2388,9 +2504,6 @@ impl Puzzle3dPrecomputeSession {
             return Ok(());
         }
         if self.engine.scene_is_synced(&scene) {
-            if self.engine.fill.is_none() && self.fill_job.is_none() && !self.fill_faulted {
-                self.engine.start_fill_preparation(true);
-            }
             return Ok(());
         }
         self.supersede_admitted_fill();
@@ -2445,20 +2558,26 @@ impl Puzzle3dPrecomputeSession {
             fill_applied_count: self.fill_applied_count,
             fill_faulted: self.fill_faulted,
             fill_fault_notice: self.fill_fault_notice,
+            fill_cancel: Some(std::mem::replace(&mut self.engine.fill_cancel, root_cancel_token())),
             last_emitted_fill_checkpoint: std::mem::take(&mut *self.last_emitted_fill_checkpoint.borrow_mut()),
         }
     }
 
-    /// 🎟 Adopts a fill cursor a previous call left in the session slot.
-    pub(crate) fn install_fill_session(&mut self, session: Puzzle3dFillSession) {
-        self.fill_job = session.fill_job;
-        self.fill_admission = session.fill_admission;
-        self.fill_terminal = session.fill_terminal;
-        self.fill_observation = session.fill_observation;
+    /// 🎟 Adopts a fill cursor a previous call left in the session slot. Fields are taken through a
+    /// mutable borrow so the source `Puzzle3dFillSession` (a `Drop` type) is never partially moved out
+    /// of; once emptied it is no longer `involved`, so its `Drop` is a clean no-op.
+    pub(crate) fn install_fill_session(&mut self, mut session: Puzzle3dFillSession) {
+        self.fill_job = session.fill_job.take();
+        self.fill_admission = session.fill_admission.take();
+        self.fill_terminal = session.fill_terminal.take();
+        self.fill_observation = std::mem::take(&mut session.fill_observation);
         self.fill_applied_count = session.fill_applied_count;
         self.fill_faulted = session.fill_faulted;
         self.fill_fault_notice = session.fill_fault_notice;
-        *self.last_emitted_fill_checkpoint.borrow_mut() = session.last_emitted_fill_checkpoint;
+        if let Some(cancel) = session.fill_cancel.take() {
+            self.engine.fill_cancel = cancel;
+        }
+        *self.last_emitted_fill_checkpoint.borrow_mut() = std::mem::take(&mut session.last_emitted_fill_checkpoint);
     }
 
     /// 🥽️ Installs real geometry for one mesh identity out of the process-wide derived-mesh store —
@@ -2523,8 +2642,14 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress_summary(&self) -> FillProgressSummary {
-        self.read_fill(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: (self.fill_applied_count as usize).min(fill.sequence.len()), max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count })
-            .unwrap_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true })
+        if let Some(summary) = self.read_fill(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: (self.fill_applied_count as usize).min(fill.sequence.len()), max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count }) {
+            return summary;
+        }
+        if self.fill_job.is_some() {
+            let count = self.fill_observation.available as usize;
+            return FillProgressSummary { count, applied_count: (self.fill_applied_count as usize).min(count), max_count: FILL_COUNT_MAX, done: self.fill_observation.done };
+        }
+        FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true }
     }
 
     /// 🔭️ Advances a fixed number of one-unit preview JSON grants and returns the retained last
@@ -2561,7 +2686,7 @@ impl Puzzle3dPrecomputeSession {
     /// 🪣️ O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` round
     /// trip just to read `sequence.len()`.
     pub fn fill_available_count(&self) -> u32 {
-        self.fill_job.as_ref().map_or_else(|| self.read_fill(|fill| fill.sequence.len() as u32).unwrap_or(0), |_| self.fill_observation.available)
+        self.read_fill(|fill| fill.sequence.len() as u32).unwrap_or_else(|| self.fill_job.as_ref().map_or(0, |_| self.fill_observation.available))
     }
 
     /// 🪣️ Restores the small persisted cursor independently of the immutable fill-plan checkpoint.
@@ -2572,7 +2697,7 @@ impl Puzzle3dPrecomputeSession {
     /// 🧵️ Advances only one bounded plan-prefix delta and checkpoints the new applied cursor.
     pub(crate) fn apply_fill_count_chunk(&mut self, requested: u32, max_delta: usize) -> Option<FillApplyChunk> {
         let current = self.fill_applied_count;
-        let chunk = self.read_fill(|fill| {
+        let Some(chunk) = self.read_fill(|fill| {
             let target = (requested as usize).min(fill.sequence.len());
             let current = (current as usize).min(fill.sequence.len());
             let next = if target > current { current.saturating_add(max_delta).min(target) } else { current.saturating_sub(max_delta).max(target) };
@@ -2582,13 +2707,41 @@ impl Puzzle3dPrecomputeSession {
                 (Vec::new(), Vec::new(), fill.appended_objects[next..current].iter().rev().map(|object| object.id.clone()).collect())
             };
             FillApplyChunk { applied_count: next as u32, added_objects, added_attractions, removed_object_ids }
-        })?;
+        }) else {
+            self.fill_applied_count = 0;
+            return Some(FillApplyChunk { applied_count: 0, added_objects: Vec::new(), added_attractions: Vec::new(), removed_object_ids: Vec::new() });
+        };
         self.fill_applied_count = chunk.applied_count;
         Some(chunk)
     }
 
     pub fn fill_is_done(&self) -> bool {
-        self.fill_job.as_ref().map_or_else(|| self.read_fill(|fill| fill.stalled || fill.sequence.len() >= fill.max_count).unwrap_or(true), |_| self.fill_observation.done)
+        if self.fill_job.is_some() {
+            return self.fill_observation.done;
+        }
+        if let Some(done) = self.read_fill(|fill| fill.stalled || fill.sequence.len() >= fill.max_count) {
+            return done;
+        }
+        let Ok(registry) = fill_envelope_registry().try_lock() else {
+            return true;
+        };
+        let live: Vec<&FillEnvelopeAuthority> = registry.slots.iter().filter_map(Option::as_ref).collect();
+        if live.len() == 1 {
+            return live[0].observation.done || matches!(live[0].phase, FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing);
+        }
+        true
+    }
+
+    #[cfg(test)]
+    pub(crate) fn fill_registry_plan_complete(&self) -> bool {
+        if let Some(_request) = &self.fill_job {
+            return self.fill_observation.done;
+        }
+        let Ok(registry) = fill_envelope_registry().try_lock() else {
+            return false;
+        };
+        let live: Vec<&FillEnvelopeAuthority> = registry.slots.iter().filter_map(Option::as_ref).collect();
+        live.len() == 1 && (live[0].observation.done || matches!(live[0].phase, FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing))
     }
 
     pub fn fill_checkpoint_bytes(&self) -> Vec<u8> {
@@ -2646,6 +2799,12 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn enqueue_fill_job(&mut self) -> Option<(u64, Vec<u8>)> {
+        self.enqueue_fill_job_spending(FILL_ENVELOPE_CENSUS_UNITS_PER_TURN)
+    }
+
+    /// 🧮 One admission-census grant. Production spends [`FILL_ENVELOPE_CENSUS_UNITS_PER_TURN`];
+    /// tests that pin mid-census fairness spend exactly one unit.
+    pub(crate) fn enqueue_fill_job_spending(&mut self, census_units: usize) -> Option<(u64, Vec<u8>)> {
         if self.fill_faulted {
             return None;
         }
@@ -2715,7 +2874,14 @@ impl Puzzle3dPrecomputeSession {
             };
             let fill = registry.slots.get(usize::from(admission.request.slot))?.as_ref().filter(|authority| authority.request == admission.request)?.fill.as_ref()?;
             let Ok(fill) = fill.try_lock() else { return None };
-            admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)
+            let mut outcome = FillBuilderOwnerCensusStep::Pending;
+            for _ in 0..census_units {
+                outcome = admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES);
+                if !matches!(outcome, FillBuilderOwnerCensusStep::Pending) {
+                    break;
+                }
+            }
+            outcome
         };
         let credit = match census {
             FillBuilderOwnerCensusStep::Pending => return None,
@@ -2801,7 +2967,11 @@ impl Puzzle3dPrecomputeSession {
         };
         let authority = registry.authority_mut(&request)?;
         apply_fill_envelope_terminal_intent(authority);
-        if !matches!(authority.phase, FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing) || authority.checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        let discard = matches!(
+            authority.phase,
+            FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled | FillEnvelopeTerminalReason::Fault | FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing
+        );
+        if !discard || authority.checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
         Some(FillEnvelopeTerminalHandle { request, checked_out: authority.checked_out.clone(), returned: false })
@@ -2809,8 +2979,22 @@ impl Puzzle3dPrecomputeSession {
 
     /// 🧾️ Identity of the fill job this session currently drives — `(job, operation, generation)`. The
     /// fill tool publishes it into its cancel action's args so a cancel can never reach a superseded run.
+    ///
+    /// 🛑 A run whose envelope has terminalized is NOT one this session drives, even while its plan is
+    /// still readable and its close cursor is still giving the slot back — that takes one turn per
+    /// retained owner, ~100 ticks on the `app()` fixture. Answering it here kept `Cancel fill` on
+    /// screen for seconds after the user pressed it, offering to cancel a run that was already over.
+    /// Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5.
     pub fn fill_job_identity(&self) -> Option<(u64, u64, u64)> {
-        self.fill_job.as_ref().map(|request| (request.job, request.operation, request.generation))
+        let request = self.fill_job.as_ref()?;
+        if self.fill_terminal.is_some() {
+            return None;
+        }
+        let identity = (request.job, request.operation, request.generation);
+        let Ok(registry) = fill_envelope_registry().try_lock() else {
+            return Some(identity);
+        };
+        registry.is_live(request).then_some(identity)
     }
 
     /// 🛑 Cancels the live fill job only when the caller names it exactly; a stale identity is a no-op,
@@ -2941,11 +3125,11 @@ impl Drop for Puzzle3dPrecomputeSession {
     /// process. `pump_fill_terminal_step` also collects envelopes earlier sessions abandoned, so this
     /// drains until the registry is quiet rather than only until this session's own slot is back.
     fn drop(&mut self) {
-        self.engine.fill_cancel.cancel_now();
         let involved = self.fill_job.is_some() || self.fill_admission.is_some() || self.fill_terminal.is_some();
         if !involved {
             return;
         }
+        self.engine.fill_cancel.cancel_now();
         if let Some(request) = &self.fill_job {
             terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed);
         }
@@ -3028,12 +3212,26 @@ impl BoundedJob for Puzzle3dFillBoundedJob {
         outcome
     }
 
+    /// 🛑 `jobs::cancel-job` calls this and then DROPS the owner, so this is the whole of the run's
+    /// last word: no later `step` will ever reach [`drive_fill_envelope`] to observe the token it
+    /// cancels. It therefore terminalizes the envelope itself, as `Cancelled`, and disarms the fault
+    /// guard the drop would otherwise fire — a run the user stopped is not a failed one, and the
+    /// `fill_failed` notice the armed guard produced was reported on every deliberate cancel.
+    /// Ticket 26/09/02/PUZZLE-3D-END-TO-END W-F5.
     fn cancel(&mut self) {
-        let FillJobStage::Driving { request, .. } = &self.stage else { return };
-        let Ok(mut registry) = fill_envelope_registry().try_lock() else { return };
-        let Some(authority) = registry.authority_mut(request) else { return };
-        let Some(cancel) = &authority.cancel else { return };
-        cancel.cancel_now();
+        match &mut self.stage {
+            FillJobStage::Admitting(cursor) => cursor.cancel(),
+            FillJobStage::Driving { request, guard } => {
+                if let Ok(mut registry) = fill_envelope_registry().try_lock() {
+                    if let Some(cancel) = registry.authority_mut(request).and_then(|authority| authority.cancel.clone()) {
+                        cancel.cancel_now();
+                    }
+                }
+                request_fill_envelope_terminal(request, FillEnvelopeTerminalReason::Cancelled);
+                guard.disarm();
+            }
+            FillJobStage::Terminal => {}
+        }
     }
 
     /// 📸️ The envelope token IS the checkpoint, byte-for-byte the same page `enqueue_fill_job`

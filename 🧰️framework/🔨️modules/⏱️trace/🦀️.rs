@@ -155,6 +155,62 @@ impl InteractiveStage {
 }
 //#endregion 🔖️Constants
 
+//#region 🩺️Diagnostics
+/// 🩺️ The ONE switch that arms every per-turn runtime perf trace in the repo — maintenance stage
+/// cost, cooperative-callback overrun, reactor more-work streak, typed-operation publication. Off by
+/// default: those sites are byte-proportional signal a perf run wants and an interactive boot must
+/// never pay for. Named as a schema constant so a host that has no environment (bare wasm in a
+/// browser tab) arms the same switch through [`set_runtime_diagnostics`] instead.
+pub const RUNTIME_DIAGNOSTICS_ENV: &str = "SEMIO_RUNTIME_DIAGNOSTICS";
+
+/// 🩺️ Tri-state so the environment is read at most once and an explicit host override always wins.
+const RUNTIME_DIAGNOSTICS_UNRESOLVED: u32 = 0;
+const RUNTIME_DIAGNOSTICS_OFF: u32 = 1;
+const RUNTIME_DIAGNOSTICS_ON: u32 = 2;
+static RUNTIME_DIAGNOSTICS: AtomicU32 = AtomicU32::new(RUNTIME_DIAGNOSTICS_UNRESOLVED);
+
+/// 🩺️ Arms or disarms the runtime perf traces for this process, outranking the environment.
+pub fn set_runtime_diagnostics(enabled: bool) {
+    RUNTIME_DIAGNOSTICS.store(if enabled { RUNTIME_DIAGNOSTICS_ON } else { RUNTIME_DIAGNOSTICS_OFF }, Ordering::Relaxed);
+}
+
+/// 🩺️ Whether per-turn runtime perf traces may print. Resolves [`RUNTIME_DIAGNOSTICS_ENV`] once on
+/// first ask (`1`/`true`/`on`/`yes` arm it, everything else including unset leaves it off).
+pub fn runtime_diagnostics_enabled() -> bool {
+    match RUNTIME_DIAGNOSTICS.load(Ordering::Relaxed) {
+        RUNTIME_DIAGNOSTICS_ON => true,
+        RUNTIME_DIAGNOSTICS_OFF => false,
+        _ => {
+            let armed = runtime_diagnostics_from_environment();
+            RUNTIME_DIAGNOSTICS.store(if armed { RUNTIME_DIAGNOSTICS_ON } else { RUNTIME_DIAGNOSTICS_OFF }, Ordering::Relaxed);
+            armed
+        }
+    }
+}
+
+/// 🌐️ Bare wasm owns no environment, so the switch there is host-set only.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn runtime_diagnostics_from_environment() -> bool {
+    false
+}
+
+/// 🖥️ Native and WASI p2 read [`RUNTIME_DIAGNOSTICS_ENV`].
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+fn runtime_diagnostics_from_environment() -> bool {
+    matches!(std::env::var(RUNTIME_DIAGNOSTICS_ENV).ok().as_deref().map(str::trim), Some("1" | "true" | "on" | "yes"))
+}
+//#endregion 🩺️Diagnostics
+
+//#region 🧮️GuestMemory
+#[path = "🧮️memory/🦀️.rs"]
+mod guest_memory;
+pub use guest_memory::{
+    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, reset_heap_peak,
+    retained_heap_bytes, HeapWitness, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
+    GUEST_LINEAR_MEMORY_STACK_BYTES,
+};
+//#endregion 🧮️GuestMemory
+
 //#region 🔄️BoundedRing
 /// 🔄️ Generic fixed-capacity overwrite-oldest ring, the same shape as
 /// `ActorMetrics::wall_us_ring`/[`PercentileRing`] generalized over `T: Copy` so it isn't duplicated

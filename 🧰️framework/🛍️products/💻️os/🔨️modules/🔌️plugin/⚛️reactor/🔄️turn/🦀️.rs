@@ -46,11 +46,144 @@ crate::component_persistent_local! {
     static COMMAND_INGRESS: RefCell<[Option<RetainedCommandIngress>; 2]> = RefCell::new([None, None]);
 }
 
+/// 🧮️ Occupied slots of the guest's retained command-ingress authority, out of its fixed two. A
+/// settled reactor holds none: an owner survives a turn only while its own command is still being
+/// assembled, dispatched or closed. This is what an ingress-saturation law reads between commands —
+/// a stream that leaves an owner behind pins the authority and backpressures every later command.
+pub fn retained_command_ingress_occupancy() -> usize {
+    COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().filter(|entry| entry.is_some()).count())
+}
+
 thread_local! {
-    /// 🐞️ `[DEBUG]` turn sequence for the phase trace — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
-    static TURN_TRACE: Cell<u64> = const { Cell::new(0) };
     /// 🐞️ `[DEBUG]` more-work streak trace: (current streak, total more-work turns) — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     static MORE_WORK_TRACE: RefCell<(u64, u64)> = const { RefCell::new((0, 0)) };
+    /// 🧮️ Largest guest linear-memory reading this actor has witnessed, in bytes.
+    static GUEST_MEMORY_WITNESS: Cell<usize> = const { Cell::new(0) };
+    /// 🧮️ Whether the install-peak ceiling has already been reported for this actor.
+    static GUEST_MEMORY_REPORTED: Cell<bool> = const { Cell::new(false) };
+    /// 🧮️ Retained-heap reading at the previous [`trace_turn_phase_retention`] probe.
+    static TURN_PHASE_RETENTION: Cell<isize> = const { Cell::new(0) };
+    /// 🔦️ Which sources answered `MoreWork` on the most recent turn.
+    static LAST_MORE_WORK_SOURCES: Cell<TurnMoreWorkSources> = const { Cell::new(TurnMoreWorkSources::SETTLED) };
+}
+
+/// 🔦️ The named sources a turn folds into `TurnStatus::MoreWork`, recorded once per turn.
+///
+/// An idle actor must answer `Idle`: every `MoreWork` costs the host another turn round trip, and at
+/// the browser's cadence that is the difference between a settled app and a permanently hot reactor.
+/// A law that asserts "idle" needs to say WHICH source stayed armed, so the reading is structural
+/// rather than a boolean. Costs one `Cell` store per turn. See `📓️idle-turns-2026-09-10.md`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TurnMoreWorkSources {
+    /// ⏱️ The reactor executor still had ready work when its 8 ms slice expired.
+    pub executor_deadline: bool,
+    /// 🧵️ The cooperative process-worker pool advanced a worker this turn.
+    pub process_pool: bool,
+    /// 🚪️ An instance close ladder has un-run cleanup steps.
+    pub close_cleanup: bool,
+    /// 🧬️ A typed operation continuation has not reached its terminal state.
+    pub typed_operation: bool,
+    /// 🔒️ OBSERVATION, never work: another owner held an instance's operation authority when the
+    /// scan ran, so the scan could not answer. Deliberately outside [`Self::any`] — see the fold in
+    /// `poll_kernel_turn`.
+    pub typed_operation_contended: bool,
+    /// 🩹️ A surface reconcile has publishable or unpublished patch work.
+    pub reconcile: bool,
+    /// 🔁️ Resumed async tasks remained undrained at the resume budget.
+    pub resumes: bool,
+    /// 🧵️ The reactor executor holds tasks that are parked, not ready.
+    pub executor_pending: bool,
+    /// 📥️ A command ingress slot still owns an in-assembly command.
+    pub command_ingress: bool,
+    /// 🚪️ The guest lifecycle registry owes a receipt or a transition.
+    pub lifecycle: bool,
+}
+
+impl TurnMoreWorkSources {
+    /// 😴️ The reading of a turn that answered `Idle`.
+    pub const SETTLED: Self = Self { executor_deadline: false, process_pool: false, close_cleanup: false, typed_operation: false, typed_operation_contended: false, reconcile: false, resumes: false, executor_pending: false, command_ingress: false, lifecycle: false };
+
+    /// 🔦️ Whether any source is armed — equal to the turn's `MoreWork` verdict.
+    pub fn any(self) -> bool {
+        !self.names().is_empty()
+    }
+
+    /// 🏷️ The armed source names, for a law's failure message.
+    pub fn names(self) -> Vec<&'static str> {
+        [
+            (self.executor_deadline, "executor_deadline"),
+            (self.process_pool, "process_pool"),
+            (self.close_cleanup, "close_cleanup"),
+            (self.typed_operation, "typed_operation"),
+            (self.reconcile, "reconcile"),
+            (self.resumes, "resumes"),
+            (self.executor_pending, "executor_pending"),
+            (self.command_ingress, "command_ingress"),
+            (self.lifecycle, "lifecycle"),
+        ]
+        .into_iter()
+        .filter_map(|(armed, name)| armed.then_some(name))
+        .collect()
+    }
+}
+
+/// 🔦️ The [`TurnMoreWorkSources`] of the most recent turn on this actor's thread.
+pub fn last_turn_more_work_sources() -> TurnMoreWorkSources {
+    LAST_MORE_WORK_SOURCES.get()
+}
+
+/// 🧮️ Attributes a turn's retained bytes to the PHASE that kept them. A settled turn must retain
+/// nothing; the wasm harness measured 4 437 B per turn against an instance-less guest answering
+/// `Idle`, so the owner is a framework phase, not app work. Only weighs anything in a binary that
+/// installed `semio_framework_trace::HeapWitness`, and only under `SEMIO_RUNTIME_DIAGNOSTICS` — which
+/// a guest arms for itself with `set_runtime_diagnostics` when it ships the witness at all.
+/// See `📓️idle-turns-2026-09-10.md`.
+fn trace_turn_phase_retention(phase: &str) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
+    let retained = semio_framework_trace::retained_heap_bytes();
+    let previous = TURN_PHASE_RETENTION.replace(retained);
+    trace_guest_line(&format!("[DEBUG] turn phase {phase}: retained {retained} B, delta {}", retained - previous));
+}
+
+/// 🗣️ One diagnostic line, out where it can actually be read. A `wasm32-wasip2` guest's `stderr` is
+/// whatever `WasiCtx` the host built — nothing, in the Wasmtime harness and in the browser — while
+/// the actor world's own `log` import always lands somewhere the host prints. Off wasm the two are
+/// the same stream, so this stays one call site.
+fn trace_guest_line(line: &str) {
+    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+    crate::app::resolve_ready(crate::component::wasip2::log("debug", line));
+    #[cfg(not(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2")))]
+    eprintln!("{line}");
+}
+
+/// 🧮️ Weighs the guest's own linear memory once per turn — one `memory.size` on wasm, nothing at all
+/// off it. Reaching the wasm `maximum` is a bare `rust_oom` → `unreachable` with no Rust panic and no
+/// diagnosis (boot #9b trapped at `189328 bytes failed` inside the exported `poll`'s own task box),
+/// so the guest says how full it is BEFORE it traps: once, on first crossing the schema's install-peak
+/// ceiling, unconditionally — and every 16 MiB of further growth under
+/// [`semio_framework_trace::runtime_diagnostics_enabled`]
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn trace_guest_memory_pressure() {
+    const GROWTH_TRACE_STEP_BYTES: usize = 16 * 1024 * 1024;
+    let Some(bytes) = semio_framework_trace::guest_linear_memory_bytes() else { return };
+    let witnessed = GUEST_MEMORY_WITNESS.get();
+    if bytes <= witnessed {
+        return;
+    }
+    GUEST_MEMORY_WITNESS.set(bytes);
+    if bytes >= semio_framework_trace::guest_linear_memory_install_peak_ceiling_bytes() && !GUEST_MEMORY_REPORTED.replace(true) {
+        eprintln!(
+            "guest linear memory at {bytes} B — {}% of the {} B budget, past the {}% install-peak ceiling",
+            semio_framework_trace::guest_linear_memory_percent(bytes),
+            semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
+            semio_framework_trace::GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT
+        );
+    }
+    if bytes / GROWTH_TRACE_STEP_BYTES > witnessed / GROWTH_TRACE_STEP_BYTES && semio_framework_trace::runtime_diagnostics_enabled() {
+        eprintln!("[DEBUG] guest linear memory {bytes} B ({}% of budget)", semio_framework_trace::guest_linear_memory_percent(bytes));
+    }
 }
 
 fn native_close_key<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
@@ -100,6 +233,86 @@ impl DirtyPollOwners {
     }
 }
 
+//#region ⏱️TurnExecution
+/// ⏱️ One turn's EXECUTING microseconds — wall time spent inside the guest's own `Future::poll`
+/// calls, with every `Pending` gap excluded. The strict lifecycle authority
+/// ([`semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US`]) must bound the guest's own work; a
+/// plain `now_us() - started_us` also bills the guest for time it is not running at all — a JSPI
+/// suspension parked on a host import, a hidden browser tab whose timer/microtask continuation is
+/// throttled, or an OS deschedule of a loaded box. Measured 2026-09-10: generation3d's whole
+/// `InstanceOpen` turn executes in 13.9 ms natively, yet its browser first step was killed at the
+/// 5 s ceiling, because the wall clock kept running across the descheduled continuations.
+#[derive(Clone, Copy)]
+struct TurnExecution {
+    accumulated_us: u64,
+    poll_started_us: Option<u64>,
+    clock_lost: bool,
+}
+
+const TURN_EXECUTION_IDLE: TurnExecution = TurnExecution { accumulated_us: 0, poll_started_us: None, clock_lost: false };
+
+thread_local! {
+    static TURN_EXECUTION: Cell<TurnExecution> = const { Cell::new(TURN_EXECUTION_IDLE) };
+}
+
+/// ⏱️ Executing microseconds of the turn in flight, including the poll currently on the stack.
+/// `None` means the host clock was missing or ran backward, which the lifecycle authority retains
+/// its receipt for exactly like an overrun.
+pub(crate) fn guest_turn_executing_us() -> Option<u64> {
+    let execution = TURN_EXECUTION.with(Cell::get);
+    if execution.clock_lost {
+        return None;
+    }
+    let Some(poll_started_us) = execution.poll_started_us else { return Some(execution.accumulated_us) };
+    Some(execution.accumulated_us.saturating_add(semio_framework_job::default_now_us()?.checked_sub(poll_started_us)?))
+}
+
+/// ⏱️ Runs one turn under [`TURN_EXECUTION`] accounting; the gaps between polls never accrue.
+///
+/// 📏️ Takes the turn future ALREADY PINNED, by pointer. Taking it `impl Future` by value cost an
+/// exact duplicate of the largest generator in the guest: a parameter owns a coroutine slot from
+/// `Unresumed` onward, `pin!` then moved it into a second local that lives across the `.await`, and
+/// the moved-from parameter slot is never reused — `with_turn_execution` measured 243 184 B around
+/// a 121 584 B `poll_kernel_turn`. `Pin<&mut …>` is 8 bytes and the caller owns the one slot. See
+/// `📓️poll-task-leak-2026-09-10.md` §3.1.
+async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::future::Future<Output = T> + ?Sized)>) -> T {
+    TURN_EXECUTION.with(|execution| execution.set(TURN_EXECUTION_IDLE));
+    std::future::poll_fn(move |context| {
+        TURN_EXECUTION.with(|execution| {
+            let mut current = execution.get();
+            current.poll_started_us = semio_framework_job::default_now_us();
+            current.clock_lost = current.clock_lost || current.poll_started_us.is_none();
+            execution.set(current);
+        });
+        let polled = future.as_mut().poll(context);
+        TURN_EXECUTION.with(|execution| {
+            let mut current = execution.get();
+            match current.poll_started_us.take().zip(semio_framework_job::default_now_us()).map(|(started_us, now_us)| now_us.checked_sub(started_us)) {
+                Some(Some(spent_us)) => current.accumulated_us = current.accumulated_us.saturating_add(spent_us),
+                _ => current.clock_lost = true,
+            }
+            execution.set(current);
+        });
+        polled
+    })
+    .await
+}
+/// ⏱️ Charges the turn in flight with executing microseconds it never really spent, so a law can
+/// reach the strict ceiling deterministically instead of sleeping through it.
+#[cfg(test)]
+pub(crate) fn charge_turn_execution_us(spent_us: u64) {
+    TURN_EXECUTION.with(|execution| {
+        let mut current = execution.get();
+        current.accumulated_us = current.accumulated_us.saturating_add(spent_us);
+        execution.set(current);
+    });
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/⏱️execution/🦀️.rs"]
+mod turn_execution_tests;
+//#endregion ⏱️TurnExecution
+
 /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
 /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
 /// host's semantic authority.
@@ -113,6 +326,7 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
 }
 
+/// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
 pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
@@ -123,8 +337,33 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
 ) -> Result<T, semio_framework::Fault> {
-    let started_us = semio_framework_job::default_now_us();
-    let _turn_seq = TURN_TRACE.with(|seq| { let next = seq.get() + 1; seq.set(next); next });
+    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish))).await
+}
+
+/// 📏️ `plugin_exchange`'s future is 76 848 B — awaiting it INLINE made it the single largest local
+/// of the turn generator, so every `poll` boxed a task future two thirds of which was one callee
+/// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
+/// exchange state is allocated only on the turns that actually run a command. See
+/// `📓️poll-task-leak-2026-09-10.md` §3.2.
+fn plugin_exchange_boxed<'a, PA: crate::app::PluginApp>(
+    runtime: &'a crate::plugin_runtime::PluginRuntime<PA>,
+    instance_id: u32,
+    command: Option<(u64, crate::plugin_runtime::PluginCommandIngress)>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<crate::plugin_runtime::PluginExchangeOutput, semio_framework::Fault>> + 'a>> {
+    Box::pin(crate::plugin_runtime::plugin_exchange(runtime, instance_id, command))
+}
+
+#[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
+async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
+    runtime: &crate::plugin_runtime::PluginRuntime<PA>,
+    events: Vec<Event>,
+    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+    budget: semio_framework::kernel::Budget,
+    prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
+    publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
+) -> Result<T, semio_framework::Fault> {
+    trace_turn_phase_retention("enter");
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
     let mut focus = None;
@@ -171,25 +410,44 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     }
     let mut close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
     let mut document_backbone_effects = Vec::new();
+    trace_turn_phase_retention("lifecycle");
     let _ = step_reactor_close()?;
     let _ = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one());
+    let retirement_deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
     PATCHES.with(|patches| {
-        for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if patches.close_step() {
+        for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
+            if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+                break;
+            }
+            if patches.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
                 break;
             }
         }
     });
-    let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)?;
-    let _ = ui_contract::close_ui_document_page_one();
-    let _ = ui_contract::close_ui_patch_owner_one();
-    let _ = ui_contract::close_ui_value_page_one();
-    let _ = ui_contract::close_built_node_page_one();
-    let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
+    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)? {
+            break;
+        }
+        if unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+            break;
+        }
+    }
+    retire_until_complete(retirement_deadline, || ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("queued document retirement remains valid").complete);
+    retire_until_complete(retirement_deadline, ui_contract::close_ui_patch_owner_one);
+    retire_until_complete(retirement_deadline, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
+    retire_until_complete(retirement_deadline, ui_contract::close_built_node_page_one);
+    retire_while_progress(retirement_deadline, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
     let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
     let _ = crate::app::close_table_rows_view_one();
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
-    with_pending_patches(|pending| pending.borrow_mut().close_step()).map_err(reactor_close_fault)?;
+    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+            break;
+        }
+        if with_pending_patches(|pending| pending.borrow_mut().close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT)).map_err(reactor_close_fault)? {
+            break;
+        }
+    }
     let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
     let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
     if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
@@ -283,8 +541,8 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
             // which owns no registry slot, so `resolve` silently dropped every extension outcome.
             Event::Completed { req, result } => {
                 let outcome = crate::host::outcome_to_result(result);
-                match take_extension_response(req, &outcome) {
-                    Some((instance, action, args)) if native_close_key(runtime, instance).is_ok() => {
+                match take_extension_response(req, outcome) {
+                    Ok((instance, action, args)) if native_close_key(runtime, instance).is_ok() => {
                         let output = crate::plugin_runtime::plugin_dispatch_response_action(runtime, instance, &action, &args).await;
                         for frame_bytes in output.frames {
                             route_app_frame(instance, &frame_bytes, &mut document_backbone_effects);
@@ -300,11 +558,19 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                             }
                         }
                     }
-                    Some(_) => {}
-                    None => REGISTRY.with(|registry| registry.resolve(req, outcome)),
+                    Ok(_) => eprintln!("[DEBUG] continuation resolve dropped req={} — owning instance has no acknowledged live lifetime", req.0),
+                    Err(unclaimed) => REGISTRY.with(|registry| registry.resolve(req, unclaimed)),
                 }
             }
+            // 📄️ A host answer larger than one `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives
+            // as PROLOGUE pages here and its terminal page rides the `Event::Completed` above, so
+            // `Event::Completed` stays THE one completion door for a `req` and this arm never needs
+            // a second dispatch site in the turn generator. A continuation claims its own pages;
+            // everything else falls through to the parked-future accumulator.
             Event::HttpChunk { req, bytes, done } => {
+                if append_extension_response_page(req, &bytes) {
+                    continue;
+                }
                 // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): used to discard every
                 // non-final chunk outright (`if done { resolve(req, Ok(bytes)) }` — every earlier
                 // `bytes` was simply dropped on the floor, silent data loss for any multi-chunk
@@ -489,7 +755,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 retained = None;
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
             } else {
-                match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, None).await {
+                match plugin_exchange_boxed(runtime, cursor.instance, None).await {
                     Ok(output) => {
                         let instance = cursor.instance;
                         if output.presence_terminal == Some(cursor.seq) {
@@ -519,7 +785,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     }
     if let Some(owner) = retained.take() {
         match owner {
-            CommandIngressOwner::Generic { cursor, command } => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command))).await {
+            CommandIngressOwner::Generic { cursor, command } => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command))).await {
                 Ok(mut output) => {
                     match advance_command_cursor(cursor.clone()) {
                         Ok(terminal) => {
@@ -622,11 +888,11 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 }
             }
         } else if cursor.page_index == 0 && retained.is_none() {
-            match semio_framework::kernel::CommandPageSet::try_new() {
+            match semio_framework::kernel::CommandPageSet::try_new(cursor.page_count as usize) {
                 Ok(mut pages) => match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -657,7 +923,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -740,7 +1006,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
 
-    let (continuation, typed_operation_work) = crate::plugin_runtime::plugin_continue_typed_operations(runtime).await?;
+    trace_turn_phase_retention("ingress");
+    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime).await?;
+    let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
         route_exchange_output(instance, output, &mut effects);
     }
@@ -748,8 +1016,10 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     // 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
     // expiry stamping below and `PRESENCE.expire` at the end of this turn — a single wall-clock
     // reading per poll, not one per presence update.
+    trace_turn_phase_retention("continuation");
     let now_ms = u64::try_from(crate::host::now_ms().await).unwrap_or(0);
 
+    trace_turn_phase_retention("presence-clock");
     for (instance, surface) in dirty.surfaces {
         if native_close_key(runtime, instance).is_err() {
             continue;
@@ -825,8 +1095,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
     // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
     // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
-    let more_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(8)));
-    let more_work = more_work || pump_process_worker_pool();
+    let executor_deadline_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(8)));
+    let process_pool_work = !executor_deadline_work && pump_process_worker_pool();
+    let more_work = executor_deadline_work || process_pool_work;
     for effect in REGISTRY.with(|registry| registry.drain()) {
         push_admitted_effect(&mut effects, 0, effect);
     }
@@ -842,20 +1113,46 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending());
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
-    let more_work = more_work || close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work;
+    // 🔒️ `typed_operation_scan.contended` is deliberately NOT folded in. A busy instance lock is not
+    // an answer of "there is runnable work", it is "another owner is mid-step and I could not look" —
+    // and the guest is single-threaded, so on wasm it can only ever be a reader inside this very turn.
+    // Answering `MoreWork` for it turned every concurrent read into a host turn round trip that
+    // produced nothing: 12 of 512 idle generation3d turns, measured 2026-09-10. Every owner that can
+    // hold that lock is itself either a reactor executor task (`executor_pending`), a task resume
+    // (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
+    // which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
+    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work;
+    LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
+        executor_deadline: executor_deadline_work,
+        process_pool: process_pool_work,
+        close_cleanup: close_cleanup_work,
+        typed_operation: typed_operation_scan.runnable,
+        typed_operation_contended,
+        reconcile: reconcile_work,
+        resumes: resumes_remain,
+        executor_pending,
+        command_ingress: command_ingress_pending,
+        lifecycle: lifecycle_work,
+    });
+    trace_turn_phase_retention("render");
+    trace_guest_memory_pressure();
     MORE_WORK_TRACE.with(|trace| {
         let mut trace = trace.borrow_mut();
         let (streak, seen) = if more_work { (trace.0 + 1, trace.1 + 1) } else { (0, trace.1) };
-        if more_work && streak >= 2048 && (streak.is_power_of_two() || streak % 4096 == 0) {
-            eprintln!(
-                "[DEBUG] reactor more-work streak={streak} seen={seen} executor_deadline={} close_cleanup={close_cleanup_work} typed_operation={typed_operation_work} reconcile={reconcile_work} resumes={resumes_remain} executor_pending={executor_pending} command_ingress={command_ingress_pending} lifecycle={lifecycle_work} effects={} patches=[{}] pending=[{}]",
-                more_work && !(close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work),
+        if !semio_framework_trace::runtime_diagnostics_enabled() {
+            *trace = (streak, seen);
+            return;
+        }
+        if more_work {
+            trace_guest_line(&format!(
+                "[DEBUG] reactor more-work streak={streak} seen={seen} sources={:?} contended={typed_operation_contended} effects={} patches=[{}] pending=[{}]",
+                LAST_MORE_WORK_SOURCES.get().names(),
                 effects.len(),
                 PATCHES.with(patches::PatchTracker::debug_state),
                 with_pending_patches(|pending| pending.borrow().debug_state())
-            );
-        } else if !more_work && trace.0 >= 2048 {
-            eprintln!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0);
+            ));
+        } else if trace.0 > 0 {
+            trace_guest_line(&format!("[DEBUG] reactor more-work streak ended after {} turns (seen={seen})", trace.0));
         }
         *trace = (streak, seen);
     });
@@ -894,7 +1191,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
             }
             let prepared = prepare(&result)?;
             if let Some(instance) = focus {
-                runtime.guest_lifetimes.borrow_mut().finish_turn(instance, started_us).map_err(|reason| {
+                runtime.guest_lifetimes.borrow_mut().finish_turn(instance, guest_turn_executing_us()).map_err(|reason| {
                     if reason == instance_lifetime::GUEST_LIFECYCLE_TURN_DEADLINE {
                         semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-turn-deadline"), reason).with_retryable(retryable_lifecycle)
                     } else {
@@ -928,25 +1225,97 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
 fn pump_process_worker_pool() -> bool {
     #[cfg(target_arch = "wasm32")]
     {
-        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
-        let mut pumps = 0;
-        while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
-            let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
-            pool.pump(now_ms);
-            pumps += 1;
-        }
-        pool.has_pending_work()
+        PROCESS_POOL.with(|pool| {
+            if !pool.has_pending_work() {
+                return false;
+            }
+            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
+            let mut pumps = 0;
+            while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
+                let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
+                pool.pump(now_ms);
+                pumps += 1;
+            }
+            pool.has_pending_work()
+        })
     }
     #[cfg(not(target_arch = "wasm32"))]
     false
 }
 
+#[cfg(target_arch = "wasm32")]
+crate::component_persistent_local! {
+    /// 🧵️ The one process worker pool, resolved once instead of once per turn.
+    ///
+    /// `process_worker_pool` re-reads `available_parallelism`, rebuilds a `WorkerPoolConfig` and
+    /// re-asserts it against the established one on every call; `pump_process_worker_pool` runs on
+    /// EVERY reactor turn, so that was a per-turn cost on the guest's hottest path for a handle that
+    /// can never change.
+    static PROCESS_POOL: semio_framework_async::WorkerPool = {
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
+    };
+}
+
 /// 🏃️ Upper bound on process-pool pumps per reactor turn on wasm.
-/// 🧹️ Retained terminal retirement units per reactor turn — background cleanup that never holds the
-/// actor in `more-work`, bounded so one turn stays inside its interactive ceiling.
-const PATCH_CLOSE_UNITS_PER_TURN: usize = 8;
+/// 🧹️ Drives one per-turn retirement ladder entry for a bounded RUN of units instead of the single
+/// unit it used to get, stopping as soon as the entry reports itself complete, its run is spent, or
+/// the turn's own wall-clock budget is gone.
+///
+/// A whole-document swap fills every one of these arenas with DOCUMENT-scaled garbage (the replaced
+/// window bodies, their patches, their built-node pages), and each `…_one()` retires one item. At one
+/// unit per turn that is one host↔guest round trip per retired item, because the same turn answers
+/// `MoreWork` while any of it is outstanding — measured 2026-09-10 (ticket 26/09/02 W-S2) as 8 799
+/// worker messages and 24.3 s for the 180-object Nakagin switch, of which only 5.4 s was main-thread
+/// work. Retirement is bounded work per TURN, not per item.
+// 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
+fn retire_until_complete(deadline: std::time::Instant, mut unit: impl FnMut() -> bool) {
+    for index in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if unit() {
+            return;
+        }
+        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
+            return;
+        }
+    }
+}
+
+/// 🧹️ [`retire_until_complete`] for a ladder entry that reports PROGRESS rather than completion.
+// 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
+fn retire_while_progress(deadline: std::time::Instant, mut unit: impl FnMut() -> bool) {
+    for index in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if !unit() {
+            return;
+        }
+        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
+            return;
+        }
+    }
+}
+
+/// 🧹️ Retained terminal retirement units per reactor turn, bounded so one turn stays inside its
+/// interactive ceiling — [`PATCH_CLOSE_DEADLINE_STRIDE`] cuts the run short on the turn's own
+/// wall-clock budget, exactly like the reconcile loop above it.
+///
+/// This is NOT background cleanup that a slow drip can be indifferent to: an acknowledged publication
+/// keeps `PendingPatchAuthority::has_unpublished` — and therefore the whole turn — in `MoreWork` until
+/// it is retired, and the host answers every `MoreWork` with another turn ROUND TRIP. One 180-object
+/// world-3d publication takes 1 092 retirement units; at the previous 8 units per turn that is 137
+/// round trips per published surface, and it is why the Nakagin example switch took 24.3 s and 8 799
+/// worker messages with only 5.4 s of main-thread work in it (measured 2026-09-10, ticket 26/09/02
+/// W-S2). At 256 it is 5. The turn stays interactive because [`PATCH_CLOSE_DEADLINE_STRIDE`] re-reads
+/// the clock every 8 units against the turn's own budget — the unit count is the ceiling, the
+/// deadline is the bound.
+pub(crate) const PATCH_CLOSE_UNITS_PER_TURN: usize = 256;
+/// ⏱️ How often the retirement run re-reads the clock — the same 64-opportunity stride the reconcile
+/// loop uses, scaled to this shorter run.
+const PATCH_CLOSE_DEADLINE_STRIDE: usize = 8;
+/// 🧹️ Items one retirement unit may retire. Priced per PAGE like every other stage of the turn
+/// (`SURFACE_RECONCILE_PAGE_BYTES` for bytes, this for items) instead of per item, so a
+/// document-scaled patch retires in a bounded handful of turns instead of one turn per item.
+pub(crate) const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
+/// 🧹️ Bytes one retirement unit may retire — the publication's own page budget.
+pub(crate) const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
 #[cfg(target_arch = "wasm32")]
 const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
 /// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.

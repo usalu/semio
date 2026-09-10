@@ -292,7 +292,7 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     work: Option<Box<dyn PuzzleCommandWork<A>>>,
     raw_input: Option<RetainedToolWireInput>,
     checkpoint_input: Option<RetainedToolWireInput>,
-    raw: [u8; PUZZLE_COMMAND_RAW_BYTES],
+    raw: Vec<u8>,
     raw_len: usize,
     raw_page_cursor: usize,
     raw_scan_cursor: usize,
@@ -357,6 +357,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
         let phase = if raw_input.is_some() { PuzzleCommandPhase::WirePages } else { PuzzleCommandPhase::Preflight };
         payload.work.bind_operation(operation);
         payload.work.bind_window_owners(payload.window_config.take(), payload.window_transient.take());
+        let raw = raw_input.as_ref().map(|input| vec![0; input.declared_bytes()]).unwrap_or_default();
         Self {
             operation,
             command: Some(payload.command),
@@ -370,7 +371,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             work: Some(payload.work),
             raw_input,
             checkpoint_input: None,
-            raw: [0; PUZZLE_COMMAND_RAW_BYTES],
+            raw,
             raw_len: 0,
             raw_page_cursor: 0,
             raw_scan_cursor: 0,
@@ -509,10 +510,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 cx.set_stage("puzzle-command-decode");
                 let decoded = match <A::Command as protocol::OpBinary>::decode_op(&self.raw[..self.raw_len]) {
                     Ok(command) => command,
-                    Err(error) => {
-                        eprintln!("[DEBUG] puzzle command wire malformed: raw_len={} pages={} scan={} error={error:?} head={:?}", self.raw_len, self.raw_page_cursor, self.raw_scan_cursor, String::from_utf8_lossy(&self.raw[..self.raw_len.min(160)]));
-                        return self.fault(cx, b"puzzle command wire payload is malformed");
-                    }
+                    Err(_) => return self.fault(cx, b"puzzle command wire payload is malformed"),
                 };
                 let Some(work) = self.work.as_ref() else { return self.fault(cx, b"puzzle command work owner is absent") };
                 if (self.command_id)(&decoded) != work.tool_id() {

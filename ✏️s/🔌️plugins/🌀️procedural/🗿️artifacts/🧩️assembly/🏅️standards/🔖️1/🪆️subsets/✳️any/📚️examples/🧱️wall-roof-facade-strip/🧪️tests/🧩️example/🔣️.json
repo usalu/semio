@@ -1,0 +1,17 @@
+{
+  "schema": "s.procedural.assembly.example-outcome/v1",
+  "example": "wall-roof-facade-strip",
+  "seed": 42,
+  "slots": 4,
+  "edges": 4,
+  "weights": 2,
+  "modules": ["wall", "roof"],
+  "rules": 3,
+  "satisfiable": true,
+  "assignments": {
+    "bay-0-ground": "wall",
+    "bay-1-ground": "wall",
+    "bay-0-top": "wall",
+    "bay-1-top": "roof"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "suspensionUs": 250000,
+  "wallToExecutingRatio": 8,
+  "perTurnBoundUs": 20000
+}

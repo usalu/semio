@@ -147,6 +147,14 @@ pub fn addressed(snapshot: &semio_framework_plugin::WindowTransientSnapshot, eva
     Ok(semio_framework_plugin::WindowTransientMutation::of::<Generation3dPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text }))
 }
 
+//#region 🧬️Schema
+/// 🧬️ The schema-first declaration of this lane, mounted the way every other `🎚️config`/`👥️presence`
+/// owner mounts its own: `🧬️schema/🦀️.rs` carries the `ArtifactSchema`-derived shape the five sibling
+/// format leaves state, while the struct above carries the runtime `DslArtifact` codec.
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🧬️Schema
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

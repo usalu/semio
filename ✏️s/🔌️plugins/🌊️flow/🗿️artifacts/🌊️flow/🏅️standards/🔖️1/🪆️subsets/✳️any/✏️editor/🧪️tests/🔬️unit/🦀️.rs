@@ -17,7 +17,7 @@ fn retained_add_widget_factory_is_exact_child_only_and_legacy_closed() {
     assert_eq!(publication[0].tool_id, "addWidget");
     assert_eq!(publication[0].lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
     let proofs = <FlowPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
-    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len());
+    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());
     assert!(FLOW_CHILD_GROUP_TOOL_IDS.contains(&"addWidget"));
     eprintln!("[DEBUG] retained addWidget factory owns one key, one exact proof and one Child-only publication lane");
 }
@@ -274,7 +274,7 @@ async fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_wi
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let document = FlowSnapshot::default();
-    let config = FlowMainWindowConfig::default();
+    let config = semio_framework_plugin::NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };

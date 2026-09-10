@@ -61,6 +61,33 @@ impl Default for UiDocumentLimits {
     }
 }
 
+/// 📏️ Intake steps ONE retained node costs at its first publication, measured with ~1.8× headroom.
+///
+/// Every renderer drives the retained intake one PHASE per `advance` — a LEB128 byte, a text body, an
+/// attach — so a fixed step count caps a surface patch at a few KiB no matter how large the grant is.
+/// Both the React and the wgpu targets therefore price an intake through
+/// [`UiDocumentLimits::retained_ui_intake_step_ceiling`] instead. The numbers are declared once,
+/// language-agnostically, in `🧵️retained/🧫️fixtures/📥️intake/🔣️.json`'s `budget` and mirrored by the
+/// TypeScript twin `RETAINED_UI_INTAKE_STEPS_PER_NODE`
+/// (`📃️UiDocumentStore/📥️intake/🟦️.ts`).
+pub const RETAINED_UI_INTAKE_STEPS_PER_NODE: usize = 8_192;
+
+/// 🎞️ Steps one drive may spend before it MUST hand the frame back. Exhausting a slice is a YIELD, not
+/// a fault: the caller parks the intake with its retained cursor and resumes it on the next frame, so a
+/// document larger than one slice publishes across several frames. Only the whole-document ceiling is
+/// terminal. Twin of `RETAINED_UI_INTAKE_SLICE_STEPS`.
+pub const RETAINED_UI_INTAKE_SLICE_STEPS: usize = 4_096;
+
+impl UiDocumentLimits {
+    /// 📏️ Liveness backstop for one surface patch: the steps a document at this quota may cost to mint.
+    /// It is NOT the progress guarantee — the intake rejects a phase reporting 32 consecutive steps that
+    /// carry neither an item nor a byte, and that byte-aware rule is what catches a genuine stall.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn retained_ui_intake_step_ceiling(&self) -> usize {
+        self.max_nodes.saturating_mul(RETAINED_UI_INTAKE_STEPS_PER_NODE)
+    }
+}
+
 /// 🧮️ A rough, dependency-free proxy for a patch's wire cost — this crate has no `pack`/serde-json
 /// runtime dependency (see `🦀️.rs`'s dependency-free guarantee), so this sums UTF-8 byte lengths
 /// of the ops' own text-bearing payloads plus a small fixed per-op overhead, rather than actually
