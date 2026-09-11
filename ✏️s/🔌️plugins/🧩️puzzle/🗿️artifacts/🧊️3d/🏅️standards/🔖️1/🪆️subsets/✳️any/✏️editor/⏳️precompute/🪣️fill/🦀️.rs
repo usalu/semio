@@ -2906,7 +2906,7 @@ impl FillBuilder {
     pub(crate) fn inject_nested_owner_page_plus_one_for_test(&mut self) {
         let mut owner = String::with_capacity(FILL_BUILDER_OWNER_PAGE_BYTES + 1);
         owner.push_str("nested-owner");
-        self.catalogs.objects[0].representations[0].tags.push(owner);
+        self.catalogs.objects.get_mut(0).expect("a catalog object kind").representations[0].tags.push(owner);
     }
 
     #[cfg(test)]
@@ -3725,7 +3725,7 @@ impl FillBuilder {
                 }
                 let vortex_index = self.candidate_vortex_cursor;
                 self.candidate_vortex_cursor += 1;
-                let Some((candidate, _)) = brush_fill_candidate_at(&target_context, &self.catalogs, &self.kind_compatibility, &self.host_rules, self.candidate_kind_cursor, vortex_index) else { return };
+                let Some((candidate, _)) = brush_fill_candidate_at(&target_context, &self.catalogs, self.kind_compatibility.as_slice(), &self.host_rules, self.candidate_kind_cursor, vortex_index) else { return };
                 let key = format!("{}\u{1}{}", candidate.object_kind_id, candidate.source_vortex_index);
                 match self.candidate_seen.try_insert(key) {
                     Ok(FixedOwnerSetInsert::Inserted) => self.candidate_raw.push(candidate),

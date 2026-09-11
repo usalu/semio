@@ -52,3 +52,28 @@ fn generation3d_manifest_examples_are_registered_on_the_editor_surface() {
     assert_eq!(registered_ids.len(), 8);
     assert_eq!(registered_ids, expected_ids);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn assembly_editor_and_viewer_share_dialect() {
+    semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor, semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>().await;
+}
+
+#[test]
+fn assembly_manifest_examples_are_registered_on_the_editor_surface() {
+    let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
+    let editor_app_id = semio_s_artifact_procedural_assembly::editor::assembly::create_assembly_editor().id;
+    assert_eq!(editor_app_id, "s.assembly@1/*#editor");
+    let registered_ids: Vec<&str> = plugin.manifest.examples.iter().filter(|example| example.app_id == editor_app_id).map(|example| example.id.as_str()).collect();
+    let sources = semio_s_artifact_procedural_assembly::examples::sources();
+    let expected_ids: Vec<&str> = sources.iter().map(|source| source.id()).collect();
+    assert_eq!(registered_ids, expected_ids);
+    assert_eq!(registered_ids, ["two-room-corridor", "wall-roof-facade-strip"]);
+}
+
+#[test]
+fn assembly_apps_are_declared_on_the_plugin() {
+    let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
+    let ids: Vec<&str> = plugin.manifest.apps.iter().map(|app| app.id.as_str()).collect();
+    assert!(ids.iter().any(|id| *id == "s.assembly@1/*#editor"), "{ids:?}");
+    assert!(ids.iter().any(|id| *id == "s.assembly@1/*#viewer"), "{ids:?}");
+}

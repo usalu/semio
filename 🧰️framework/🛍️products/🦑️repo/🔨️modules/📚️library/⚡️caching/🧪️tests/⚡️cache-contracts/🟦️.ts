@@ -9,6 +9,7 @@ import { testContinuousServices } from "../🖥️services/🟦️.ts";
 import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
 import { testDependencyBootstrap, testNxTooling, testDependencyCancellation } from "../📦️dependencies/🟦️.ts";
 import { testResourceLeases } from "../../🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
+import { testCachePrune } from "../🧹️cache-prune/🟦️.ts";
 import { testWasmOptimizer } from "../🕸️wasm/🟦️.ts";
 import { testCiBaseline } from "../../🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts";
 import { testGithubHistory } from "../../🚦️ci/🐙️github/🧪️tests/🐙️workflow-history/🟦️.ts";
@@ -58,6 +59,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testGraphCoalescing(workspace);
   await testContinuousServices(workspace, output);
   await testResourceLeases(output);
+  await testCachePrune(output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
   const { testPlaygroundPreferences } = await import("../../../🎮️playground/🔒️preferences/🧪️tests/🔒️playground-preferences/🟦️.ts");
@@ -599,8 +601,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const name of ["format", "setup", "publish", "dev"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
     assert.equal(Object.keys(JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {}).length, 0, "Native Nx defaults override custom project metadata; apply defaults inside the repository plugin");
-    assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, join(root, ".🧬semio/🦑️repo/⚡️cache/cargo/browser"));
-    assert.equal(wasmBuildEnvironment(root, { CARGO_TARGET_DIR: "chosen-cache" }).CARGO_TARGET_DIR, join(root, "chosen-cache"));
+    assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, undefined);
+    assert.equal(wasmBuildEnvironment(root, { CARGO_TARGET_DIR: "chosen-cache" }).CARGO_TARGET_DIR, "chosen-cache");
     const vectors = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
     assert.equal(validate(vectors, JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🛂️schema/🔣️.json"), "utf8"))).valid, true);
     const loggingKeys = Object.keys(vectors.daemonEnvironment), savedLogging = Object.fromEntries(loggingKeys.map((key) => [key, process.env[key]]));
@@ -632,8 +634,12 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { isCacheableTask } = createRequire(testSource.url)("nx/src/tasks-runner/utils");
     assert.equal(typeof cacheInternals.matchesUncached, "function");
     assert.equal(typeof cacheInternals.cacheableFamily, "function");
-    assert.equal(cacheInternals.matchesUncached("format-check", policy.uncached), false);
-    assert.equal(cacheInternals.matchesUncached("format", policy.uncached), true);
+    assert.equal(cacheInternals.matchesUncached("format-check", policy), false);
+    assert.equal(cacheInternals.matchesUncached("format", policy), true);
+    assert.equal(cacheInternals.matchesUncached("commit", policy), true);
+    assert.equal(cacheInternals.matchesUncached("os", policy), true);
+    assert.equal(cacheInternals.matchesUncached("os-dev", policy), false);
+    assert.equal(cacheInternals.matchesUncached("setup-git", policy), true);
     assert.equal(cacheInternals.cacheableFamily("format-check"), true);
     assert.equal(cacheInternals.cacheableFamily("generator-inputs"), false);
     for (const row of vectors.policies) {
@@ -764,8 +770,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       for (const profile of vectors.playgroundPreparation.profiles) {
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
         assert.ok(preparation, `${targetName} needs declared prerequisites`);
-        assert.equal(preparation.cache, false);
+        assert.equal(preparation.cache, true, `${targetName} only validates already Nx-materialized bytes and writes nothing`);
         assert.deepEqual(preparation.outputs, []);
+        assert.ok(preparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${targetName} must hash its whole transitive dependency closure`);
+        const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
+        assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
+        assert.equal(wgpuPreparation.cache, false, `${wgpuTargetName} writes into the shared, live PLUGIN_MODULES_ROOT and cannot be replayed`);
+        assert.deepEqual(wgpuPreparation.outputs, []);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
         assert.ok(activationTarget, `${activationName} must follow completed preparation`);
         assert.equal(activationTarget.cache, false);
@@ -832,7 +843,17 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false);
         assert.deepEqual(guard.outputs, [`{workspaceRoot}/${fingerprint.output}`]);
       }
-      if (authority.checkTarget) assert.equal(project.targets[authority.checkTarget.slice(authority.checkTarget.lastIndexOf(":") + 1)].cache, false, `${id} freshness checks must inspect current bytes`);
+      if (authority.checkTarget) {
+        const guardName = authority.checkTarget.slice(authority.checkTarget.lastIndexOf(":") + 1), guardTarget = project.targets[guardName];
+        assert.equal(guardTarget.cache, true, `${id} freshness checks must be soundly cacheable`);
+        for (const path of authority.inputPatterns) assert.ok(guardTarget.inputs.includes(`{workspaceRoot}/${path}`), `${id} check target missing generator input ${path}`);
+        for (const output of authority.outputRoots) assert.ok(guardTarget.inputs.some((input: any) => typeof input === "object" && typeof input.runtime === "string" && input.runtime.includes(JSON.stringify(join(root, output.path)))), `${id} check target must hash its own generated output ${output.path} live, since Nx's own fileset walk silently drops anything .gitignore covers`);
+        if (authority.inputDiscovery) {
+          const fingerprint = policy.generatorInputs[authority.inputDiscovery.kind];
+          assert.ok(guardTarget.inputs.some((input: any) => input.dependentTasksOutputFiles === fingerprint.output), `${id} check target must hash the discovered input receipt too`);
+          assert.ok(guardTarget.dependsOn?.includes(fingerprint.target), `${id} check target must depend on the discovery fingerprint owner`);
+        }
+      }
     }
     const [validatedProject, validatedTarget] = vectors.validationPrerequisite.target.split(":");
     assert.ok(contracts.find((project) => project.name === validatedProject)?.targets[validatedTarget].dependsOn.includes(vectors.validationPrerequisite.prerequisite));

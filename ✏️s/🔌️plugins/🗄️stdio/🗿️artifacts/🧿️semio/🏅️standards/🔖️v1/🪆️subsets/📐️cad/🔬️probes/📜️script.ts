@@ -81,17 +81,15 @@ function main(argv: readonly string[]): number {
     console.error(`[probe] unknown probe ${JSON.stringify(probe)} — expected ${PROBES.join(" | ")}`);
     return 2;
   }
-  // 🏭️`--offline` and an agent-scoped target directory: probes run inside a test sweep alongside peer
-  // sessions, and a shared target directory is the single biggest source of cargo lock contention here.
-  const target = process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(CRATE_DIR, "target"), "probe");
   // 📎️cargo must run in the CRATE directory, so every caller-supplied path is resolved against the
   // caller's cwd FIRST. Passing them through unresolved made every relative `--input` resolve inside
   // the crate instead and the probe reported "No such file or directory" for files that were there.
   const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
+  // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
+  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
   const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", ...resolved], {
     cwd: CRATE_DIR,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: target },
   });
   if (run.status !== 0) {
     console.log(JSON.stringify(failed(probe, `oracle probe exited ${run.status}`, (run.stderr ?? "").trim().split("\n").slice(-6).join("\n"))));

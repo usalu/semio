@@ -1034,6 +1034,31 @@ async fn set_active_example_swaps_the_document_and_undo_restores_it() {
     assert_eq!(object_count(&app), 0);
 }
 
+/// 🛰️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B7: `undo` is a TWO-half framework-reserved gesture
+/// and neither half may be silent. The ADMISSION half must change nothing and say so out loud — one
+/// Isolated [`semio_framework_plugin::app::FRAMEWORK_RESERVED_JOB_KIND`] spawn job and
+/// `UiDirtyScope::None`, never a success that quietly committed nothing; the HOST half
+/// (`complete_reserved_spawned_job` → `commit_framework_history_route`) is the only thing that may
+/// move the document. Pins the regression wave B5 reported: a caller that stops at the admission
+/// sees `dispatch("undo")` succeed while the store never moves, so every undo law degrades into a
+/// no-op that still passes its dispatch.
+#[semio_framework_async_macros::async_test]
+async fn undo_admits_one_reserved_job_that_alone_restores_the_document() {
+    let mut app = app().await;
+    let loaded = object_count(&app);
+    assert!(loaded > 0);
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    assert_eq!(object_count(&app), 0, "empty example clears the objects");
+    let admitted = dispatch_reserved_unsettled(&mut app, "undo", None, None).await.expect("undo admits");
+    let spawned = admitted.requested_effects.iter().filter(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework_plugin::app::FRAMEWORK_RESERVED_JOB_KIND)).count();
+    assert_eq!(spawned, 1, "the admission half must ask the host for exactly one Isolated reserved job: {:?}", admitted.requested_effects);
+    assert!(matches!(admitted.ui_scope, UiDirtyScope::None), "an undo that has not run yet must not claim a dirty scope: {:?}", admitted.ui_scope);
+    assert_eq!(object_count(&app), 0, "the admission half must never move the document on its own");
+    let committed = settle_reserved(&mut app, admitted).await.expect("the host half commits the history route");
+    assert!(matches!(committed.ui_scope, UiDirtyScope::Full), "a committed undo republishes the whole document: {:?}", committed.ui_scope);
+    assert_eq!(object_count(&app), loaded, "only the driven reserved job restores the concrete-forest objects");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn nakagin_example_loads_via_operations() {
     let mut app = app().await;
@@ -1685,6 +1710,23 @@ async fn open_and_accept_vortex_suggestions_preserve_active_utility() {
     let accept_interaction = interaction_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
     assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     assert_eq!(accept_interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
+}
+
+/// 🎰️ Wave B6: `pending_reserved` is direct-mapped on `job % 64`, and a reserved verb that is NOT an
+/// interaction (`noteShellCommand` — the shell records one for every user command) holds its residue
+/// class until it settles. `retire_pending_reserved_latest_wins` may only retire interaction pendings,
+/// so the colliding class used to fault the whole pick with `framework route 'interactionSelect' has no
+/// exact pending spawn slot` (browser battery #44-pre) while 63 classes stood empty. 64 rounds cover
+/// every residue class, so at least one of them mints into the occupied one.
+#[semio_framework_async_macros::async_test]
+async fn interaction_admits_in_every_residue_class_while_a_reserved_verb_stays_pending() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    dispatch_reserved_unsettled(&mut app, "noteShellCommand", Some(&json!({ "commandId": "framework.shell.b6-probe", "label": "Probe" })), None).await.expect("a non-interaction reserved verb admits and holds its residue class");
+    for round in 0..64 {
+        let admitted = select_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.unwrap_or_else(|error| panic!("round {round} must mint into a vacant residue class: {error:?}"));
+        settle_reserved(&mut app, admitted).await.unwrap_or_else(|error| panic!("round {round} must commit: {error:?}"));
+    }
 }
 
 /// 🖱️ Wave W-AB: a vortex pointermove storm admits 70 `interactionHover`s (then a click
@@ -4319,6 +4361,41 @@ async fn world_relocate_on_nakagin_admits_and_completes() {
     assert!((moved[0] - 4.0).abs() < 1e-6 && (moved[1] - 5.0).abs() < 1e-6 && (moved[2] - 6.0).abs() < 1e-6, "nakagin relocate must land, got {moved:?} from {start:?}");
 }
 
+/// 🚚️ Wave B5: the Relocate utility's single commit, both answers. An UNLOCKED object takes the absolute
+/// world origin the host's pointer-up sends and publishes a real document edit; the SAME verb on a LOCKED
+/// object refuses with exactly one `selection_locked` notice, no edit and no movement — the identical
+/// refusal `translateSelection` already owes a locked selection, which this verb used to skip silently
+/// (the host's relocate ghost just snapped back with nothing said). The declared `ActionKind` is pinned
+/// here too: `worldRelocate` writes the document, so undo/redo and the history panel must see a
+/// `Mutation`, never the `View` the 2026-09-10 checklist reverification claimed.
+#[semio_framework_async_macros::async_test]
+async fn world_relocate_moves_an_unlocked_object_and_refuses_a_locked_one_with_one_notice() {
+    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+        result.requested_effects.iter().filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        }).collect()
+    };
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let object_id = first_object_id(&app);
+    let moved = dispatch(&mut app, "worldRelocate", Some(&json!({ "objectId": object_id.as_str(), "position": [3.0, -2.0, 1.5] })), None).await.expect("worldRelocate unlocked");
+    assert!(notices(&moved).is_empty(), "an unlocked relocate must not refuse: {:?}", moved.requested_effects);
+    let landed = object_origin(&app, &object_id);
+    assert!((landed[0] - 3.0).abs() < 1e-9 && (landed[1] + 2.0).abs() < 1e-9 && (landed[2] - 1.5).abs() < 1e-9, "worldRelocate must write the absolute origin, got {landed:?}");
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "ids": [object_id.as_str()], "flag": "locked", "value": true })), None).await.expect("lock");
+    let refused = dispatch(&mut app, "worldRelocate", Some(&json!({ "objectId": object_id.as_str(), "position": [9.0, 9.0, 9.0] })), None).await.expect("worldRelocate locked");
+    let raised = notices(&refused);
+    assert_eq!(raised.len(), 1, "a locked relocate must raise exactly one notice: {:?}", refused.requested_effects);
+    assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED, "the test host declares an authored axis, so the refusal must be real prose");
+    assert!(refused.mutations.is_empty(), "a locked relocate must emit no edit: {:?}", refused.mutations);
+    assert_eq!(object_origin(&app, &object_id), landed, "a locked object must not move");
+    let declared = create_puzzle3d_app().window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "worldRelocate").map(|action| action.kind).expect("worldRelocate is declared");
+    assert_eq!(declared, ActionKind::Mutation, "worldRelocate edits the document, so history and undo must see a Mutation");
+}
+
 /// 📋️ Wave W-Y: copy then paste clones the selection with new ids as one Mutation edit.
 #[semio_framework_async_macros::async_test]
 async fn copy_then_paste_clones_selection_as_one_mutation() {
@@ -4467,6 +4544,35 @@ async fn import_fixture_of_the_live_document_records_whether_identical_content_i
     let objects_after = object_cores(&projection_of(&app));
     assert_eq!(objects_after, object_cores(&source), "identical payload must not rewrite object cores");
     assert!(imported.history_patch.is_none(), "identical live fixture is a store no-op, not a guest dedupe: ingress still delivers payload+name");
+}
+
+/// 📥️ Wave W-AB #44: leftover `importFixture` against a one-object live fixture applies a distinct two-object JSON.
+#[semio_framework_async_macros::async_test]
+async fn import_fixture_of_a_distinct_two_object_json_against_a_one_object_live_fixture_emits_operations() {
+    let source = include_str!("../../🦀️.rs");
+    assert!(
+        source.contains(r#""importFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        "importFixture must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
+    );
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [0.0, 0.0, 0.0] })), None).await.expect("seed");
+    assert_eq!(object_count(&app), 1, "live fixture must start as one object");
+    let live_id = first_object_id(&app);
+    let one = projection_of(&app);
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("distinct");
+    let two = projection_of(&app);
+    let cores = object_cores(&two);
+    assert_eq!(cores.len(), 2, "distinct payload must carry two objects");
+    let distinct_id = cores.iter().map(|row| row.0.as_str()).find(|id| *id != live_id).expect("distinct object id").to_string();
+    dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&one) })), None).await.expect("restore one-object live fixture");
+    assert_eq!(object_count(&app), 1, "live fixture is one object before import");
+    assert_eq!(first_object_id(&app), live_id);
+    let imported = dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&two) })), None).await.expect("import distinct");
+    assert!(imported.history_patch.is_some(), "distinct two-object import must emit operations");
+    let after = object_cores(&projection_of(&app));
+    assert_eq!(after.len(), 2, "after-snapshot must contain both objects");
+    assert!(after.iter().any(|row| row.0 == distinct_id), "after-snapshot must contain the distinct object id {distinct_id}");
 }
 
 /// 🖱️ Wave W-Y: a selected-object context menu is puzzle-owned — never the shell fallback vocabulary.

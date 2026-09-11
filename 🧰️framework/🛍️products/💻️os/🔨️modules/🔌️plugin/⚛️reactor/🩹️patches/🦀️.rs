@@ -48,9 +48,13 @@ struct MountedTreeTerminal {
 }
 
 impl MountedTreeTerminal {
-    fn close_step(&mut self) -> bool {
+    /// 🧹️ Retires this mounted tree terminal against the caller's ITEM grant. Its only owners are the
+    /// tree producer's node pages and two single handles — nothing on this ladder is byte-priced, so
+    /// it takes the grant's `items` and not its `bytes`; the producer spends the whole grant in one
+    /// call and the two handles cost one item each (ticket 26/09/02, W-B2).
+    fn close_step(&mut self, items: usize) -> bool {
         if let Some(authority) = self.authority.as_mut() {
-            if !authority.close_step() {
+            if !authority.close_step_with_grant(items) {
                 return false;
             }
             self.authority = None;
@@ -832,7 +836,7 @@ impl PatchTracker {
                 if let Some(index) = state.terminals.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(closing.instance))) {
                     let terminal = state.terminals[index].as_mut().expect("matching capacity-producing terminal");
                     terminal.close = true;
-                    if terminal.authority.close_step() && terminal.authority.terminal_is_empty() {
+                    if terminal.authority.close_step_with_grant(items, bytes) && terminal.authority.terminal_is_empty() {
                         state.terminals[index] = None;
                     }
                     return false;
@@ -860,7 +864,7 @@ impl PatchTracker {
             if let Some(index) = state.producer_terminals.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.instance == Some(closing.instance))) {
                 let terminal = state.producer_terminals[index].as_mut().expect("matching producer terminal");
                 terminal.close = true;
-                if terminal.close_step() && terminal.terminal_is_empty() {
+                if terminal.close_step(items) && terminal.terminal_is_empty() {
                     state.producer_terminals[index] = None;
                 }
                 return false;
@@ -921,7 +925,7 @@ impl PatchTracker {
             }
             if let Some(index) = state.terminals.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(closing.instance))) {
                 let terminal = state.terminals[index].as_mut().expect("matching terminal");
-                if terminal.authority.close_step() && terminal.authority.terminal_is_empty() {
+                if terminal.authority.close_step_with_grant(items, bytes) && terminal.authority.terminal_is_empty() {
                     state.terminals[index] = None;
                 }
                 return false;
@@ -936,7 +940,7 @@ impl PatchTracker {
         };
         state.close_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
         if let Some(terminal) = state.producer_terminals[index].as_mut().filter(|slot| slot.close) {
-            if terminal.close_step() && terminal.terminal_is_empty() {
+            if terminal.close_step(items) && terminal.terminal_is_empty() {
                 let Some(terminal) = state.producer_terminals[index].take() else { return false };
                 if let Some(surface_index) = terminal.surface_index {
                     if let Some(surface) = state.slots[surface_index].as_mut().filter(|slot| slot.surface == terminal.surface && slot.reconciler.is_none() && slot.producer.is_none() && slot.job.is_none()) {
@@ -949,7 +953,7 @@ impl PatchTracker {
         let Some(terminal) = state.terminals[index].as_mut().filter(|slot| slot.close) else {
             return !state.terminals.iter().flatten().any(|slot| slot.close) && !state.producer_terminals.iter().flatten().any(|slot| slot.close);
         };
-        if terminal.authority.close_step() && terminal.authority.terminal_is_empty() {
+        if terminal.authority.close_step_with_grant(items, bytes) && terminal.authority.terminal_is_empty() {
             state.terminals[index] = None;
         }
         !state.terminals.iter().flatten().any(|slot| slot.close) && !state.producer_terminals.iter().flatten().any(|slot| slot.close)

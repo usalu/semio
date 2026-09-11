@@ -2,9 +2,10 @@
   "title": "Nx Complete Task Caching",
   "emoji": "⚡️",
   "status": "open",
-  "description": "Setup the complete monorepo to use proper caching on every build, test, lint, generate, schema, verify, stdio, cpp, and other deterministic Nx step. Continuous targets (dev, serve, watch, start) stay uncached. Mutating setup/deps/clean/publish stay uncached. Cache hits must be correct; cache misses only when inputs change. Evidence: plugin targetPolicy, policy.json, project metadata, and runtime cache-hit/miss checks.",
+  "description": "Setup the complete monorepo to use proper caching on every build, dev, test, lint, generate, schema, verify, stdio, cpp, wasm and other deterministic Nx step. Every Rust, wasm, npm, etc output is cached on package level (Cargo crate, npm package, ...). There is a single cache location that every agent and dev shares, so disk is bounded by codebase size and build history instead of by the number of concurrent agents (no private per-agent CARGO_TARGET_DIRs). Continuous targets (dev, serve, watch, start) stay uncached themselves but consume cached package outputs. Mutating setup/deps/clean/publish stay uncached. Cache hits must be correct; cache misses only when inputs change. Evidence: plugin targetPolicy, policy.json, project metadata, runtime cache-hit/miss checks, shared cargo build-dir with fine-grain locking, and bounded cache pruning.",
   "goal": "🎯️aioptimizedrepo",
   "sessions": [
-    "⚪1e78163e30c04e369b860a762352153c"
+    "⚪1e78163e30c04e369b860a762352153c",
+    "⚪83140bef0e504e03b0b3380912b12a0e"
   ]
 }

@@ -12,7 +12,8 @@
 use crate::AssemblySnapshot;
 use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
+use semio_framework::{InteractiveJobClassification};
+use semio_framework_plugin::{ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -22,7 +23,26 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::assembly::create_assembly_editor`.
 pub fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Structure", "Struktur"), icon_id: "list-tree".into(), ..TreeWindowKit::editable_window_kind() }
+    {
+        let mut definition = TreeWindowKit::editable_window_kind();
+        definition.label = LocalizedLabel::native("Structure", "Struktur");
+        definition.icon_id = "list-tree".into();
+        definition.actions.extend([
+            ActionDefinition::bounded_catalog("create-slot", LocalizedLabel::native("Create Slot", "Slot erstellen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("delete-slot", LocalizedLabel::native("Delete Slot", "Slot löschen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("create-rule", LocalizedLabel::native("Create Rule", "Regel erstellen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("delete-rule", LocalizedLabel::native("Delete Rule", "Regel löschen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("connect-slots", LocalizedLabel::native("Connect Slots", "Slots verbinden"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("disconnect-slots", LocalizedLabel::native("Disconnect Slots", "Slots trennen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("change-weight", LocalizedLabel::native("Change Weight", "Gewicht ändern"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("remove-weight", LocalizedLabel::native("Remove Weight", "Gewicht entfernen"), ActionKind::Mutation),
+            ActionDefinition::bounded_catalog("change-seed", LocalizedLabel::native("Change Seed", "Seed ändern"), ActionKind::Mutation),
+        ]);
+        for action in &mut definition.actions {
+            action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        }
+        definition
+    }
 }
 //#endregion 🔖️Definition
 

@@ -31,6 +31,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -43,7 +45,6 @@ const stepFixtures = join(step, "🧫️fixtures");
 const dependencyFixtures = join(dependency, "🧫️fixtures");
 const csvEngine = join(here, "📊️csv-engine");
 const jsonEngine = join(here, "🧾️json-engine");
-const target = process.env.CARGO_TARGET_DIR;
 const CSV_KINDS = ["create-step", "delete-step", "duplicate-step", "edit-step-params"] as const;
 const JSON_KINDS = ["change-step-collapsed", "connect-steps", "disconnect-steps", "move-step"] as const;
 const CSV_DIRECTORIES = {
@@ -62,10 +63,11 @@ const JSON_DESTINATIONS = {
 
 //#region 🏭️Generate
 const runEngine = (engine: string, output: string): void => {
-  const targetDir = target ?? join(engine, "target");
-  const built = spawnSync("cargo", ["build", "--release", "--offline", "--target-dir", targetDir], { cwd: engine, stdio: "inherit" });
+  // 🏭️`--offline`: each engine is its own standalone workspace; the shared build-dir/target-dir
+  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-engine override here.
+  const built = spawnSync("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error(`${engine} build failed`);
-  const run = spawnSync(join(targetDir, "release", "generate"), [output], { stdio: "inherit" });
+  const run = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [output], { stdio: "inherit" });
   if (run.status !== 0) throw new Error(`${engine} fixture generation failed`);
 };
 

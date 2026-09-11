@@ -209,6 +209,9 @@ fn assembly_document_from_dsl(parsed: AssemblySnapshotDsl) -> Result<AssemblySna
 
 impl store::ArtifactDsl for AssemblySnapshot {
     const EXTENSION: &'static str = "assembly";
+    fn envelope_id() -> &'static str {
+        "procedural.assembly"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         assembly_document_from_dsl(<AssemblySnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)

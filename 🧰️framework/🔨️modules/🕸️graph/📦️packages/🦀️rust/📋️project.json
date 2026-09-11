@@ -22,7 +22,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check-generated": {
       "executor": "nx:run-commands",

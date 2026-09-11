@@ -31,7 +31,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check-generated": {
       "executor": "nx:run-commands",

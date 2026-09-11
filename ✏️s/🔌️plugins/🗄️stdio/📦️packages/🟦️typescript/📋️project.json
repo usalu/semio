@@ -37,7 +37,8 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts package-graph",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

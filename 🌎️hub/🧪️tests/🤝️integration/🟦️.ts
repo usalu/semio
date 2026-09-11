@@ -26,6 +26,7 @@ import {
 } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { describe, expect, it } from "vitest";
 import { type HubHandle, findFreePort, getWorkspaceRoot, hubSchemaExport, resolveHubBinaryPath, startHub, waitForHttpReady } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { parseInviteCapabilityV1, parseSessionCapabilityV1, parseShareCapabilityV1, parseSocketGrantCapabilityV1 } from "../../🔐️auth/🧬️schema/🟦️.ts";
 
 const HUB_E2E = process.env.HUB_E2E === "1";
@@ -792,7 +793,7 @@ describe("hub harness quick contract", () => {
     if (!address || typeof address === "string") throw new Error("quick harness: HTTP listener has no TCP address");
     try {
       await waitForHttpReady(`http://127.0.0.1:${address.port}/ready`, {}, 1_000);
-      expect(resolveHubBinaryPath("/repo")).toBe(join("/repo", "target", "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
+      expect(resolveHubBinaryPath("/repo")).toBe(join(cargoTargetDirectory("/repo"), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
     } finally {
       await new Promise<void>((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
     }

@@ -18,6 +18,7 @@ import type { Readable } from "node:stream";
 import Ajv from "ajv";
 
 export { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 //#region 🧬️Scope-owned schema resolution
 
@@ -167,11 +168,12 @@ export async function waitForHttpReady(url: string, headers: Record<string, stri
 //#endregion 🔖️Readiness
 
 //#region 🔖️Hub
-/** 📁️ `<repoRoot>/target/debug/os-hub[.exe]` — the plain `cargo build` (default features)
- * output; never the `--release` path, matching `📜️script.ts`'s own build step. */
+/** 📁️ `<cargo target-dir>/debug/os-hub[.exe]` — the plain `cargo build` (default features)
+ * output; never the `--release` path, matching `📜️script.ts`'s own build step.
+ * https://doc.rust-lang.org/cargo/reference/config.html#buildtarget-dir */
 export function resolveHubBinaryPath(repoRoot: string): string {
   const name = process.platform === "win32" ? "os-hub.exe" : "os-hub";
-  return join(repoRoot, "target", "debug", name);
+  return join(cargoTargetDirectory(repoRoot), "debug", name);
 }
 
 export type HubOptions = {

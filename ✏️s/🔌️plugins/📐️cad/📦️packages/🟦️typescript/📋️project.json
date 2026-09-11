@@ -67,7 +67,8 @@
         "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts fixture",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

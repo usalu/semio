@@ -43,12 +43,14 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🦀️engine");
-const ENGINE_BIN = join(ENGINE_DIR, "target", "release", process.platform === "win32" ? "generate.exe" : "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
 const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";

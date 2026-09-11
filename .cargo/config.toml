@@ -1,9 +1,21 @@
+# ⚡️ One shared compiler cache for every workspace, crate, profile, target, agent and dev. Intermediates live in
+# `build-dir`, uplifted deliverables in `target-dir`; both sit under the repo cache root, so disk is bounded by the
+# codebase and its build history (pruned by `bun nx run repo:cache-prune`) instead of by the
+# number of concurrent builders. `fine-grain-locking` locks per compilation unit instead of per directory, so
+# concurrent cargo invocations share every already-built unit and only wait on units another invocation is building.
+# `checksum-freshness` keys freshness on content, so Nx cache restores and checkouts that only touch mtimes rebuild nothing.
+# A private `CARGO_TARGET_DIR` only diverts the small uplifted deliverables; intermediates stay shared.
+# https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#fine-grain-locking
 [build]
-rustc-wrapper = "sccache"
+target-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/target"
+build-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/build"
 rustflags = ["-Z", "threads=8"]
 
 [unstable]
 no-embed-metadata = true
+fine-grain-locking = true
+build-dir-new-layout = true
+checksum-freshness = true
 
 # 🧊️ The browser renderer's shadow stack. LLVM's wasm-ld default is 1 MiB, and a debug build of the wgpu
 # renderer overruns it during ordinary construction — `<UiSurfaceRegistry as Default>::default` alone

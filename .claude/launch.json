@@ -166,7 +166,6 @@
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "SKIP_PLUGIN_BUILD=1",
-        "CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-engines",
         "SEMIO_BUILD_BUDGET_MS=5400000",
         "SEMIO_CMD_BUDGET_MS=5400000",
         "RUSTFLAGS=-Awarnings",
@@ -206,7 +205,6 @@
       "runtimeArgs": [
         "SKIP_PLUGIN_BUILD=1",
         "SKIP_ENGINE_BUILD=1",
-        "CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-engines",
         "RUSTFLAGS=-Awarnings",
         "CARGO_TERM_QUIET=true",
         "bun",

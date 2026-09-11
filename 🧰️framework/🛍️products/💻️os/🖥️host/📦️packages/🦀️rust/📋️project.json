@@ -25,7 +25,8 @@
         "command": "bun ./📜️script.ts public-member-open-handoff-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "public-member-open-handoff-source": {
       "executor": "nx:run-commands",
@@ -43,7 +44,8 @@
         "command": "bun ./📜️script.ts member-factory-identity-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-record-check": {
       "executor": "nx:run-commands",
@@ -52,7 +54,8 @@
         "command": "bun ./📜️script.ts member-history-record-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-foundation-check": {
       "executor": "nx:run-commands",
@@ -61,7 +64,8 @@
         "command": "bun ./📜️script.ts member-history-foundation-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-dictionary-check": {
       "executor": "nx:run-commands",
@@ -70,7 +74,8 @@
         "command": "bun ./📜️script.ts member-history-dictionary-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-id-check": {
       "executor": "nx:run-commands",
@@ -79,7 +84,8 @@
         "command": "bun ./📜️script.ts member-history-id-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-input-check": {
       "executor": "nx:run-commands",
@@ -88,7 +94,8 @@
         "command": "bun ./📜️script.ts member-history-input-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "member-history-identity-source": {
       "executor": "nx:run-commands",
@@ -106,7 +113,8 @@
         "command": "bun ./📜️script.ts member-open-protocol-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "document-retirement-check": {
       "executor": "nx:run-commands",
@@ -115,7 +123,8 @@
         "command": "bun ./📜️script.ts document-retirement-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "persistence-contract-check": {
       "executor": "nx:run-commands",
@@ -133,7 +142,8 @@
         "command": "bun ./📜️script.ts media-projection-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",

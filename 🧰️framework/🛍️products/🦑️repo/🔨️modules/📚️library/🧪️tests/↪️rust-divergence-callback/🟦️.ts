@@ -80,7 +80,7 @@ function compilerPids(pid: number, observed: Set<number>): number[] {
 
 /** ⏱️ Uses one declared compiler deadline, with owned-tree termination and observable terminal closure. */
 async function coldCompiler(owner: string, command: string[], budgetMs: number) {
-  const started = performance.now(), child = nodeSpawn(command[0]!, command.slice(1), { cwd: owner, env: { ...process.env, RUSTC_WRAPPER: "" }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+  const started = performance.now(), child = nodeSpawn(command[0]!, command.slice(1), { cwd: owner, env: { ...process.env }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
   if (!child.pid) throw new Error("Compiler has no PID");
   const pid = child.pid, observed = new Set([pid]);
   let stdout = "", stderr = "", timedOut = false, observationError: string | null = null;
@@ -210,7 +210,7 @@ for (const row of vector.attributeCompilerCases) test("actual rustc attributed c
   mkdirSync(manifestRoot);
   writeFileSync(source, row.source + "\nfn main() { inspect(); }\n", { flag: "wx" });
   const command = ["rustc", "--edition=2021", "--crate-name", "attributed_callback", source, "-o", binary];
-  const compile = Bun.spawnSync(command, { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: manifestRoot, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 4_000 });
+  const compile = Bun.spawnSync(command, { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: manifestRoot }, stdout: "pipe", stderr: "pipe", timeout: 4_000 });
   record(owner, { command, exitCode: compile.exitCode, stdout: compile.stdout.toString(), stderr: compile.stderr.toString() });
   expect(compile.exitCode, compile.stderr.toString()).toBe(row.compileExit);
   if (row.runtimeExit === null) expect(compile.stderr.toString()).toContain("unknown");
@@ -236,7 +236,7 @@ test("actual rustc executes ordinary and divergent error paths and rejects shado
     const input = join(directory, "../↪️rust-divergence-callback/🦀️.rs"), binary = join(directory, process.platform === "win32" ? "🔣️.exe" : "../../🧫️fixtures/↪️rust-divergence-callback/🔣️.json");
     writeFileSync(input, row.source + '\nfn main() { inspect(); println!("ordinary-finished"); }\n', { flag: "wx" });
     const command = ["rustc", "--edition=2021", "--crate-name", "divergence_callback", input, "-o", binary];
-    const result = Bun.spawnSync(command, { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestRoot, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 4_000 });
+    const result = Bun.spawnSync(command, { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestRoot }, stdout: "pipe", stderr: "pipe", timeout: 4_000 });
     record(owner, { command, exitCode: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() });
     return { result, binary, directory };
   };

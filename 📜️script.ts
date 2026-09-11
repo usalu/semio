@@ -135,6 +135,8 @@ import {
   type LcovFileRecord,
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { cargoTargetDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import {
   buildSemanticCensus,
   fileKindIdForSourcePath,
@@ -196,7 +198,7 @@ import {
   type TaxonomySourceInventory,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { builtinModules, createRequire } from "node:module";
 import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
@@ -291,74 +293,6 @@ export class NativeOsScript extends Script {
 }
 //#endregion 🔖️NativeOsScript
 
-//#region 🔖️SccacheSetup
-const SCCACHE_VERSION = "0.10.0";
-
-/** ⚡️Ensures `sccache` is on PATH for `.cargo/config.toml` rustc-wrapper. */
-function ensureSccache(): void {
-  try {
-    if (runProbe("sccache", ["--version"]).status === 0) return;
-  } catch {
-    /* install below */
-  }
-
-  const asset = sccacheReleaseAsset();
-  if (!asset) {
-    console.warn("[setup] sccache auto-install unsupported on this platform; install manually.");
-    return;
-  }
-
-  const binDir = process.platform === "win32" ? join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "bin") : join(homedir(), ".local", "bin");
-  const binName = process.platform === "win32" ? "sccache.exe" : "sccache";
-  const dest = join(binDir, binName);
-  if (existsSync(dest)) return;
-
-  const cacheDir = join(getRepoMetaDir(WORKSPACE_ROOT), "⚡️cache", "sccache");
-  mkdirSync(cacheDir, { recursive: true });
-  const archive = join(cacheDir, asset);
-  const url = `https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/${asset}`;
-  console.log(`[setup] downloading sccache ${SCCACHE_VERSION}…`);
-  runCmd("curl", ["-fSL", "-o", archive, url]);
-
-  if (asset.endsWith(".tar.gz")) {
-    runCmd("tar", ["-xzf", archive, "-C", cacheDir]);
-    const extractedDir = readdirSync(cacheDir).find((name) => name.startsWith("sccache-") && !name.endsWith(".tar.gz"));
-    if (!extractedDir) throw new Error("sccache archive extraction failed");
-    copyFileSync(join(cacheDir, extractedDir, binName), dest);
-  } else {
-    const extractDir = join(cacheDir, "extract");
-    rmSync(extractDir, { recursive: true, force: true });
-    mkdirSync(extractDir, { recursive: true });
-    if (process.platform === "win32") {
-      runCmd("powershell.exe", ["-NoProfile", "-Command", `Expand-Archive -Path '${archive}' -DestinationPath '${extractDir}' -Force`]);
-    } else {
-      runCmd("unzip", ["-o", archive, "-d", extractDir]);
-    }
-    const extractedDir = readdirSync(extractDir).find((name) => name.startsWith("sccache-"));
-    if (!extractedDir) throw new Error("sccache archive extraction failed");
-    copyFileSync(join(extractDir, extractedDir, binName), dest);
-  }
-
-  if (process.platform !== "win32") chmodSync(dest, 0o755);
-  console.log(`[setup] installed sccache -> ${dest}`);
-}
-
-function sccacheReleaseAsset(): string | null {
-  if (process.platform === "darwin") {
-    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-apple-darwin.tar.gz` : `sccache-v${SCCACHE_VERSION}-x86_64-apple-darwin.tar.gz`;
-  }
-  if (process.platform === "linux") {
-    const report = process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } | undefined;
-    const libc = report?.header?.glibcVersionRuntime ? "gnu" : "musl";
-    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-unknown-linux-${libc}.tar.gz` : `sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-${libc}.tar.gz`;
-  }
-  if (process.platform === "win32") {
-    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-pc-windows-msvc.zip` : `sccache-v${SCCACHE_VERSION}-x86_64-pc-windows-msvc.zip`;
-  }
-  return null;
-}
-//#endregion 🔖️SccacheSetup
-
 //#region 🔖️SetupScript
 export class SetupScript extends Script {
   run(segments: string[]): void {
@@ -436,7 +370,7 @@ export class SetupScript extends Script {
     else if (kind === "go") runCmd("go", ["mod", "download"], { ...opts, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
     else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
     else if (kind === "cpp") console.log("[deps-cpp] Nx native tooling prerequisite completed");
-    else if (kind === "browsers") runCmd("bun", [join(this.root, "node_modules/playwright/cli.js"), "install", "chromium"], { ...opts, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(this.root, "node_modules/.cache/ms-playwright") } });
+    else if (kind === "browsers") runCmd("bun", [join(this.root, "node_modules/playwright/cli.js"), "install", "chromium"], { ...opts, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.root, "tools", "ms-playwright") } });
     else if (kind === "wasm") {
       this.ensureCargoTool("wasm-pack", ["wasm-pack"], "0.15.0");
       this.ensureCargoTool("wasm-bindgen-cli", ["wasm-bindgen"], wasmBindgenVersion(readFileSync(join(this.root, "Cargo.lock"), "utf8")));
@@ -445,7 +379,6 @@ export class SetupScript extends Script {
     } else if (kind === "tools") {
       this.ensureCargoTool("cargo-nextest", ["cargo", "nextest"], "0.9.140");
       this.ensureCargoTool("cargo-llvm-cov", ["cargo", "llvm-cov"], "0.8.7");
-      ensureSccache();
     } else throw new Error(`Unknown dependency environment: ${kind}`);
   }
 
@@ -7431,8 +7364,6 @@ export class VerifyScript extends Script {
       const schemaRoot = join(this.root, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
       if (segments[1] === "native") {
-        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
-        process.env.CARGO_INCREMENTAL = "0";
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-cad-cad", "--lib", "cad_document_contract", "--", "--nocapture"], this.root);
       }
@@ -7444,8 +7375,6 @@ export class VerifyScript extends Script {
       const schemaRoot = join(this.root, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
       if (segments[1] === "native") {
-        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
-        process.env.CARGO_INCREMENTAL = "0";
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_document_contract", "--", "--nocapture"], this.root);
       }
@@ -7457,8 +7386,6 @@ export class VerifyScript extends Script {
       testGeneration3dPreviewWindowTransientContract();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
-        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
-        process.env.CARGO_INCREMENTAL = "0";
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "preview_eval_", "--", "--nocapture"], this.root);
       }
@@ -7470,8 +7397,6 @@ export class VerifyScript extends Script {
       testGisTerrainWindowConfigContract();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
-        process.env.CARGO_TARGET_DIR = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/🗑️generated/cargo-trinity");
-        process.env.CARGO_INCREMENTAL = "0";
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gisterrain", "--features", "component-app-assembly", "--lib", "gis_terrain_window_config_", "--", "--nocapture"], this.root);
       }
@@ -14323,7 +14248,7 @@ export class TestScript extends Script {
         env: {
           ...process.env,
           PLAYWRIGHT_BASE_URL: baseUrl,
-          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${this.root}/node_modules/.cache/ms-playwright`,
+          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(this.root, "tools", "ms-playwright"),
           STORYBOOK_PORT: storybookPort,
         },
       });
@@ -16390,6 +16315,14 @@ export class CleanScript extends Script {
       ...report.skippedProtected.map((p) => `[clean] protected ${p}`),
     ];
     for (const line of lines) console.log(line);
+    this.runCachePrune(dry);
+  }
+
+  /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
+  private runCachePrune(dry: boolean): void {
+    const cachingScript = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts");
+    const status = runCmdStatus("bun", [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
   }
 
   private runTaxonomy(args: string[]): void {
@@ -16520,9 +16453,18 @@ function cleanIsMisplacedTicketsDir(name: string): boolean {
 
 function cleanIsBuildArtifactDirName(name: string): boolean {
   if (CLEAN_BUILD_DIR_NAMES.has(name)) return true;
-  if (name.startsWith("🎯️target")) return true;
-  if (name.startsWith("target-")) return true;
+  if (cleanIsCargoTargetDirName(name)) return true;
   return false;
+}
+
+/** 🦀️Every Cargo target dir outside the shared cache root is stray — nothing writes there since `.cargo/config.toml` moved `build.target-dir`/`build.build-dir` under the cache root. Names are exact (`🎯️targets` is a source taxonomy folder). */
+function cleanIsCargoTargetDirName(name: string): boolean {
+  return name === "target" || name === "🎯️target" || name.startsWith("target-") || name.startsWith("🎯️target-");
+}
+
+/** 🏷️Cargo stamps every target and build dir with `CACHEDIR.TAG`; only such dirs are provably Cargo output. https://bford.info/cachedir/ */
+function cleanIsCargoTargetDir(abs: string, name: string): boolean {
+  return cleanIsCargoTargetDirName(name) && existsSync(join(abs, "CACHEDIR.TAG"));
 }
 
 function cleanIsSemioRootName(name: string): boolean {
@@ -16977,7 +16919,7 @@ function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly st
     if (cleanIsBuildArtifactDirName(name)) {
       if (cleanIntersectsProtected(abs, protectedPrefixes)) return "skip";
       const bytes = cleanPathBytes(abs);
-      if (bytes > CLEAN_BUILD_ARTIFACT_MAX_BYTES) out.push({ kind: "build-artifact", path: relative(root, abs), bytes });
+      if (cleanIsCargoTargetDir(abs, name) || bytes > CLEAN_BUILD_ARTIFACT_MAX_BYTES) out.push({ kind: "build-artifact", path: relative(root, abs), bytes });
       return "skip";
     }
     return "enter";
@@ -17061,16 +17003,16 @@ export class CommitScript extends Script {
 type OsPluginArtifact = { pluginId: string; wasmOut: string };
 
 /**
- * 🔍️Plugin ids from the generated plugin registry with no built `.wasm` under
- * `target/wasm32-wasip2/{wasm-dev,wasm-release}/` — same resolution order as `resolve_plugin_paths` in
- * `semio-framework-os-run`.
+ * 🔍️Plugin ids from the generated plugin registry with no built `.wasm` under Cargo's own configured
+ * deliverable root (`.cargo/config.toml`'s `build.target-dir`) `/wasm32-wasip2/{wasm-dev,wasm-release}/`
+ * — same resolution order as `resolve_plugin_paths` in `semio-framework-os-run`.
  */
-const PLUGIN_WASM_TARGET_DIR = "target/wasm32-wasip2";
 const PLUGIN_WASM_PROFILE_DIRS = ["wasm-dev", "wasm-release"] as const;
 
 function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
+  const wasmTargetDir = join(cargoTargetDirectory(repoRoot), "wasm32-wasip2");
   for (const profileDir of PLUGIN_WASM_PROFILE_DIRS) {
-    if (existsSync(join(repoRoot, PLUGIN_WASM_TARGET_DIR, profileDir, wasmOut))) return true;
+    if (existsSync(join(wasmTargetDir, profileDir, wasmOut))) return true;
   }
   return false;
 }

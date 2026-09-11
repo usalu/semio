@@ -74,14 +74,12 @@ function main(argv: readonly string[]): number {
   // `--offline` failure here would read as "the carrier disagrees" rather than "cargo couldn't
   // resolve deps" — a worse failure mode than the network round-trip cargo's own cache makes cheap
   // on every call after the first.
-  const target = process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(CRATE_DIR, "target"), "probe");
   // 📎️cargo must run in the CRATE directory, so every caller-supplied path is resolved against the
   // caller's cwd FIRST — the same fix `…✳️cad/🔬️probes/📜️script.ts` needed for the same reason.
   const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
   const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...resolved], {
     cwd: CRATE_DIR,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: target },
   });
   if (run.status !== 0) {
     console.log(JSON.stringify(failed(probe, `oracle probe exited ${run.status}`, (run.stderr ?? "").trim().split("\n").slice(-6).join("\n"))));

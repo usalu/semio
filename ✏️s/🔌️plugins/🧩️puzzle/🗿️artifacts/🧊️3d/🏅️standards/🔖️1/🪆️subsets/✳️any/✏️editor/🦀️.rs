@@ -3276,6 +3276,9 @@ impl Puzzle3dActionPrologue {
             debug_assert!(!puzzle3d_action_document_intent(action));
             Vec::new()
         };
+        if action == "importFixture" {
+            eprintln!("[DEBUG] puzzle3d.import.apply ops={} after_objects={}", operations.len(), scene.fixture.objects.len());
+        }
         let coalesce_key = match action {
             "translateSelection" => Some("gumball-translate".to_string()),
             "rotateSelection" => Some("gumball-rotate".to_string()),
@@ -4933,6 +4936,7 @@ struct Puzzle3dWorldRelocateWork {
     existing: HashSet<String>,
     mutations: Vec<Puzzle3dMutation>,
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
+    view_state: Option<semio_framework_plugin::ViewModel>,
 }
 
 impl Default for Puzzle3dWorldRelocateWork {
@@ -4947,6 +4951,7 @@ impl Default for Puzzle3dWorldRelocateWork {
             existing: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
             mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
             window_config: None,
+            view_state: None,
         }
     }
 }
@@ -4988,6 +4993,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         self.window_config = config;
     }
 
+    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
+        self.view_state = view_state;
+    }
+
     fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
         let document = snapshot.typed();
         let mut object_vortices = 0usize;
@@ -5016,6 +5025,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let Some(position) = Self::position(command) else { return Ok(self.complete()) };
                 let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
                 self.object_cursor += 1;
+                // 🔒️ A locked/hidden grab must ANSWER, exactly like `translateSelection`'s own refusal:
+                // dropping out silently left the host's relocate ghost snapping back with nothing said.
+                if object.id == requested && (object.locked || object.hidden) {
+                    self.stage = Puzzle3dWorldRelocateStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+                }
                 if object.id == requested && !object.locked && !object.hidden {
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_object(object.id.clone(), position));
                     if let Some(vortex) = object.vortices.first() {
@@ -5119,7 +5134,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.mutations.pop().is_some() || self.candidate.take().is_some() || self.source.take().is_some() || self.window_config.take().is_some() {
+        if self.mutations.pop().is_some() || self.candidate.take().is_some() || self.source.take().is_some() || self.window_config.take().is_some() || self.view_state.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         let edge = {
@@ -5133,7 +5148,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dWorldRelocateStage::Closing && self.source.is_none() && self.candidate.is_none() && self.existing.is_empty() && self.mutations.is_empty() && self.window_config.is_none()
+        self.stage == Puzzle3dWorldRelocateStage::Closing && self.source.is_none() && self.candidate.is_none() && self.existing.is_empty() && self.mutations.is_empty() && self.window_config.is_none() && self.view_state.is_none()
     }
 }
 
@@ -7637,6 +7652,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "hoverSuggestion"
             | "engagementControlSelect"
             | "engagementInput" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
+            "importFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "addTargetVolume" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
@@ -7993,7 +8009,7 @@ impl Puzzle3dPlayApp {
                 document::BODY_KEY => app.document_tree_cached_from(&envelope.fixture, labels, &envelope.runtime.panel_pages),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, interaction, labels),
-                settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
+                settings_panel::BODY_KEY => settings_panel::render(&envelope, labels, wid),
                 _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d unknown-body label admission failed")),
             }
         })?;

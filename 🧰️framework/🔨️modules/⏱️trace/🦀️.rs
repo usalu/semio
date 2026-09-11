@@ -877,6 +877,17 @@ static NEXT_OPERATION_ID: AtomicU64 = AtomicU64::new(1);
 pub fn allocate_operation_id() -> OperationId {
     OperationId(NEXT_OPERATION_ID.fetch_add(1, Ordering::SeqCst))
 }
+
+/// 🎰️ A fresh, process-unique [`OperationId`] congruent to `slot` modulo `slots`. Direct-mapped fixed
+/// owner tables address one live owner per residue class of `id % slots`; minting the id first and then
+/// testing that one residue class turns an unrelated live owner into a spurious capacity refusal, so the
+/// admitting side picks the free slot and mints the id for it here instead. The shared counter still only
+/// ever moves forward, so every id stays process-unique and never `0`.
+pub fn allocate_operation_id_in_slot(slots: u64, slot: u64) -> OperationId {
+    assert!(slots != 0 && slot < slots, "an operation slot must address one residue class of a fixed owner table");
+    let advance = |next: u64| next + (slots + slot - next % slots) % slots;
+    OperationId(advance(NEXT_OPERATION_ID.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |next| Some(advance(next) + 1)).expect("operation id allocation never rejects its own update")))
+}
 //#endregion 🪪️Operation
 
 //#region 🛰️Trace

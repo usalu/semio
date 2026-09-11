@@ -36,6 +36,8 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -170,7 +172,7 @@ print(kind + ': written')
       const readerDir = join(import.meta.dir, "..", "🔬️probes", "🦀️byte-order-reader");
       const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
       if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
-      const readerBin = join(readerDir, "target", "release", "reader");
+      const readerBin = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");
       if (command === "byte-order") {
         const failures: string[] = [];
         for (const kind of KINDS) {

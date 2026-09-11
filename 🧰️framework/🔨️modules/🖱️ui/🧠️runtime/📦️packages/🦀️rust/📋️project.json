@@ -8,7 +8,8 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts tree-retirement-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

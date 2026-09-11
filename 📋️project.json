@@ -164,6 +164,7 @@
     },
     "scale-fixture-check": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",

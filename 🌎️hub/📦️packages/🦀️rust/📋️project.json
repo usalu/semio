@@ -74,14 +74,16 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-cas-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "socket-grant-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts socket-grant-check"
-      }
+      },
+      "outputs": []
     },
     "scoped-directory-socket-source-check": {
       "executor": "nx:run-commands",
@@ -89,7 +91,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts scoped-directory-socket-check source"
-      }
+      },
+      "outputs": []
     },
     "scoped-directory-socket-native-check": {
       "executor": "nx:run-commands",
@@ -97,7 +100,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts scoped-directory-socket-check native"
-      }
+      },
+      "outputs": []
     },
     "scoped-directory-socket-process-check": {
       "executor": "nx:run-commands",
@@ -105,7 +109,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts scoped-directory-socket-check process"
-      }
+      },
+      "outputs": []
     },
     "directory-message-authority-source-check": {
       "executor": "nx:run-commands",
@@ -113,7 +118,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-message-authority-check source"
-      }
+      },
+      "outputs": []
     },
     "directory-message-authority-native-check": {
       "executor": "nx:run-commands",
@@ -121,7 +127,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-message-authority-check native"
-      }
+      },
+      "outputs": []
     },
     "admin-directory-authority-source-check": {
       "executor": "nx:run-commands",
@@ -129,7 +136,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-directory-authority-check source"
-      }
+      },
+      "outputs": []
     },
     "admin-directory-authority-native-check": {
       "executor": "nx:run-commands",
@@ -137,7 +145,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-directory-authority-check native"
-      }
+      },
+      "outputs": []
     },
     "share-issuance-atomicity-check": {
       "executor": "nx:run-commands",
@@ -145,7 +154,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts share-issuance-atomicity-check"
-      }
+      },
+      "outputs": []
     },
     "share-issuance-atomicity-native-check": {
       "executor": "nx:run-commands",
@@ -153,7 +163,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts share-issuance-atomicity-check --native"
-      }
+      },
+      "outputs": []
     },
     "retained-short-admin-check": {
       "executor": "nx:run-commands",
@@ -161,7 +172,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts retained-short-admin-check"
-      }
+      },
+      "outputs": []
     },
     "retained-short-admin-native-check": {
       "executor": "nx:run-commands",
@@ -169,7 +181,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts retained-short-admin-check --native"
-      }
+      },
+      "outputs": []
     },
     "presence-normalization-source-check": {
       "executor": "nx:run-commands",
@@ -177,7 +190,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-normalization-check source"
-      }
+      },
+      "outputs": []
     },
     "presence-normalization-native-check": {
       "executor": "nx:run-commands",
@@ -185,7 +199,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-normalization-check native"
-      }
+      },
+      "outputs": []
     },
     "admin-presence-target-recovery-source-check": {
       "executor": "nx:run-commands",
@@ -193,7 +208,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-presence-target-recovery-check source"
-      }
+      },
+      "outputs": []
     },
     "admin-presence-target-recovery-native-check": {
       "executor": "nx:run-commands",
@@ -201,7 +217,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-presence-target-recovery-check native"
-      }
+      },
+      "outputs": []
     },
     "presence-lease-source-check": {
       "executor": "nx:run-commands",
@@ -209,7 +226,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-lease-check source"
-      }
+      },
+      "outputs": []
     },
     "presence-lease-native-check": {
       "executor": "nx:run-commands",
@@ -217,7 +235,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-lease-check native"
-      }
+      },
+      "outputs": []
     },
     "presence-lease-process-check": {
       "executor": "nx:run-commands",
@@ -225,7 +244,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-lease-check process"
-      }
+      },
+      "outputs": []
     },
     "directory-event-page-v1-source-check": {
       "executor": "nx:run-commands",
@@ -233,7 +253,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-event-page-v1-check source"
-      }
+      },
+      "outputs": []
     },
     "directory-event-page-v1-native-check": {
       "executor": "nx:run-commands",
@@ -241,7 +262,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-event-page-v1-check native"
-      }
+      },
+      "outputs": []
     },
     "directory-event-page-v1-process-check": {
       "executor": "nx:run-commands",
@@ -249,7 +271,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-event-page-v1-check process"
-      }
+      },
+      "outputs": []
     },
     "space-administration-source-check": {
       "executor": "nx:run-commands",
@@ -257,7 +280,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-administration-check source"
-      }
+      },
+      "outputs": []
     },
     "space-administration-native-check": {
       "executor": "nx:run-commands",
@@ -265,7 +289,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-administration-check native"
-      }
+      },
+      "outputs": []
     },
     "directory-command-receipt-source-check": {
       "executor": "nx:run-commands",
@@ -273,7 +298,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check source"
-      }
+      },
+      "outputs": []
     },
     "directory-command-authority-native-check": {
       "executor": "nx:run-commands",
@@ -281,7 +307,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check authority"
-      }
+      },
+      "outputs": []
     },
     "directory-invite-authority-native-check": {
       "executor": "nx:run-commands",
@@ -289,7 +316,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check invites"
-      }
+      },
+      "outputs": []
     },
     "directory-command-receipt-native-check": {
       "executor": "nx:run-commands",
@@ -297,7 +325,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check native"
-      }
+      },
+      "outputs": []
     },
     "directory-command-receipt-process-check": {
       "executor": "nx:run-commands",
@@ -305,7 +334,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check process"
-      }
+      },
+      "outputs": []
     },
     "space-journey-source-check": {
       "executor": "nx:run-commands",
@@ -313,7 +343,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-journey-check --source"
-      }
+      },
+      "outputs": []
     },
     "space-journey-process-check": {
       "executor": "nx:run-commands",
@@ -321,7 +352,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-journey-check --process"
-      }
+      },
+      "outputs": []
     },
     "directory-home-browser-process-source-check": {
       "executor": "nx:run-commands",
@@ -329,7 +361,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-home-browser-process-check source"
-      }
+      },
+      "outputs": []
     },
     "directory-home-browser-process-runtime-check": {
       "executor": "nx:run-commands",
@@ -337,7 +370,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-home-browser-process-check runtime"
-      }
+      },
+      "outputs": []
     },
     "directory-home-browser-process-check": {
       "executor": "nx:run-commands",
@@ -345,7 +379,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-home-browser-process-check process"
-      }
+      },
+      "outputs": []
     },
     "scoped-presence-browser-serve": {
       "executor": "nx:run-commands",
@@ -361,7 +396,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts invite-redemption-transaction-check"
-      }
+      },
+      "outputs": []
     },
     "invite-redemption-transaction-native-check": {
       "executor": "nx:run-commands",
@@ -369,7 +405,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts invite-redemption-transaction-check --native"
-      }
+      },
+      "outputs": []
     },
     "invite-redemption-transaction-postgres-check": {
       "executor": "nx:run-commands",
@@ -377,7 +414,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts invite-redemption-transaction-check --postgres"
-      }
+      },
+      "outputs": []
     },
     "invite-redemption-transaction-neo4j-check": {
       "executor": "nx:run-commands",
@@ -385,7 +423,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts invite-redemption-transaction-check --neo4j"
-      }
+      },
+      "outputs": []
     },
     "execution-target-relay-check": {
       "executor": "nx:run-commands",
@@ -393,7 +432,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts execution-target-relay-check"
-      }
+      },
+      "outputs": []
     },
     "execution-target-native-check": {
       "executor": "nx:run-commands",
@@ -401,7 +441,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts execution-target-relay-check --native"
-      }
+      },
+      "outputs": []
     },
     "browser-broker-check": {
       "executor": "nx:run-commands",
@@ -409,7 +450,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts browser-broker-check"
-      }
+      },
+      "outputs": []
     },
     "admin-relay-check": {
       "executor": "nx:run-commands",
@@ -417,7 +459,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-relay-check"
-      }
+      },
+      "outputs": []
     },
     "admin-backend-check": {
       "executor": "nx:run-commands",
@@ -425,7 +468,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts admin-backend-check"
-      }
+      },
+      "outputs": []
     },
     "admin-live-journey-check": {
       "executor": "nx:run-commands",
@@ -441,7 +485,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-ordered-publication-check"
-      }
+      },
+      "outputs": []
     },
     "directory-ordered-publication-native-check": {
       "executor": "nx:run-commands",
@@ -449,7 +494,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-ordered-publication-check --native"
-      }
+      },
+      "outputs": []
     },
     "canonical-pair-check": {
       "executor": "nx:run-commands",
@@ -457,7 +503,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-check"
-      }
+      },
+      "outputs": []
     },
     "native-catalog-selection-check": {
       "executor": "nx:run-commands",
@@ -465,7 +512,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-catalog-selection-check"
-      }
+      },
+      "outputs": []
     },
     "native-openable-catalog-provider-check": {
       "executor": "nx:run-commands",
@@ -473,7 +521,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-openable-catalog-provider-check"
-      }
+      },
+      "outputs": []
     },
     "open-plan-check": {
       "executor": "nx:run-commands",
@@ -481,7 +530,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts open-plan-check"
-      }
+      },
+      "outputs": []
     },
     "open-plan-source-check": {
       "executor": "nx:run-commands",
@@ -489,7 +539,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts open-plan-check --source"
-      }
+      },
+      "outputs": []
     },
     "open-plan-server-check": {
       "executor": "nx:run-commands",
@@ -497,23 +548,24 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts open-plan-server-check"
-      }
+      },
+      "outputs": []
     },
     "browser-actor-child-worker-containment-check": {
       "executor": "nx:run-commands",
-      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts browser-actor-child-worker-containment-check"
-      }
+      },
+      "cache": false
     },
     "browser-actor-gis-describe-check": {
       "executor": "nx:run-commands",
-      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts browser-actor-gis-describe-check"
-      }
+      },
+      "cache": false
     },
     "browser-actor-document-reservation-check": {
       "executor": "nx:run-commands",
@@ -521,7 +573,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts browser-actor-document-reservation-check"
-      }
+      },
+      "outputs": []
     },
     "browser-document-open-check": {
       "executor": "nx:run-commands",
@@ -529,7 +582,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts browser-document-open-check"
-      }
+      },
+      "outputs": []
     },
     "execution-target-lease-check": {
       "executor": "nx:run-commands",
@@ -537,7 +591,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts execution-target-lease-check"
-      }
+      },
+      "outputs": []
     },
     "execution-target-lease-browser-check": {
       "executor": "nx:run-commands",
@@ -545,7 +600,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts execution-target-lease-browser-check"
-      }
+      },
+      "outputs": []
     },
     "space-public-boundary-check": {
       "executor": "nx:run-commands",
@@ -553,7 +609,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-public-boundary-check"
-      }
+      },
+      "outputs": []
     },
     "document-browser-actor-identity-check": {
       "executor": "nx:run-commands",
@@ -561,7 +618,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts document-browser-actor-identity-check"
-      }
+      },
+      "outputs": []
     },
     "document-browser-actor-identity-native-check": {
       "executor": "nx:run-commands",
@@ -569,7 +627,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts document-browser-actor-identity-check --native"
-      }
+      },
+      "outputs": []
     },
     "trusted-browser-actor-catalog-native-check": {
       "executor": "nx:run-commands",
@@ -577,7 +636,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts document-browser-actor-identity-check --catalog-native"
-      }
+      },
+      "outputs": []
     },
     "checkpoint-publication-check": {
       "executor": "nx:run-commands",
@@ -585,7 +645,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts checkpoint-publication-check source"
-      }
+      },
+      "outputs": []
     },
     "space-artifact-creation-check": {
       "executor": "nx:run-commands",
@@ -593,7 +654,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-artifact-creation-check source"
-      }
+      },
+      "outputs": []
     },
     "space-artifact-creation-native-check": {
       "executor": "nx:run-commands",
@@ -601,7 +663,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-artifact-creation-check native"
-      }
+      },
+      "outputs": []
     },
     "space-artifact-creation-sqlite-check": {
       "executor": "nx:run-commands",
@@ -609,7 +672,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-artifact-creation-check sqlite"
-      }
+      },
+      "outputs": []
     },
     "space-artifact-creation-postgres-check": {
       "executor": "nx:run-commands",
@@ -617,7 +681,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-artifact-creation-check postgres"
-      }
+      },
+      "outputs": []
     },
     "space-artifact-creation-neo4j-check": {
       "executor": "nx:run-commands",
@@ -625,7 +690,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts space-artifact-creation-check neo4j"
-      }
+      },
+      "outputs": []
     },
     "checkpoint-publication-native-check": {
       "executor": "nx:run-commands",
@@ -633,7 +699,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts checkpoint-publication-check native"
-      }
+      },
+      "outputs": []
     },
     "checkpoint-publication-process-check": {
       "executor": "nx:run-commands",
@@ -641,7 +708,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts checkpoint-publication-check process"
-      }
+      },
+      "outputs": []
     },
     "trusted-catalog-opened-root-check": {
       "executor": "nx:run-commands",
@@ -649,7 +717,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-catalog-opened-root-check"
-      }
+      },
+      "outputs": []
     },
     "trusted-catalog-opened-root-native-check": {
       "executor": "nx:run-commands",
@@ -657,7 +726,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-catalog-opened-root-check --native"
-      }
+      },
+      "outputs": []
     },
     "trusted-stdio-gis-bootstrap": {
       "executor": "nx:run-commands",
@@ -665,7 +735,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-stdio-gis-bootstrap"
-      }
+      },
+      "outputs": []
     },
     "trusted-stdio-gis-bundle-check": {
       "executor": "nx:run-commands",
@@ -674,7 +745,8 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "trusted-stdio-gis-bundle-browser-check": {
       "executor": "nx:run-commands",
@@ -682,7 +754,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check --browser"
-      }
+      },
+      "outputs": []
     },
     "trusted-stdio-gis-bundle-process-check": {
       "executor": "nx:run-commands",
@@ -690,7 +763,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check --process"
-      }
+      },
+      "outputs": []
     },
     "gis-inference-ledger-oracle": {
       "executor": "nx:run-commands",
@@ -706,7 +780,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-relay-check"
-      }
+      },
+      "outputs": []
     },
     "gis-inference-ledger-check": {
       "executor": "nx:run-commands",
@@ -714,7 +789,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-inference-ledger-check"
-      }
+      },
+      "outputs": []
     },
     "gis-map-frozen-binding-source-check": {
       "executor": "nx:run-commands",
@@ -722,7 +798,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-map-frozen-binding-check"
-      }
+      },
+      "outputs": []
     },
     "gis-map-frozen-binding-native-check": {
       "executor": "nx:run-commands",
@@ -730,7 +807,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-map-frozen-binding-check --native"
-      }
+      },
+      "outputs": []
     },
     "gis-map-proposal-source-check": {
       "executor": "nx:run-commands",
@@ -738,7 +816,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-map-proposal-check --source"
-      }
+      },
+      "outputs": []
     },
     "gis-map-proposal-native-check": {
       "executor": "nx:run-commands",
@@ -746,7 +825,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-map-proposal-check --native"
-      }
+      },
+      "outputs": []
     },
     "gis-map-proposal-process-check": {
       "executor": "nx:run-commands",
@@ -754,7 +834,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts gis-map-proposal-check --process"
-      }
+      },
+      "outputs": []
     },
     "native-document-open-check": {
       "executor": "nx:run-commands",
@@ -762,7 +843,8 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-document-open-check"
-      }
+      },
+      "outputs": []
     },
     "dev": {
       "executor": "nx:run-commands",

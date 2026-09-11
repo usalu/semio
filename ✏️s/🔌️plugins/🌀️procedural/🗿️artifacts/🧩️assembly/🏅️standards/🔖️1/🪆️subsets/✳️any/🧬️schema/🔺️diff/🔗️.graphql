@@ -1,0 +1,10 @@
+# 🧬️ Assembly diff schema — sparse id-keyed delta.
+
+type AssemblyDiff {
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  slotsRemoved: [String!]! @state(class: ARTIFACT)
+  edgesRemoved: [String!]! @state(class: ARTIFACT)
+  weightsRemoved: [String!]! @state(class: ARTIFACT)
+  rulesRemoved: [String!]! @state(class: ARTIFACT)
+}

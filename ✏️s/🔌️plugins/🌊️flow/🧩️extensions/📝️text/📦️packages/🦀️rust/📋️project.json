@@ -64,7 +64,11 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🔣️.json"
+      ]
     }
   }
 }

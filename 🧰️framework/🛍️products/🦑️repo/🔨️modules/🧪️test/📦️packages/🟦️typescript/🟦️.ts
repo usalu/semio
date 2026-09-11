@@ -14,6 +14,7 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import ts from "typescript";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../../../📚️library/🔍️discovery/🟦️.ts";
+import { repoCacheDirectory } from "../../../📚️library/⚡️caching/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract
@@ -1167,7 +1168,7 @@ export function testId(owner: string, caseSlug: string, scenario: string, implem
 //#region ⚡️Cache
 /** ⚡️ Root of every generated test artifact. Nothing outside this tree is ever written or deleted. */
 export function testCacheRoot(repoRoot: string): string {
-  return join(getRepoMetaDir(repoRoot), "⚡️cache", testTaxonomy(repoRoot).testOutputCacheDirName);
+  return repoCacheDirectory(repoRoot, testTaxonomy(repoRoot).testOutputCacheDirName);
 }
 
 /** ⚡️ One of the six generated output roots (`work`, `hosts`, `oracles`, `results`, `diffs`, `reports`). */
@@ -1182,9 +1183,9 @@ export function testCacheDir(repoRoot: string, child: string): string {
   return join(testCacheRoot(repoRoot), child);
 }
 
-/** 🏷️ Agent-scoped build/output root so concurrent sessions never contend on one target directory. */
+/** 🏷️ Agent-scoped scratch root for non-Cargo per-agent state (e.g. Python's pycache); Cargo output lives in the one shared cargo cache instead. */
 export function agentCacheRoot(repoRoot: string, agentId = process.env.SEMIO_AGENT_ID ?? "local"): string {
-  return join(getRepoMetaDir(repoRoot), "⚡️cache", "agents", agentId.replace(/[^A-Za-z0-9._-]+/g, "_"));
+  return repoCacheDirectory(repoRoot, "agents", agentId.replace(/[^A-Za-z0-9._-]+/g, "_"));
 }
 
 /** 🧾️ Ownership marker written into every generated output root; only marked trees are deletable. */
@@ -2401,7 +2402,7 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
   const removals: TestCleanRemoval[] = [];
   const retained: { category: string; path: string; files: number; bytes: number }[] = [];
   const skippedUnmarked: string[] = [];
-  const protectedPaths = [relative(repoRoot, join(getRepoMetaDir(repoRoot), "⚡️cache")).split(sep).join("/")];
+  const protectedPaths = [relative(repoRoot, repoCacheDirectory(repoRoot)).split(sep).join("/")];
   if (!existsSync(root)) return { dry, removals, protectedPaths, skippedUnmarked, retained };
 
   for (const child of taxonomy.testOutputChildDirs) {

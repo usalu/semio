@@ -43,6 +43,8 @@ import type { CrossSection, Manifold } from "manifold-3d";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 
@@ -438,8 +440,10 @@ async function main(argv: readonly string[]): Promise<number> {
   // and nothing of ours.
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🦀️json-engine");
-    const cargoTargetDir = process.env.CARGO_TARGET_DIR ?? join(engineDir, "target");
-    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit", env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDir } });
+    const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot());
+    // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
+    // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.
+    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const subsetsDir = join(import.meta.dir, "..", "..");
     if (command === "carrier") {

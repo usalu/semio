@@ -59,5 +59,12 @@
       "first"
     ],
     "zeroGrantAdvancesCursor": false
+  },
+  "liveWriteGeneration": {
+    "firstRevision": 4,
+    "staleRevision": 5,
+    "liveRevision": 6,
+    "staleBeginAccepted": false,
+    "refreshedBeginAccepted": true
   }
 }

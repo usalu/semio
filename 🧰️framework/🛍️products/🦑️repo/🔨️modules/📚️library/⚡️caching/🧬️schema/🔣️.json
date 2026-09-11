@@ -65,10 +65,12 @@
   "required": [
     "version",
     "uncached",
+    "uncachedExact",
     "continuous",
     "generatedDirectories",
     "toolchains",
-    "generatorInputs"
+    "generatorInputs",
+    "storage"
   ],
   "properties": {
     "$schema": {
@@ -78,6 +80,15 @@
       "const": 1
     },
     "uncached": {
+      "description": "Target families that never replay: the name itself and every `<name>-…` variant.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "uncachedExact": {
+      "description": "Target names that never replay while their `<name>-…` variants stay cacheable (e.g. `format` vs `format-check`, `os` vs `os-*`).",
       "type": "array",
       "items": {
         "type": "string"
@@ -154,6 +165,80 @@
             "type": "string",
             "minLength": 1,
             "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(/|$))(?!.*[\\\\:*?{}\\[\\]\\u0000]).+$"
+          }
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guardAgeMs",
+        "cargo",
+        "vite",
+        "agents",
+        "tests"
+      ],
+      "properties": {
+        "guardAgeMs": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "cargo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "budgetBytes",
+            "unusedAgeMs"
+          ],
+          "properties": {
+            "budgetBytes": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "unusedAgeMs": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "vite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unusedAgeMs"
+          ],
+          "properties": {
+            "unusedAgeMs": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "agents": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unusedAgeMs"
+          ],
+          "properties": {
+            "unusedAgeMs": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unusedAgeMs"
+          ],
+          "properties": {
+            "unusedAgeMs": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
           }
         }
       }

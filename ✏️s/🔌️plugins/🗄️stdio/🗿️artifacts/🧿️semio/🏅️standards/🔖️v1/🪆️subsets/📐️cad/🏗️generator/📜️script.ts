@@ -82,9 +82,8 @@ function main(argv: readonly string[]): number {
     return 2;
   }
   const out = process.env.SEMIO_FIXTURE_OUT ?? COMMITTED_FIXTURES;
-  const target = process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(CRATE_DIR, "target"), "probe");
   const args = ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", "generate", "--out", out, ...only.flatMap((recipe) => ["--only", recipe])];
-  const run = spawnSync("cargo", args, { cwd: CRATE_DIR, encoding: "utf8", env: { ...process.env, CARGO_TARGET_DIR: target }, stdio: ["ignore", "inherit", "pipe"] });
+  const run = spawnSync("cargo", args, { cwd: CRATE_DIR, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
   if (run.status !== 0) {
     // 🚫️A generator that cannot run must SAY SO and exit non-zero. Leaving the previous bytes in
     // place and reporting success would make `fixture reproduce` compare a stale corpus with itself.

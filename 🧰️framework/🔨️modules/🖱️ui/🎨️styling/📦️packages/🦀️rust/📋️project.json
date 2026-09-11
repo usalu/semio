@@ -16,7 +16,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check-generated": {
       "executor": "nx:run-commands",
@@ -31,7 +32,8 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fonts",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check-no-px": {
       "executor": "nx:run-commands",

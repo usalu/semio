@@ -23,7 +23,8 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-peer-codec-check --oracle-only",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "presence-peer-codec-native-check": {
       "executor": "nx:run-commands",
@@ -31,7 +32,8 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts presence-peer-codec-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "retained-record-observation-check": {
       "executor": "nx:run-commands",
@@ -39,7 +41,8 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts retained-record-observation-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "retained-verification-check": {
       "executor": "nx:run-commands",
@@ -47,7 +50,8 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts retained-verification-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-local-interaction-native": {
       "executor": "nx:run-commands",

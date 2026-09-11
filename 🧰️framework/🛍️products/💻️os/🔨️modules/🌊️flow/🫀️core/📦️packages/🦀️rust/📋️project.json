@@ -15,7 +15,8 @@
       "options": {
         "command": "bun ./📜️script.ts declarations",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",

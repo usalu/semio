@@ -15,7 +15,8 @@
       "options": {
         "command": "bun ./📜️script.ts document-backbone-binding-check",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "document-backbone-binding-native-check": {
       "executor": "nx:run-commands",
@@ -23,7 +24,8 @@
       "options": {
         "command": "bun ./📜️script.ts document-backbone-binding-check --native",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "cold-document-pair-ingress-check": {
       "executor": "nx:run-commands",
@@ -31,7 +33,8 @@
       "options": {
         "command": "bun ./📜️script.ts cold-document-pair-ingress-check",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "cold-document-pair-ingress-native-check": {
       "executor": "nx:run-commands",
@@ -39,7 +42,8 @@
       "options": {
         "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "artifact-admission-check": {
       "executor": "nx:run-commands",
@@ -48,7 +52,8 @@
         "command": "bun ./📜️script.ts artifact-admission-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
@@ -65,7 +70,8 @@
         "command": "bun ./📜️script.ts guest-lifecycle-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "retained-child-close-check": {
       "executor": "nx:run-commands",
@@ -73,7 +79,8 @@
       "options": {
         "command": "bun ./📜️script.ts test --retained-child-close-exact",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

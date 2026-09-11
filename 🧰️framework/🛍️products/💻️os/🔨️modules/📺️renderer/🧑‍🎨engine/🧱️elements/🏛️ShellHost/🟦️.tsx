@@ -401,6 +401,7 @@ import {
   endInteractivePluginAction,
   mapContextMenuSpecs,
   registerPendingWorldProjection,
+  leftoverOverlayCarryingUtilityV1,
   leftoverWorldSelectionOverlayV1,
   publishLeftoverWorldSelectionV1,
   WindowInstanceIdContext,
@@ -1887,7 +1888,12 @@ function FrameworkOsShellInner({
   const applyLeftoverInteractionView = useCallback((output: unknown) => {
     const published = interactionViewFromLeftoverOutput(output);
     if (!published) return;
-    publishLeftoverWorldSelectionV1({ ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId });
+    publishLeftoverWorldSelectionV1(
+      leftoverOverlayCarryingUtilityV1(
+        { ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId },
+        leftoverWorldSelectionOverlayV1(),
+      ),
+    );
     dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1(published) });
     leftoverInspectionHasSelectionRef.current = published.selectedIds.length > 0;
     const selectedKey = published.selectedIds.join("\0");
@@ -4223,6 +4229,7 @@ function FrameworkOsShellInner({
       if (scopeArg.kind === "none") return;
       const refreshOwner = captureEffectOwner(nextSession, captureDialogOrigin(nextSession));
       const generation = ++refreshGenerationRef.current;
+      let pendingRefreshEffects: readonly Effect[] = [];
       // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — reads `loadedPluginsRef`
       // (kept in sync every render, line ~1145), NOT the `loadedPlugins` array closed over by this
       // callback: this function's own identity depended on `loadedPlugins` (deps array below), so it was
@@ -4336,8 +4343,26 @@ function FrameworkOsShellInner({
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
-        // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
-        if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession, { kind: "full" }, refreshOwner);
+        console.warn(
+          "[DEBUG] b6 refresh panels",
+          JSON.stringify({
+            scope: scope.kind,
+            gen: generation,
+            panelCount: (request.panels ?? []).length,
+            asked: (request.panels ?? []).filter((entry) => entry.key.includes("inspection")).map((entry) => `${entry.key}#${entry.hash ?? "-"}`),
+            got: resolvedPanels
+              .filter((entry) => entry.key.includes("inspection"))
+              .map((entry) => {
+                if (entry.value === undefined) return `${entry.key}#${entry.hash}=same`;
+                const json = JSON.stringify(entry.value);
+                return `${entry.key}#${entry.hash}=${json.includes("inspector.object.id") ? "OBJECT" : json.includes("inspector.empty") ? "EMPTY" : "?"}:${json.length}`;
+              }),
+            guestSelection: resolvedWindows.map((entry) => `${entry.key}=${entry.value === undefined ? "same" : (JSON.stringify(entry.value).match(/"selectionJson":"((?:[^"\\]|\\.){0,160})"/)?.[1] ?? "none")}`),
+          }),
+        );
+        // ⏱️ pending_effects (e.g. flowEvalTick) wait until contributions are installed — an earlier
+        // tick faults `flow.extension-not-contributed` and retires the window-transient authority.
+        pendingRefreshEffects = response.requestedEffects ?? [];
       }
       // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
@@ -4405,15 +4430,8 @@ function FrameworkOsShellInner({
       } else if (!receiverPlugin?.handle.readAppDocumentPack) {
         operatorScope = { status: "unresolved", reason: receiverPlugin ? "no-document-read" : "no-receiver" };
       } else {
-        let liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId);
+        const liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId);
         if (generation !== refreshGenerationRef.current) return;
-        const opsLooksEmpty = (ops: string | undefined) => ops == null || !/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(ops);
-        if (liveDocument && opsLooksEmpty(liveDocument.ops)) {
-          await new Promise((resolve) => setTimeout(resolve, 250));
-          if (generation !== refreshGenerationRef.current) return;
-          liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId) ?? liveDocument;
-          if (generation !== refreshGenerationRef.current) return;
-        }
         if (!liveDocument) {
           operatorScope = { status: "unresolved", reason: "no-document-pack" };
         } else {
@@ -4458,6 +4476,8 @@ function FrameworkOsShellInner({
         if (scopedContributionsJson === "[]") {
           console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, chars: 2, kinds: operatorScope.kinds }));
         } else if (scopedContributionsJson) {
+          console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds: operatorScope.kinds }));
+
           const contributionsPushKey = `${nextSession.instanceId}::${scopedContributionsJson}`;
           if (contributionsPushKey !== contributionsJsonRef.current) {
             contributionsJsonRef.current = contributionsPushKey;
@@ -4484,7 +4504,20 @@ function FrameworkOsShellInner({
               const args = takesPageRun ? { json: scopedContributionsJson, page: 0, pageCount: 1 } : { json: scopedContributionsJson };
               try {
                 const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
-                await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
+                const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
+                if (contributionResponse.requestedEffects?.length) {
+                  const deferredEffects = contributionResponse.requestedEffects;
+                  const deferredPluginId = pluginEntry.handle.pluginId;
+                  const deferredInstanceId = instanceId;
+                  console.error("[DEBUG] setContributions deferred effects", JSON.stringify({ plugin: deferredPluginId, instanceId: deferredInstanceId, effects: deferredEffects }));
+                  queueMicrotask(() => {
+                    const live = sessionRef.current;
+                    if (!live) return;
+                    const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
+                    const owner = captureEffectOwner(target, captureDialogOrigin(target));
+                    void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => console.error("[DEBUG] setContributions deferred effects failed", error));
+                  });
+                }
               } catch (error) {
                 console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
               }
@@ -4492,6 +4525,7 @@ function FrameworkOsShellInner({
           }
         }
       }
+      if (pendingRefreshEffects.length) await applyHostEffects(pendingRefreshEffects, nextSession, { kind: "full" }, refreshOwner);
       if (appRegistrationsJson) {
         const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
         if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
@@ -5089,10 +5123,16 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("invokeExtension" in effect) {
-          void dispatchInvokeExtensionEffect(loadedPlugins, baseSession, effect.invokeExtension, async (requestingPlugin, response) => {
+          const pluginsNow = loadedPluginsRef.current;
+          const requesterId = pluginsNow.some((entry) => entry.handle.pluginId === baseSession.pluginId) ? baseSession.pluginId : sessionRef.current?.pluginId;
+          const requester = requesterId && pluginsNow.some((entry) => entry.handle.pluginId === requesterId) ? { pluginId: requesterId, instanceId: baseSession.instanceId } : baseSession;
+          if (!pluginsNow.some((entry) => entry.handle.pluginId === requester.pluginId)) {
+            console.error("[DEBUG] invokeExtension requester missing", JSON.stringify({ requested: baseSession.pluginId, instanceId: baseSession.instanceId, session: sessionRef.current?.pluginId ?? null, loaded: pluginsNow.map((entry) => entry.handle.pluginId), extensionId: effect.invokeExtension.extensionId }));
+          }
+          void dispatchInvokeExtensionEffect(pluginsNow, requester, effect.invokeExtension, async (requestingPlugin, response) => {
             if (!isCurrentEffectOwner(effectOwner)) throw new Error("extension.requester-retired");
             const current = sessionRef.current;
-            const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
+            const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === requester.pluginId)?.handle;
             if (!current || handle !== requestingPlugin.handle) throw new Error("extension.requester-retired");
             const primary = current.pluginId === baseSession.pluginId && current.instanceId === baseSession.instanceId;
             const spawned = parsePanelState(current.viewState)?.spawnedApps.some((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);

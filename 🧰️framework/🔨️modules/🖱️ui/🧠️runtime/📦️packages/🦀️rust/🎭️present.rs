@@ -254,6 +254,19 @@ impl ComponentTreeProducer {
     /// 🧹️ Releases one owned unit per call, then retires one queued built-child page and completes
     /// once the retire queue is empty — pages still reserved by other live trees are not waited for
     /// (that condition never holds while surfaces are mounted; the reactor turn drains the queue too).
+    /// 🧹️ Retires this producer for a bounded RUN of its own units instead of the single owner
+    /// [`Self::close_step`] retires. Its owners are whole nodes and built-child PAGES, so this ladder
+    /// is priced per ITEM: a document-scaled tree costs one host round trip per node while the
+    /// reactor drives one unit per turn (ticket 26/09/02, W-B2).
+    pub fn close_step_with_grant(&mut self, items: usize) -> bool {
+        for _ in 0..items.max(1) {
+            if self.close_step() {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn close_step(&mut self) -> bool {
         if let Some(tree) = self.complete.take() {
             drop(tree);

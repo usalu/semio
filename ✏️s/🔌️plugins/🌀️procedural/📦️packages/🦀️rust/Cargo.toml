@@ -27,6 +27,13 @@ app = "s.procedural.generation3d@1/*#editor"
 aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 
+
+[[package.metadata.semio.playground]]
+variant = "assembly"
+app = "s.assembly@1/*#editor"
+aliases = ["procedural assembly"]
+ports = { react = 6019, wgpu = 6119 }
+
 # 🎪️ The `generator` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
@@ -48,7 +55,7 @@ plugin-entry = []
 guest-heap-witness = ["dep:semio-framework-trace"]
 
 [dependencies]
-semio-s-artifact-procedural-assembly = { workspace = true }
+semio-s-artifact-procedural-assembly = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-procedural-generation2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-dispatch-macros = { workspace = true }

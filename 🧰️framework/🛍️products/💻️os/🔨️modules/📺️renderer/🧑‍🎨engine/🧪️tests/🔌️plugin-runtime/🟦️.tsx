@@ -30,7 +30,7 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 }
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
@@ -863,7 +863,55 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           }
         }
       });
-  
+
+      /** 🪞️ Ticket 26/09/02 wave B4. `buildUiRefreshRequest` stamps every requested entry with the
+       * host's cached hash so an unchanged body can answer without a payload; before this law both
+       * projectors ignored it and rebuilt every requested tree on every refresh — measured on the live
+       * Nakagin document switch at 51 projections / 1 275 retained-node walks for ONE switch, and,
+       * worse, a fresh `BuiltNode` per unchanged body defeats `mergeRecordPreservingIdentity` and
+       * re-reconciles the whole shell subtree. The clause that matters is `value === undefined` with
+       * the hash echoed back: that is what lets the shell keep its exact object reference. */
+      it("omits the payload of a requested body whose hash the host already holds and re-projects only the one that changed", () => {
+        const body = (key: string, value: string): UiNodeRecord => ({
+          id: 0, key, component: { type: "text", value, emphasize: null, dataAttributes: null },
+          layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+          transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [],
+        });
+        const publish = (previous: RetainedSurface | null, key: string, revision: number, value: string): RetainedSurface => {
+          const { surface, desynced } = applyUiPatchToRetained(previous, { surface: key, revision, baseRevision: revision - 1, ops: [{ type: "upsert", ...body(key, value) }, { type: "setRoot", id: 0 }] });
+          expect(desynced).toBe(false);
+          return surface!;
+        };
+        const retained = new Map<string, RetainedSurface>([
+          [retainedSurfaceId(7, "steady"), publish(null, "steady", 1, "steady-one")],
+          [retainedSurfaceId(7, "moving"), publish(null, "moving", 1, "moving-one")],
+        ]);
+        const request = { viewState: {}, windows: [{ key: "steady", bodyKey: "steady" }, { key: "moving", bodyKey: "moving" }] };
+        const first = retainedUiRefreshResponse(7, request, retained);
+        expect(first.windows?.map((entry) => entry.value !== undefined)).toEqual([true, true]);
+        const hashes = Object.fromEntries((first.windows ?? []).map((entry) => [entry.key, entry.hash]));
+
+        const echoed = retainedUiRefreshResponse(7, { ...request, windows: request.windows.map((target) => ({ ...target, hash: hashes[target.key] })) }, retained);
+        expect(echoed.windows).toEqual([{ key: "steady", hash: hashes.steady }, { key: "moving", hash: hashes.moving }]);
+        expect(echoed.windows?.every((entry) => entry.value === undefined)).toBe(true);
+
+        retained.set(retainedSurfaceId(7, "moving"), publish(retained.get(retainedSurfaceId(7, "moving"))!, "moving", 2, "moving-two"));
+        const partial = retainedUiRefreshResponse(7, { ...request, windows: request.windows.map((target) => ({ ...target, hash: hashes[target.key] })) }, retained);
+        expect(partial.windows?.find((entry) => entry.key === "steady")).toEqual({ key: "steady", hash: hashes.steady });
+        const moved = partial.windows?.find((entry) => entry.key === "moving");
+        expect(moved?.hash).not.toBe(hashes.moving);
+        expect(moved?.value).toMatchObject({ component: { type: "text", value: "moving-two" } });
+        console.info(`[DEBUG] refresh skip: ${JSON.stringify({ projectedFirst: 2, skippedOnEcho: 2, projectedAfterOneEdit: 1 })}`);
+      });
+
+      it("holds the skip predicate to exact hash equality on a rooted surface", () => {
+        expect(uiRefreshSectionUnchanged("abc", { root: 0, hash: "abc" })).toBe(true);
+        expect(uiRefreshSectionUnchanged("abc", { root: 0, hash: "abd" })).toBe(false);
+        expect(uiRefreshSectionUnchanged(undefined, { root: 0, hash: "abc" })).toBe(false);
+        expect(uiRefreshSectionUnchanged("", { root: 0, hash: "" })).toBe(false);
+        expect(uiRefreshSectionUnchanged("abc", { root: null, hash: "abc" })).toBe(false);
+      });
+
       it("acknowledges only patches that identify the exact retained surface", () => {
         const receipt = { lifetime: { activationGeneration: 1n, instanceId: 4, guestLifetime: 1n }, patchSequence: 1n };
         const turn = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, uiPatchReceipt: encodeActorUiPatchReceipt(receipt) } as unknown as WireTurnResult;
@@ -2056,6 +2104,61 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         );
       });
 
+      /** 🛑️ Wave W-B2 (ticket 26/09/02): a guest that answers `more-work` while publishing,
+       * acknowledging and emitting NOTHING is not "still working", it is stalled — and the settle
+       * loop used to spend all 4 096 continuations (4 096 host round trips) discovering that, then
+       * throw a timeout naming neither the surface nor the reason. It must now stop after the
+       * contract-derived zero-progress bound and name the surface it is waiting on. */
+      it("fails fast and names the pending surface when a guest answers more-work without publishing anything", async () => {
+        let continuationCount = 0;
+        await withFakeShardClient(
+          async () => {
+            continuationCount += 1;
+            return { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } };
+          },
+          async () => {
+            const surface = retainedSurfaceId(7, "puzzle3d-main-perspective");
+            await expect(settlePluginTurn(
+              "zero-progress-settle#1",
+              { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+              "Interactive",
+              new Set([surface]),
+            )).rejects.toThrow(`pending=${JSON.stringify([surface])}`);
+            expect(continuationCount).toBe(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT);
+            expect(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT).toBeLessThan(PLUGIN_UI_CONTINUATION_LIMIT);
+            console.info("[DEBUG] zero-progress settle: continuations=%d limit=%d spinLimit=%d", continuationCount, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_CONTINUATION_LIMIT);
+          },
+        );
+      });
+
+      /** ✅️ The successful path is untouched: any continuation that publishes resets the streak, so a
+       * guest still publishing OTHER surfaces while the requested one is pending keeps its full
+       * continuation budget — the bound is on zero progress, not on continuations. */
+      it("does not fast-fail a guest that keeps publishing while the requested surface is still pending", async () => {
+        let continuationCount = 0;
+        const total = PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT * 2;
+        await withFakeShardClient(
+          async () => {
+            continuationCount += 1;
+            const last = continuationCount >= total;
+            return {
+              uiPatches: [{ surface: pluginSurfaceRef(7, last ? "puzzle3d-main-perspective" : "puzzle3d-outliner"), revision: 1, baseRevision: 0, ops: [] }],
+              effects: [], nextWake: null, status: { tag: last ? "idle" : "more-work" },
+            };
+          },
+          async () => {
+            const result = await settlePluginTurn(
+              "slow-but-progressing-settle#1",
+              { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+              "Interactive",
+              new Set([retainedSurfaceId(7, "puzzle3d-main-perspective")]),
+            );
+            expect(continuationCount).toBe(total);
+            expect(result.uiPatches).toHaveLength(total);
+          },
+        );
+      });
+
       it("does not chase background work during instance-open before a UI surface is requested", async () => {
         let continuationCount = 0;
         await withFakeShardClient(
@@ -2103,16 +2206,28 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         );
       });
   
-      it("allows a large retained surface to reconcile beyond the former continuation ceiling", async () => {
+      /** 📏️ A large retained surface may still take far more continuations than the former 1 024
+       * ceiling — the settle is bounded by PROGRESS, not by round trips. What it may not do is spend
+       * them in silence: W-B2 (ticket 26/09/02) made every retirement ladder page-priced, so a guest
+       * that publishes, acknowledges and emits nothing for
+       * {@link PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT} consecutive turns is stalled, not busy —
+       * this guest publishes its section surfaces as it goes and its requested one at the end. */
+      it("allows a large retained surface to reconcile beyond the former continuation ceiling while it keeps publishing", async () => {
         let continuationCount = 0;
         await withFakeShardClient(
           async () => {
             continuationCount += 1;
+            const done = continuationCount === 1_025;
+            const progressing = continuationCount % 32 === 0;
             return {
-              uiPatches: continuationCount === 1_025 ? [{ surface: pluginSurfaceRef(9, "large"), revision: 1, baseRevision: 0, ops: [] }] : [],
+              uiPatches: done
+                ? [{ surface: pluginSurfaceRef(9, "large"), revision: 1, baseRevision: 0, ops: [] }]
+                : progressing
+                  ? [{ surface: pluginSurfaceRef(9, "large-sections"), revision: continuationCount, baseRevision: continuationCount - 1, ops: [] }]
+                  : [],
               effects: [],
               nextWake: null,
-              status: { tag: continuationCount === 1_025 ? "idle" : "more-work" },
+              status: { tag: done ? "idle" : "more-work" },
             };
           },
           async () => {
@@ -2123,7 +2238,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               new Set([retainedSurfaceId(9, "large")]),
             );
             expect(continuationCount).toBe(1_025);
-            expect(result.uiPatches).toHaveLength(1);
+            expect(continuationCount).toBeGreaterThan(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT);
+            expect(result.uiPatches.at(-1)?.surface?.surface).toBe("large");
           },
         );
       });

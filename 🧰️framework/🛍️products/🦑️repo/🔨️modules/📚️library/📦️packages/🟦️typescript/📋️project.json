@@ -461,14 +461,16 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts workspaces --check"
-      }
+      },
+      "outputs": []
     },
     "workspaces-write": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts workspaces --write"
-      }
+      },
+      "cache": false
     }
   }
 }

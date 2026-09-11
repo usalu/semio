@@ -10,10 +10,8 @@
     "clean",
     "deploy",
     "deps",
-    "disk-prune",
     "disk-report",
     "doctor",
-    "format",
     "format-fix",
     "fuzz",
     "generator-inputs",
@@ -22,7 +20,6 @@
     "new",
     "perf-baseline",
     "postinstall",
-    "prepare",
     "publish",
     "purge",
     "seed",
@@ -35,6 +32,15 @@
     "test-inventory",
     "test-metrics",
     "update"
+  ],
+  "uncachedExact": [
+    "commit",
+    "format",
+    "micro-commit",
+    "os",
+    "parity",
+    "scale-fixture",
+    "semio"
   ],
   "continuous": [
     "dev",
@@ -105,6 +111,8 @@
         "CARGO_PROFILE_RELEASE_OPT_LEVEL",
         "CARGO_PROFILE_DEV_DEBUG",
         "CARGO_PROFILE_RELEASE_DEBUG",
+        "CARGO_PROFILE_WASM_DEV_DEBUG",
+        "CARGO_PROFILE_WASM_RELEASE_DEBUG",
         "CC",
         "CXX",
         "CFLAGS",
@@ -118,7 +126,6 @@
         "SEMIO_WASM_OPT",
         "SEMIO_WASM_BINDGEN_BIN",
         "RUSTC_BOOTSTRAP",
-        "CARGO_TARGET_DIR",
         "CARGO_UNSTABLE_EMBED_METADATA",
         "SEMIO_WASM_OPT_BIN",
         "DEVELOPER_DIR",
@@ -486,6 +493,22 @@
     "registry-catalog": {
       "target": "repo:generator-inputs",
       "output": ".🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
+    }
+  },
+  "storage": {
+    "guardAgeMs": 172800000,
+    "cargo": {
+      "budgetBytes": 85899345920,
+      "unusedAgeMs": 604800000
+    },
+    "vite": {
+      "unusedAgeMs": 1209600000
+    },
+    "agents": {
+      "unusedAgeMs": 604800000
+    },
+    "tests": {
+      "unusedAgeMs": 604800000
     }
   }
 }

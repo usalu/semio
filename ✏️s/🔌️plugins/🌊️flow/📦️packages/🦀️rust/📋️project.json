@@ -11,7 +11,8 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts add-widget-retained-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "child-edit-check": {
       "executor": "nx:run-commands",
@@ -19,7 +20,8 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-edit-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "child-identity-check": {
       "executor": "nx:run-commands",
@@ -27,7 +29,8 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-identity-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test-source": {
       "executor": "nx:run-commands",
@@ -83,7 +86,11 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🔣️.json"
+      ]
     }
   }
 }

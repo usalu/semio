@@ -22,7 +22,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check-generated": {
       "executor": "nx:run-commands",
@@ -37,7 +38,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts native-catalog-selection-check"
-      }
+      },
+      "outputs": []
     },
     "catalog-complete": {
       "executor": "nx:run-commands",
@@ -45,7 +47,8 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts catalog-complete",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "trusted-catalog-publish": {
       "executor": "nx:run-commands",
@@ -53,7 +56,8 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts trusted-catalog-publish",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
@@ -87,19 +91,19 @@
     },
     "rust-taxonomy-mounts-check": {
       "executor": "nx:run-commands",
-      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
-      }
+      },
+      "cache": false
     },
     "plugin-root-ownership-check": {
       "executor": "nx:run-commands",
-      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts plugin-root-ownership-check"
-      }
+      },
+      "cache": false
     }
   },
   "tags": [

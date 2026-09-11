@@ -32,6 +32,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -182,7 +184,7 @@ const READER = join(HERE, "..", "🔬️probes", "🦀️reader");
 function readerBinary(): string {
   const result = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(READER, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
-  return join(READER, "target", "release", "reader");
+  return join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");
 }
 
 function projectionOf(binary: string, path: string): string {

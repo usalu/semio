@@ -7005,6 +7005,7 @@ dependencies = [
  "semio-framework-ui-styling",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-txt",
  "serde",
  "serde_json",
 ]

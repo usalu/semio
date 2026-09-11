@@ -436,6 +436,14 @@ async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fau
 /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
 /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
+///
+/// 🛰️ Wave B7: a framework-reserved verb is a TWO-half gesture since `dispatch_framework_reserved_action`
+/// began answering every non-clipboard route with `Effect::SpawnJob { kind: FRAMEWORK_RESERVED_JOB_KIND }`.
+/// `handle_action` only ADMITS it; the document changes when the host drives that Isolated job to a
+/// terminal step and hands the bytes back through `complete_reserved_spawned_job`. A fixture that stopped
+/// at the admission observed `undo`/`interactionSelect`/`interactionHover` succeeding while the store and
+/// the interaction snapshot never moved — the exact silent no-op shape wave B5 reported. [`settle_reserved`]
+/// plays that host half, and is a no-op for the clipboard routes that still commit inline.
 pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
     app.ensure_window(window_id);
@@ -476,7 +484,11 @@ pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>,
             | "setInteractionGranularity"
     ) {
         let dsl_args = args.map(json::to_dsl_value);
-        let reserved = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
+        let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
+        let reserved = match admitted {
+            Ok(admitted) => settle_reserved(app, admitted).await,
+            Err(fault) => Err(fault),
+        };
         return settle_into(app, reserved).await;
     }
     let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta).await;

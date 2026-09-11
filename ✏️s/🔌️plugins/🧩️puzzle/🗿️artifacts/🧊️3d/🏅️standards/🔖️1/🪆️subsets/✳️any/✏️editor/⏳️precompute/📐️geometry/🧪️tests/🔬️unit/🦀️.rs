@@ -560,3 +560,123 @@ fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
     assert_eq!(FixedOwnerMap::<String, u32, 8>::new().capacity(), 8);
     assert_eq!(FixedOwnerSet::<String, 8>::new().capacity(), 8);
 }
+
+
+/// ⚖️ LAW: every sub-page a fixed owner asks the guest for stays at or under
+/// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` — the owners never ask for a block a fragmented guest
+/// refuses first.
+///
+/// 🧊️ The guest runs on one linear memory that grows and never shrinks, served by `dlmalloc` with a
+/// 64 KiB granularity, so a single block larger than that is the first request a fragmented or
+/// nearly-full guest refuses. `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>` used to ask for
+/// ≈432 KiB in ONE piece, and `DOCUMENT_OWNER_PAGE_BYTES` admitted up to a whole MiB — the block
+/// whose refusal abandoned a Nakagin fill plan the user was 40+ s into (W-F6 §8 item 2). The
+/// declared width is unchanged; it is now backed by lazily claimed sub-pages, and this law is what
+/// keeps a later widening from re-crossing the ceiling.
+#[test]
+fn every_fixed_owner_sub_page_request_stays_under_the_guest_contiguous_ceiling() {
+    use crate::standards::v1::subsets::any::schema::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
+    for (owner, bytes) in [
+        ("fixture objects", FixedOwnerVec::<FixtureObject, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+        ("fixture attractions", FixedOwnerVec::<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::sub_page_bytes()),
+        ("fixture target volumes", FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::sub_page_bytes()),
+        ("catalog objects", FixedOwnerVec::<ObjectKind, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("catalog vortices", FixedOwnerVec::<VortexKindCatalog, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("catalog cables", FixedOwnerVec::<CableKindCatalog, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("kind compatibility", FixedOwnerVec::<KindCompatEntry, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("placed lookup", FixedOwnerMap::<String, usize, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+        ("candidate cache", FixedOwnerMap::<String, Vec<BrushCompatibleCandidate>>::sub_page_bytes()),
+        ("seed object ids", FixedOwnerMap::<String, (), DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+        ("meshes", FixedOwnerMap::<String, CollisionBody, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("blocked vortex ids", FixedOwnerMap::<String, (), DOCUMENT_VORTEX_SLOTS>::sub_page_bytes()),
+        ("candidates seen", FixedOwnerMap::<String, (), DOCUMENT_CANDIDATE_SLOTS>::sub_page_bytes()),
+        ("candidate classification", FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::sub_page_bytes()),
+        ("kind weights", FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("collision entries", FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+        ("collision cells", FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::sub_page_bytes()),
+        ("collision cell members", FixedOwnerMap::<String, ()>::sub_page_bytes()),
+        ("collision oversized", FixedOwnerMap::<String, (), DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
+        ("collision query candidates", FixedOwnerMap::<String, (), DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+    ] {
+        assert!(bytes > 0 && bytes <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "the {owner} owner asks the guest for {bytes} contiguous bytes, over the {GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES}-byte ceiling");
+    }
+}
+
+/// ⚖️ LAW: an owner wider than one sub-page reads, writes and retires across its boundaries — the
+/// declared width is unchanged by the split, and one close grant gives back exactly one sub-page.
+///
+/// 🧊️ Index arithmetic across lazily claimed sub-pages is where a chunked owner silently loses
+/// entries, and the retirement cursor is priced in owners per grant: a document-scale owner that
+/// gave its whole backing back in one call would spend a whole interactive close step on it.
+#[test]
+fn an_owner_wider_than_one_sub_page_reads_writes_and_retires_across_its_boundaries() {
+    let sub_page = FixedOwnerVec::<[u64; 32], DOCUMENT_OBJECT_SLOTS>::sub_page_slots();
+    let filled = 2 * sub_page + 5;
+    let mut values = FixedOwnerVec::<[u64; 32], DOCUMENT_OBJECT_SLOTS>::new();
+    for index in 0..filled {
+        assert_eq!(values.try_push([index as u64; 32]), Ok(()));
+    }
+    assert_eq!((values.len(), values.capacity()), (filled, DOCUMENT_OBJECT_SLOTS));
+    assert_eq!(values.backing_credit(), Some((3, 3 * sub_page * size_of::<[u64; 32]>())), "three claimed sub-pages, credited as three owners");
+    assert_eq!(values.get(sub_page - 1), Some(&[sub_page as u64 - 1; 32]));
+    assert_eq!(values.get(sub_page), Some(&[sub_page as u64; 32]), "the first slot of the second sub-page");
+    assert_eq!(values.get(filled - 1), Some(&[filled as u64 - 1; 32]));
+    assert_eq!(values.get(filled), None);
+    assert!(values.iter().enumerate().all(|(index, value)| value == &[index as u64; 32]), "iteration crosses the sub-page boundaries in order");
+    assert_eq!(values.iter().count(), filled);
+    *values.get_mut(sub_page + 1).expect("a slot on the second sub-page") = [u64::MAX; 32];
+    assert_eq!(values.get(sub_page + 1), Some(&[u64::MAX; 32]));
+    for index in (0..filled).rev() {
+        let expected = if index == sub_page + 1 { [u64::MAX; 32] } else { [index as u64; 32] };
+        assert_eq!(values.pop(), Some(expected));
+    }
+    assert!(values.pop().is_none());
+    for remaining in (0..3).rev() {
+        assert!(values.retire_backing(), "one sub-page per close grant");
+        assert_eq!(values.backing_credit().map_or(0, |credit| credit.0), remaining);
+    }
+    assert!(!values.retire_backing() && values.terminal_owners_empty());
+    assert_eq!(values.capacity(), 0, "a fully retired owner backs nothing and says so");
+}
+
+/// ⚖️ LAW: an owner whose MIDDLE sub-page the guest refused keeps every earlier sub-page readable,
+/// reports the capacity it actually backs, and refuses the insert that needed the missing page.
+///
+/// 🧊️ Lazily claimed sub-pages move the refusal from construction to the boundary crossing: the
+/// owner is alive and half-filled when the guest says no. Reporting the declared width there is the
+/// same lie that turned build #29's out-of-memory refusal into a guest trap — the preflight every
+/// collision mutation runs compares `len()` against `capacity()`, so the honest answer is the one
+/// that turns an exhausted guest into a refused mutation instead of an `unreachable!`.
+#[test]
+fn an_owner_whose_middle_sub_page_was_refused_keeps_the_earlier_ones_and_reports_honest_capacity() {
+    let backed = FixedOwnerVec::<[u64; 32], DOCUMENT_OBJECT_SLOTS>::sub_page_slots();
+    assert!(backed < DOCUMENT_OBJECT_SLOTS && backed * size_of::<[u64; 32]>() <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a 512 KiB declared page is backed by more than one sub-page");
+    {
+        let _fragmented = OwnerReservationLimit::install(usize::MAX, 1);
+        let mut values = FixedOwnerVec::<[u64; 32], DOCUMENT_OBJECT_SLOTS>::new();
+        assert_eq!(values.capacity(), DOCUMENT_OBJECT_SLOTS, "an owner that got its first sub-page still reports its declared width");
+        for index in 0..backed {
+            assert_eq!(values.try_push([index as u64; 32]), Ok(()), "slot {index} rides an already claimed sub-page");
+        }
+        let refused = [u64::MAX; 32];
+        assert_eq!(values.try_push(refused), Err(refused), "the value that needed the refused sub-page is handed back whole");
+        assert_eq!((values.len(), values.capacity()), (backed, backed), "a refused sub-page drops the reported capacity to what is actually backed");
+        assert_eq!(values.get(0), Some(&[0u64; 32]));
+        assert_eq!(values.get(backed - 1), Some(&[backed as u64 - 1; 32]));
+        assert_eq!(values.iter().count(), backed, "every earlier sub-page stays readable");
+        assert_eq!(values.backing_credit().map(|credit| credit.0), Some(1), "only the sub-pages it actually holds are credited");
+        assert_eq!(values.pop(), Some([backed as u64 - 1; 32]));
+    }
+    let entries = FixedOwnerMap::<usize, [u64; 32], DOCUMENT_OBJECT_SLOTS>::sub_page_slots();
+    assert!(entries < DOCUMENT_OBJECT_SLOTS);
+    let _fragmented = OwnerReservationLimit::install(usize::MAX, 1);
+    let mut map = FixedOwnerMap::<usize, [u64; 32], DOCUMENT_OBJECT_SLOTS>::new();
+    for index in 0..entries {
+        assert!(matches!(map.try_insert(index, [index as u64; 32]), Ok(FixedOwnerMapInsert::Inserted)));
+    }
+    assert_eq!(map.try_insert(entries, [7; 32]).expect_err("the entry that needed the refused sub-page"), (entries, [7; 32]));
+    assert_eq!((map.len(), map.capacity()), (entries, entries));
+    assert_eq!(map.get(&0), Some(&[0u64; 32]));
+    assert_eq!(map.get(&(entries - 1)), Some(&[entries as u64 - 1; 32]));
+    assert_eq!(map.iter().count(), entries);
+}

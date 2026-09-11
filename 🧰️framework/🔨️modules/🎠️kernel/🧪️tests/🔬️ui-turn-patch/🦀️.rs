@@ -351,6 +351,6 @@ fn ui_turn_patch_transport_max_plus_one_returns_exact_owner_and_session_close_is
     let rejected = arena.reserve(90_001, UiTurnPatches::default()).expect_err("maximum plus one");
     assert!(rejected.is_empty());
     assert!(arena.request_session_close(1));
-    assert!(matches!(arena.close_one().unwrap(), UiTurnPatchTransportProgress::Pending { released_items: 1, .. }));
+    assert!(matches!(arena.close_one(1, 4096).unwrap(), UiTurnPatchTransportProgress::Pending { released_items: 1, .. }));
     assert_eq!(arena.slots.iter().filter(|slot| slot.state != UiTurnPatchTransportState::Vacant).count(), UI_TURN_PATCH_TRANSPORT_SLOTS - 1);
 }

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/test/cache-prune",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "nowMs", "guardAgeMs", "areas", "expected"],
+  "properties": {
+    "version": { "const": 1 },
+    "nowMs": { "type": "integer", "minimum": 0 },
+    "guardAgeMs": { "type": "integer", "minimum": 0 },
+    "areas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "budgetBytes", "unusedAgeMs", "units"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "budgetBytes": { "type": ["integer", "null"], "minimum": 0 },
+          "unusedAgeMs": { "type": "integer", "minimum": 0 },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "bytes", "recencyMs", "lockHeld", "kind"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "bytes": { "type": "integer", "minimum": 0 },
+                "recencyMs": { "type": "integer", "minimum": 0 },
+                "lockHeld": { "type": "boolean" },
+                "kind": { "enum": ["cargo-build", "cargo-incremental", "cargo-target-file", "directory"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["totalBytes", "unitCount", "ageDeletions", "budgetDeletions", "retainedBytes", "guardedOverBudgetBytes"],
+        "properties": {
+          "totalBytes": { "type": "integer", "minimum": 0 },
+          "unitCount": { "type": "integer", "minimum": 0 },
+          "ageDeletions": { "type": "array", "items": { "type": "string" } },
+          "budgetDeletions": { "type": "array", "items": { "type": "string" } },
+          "retainedBytes": { "type": "integer", "minimum": 0 },
+          "guardedOverBudgetBytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

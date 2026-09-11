@@ -43,7 +43,11 @@
         "cwd": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🔣️.json"
+      ]
     }
   }
 }

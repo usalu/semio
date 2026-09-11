@@ -43,7 +43,11 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🔣️.json"
+      ]
     }
   }
 }

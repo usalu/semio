@@ -12,7 +12,8 @@ fn faulted(outcome: StepOutcome) -> bool {
     true
 }
 
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, DOCUMENT_CELL_SLOTS, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_SLOTS, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use crate::editor::puzzle3d::precompute::{FILL_ENVELOPE_MAX_BYTES, FILL_ENVELOPE_MAX_ITEMS};
 use crate::standards::v1::subsets::any::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
@@ -1140,32 +1141,35 @@ fn document_scale_fixed_pages_are_admitted_by_the_fill_envelope_reservation() {
     assert!(credit.bytes > 10 * FIXED_OWNER_PAGE_BYTES, "document pages are actually credited, not silently absent: {credit:?}");
 }
 
-#[test]
-fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
-    const OBJECTS: usize = 180;
-    const OBJECT_KINDS: usize = 12;
-    const VORTEX_KINDS: usize = 18;
-    const COMPATIBILITY_ROWS: usize = 14;
-    const MESH_URL: &str = "/nakagin/capsule.glb";
+const NAKAGIN_OBJECTS: usize = 180;
+const NAKAGIN_OBJECT_KINDS: usize = 12;
+const NAKAGIN_VORTEX_KINDS: usize = 18;
+const NAKAGIN_COMPATIBILITY_ROWS: usize = 14;
+const NAKAGIN_MESH_URL: &str = "/nakagin/capsule.glb";
+
+/// 🏢️ The flagship fixture at document scale — 180 capsules, 360 attractions, 12 object kinds, 18
+/// vortex kinds, 14 compatibility rows — as the fill lane's own preparation roots. Two laws drive
+/// it: one on an unconstrained guest, one under a fragmented guest's reservation ceiling.
+fn nakagin_scale_roots() -> FillPreparationRoots {
     let template = ObjectKindVortexTemplate { vortex_kind: Some("port-00".into()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() };
     let catalogs = KindCatalogBundle {
-        objects: (0..OBJECT_KINDS)
+        objects: (0..NAKAGIN_OBJECT_KINDS)
             .map(|index| ObjectKind {
                 id: format!("capsule-kind-{index:02}"),
-                representations: vec![ObjectKindRepresentation { id: format!("capsule-representation-{index:02}"), name: String::new(), url: MESH_URL.into(), mime: String::new(), tags: Vec::new(), lod: None, description: String::new() }],
+                representations: vec![ObjectKindRepresentation { id: format!("capsule-representation-{index:02}"), name: String::new(), url: NAKAGIN_MESH_URL.into(), mime: String::new(), tags: Vec::new(), lod: None, description: String::new() }],
                 scale: None,
                 vortices: vec![template.clone()],
             })
             .collect(),
-        vortices: (0..VORTEX_KINDS).map(|index| VortexKindCatalog { id: format!("port-{index:02}"), ..Default::default() }).collect(),
+        vortices: (0..NAKAGIN_VORTEX_KINDS).map(|index| VortexKindCatalog { id: format!("port-{index:02}"), ..Default::default() }).collect(),
         cables: Vec::new(),
     };
-    let objects: Vec<FixtureObject> = (0..OBJECTS)
+    let objects: Vec<FixtureObject> = (0..NAKAGIN_OBJECTS)
         .map(|index| FixtureObject {
             id: format!("capsule-{index:03}"),
-            object_kind: Some(format!("capsule-kind-{:02}", index % OBJECT_KINDS)),
+            object_kind: Some(format!("capsule-kind-{:02}", index % NAKAGIN_OBJECT_KINDS)),
             anchor: Default::default(),
-            mesh_url: Some(MESH_URL.into()),
+            mesh_url: Some(NAKAGIN_MESH_URL.into()),
             origin: [(index % 12) as f64 * 64.0, (index / 12) as f64 * 64.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
@@ -1179,7 +1183,7 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
     let attraction = |index: usize, vortex: &str| AttractionProps {
         id: format!("cable-{vortex}-{index:03}"),
         attracting: puzzle3d_vortex_full_id(&format!("capsule-{index:03}"), vortex),
-        attracted: puzzle3d_vortex_full_id(&format!("capsule-{:03}", (index + 1) % OBJECTS), vortex),
+        attracted: puzzle3d_vortex_full_id(&format!("capsule-{:03}", (index + 1) % NAKAGIN_OBJECTS), vortex),
         gap: 0.0,
         shift: 0.0,
         rise: 0.0,
@@ -1189,9 +1193,10 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
         x: 0.0,
         y: 0.0,
     };
-    let attractions: Vec<AttractionProps> = (0..OBJECTS).map(|index| attraction(index, "connected-a")).chain((0..OBJECTS).map(|index| attraction(index, "connected-b"))).collect();
-    let kind_compatibility: Vec<KindCompatEntry> =
-        (0..COMPATIBILITY_ROWS).map(|index| KindCompatEntry { source: format!("port-{index:02}"), target: format!("port-{index:02}"), bidirectional: true, important: false, specificity: Some("vortex".into()) }).collect();
+    let attractions: Vec<AttractionProps> = (0..NAKAGIN_OBJECTS).map(|index| attraction(index, "connected-a")).chain((0..NAKAGIN_OBJECTS).map(|index| attraction(index, "connected-b"))).collect();
+    let kind_compatibility: Vec<KindCompatEntry> = (0..NAKAGIN_COMPATIBILITY_ROWS)
+        .map(|index| KindCompatEntry { source: format!("port-{index:02}"), target: format!("port-{index:02}"), bidirectional: true, important: false, specificity: Some("vortex".into()) })
+        .collect();
     let body = collision_body_from_buffers(&[-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0], &[0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3]).expect("capsule body");
     let scene = Arc::new(SceneConfig {
         fixture: Fixture { objects, attractions, target_volumes: Vec::new() },
@@ -1202,7 +1207,13 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
     });
-    let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::from([(MESH_URL.to_string(), body)]))), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43));
+    FillPreparationRoots::new(scene, Arc::new(HashMap::from([(NAKAGIN_MESH_URL.to_string(), body)])))
+}
+
+/// 🏢️ Drives a document-scale preparation until it places its first object, refusing to accept a
+/// fault, a capacity refusal, or a terminal outcome that placed nothing.
+fn drive_nakagin_scale_fill() -> FillBuilder {
+    let mut builder = FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43));
     assert_eq!(builder.preview.rejection_reason, None, "a Nakagin-scale document must not be refused before preparation starts");
     let mut sequence = 0;
     let mut turns = 0;
@@ -1210,13 +1221,41 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let outcome = builder.step(&mut context);
         turns += 1;
-        assert!(!matches!(outcome, StepOutcome::Fault(_)), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.preview.rejection_reason);
+        let terminal = outcome.is_terminal();
+        assert!(!faulted(outcome), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.preview.rejection_reason);
         assert!(builder.preview.rejection_reason.as_deref().is_none_or(|reason| !reason.starts_with("preparation-capacity")), "document scale must not publish a capacity refusal: {:?}", builder.preview.rejection_reason);
-        assert!(!outcome.is_terminal() || !builder.sequence.is_empty(), "Nakagin-scale fill ended after {turns} turns without placing an object: {:?}", builder.preview.rejection_reason);
+        assert!(!terminal || !builder.sequence.is_empty(), "Nakagin-scale fill ended after {turns} turns without placing an object: {:?}", builder.preview.rejection_reason);
         assert!(turns < 400_000, "Nakagin-scale fill did not place an object in bounded turns");
     }
-    assert_eq!((builder.base.objects.len(), builder.base.attractions.len()), (OBJECTS, 2 * OBJECTS));
-    assert_eq!((builder.catalogs.objects.len(), builder.catalogs.vortices.len(), builder.kind_compatibility.len()), (OBJECT_KINDS, VORTEX_KINDS, COMPATIBILITY_ROWS));
-    assert_eq!(builder.placed_lookup.len(), OBJECTS + 1);
+    builder
+}
+
+#[test]
+fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
+    let builder = drive_nakagin_scale_fill();
+    assert_eq!((builder.base.objects.len(), builder.base.attractions.len()), (NAKAGIN_OBJECTS, 2 * NAKAGIN_OBJECTS));
+    assert_eq!((builder.catalogs.objects.len(), builder.catalogs.vortices.len(), builder.kind_compatibility.len()), (NAKAGIN_OBJECT_KINDS, NAKAGIN_VORTEX_KINDS, NAKAGIN_COMPATIBILITY_ROWS));
+    assert_eq!(builder.placed_lookup.len(), NAKAGIN_OBJECTS + 1);
     assert_eq!(builder.appended_objects.len(), 1);
+}
+
+/// ⚖️ LAW: a fill session on a guest that refuses every contiguous request over
+/// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` still prepares a Nakagin-scale document and places an
+/// object — no owner of this lane asks for a single block the fragmented guest cannot serve.
+///
+/// 🧊️ A wasm guest runs on one linear memory that grows and never shrinks, served by `dlmalloc` with
+/// a 64 KiB granularity: the FIRST request a fragmented or nearly-full guest refuses is one larger
+/// than a granularity unit. The fill session's own owners used to be exactly that — one 432 KiB
+/// block for `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>`, one 96 KiB block for the
+/// collision entry map — so ~44 s into a Nakagin fill run the guest refused them and the whole plan
+/// was abandoned (`CollisionMutationStep::Rejected(Capacity)`, ticket 26/09/02 build #29 and W-F6
+/// §8 item 2). A native suite cannot exhaust a 512 MiB linear memory, so the law installs the
+/// fragmented guest as a reservation policy instead.
+#[test]
+fn nakagin_scale_fill_places_an_object_under_a_fragmented_guest_reservation_ceiling() {
+    let _fragmented = OwnerReservationLimit::install(GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, usize::MAX);
+    let builder = drive_nakagin_scale_fill();
+    assert_eq!((builder.base.objects.len(), builder.base.attractions.len()), (NAKAGIN_OBJECTS, 2 * NAKAGIN_OBJECTS));
+    assert_eq!(builder.appended_objects.len(), 1, "the fragmented guest still places its first object");
+    assert_eq!(builder.preview.rejection_reason, None);
 }

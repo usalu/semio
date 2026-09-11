@@ -17,7 +17,8 @@
       "options": {
         "command": "bun ./📜️script.ts scoped-presence-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "directory-invite-capability-check": {
       "executor": "nx:run-commands",
@@ -25,7 +26,8 @@
       "options": {
         "command": "bun ./📜️script.ts directory-invite-capability-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "directory-home-bootstrap-check": {
       "executor": "nx:run-commands",
@@ -33,7 +35,8 @@
       "options": {
         "command": "bun ./📜️script.ts directory-home-bootstrap-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",
@@ -83,7 +86,8 @@
       "options": {
         "command": "bun ./📜️script.ts tutorial-interaction-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "flow-browser-runtime-check": {
       "executor": "nx:run-commands",
@@ -91,7 +95,8 @@
       "options": {
         "command": "bun ./📜️script.ts flow-browser-runtime-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "artifact-creation-progress-check": {
       "executor": "nx:run-commands",
@@ -99,7 +104,8 @@
       "options": {
         "command": "bun ./📜️script.ts artifact-creation-progress-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "document-opening-scope-check": {
       "executor": "nx:run-commands",
@@ -107,7 +113,8 @@
       "options": {
         "command": "bun ./📜️script.ts document-opening-scope-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     },
     "agent-bridge-check": {
       "executor": "nx:run-commands",
@@ -115,7 +122,8 @@
       "options": {
         "command": "bun ./📜️script.ts agent-bridge-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-      }
+      },
+      "outputs": []
     }
   },
   "tags": [

@@ -1,7 +1,7 @@
 {
   "schema": "semio.repo.exact-cargo-laws/v1",
   "compilerStorage": {
-    "defaultDirectory": "target",
+    "defaultDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/target",
     "base": "workspace"
   },
   "stageEnvironment": {

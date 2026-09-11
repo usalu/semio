@@ -18,7 +18,8 @@
     },
     "preview-generated": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts preview-generated" }
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts preview-generated" },
+      "outputs": []
     },
     "check-wgpu": {
       "executor": "nx:run-commands",
@@ -27,19 +28,23 @@
     },
     "gis-map-inference-port-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check" }
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check" },
+      "outputs": []
     },
     "gis-map-inference-port-browser-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" }
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" },
+      "outputs": []
     },
     "document-opening-attempt-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts document-opening-attempt-check" }
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts document-opening-attempt-check" },
+      "outputs": []
     },
     "cold-document-pair-browser-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts cold-document-pair-browser-check long" }
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts cold-document-pair-browser-check long" },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

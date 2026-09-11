@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "nowMs": 10000000,
+  "guardAgeMs": 1000,
+  "areas": [
+    {
+      "name": "cargo",
+      "budgetBytes": 150,
+      "unusedAgeMs": 5000,
+      "units": [
+        { "path": "build/pkg/aaa", "bytes": 100, "recencyMs": 9994000, "lockHeld": false, "kind": "cargo-build" },
+        { "path": "incremental/crate-bbb", "bytes": 90, "recencyMs": 9994000, "lockHeld": true, "kind": "cargo-incremental" },
+        { "path": "target/deps/lib.rlib", "bytes": 120, "recencyMs": 9995000, "lockHeld": false, "kind": "cargo-target-file" },
+        { "path": "build/pkg/ddd", "bytes": 70, "recencyMs": 9997000, "lockHeld": false, "kind": "cargo-build" },
+        { "path": "incremental/crate-eee", "bytes": 60, "recencyMs": 9999500, "lockHeld": false, "kind": "cargo-incremental" }
+      ]
+    },
+    {
+      "name": "vite",
+      "budgetBytes": null,
+      "unusedAgeMs": 2000,
+      "units": [
+        { "path": "consumer-a", "bytes": 50, "recencyMs": 9997000, "lockHeld": false, "kind": "directory" },
+        { "path": "consumer-b", "bytes": 40, "recencyMs": 9999000, "lockHeld": false, "kind": "directory" }
+      ]
+    },
+    {
+      "name": "agents",
+      "budgetBytes": null,
+      "unusedAgeMs": 1500,
+      "units": [
+        { "path": "stray-session-1", "bytes": 30, "recencyMs": 9998000, "lockHeld": false, "kind": "directory" },
+        { "path": "stray-session-2", "bytes": 20, "recencyMs": 9999800, "lockHeld": false, "kind": "directory" }
+      ]
+    }
+  ],
+  "expected": {
+    "cargo": { "totalBytes": 440, "unitCount": 5, "ageDeletions": ["build/pkg/aaa", "target/deps/lib.rlib"], "budgetDeletions": ["build/pkg/ddd"], "retainedBytes": 150, "guardedOverBudgetBytes": 90 },
+    "vite": { "totalBytes": 90, "unitCount": 2, "ageDeletions": ["consumer-a"], "budgetDeletions": [], "retainedBytes": 40, "guardedOverBudgetBytes": 0 },
+    "agents": { "totalBytes": 50, "unitCount": 2, "ageDeletions": ["stray-session-1"], "budgetDeletions": [], "retainedBytes": 20, "guardedOverBudgetBytes": 0 }
+  }
+}

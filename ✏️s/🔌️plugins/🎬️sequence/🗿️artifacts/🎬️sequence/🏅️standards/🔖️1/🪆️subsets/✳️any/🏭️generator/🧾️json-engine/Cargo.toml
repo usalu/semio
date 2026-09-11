@@ -9,11 +9,11 @@ publish = false
 
 [[bin]]
 name = "generate"
-path = "src/â¨ï¸generate.rs"
+path = "src/✨️generate.rs"
 
 [[bin]]
 name = "reader"
-path = "src/ðï¸reader.rs"
+path = "src/📖️reader.rs"
 
 [lib]
 name = "sequence_json"

@@ -30,6 +30,9 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+# 🧮️ The guest memory budget the fixed owners size their sub-pages against, and the shared heap
+# witness this artifact's growth laws weigh the tick loop with.
+semio-framework-trace = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
@@ -53,7 +56,5 @@ js-sys = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-# 🧮️ The shared heap witness this artifact's growth laws weigh the tick loop with — test-only.
-semio-framework-trace = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

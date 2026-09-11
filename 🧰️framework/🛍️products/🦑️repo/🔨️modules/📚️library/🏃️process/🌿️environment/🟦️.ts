@@ -1,3 +1,5 @@
+import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
+
 /** 🧰️Dev tooling env without IDE-injected node options. Plugin isolation is deliberately left at Nx's
  * own default: this workspace's inference plugin
  * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`) is an async ES module — it top-level
@@ -15,6 +17,13 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_VERBOSE_LOGGING ??= "false";
   env.NX_PERF_LOGGING ??= "false";
   env.NX_NATIVE_LOGGING ??= "nx=warn";
-  env.RUSTC_WRAPPER ??= "";
+  return env;
+}
+
+/** ⚡️ Routes Go's build cache and Playwright's browser downloads into the shared cache root; never overrides a value the caller set explicitly. */
+export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  const env = { ...extra };
+  env.GOCACHE ??= repoCacheDirectory(repoRoot, "go");
+  env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
   return env;
 }

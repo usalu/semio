@@ -46,7 +46,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts boundaries"
-      }
+      },
+      "outputs": []
     }
   }
 }

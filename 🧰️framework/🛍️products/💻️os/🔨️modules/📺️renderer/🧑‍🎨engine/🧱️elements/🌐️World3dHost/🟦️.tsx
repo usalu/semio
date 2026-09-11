@@ -835,6 +835,27 @@ export function worldCameraPoseApproxEqual(a: WorldCameraState, b: WorldCameraSt
   return vectorClose(a.position, b.position) && vectorClose(a.target, b.target) && Math.abs(a.zoom - b.zoom) <= epsilon;
 }
 
+/** 📸️ Compact DOM mirror of the live camera pose for `data-camera-json` — rounds every component to
+ * {@link WORLD_CAMERA_DOM_PRECISION} decimals so an unchanged pose re-renders to a byte-identical string and a
+ * headless probe can diff orbit/pan/zoom without a pixel compare. Deliberately pose-only (no projection spec
+ * object) to stay cheap enough for a per-render attribute. */
+export function world3dCameraDomJson(camera: WorldCameraState & { readonly fov?: number }): string {
+  const round = (value: number): number => (Number.isFinite(value) ? Number(value.toFixed(WORLD_CAMERA_DOM_PRECISION)) : 0);
+  const vector = (values?: readonly number[]): readonly number[] | null => (values ? values.map(round) : null);
+  return JSON.stringify({
+    position: vector(camera.position),
+    target: vector(camera.target),
+    up: vector(camera.up),
+    zoom: round(camera.zoom),
+    fov: typeof camera.fov === "number" ? round(camera.fov) : null,
+    projection: camera.projection ?? null,
+  });
+}
+
+/** 📸️ Decimal places {@link world3dCameraDomJson} rounds to — coarse enough that float noise never churns the
+ * attribute, fine enough that a real orbit/pan/zoom gesture always changes it. */
+const WORLD_CAMERA_DOM_PRECISION = 4;
+
 /** 📷️ True when `scene.cameraJson` changed from outside this viewport (view preset, focus, example load) —
  * false both for a byte-identical string and for one that merely echoes `lastDispatchedCamera` (this
  * component's own just-sent `setCamera` pose, within {@link worldCameraPoseApproxEqual} float-noise
@@ -1201,7 +1222,7 @@ function parseSelection(selectionJson: string): WorldSelectionRecord {
   }
 }
 
-type LeftoverWorldSelectionOverlayV1 = {
+export type LeftoverWorldSelectionOverlayV1 = {
   readonly ids: readonly string[];
   readonly hoveredId: string | null;
   readonly hoveredDomain?: string | null;
@@ -1221,6 +1242,17 @@ export function publishLeftoverWorldSelectionV1(overlay: LeftoverWorldSelectionO
 
 export function leftoverWorldSelectionOverlayV1(): LeftoverWorldSelectionOverlayV1 | null {
   return leftoverWorldSelectionOverlay;
+}
+
+/**
+ * 🧰️ The armed window utility is host session state owned by `SET_ACTIVE_UTILITY_ACTION_ID`, NOT part of
+ * the guest's `InteractionView` leftover — so an `interactionSelect`/`interactionHover`/`setCamera`
+ * leftover republish, which carries no `activeUtility` at all, must CARRY the armed one forward instead of
+ * replacing the overlay with an utility-less one (that dropped the lane back to the guest's `select` and
+ * disarmed Brush on the first pointer move after arming it).
+ */
+export function leftoverOverlayCarryingUtilityV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null): LeftoverWorldSelectionOverlayV1 {
+  return next.activeUtility === undefined ? { ...next, activeUtility: prior?.activeUtility ?? null } : next;
 }
 
 /** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape. */
@@ -3920,6 +3952,48 @@ export function snapWorldPointToGrid(point: readonly [number, number, number], g
   return [snap(point[0]), snap(point[1]), snap(point[2])];
 }
 
+//#region WorldRelocateGesture
+/** @emoji 🚚️ Which object a Relocate-utility press grabs. A press with NOTHING selected grabs the object
+ * under the pointer outright (direct manipulation, no select-then-drag ceremony); once a selection
+ * exists the selection is the GATE — a press outside it grabs nothing and falls through to the ordinary
+ * marquee/pick path, so the user can re-select without the scene jumping under the cursor.
+ * `selectedIds` is the leftover/object id list {@link world3dGumballSelectionArgsV1} already resolves. */
+export function world3dRelocateDragTargetV1(pressedId: string | null | undefined, selectedIds: readonly string[]): string | null {
+  if (!pressedId) return null;
+  if (selectedIds.length === 0) return pressedId;
+  return selectedIds.includes(pressedId) ? pressedId : null;
+}
+
+/** @emoji 🚚️ The ONE `worldRelocate` payload a finished Relocate drag commits — the absolute world origin
+ * the guest's `world_relocate` arm decodes as `{objectId, position}`, never an incremental pose delta
+ * (`gumballTransformDeltaBetweenPoses`'s `translateSelection` shape, which this verb deliberately is not).
+ * The ground-plane travel `from → to` is added to the grabbed object's own origin and snapped exactly like
+ * a catalogue drop; a drag that lands inside {@link GUMBALL_TRANSFORM_EPSILON} of where it started returns
+ * `null` so a click-without-travel never writes a document edit. */
+export function world3dRelocateDispatchArgsV1(
+  objectId: string,
+  origin: readonly [number, number, number],
+  from: readonly [number, number, number],
+  to: readonly [number, number, number],
+  snap?: { readonly gridSnapEnabled: boolean; readonly gridFactor: number },
+): { readonly objectId: string; readonly position: readonly [number, number, number] } | null {
+  const moved: [number, number, number] = [origin[0] + (to[0] - from[0]), origin[1] + (to[1] - from[1]), origin[2] + (to[2] - from[2])];
+  const position = snap ? snapWorldPointToGrid(moved, snap.gridSnapEnabled, snap.gridFactor) : moved;
+  if (Math.abs(position[0] - origin[0]) < GUMBALL_TRANSFORM_EPSILON && Math.abs(position[1] - origin[1]) < GUMBALL_TRANSFORM_EPSILON && Math.abs(position[2] - origin[2]) < GUMBALL_TRANSFORM_EPSILON) {
+    return null;
+  }
+  return { objectId, position };
+}
+
+type World3dRelocateSession = {
+  readonly objectId: string;
+  readonly origin: readonly [number, number, number];
+  readonly from: readonly [number, number, number];
+  readonly objectKind: string;
+  readonly meshUrl?: string;
+};
+//#endregion WorldRelocateGesture
+
 function resolveCatalogueDropOrigin(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera | null, gridSnapEnabled: boolean, gridFactor: number): [number, number, number] | null {
   if (!camera) return null;
   const hit = raycastGroundPoint(clientX, clientY, hostRect, camera);
@@ -4560,6 +4634,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const visibleBrushPreview = fillMode ? (fillDiagnostic?.candidateGhost ? brushPreview : null) : brushPreview;
   const brushMode = activeUtility === "brush";
   const volumeBrushMode = activeUtility === "volumeBrush";
+  const relocateMode = activeUtility === "worldRelocate";
   const volumeLayersInteractive = !brushMode && !fillMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
   const instancesGroupRef = useRef<Group | null>(null);
@@ -4632,6 +4707,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
+  /** 🚚️ Open Relocate-utility drag, or `null`. A ref, not state: mid-drag the only thing that changes is
+   * the shared ghost origin, so the gesture never re-renders this host by itself (same discipline as the
+   * gumball's local preview). */
+  const relocateSessionRef = useRef<World3dRelocateSession | null>(null);
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
   /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only; one absolute start→end delta commits on drag end. */
   const gumballDragChainRef = useRef(Promise.resolve());
@@ -5492,9 +5571,85 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }, []);
 
+  /** 🚚️ Takes a Relocate-utility press: grabs the object under it (gated by the selection, see
+   * {@link world3dRelocateDragTargetV1}), pins the ground point the drag starts from and paints the shared
+   * world ghost at the object's own origin. Answers whether it took the press, so the marquee never opens
+   * underneath an in-progress relocate. A LOCKED object is grabbed on purpose — the guest answers the
+   * commit with its `selection_locked` notice, which is a visible refusal instead of a dead gesture. */
+  const beginRelocateDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>): boolean => {
+      const host = hostRef.current;
+      const camera = cameraRef.current;
+      if (!host || !camera) return false;
+      const rect = host.getBoundingClientRect();
+      const from = raycastGroundPoint(event.clientX, event.clientY, rect, camera);
+      if (!from) return false;
+      const pressed = resolveClickInstanceId(instancesRef.current, meshesRef.current, toLocalPoint(event), rect, camera);
+      const objectId = world3dRelocateDragTargetV1(pressed, selectionArgs().ids);
+      const instance = objectId ? instancesRef.current.find((entry) => entry.id === objectId) : undefined;
+      if (!objectId || !instance) return false;
+      const origin = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+      const objectKind = instance.objectKind ?? "";
+      const meshUrl = meshesRef.current.find((mesh) => mesh.id === (instance.meshId ?? instance.id))?.url;
+      relocateSessionRef.current = { objectId, origin, from, objectKind, meshUrl };
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      setWorldCatalogueDropPreview(node.controllerId, { objectKind, meshUrl, origin });
+      return true;
+    },
+    [node.controllerId, selectionArgs, toLocalPoint],
+  );
+
+  /** 🚚️ Moves the live relocate ghost to the grabbed object's would-be origin — grid-snapped exactly like a
+   * catalogue drop, zero dispatches until release. */
+  const updateRelocateDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>): boolean => {
+      const session = relocateSessionRef.current;
+      const host = hostRef.current;
+      const camera = cameraRef.current;
+      if (!session || !host || !camera) return false;
+      const to = raycastGroundPoint(event.clientX, event.clientY, host.getBoundingClientRect(), camera);
+      if (!to) return true;
+      const args = world3dRelocateDispatchArgsV1(session.objectId, session.origin, session.from, to, { gridSnapEnabled, gridFactor });
+      setWorldCatalogueDropPreview(node.controllerId, { objectKind: session.objectKind, meshUrl: session.meshUrl, origin: args?.position ?? session.origin });
+      return true;
+    },
+    [gridFactor, gridSnapEnabled, node.controllerId],
+  );
+
+  /** 🚚️ Closes the relocate drag. A pointer-UP event commits ONE absolute `worldRelocate`; `null` (Escape) and
+   * a `pointercancel` both drop the ghost and dispatch nothing — the host binds `onPointerCancel` to the same
+   * pointer-up handler, so the event kind is the only thing separating a commit from an abort. */
+  const endRelocateDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement> | null): boolean => {
+      const session = relocateSessionRef.current;
+      if (!session) return false;
+      relocateSessionRef.current = null;
+      clearWorldCatalogueDropPreview(node.controllerId);
+      const host = hostRef.current;
+      const camera = cameraRef.current;
+      if (!event || event.type === "pointercancel" || !host || !camera) return true;
+      const to = raycastGroundPoint(event.clientX, event.clientY, host.getBoundingClientRect(), camera);
+      const args = to ? world3dRelocateDispatchArgsV1(session.objectId, session.origin, session.from, to, { gridSnapEnabled, gridFactor }) : null;
+      if (args) void Promise.resolve(dispatch("worldRelocate", args));
+      return true;
+    },
+    [dispatch, gridFactor, gridSnapEnabled, node.controllerId],
+  );
+
+  useEffect(() => {
+    if (!relocateMode) return undefined;
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      if (endRelocateDrag(null)) event.stopPropagation();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [endRelocateDrag, relocateMode]);
+
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
+      if (relocateMode && beginRelocateDrag(event)) return;
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
@@ -5519,11 +5674,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [dispatch, node.surfaceId, paintMode, selection.engagementSessionActive, toLocalPoint],
+    [beginRelocateDrag, dispatch, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (updateRelocateDrag(event)) return;
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
@@ -5550,7 +5706,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, local]);
     },
-    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint],
+    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag],
   );
 
   const finalizeMarqueeSelection = useCallback(() => {
@@ -5589,6 +5745,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+      if (endRelocateDrag(event)) return;
       if (faceDragSession) {
         const session = faceDragSession;
         setFaceDragSession(null);
@@ -5636,7 +5793,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleConnectDragCancel();
       }
     },
-    [activeUtility, dispatch, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
+    [activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
   );
 
   useEffect(() => {
@@ -5831,6 +5988,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       data-meshes-json={scene.meshesJson ?? undefined}
       data-instances-json={scene.instancesJson ?? undefined}
+      data-target-volumes-json={scene.targetVolumesJson ?? undefined}
+      data-camera-json={world3dCameraDomJson(cameraState)}
       data-vortices-json={scene.vorticesJson ?? undefined}
       data-brush-preview-json={brushPreviewJson}
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}

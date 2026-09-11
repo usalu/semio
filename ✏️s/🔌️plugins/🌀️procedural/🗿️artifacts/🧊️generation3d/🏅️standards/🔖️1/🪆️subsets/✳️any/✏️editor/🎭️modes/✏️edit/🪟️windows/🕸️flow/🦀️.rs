@@ -11,7 +11,7 @@ use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, HasStackLayout, Trigger, UiAssemblyResult};
 use semio_framework_plugin::{tree_item, tree_item_desc, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
-use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
@@ -162,11 +162,108 @@ fn outline_error(scope: &'static str) -> PluginAssemblyError {
 }
 //#endregion 🔖️Outline
 
+
+/// 🔌️ Channel code the operator catalogue speaks — `{nodeId}@{portId}` on a scene port, bare `portId` on a kind.
+fn operator_channel_code(port_id: &str) -> &str {
+    port_id.rsplit_once('@').map(|(_, code)| code).filter(|code| !code.is_empty()).unwrap_or(port_id)
+}
+
+fn operator_channel(code: &str, label: &str) -> NodeGraphOperatorChannelRecord {
+    NodeGraphOperatorChannelRecord {
+        code: code.to_string(),
+        abbreviation: code.to_string(),
+        name: label.to_string(),
+        full_name: label.to_string(),
+        operators: Vec::new(),
+        default_json: None,
+        label: Some(label.to_string()),
+        cardinality: "!".into(),
+    }
+}
+
+fn kind_extension_name(kind: &str) -> (String, String) {
+    match kind.rsplit_once('.') {
+        Some((extension, name)) => (extension.to_string(), name.to_string()),
+        None => (String::new(), kind.to_string()),
+    }
+}
+
+/// 🛍️ Document-derived operator records — one per neuron KIND the open graph actually holds, the way
+/// the OS workflow window seeds `NodeGraphScene.operators` so the canvas can lay ports out without
+/// waiting for the app-static catalogue (which may not have been contributed yet). Built-in `core.*`
+/// widgets are omitted: the engine already knows them. Never the registered catalogue.
+fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagFixture, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+    let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
+    let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    let mut kinds: Vec<String> = Vec::new();
+    for spec in &dag.nodes {
+        let Some(kind) = spec.operator_kind.as_deref().filter(|kind| !kind.is_empty() && !kind.starts_with("core.")) else { continue };
+        if !kinds.iter().any(|known| known == kind) {
+            kinds.push(kind.to_string());
+        }
+    }
+    kinds
+        .into_iter()
+        .map(|kind| {
+            if let Some(record) = catalogue.iter().find(|record| record.id == kind) {
+                return record.clone();
+            }
+            let mut inputs = Vec::new();
+            let mut outputs = Vec::new();
+            let mut seen_in = std::collections::BTreeSet::new();
+            let mut seen_out = std::collections::BTreeSet::new();
+            for spec in &dag.nodes {
+                if spec.operator_kind.as_deref() != Some(kind.as_str()) {
+                    continue;
+                }
+                let Some(node) = node_by_id.get(spec.id.as_str()) else { continue };
+                for port in &node.inputs {
+                    let code = operator_channel_code(&port.id).to_string();
+                    if seen_in.insert(code.clone()) {
+                        inputs.push(operator_channel(&code, port.label.as_deref().unwrap_or(&code)));
+                    }
+                }
+                for port in &node.outputs {
+                    let code = operator_channel_code(&port.id).to_string();
+                    if seen_out.insert(code.clone()) {
+                        outputs.push(operator_channel(&code, port.label.as_deref().unwrap_or(&code)));
+                    }
+                }
+            }
+            let (extension, name) = kind_extension_name(&kind);
+            NodeGraphOperatorRecord {
+                id: kind,
+                extension: extension.clone(),
+                name: name.clone(),
+                abbreviation: name.chars().next().map(|ch| ch.to_uppercase().to_string()).unwrap_or_else(|| "?".into()),
+                icon: "box".into(),
+                summary: String::new(),
+                inputs,
+                outputs,
+                variadic_input: None,
+                variadic_output: None,
+                group: if extension.is_empty() { Vec::new() } else { vec![extension] },
+            }
+        })
+        .collect()
+}
+
+fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGraphFindItem> {
+    nodes
+        .iter()
+        .map(|node| NodeGraphFindItem { id: node.id.clone(), label: node.label.clone().unwrap_or_else(|| node.id.clone()), category: category.into() })
+        .collect()
+}
+
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
-    let (nodes, edges) = with_host(fixture, |host| fixture_to_workflow(&host.dag.fixture));
-    let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
+    let (nodes, edges, operators) = with_host(fixture, |host| {
+        let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+        let operators = document_operator_records(&host.dag.fixture, &nodes);
+        (nodes, edges, operators)
+    });
+    let viewport = NodeGraphViewport { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let outline = graph_outline(&nodes, &edges, flow_extras.status_json.as_ref(), labels)?;
@@ -180,6 +277,8 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
             fixture_json: flow_extras.fixture_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
+            operators,
+            find_items: graph_find_items(&nodes, labels.graph_nodes.as_str()),
             selection: marks.graph_selection_ids(),
             highlighted: marks.graph_highlight_ids(),
             hover,

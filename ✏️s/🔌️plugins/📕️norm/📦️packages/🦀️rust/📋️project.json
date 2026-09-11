@@ -7,19 +7,23 @@
   "targets": {
     "surface-render-source": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-source", "forwardAllArgs": true }
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-source", "forwardAllArgs": true },
+      "outputs": []
     },
     "surface-render-test": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true }
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true },
+      "outputs": []
     },
     "config-mutation-source": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-source", "forwardAllArgs": true }
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-source", "forwardAllArgs": true },
+      "outputs": []
     },
     "config-mutation-test": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-test", "forwardAllArgs": true }
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-test", "forwardAllArgs": true },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
@@ -67,7 +71,11 @@
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔣️.json"
+      ]
     },
     "mutation-leaf-taxonomy-generate": {
       "executor": "nx:run-commands",
@@ -75,7 +83,10 @@
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts mutation-leaf-taxonomy-generate",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"
+      ]
     },
     "mutation-leaf-taxonomy-check": {
       "executor": "nx:run-commands",
@@ -83,7 +94,8 @@
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts mutation-leaf-taxonomy-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

@@ -4,13 +4,13 @@
   "targets": {
     "runtime-check": {
       "executor": "nx:run-commands",
-      "cache": true,
-      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts runtime-check" }
+      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts runtime-check" },
+      "cache": false
     },
     "pending-host-close-check": {
       "executor": "nx:run-commands",
-      "cache": true,
-      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts pending-host-close-check" }
+      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts pending-host-close-check" },
+      "cache": false
     }
   }
 }

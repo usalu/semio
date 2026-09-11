@@ -85,7 +85,8 @@
       "options": {
         "cwd": "🧰️framework/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",

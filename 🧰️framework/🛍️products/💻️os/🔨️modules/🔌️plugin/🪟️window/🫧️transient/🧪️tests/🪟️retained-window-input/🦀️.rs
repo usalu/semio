@@ -163,3 +163,47 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
     assert!(registry.terminal_is_empty());
     eprintln!("[DEBUG] blocked partition and owner kind do not starve later owners; zero grants preserve both cursors");
 }
+
+
+#[test]
+fn retained_window_input_refresh_admits_live_generation_after_a_committed_write() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let expected = &fixture["liveWriteGeneration"];
+    let mut registry = WindowTransientOwnerRegistry::default();
+    registry.register::<ReplacementWindow>().unwrap();
+    let view = ViewModel { window_id: Some("canvas-left".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "canvas-left".into(), window_kind_id: "canvas".into() }], ..Default::default() };
+    let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", crate::publication_fixture::ChangePublicationTransient { revision }.into());
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+    let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {
+        let mut publication = registry.begin(semio_framework_job::OperationId(1), authority, mutation(revision)).unwrap();
+        for _ in 0..1024 {
+            if matches!(registry.advance(publication.as_mut(), grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+                assert!(publication.acknowledge());
+                break;
+            }
+        }
+        publication.begin_close();
+        for _ in 0..1024 {
+            if publication.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete {
+                break;
+            }
+        }
+        assert!(publication.terminal_is_empty());
+    };
+    let captured = registry.capture(Some(&view)).unwrap().unwrap();
+    publish(&mut registry, &captured, expected["firstRevision"].as_u64().unwrap());
+    assert_eq!(registry.begin(semio_framework_job::OperationId(2), &captured, mutation(expected["staleRevision"].as_u64().unwrap())).is_ok(), expected["staleBeginAccepted"].as_bool().unwrap());
+    let mut live = captured.clone();
+    registry.refresh(&mut live).unwrap();
+    assert_ne!(live.generation, captured.generation);
+    assert!(expected["refreshedBeginAccepted"].as_bool().unwrap());
+    publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
+    drop((captured, live));
+    for _ in 0..2048 {
+        if registry.close_step(1, 4096).unwrap() == PluginCloseStep::Complete {
+            break;
+        }
+    }
+    assert!(registry.terminal_is_empty());
+    eprintln!("[DEBUG] window-transient refresh rebinds a captured authority onto the live generation so evaluate publication is not retiring a rejected write");
+}

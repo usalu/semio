@@ -1,0 +1,10 @@
+# 💡️ Assembly solve inference.
+
+type AssemblyInferenceCommit {
+  assignments: [AssemblyAssignment!]!
+}
+
+type AssemblyAssignment {
+  slotId: String!
+  moduleId: String!
+}

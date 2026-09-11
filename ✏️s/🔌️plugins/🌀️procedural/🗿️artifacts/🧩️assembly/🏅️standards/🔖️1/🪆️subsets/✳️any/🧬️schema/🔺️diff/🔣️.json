@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/assembly/1/any/diff.json",
+  "title": "AssemblyDiff",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "seed": { "type": "integer", "x-semio-state": "artifact" },
+    "slotsRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "edgesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "weightsRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "rulesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" }
+  }
+}

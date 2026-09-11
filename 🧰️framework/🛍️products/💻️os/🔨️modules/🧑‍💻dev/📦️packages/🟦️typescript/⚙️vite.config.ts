@@ -16,6 +16,7 @@ import { developmentRuntimeRoot, readActivationReceipt } from "../../♻️activ
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "../..");
@@ -63,8 +64,9 @@ function engineNpmPackage(cratePath: string): string {
 
 const registryEngineOptimizeDepsExclude = [...new Set((isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS : PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin)).flatMap((target) => target.engines))].map(engineNpmPackage);
 
-/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants and renderers. */
-const playgroundCacheDir = path.join(repoRoot, "node_modules/.vite-os-dev", `${plugin}-${renderer}`);
+/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants and renderers under
+ * the ONE shared cache root, so disk is bounded by build history rather than by `node_modules`. */
+const playgroundCacheDir = repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`);
 
 /** @emoji 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];

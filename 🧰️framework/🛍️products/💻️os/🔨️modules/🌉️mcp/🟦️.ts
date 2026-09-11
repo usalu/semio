@@ -11,6 +11,7 @@ import { accessSync, constants as fsConstants, readFileSync, statSync } from "no
 import { posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
+import { cargoTargetDirectory } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 //#region 🔖️BinaryPath
 /** 📦️ Nx owns the executable separately from mutable compiler state. */
@@ -23,8 +24,8 @@ function pathApi(platform: NodeJS.Platform): typeof posix {
 }
 
 /** 📁️ Absolute Cargo target root shared by the build and black-box test gates. */
-export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
-  return pathApi(platform).resolve(repoRoot, env.CARGO_TARGET_DIR ?? "target");
+export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, _platform: NodeJS.Platform = process.platform): string {
+  return cargoTargetDirectory(repoRoot, env);
 }
 
 /** 📦️ The exact debug artifact Cargo's MCP build command must produce, ignoring test overrides. */

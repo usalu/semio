@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s.procedural.assembly.diff;
+
+message AssemblyDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  repeated string slots_removed = 3;
+  repeated string edges_removed = 4;
+  repeated string weights_removed = 5;
+  repeated string rules_removed = 6;
+}

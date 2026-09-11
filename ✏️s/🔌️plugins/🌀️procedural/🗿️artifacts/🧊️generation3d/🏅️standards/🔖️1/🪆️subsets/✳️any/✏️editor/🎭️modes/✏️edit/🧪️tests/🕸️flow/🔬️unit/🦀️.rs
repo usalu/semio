@@ -8,10 +8,10 @@ async fn renders_node_graph_scene() {
     assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await.contains("node-graph"));
 }
 
-/// 🛍️ The scene names its operators by KIND ID (inside `fixtureJson`) and carries no operator records
-/// of its own: the registered catalogue is app-static and ~100 KB with the real `brep`/`math` sets
-/// installed, three times the fixed 32 KiB per-surface admission this very render is checked against
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+/// 🛍️ The scene names its operators by KIND ID (inside `fixtureJson`) and carries only the document's
+/// own neuron kinds as operator records — never the registered catalogue (~100 KB, three times the
+/// fixed 32 KiB per-surface admission; ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). Those records
+/// are how the canvas instantiates the graph instead of `FlowFixture::default()`'s placeholder slider.
 #[semio_framework_async_macros::async_test]
 async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let _serial = crate::editor::generation3d::test_support::lock();
@@ -21,7 +21,18 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     assert!(scene.fixture_json.as_deref().is_some_and(|fixture| fixture.contains("flow.fixture")));
     let capabilities = scene.capabilities_json.clone().unwrap_or_default();
     assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
-    assert!(scene.operators.is_empty(), "a flow-backed scene must carry no operator records, carries {}", scene.operators.len());
+    assert!(!scene.nodes.is_empty(), "the open document's nodes must reach the scene");
+    assert!(!scene.nodes.iter().any(|node| node.id == "slider"), "the engine default fixture must not replace the open document");
+    assert!(
+        scene.operators.len() < 32,
+        "operators must be document-derived, not the registered catalogue, carries {}",
+        scene.operators.len()
+    );
+    assert!(
+        scene.operators.iter().any(|operator| operator.id.contains("brep.") || operator.id.contains("math.")),
+        "the open document's neuron kinds must reach the scene as operator records: {:?}",
+        scene.operators.iter().map(|operator| operator.id.as_str()).collect::<Vec<_>>()
+    );
 }
 
 /// 🛍️ …and the catalogue the scene no longer carries is exactly what this app publishes on the

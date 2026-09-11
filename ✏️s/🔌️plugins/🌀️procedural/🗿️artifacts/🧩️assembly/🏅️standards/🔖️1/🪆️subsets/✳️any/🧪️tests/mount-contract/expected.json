@@ -1,0 +1,10 @@
+{
+  "editorAppId": "s.assembly@1/*#editor",
+  "viewerAppId": "s.assembly@1/*#viewer",
+  "windowKindId": "framework.window.tree",
+  "windowLabel": {"en": "Structure", "de": "Struktur"},
+  "examples": [
+    {"id": "two-room-corridor", "label": {"en": "Two Rooms And A Corridor", "de": "Zwei Räume und ein Korridor"}, "slots": 3},
+    {"id": "wall-roof-facade-strip", "label": {"en": "Wall And Roof Facade Strip", "de": "Wand-Dach-Fassadenstreifen"}, "slots": 4}
+  ]
+}

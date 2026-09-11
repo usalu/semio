@@ -59,7 +59,9 @@
     "target/debug",
     ".nx/cache",
     ".🧬semio/🦑️repo/⚡️cache",
-    ".🧬semio/🦑️repo/⚡️cache/cargo/browser"
+    ".🧬semio/🦑️repo/⚡️cache/nx",
+    ".🧬semio/🦑️repo/⚡️cache/cargo/target",
+    ".🧬semio/🦑️repo/⚡️cache/cargo/build"
   ],
   "overlaps": [
     {

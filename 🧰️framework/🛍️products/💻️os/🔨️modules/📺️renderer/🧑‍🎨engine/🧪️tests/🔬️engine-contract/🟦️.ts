@@ -1610,7 +1610,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingUtilityV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -1692,6 +1692,7 @@ import {
   worldCameraSetCameraDispatchArgs,
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
+  world3dCameraDomJson,
   worldInstancePickBlocked,
   worldFillBuildShouldTick,
   worldFillBuildHostTickAllowed,
@@ -1784,6 +1785,8 @@ import {
   isWorldTransformGumballMode,
   worldGumballConfigForProjection,
   gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1,
+  world3dRelocateDragTargetV1,
+  world3dRelocateDispatchArgsV1,
   gumballLivePreviewDeltaBetweenPoses,
   applyGumballLivePreviewDeltaToPose,
   WindowActionPane,
@@ -5331,6 +5334,17 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain(`<span>${statusLabel}</span>`);
   });
 
+  it("mirrors the world-3d camera pose into a stable rounded dom json attribute", () => {
+    const pose = { position: [1.000004, 2, 3], target: [0, 0, 0], zoom: 1, up: [0, 0, 1], projection: "perspective", fov: 50 } as const;
+    const first = world3dCameraDomJson(pose);
+    expect(first).toBe(world3dCameraDomJson({ ...pose, position: [1.000001, 2, 3] }));
+    expect(JSON.parse(first)).toEqual({ position: [1, 2, 3], target: [0, 0, 0], up: [0, 0, 1], zoom: 1, fov: 50, projection: "perspective" });
+    expect(world3dCameraDomJson({ ...pose, position: [9, 2, 3] })).not.toBe(first);
+    expect(world3dCameraDomJson({ ...pose, target: [0, 0, 4] })).not.toBe(first);
+    expect(world3dCameraDomJson({ ...pose, zoom: 2 })).not.toBe(first);
+    expect(JSON.parse(world3dCameraDomJson({ position: [0, 0, 0], target: [0, 0, 0], zoom: 1 })).up).toBe(null);
+  });
+
   it("keeps world-3d orbit camera seed local per viewport once detached", () => {
     const sceneCamera = '{"position":[1,2,3],"target":[0,0,0],"zoom":1}';
     expect(world3dViewportCameraSeedKey(sceneCamera, 0)).toBe(sceneCamera);
@@ -7532,6 +7546,20 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(translated.position).toEqual([3, -2, 1.5]);
   });
 
+  it("Relocate-utility drag grabs by selection gate and commits one absolute worldRelocate", () => {
+    expect(world3dRelocateDragTargetV1("obj-1", [])).toBe("obj-1");
+    expect(world3dRelocateDragTargetV1("obj-1", ["obj-1", "obj-2"])).toBe("obj-1");
+    expect(world3dRelocateDragTargetV1("obj-3", ["obj-1", "obj-2"])).toBeNull();
+    expect(world3dRelocateDragTargetV1(null, [])).toBeNull();
+    const selected = world3dGumballSelectionArgsV1({ ids: ["obj-1"], selectionMode: "object" });
+    expect(world3dRelocateDragTargetV1("obj-1", selected.ids)).toBe("obj-1");
+    expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [14, 7, 0])).toEqual({ objectId: "obj-1", position: [5, -1, 3] });
+    expect(world3dRelocateDispatchArgsV1("obj-2", [0, 0, 0], [0, 0, 0], [1.4, -2.6, 0], { gridSnapEnabled: true, gridFactor: 1 })).toEqual({ objectId: "obj-2", position: [1, -3, 0] });
+    expect(world3dRelocateDispatchArgsV1("obj-2", [0, 0, 0], [0, 0, 0], [1.4, -2.6, 0], { gridSnapEnabled: false, gridFactor: 1 })).toEqual({ objectId: "obj-2", position: [1.4, -2.6, 0] });
+    expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10, 10, 0])).toBeNull();
+    expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
+  });
+
   it("resolveWindowActions preserves every definition owned by the window", () => {
     const actionsApp = {
       controllerId: "draw",
@@ -7984,6 +8012,17 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(leftoverWorldOverlayAppliesV1(leftover)).toBe(true);
     expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, leftover).activeUtility).toBe("brush");
     expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, { ids: [], hoveredId: null, gumballActive: false, gumballAnchorId: null }).activeUtility).toBe("select");
+  });
+
+  it("carries the armed utility across an InteractionView leftover republish", () => {
+    const armed = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
+    const picked = { ids: ["seed-left-001"], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: true, gumballAnchorId: "seed-left-001" };
+    const carried = leftoverOverlayCarryingUtilityV1(picked, armed);
+    expect(carried.activeUtility).toBe("brush");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, carried).activeUtility).toBe("brush");
+    expect(leftoverOverlayCarryingUtilityV1(picked, null).activeUtility).toBeNull();
+    expect(leftoverOverlayCarryingUtilityV1({ ...picked, activeUtility: "select" }, armed).activeUtility).toBe("select");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "brush" }, leftoverOverlayCarryingUtilityV1(picked, { ...armed, activeUtility: "select" })).activeUtility).toBe("select");
   });
 
   it("retains last brush preview JSON for the leftover hover after a guest no-target wipe", () => {

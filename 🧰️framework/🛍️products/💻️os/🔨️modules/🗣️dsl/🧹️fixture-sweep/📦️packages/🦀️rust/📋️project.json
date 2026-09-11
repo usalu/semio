@@ -16,7 +16,8 @@
         "command": "bun ./📜️script.ts source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

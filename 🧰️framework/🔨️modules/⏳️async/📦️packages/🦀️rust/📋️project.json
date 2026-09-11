@@ -8,27 +8,33 @@
   "targets": {
     "worker-pool-use-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-pool-use-check", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-pool-use-check", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "worker-pool-use-native-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-pool-use-check --native", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-pool-use-check --native", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "worker-deferred-wake-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "worker-deferred-wake-native-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check --native", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check --native", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "worker-maintenance-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-maintenance-check", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-maintenance-check", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "worker-maintenance-native-check": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts worker-maintenance-check --native", "cwd": "{projectRoot}" }
+      "options": { "command": "bun ./📜️script.ts worker-maintenance-check --native", "cwd": "{projectRoot}" },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
@@ -75,7 +81,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     }
   }
 }

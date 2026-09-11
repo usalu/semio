@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/assembly/1/any/inference.json",
+  "title": "AssemblyInferenceCommit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignments"],
+  "properties": {
+    "assignments": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

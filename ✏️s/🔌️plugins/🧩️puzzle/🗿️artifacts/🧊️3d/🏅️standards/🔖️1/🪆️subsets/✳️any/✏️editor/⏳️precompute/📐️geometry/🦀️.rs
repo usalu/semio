@@ -12,6 +12,7 @@
 
 use crate::standards::v1::subsets::any::schema::{Quat, Vec3, WorldVolumeProps};
 use semio_framework_3d::{collision, rigid};
+use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 
@@ -54,76 +55,238 @@ pub(crate) const DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS;
 /// bucket stays at `FIXED_OWNER_SLOTS`.
 pub(crate) const DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS;
 
+//#region 🧯️Reservation
+/// 📏️ Slots ONE sub-page of an owner over `T` backs: the largest power of two whose block stays at
+/// or under [`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], and never more than the owner's declared
+/// width — so a narrow owner keeps its single page and only a document-scale one is split.
+///
+/// 🧊️ The ceiling is `dlmalloc`'s wasm granularity, the unit `memory.grow` moves in: a request at or
+/// under it is served from a small bin, a split of `dv`/`top`, or one page of growth, while a larger
+/// one needs a pre-existing large free chunk or a multi-page grow — the FIRST request a fragmented
+/// guest refuses. A power of two keeps the index arithmetic a shift and a mask on the hot path.
+pub(crate) const fn owner_sub_page_slots<T>(slots: usize) -> usize {
+    let width = size_of::<T>();
+    if width == 0 || slots == 0 {
+        return if slots == 0 { 1 } else { slots };
+    }
+    let fit = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / width;
+    if fit >= slots {
+        return slots;
+    }
+    if fit <= 1 {
+        return 1;
+    }
+    let mut sub_page = 1;
+    while sub_page * 2 <= fit {
+        sub_page *= 2;
+    }
+    sub_page
+}
+
+/// 🧯️ The ONE heap request a fixed owner ever makes: one SUB-PAGE of `slots` elements. Every owner
+/// page in this module is claimed here, so the guest's contiguous-request budget is enforced in a
+/// single place and a law can refuse a request the way a fragmented guest does.
+///
+/// 🧊️ `Box::new(std::array::from_fn(..))` materializes the whole array as a stack temporary first,
+/// which at document capacity is hundreds of kilobytes per owner — enough to overflow a test
+/// thread's stack and far past any wasm guest's. `try_reserve_exact` keeps allocation failure a
+/// handled `None` (a refused sub-page) instead of an abort.
+fn claim_owner_sub_page<T>(slots: usize, fill: impl FnMut() -> T) -> Option<Box<[T]>> {
+    if !owner_reservation_admits(slots.checked_mul(size_of::<T>())?) {
+        return None;
+    }
+    let mut page: Vec<T> = Vec::new();
+    page.try_reserve_exact(slots).ok()?;
+    page.resize_with(slots, fill);
+    Some(page.into_boxed_slice())
+}
+
+/// 🧯️ A guest whose linear memory is not fragmented serves every sub-page: production has no policy
+/// and the check folds away. [`OwnerReservationLimit`] is how a law reaches the fragmented guest a
+/// native suite cannot produce — a 512 MiB linear memory cannot be exhausted from a test.
+#[cfg(not(test))]
+const fn owner_reservation_admits(_bytes: usize) -> bool {
+    true
+}
+
+#[cfg(test)]
+thread_local! {
+    static OWNER_RESERVATION: std::cell::Cell<(usize, usize)> = const { std::cell::Cell::new((usize::MAX, usize::MAX)) };
+}
+
+#[cfg(test)]
+fn owner_reservation_admits(bytes: usize) -> bool {
+    OWNER_RESERVATION.with(|policy| {
+        let (ceiling, grants) = policy.get();
+        if bytes > ceiling || grants == 0 {
+            return false;
+        }
+        policy.set((ceiling, grants - 1));
+        true
+    })
+}
+
+/// 🧯️ The fragmented guest, installed on THIS thread for the lifetime of the guard: every sub-page
+/// request over `ceiling_bytes`, and every request past the `grants`th, is refused exactly the way
+/// `dlmalloc` refuses a block it cannot serve out of a memory that never shrinks.
+#[cfg(test)]
+pub(crate) struct OwnerReservationLimit((usize, usize));
+
+#[cfg(test)]
+impl OwnerReservationLimit {
+    pub(crate) fn install(ceiling_bytes: usize, grants: usize) -> Self {
+        OWNER_RESERVATION.with(|policy| {
+            let restored = policy.get();
+            policy.set((ceiling_bytes, grants));
+            Self(restored)
+        })
+    }
+}
+
+#[cfg(test)]
+impl Drop for OwnerReservationLimit {
+    fn drop(&mut self) {
+        OWNER_RESERVATION.with(|policy| policy.set(self.0));
+    }
+}
+//#endregion 🧯️Reservation
+
 #[derive(Debug)]
 pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
-    page: Option<Box<[MaybeUninit<T>; N]>>,
+    pages: Vec<Box<[MaybeUninit<T>]>>,
+    sealed: bool,
     len: usize,
 }
 
 impl<T, const N: usize> FixedOwnerVec<T, N> {
-    /// 🧱️ Allocates the page directly on the heap. `Box::new(std::array::from_fn(..))` materializes the
-    /// whole array as a stack temporary first, which at document capacity is hundreds of kilobytes per
-    /// owner — enough to overflow a test thread's stack and far past any wasm guest's. `try_reserve_exact`
-    /// keeps allocation failure a handled `None` page (capacity zero) instead of an abort.
-    pub(crate) fn new() -> Self {
-        assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
-        let mut page: Vec<MaybeUninit<T>> = Vec::new();
-        if page.try_reserve_exact(N).is_err() {
-            return Self::refused();
-        }
-        page.resize_with(N, MaybeUninit::uninit);
-        Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
+    /// 📏️ Slots ONE sub-page of this owner backs — derived from `size_of::<T>()` and
+    /// [`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], never hand-picked.
+    pub(crate) const fn sub_page_slots() -> usize {
+        owner_sub_page_slots::<MaybeUninit<T>>(N)
     }
 
-    /// 🚫️ The owner a guest that could not spare the page hands back: no backing, zero capacity,
-    /// every insert refused. Production reaches it through [`FixedOwnerVec::new`]'s failed
-    /// reservation; a law reaches it directly, because a native suite cannot exhaust a 512 MiB
-    /// linear memory to get there.
+    /// 📏️ Bytes of ONE contiguous sub-page request this owner makes.
+    pub(crate) const fn sub_page_bytes() -> usize {
+        Self::sub_page_slots() * size_of::<MaybeUninit<T>>()
+    }
+
+    const fn sub_pages() -> usize {
+        N.div_ceil(Self::sub_page_slots())
+    }
+
+    /// 🧱️ Claims the FIRST sub-page and reserves the (pointer-wide) cursor over the rest. The
+    /// remaining sub-pages are claimed by [`FixedOwnerVec::try_push`] as `len` crosses their
+    /// boundaries, so an owner declared at document width costs one sub-page until it is used and
+    /// never asks the guest for a block over the contiguous ceiling.
+    pub(crate) fn new() -> Self {
+        const { assert!(Self::sub_page_bytes() <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a fixed owner sub-page is over the guest contiguous-request ceiling") };
+        const { assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES, "a fixed owner page is over the document page ceiling") };
+        let mut pages = Vec::new();
+        if pages.try_reserve_exact(Self::sub_pages()).is_err() {
+            return Self::refused();
+        }
+        let mut owner = Self { pages, sealed: false, len: 0 };
+        if !owner.claim_sub_page() {
+            owner.sealed = true;
+        }
+        owner
+    }
+
+    /// 🚫️ The owner a guest that could not spare a page hands back: no backing, zero capacity,
+    /// every insert refused. Production reaches it through [`FixedOwnerVec::new`]'s refused first
+    /// sub-page; a law reaches it directly, because a native suite cannot exhaust a 512 MiB linear
+    /// memory to get there.
     pub(crate) const fn refused() -> Self {
-        Self { page: None, len: 0 }
+        Self { pages: Vec::new(), sealed: true, len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
         size_of::<[MaybeUninit<T>; N]>()
     }
 
+    fn claim_sub_page(&mut self) -> bool {
+        let base = self.pages.len() * Self::sub_page_slots();
+        if self.sealed || base >= N {
+            return false;
+        }
+        let slots = if N - base < Self::sub_page_slots() { N - base } else { Self::sub_page_slots() };
+        let Some(page) = claim_owner_sub_page(slots, MaybeUninit::uninit) else { return false };
+        self.pages.push(page);
+        true
+    }
+
+    fn backed_slots(&self) -> usize {
+        let backed = self.pages.len() * Self::sub_page_slots();
+        if backed > N { N } else { backed }
+    }
+
     #[cfg(test)]
     pub(crate) fn backing_ptr(&self) -> Option<*const MaybeUninit<T>> {
-        self.page.as_ref().map(|page| page.as_ptr())
+        self.pages.first().map(|page| page.as_ptr())
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
-        self.page.as_ref().map(|_| (1, Self::page_bytes()))
+        (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<MaybeUninit<T>>()).sum()))
     }
 
     pub(crate) fn len(&self) -> usize {
         self.len
     }
 
+    /// 📃️ The one contiguous view a SINGLE-sub-page owner still offers. A document-scale owner is
+    /// backed by several sub-pages and has no such view — the const assertion refuses the call at
+    /// compile time rather than handing back a prefix, and [`FixedOwnerVec::iter`] is the answer.
     pub(crate) fn as_slice(&self) -> &[T] {
-        let Some(page) = self.page.as_ref() else { return &[] };
+        const { assert!(Self::sub_pages() == 1, "a multi-sub-page owner has no contiguous slice — iterate it instead") };
+        let Some(page) = self.pages.first() else { return &[] };
         unsafe { std::slice::from_raw_parts(page.as_ptr().cast::<T>(), self.len) }
     }
 
-    pub(crate) fn as_mut_slice(&mut self) -> &mut [T] {
-        let Some(page) = self.page.as_mut() else { return &mut [] };
-        unsafe { std::slice::from_raw_parts_mut(page.as_mut_ptr().cast::<T>(), self.len) }
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
+        let len = self.len;
+        self.pages.iter().enumerate().flat_map(move |(index, page)| {
+            let filled = len.saturating_sub(index * Self::sub_page_slots()).min(page.len());
+            unsafe { std::slice::from_raw_parts(page.as_ptr().cast::<T>(), filled) }.iter()
+        })
     }
 
-    /// 📏️ Slots this owner can actually hold. An owner whose page allocation was REFUSED
-    /// ([`FixedOwnerVec::new`] returns `page: None` rather than aborting) holds nothing at all, so
-    /// its capacity is zero — reporting `N` there is the lie that turned an out-of-memory refusal
-    /// into a guest trap (`live fixed owner page`, ticket 26/09/02 build #29).
-    pub(crate) const fn capacity(&self) -> usize {
-        if self.page.is_some() { N } else { 0 }
+    pub(crate) fn get(&self, index: usize) -> Option<&T> {
+        if index >= self.len {
+            return None;
+        }
+        Some(unsafe { self.pages.get(index / Self::sub_page_slots())?.get(index % Self::sub_page_slots())?.assume_init_ref() })
+    }
+
+    /// ✍️ In-place mutation of a slot. Production never reaches for it — a fill session appends and
+    /// pops its owners and rebuilds a changed object — so only the laws that seed one name it.
+    #[cfg(test)]
+    pub(crate) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.len {
+            return None;
+        }
+        Some(unsafe { self.pages.get_mut(index / Self::sub_page_slots())?.get_mut(index % Self::sub_page_slots())?.assume_init_mut() })
+    }
+
+    /// 📏️ Slots this owner can actually hold. An owner whose sub-page the guest REFUSED reports
+    /// what it is really backed by, never the declared width — reporting `N` there is the lie that
+    /// turned an out-of-memory refusal into a guest trap (`live fixed owner page`, ticket 26/09/02
+    /// build #29). Until a refusal every declared slot is still reachable, because the sub-pages a
+    /// growing owner still needs have not been asked for yet.
+    pub(crate) fn capacity(&self) -> usize {
+        if self.sealed { self.backed_slots() } else { N }
     }
 
     pub(crate) fn try_push(&mut self, value: T) -> Result<(), T> {
         if self.len == self.capacity() {
             return Err(value);
         }
-        let Some(page) = self.page.as_mut() else { return Err(value) };
-        page[self.len].write(value);
+        if self.len == self.backed_slots() && !self.claim_sub_page() {
+            self.sealed = true;
+            return Err(value);
+        }
+        let (page, offset) = (self.len / Self::sub_page_slots(), self.len % Self::sub_page_slots());
+        let Some(slot) = self.pages.get_mut(page).and_then(|page| page.get_mut(offset)) else { return Err(value) };
+        slot.write(value);
         self.len += 1;
         Ok(())
     }
@@ -133,32 +296,27 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
             return None;
         }
         self.len -= 1;
-        Some(unsafe { self.page.as_mut()?.get_unchecked_mut(self.len).assume_init_read() })
+        let (page, offset) = (self.len / Self::sub_page_slots(), self.len % Self::sub_page_slots());
+        Some(unsafe { self.pages.get_mut(page)?.get_mut(offset)?.assume_init_read() })
     }
 
+    /// ♻️ Gives ONE sub-page back per close grant, last claimed first, and seals the owner so a
+    /// retired page is never silently re-claimed. The retirement cursor spends one grant per call,
+    /// so a document-scale owner retires over as many grants as it holds sub-pages.
     pub(crate) fn retire_backing(&mut self) -> bool {
         if self.len != 0 {
             return false;
         }
-        self.page.take().is_some()
+        self.sealed = true;
+        let released = self.pages.pop().is_some();
+        if self.pages.is_empty() {
+            self.pages = Vec::new();
+        }
+        released
     }
 
     pub(crate) fn terminal_owners_empty(&self) -> bool {
-        self.len == 0 && self.page.is_none()
-    }
-}
-
-impl<T, const N: usize> std::ops::Deref for FixedOwnerVec<T, N> {
-    type Target = [T];
-
-    fn deref(&self) -> &Self::Target {
-        self.as_slice()
-    }
-}
-
-impl<T, const N: usize> std::ops::DerefMut for FixedOwnerVec<T, N> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.as_mut_slice()
+        self.len == 0 && self.pages.is_empty()
     }
 }
 
@@ -168,11 +326,10 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
     }
 }
 
-type FixedOwnerMapPage<K, V, const N: usize> = Box<[Option<(K, V)>; N]>;
-
 #[derive(Debug)]
 pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
-    page: Option<FixedOwnerMapPage<K, V, N>>,
+    pages: Vec<Box<[Option<(K, V)>]>>,
+    sealed: bool,
     len: usize,
 }
 
@@ -183,43 +340,76 @@ pub(crate) enum FixedOwnerMapInsert<K, V> {
 }
 
 impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
-    /// 🧱️ Heap-only page allocation, for the same reason as [`FixedOwnerVec::new`]: a document-capacity
-    /// array built through `Box::new(std::array::from_fn(..))` is a stack temporary of the page's full
-    /// size before it ever reaches the heap.
-    pub(crate) fn new() -> Self {
-        assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
-        let mut page: Vec<Option<(K, V)>> = Vec::new();
-        if page.try_reserve_exact(N).is_err() {
-            return Self::refused();
-        }
-        page.resize_with(N, || None);
-        Self { page: page.into_boxed_slice().try_into().ok(), len: 0 }
+    /// 📏️ Slots ONE sub-page of this owner backs — see [`FixedOwnerVec::sub_page_slots`].
+    pub(crate) const fn sub_page_slots() -> usize {
+        owner_sub_page_slots::<Option<(K, V)>>(N)
     }
 
-    /// 🚫️ The owner a guest that could not spare the page hands back — see [`FixedOwnerVec::refused`].
+    /// 📏️ Bytes of ONE contiguous sub-page request this owner makes.
+    pub(crate) const fn sub_page_bytes() -> usize {
+        Self::sub_page_slots() * size_of::<Option<(K, V)>>()
+    }
+
+    const fn sub_pages() -> usize {
+        N.div_ceil(Self::sub_page_slots())
+    }
+
+    /// 🧱️ Claims its first sub-page and grows one sub-page at a time, for the same reason as
+    /// [`FixedOwnerVec::new`].
+    pub(crate) fn new() -> Self {
+        const { assert!(Self::sub_page_bytes() <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a fixed owner sub-page is over the guest contiguous-request ceiling") };
+        const { assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES, "a fixed owner page is over the document page ceiling") };
+        let mut pages = Vec::new();
+        if pages.try_reserve_exact(Self::sub_pages()).is_err() {
+            return Self::refused();
+        }
+        let mut owner = Self { pages, sealed: false, len: 0 };
+        if !owner.claim_sub_page() {
+            owner.sealed = true;
+        }
+        owner
+    }
+
+    /// 🚫️ The owner a guest that could not spare a page hands back — see [`FixedOwnerVec::refused`].
     pub(crate) const fn refused() -> Self {
-        Self { page: None, len: 0 }
+        Self { pages: Vec::new(), sealed: true, len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
         size_of::<[Option<(K, V)>; N]>()
     }
 
-    /// 📏️ Slots this owner can actually hold — zero when its page allocation was refused, for the
-    /// same reason as [`FixedOwnerVec::capacity`]. Every collision-mutation preflight compares
-    /// `len()` against this, so an honest answer turns an exhausted guest into a refused mutation
-    /// instead of an `unreachable!` two frames later.
-    pub(crate) const fn capacity(&self) -> usize {
-        if self.page.is_some() { N } else { 0 }
+    fn claim_sub_page(&mut self) -> bool {
+        let base = self.pages.len() * Self::sub_page_slots();
+        if self.sealed || base >= N {
+            return false;
+        }
+        let slots = if N - base < Self::sub_page_slots() { N - base } else { Self::sub_page_slots() };
+        let Some(page) = claim_owner_sub_page(slots, || None) else { return false };
+        self.pages.push(page);
+        true
+    }
+
+    fn backed_slots(&self) -> usize {
+        let backed = self.pages.len() * Self::sub_page_slots();
+        if backed > N { N } else { backed }
+    }
+
+    /// 📏️ Slots this owner can actually hold — what it is really backed by once a sub-page was
+    /// refused, for the same reason as [`FixedOwnerVec::capacity`]. Every collision-mutation
+    /// preflight compares `len()` against this, so an honest answer turns an exhausted guest into a
+    /// refused mutation instead of an `unreachable!` two frames later.
+    pub(crate) fn capacity(&self) -> usize {
+        if self.sealed { self.backed_slots() } else { N }
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
-        self.page.as_ref().map(|_| (1, Self::page_bytes()))
+        (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<Option<(K, V)>>()).sum()))
     }
 
     #[cfg(test)]
     pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, V)>> {
-        self.page.as_ref().map(|page| page.as_ptr())
+        self.pages.first().map(|page| page.as_ptr())
     }
 
     pub(crate) fn len(&self) -> usize {
@@ -230,8 +420,31 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         self.len == 0
     }
 
+    fn entry(&self, index: usize) -> Option<&Option<(K, V)>> {
+        self.pages.get(index / Self::sub_page_slots())?.get(index % Self::sub_page_slots())
+    }
+
+    fn entry_mut(&mut self, index: usize) -> Option<&mut Option<(K, V)>> {
+        self.pages.get_mut(index / Self::sub_page_slots())?.get_mut(index % Self::sub_page_slots())
+    }
+
+    fn take_at(&mut self, index: usize) -> Option<(K, V)> {
+        self.entry_mut(index)?.take()
+    }
+
+    fn put_at(&mut self, index: usize, entry: Option<(K, V)>) {
+        if let Some(slot) = self.entry_mut(index) {
+            *slot = entry;
+        }
+    }
+
     pub(crate) fn iter(&self) -> impl Iterator<Item = &(K, V)> {
-        self.page.as_ref().into_iter().flat_map(move |page| page[..self.len].iter()).filter_map(Option::as_ref)
+        let len = self.len;
+        self.pages.iter().enumerate().flat_map(move |(index, page)| {
+            let filled = len.saturating_sub(index * Self::sub_page_slots()).min(page.len());
+            page[..filled].iter()
+        })
+        .filter_map(Option::as_ref)
     }
 
     pub(crate) fn keys(&self) -> impl Iterator<Item = &K> {
@@ -255,7 +468,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         K: Borrow<Q>,
         Q: Ord + ?Sized,
     {
-        self.index_of(key).and_then(|index| self.page.as_ref()?.get(index)?.as_ref().map(|(_, value)| value))
+        self.entry(self.index_of(key)?)?.as_ref().map(|(_, value)| value)
     }
 
     pub(crate) fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
@@ -264,7 +477,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         Q: Ord + ?Sized,
     {
         let index = self.index_of(key)?;
-        self.page.as_mut()?.get_mut(index)?.as_mut().map(|(_, value)| value)
+        self.entry_mut(index)?.as_mut().map(|(_, value)| value)
     }
 
     pub(crate) fn contains_key<Q>(&self, key: &Q) -> bool
@@ -285,12 +498,16 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         if self.len == self.capacity() {
             return Err((key, value));
         }
-        let insert_at = self.iter().position(|(candidate, _)| candidate > &key).unwrap_or(self.len);
-        let Some(page) = self.page.as_mut() else { return Err((key, value)) };
-        for index in (insert_at..self.len).rev() {
-            page[index + 1] = page[index].take();
+        if self.len == self.backed_slots() && !self.claim_sub_page() {
+            self.sealed = true;
+            return Err((key, value));
         }
-        page[insert_at] = Some((key, value));
+        let insert_at = self.iter().position(|(candidate, _)| candidate > &key).unwrap_or(self.len);
+        for index in (insert_at..self.len).rev() {
+            let moved = self.take_at(index);
+            self.put_at(index + 1, moved);
+        }
+        self.put_at(insert_at, Some((key, value)));
         self.len += 1;
         Ok(FixedOwnerMapInsert::Inserted)
     }
@@ -301,10 +518,10 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         Q: Ord + ?Sized,
     {
         let index = self.index_of(key)?;
-        let page = self.page.as_mut()?;
-        let entry = page[index].take()?;
+        let entry = self.take_at(index)?;
         for cursor in index + 1..self.len {
-            page[cursor - 1] = page[cursor].take();
+            let moved = self.take_at(cursor);
+            self.put_at(cursor - 1, moved);
         }
         self.len -= 1;
         Some(entry)
@@ -314,24 +531,30 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         if self.len == 0 {
             return None;
         }
-        let page = self.page.as_mut()?;
-        let entry = page[0].take();
+        let entry = self.take_at(0);
         for cursor in 1..self.len {
-            page[cursor - 1] = page[cursor].take();
+            let moved = self.take_at(cursor);
+            self.put_at(cursor - 1, moved);
         }
         self.len -= 1;
         entry
     }
 
+    /// ♻️ Gives ONE sub-page back per close grant — see [`FixedOwnerVec::retire_backing`].
     pub(crate) fn retire_backing(&mut self) -> bool {
         if self.len != 0 {
             return false;
         }
-        self.page.take().is_some()
+        self.sealed = true;
+        let released = self.pages.pop().is_some();
+        if self.pages.is_empty() {
+            self.pages = Vec::new();
+        }
+        released
     }
 
     pub(crate) fn terminal_owners_empty(&self) -> bool {
-        self.len == 0 && self.page.is_none()
+        self.len == 0 && self.pages.is_empty()
     }
 }
 
@@ -358,7 +581,7 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
         Self { values: FixedOwnerMap::refused() }
     }
 
-    pub(crate) const fn capacity(&self) -> usize {
+    pub(crate) fn capacity(&self) -> usize {
         self.values.capacity()
     }
 
@@ -1210,25 +1433,30 @@ impl CollisionSpatialIndex {
                         mutation.cursor += 1;
                         if self.cells.get(&cell).is_none() {
                             let bucket = FixedOwnerSet::new();
-                            // 🧊️ The one owner the preflight cannot weigh: a cell's member bucket does
-                            // not exist yet, so its page is allocated HERE. A guest that refuses it
-                            // hands back a zero-capacity bucket, and the mutation is refused rather
+                            // 🧊️ The two owners the preflight cannot weigh: a cell's member bucket does
+                            // not exist yet, so its first sub-page is claimed HERE, and the cell map's
+                            // own next sub-page is claimed by this very insert. A guest that refuses
+                            // either hands back what it was given, and the mutation is refused rather
                             // than pushed into an owner that cannot hold it.
                             if bucket.capacity() == 0 {
                                 return Self::reject_mutation(mutation);
                             }
                             match self.cells.try_insert(cell, bucket) {
                                 Ok(FixedOwnerMapInsert::Inserted) => {}
-                                Ok(FixedOwnerMapInsert::Occupied { .. }) | Err(_) => unreachable!("preflighted fixed collision cell"),
+                                Ok(FixedOwnerMapInsert::Occupied { .. }) => {}
+                                Err((_, bucket)) => {
+                                    drop(bucket);
+                                    return Self::reject_mutation(mutation);
+                                }
                             }
                         }
-                        let bucket = self.cells.get_mut(&cell).expect("preflighted fixed collision bucket");
+                        let Some(bucket) = self.cells.get_mut(&cell) else { return Self::reject_mutation(mutation) };
                         match bucket.try_insert(mutation.id.clone()) {
                             Ok(FixedOwnerSetInsert::Inserted) => {}
                             Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
                             Err(input) => {
                                 drop(input);
-                                unreachable!("preflighted fixed collision member");
+                                return Self::reject_mutation(mutation);
                             }
                         }
                         return CollisionMutationStep::Pending;
@@ -1239,7 +1467,7 @@ impl CollisionSpatialIndex {
                         Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
                         Err(input) => {
                             drop(input);
-                            unreachable!("preflighted oversized collision member");
+                            return Self::reject_mutation(mutation);
                         }
                     }
                 }
@@ -1251,7 +1479,10 @@ impl CollisionSpatialIndex {
                 let id = std::mem::take(&mut mutation.id);
                 match self.entries.try_insert(id, mutation.bounds) {
                     Ok(FixedOwnerMapInsert::Inserted) => {}
-                    Ok(FixedOwnerMapInsert::Occupied { .. }) | Err(_) => unreachable!("preflighted collision entry"),
+                    Ok(FixedOwnerMapInsert::Occupied { input_key, input_value: _ }) | Err((input_key, _)) => {
+                        mutation.id = input_key;
+                        return Self::reject_mutation(mutation);
+                    }
                 }
                 mutation.stage = CollisionMutationStage::Complete;
                 CollisionMutationStep::Complete

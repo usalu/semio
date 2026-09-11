@@ -10,6 +10,7 @@ import { decodePackValue, encodePackValue } from "../../../../../🧰️framewor
 import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 const PACKAGE_NAME = "semio-s-plugin-stdio";
 const PLUGIN_ID = "stdio";
@@ -896,9 +897,11 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
   if (info.isSymbolicLink() || !info.isDirectory()) throw new Error("catalog-root build root must be a regular non-symlink directory");
   if (readdirSync(root).length !== 0) throw new Error("catalog-root build root must be empty");
   const exact = realpathSync(root);
-  const ambientTarget = resolve(repoRoot, "target");
+  const ambientTarget = cargoTargetDirectory(repoRoot);
+  const ambientBuild = cargoBuildDirectory(repoRoot);
   const developmentCache = resolve(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🔌️plugin-modules");
   if (pathIsWithin(ambientTarget, exact)) throw new Error("catalog-root refuses the ambient shared target");
+  if (pathIsWithin(ambientBuild, exact)) throw new Error("catalog-root refuses the ambient shared build directory");
   if (pathIsWithin(developmentCache, exact)) throw new Error("catalog-root refuses the development cache");
   if (exact === resolve(repoRoot)) throw new Error("catalog-root requires a dedicated fresh directory");
   return exact;
@@ -932,12 +935,12 @@ class CatalogRootScript extends BundleScript {
     const ownerSnapshot = snapshotDescriptor(ownerRoot);
     let ownerPublished = false;
     let rowPublished = false;
-    const env = devToolingEnv({ CARGO_TARGET_DIR: cargoTarget, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" });
+    const env = devToolingEnv({ CARGO_TARGET_DIR: cargoTarget, CARGO_INCREMENTAL: "0" });
     try {
       mkdirSync(workRoot, { recursive: true });
       mkdirSync(stageRoot, { recursive: true });
       const packageId = componentPackageId(join(this.root, "Cargo.toml"));
-      await runControlled("cargo", ["--config", 'build.rustc-wrapper=""', "rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
+      await runControlled("cargo", ["rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
       const raw = join(cargoTarget, "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
       assertContainedBounded(buildRoot, raw, "raw component");
       const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
@@ -953,7 +956,7 @@ class CatalogRootScript extends BundleScript {
       if (!/world\s+actor\s*\{/.test(wit) || !["reactor", "jobs", "checkpoint", "describe"].every((name) => new RegExp(`export\\s+${name}\\s*;`).test(wit))) {
         throw new Error("wasm-tools WIT oracle rejected the required actor exports");
       }
-      await runControlled("cargo", ["--config", 'build.rustc-wrapper=""', "build", "-p", "semio-framework-plugin-describe"], this.repoRoot, env, control);
+      await runControlled("cargo", ["build", "-p", "semio-framework-plugin-describe"], this.repoRoot, env, control);
       const emitter = join(cargoTarget, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
       const descriptorRoot = join(workRoot, "descriptor");
       await runControlled(emitter, ["describe", raw, "--core", core, "--out", descriptorRoot], this.repoRoot, env, control);

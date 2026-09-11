@@ -19,13 +19,14 @@ export type ArtifactMeasurement = {
 export const artifactBudgets = { "task-results": 8 * 1024 ** 3, "compiler-state": 20 * 1024 ** 3, deliverable: 5 * 1024 ** 3, report: 2 * 1024 ** 3 };
 const cache = ".🧬semio/🦑️repo/⚡️cache";
 const stores: readonly [string, string, ArtifactCategory][] = [
-  ["nx", ".nx/cache", "task-results"], ["nx-graph", ".nx/workspace-data", "service-state"],
+  ["nx", `${cache}/nx`, "task-results"], ["nx-graph", ".nx/workspace-data", "service-state"],
   ["cargo", "target", "compiler-state"], ["bun", "node_modules", "dependency-store"], ["uv", ".venv", "dependency-store"],
-  ["repo-cache", cache, "unclassified"], ["cargo-browser", `${cache}/cargo`, "compiler-state"],
+  ["repo-cache", cache, "unclassified"], ["cargo-target", `${cache}/cargo/target`, "compiler-state"], ["cargo-build", `${cache}/cargo/build`, "compiler-state"],
   ["cmake", `${cache}/cmake`, "compiler-state"], ["dotnet", `${cache}/dotnet`, "compiler-state"],
   ["tools", `${cache}/tools`, "downloaded-asset"], ["tectonic", `${cache}/tectonic`, "compiler-state"],
   ["test-oracles", `${cache}/oracles`, "dependency-store"], ["tests", `${cache}/tests`, "report"],
   ["agents", `${cache}/agents`, "service-state"], ["breaches", `${cache}/breaches`, "report"],
+  ["vite", `${cache}/vite`, "compiler-state"],
 ];
 const contains = (parent: string, child: string): boolean => child === parent || child.startsWith(parent + "/");
 const portablePath = (path: string): string => path.normalize("NFC").toLowerCase();

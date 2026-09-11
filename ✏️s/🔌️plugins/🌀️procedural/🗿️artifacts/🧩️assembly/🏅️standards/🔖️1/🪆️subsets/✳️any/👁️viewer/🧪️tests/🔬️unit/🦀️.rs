@@ -18,3 +18,10 @@ fn viewer_declares_the_structure_window() {
     let def = create_assembly_viewer();
     assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
 }
+
+#[test]
+fn structure_window_is_localized_en_and_de() {
+    let def = create_assembly_viewer();
+    let window = def.window_kinds.iter().find(|w| w.id == structure::WINDOW_KIND_ID).expect("structure");
+    assert_eq!(window.label, semio_framework_plugin::LocalizedLabel::native("Structure", "Struktur"));
+}

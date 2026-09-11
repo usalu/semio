@@ -2,12 +2,15 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoCacheDirectory } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(root, "../../../../..");
 
 export default defineConfig({
   root,
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "framework-machine"),
   resolve: {
     alias: {
     },

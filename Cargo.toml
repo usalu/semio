@@ -512,8 +512,8 @@ trim-paths = "object"
 #   ElemSection::writeBody crash noted above (a stable low CGU count, same fix as `store`'s override).
 # - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
 #   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
-# - incremental = false: deterministic output; also makes these units cacheable by `sccache`, which
-#   never caches incremental builds (today's plugin builds pay full non-incremental cost anyway).
+# - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
+#   session state would only cost disk in the shared build-dir (`.cargo/config.toml` `build.build-dir`).
 # - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
 #   `Location` strings (panic = "unwind" is intentionally NOT overridden here — wasm32-wasip2's
 #   target spec already defaults to panic-strategy "abort", so plugins already abort-on-panic and

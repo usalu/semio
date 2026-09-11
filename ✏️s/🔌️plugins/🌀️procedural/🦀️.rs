@@ -23,12 +23,14 @@ static PROCEDURAL_GUEST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
+    /// 🗃️ Closed runtime app fleet for the procedural 2D, 3D, and assembly surfaces.
     pub enum ProceduralApps: PluginApp {
         Generation2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>>),
         Generation2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>>),
         Generation3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>>),
         Generation3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>>),
+        AssemblyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor>>),
+        AssemblyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -86,6 +88,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         .routed_inference(semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
         .artifact(semio_s_artifact_procedural_generation2d::declaration().map_err(PluginAssemblyError::definition)?)
         .artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(semio_s_artifact_procedural_assembly::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
             "s.procedural.host-media.mesh-import",
             semio_s_artifact_procedural_generation3d::artifact_kind(),
@@ -101,21 +104,18 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         .editor_mutation_roster::<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>()
         .viewer::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>(semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer())
         .viewer_mutation_roster::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>()
-        // 🚧️ assembly's editor/viewer are authored (`🗿️artifacts/🧩️assembly/…/{✏️editor,👁️viewer}/`) but
-        // not yet mounted in `🦀️.rs` or registered here: `ArtifactEditor`/`ArtifactViewer`'s own
-        // trait bounds (`Snapshot: ArtifactDsl + ArtifactPack`, `Mutation`/`Command`: `OpText`/`OpBinary`)
-        // are unsatisfied until assembly's schema gains its missing artifact-facet descriptor + leaf
-        // set — see `📓️w2-p5-assembly-notes.md`. Wire once that lands.
-        //
-        // 🧬️ Assembly's editor remains unmounted, but its schema-owned `semio.infer` WFC factory
-        // is registered above on the production action bus and needs no artifact surface.
+        .editor_with_examples::<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor>(semio_s_artifact_procedural_assembly::editor::assembly::create_assembly_editor(), semio_s_artifact_procedural_assembly::examples::sources())
+        .editor_mutation_roster::<semio_s_artifact_procedural_assembly::editor::assembly::AssemblyEditor>()
+        .viewer::<semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>(semio_s_artifact_procedural_assembly::viewer::assembly::create_assembly_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_procedural_assembly::viewer::assembly::AssemblyViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_assembly::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation2d::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("documents.write".into()),
             scope: "plugin".into(),
-            reason: "persist generation2d/generation3d editor edits (flow graph parameter/node changes) to the open document".into(),
+            reason: "persist generation2d/generation3d/assembly editor edits to the open document".into(),
             optional: false,
         });
     for declaration in flow_extension_declarations()? {

@@ -128,7 +128,6 @@ RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.cursor-server \
     /home/vscode/.antigravity-server \
     /home/vscode/.vscode-server \
-    /home/vscode/.windsurf-server \
-    /home/vscode/.cache/ms-playwright
+    /home/vscode/.windsurf-server
 
 WORKDIR /workspaces/semio

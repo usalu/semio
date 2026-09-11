@@ -12,7 +12,8 @@
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-openable-identity-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "native-codec-check": {
       "executor": "nx:run-commands",
@@ -21,7 +22,8 @@
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-codec-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",
@@ -61,7 +63,11 @@
         "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/🔣️.json"
+      ]
     }
   }
 }

@@ -15,6 +15,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
+import { repoCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -108,6 +109,9 @@ const config: StorybookConfig = {
     changeDetection: false,
   },
   async viteFinal(config, { configType }) {
+    // ⚡️ Routes Storybook's Vite dependency-optimizer cache into the ONE shared cache root instead of
+    // the Vite default (`node_modules/.vite`), so disk is bounded by the pruner rather than by `node_modules`.
+    config.cacheDir = repoCacheDirectory(repoRootPath, "vite", "storybook");
     config.resolve = config.resolve || {};
     // #region 🔖️ResolvePackageExports
     /** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */

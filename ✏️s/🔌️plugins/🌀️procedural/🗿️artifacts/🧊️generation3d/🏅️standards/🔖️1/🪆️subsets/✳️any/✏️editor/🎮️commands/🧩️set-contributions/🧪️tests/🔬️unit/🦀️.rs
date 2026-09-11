@@ -39,6 +39,84 @@ fn a_paged_run_installs_the_contributed_registry() {
     assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "the assembler retains nothing once its last page lands");
     assert!(semio_framework_os_flow::flow_extension_invocation_address("brep").is_ok(), "the contributed brep extension must be addressable after the run");
     assert!(semio_framework_os_flow::flow_extension_invocation_address("math").is_ok(), "the contributed math extension must be addressable after the run");
+    assert_contributed_kind("brep.curve.polygon");
+    assert_contributed_kind("math.vector");
+}
+
+fn contributed_kind_ids() -> Vec<String> {
+    let catalogue: serde_json::Value = serde_json::from_str(&semio_framework_os_flow::flow_neuron_kind_infos_json()).expect("operator catalogue JSON");
+    catalogue.as_array().expect("catalogue array").iter().filter_map(|item| item["id"].as_str().map(str::to_string)).collect()
+}
+
+fn assert_contributed_kind(kind: &str) {
+    let ids = contributed_kind_ids();
+    assert!(ids.iter().any(|id| id == kind), "contributed operator {kind} must be in the registry FlowHost indexes after setContributions, else evaluate answers unknown kind instead of PendingExtension; catalogue={ids:?}");
+}
+
+/// ⚖️ LAW: the packaged brep `manifestJson` the host actually pushes must parse as
+/// [`semio_framework_os_flow::FlowExtensionManifest`]. `register_contributed_manifest` previously
+/// returned on parse failure, so invocation addresses still resolved while every operator stayed
+/// unknown (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn the_packaged_brep_manifest_parses_as_a_flow_extension_manifest() {
+    let json = crate::flow_operators::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
+    let third_party: serde_json::Value = serde_json::from_str(&json).expect("RFC 8259 brep manifest");
+    assert!(third_party["contributes"]["operators"].as_array().unwrap().iter().any(|operator| operator["id"] == "brep.curve.polygon"), "third-party JSON names brep.curve.polygon");
+    let mut parsed: semio_framework_os_flow::FlowExtensionManifest = semio_framework_os_flow::os_pack::json::from_json_str(&json).unwrap_or_else(|error| panic!("packaged brep manifest must parse as FlowExtensionManifest: {error}"));
+    let has_polygon = parsed.contributes.operators.iter().any(|operator| operator.id == "brep.curve.polygon");
+    for operator in parsed.contributes.operators.drain(..) {
+        operator.retire_cold();
+    }
+    for schema in parsed.contributes.schemas.drain(..) {
+        schema.retire_cold();
+    }
+    assert!(has_polygon, "first-party FromValue must keep brep.curve.polygon");
+}
+
+/// ⚖️ LAW: the served shell sends page 0 of 1 as JSON.stringify-shaped contributions (camelCase
+/// `pluginId` + extra payload fields), not the ToValue round-trip the paging assembler test uses.
+#[test]
+fn a_one_page_host_shaped_run_indexes_contributed_operators() {
+    let _serial = crate::editor::generation3d::test_support::lock();
+    let contributions = host_shaped_contributions_json();
+    assert!(contributions.contains("brep.curve.polygon") && contributions.contains("manifestJson"), "the host-shaped pack must carry the live operator ids");
+    dispatch(&[(contributions.as_str(), 0, 1)]).into_iter().next().unwrap().expect("one-page host-shaped run is admitted");
+    assert_contributed_kind("brep.curve.polygon");
+    assert_contributed_kind("math.vector");
+}
+
+fn host_shaped_contributions_json() -> String {
+    let brep = crate::flow_operators::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
+    let math = semio_s_plugin_flow_extension_math::extension_manifest_json();
+    serde_json::json!([
+        {
+            "pluginId": crate::flow_operators::BREP_EXTENSION_PLUGIN_ID,
+            "topicContribution": {
+                "topic": "flow.extension",
+                "payload": {
+                    "appId": "generation3d",
+                    "extensionId": "brep",
+                    "iconId": "emoji:🧊",
+                    "label": { "en": "Brep", "de": "Brep" },
+                    "manifestJson": brep
+                }
+            }
+        },
+        {
+            "pluginId": crate::flow_operators::MATH_EXTENSION_PLUGIN_ID,
+            "topicContribution": {
+                "topic": "flow.extension",
+                "payload": {
+                    "appId": "generation3d",
+                    "extensionId": "math",
+                    "iconId": "emoji:🧮",
+                    "label": { "en": "Math", "de": "Mathe" },
+                    "manifestJson": math
+                }
+            }
+        }
+    ])
+    .to_string()
 }
 
 /// ⚖️ LAW: a gap in the run is refused and discards the partial buffer — a half-assembled payload

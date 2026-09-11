@@ -72,7 +72,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts inference-bridge-check --source"
-      }
+      },
+      "outputs": []
     },
     "inference-bridge-process-check": {
       "executor": "nx:run-commands",
@@ -88,7 +89,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts inference-bridge-check --process"
-      }
+      },
+      "outputs": []
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",

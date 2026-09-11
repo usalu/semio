@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
+import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(root, "../../../../../../../../../..");
@@ -49,6 +50,7 @@ const exhaustiveInSourceSuites = [
 
 export default defineConfig({
   root,
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "renderer-react"),
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react/test", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🖌️render.ts") },

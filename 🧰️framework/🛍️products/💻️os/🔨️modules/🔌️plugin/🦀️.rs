@@ -15891,7 +15891,13 @@ pub mod app {
         }
 
         fn can_insert(&self, id: u64) -> bool {
-            self.allocation_admitted && self.entry(id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS).is_none()
+            self.slot_is_vacant(id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS)
+        }
+
+        /// 🎰️ Whether one residue class of this direct-mapped table owns no live value — the per-slot
+        /// question an admitting caller asks before it mints an id for that slot.
+        fn slot_is_vacant(&self, slot: usize) -> bool {
+            self.allocation_admitted && self.entry(slot).is_none()
         }
 
         pub(crate) fn insert_admitted(&mut self, id: u64, value: T) {
@@ -17283,6 +17289,69 @@ pub mod app {
             assert!(app.close_terminal_is_empty());
             eprintln!("[DEBUG] actual registered keyed dispatch {} preserved foreign reservation, retired seven UTF-8 bytes exactly, and delivered rejection after vacancy", case["id"]);
         }
+    }
+
+    /// 🎰️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B0: typed-operation ingress pre-admits the exact slot
+    /// BEFORE it mints an operation id. Minting from the process-wide counter first and then testing that
+    /// one residue class of the direct-mapped 64-slot authorities refused unrelated live actions —
+    /// `suggestionsTick`, `setCamera`, `engagementAbort`, `transformBegin`, `translateSelection` all died on
+    /// it in the puzzle3d browser battery — whenever a live operation happened to share the class. With 63
+    /// classes held, sixty-four consecutive admissions must every time land on the one vacant slot (the
+    /// mint-then-test model visits every residue class across that span, so it fails here deterministically),
+    /// a real dispatch must succeed there, and only true saturation may refuse.
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const VACANT: usize = 11;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(7).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
+        for slot in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            app.typed_operation_reservations[slot] = (slot != VACANT).then_some((slot + 3 * ARTIFACT_LIVE_OUTPUT_SLOTS) as u64);
+        }
+        for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            let admitted = app.admit_typed_operation_slot().expect("one vacant residue class still pre-admits an exact operation slot");
+            assert_eq!(admitted.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS, VACANT, "ingress must mint its operation id FOR the vacant slot instead of testing whichever slot the shared counter reached");
+        }
+        let first = Box::new(command("aä🧵", 42));
+        let wire = <A::Command as ::protocol::OpBinary>::encode_op(&first).unwrap();
+        let admission = app.admit_command_wire(verb, &wire, 1).await.unwrap();
+        app.dispatch_typed_command_inner(first, admission, &meta).await.expect("a typed action must dispatch while unrelated operations hold every other slot");
+        let operation_id = *app.latest_wins_order.items.front().expect("the admitted operation owns the vacant slot");
+        assert_eq!(operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS, VACANT);
+        assert_eq!(app.typed_operation_reservations[VACANT], Some(operation_id));
+        let saturated = Box::new(command("bö🧶", 43));
+        let wire = <A::Command as ::protocol::OpBinary>::encode_op(&saturated).unwrap();
+        let admission = app.admit_command_wire(verb, &wire, 1).await.unwrap();
+        let fault = app.dispatch_typed_command_inner(saturated, admission, &meta).await.expect_err("only true saturation of every fixed slot may refuse a typed action");
+        assert_eq!(fault.code.0, "interactive-job.typed-operation-capacity");
+        assert!(app.admit_typed_operation_slot().is_none());
+        for slot in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            if slot != VACANT {
+                app.typed_operation_reservations[slot] = None;
+            }
+        }
+        app.latest_wins_commands.get_mut(operation_id).expect("the pending keyed command").lease.as_ref().expect("pending cancellation lease").cancel();
+        for _ in 0..100_000 {
+            if app.tool_operations.get(operation_id).is_some() {
+                break;
+            }
+            app.advance_latest_wins_command_one().await.unwrap();
+            plugin_job_yield_once().await;
+        }
+        let mounted = app.tool_operations.get_mut(operation_id).expect("the cancelled pending command lands its retained terminal result");
+        let page = mounted.result_page.as_ref().expect("terminal fault page");
+        assert_eq!(page.lane, TypedOperationResultLane::Fault);
+        let token = page.token;
+        assert!(mounted.acknowledge_result_page(token).unwrap());
+        for _ in 0..100_000 {
+            if app.close_terminal_is_empty() {
+                break;
+            }
+            let _ = app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            plugin_job_yield_once().await;
+        }
+        assert!(app.close_terminal_is_empty());
+        eprintln!("[DEBUG] actual typed ingress pre-admitted slot {VACANT} under 63 live foreign reservations and refused only at true saturation");
     }
 
     #[cfg(test)]
@@ -19422,11 +19491,11 @@ pub mod app {
         /// 🎟️ Pre-admits the exact page and byte extent before a producer constructs any
         /// envelope input owner. Occupied fixed slots and allocation failure leave no input owner.
         pub fn begin_artifact_envelope_ingress(&mut self, maximum_pages: usize, maximum_bytes: usize) -> Result<ArtifactEnvelopeDecodeOperationHandle, Fault> {
-            let operation = semio_framework_job::allocate_operation_id();
             let generation = self.artifact_generation_now();
-            if !self.envelope_ingress.can_insert(operation.0) || !self.envelope_decode_jobs.can_insert(operation.0) || !self.store_replacement_jobs.can_insert(operation.0) {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-saturated"), "artifact envelope ingress has no exact fixed operation slot"));
-            }
+            let Some(slot) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.envelope_ingress.slot_is_vacant(*slot) && self.envelope_decode_jobs.slot_is_vacant(*slot) && self.store_replacement_jobs.slot_is_vacant(*slot)) else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-saturated"), "every fixed artifact envelope ingress slot already owns a live operation"));
+            };
+            let operation = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64);
             let pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages, maximum_bytes })
                 .map_err(|fault| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-credits"), format!("artifact envelope ingress credits were rejected: {fault:?}")))?;
             self.envelope_ingress.insert_admitted(operation.0, ActiveArtifactEnvelopeIngress::new(pages));
@@ -21469,15 +21538,39 @@ pub mod app {
         }
 
         //#region 🔖️InteractionDispatch
+        /// 🧾️ `domain=granularity:id,id` for one `InteractionState`'s selection half — the compact witness
+        /// the persist round-trip check below compares, so a lost selection names its own domain instead of
+        /// reaching the user as a silently empty panel.
+        fn interaction_selection_witness(state: &protocol::InteractionState) -> String {
+            state.selection.iter().map(|(domain, selection)| format!("{domain}={}:{}", selection.granularity, selection.ids.join(","))).collect::<Vec<_>>().join(";")
+        }
+
         /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral
         /// `interaction_hover` map into one `InteractionState` — the "app-side source" a host's presence
         /// heartbeat reads for THIS app instance before calling `assemble_presence_interaction`
         /// (`🏪️store/🔄️sync/🦀️.rs`, wave 2a) with it plus this app's declared hover/selection
         /// specs (from `AppDefinition.interactions`, already available wherever a heartbeat is built).
         pub async fn interaction_state(&self) -> protocol::InteractionState {
-            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            let mut state = self.interaction_selection_snapshot();
             state.hover = self.interaction_hover.clone();
             state
+        }
+
+        /// 🕹️ The persisted-local selection half, with a store read failure NAMED instead of silently
+        /// collapsing into an empty `InteractionState`. Every reader treats "no selection" and "the
+        /// selection could not be read" identically, so a swallowed read reaches the user as a panel that
+        /// renders the empty-document summary on a live pick — measured in the browser on
+        /// `framework.panel.inspection` (ticket 26/09/02/PUZZLE-3D-END-TO-END, wave B6: 25 full refreshes
+        /// over 73 s kept the pre-pick body hash while the same turn's leftover `InteractionView` carried
+        /// the picked id).
+        fn interaction_selection_snapshot(&self) -> protocol::InteractionState {
+            match self.interaction_store.snapshot() {
+                Ok(state) => state,
+                Err(error) => {
+                    crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] interaction-store snapshot unavailable, selection read as empty: {error}"));
+                    protocol::InteractionState::default()
+                }
+            }
         }
 
         /// 🌳️ Resolves `def`'s `DomainTopology` for the current document — the CLOSURE/RANGE-ARITHMETIC
@@ -21548,8 +21641,14 @@ pub mod app {
             let persisted_before = self.interaction_store.snapshot().unwrap_or_default();
             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
             if persisted != persisted_before {
+                let requested = Self::interaction_selection_witness(&persisted);
+                let dispatched = Self::interaction_selection_witness(&combined);
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
+                let readback = Self::interaction_selection_witness(&self.interaction_selection_snapshot());
+                if readback != dispatched {
+                    crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] interaction selection lost dispatched={dispatched} validated={requested} readback={readback} domains={}", topology.domains.iter().map(|(domain, topo)| format!("{domain}:{}", topo.ordered.len())).collect::<Vec<_>>().join(",")));
+                }
             }
             Ok(())
         }
@@ -21577,7 +21676,7 @@ pub mod app {
             if writes.is_empty() {
                 return Ok(());
             }
-            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            let mut state = self.interaction_selection_snapshot();
             for write in writes {
                 let def = self.registry.interaction(&write.domain).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("interaction write names undeclared domain {}", write.domain)))?;
                 let mode = state.active_mode.get(&write.domain).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Multiple));
@@ -21605,7 +21704,7 @@ pub mod app {
         async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             self.validate_framework_reserved_commit(action, permit).await?;
             self.refresh_cache().await?;
-            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            let mut state = self.interaction_selection_snapshot();
             match action {
                 _ if action == INTERACTION_SELECT_ACTION_ID => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
@@ -21844,7 +21943,7 @@ pub mod app {
                 config,
                 history,
                 raw_wire,
-                input: ArtifactReservedToolInput::Action { args: args.cloned(), interaction: self.interaction_store.snapshot().unwrap_or_default(), hover: self.interaction_hover.clone() },
+                input: ArtifactReservedToolInput::Action { args: args.cloned(), interaction: self.interaction_selection_snapshot(), hover: self.interaction_hover.clone() },
                 completion: completion.clone(),
             };
             Ok(A::build_reserved_tool_job(request)?.map(|job| (job, completion)))
@@ -21895,10 +21994,10 @@ pub mod app {
             let canonical_base_revision = self.store.content_revision();
             let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
             let generation = semio_framework_job::Generation(self.store.generation());
-            let operation_id = semio_framework_job::allocate_operation_id();
-            if !self.media_exports.can_insert(operation_id.0) || !self.media_closures.can_insert(operation_id.0) || !self.snapshot_retirements.can_insert(operation_id.0) {
-                return Err(fault("fixed media export authority collided at the exact operation slot".into()));
-            }
+            let Some(slot) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.media_exports.slot_is_vacant(*slot) && self.media_closures.slot_is_vacant(*slot) && self.snapshot_retirements.slot_is_vacant(*slot)) else {
+                return Err(fault("every fixed media export slot already owns a live operation".into()));
+            };
+            let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64);
             let parent_document_id = self.store.envelope().id.clone();
             let seed_handle = artifact_handle_of(&format!("{app_instance_id}/{}/{tool_id}/{}", self.tool_job_controller_id, base_revision.0)).await;
             let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
@@ -22149,7 +22248,7 @@ pub mod app {
                     }
                 }
                 "copy" | "cut" => {
-                    let interaction = self.interaction_store.snapshot().unwrap_or_default();
+                    let interaction = self.interaction_selection_snapshot();
                     Ok(interaction.selection.values().map(|selection| selection.ids.len()).sum::<usize>().max(1))
                 }
                 "paste" => {
@@ -22212,12 +22311,29 @@ pub mod app {
                 return result;
             }
             initialize_framework_reserved_jobs();
-            let permit = self.admit_framework_reserved_spawn(action, &raw, decoded_items, meta).await?;
-            let job = permit.operation.operation.0;
+            // 🎰️ `pending_reserved` is DIRECT-MAPPED on `job % ARTIFACT_LIVE_OUTPUT_SLOTS`, and this caller
+            // MINTS the id — so a residue class already held by an unrelated reserved verb (a
+            // `noteShellCommand` the shell records for every user command, an in-flight `undo`) must be
+            // answered by minting into a vacant class, never by faulting the whole route. It used to fault:
+            // a canvas pick landed as `interactive-job.reserved-spawn-capacity` with 63 slots standing empty
+            // (ticket 26/09/02/PUZZLE-3D-END-TO-END battery #44-pre: `framework route 'interactionSelect'
+            // has no exact pending spawn slot`). `retire_pending_reserved_latest_wins` still runs first, so
+            // an interaction storm keeps its latest-wins retirement rather than filling the table.
+            let mut permit = self.admit_framework_reserved_spawn(action, &raw, decoded_items, meta).await?;
+            let mut job = permit.operation.operation.0;
             self.retire_pending_reserved_latest_wins(action, job);
+            for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                if self.pending_reserved.can_insert(job) {
+                    break;
+                }
+                permit.finish();
+                permit = self.admit_framework_reserved_spawn(action, &raw, decoded_items, meta).await?;
+                job = permit.operation.operation.0;
+                self.retire_pending_reserved_latest_wins(action, job);
+            }
             if !self.pending_reserved.can_insert(job) {
                 permit.finish();
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-capacity"), format!("framework route '{action}' has no exact pending spawn slot")));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-capacity"), format!("framework route '{action}' found no vacant pending spawn slot in {ARTIFACT_LIVE_OUTPUT_SLOTS} residue classes")));
             }
             self.pending_reserved.insert_admitted(
                 job,
@@ -23090,7 +23206,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("artifact-store publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("artifact-store publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("artifact-store publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23105,7 +23220,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("config-store publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("config-store publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("config-store publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23120,7 +23234,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("draft-store publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("draft-store publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("draft-store publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23135,7 +23248,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("presence-store publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("presence-store publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("presence-store publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23150,7 +23262,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("transient-store publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("transient-store publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("transient-store publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23165,7 +23276,6 @@ pub mod app {
                                     return if failed { Err(plugin_sdk_fault("window-config publication rejected stale or cancelled authority")) } else { Ok(()) };
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-config publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("window-config publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23173,14 +23283,12 @@ pub mod app {
                     }
                     PendingArtifactStorePublication::WindowTransient(publication) => {
                         if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
-                            let failed = publication.fault().is_some();
                             match publication.close_step(grant).map_err(plugin_sdk_fault)? {
                                 store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
                                     mounted.pending_artifact_publication = None;
-                                    return if failed { Err(plugin_sdk_fault("window-transient publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                    return Ok(());
                                 }
                                 store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("window-transient publication closed without terminal emptiness")),
-                                _ if failed => return Err(plugin_sdk_fault("window-transient publication is retiring a rejected authority")),
                                 _ => return Ok(()),
                             }
                         }
@@ -23254,7 +23362,8 @@ pub mod app {
                             }
                         }
                     } else if let Some(mutation) = ephemeral.window_transient.pop() {
-                        let authority = mounted.window_transient_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        self.window_transient_store.refresh(authority)?;
                         let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
                         mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
                         return Ok(());
@@ -23267,12 +23376,6 @@ pub mod app {
                     }
                 }
                 ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
-                    // 🔁️ Minted before the lane audit and before any per-item publication step, so a
-                    // retained tool job's extension invocations reach the host on the SAME turn its
-                    // first publication unit runs — and so the lane is empty by the time the
-                    // effect/event drains below walk the emit item by item. Idempotent: the drain
-                    // takes the vector, so a re-entered publication mints nothing twice.
-                    Self::mint_extension_invocations(mounted.meta.instance_id, emit)?;
                     if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
                         || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
                         || (!emit.window_config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowConfig))
@@ -23388,7 +23491,8 @@ pub mod app {
                             }
                         }
                     } else if let Some(mutation) = ephemeral.window_transient.pop() {
-                        let authority = mounted.window_transient_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
+                        self.window_transient_store.refresh(authority)?;
                         let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
                         mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
                         return Ok(());
@@ -23398,7 +23502,9 @@ pub mod app {
                         }
                         mounted.pending_child_publication = Some(PendingChildGroupPublication::new(std::mem::take(&mut emit.artifact_mutations), std::mem::take(&mut emit.child_emits), emit.description.take())?);
                         return Ok(());
-                    } else if let Some(effect) = emit.effects.pop() {
+                    } else {
+                        Self::mint_extension_invocations(mounted.meta.instance_id, emit)?;
+                        if let Some(effect) = emit.effects.pop() {
                         if let Err(effect) = self.typed_effect_outbox.push(effect) {
                             emit.effects.push(effect);
                             return Err(plugin_sdk_fault("typed-operation effect receiver is saturated"));
@@ -23428,6 +23534,7 @@ pub mod app {
                                 TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?
                             }
                         }
+                    }
                     }
                 }
             };
@@ -23464,6 +23571,30 @@ pub mod app {
             self.tool_operations.can_insert(operation) && self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS].is_none()
         }
 
+        /// 🎰️ Whether every fixed typed-operation and segmented-output authority owns nothing in this one
+        /// residue class of `id % ARTIFACT_LIVE_OUTPUT_SLOTS`.
+        fn typed_operation_slot_is_vacant(&self, slot: usize) -> bool {
+            self.tool_operations.slot_is_vacant(slot)
+                && self.typed_operation_reservations[slot].is_none()
+                && self.latest_wins_commands.slot_is_vacant(slot)
+                && self.segmented_downloads.slot_is_vacant(slot)
+                && self.segmented_closures.slot_is_vacant(slot)
+        }
+
+        /// 🎫️ Pre-admits the exact operation slot BEFORE an operation id exists. Every typed authority is a
+        /// direct-mapped table addressed by `id % ARTIFACT_LIVE_OUTPUT_SLOTS`, so minting a shared-counter id
+        /// first and then testing its one residue class refuses an action whenever an unrelated live
+        /// operation happens to share that class — a hover/tick/camera storm then fails while 63 slots sit
+        /// empty. Ingress therefore chooses the vacant slot and mints the id for it, and refusal now means
+        /// actual saturation of all fixed slots.
+        fn admit_typed_operation_slot(&self) -> Option<semio_framework_job::OperationId> {
+            if !self.latest_wins_order.allocation_admitted || self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
+                return None;
+            }
+            let slot = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.typed_operation_slot_is_vacant(*slot))?;
+            Some(semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64))
+        }
+
         async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if self.live_runtime_instance_id != Some(meta.instance_id) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
@@ -23473,16 +23604,9 @@ pub mod app {
             if admission.verb != verb {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.command-identity"), format!("exact admitted command '{}' decoded as '{verb}'", admission.verb)));
             }
-            let operation_id = semio_framework_job::allocate_operation_id();
-            if !self.can_admit_typed_operation(operation_id.0)
-                || !self.latest_wins_commands.can_insert(operation_id.0)
-                || !self.latest_wins_order.allocation_admitted
-                || self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS
-                || !self.segmented_downloads.can_insert(operation_id.0)
-                || !self.segmented_closures.can_insert(operation_id.0)
-            {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "fixed typed-operation and segmented-output authorities did not pre-admit the exact operation slot"));
-            }
+            let Some(operation_id) = self.admit_typed_operation_slot() else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "every fixed typed-operation and segmented-output slot already owns a live operation"));
+            };
             if let QualifiedToolProof::AppOwned(registration) = &admission.proof {
                 if let Some(target) = (registration.latest_wins_target)(command.as_ref()) {
                     let disposer = (registration.latest_wins_command_disposer)()
@@ -26565,16 +26689,21 @@ pub mod app {
             self.actions.try_push(action)
         }
 
-        fn close_step(&mut self) -> bool {
+        /// 🧹️ Retires one owner of this row and answers `(complete, bytes)` — the retired text's own
+        /// byte count, so the table ladder above can price a retirement run per PAGE instead of per
+        /// item (ticket 26/09/02, W-B2).
+        fn close_step(&mut self) -> (bool, usize) {
             if let Some(mut action) = self.actions.pop() {
+                let released = action.icon.len();
                 let _ = action.close_step();
-                return false;
+                return (false, released);
             }
-            if self.cells.pop().is_some() {
-                return false;
+            if let Some(cell) = self.cells.pop() {
+                return (false, cell.len());
             }
+            let bytes = self.id.len();
             self.id = UiText::default();
-            true
+            (true, bytes)
         }
     }
 
@@ -26599,23 +26728,44 @@ pub mod app {
     }
 
     impl RetiredTableRowsView {
-        fn close_step(&mut self) -> bool {
-            if let Some(row) = self.closing_row.as_mut() {
-                if !row.close_step() {
+        /// 🧹️ Retires this retired table for a bounded RUN priced by the caller's PAGE grant. A
+        /// retained table window is document-scaled (`TABLE_WINDOW_ROWS` rows of
+        /// `TABLE_WINDOW_CELLS` cells is over a thousand retirement units), and the reactor turn that
+        /// still owns any of it answers `MoreWork`, which the host answers with one more round trip —
+        /// so one owner per turn is one host round trip per cell (ticket 26/09/02, W-B2).
+        fn close_step(&mut self, items: usize, bytes: usize) -> bool {
+            let (mut remaining_items, mut remaining_bytes) = (items.max(1), bytes.max(1));
+            loop {
+                let (complete, released) = self.close_unit();
+                if complete {
+                    return true;
+                }
+                remaining_items -= 1;
+                remaining_bytes = remaining_bytes.saturating_sub(released.max(1));
+                if remaining_items == 0 || remaining_bytes == 0 {
                     return false;
                 }
-                self.closing_row = None;
-                return false;
+            }
+        }
+
+        fn close_unit(&mut self) -> (bool, usize) {
+            if let Some(row) = self.closing_row.as_mut() {
+                let (complete, released) = row.close_step();
+                if complete {
+                    self.closing_row = None;
+                }
+                return (false, released);
             }
             if let Some(row) = self.rows.pop() {
                 self.closing_row = Some(row);
-                return false;
+                return (false, 0);
             }
-            if self.columns.pop().is_some() {
-                return false;
+            if let Some(column) = self.columns.pop() {
+                return (false, column.len());
             }
+            let released = self.actions_label.len();
             self.actions_label = UiText::default();
-            true
+            (true, released)
         }
     }
 
@@ -26665,14 +26815,14 @@ pub mod app {
             Ok(())
         }
 
-        fn close_one(&mut self) -> bool {
+        fn close_one(&mut self, items: usize, bytes: usize) -> bool {
             for offset in 0..TABLE_WINDOW_RETIRE_SLOTS {
                 let Some(next_index) = self.close_cursor.checked_add(offset) else { return false };
                 let index = next_index % TABLE_WINDOW_RETIRE_SLOTS;
                 let Some(owner) = self.slots[index].owner.as_mut() else { continue };
                 let Some(next_cursor) = index.checked_add(1) else { return false };
                 self.close_cursor = next_cursor % TABLE_WINDOW_RETIRE_SLOTS;
-                if owner.close_step() {
+                if owner.close_step(items, bytes) {
                     self.slots[index].owner = None;
                     self.slots[index].reserved = false;
                 }
@@ -26689,7 +26839,14 @@ pub mod app {
     }
 
     pub fn close_table_rows_view_one() -> bool {
-        with_table_rows_retire_arena(TableRowsRetireArena::close_one)
+        close_table_rows_view_with_grant(1, 4096)
+    }
+
+    /// 🧹️ One retirement unit of the oldest retired table window, against the caller's PAGE grant —
+    /// see [`RetiredTableRowsView::close_step`] for why a retained table must not retire one cell per
+    /// reactor turn. Answers whether this call found work, not whether the arena is empty.
+    pub fn close_table_rows_view_with_grant(items: usize, bytes: usize) -> bool {
+        with_table_rows_retire_arena(|arena| arena.close_one(items, bytes))
     }
 
     #[derive(Debug, PartialEq)]

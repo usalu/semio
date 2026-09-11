@@ -4,6 +4,8 @@ import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, br
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/📦️packages/🦀️rust/📜️script.ts";
 import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧪️testkit/⚖️scale/🟦️.ts";
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -337,15 +339,14 @@ async function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string
   console.log(`described ${target.pluginId} -> ${ownerRoot}`);
 }
 //#endregion 🛂️DescriptorPublication
-/** 🎯️ Serial component compilation; descriptor extraction runs after materialization. */
-async function buildPluginCargo(target: PluginRegistryEntry, ownedTargetRoot?: string): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
+/** 🎯️ Serial component compilation against the ONE shared `cargoTargetDirectory` — descriptor extraction
+ * runs after materialization. Fine-grain locking (`.cargo/config.toml`) makes concurrent invocations of
+ * this function across agents/devs share every already-built unit, so no caller owns a private target dir. */
+async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
-  const cargoTargetRoot = ownedTargetRoot ? resolve(ownedTargetRoot) : process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
-  if (ownedTargetRoot && !isAbsolute(ownedTargetRoot)) throw new Error("plugin build target owner must be absolute");
-  if (ownedTargetRoot) mkdirSync(cargoTargetRoot, { recursive: true, mode: 0o700 });
-  const env = ownedTargetRoot ? { ...process.env, CARGO_TARGET_DIR: cargoTargetRoot, CARGO_BUILD_JOBS: "1", CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: "" } : process.env;
-  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, env, budgetMs: buildBudgetMs() }) !== 0) {
+  const cargoTargetRoot = cargoTargetDirectory(repoRoot);
+  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, env: process.env, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
   const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
@@ -471,8 +472,14 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
   if (!space || !gis || PLUGIN_BUILD_TARGETS.filter((entry) => ["space", "gis"].includes(entry.pluginId)).length !== 2) throw new Error("Test browser host registry selection is not exact");
   ensureAppleDeveloperDir();
   ensureWasmTarget();
-  const builtSpace = await buildPluginCargo(space, join(artifactRoot, "browser-host-wasi-target"));
-  const spaceComponent = ownedTestBrowserHostInput(artifactRoot, builtSpace.artifact, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Fresh Space component");
+  const builtSpace = await buildPluginCargo(space);
+  // 🔒️ `buildPluginCargo` now always writes into the ONE shared `cargoTargetDirectory` (fine-grain-locked,
+  // no private target dirs); this ticket-owned copy is what makes the artifact eligible for
+  // `ownedTestBrowserHostInput`'s bounded-regular-file-inside-`artifactRoot` check below.
+  const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));
+  mkdirSync(dirname(stagedSpacePath), { recursive: true, mode: 0o700 });
+  writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });
+  const spaceComponent = ownedTestBrowserHostInput(artifactRoot, stagedSpacePath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Fresh Space component");
   const spaceComponentSha256 = await pluginFileDigest(spaceComponent.path);
   const stagingOwner = mkdtempSync(join(artifactRoot, ".browser-host-build-"));
   try {
@@ -483,7 +490,7 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
     const shardRoot = join(roots.moduleRoot, MODULE_SHARD_DIRECTORY);
     mkdirSync(shardRoot, { recursive: true, mode: 0o700 });
     writeFileSync(join(shardRoot, SHARD_WORKER_FILE), shardWorkerSource());
-    await materializeTestBrowserPluginV1({ target: space, artifact: builtSpace.artifact, moduleRoot: roots.moduleRoot });
+    await materializeTestBrowserPluginV1({ target: space, artifact: spaceComponent.path, moduleRoot: roots.moduleRoot });
     await materializeTestBrowserPluginV1({ target: gis, artifact: component.path, descriptorPath: descriptor.path, moduleRoot: roots.moduleRoot, selectedSource: { componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 } });
     if (lstatSync(spaceComponent.path).size !== spaceComponent.size || await pluginFileDigest(spaceComponent.path) !== spaceComponentSha256) throw new Error("Fresh Space component changed during browser staging");
     if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
@@ -1320,10 +1327,34 @@ function releasePluginBuildLease(variant: string): void {
 }
 //#endregion 🔖️PluginBuildLease
 
+/** @emoji 🧊️ Stages the Nx-cached `materialize-<profile>` output (already verified fresh by
+ * `PreparationScript`, which runs first) into the live `🔌️plugin-modules/` root the wgpu native runner's
+ * own `SEMIO_PLUGIN_MODULES` env constant reads. The react path needs no such copy — its Vite dev server
+ * serves `browserModuleRoot(profile)` directly — so this exists only for the renderer that still reads a
+ * fixed filesystem path instead of an HTTP route. */
+function stageWgpuPluginModules(plugins: readonly { readonly pluginId: string }[], moduleRoot: string): void {
+  mkdirSync(pluginOutRoot, { recursive: true });
+  for (const relative of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) {
+    const destination = join(pluginOutRoot, relative);
+    rmSync(destination, { recursive: true, force: true });
+    cpSync(join(moduleRoot, relative), destination, { recursive: true });
+  }
+  const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
+  for (const plugin of plugins) {
+    const directory = moduleDirectoryName(plugin.pluginId), outDir = join(pluginOutRoot, directory);
+    rmSync(outDir, { recursive: true, force: true });
+    cpSync(join(moduleRoot, directory), outDir, { recursive: true });
+    const target = catalog.get(plugin.pluginId);
+    if (target) publishBuiltExtension(target, outDir);
+  }
+  ensureGuestSlimTypstFontsAsset();
+  writeFileSync(join(pluginOutRoot, MODULE_HOT_SWAP_FILE), `${JSON.stringify({ pluginId: "*", rebuiltAt: Date.now() })}\n`);
+}
+
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args;
-    if (args.length !== 3 || renderer !== "react" || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react <dev|release>");
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react|wgpu <dev|release>");
     const playground = playgroundCatalog.find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
     const moduleRoot = browserModuleRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
@@ -1336,6 +1367,7 @@ class PreparationScript extends BundleScript {
     }
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
+    if (renderer === "wgpu") stageWgpuPluginModules(session.plugins, moduleRoot);
     console.log(`Prepared ${variant} ${renderer} ${profile}: ${session.plugins.length} components, session, browser support and ${fonts} fonts`);
   }
 }
@@ -1379,7 +1411,14 @@ function publishActivatedExtension(target: PluginRegistryEntry, source: string, 
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     await new PreparationScript(this.root).run(args);
-    const [variant, , selectedProfile] = args, profile = selectedProfile as "dev" | "release";
+    const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "dev" | "release";
+    // 🧊️ The wgpu native runner reads `pluginOutRoot` directly (already staged by `PreparationScript`
+    // above) instead of an activation receipt served over HTTP — there is no Vite runtime root to
+    // publish extensions into, so activation IS preparation for this renderer.
+    if (renderer === "wgpu") {
+      console.log(`Activated ${variant} wgpu ${profile}`);
+      return;
+    }
     const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = browserModuleRoot(profile);
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🟦️session.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
@@ -1422,17 +1461,17 @@ class ServeScript extends BundleScript {
   }
 }
 
-/** @emoji ♻️ Brings one playground variant's react runtime up to a publishable activation receipt by
- * running the Nx target that OWNS that closure — `activate-<variant>-react-<profile>`, whose declared
+/** @emoji ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
+ * running the Nx target that OWNS that closure — `activate-<variant>-<renderer>-<profile>`, whose declared
  * `dependsOn` (`…🦑️repo/🔨️modules/📚️library/🟨️.mjs` `playgroundPreparationTargets`) is the single
  * source of truth for the chain: every selected plugin's `component-<profile>` → `materialize-<profile>`,
- * `@semio-tech/framework-plugin-web:support-<profile>`, `semio-framework-os-infinite:fonts`, the engine
- * `wasm` producers, `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
+ * `@semio-tech/framework-plugin-web:support-<profile>`, `semio-framework-os-infinite:fonts`, the renderer's
+ * own `wasm` producer(s), `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
  * Delegating rather than re-listing that closure here is what makes "reuse whatever is already fresh"
- * Nx's cache decision instead of a second, drifting freshness rule. */
-async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release"): Promise<void> {
-  const target = `@semio-tech/framework-os-dev:activate-${variant}-react-${profile}`;
-  console.log(`[dev] activating ${variant} react ${profile} via ${target}`);
+ * Nx's cache decision instead of a second, drifting freshness rule — react and wgpu share this one path. */
+async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu" = "react"): Promise<void> {
+  const target = `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
+  console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
   if (runCmdStatus("bun", ["nx", "run", target], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`Playground activation failed: ${target}`);
 }
 
@@ -1444,16 +1483,18 @@ class DevScript extends BundleScript {
     const serverArgs = variantSegment ? selectors.slice(1) : selectors;
     const plugin = variantSegment === "multi" ? DEFAULT_HOST_VARIANT : variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
     const renderer = variantSegment === "multi" ? "react" : process.env.SEMIO_RENDERER ?? "react";
+    const profile = semioBuildMode() === "ship" ? "release" : "dev";
     if (renderer === "react") {
-      const profile = semioBuildMode() === "ship" ? "release" : "dev";
       if (!served) await activatePlaygroundRuntime(plugin, profile);
       await new ServeScript(this.root).run([plugin, renderer, profile, ...serverArgs]);
       return;
     }
     if (renderer !== "wgpu") throw new Error(`Unknown development renderer: ${renderer}`);
     ensureAppleDeveloperDir();
-    await buildPlugins(plugin);
-    await buildEngineWasm(plugin, renderer);
+    // 🚀️ Consumes the Nx-cached `materialize-<profile>` outputs (`activate-<variant>-wgpu-<profile>`,
+    // generated by `playgroundPreparationTargets`) instead of a raw serial `cargo`+jco catalog build —
+    // see `WgpuPreparationScript` below for how those already-built modules reach `pluginOutRoot`.
+    if (!served) await activatePlaygroundRuntime(plugin, profile, "wgpu");
     const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = Number(process.env.S_OS_PORT ?? defaultPort);
@@ -3080,12 +3121,12 @@ async function runCollabE2eVerify(): Promise<void> {
       throw error;
     }
 
-    // 🎭️ Matches `SetupScript`'s own install location (`node_modules/.cache/ms-playwright`) — without
-    // this, Playwright falls back to the OS default cache (`~/Library/Caches/ms-playwright`), which can
-    // hold a different/older browser revision than the one this repo's `playwright` version expects
-    // (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this repo's
-    // `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
-    process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    // 🎭️ Matches `SetupScript`'s own install location (the shared cache root's `tools/ms-playwright`) —
+    // without this, Playwright falls back to the OS default cache (`~/Library/Caches/ms-playwright`),
+    // which can hold a different/older browser revision than the one this repo's `playwright` version
+    // expects (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this
+    // repo's `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
+    process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(repoRoot, "tools", "ms-playwright");
     const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     browser = await chromium.launch({ headless: true });
     const context1 = await browser.newContext();
@@ -4096,7 +4137,11 @@ const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_M
 async function prebuildParityPlugin(variant: string): Promise<void> {
   const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
   const logPath = join(parityOutDir(), `prebuild-${variant}.log`);
-  const lockRoot = resolve(process.env.PARITY_CARGO_TARGET_DIR ?? parityOutDir());
+  // 🔒️ The lock file lives beside the parity report, not in cargo's own output: every cargo invocation
+  // (this prebuild, react's and wgpu's own nx-driven builds) shares the ONE `cargoTargetDirectory`
+  // (fine-grain-locked, `.cargo/config.toml`) — this mkdir-mutex only dedupes the ~30-crate prebuild
+  // itself across concurrent parity runs, not cargo's own output location.
+  const lockRoot = parityOutDir();
   const lockPath = join(lockRoot, ".semio-parity-prebuild-lock");
   mkdirSync(lockRoot, { recursive: true });
   const lockDeadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
@@ -4122,7 +4167,6 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
         ...process.env,
         SEMIO_PLUGIN: variant,
         CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "4",
-        ...(process.env.PARITY_CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.PARITY_CARGO_TARGET_DIR } : {}),
       },
       stdio: "pipe",
     });
@@ -4156,7 +4200,6 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
       SEMIO_PARITY_QUIET_CARGO: "1",
       S_OS_PORT: String(port),
       CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "4",
-      ...(process.env.PARITY_CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.PARITY_CARGO_TARGET_DIR } : {}),
     },
     stdio: "pipe",
   });
@@ -4233,13 +4276,13 @@ function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
 //#endregion 🔖️Report
 
 //#region 🔖️Sweep
-/** 🎭️ Points playwright at the repo-local browser cache that `📜️script.ts setup` actually populates
- * (`bunx playwright install --with-deps chromium` → `node_modules/.cache/ms-playwright`). Without
- * this, `chromium.launch()` falls back to the user-global `~/Library/Caches/ms-playwright`, which
- * holds whatever an unrelated project installed — here a stale `chromium_headless_shell-1223`
- * against the required `-1234` — and every parity run dies with "Executable doesn't exist"
- * suggesting `npx playwright install`, i.e. a download, for a browser the repo had already
- * installed. The storybook runner (root `📜️script.ts`, `🔖️TestScript`) already sets this.
+/** 🎭️ Points playwright at the shared cache root's `tools/ms-playwright` that `📜️script.ts setup`
+ * actually populates (`bunx playwright install --with-deps chromium`). Without this, `chromium.launch()`
+ * falls back to the user-global `~/Library/Caches/ms-playwright`, which holds whatever an unrelated
+ * project installed — here a stale `chromium_headless_shell-1223` against the required `-1234` — and
+ * every parity run dies with "Executable doesn't exist" suggesting `npx playwright install`, i.e. a
+ * download, for a browser the repo had already installed. The storybook runner (root `📜️script.ts`,
+ * `🔖️TestScript`) already sets this.
  *
  * terra-parity-rebaseline: hoisted out of `verifyParityVariant` (the only call site that set this
  * before today) into a shared helper, and now ALSO called from `ParityTriageScript`/`ParityProbeScript`
@@ -4248,7 +4291,7 @@ function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
  * unrunnable (measured: `Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1234/...`,
  * exit 1) before this fix — never mind a 58-variant sweep. */
 function ensureParityPlaywrightBrowsersPath(): void {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+  process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
 }
 
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
@@ -5142,7 +5185,7 @@ runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardC
   .catch((error) => { window.__BENCH_WEB__.error = String((error && error.stack) || error); window.__BENCH_WEB__.done = true; });
 </script></body></html>`;
   // 🎭️ Matches `StudioE2eScript`'s own install location note above — same repo-scoped Playwright cache.
-  process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
+  process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(repoRoot, "tools", "ms-playwright");
   const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   try {

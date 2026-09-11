@@ -15,6 +15,8 @@ export interface Generation3dFlowViewModel {
   lodMode: string;
   /** 🧬️ Whether the graph is editable (always true for the editor's own Flow window). */
   editable: true;
+  /** 🛍️ Neuron kinds the open document actually holds — one record per kind, not the app catalogue. */
+  operators: readonly Generation3dFlowOperator[];
 }
 
 /** 🔌️ One port of one node, keyed by the `graph` domain's own `{nodeId}@{portId}` handle id. A port id
@@ -51,6 +53,16 @@ export interface Generation3dFlowOutline {
   interactionDomain: "graph";
   nodes: readonly Generation3dFlowOutlineNode[];
   wires: readonly Generation3dFlowOutlineWire[];
+}
+
+
+/** 🛍️ One document-derived operator the Flow canvas lays ports from — never the registered catalogue. */
+export interface Generation3dFlowOperator {
+  id: string;
+  extension: string;
+  name: string;
+  inputs: readonly { code: string; name: string }[];
+  outputs: readonly { code: string; name: string }[];
 }
 
 export const GENERATION3D_PLAY_FLOW_WINDOW_KIND_ID = "procedural-main" as const;

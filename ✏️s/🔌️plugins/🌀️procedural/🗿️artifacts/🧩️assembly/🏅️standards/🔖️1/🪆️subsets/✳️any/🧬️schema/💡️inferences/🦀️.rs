@@ -619,6 +619,17 @@ impl semio_framework::ToolJobFactory for AssemblyInferenceJobFactory {
     }
 }
 
+
+/// 💡️ Descriptor for `s.assembly` solve inference — five handcrafted facet leaves.
+pub fn assembly_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
+    ::semio_framework_schema::ArtifactInferenceDescriptor {
+        id: "s.assembly.solve",
+        inference: ::semio_framework_schema::FacetLeaves {
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+        },
+    }
+}
+
 pub fn register_assembly_inference_factory(bus: &semio_framework::ActionBus) -> Result<(), semio_framework::ToolRegistrationError> {
     bus.register_once(AssemblyInferenceJobFactory::default())
 }

@@ -3,12 +3,14 @@ import { createHash, createHmac, randomBytes, timingSafeEqual, webcrypto } from 
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
   decodeClientFrame,
@@ -858,8 +860,7 @@ async function freeLoopbackPort(): Promise<number> {
 }
 
 function hubBinaryPath(repoRoot: string): string {
-  const target = process.env.CARGO_TARGET_DIR ? resolve(process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
-  return join(target, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+  return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
 }
 
 type LocalHubRun = {
@@ -1180,8 +1181,7 @@ export async function deliverMcpCredentialEnvelope(executable: string, args: rea
 }
 
 function nativeWgpuExecutable(repoRoot: string): string {
-  const targetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
-  return join(targetRoot, "debug", process.platform === "win32" ? "semio-wgpu-native.exe" : "semio-wgpu-native");
+  return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "semio-wgpu-native.exe" : "semio-wgpu-native");
 }
 
 function mcpExecutable(repoRoot: string): string {
@@ -5129,13 +5129,15 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
 }
 
 const HEADLESS_STDIO_METADATA_MAX_BYTES = 2 * 1024 * 1024 * 1024;
+/** 🧾️ One dependency-closure member captured into the private deps directory. */
+type HeadlessStdioMetadataArtifactV1 = Readonly<{ originalPath: string; capturedPath: string; byteLength: number; sha256: string }>;
 type HeadlessStdioMetadataCaptureV1 = Readonly<{
-  schema: "semio.hub.headless-stdio-metadata-capture/v1";
+  schema: "semio.hub.headless-stdio-metadata-capture/v2";
   sourcePath: string;
   features: readonly string[];
-  originalPath: string;
   capturedPath: string;
-  dependencyRoot: string;
+  depsDirectory: string;
+  artifacts: readonly HeadlessStdioMetadataArtifactV1[];
   byteLength: number;
   sha256: string;
 }>;
@@ -5172,58 +5174,94 @@ function proveHeadlessStdioLaunchIsolation(repoRoot: string): void {
   if (new Set(rows.map((row) => row.artifactRoot)).size !== rows.length || new Set(rows.map((row) => row.cargoTargetDir)).size !== rows.length) throw new Error("headless Stdio independently launchable commands share build ownership");
 }
 
-/** 📦️ Captures one exact Cargo metadata artifact into a command-private immutable input. */
+/**
+ * 📦️ Captures one Cargo compiler-artifact's full dependency closure into one command-private, immutable deps
+ * directory — layout-independent: every original path is taken from `build.stdout` compiler-artifact records,
+ * never from a `<target>/debug/deps` convention (the new build-dir layout keeps no such directory).
+ */
 function captureHeadlessStdioMetadata(
-  input: Readonly<{ artifactRoot: string; cargoTargetDir: string; runRoot: string; sourcePath: string; originalPath: string; features: readonly string[]; check: () => void; progress?: (stage: "read" | "copy", completed: number, total: number) => void }>,
+  input: Readonly<{
+    artifactRoot: string;
+    cargoTargetDir: string;
+    runRoot: string;
+    sourcePath: string;
+    stdioOriginalPath: string;
+    dependencyOriginalPaths: readonly string[];
+    features: readonly string[];
+    check: () => void;
+    progress?: (stage: "read" | "copy", completed: number, total: number) => void;
+  }>,
   reader: StableBuildFileReaderV1 = readStableBuildFile,
 ): HeadlessStdioMetadataCaptureV1 {
-  const roots = headlessStdioOwnedCargoTarget(input.artifactRoot, input.cargoTargetDir), dependencyRoot = join(roots.cargoTargetDir, "debug", "deps"), originalPath = resolve(input.originalPath), runRoot = resolve(input.runRoot);
-  if (dirname(originalPath) !== dependencyRoot || !isAbsolute(input.sourcePath) || relative(roots.artifactRoot, runRoot).startsWith("..") || isAbsolute(relative(roots.artifactRoot, runRoot))) throw new Error("headless Stdio metadata paths are outside their exact command owner");
-  const targetInfo = lstatSync(roots.cargoTargetDir), dependencyInfo = lstatSync(dependencyRoot);
-  if (!targetInfo.isDirectory() || targetInfo.isSymbolicLink() || !dependencyInfo.isDirectory() || dependencyInfo.isSymbolicLink() || realpathSync(roots.cargoTargetDir) !== roots.cargoTargetDir || realpathSync(dependencyRoot) !== dependencyRoot) throw new Error("headless Stdio metadata dependency owner is not a private regular directory");
+  const roots = headlessStdioOwnedCargoTarget(input.artifactRoot, input.cargoTargetDir), runRoot = resolve(input.runRoot);
+  if (!isAbsolute(input.sourcePath) || relative(roots.artifactRoot, runRoot).startsWith("..") || isAbsolute(relative(roots.artifactRoot, runRoot))) throw new Error("headless Stdio metadata paths are outside their exact command owner");
   input.check();
-  const original = lstatSync(originalPath);
-  if (!original.isFile() || original.isSymbolicLink()) throw new Error("headless Stdio metadata is not a regular dependency artifact");
-  let readProgress = 0;
-  const bytes = reader(originalPath, HEADLESS_STDIO_METADATA_MAX_BYTES, { remaining: HEADLESS_STDIO_METADATA_MAX_BYTES }, () => {
-    input.check();
-    input.progress?.("read", readProgress, original.size);
-    readProgress = Math.min(original.size, readProgress + 64 * 1024);
+  const stdioOriginalPath = resolve(input.stdioOriginalPath);
+  const originals = [stdioOriginalPath, ...input.dependencyOriginalPaths.map((path) => resolve(path))].filter((path, index, all) => all.indexOf(path) === index);
+  if (originals.length < 1 || !originals.every((path) => isAbsolute(path))) throw new Error("headless Stdio dependency closure requires absolute original artifact paths");
+  if (new Set(originals.map((path) => basename(path))).size !== originals.length) throw new Error("headless Stdio dependency closure has colliding artifact names");
+  const depsDirectory = join(runRoot, "deps");
+  mkdirSync(depsDirectory, { recursive: true, mode: 0o700 });
+  const sizes = originals.map((path) => {
+    const original = lstatSync(path);
+    if (!original.isFile() || original.isSymbolicLink()) throw new Error("headless Stdio metadata is not a regular dependency artifact");
+    return original.size;
   });
-  input.progress?.("read", original.size, original.size);
-  const capturedPath = join(runRoot, "libsemio_s_plugin_stdio.rmeta");
-  const output = openSync(capturedPath, "wx", 0o600), digest = createHash("sha256");
-  let offset = 0, complete = false;
-  try {
-    while (offset < bytes.byteLength) {
+  const totalBytes = sizes.reduce((sum, size) => sum + size, 0);
+  if (totalBytes > HEADLESS_STDIO_METADATA_MAX_BYTES) throw new Error("headless Stdio dependency closure exceeds its bounded byte budget");
+  const artifacts: HeadlessStdioMetadataArtifactV1[] = [];
+  let readProgress = 0, copyProgress = 0;
+  for (const originalPath of originals) {
+    input.check();
+    const bytes = reader(originalPath, HEADLESS_STDIO_METADATA_MAX_BYTES, { remaining: HEADLESS_STDIO_METADATA_MAX_BYTES - readProgress }, () => {
       input.check();
-      const count = writeSync(output, bytes, offset, Math.min(64 * 1024, bytes.byteLength - offset), offset);
-      if (!count) throw new Error("headless Stdio private metadata copy stopped making progress");
-      digest.update(bytes.subarray(offset, offset + count));
-      offset += count;
-      input.progress?.("copy", offset, bytes.byteLength);
+      input.progress?.("read", readProgress, totalBytes);
+    });
+    readProgress += bytes.byteLength;
+    input.progress?.("read", readProgress, totalBytes);
+    const capturedPath = join(depsDirectory, basename(originalPath));
+    const output = openSync(capturedPath, "wx", 0o600), digest = createHash("sha256");
+    let offset = 0, complete = false;
+    try {
+      while (offset < bytes.byteLength) {
+        input.check();
+        const count = writeSync(output, bytes, offset, Math.min(64 * 1024, bytes.byteLength - offset), offset);
+        if (!count) throw new Error("headless Stdio private metadata copy stopped making progress");
+        digest.update(bytes.subarray(offset, offset + count));
+        offset += count;
+        copyProgress += count;
+        input.progress?.("copy", copyProgress, totalBytes);
+      }
+      complete = true;
+    } finally {
+      closeSync(output);
+      if (!complete) rmSync(capturedPath, { force: true });
     }
-    complete = true;
-  } finally {
-    closeSync(output);
-    if (!complete) rmSync(capturedPath, { force: true });
+    const captured = lstatSync(capturedPath), sha256 = digest.digest("hex");
+    if (!captured.isFile() || captured.isSymbolicLink() || captured.size !== bytes.byteLength) throw new Error("headless Stdio private metadata copy differs from its retained source descriptor");
+    artifacts.push({ originalPath, capturedPath, byteLength: bytes.byteLength, sha256 });
   }
-  const captured = lstatSync(capturedPath), sha256 = digest.digest("hex"), features = [...input.features].sort();
-  if (!captured.isFile() || captured.isSymbolicLink() || captured.size !== bytes.byteLength) throw new Error("headless Stdio private metadata copy differs from its retained source descriptor");
-  const receipt: HeadlessStdioMetadataCaptureV1 = { schema: "semio.hub.headless-stdio-metadata-capture/v1", sourcePath: resolve(input.sourcePath), features, originalPath, capturedPath, dependencyRoot, byteLength: bytes.byteLength, sha256 };
+  const stdioArtifact = artifacts.find((artifact) => artifact.originalPath === stdioOriginalPath);
+  if (!stdioArtifact) throw new Error("headless Stdio captured closure is missing its own compiled metadata");
+  const features = [...input.features].sort();
+  const receipt: HeadlessStdioMetadataCaptureV1 = { schema: "semio.hub.headless-stdio-metadata-capture/v2", sourcePath: resolve(input.sourcePath), features, capturedPath: stdioArtifact.capturedPath, depsDirectory, artifacts, byteLength: totalBytes, sha256: stdioArtifact.sha256 };
   writeFileSync(join(runRoot, "stdio.capture.json"), JSON.stringify(receipt), { flag: "wx", mode: 0o600 });
   return receipt;
 }
 
 /** 🔗️ Builds one exact metadata import command with no alternate dependency resolver. */
 function headlessStdioImportArguments(capture: HeadlessStdioMetadataCaptureV1, dependencyRoots: readonly string[], input: string, output: string): string[] {
-  if (dependencyRoots.length !== 1 || resolve(dependencyRoots[0]!) !== capture.dependencyRoot) throw new Error("headless Stdio imports require exactly their captured private dependency root");
+  if (dependencyRoots.length !== 1 || resolve(dependencyRoots[0]!) !== capture.depsDirectory) throw new Error("headless Stdio imports require exactly their captured private dependency root");
   const info = lstatSync(capture.capturedPath);
-  if (!info.isFile() || info.isSymbolicLink()) throw new Error("headless Stdio captured metadata is not a regular file");
-  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_s_plugin_stdio=${capture.capturedPath}`, "-L", `dependency=${capture.dependencyRoot}`, "-o", output, input];
+  if (!info.isFile() || info.isSymbolicLink() || dirname(capture.capturedPath) !== capture.depsDirectory) throw new Error("headless Stdio captured metadata is not a regular file inside its private dependency root");
+  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_s_plugin_stdio=${capture.capturedPath}`, "-L", `dependency=${capture.depsDirectory}`, "-o", output, input];
 }
 
-/** 🧪️ Proves private capture stability, replacement refusal and command-root isolation without Cargo. */
+/**
+ * 🧪️ Proves private capture stability, closure completeness, replacement refusal and command-root isolation
+ * without Cargo — original artifacts are deliberately scattered across distinct directories (one per simulated
+ * build-dir compilation unit) to prove the capture never assumes a `<target>/debug/deps` layout.
+ */
 function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
   if (!isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("headless Stdio capture law requires one ticket-generated artifact root");
   mkdirSync(artifactRoot, { recursive: true });
@@ -5231,42 +5269,69 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
   try {
     const captures: HeadlessStdioMetadataCaptureV1[] = [];
     for (const [name, payload] of [["full", "full-metadata"], ["stdio-only", "stdio-only-metadata"]] as const) {
-      const commandRoot = join(lawRoot, name), cargoTargetDir = join(commandRoot, "cargo-target"), dependencyRoot = join(cargoTargetDir, "debug", "deps"), runRoot = join(commandRoot, "headless-imports-proof"), sourcePath = join(commandRoot, "stdio.rs"), originalPath = join(dependencyRoot, "libsemio_s_plugin_stdio.rmeta");
-      mkdirSync(dependencyRoot, { recursive: true });
+      const commandRoot = join(lawRoot, name), cargoTargetDir = join(commandRoot, "cargo-target"), runRoot = join(commandRoot, "headless-imports-proof"), sourcePath = join(commandRoot, "stdio.rs");
+      const stdioUnit = join(commandRoot, "build-dir", "debug", "build", "semio-s-plugin-stdio-aaaa", "out"), depUnitOne = join(commandRoot, "build-dir", "debug", "build", "serde-bbbb", "out"), depUnitTwo = join(commandRoot, "build-dir", "debug", "build", "blake3-cccc", "out");
+      const stdioOriginalPath = join(stdioUnit, "libsemio_s_plugin_stdio.rmeta"), depOne = join(depUnitOne, "libserde.rmeta"), depTwo = join(depUnitTwo, "libblake3.rmeta");
+      mkdirSync(stdioUnit, { recursive: true });
+      mkdirSync(depUnitOne, { recursive: true });
+      mkdirSync(depUnitTwo, { recursive: true });
+      mkdirSync(cargoTargetDir, { recursive: true });
       mkdirSync(runRoot);
       writeFileSync(sourcePath, "pub const SOURCE: u8 = 1;\n", { flag: "wx", mode: 0o600 });
-      writeFileSync(originalPath, payload, { flag: "wx", mode: 0o600 });
-      captures.push(captureHeadlessStdioMetadata({ artifactRoot: commandRoot, cargoTargetDir, runRoot, sourcePath, originalPath, features: ["full-artifact-catalog"], check() {} }));
+      writeFileSync(stdioOriginalPath, payload, { flag: "wx", mode: 0o600 });
+      writeFileSync(depOne, `${payload}-serde`, { flag: "wx", mode: 0o600 });
+      writeFileSync(depTwo, `${payload}-blake3`, { flag: "wx", mode: 0o600 });
+      captures.push(captureHeadlessStdioMetadata({ artifactRoot: commandRoot, cargoTargetDir, runRoot, sourcePath, stdioOriginalPath, dependencyOriginalPaths: [depOne, depTwo, stdioOriginalPath], features: ["full-artifact-catalog"], check() {} }));
     }
-    if (captures[0]!.capturedPath === captures[1]!.capturedPath || captures[0]!.sha256 === captures[1]!.sha256) throw new Error("headless Stdio command captures are not isolated");
+    if (captures[0]!.depsDirectory === captures[1]!.depsDirectory || captures[0]!.sha256 === captures[1]!.sha256) throw new Error("headless Stdio command captures are not isolated");
+    if (captures[0]!.artifacts.length !== 3 || !captures[0]!.artifacts.every((artifact) => dirname(artifact.capturedPath) === captures[0]!.depsDirectory)) throw new Error("headless Stdio capture did not land its full dependency closure in one private directory");
     const firstBytes = readFileSync(captures[0]!.capturedPath);
-    renameSync(captures[0]!.originalPath, `${captures[0]!.originalPath}.replaced`);
-    writeFileSync(captures[0]!.originalPath, "replacement", { flag: "wx", mode: 0o600 });
+    const firstStdioOriginal = captures[0]!.artifacts.find((artifact) => artifact.capturedPath === captures[0]!.capturedPath)!.originalPath;
+    renameSync(firstStdioOriginal, `${firstStdioOriginal}.replaced`);
+    writeFileSync(firstStdioOriginal, "replacement", { flag: "wx", mode: 0o600 });
     if (createHash("sha256").update(firstBytes).digest("hex") !== captures[0]!.sha256 || !readFileSync(captures[0]!.capturedPath).equals(firstBytes)) throw new Error("headless Stdio private capture followed a replaced live target");
-    const args = headlessStdioImportArguments(captures[0]!, [captures[0]!.dependencyRoot], join(lawRoot, "probe.rs"), join(lawRoot, "probe.rmeta"));
+    const args = headlessStdioImportArguments(captures[0]!, [captures[0]!.depsDirectory], join(lawRoot, "probe.rs"), join(lawRoot, "probe.rmeta"));
     if (args.filter((value) => value === "-L").length !== 1 || args.some((value) => value.includes("executable"))) throw new Error("headless Stdio import command admitted an alternate dependency directory");
     let rejectedSecondRoot = false;
-    try { headlessStdioImportArguments(captures[0]!, [captures[0]!.dependencyRoot, dirname(captures[0]!.capturedPath)], join(lawRoot, "probe.rs"), join(lawRoot, "probe.rmeta")); } catch { rejectedSecondRoot = true; }
+    try { headlessStdioImportArguments(captures[0]!, [captures[0]!.depsDirectory, dirname(captures[0]!.capturedPath)], join(lawRoot, "probe.rs"), join(lawRoot, "probe.rmeta")); } catch { rejectedSecondRoot = true; }
     if (!rejectedSecondRoot) throw new Error("headless Stdio import command admitted a second dependency root");
     let rejectedOutside = false;
     try { headlessStdioOwnedCargoTarget(join(lawRoot, "full"), join(lawRoot, "foreign-target")); } catch { rejectedOutside = true; }
     if (!rejectedOutside) throw new Error("headless Stdio command admitted an externally owned Cargo target");
-    const raceRoot = join(lawRoot, "race"), raceTarget = join(raceRoot, "cargo-target"), raceDeps = join(raceTarget, "debug", "deps"), raceRun = join(raceRoot, "headless-imports-proof"), raceSource = join(raceRoot, "stdio.rs"), raceMetadata = join(raceDeps, "libsemio_s_plugin_stdio.rmeta");
-    mkdirSync(raceDeps, { recursive: true });
+    const collisionRoot = join(lawRoot, "collision"), collisionTarget = join(collisionRoot, "cargo-target"), collisionRun = join(collisionRoot, "headless-imports-proof"), collisionSource = join(collisionRoot, "stdio.rs");
+    const collisionStdioUnit = join(collisionRoot, "build-dir", "debug", "build", "stdio-aaaa", "out"), collisionDepUnit = join(collisionRoot, "build-dir", "debug", "build", "stdio-bbbb", "out");
+    mkdirSync(collisionStdioUnit, { recursive: true });
+    mkdirSync(collisionDepUnit, { recursive: true });
+    mkdirSync(collisionTarget, { recursive: true });
+    mkdirSync(collisionRun);
+    writeFileSync(collisionSource, "pub const SOURCE: u8 = 1;\n", { flag: "wx", mode: 0o600 });
+    const collisionStdio = join(collisionStdioUnit, "libsemio_s_plugin_stdio.rmeta"), collisionDuplicateName = join(collisionDepUnit, "libsemio_s_plugin_stdio.rmeta");
+    writeFileSync(collisionStdio, "stdio", { flag: "wx", mode: 0o600 });
+    writeFileSync(collisionDuplicateName, "stdio-again", { flag: "wx", mode: 0o600 });
+    let rejectedCollision = false;
+    try { captureHeadlessStdioMetadata({ artifactRoot: collisionRoot, cargoTargetDir: collisionTarget, runRoot: collisionRun, sourcePath: collisionSource, stdioOriginalPath: collisionStdio, dependencyOriginalPaths: [collisionDuplicateName], features: ["full-artifact-catalog"], check() {} }); } catch { rejectedCollision = true; }
+    if (!rejectedCollision) throw new Error("headless Stdio capture admitted two dependency-closure artifacts with the same file name");
+    const raceRoot = join(lawRoot, "race"), raceTarget = join(raceRoot, "cargo-target"), raceRun = join(raceRoot, "headless-imports-proof"), raceSource = join(raceRoot, "stdio.rs");
+    const raceStdioUnit = join(raceRoot, "build-dir", "debug", "build", "stdio-aaaa", "out"), raceDepUnit = join(raceRoot, "build-dir", "debug", "build", "serde-bbbb", "out");
+    const raceStdio = join(raceStdioUnit, "libsemio_s_plugin_stdio.rmeta"), raceDep = join(raceDepUnit, "libserde.rmeta");
+    mkdirSync(raceStdioUnit, { recursive: true });
+    mkdirSync(raceDepUnit, { recursive: true });
+    mkdirSync(raceTarget, { recursive: true });
     mkdirSync(raceRun);
     writeFileSync(raceSource, "pub const SOURCE: u8 = 1;\n", { flag: "wx", mode: 0o600 });
-    writeFileSync(raceMetadata, Buffer.alloc(128 * 1024, 7), { flag: "wx", mode: 0o600 });
+    writeFileSync(raceStdio, Buffer.alloc(0), { flag: "wx", mode: 0o600 });
+    writeFileSync(raceDep, Buffer.alloc(128 * 1024, 9), { flag: "wx", mode: 0o600 });
     let checks = 0, refusedRace = false;
     const racingReader: StableBuildFileReaderV1 = (path, maximum, admission, check) => readStableBuildFile(path, maximum, admission, () => {
       check();
-      if (++checks === 2) {
-        renameSync(raceMetadata, `${raceMetadata}.replaced`);
-        writeFileSync(raceMetadata, "raced", { flag: "wx", mode: 0o600 });
+      if (++checks === 3) {
+        renameSync(raceDep, `${raceDep}.replaced`);
+        writeFileSync(raceDep, "raced", { flag: "wx", mode: 0o600 });
       }
     });
-    try { captureHeadlessStdioMetadata({ artifactRoot: raceRoot, cargoTargetDir: raceTarget, runRoot: raceRun, sourcePath: raceSource, originalPath: raceMetadata, features: ["full-artifact-catalog"], check() {} }, racingReader); } catch { refusedRace = true; }
+    try { captureHeadlessStdioMetadata({ artifactRoot: raceRoot, cargoTargetDir: raceTarget, runRoot: raceRun, sourcePath: raceSource, stdioOriginalPath: raceStdio, dependencyOriginalPaths: [raceDep], features: ["full-artifact-catalog"], check() {} }, racingReader); } catch { refusedRace = true; }
     if (!refusedRace) throw new Error("headless Stdio metadata replacement during capture was accepted");
-    console.log("headless-stdio-metadata-capture-oracle: private-commands=2 replacement-stable=1 replacement-during-capture-denied=1 second-dependency-root-denied=1 outside-target-denied=1");
+    console.log("headless-stdio-metadata-capture-oracle: private-commands=2 closure-complete=1 replacement-stable=1 replacement-during-capture-denied=1 second-dependency-root-denied=1 outside-target-denied=1 colliding-artifact-name-denied=1");
   } finally {
     rmSync(lawRoot, { recursive: true, force: true });
   }
@@ -5280,10 +5345,24 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
   const report = lstatSync(reportPath);
   if (!report.isFile() || report.isSymbolicLink() || report.size > 256 * 1024 * 1024) throw new Error("headless Stdio Cargo report is not bounded regular output");
   const sourcePath = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs");
-  const records = readFileSync(reportPath, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reason === "compiler-artifact" && row.target?.name === "semio_s_plugin_stdio" && resolve(row.target.src_path) === sourcePath);
-  if (records.length !== 1 || JSON.stringify([...records[0].features].sort()) !== JSON.stringify([...fixture.features].sort())) throw new Error("headless Stdio build did not report the exact catalog-only feature closure");
-  const libraries = records[0].filenames.filter((path: unknown) => typeof path === "string" && path.endsWith(".rmeta")) as string[];
+  const records = readFileSync(reportPath, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reason === "compiler-artifact");
+  const stdio = records.filter((row) => row.target?.name === "semio_s_plugin_stdio" && resolve(row.target.src_path) === sourcePath);
+  if (stdio.length !== 1 || JSON.stringify([...stdio[0].features].sort()) !== JSON.stringify([...fixture.features].sort())) throw new Error("headless Stdio build did not report the exact catalog-only feature closure");
+  const libraries = stdio[0].filenames.filter((path: unknown) => typeof path === "string" && path.endsWith(".rmeta")) as string[];
   if (libraries.length !== 1) throw new Error("headless Stdio build did not report one full metadata artifact");
+  // 🕸️ Every compiler-artifact record (not only Stdio's own) carries the rmeta/rlib/proc-macro-dylib the linker
+  // closure needs; the new build-dir layout scatters them across per-unit-hash directories, so the JSON messages
+  // are the only reliable source of truth. https://doc.rust-lang.org/cargo/reference/unstable.html#build-dir
+  const dependencyArtifacts = new Set<string>();
+  for (const row of records) {
+    const filenames = Array.isArray(row.filenames) ? row.filenames : [];
+    const isProcMacro = Array.isArray(row.target?.kind) && row.target.kind.includes("proc-macro");
+    for (const filePath of filenames) {
+      if (typeof filePath !== "string") continue;
+      if (filePath.endsWith(".rmeta") || filePath.endsWith(".rlib") || (isProcMacro && /\.(so|dylib|dll)$/u.test(filePath))) dependencyArtifacts.add(resolve(filePath));
+    }
+  }
+  if (dependencyArtifacts.size < 1) throw new Error("headless Stdio build reported no dependency-closure artifacts");
   const runRoot = mkdtempSync(join(receipt.artifactDir, "headless-imports-"));
   let cancelled = false;
   const cancel = () => { cancelled = true; };
@@ -5292,7 +5371,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
   try {
     let progressStage: "read" | "copy" | undefined, progressReported = -64 * 1024 * 1024;
     const capture = captureHeadlessStdioMetadata({
-      artifactRoot: dirname(dirname(receipt.artifactDir)), cargoTargetDir: receipt.cargoTargetDir, runRoot, sourcePath, originalPath: libraries[0]!, features: records[0].features,
+      artifactRoot: dirname(dirname(receipt.artifactDir)), cargoTargetDir: receipt.cargoTargetDir, runRoot, sourcePath, stdioOriginalPath: libraries[0]!, dependencyOriginalPaths: [...dependencyArtifacts], features: stdio[0].features,
       check() { if (cancelled) throw new Error("headless Stdio imports cancelled"); },
       progress(stage, completed, total) {
         if (stage === progressStage && completed !== total && completed - progressReported < 64 * 1024 * 1024) return;
@@ -5307,7 +5386,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
       if (cancelled) throw new Error("headless Stdio imports cancelled");
       const input = join(runRoot, `${row.id}.rs`);
       writeFileSync(input, row.source + "\n", { flag: "wx", mode: 0o600 });
-      const result = await runExactCargoLawProcess("rustc", headlessStdioImportArguments(capture, [capture.dependencyRoot], input, join(runRoot, `${row.id}.rmeta`)), {
+      const result = await runExactCargoLawProcess("rustc", headlessStdioImportArguments(capture, [capture.depsDirectory], input, join(runRoot, `${row.id}.rmeta`)), {
         cwd: repoRoot, env: exactCargoStageEnvironments().env, budgetMs: 60_000, maxOutputBytes: 1024 * 1024,
         stdoutPath: join(runRoot, `${row.id}.stdout`), stderrPath: join(runRoot, `${row.id}.stderr`), cancelled: () => cancelled,
       });
@@ -12860,7 +12939,6 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       producerStart < 0 ||
       producerEnd < 0 ||
       !producer.includes('CARGO_INCREMENTAL: "0"') ||
-      !producer.includes('RUSTC_WRAPPER: ""') ||
       !producer.includes("pluginWasmArtifactPath(") ||
       !producer.includes("verifyFreshCatalogPackageV1(") ||
       !producer.includes("readStableBuildFile(cargoComponent") ||
@@ -12971,13 +13049,13 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
       const hubTarget = join(artifactPath, "hub-target");
       mkdirSync(hubTarget, { recursive: true, mode: 0o700 });
-      const hubEnv = { ...process.env, CARGO_TARGET_DIR: hubTarget, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" };
+      const hubEnv = { ...process.env, CARGO_TARGET_DIR: hubTarget, CARGO_INCREMENTAL: "0" };
       const hubBuildRoot = mkdtempSync(join(artifactPath, "hub-build-"));
       const hubBuildControl = trustedBootstrapBuildControl(buildBudgetMs());
       console.log("trusted-native-hub build:start artifacts=" + hubBuildRoot);
       try {
         const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "-p", "semio-framework-os-mcp", "--bins", "--features", "semio-hub/test-support"] : ["--bin", "os-hub"];
-        const result = await runExactCargoLawProcess("cargo", ["--config", 'build.rustc-wrapper=""', "build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
+        const result = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
           cwd: this.root,
           env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
           budgetMs: buildBudgetMs(),
@@ -13776,7 +13854,7 @@ async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixt
   const browserDiagnostics: string[] = [];
   const abort = AbortSignal.timeout(fixture.limits.journeyMs);
   try {
-    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
     const controllerPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx");
     const bundle = await Bun.build({ entrypoints: [controllerPath], target: "browser", format: "esm", sourcemap: "none" });
     if (!bundle.success || bundle.outputs.length !== 1) throw new Error(`directory Home browser controller bundle failed: ${bundle.logs.map(String).join("; ") || "unexpected output closure"}`);
@@ -13989,7 +14067,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
   let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
   const diagnostics: string[] = [];
   try {
-    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
     const { chromium } = await import("playwright");
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();

@@ -1,0 +1,56 @@
+# 🧬️ Assembly snapshot schema — artifact-lane fields only.
+
+type AssemblySlot {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  pinnedModuleId: String
+}
+
+type AssemblySlotEdge {
+  id: String!
+  fromSlotId: String!
+  toSlotId: String!
+}
+
+type AssemblyModuleWeight {
+  moduleId: String!
+  weight: Float!
+}
+
+scalar SemioValue
+
+type AssemblyRule {
+  id: String!
+  moduleAId: String!
+  moduleBId: String!
+  allowed: Boolean!
+  params: SemioValue!
+}
+
+type ArtifactChildHandle {
+  childId: String!
+  target: ArtifactRef!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type AssemblySnapshot {
+  schema: String! @state(class: ARTIFACT)
+  seed: Float! @state(class: ARTIFACT)
+  slots: [AssemblySlot!]! @state(class: ARTIFACT)
+  edges: [AssemblySlotEdge!]! @state(class: ARTIFACT)
+  modules: [ArtifactChildHandle!]! @state(class: ARTIFACT)
+  weights: [AssemblyModuleWeight!]! @state(class: ARTIFACT)
+  rules: [AssemblyRule!]! @state(class: ARTIFACT)
+}

@@ -86,12 +86,6 @@ const PROBE_ENGINES: Record<string, (typeof ENGINES)[keyof typeof ENGINES]> = {
 //#endregion 🧬️Contract
 
 //#region 🚀️Entry
-/** 🏭️ `--offline` and an agent-scoped target directory: probes run inside a test sweep alongside peer
- *  sessions, and a shared cargo target directory is the single biggest source of lock contention. */
-function cargoTargetDir(): string {
-  return process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(import.meta.dir, "🦀️oracle-probe", "target"), "oracle-probe");
-}
-
 function emit(report: ProbeReport): number {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   return report.status === "failed" ? 1 : 0;
@@ -116,10 +110,11 @@ function main(argv: readonly string[]): number {
     return emit(envelope("failed", {}, [{ severity: "error", message: `unknown probe ${probe || "(none)"}`, detail: `known: ${Object.keys(PROBE_ENGINES).join(", ")}` }]));
   }
 
+  // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
+  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
   const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...rest], {
     cwd: join(import.meta.dir, "🦀️oracle-probe"),
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDir() },
   });
   if (run.status !== 0) {
     // 🚫️A reader that cannot run must SAY SO and exit non-zero. Emitting a plausible-looking empty

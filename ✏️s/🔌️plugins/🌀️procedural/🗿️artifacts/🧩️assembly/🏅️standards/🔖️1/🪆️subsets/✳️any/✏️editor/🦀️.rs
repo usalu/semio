@@ -45,6 +45,15 @@ pub enum AssemblyEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
 }
+
+impl protocol::OpBinary for AssemblyEditorCommand {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
 //#endregion 🔖️Command
 
 //#region 🔖️Editor

@@ -52,7 +52,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "wasm": {
       "executor": "nx:run-commands",

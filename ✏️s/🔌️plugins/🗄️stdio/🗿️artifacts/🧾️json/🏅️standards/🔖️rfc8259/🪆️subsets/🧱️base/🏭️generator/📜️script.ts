@@ -29,6 +29,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -49,7 +51,7 @@ const KINDS = [
 const generate = (): void => {
   const built = spawnSync("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error("engine build failed");
-  const run = spawnSync(join(engine, "target", "release", process.platform === "win32" ? "generate.exe" : "generate"), [fixtures], { stdio: "inherit" });
+  const run = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate"), [fixtures], { stdio: "inherit" });
   if (run.status !== 0) throw new Error("fixture generation failed");
 };
 //#endregion 🏭️Generate

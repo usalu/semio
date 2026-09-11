@@ -41,13 +41,15 @@ import { createHash } from "node:crypto";
 import { readdirSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🦀️engine");
 const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
-const ENGINE_BIN = join(ENGINE_DIR, "target", "release", "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const APPLICATION_FIXTURES_DIR = join(HERE, "..", "..", "🧩️application", "🧫️fixtures");
 const COMMENT_FIXTURES_DIR = join(HERE, "..", "..", "💬️comment", "🧫️fixtures");
@@ -358,7 +360,7 @@ print(kind + ': written')
     const readerDir = join(HERE, "..", "🔬️probes", "🦀️extension-reader");
     const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
     if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
-    const readerBin = join(readerDir, "target", "release", "reader");
+    const readerBin = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");
     const explicitRoot = flagValue(rest, "--out") ?? fixtureOutRoot ?? null;
     if (command === "extensions") {
       const failures: string[] = [];

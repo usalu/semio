@@ -43,7 +43,8 @@
         "cwd": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts regenerate-example",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "describe": {
       "executor": "nx:run-commands",
@@ -51,7 +52,11 @@
         "cwd": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🔣️.json"
+      ]
     }
   }
 }

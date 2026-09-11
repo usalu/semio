@@ -34,12 +34,14 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🦀️lopdf-engine");
-const ENGINE_BIN = join(ENGINE_DIR, "target", "release", "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const SUBSET = "x";
 const ORACLE_ID = "lopdf-pdf-1-7-x-mutate-reader";

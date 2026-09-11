@@ -28,6 +28,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -55,7 +57,7 @@ async function sha256(path: string): Promise<string> {
 //#region 🚪️Commands
 function generate(outRoot: string): number {
   build();
-  const result = spawnSync(join(ENGINE, "target", "release", "generate"), [outRoot], { stdio: "inherit" });
+  const result = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
   return result.status ?? 1;
 }
 

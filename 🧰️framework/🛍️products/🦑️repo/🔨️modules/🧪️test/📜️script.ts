@@ -14,7 +14,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, delimiter, join, relative, sep } from "node:path";
-import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, buildBudgetMs, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs, runCmd, orchestratorBudgetOpts } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, buildBudgetMs, formatBreachReport, getRepoMetaDir, repoToolCacheEnv, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs, runCmd, orchestratorBudgetOpts } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import {
   type ClassifiedDependency,
   type CoverageMetrics,
@@ -495,7 +496,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
     command: "",
     args: ["--plan", planPath, "--out", outPath],
     cwd: repoRoot,
-    env: { ...process.env, CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR ?? join(agentCacheRoot(repoRoot), "cargo-test-hosts") },
+    env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot) },
     hostDir: dir,
     problems,
     preparation: {
@@ -513,7 +514,7 @@ function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, role: T
   writeFileSync(join(dir, "go.mod"), ["// 🤖️ Generated — safe to delete, never commit.", "module semio.test/host", "", "go 1.23", "", "require semio.tech/repo/test v0.0.0", "", `replace semio.tech/repo/test => ${join(repoRoot, GO_PACKAGE_REL)}`, ""].join("\n"));
   writeFileSync(join(dir, "adapter.go"), readFileSync(adapterAbs, "utf8").replace(/^package\s+\w+/m, "package main"));
   writeFileSync(join(dir, "main.go"), ["// 🤖️ Generated native entrypoint.", "package main", "", 'import host "semio.tech/repo/test"', "", "func main() {", "\thost.RunMain(Adapter())", "}", ""].join("\n"));
-  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: { ...process.env, GOFLAGS: "-mod=mod", GOWORK: "off" }, hostDir: dir, problems: [] };
+  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repoToolCacheEnv(repoRoot, { ...process.env, GOFLAGS: "-mod=mod", GOWORK: "off" }), hostDir: dir, problems: [] };
 }
 
 /**

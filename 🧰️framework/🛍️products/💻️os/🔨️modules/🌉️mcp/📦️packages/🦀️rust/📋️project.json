@@ -69,7 +69,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-check"
-      }
+      },
+      "outputs": []
     },
     "inference-discovery-oracle": {
       "executor": "nx:run-commands",
@@ -85,7 +86,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-discovery-check"
-      }
+      },
+      "outputs": []
     },
     "hub-live-catalog-oracle": {
       "executor": "nx:run-commands",
@@ -125,7 +127,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-check"
-      }
+      },
+      "outputs": []
     },
     "canonical-checkpoint-resource-native-check": {
       "executor": "nx:run-commands",
@@ -133,7 +136,8 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
-      }
+      },
+      "outputs": []
     },
     "schema-mirror": {
       "executor": "nx:run-commands",

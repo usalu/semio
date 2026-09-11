@@ -1,8 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(root, "../../../../../../..");
 
 /** @emoji 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
@@ -12,6 +14,7 @@ const root = dirname(fileURLToPath(import.meta.url));
  * A generous `testTimeout` covers real process spawn/build-adjacent latency, not network flakiness. */
 export default defineConfig({
   root,
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "os-mcp"),
   resolve: {
     alias: {
       "@semio-tech/framework-os-mcp": resolve(root, "./🟦️.ts"),

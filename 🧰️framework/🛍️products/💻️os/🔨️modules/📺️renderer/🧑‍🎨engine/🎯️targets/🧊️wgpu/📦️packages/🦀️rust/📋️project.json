@@ -49,28 +49,32 @@
       "options": {
         "command": "bun ./📜️script.ts directory-retained-home-bootstrap-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "directory-retained-home-bootstrap-native-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts directory-retained-home-bootstrap-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "normalized-presence-rows-source-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts normalized-presence-rows-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "normalized-presence-rows-native-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts normalized-presence-rows-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "test-browser-worker": {
       "executor": "nx:run-commands",
@@ -148,7 +152,8 @@
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "lockfile-check": {
       "executor": "nx:run-commands",
@@ -239,7 +244,8 @@
       "options": {
         "command": "bun ./📜️script.ts native-environment-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-      }
+      },
+      "outputs": []
     },
     "native-build": {
       "executor": "nx:run-commands",

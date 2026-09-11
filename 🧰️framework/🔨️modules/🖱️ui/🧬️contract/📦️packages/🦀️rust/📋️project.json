@@ -9,7 +9,8 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts built-tree-retirement-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",
@@ -49,7 +50,8 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts conformance",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "check-wasm": {
       "executor": "nx:run-commands",
@@ -70,7 +72,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
-      }
+      },
+      "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",

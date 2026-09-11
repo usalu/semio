@@ -14,6 +14,10 @@ import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
 import { createArtifactRegistry, measureArtifactRegistry, artifactBudgets, type ArtifactRegistry } from "./📦️artifacts/📇️registry/🟦️.ts";
 import { readInventoryGraph, type InventoryProject } from "./📇️inventory/🟦️.ts";
+import { repoCacheDirectory } from "./🟦️.ts";
+import { cargoDirectories } from "./🦀️cargo/🟦️.ts";
+import { acquireResourceLease } from "./🔒️leases/🟦️.ts";
+import { planCachePrune, scanCargoBuildUnits, scanCargoTargetUnits, scanDirectoryUnits, deleteUnit, formatBytes, type CacheAreaInput, type CacheUnit, type PrunePlan } from "./🧹️pruning/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 const POLICY = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
@@ -293,14 +297,79 @@ console.log("[cache-probe] " + command + " executed " + count);
   }
 }
 
-/** 🧹️ Delegates test retention to its owner; Nx manages task-result eviction independently. */
-class DiskPruneScript extends BundleScript {
+/** 🧪️ Test evidence under the cache root is bounded by its retention owner, which knows pinned and active evidence. */
+async function pruneTestEvidence(repoRoot: string, dry: boolean): Promise<string> {
+  const { collectGarbage, loadOracleRegistry, formatGcReport } = await import("../../🧪️test/📦️packages/🟦️typescript/🟦️.ts");
+  return formatGcReport(collectGarbage(repoRoot, loadOracleRegistry(repoRoot), { dry, olderThanMs: POLICY.storage.tests.unusedAgeMs }));
+}
+
+/** ⚡️ Scans the one shared cache root's bounded areas: Cargo's combined build+target budget, Vite consumer caches, stray agent scratch dirs. Nx governs its own `nx/` dir via `maxCacheSize`. */
+function scanCacheAreas(repoRoot: string, signal: AbortSignal, onUnit?: (area: string, unit: CacheUnit) => void): CacheAreaInput[] {
+  const storage = POLICY.storage;
+  const dirs = cargoDirectories(repoRoot);
+  const progress = (area: string) => (unit: CacheUnit) => onUnit?.(area, unit);
+  const buildUnits = scanCargoBuildUnits(dirs.build, signal, progress("cargo"));
+  const targetUnits = dirs.target === dirs.build ? [] : scanCargoTargetUnits(dirs.target, signal, progress("cargo"));
+  const viteUnits = scanDirectoryUnits(repoCacheDirectory(repoRoot, "vite"), signal, new Set(), progress("vite"));
+  const agentUnits = scanDirectoryUnits(repoCacheDirectory(repoRoot, "agents"), signal, new Set(["resource-leases"]), progress("agents"));
+  return [
+    { name: "cargo", budgetBytes: storage.cargo.budgetBytes, unusedAgeMs: storage.cargo.unusedAgeMs, units: [...buildUnits, ...targetUnits] },
+    { name: "vite", budgetBytes: null, unusedAgeMs: storage.vite.unusedAgeMs, units: viteUnits },
+    { name: "agents", budgetBytes: null, unusedAgeMs: storage.agents.unusedAgeMs, units: agentUnits },
+  ];
+}
+
+/** 🗺️ Resolves the real directory a scanned unit's relative path was measured against, so deletion targets exactly what was scanned. */
+function areaUnitRoot(repoRoot: string, area: string, unit: CacheUnit): string {
+  if (area === "cargo") { const dirs = cargoDirectories(repoRoot); return unit.kind === "cargo-target-file" ? dirs.target : dirs.build; }
+  return repoCacheDirectory(repoRoot, area);
+}
+
+/** 📊️ Dry-run visibility into the shared cache root: per-area sizes, unit counts, and exactly what `cache-prune` would delete. */
+class CacheReportScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const output = ticketOutput(this.repoRoot, args);
-    const { collectGarbage, loadOracleRegistry, formatGcReport } = await import("../../🧪️test/📦️packages/🟦️typescript/🟦️.ts");
-    const report = collectGarbage(this.repoRoot, loadOracleRegistry(this.repoRoot), { dry: !args.includes("--apply"), olderThanMs: 7 * 86400000 });
-    writeFileSync(join(output, "prune.json"), JSON.stringify({ tests: report, nx: "Nx maxCacheSize eviction", preserved: ["Cargo incremental state", "Renderer and plugin artifacts", "Active and pinned test evidence"] }, null, 2) + "\n");
-    console.log(formatGcReport(report));
+    const controller = new AbortController(), cancel = (): void => controller.abort(new Error("Cache report cancelled"));
+    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
+    try {
+      const json = args.includes("--json");
+      const areas = scanCacheAreas(this.repoRoot, controller.signal, json ? undefined : (area, unit) => console.log(`[cache-report] scanned ${area}/${unit.path}`));
+      const plan = planCachePrune(areas, Date.now(), POLICY.storage.guardAgeMs);
+      if (json) { console.log(JSON.stringify(plan)); return; }
+      for (const area of plan.areas) {
+        const ageBytes = area.ageDeletions.reduce((sum, unit) => sum + unit.bytes, 0), budgetBytes = area.budgetDeletions.reduce((sum, unit) => sum + unit.bytes, 0);
+        console.log(`[cache-report] ${area.name}: ${formatBytes(area.totalBytes)} across ${area.unitCount} units; would delete ${area.ageDeletions.length} unused units (${formatBytes(ageBytes)}) and ${area.budgetDeletions.length} over-budget units (${formatBytes(budgetBytes)}); retains ${formatBytes(area.retainedBytes)}${area.guardedOverBudgetBytes ? `; ${formatBytes(area.guardedOverBudgetBytes)} over budget but within the guard age` : ""}`);
+      }
+      console.log(`[cache-report] tests: ${await pruneTestEvidence(this.repoRoot, true)}`);
+    } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+  }
+}
+
+/** 🧹️ Bounds the one shared cache root: deletes unused-past-age units first, then the oldest units past the lock-free guard until Cargo's combined budget is met. Safe under concurrent prunes (exclusive lease) and concurrent builds (never deletes anything newer than the guard). */
+class CachePruneScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const controller = new AbortController(), cancel = (): void => controller.abort(new Error("Cache prune cancelled"));
+    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
+    const dryRun = args.includes("--dry-run");
+    try {
+      const lease = await acquireResourceLease({ directory: repoCacheDirectory(this.repoRoot, "agents/resource-leases"), resource: "cache-prune", mode: "exclusive", signal: controller.signal, onWait: (wait) => console.log(`[cache-prune] waiting for exclusive access elapsedMs=${wait.elapsedMs}`) });
+      try {
+        const areas = scanCacheAreas(this.repoRoot, controller.signal, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
+        const plan: PrunePlan = planCachePrune(areas, Date.now(), POLICY.storage.guardAgeMs);
+        let deletedBytes = 0, deletedCount = 0;
+        for (const area of plan.areas) {
+          for (const unit of [...area.ageDeletions, ...area.budgetDeletions]) {
+            controller.signal.throwIfAborted();
+            console.log(`[cache-prune] ${dryRun ? "would delete" : "deleting"} ${area.name}/${unit.path} (${formatBytes(unit.bytes)})`);
+            if (!dryRun) deleteUnit(areaUnitRoot(this.repoRoot, area.name, unit), unit);
+            deletedBytes += unit.bytes; deletedCount++;
+          }
+          if (area.guardedOverBudgetBytes) console.log(`[cache-prune] ${area.name}: ${formatBytes(area.guardedOverBudgetBytes)} over budget but touched within the last ${Math.round(POLICY.storage.guardAgeMs / 3600000)}h; left in place`);
+        }
+        console.log(`[cache-prune] ${dryRun ? "would delete" : "deleted"} ${deletedCount} units; ${formatBytes(deletedBytes)}`);
+        controller.signal.throwIfAborted();
+        console.log(`[cache-prune] tests: ${await pruneTestEvidence(this.repoRoot, dryRun)}`);
+      } finally { lease.release(); }
+    } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }
 
@@ -496,7 +565,7 @@ class ArtifactPackageContractScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("artifact-package-contract", ArtifactPackageContractScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript);
+const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("artifact-package-contract", ArtifactPackageContractScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("cache-verify", CacheVerifyScript).register("cache-report", CacheReportScript).register("cache-prune", CachePruneScript);
 const createCachePolicyTestsInstance = createCachePolicyTests({ assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, inventory, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, slash, spawn, stageArtifacts, ticketOutput, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testCacheContracts = createCachePolicyTestsInstance.testCacheContracts;
 

@@ -31,7 +31,7 @@ Native Neo4j Desktop connection:
 
 ## devcontainer.json
 
-Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and Playwright cache under `node_modules`.
+Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
 
 ## docker-compose.yml
 
@@ -75,6 +75,7 @@ The attach hook detects the active editor CLI and invokes `bun nx run @semio-tec
 ## Devcontainer Persistence
 
 Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`), GitKraken Desktop state (`~/.gitkraken`), GitKraken CLI state (`~/.local/share/GitKrakenCLI`, `~/.local/share/gk`), and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
+One additional named volume mounts at `${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache` — the single shared build/tool cache root (cargo, Nx, Vite, Playwright, Go, …) — so every agent and dev process in the container reuses the same cache and rebuilds never start cold.
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach reconciles VS Code workspace chat storage for `GitHub.copilot-chat` and `openai.chatgpt` by merging transcript and chat resource folders from older workspace-storage hashes into the active workspace-storage directories after attach.
@@ -161,8 +162,8 @@ The devcontainer image installs ripgrep (`rg`) as part of the base apt package s
 
 ## Playwright Browser Cache
 
-Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
-The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-operation once cached.
+Playwright browser downloads live under `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`, inside the single named volume mounted at the shared cache root, so the binaries persist across container restarts, editor reloads, and rebuilds.
+The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to that shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-operation once cached.
 
 # 💯️Requirements
 
@@ -176,7 +177,7 @@ Devcontainer post-attach MUST generate Windsurf MCP config, write `.cursor/mcp.j
 
 Compose VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 
-Playwright browser caches MUST use the workspace node_modules volume path so browser install stays cached across reloads.
+Playwright browser caches MUST use the shared `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` path so browser install stays cached across reloads and is pruned by the same cache budget as every other build output.
 
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 VS Code chat-provider workspace history MUST persist across devcontainer rebuilds even when the active `workspaceStorage` hash changes for the same repo.

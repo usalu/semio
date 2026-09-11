@@ -3032,7 +3032,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:member-dialect-check -- -j 1",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-dialect-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -3125,7 +3124,6 @@
       "command": "bun nx run @semio-tech/framework-plugin:artifact-admission-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/artifact-admission-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 405.05 }
@@ -3317,8 +3315,7 @@
         "order": 407.68
       },
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/guest-fault-native",
-        "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target"
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/guest-fault-native"
       }
     },
     {
@@ -3436,7 +3433,7 @@
       "name": "⚖️gate📐️cad🧠️brep-invoke🦀️check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "RUSTC_WRAPPER='' cargo check -p semio-framework-os-flow --lib --message-format short",
+      "command": "cargo check -p semio-framework-os-flow --lib --message-format short",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 408.06 }
     },
@@ -3504,10 +3501,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/flow-add-widget-retained-sol-run",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/flow-add-widget-retained-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 408.257 }
     },
@@ -3519,10 +3513,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/flow-session-close-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/flow-session-close-native-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_BUILD_RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -3549,10 +3540,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/built-tree-retirement-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 408.27 }
     },
@@ -3572,10 +3560,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/runtime-tree-retirement-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 408.29 }
     },
@@ -3774,7 +3759,6 @@
       "command": "bun nx run workspace:test -- dsl exhaustive -j 1",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/dsl-fixture-sweep-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000"
       },
@@ -3788,7 +3772,6 @@
       "command": "bun nx run @semio-tech/framework-os-host-rs:media-projection-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/host-media-projection-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000"
       },
@@ -3813,7 +3796,6 @@
       "command": "bun nx run @semio-tech/framework-os-host-rs:persistence-contract-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/host-persistence-contract-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000"
       },
@@ -3836,10 +3818,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/host-document-retirement-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.7 }
     },
@@ -3859,10 +3838,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/host-member-open-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.9 }
     },
@@ -3914,11 +3890,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/flow-retained-decode-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1",
-        "SEMIO_BUILD_BUDGET_MS": "3600000",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "SEMIO_BUILD_BUDGET_MS": "3600000"
       },
       "presentation": { "group": "4_gate", "order": 419.93 }
     },
@@ -3938,12 +3911,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/spr-retained-verification-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_ORCHESTRATOR_BUDGET_MS": "3900000",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.95 }
     },
@@ -3963,10 +3933,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/spr-record-observation-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.952 }
     },
@@ -3994,10 +3961,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-history-input-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.98 }
     },
@@ -4017,10 +3981,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-history-id-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.995 }
     },
@@ -4040,10 +4001,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-history-dictionary-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.998 }
     },
@@ -4063,10 +4021,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-history-record-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.9982 }
     },
@@ -4078,10 +4033,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-history-foundation-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.999 }
     },
@@ -4101,10 +4053,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/member-factory-identity-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.9992 }
     },
@@ -4124,10 +4073,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-run",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.9994 }
     },
@@ -4155,13 +4101,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wgpu-directory-retained-home-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wgpu-directory-retained-home-sol-target",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 419.9997 }
     },
@@ -5117,7 +5060,6 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "presentation": {
@@ -5133,7 +5075,6 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "presentation": {
@@ -5148,7 +5089,6 @@
       "command": "bun nx run @semio-tech/framework-plugin:retained-child-close-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/retained-command-child-close-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5175,7 +5115,6 @@
       "command": "bun nx run @semio-tech/space-plugin:home-directory-projection-persistence-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5202,7 +5141,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:directory-event-page-contract-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-contract-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-contract-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5229,7 +5167,6 @@
       "command": "bun nx run @semio-tech/space-plugin:home-directory-event-page-owner-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-event-page-owner-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-event-page-owner-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5256,14 +5193,11 @@
       "command": "bun nx run @semio-tech/space-plugin:home-directory-identity-rows-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-identity-rows-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86400000",
         "SEMIO_CMD_BUDGET_MS": "86400000",
         "CARGO_BUILD_JOBS": "1",
-        "CARGO_BUILD_RUSTFLAGS": "-Z threads=1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "CARGO_BUILD_RUSTFLAGS": "-Z threads=1"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -5301,9 +5235,7 @@
       "env": {
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86400000",
-        "SEMIO_CMD_BUDGET_MS": "86400000",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "SEMIO_CMD_BUDGET_MS": "86400000"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -5329,7 +5261,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:directory-event-page-client-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-client-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-client-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5367,7 +5298,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-segment-state-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-segment-state-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5391,7 +5321,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-recovery-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-recovery-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "3900000",
@@ -5415,7 +5344,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-capacity-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-capacity-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "3900000",
@@ -5439,7 +5367,6 @@
       "command": "bun nx run @semio-tech/framework-replication-rs:presence-peer-codec-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-peer-codec-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "3900000",
@@ -5463,7 +5390,6 @@
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:normalized-presence-rows-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wgpu-normalized-presence-rows-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wgpu-directory-retained-home-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5487,7 +5413,6 @@
       "command": "bun nx run os-hub:presence-normalization-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-normalization-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "3900000",
@@ -5511,7 +5436,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-committed-transactions-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-committed-transactions-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5535,7 +5459,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-committed-compaction-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-committed-compaction-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5559,7 +5482,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:durable-owned-group-decision-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/durable-owned-group-decision-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "3600000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "3900000",
@@ -5583,7 +5505,6 @@
       "command": "bun nx run os-hub:admin-presence-target-recovery-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/admin-presence-target-recovery-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5607,7 +5528,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:wal-writer-authority-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/wal-writer-authority-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5634,7 +5554,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:database-capability-completion-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/database-capability-completion-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5664,7 +5583,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:database-catalog-read-ownership-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/database-catalog-read-ownership-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5694,7 +5612,6 @@
       "command": "bun nx run @semio-tech/framework-os-kernel:database-history-completion-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/database-history-completion-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -5720,7 +5637,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/stdio-plugin:home-io-surface-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/stdio-home-io-native-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -5734,7 +5650,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/space-plugin:describe",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-space-component-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "CARGO_TARGET_WASM32_WASIP2_RUSTFLAGS": "-Z threads=1 -C link-arg=--max-memory=536870912",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
@@ -5767,7 +5682,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-kernel:database-shutdown-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/database-shutdown-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5792,7 +5706,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-kernel:document-mount-single-flight-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/document-mount-single-flight-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5817,7 +5730,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/gis-plugin:durable-three-store-assembly-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-durable-three-store-assembly-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5842,7 +5754,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-kernel:durable-group-journal-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/durable-group-journal-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5859,7 +5770,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/browser-actor-import-fixture:runtime-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "600000",
@@ -5875,7 +5785,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/browser-actor-import-fixture:pending-host-close-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "600000",
@@ -5907,7 +5816,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/worker-deferred-wake-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5932,7 +5840,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-async-rs:worker-pool-use-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/worker-pool-use-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5949,7 +5856,6 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-async-rs:worker-maintenance-native-check",
       "env": {
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/worker-maintenance-exact",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
@@ -5978,7 +5884,6 @@
       "command": "bun nx run os-hub:scoped-directory-socket-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/scoped-directory-socket-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/scoped-directory-socket-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -5994,7 +5899,6 @@
       "command": "bun nx run os-hub:scoped-directory-socket-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/scoped-directory-socket-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/scoped-directory-socket-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6021,7 +5925,6 @@
       "command": "bun nx run os-hub:invite-redemption-transaction-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-transaction-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-transaction-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6037,7 +5940,6 @@
       "command": "bun nx run os-hub:invite-redemption-transaction-postgres-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-postgres-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-transaction-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6053,7 +5955,6 @@
       "command": "bun nx run os-hub:invite-redemption-transaction-neo4j-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-neo4j-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/invite-redemption-transaction-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6080,7 +5981,6 @@
       "command": "bun nx run os-hub:presence-lease-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🧏️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-lease-native-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🧏️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-lease-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6096,7 +5996,6 @@
       "command": "bun nx run os-hub:presence-lease-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🧏️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-lease-process-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🧏️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/presence-lease-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6123,7 +6022,6 @@
       "command": "bun nx run os-hub:directory-event-page-v1-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-v1-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-v1-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6139,7 +6037,6 @@
       "command": "bun nx run os-hub:directory-event-page-v1-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-v1-process-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-event-page-v1-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6192,7 +6089,6 @@
       "command": "bun nx run os-hub:directory-command-authority-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6208,7 +6104,6 @@
       "command": "bun nx run os-hub:directory-invite-authority-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6235,7 +6130,6 @@
       "command": "bun nx run os-hub:directory-message-authority-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6262,7 +6156,6 @@
       "command": "bun nx run os-hub:admin-directory-authority-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6289,7 +6182,6 @@
       "command": "bun nx run os-hub:share-issuance-atomicity-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/share-issuance-atomicity-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -6321,7 +6213,6 @@
       "command": "bun nx run os-hub:retained-short-admin-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/retained-short-admin-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -6342,7 +6233,6 @@
       "command": "bun nx run os-hub:directory-command-receipt-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-directory-command-receipt/exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-directory-command-receipt/target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6358,7 +6248,6 @@
       "command": "bun nx run os-hub:directory-command-receipt-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-directory-command-receipt/process-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-directory-command-receipt/target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6385,7 +6274,6 @@
       "command": "bun nx run os-hub:space-journey-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-two-user-space-journey/process-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-two-user-space-journey/target",
         "CARGO_BUILD_JOBS": "4"
       },
       "cwd": "${workspaceFolder}",
@@ -6423,13 +6311,10 @@
       "command": "bun nx run os-hub:directory-home-browser-process-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-home-browser-process-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86400000",
-        "SEMIO_CMD_BUDGET_MS": "86400000",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": ""
+        "SEMIO_CMD_BUDGET_MS": "86400000"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -6576,7 +6461,6 @@
       "command": "bun nx run os-hub:directory-ordered-publication-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-ordered-publication-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6629,7 +6513,6 @@
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/headless-native-catalog-exact",
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/headless-native-catalog-exact/cargo-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_BUILD_RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -6651,7 +6534,6 @@
       "command": "bun nx run @semio-tech/vcs-plugin:native-openable-identity-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/vcs-native-openable-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/native-openable-provider-sol-target",
         "CARGO_BUILD_JOBS": "1"
       },
       "cwd": "${workspaceFolder}",
@@ -6668,10 +6550,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-vcs-native-provider/vcs-native-codecs-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-vcs-native-provider/vcs-native-codecs-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": ""
+        "RUST_MIN_STACK": "268435456"
       },
       "presentation": { "group": "4_gate", "order": 411.10865 }
     },
@@ -6863,8 +6743,7 @@
       "command": "bun nx run os-hub:document-browser-actor-identity-native-check",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target"
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated"
       },
       "presentation": { "group": "4_gate", "order": 411.109602 }
     },
@@ -6875,8 +6754,7 @@
       "command": "bun nx run os-hub:trusted-browser-actor-catalog-native-check",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target"
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated"
       },
       "presentation": { "group": "4_gate", "order": 411.109603 }
     },
@@ -6913,10 +6791,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-publication-native",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_BUILD_RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -6935,10 +6810,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-publication-cli",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_BUILD_RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
@@ -6958,7 +6830,6 @@
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-native",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
@@ -6979,7 +6850,6 @@
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-browser",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
@@ -7012,8 +6882,6 @@
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-browser",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
-        "RUSTC_WORKSPACE_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
@@ -7032,7 +6900,6 @@
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-process",
         "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": "",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
@@ -7128,7 +6995,6 @@
       "command": "bun nx run @semio-tech/framework-os-mcp-rs:hub-live-catalog-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/hub-live-catalog-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -7153,7 +7019,6 @@
       "command": "bun nx run os-hub:trusted-catalog-opened-root-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-catalog-opened-root-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -7178,7 +7043,6 @@
       "command": "bun nx run @semio-tech/framework-os-mcp-rs:canonical-checkpoint-resource-native-check",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/canonical-checkpoint-resource-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
@@ -7220,9 +7084,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-native-codecs-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
-        "CARGO_BUILD_JOBS": "1",
-        "RUSTC_WRAPPER": ""
+        "CARGO_BUILD_JOBS": "1"
       },
       "presentation": { "group": "4_gate", "order": 411.142 }
     },
@@ -7234,10 +7096,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-map-create-region-group-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": ""
+        "RUST_MIN_STACK": "268435456"
       },
       "presentation": { "group": "4_gate", "order": 411.143 }
     },
@@ -7257,11 +7117,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-component-cold-map-patch",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7284,10 +7142,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-map-frozen-binding-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
-        "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": ""
+        "RUST_MIN_STACK": "268435456"
       },
       "presentation": { "group": "4_gate", "order": 411.145 }
     },
@@ -7307,11 +7163,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-ai-map-proposal/gis-map-proposal-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7326,11 +7180,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-ai-map-proposal/gis-map-proposal-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7385,11 +7237,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000"
       },
@@ -7403,11 +7253,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/artifact-creation-sqlite-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7422,11 +7270,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/artifact-creation-postgres-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7441,11 +7287,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/artifact-creation-neo4j-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "33554432",
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7468,10 +7312,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/checkpoint-publication-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7486,10 +7328,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/checkpoint-publication-process",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7539,10 +7379,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/cold-document-pair-ingress-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7573,10 +7411,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/ui-patch-marshalling-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -7599,10 +7435,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/document-opening-attempt-exact",
-        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
         "CARGO_BUILD_JOBS": "1",
         "RUST_MIN_STACK": "268435456",
-        "RUSTC_WRAPPER": "",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"

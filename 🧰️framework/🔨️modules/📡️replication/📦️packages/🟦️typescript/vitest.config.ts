@@ -2,10 +2,12 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoCacheDirectory } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(configDir, "../.."); // 📡️replication module root — owner of 🟦️.ts
+const repoRoot = resolve(configDir, "../../../../..");
 
 /**
  * @emoji 🧪️ Vitest for `@semio-tech/framework-replication` (inline `import.meta.vitest`).
@@ -21,6 +23,7 @@ const root = resolve(configDir, "../.."); // 📡️replication module root — 
  */
 export default defineConfig({
   root,
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "framework-replication"),
   resolve: {
     alias: {
       "@semio-tech/framework-replication": resolve(root, "📦️packages/🟦️typescript/🟦️.ts"),

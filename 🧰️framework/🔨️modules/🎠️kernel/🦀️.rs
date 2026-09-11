@@ -1490,7 +1490,7 @@ impl UiTurnPatchTransportArena {
         (slot.epoch == key.epoch && slot.session == key.session && slot.state != UiTurnPatchTransportState::Vacant).then_some(slot)
     }
 
-    fn close_one(&mut self) -> Result<UiTurnPatchTransportProgress, &'static str> {
+    fn close_one(&mut self, items: usize, bytes: usize) -> Result<UiTurnPatchTransportProgress, &'static str> {
         for offset in 0..UI_TURN_PATCH_TRANSPORT_SLOTS {
             let index = (self.close_cursor + offset) % UI_TURN_PATCH_TRANSPORT_SLOTS;
             if self.slots[index].state != UiTurnPatchTransportState::Closing {
@@ -1501,11 +1501,11 @@ impl UiTurnPatchTransportArena {
                 return Ok(UiTurnPatchTransportProgress::Blocked);
             }
             let owner = self.slots[index].owner.as_mut().ok_or("closing turn patch transport lost its exact owner")?;
-            let step = owner.close_step_with_grant(1, 4096)?;
+            let step = owner.close_step_with_grant(items.max(1), bytes.max(1))?;
             if step.complete {
                 let epoch = self.slots[index].epoch;
                 self.slots[index] = UiTurnPatchTransportSlot { epoch, ..UiTurnPatchTransportSlot::default() };
-                return Ok(UiTurnPatchTransportProgress::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(UiTurnPatchTransportProgress::Pending { released_items: step.released_items.max(1), released_bytes: step.released_bytes });
             }
             return Ok(if step.progressed { UiTurnPatchTransportProgress::Pending { released_items: step.released_items, released_bytes: step.released_bytes } } else { UiTurnPatchTransportProgress::Blocked });
         }
@@ -1734,6 +1734,16 @@ impl Drop for UiTurnPatchTransportLease {
 }
 
 pub fn close_ui_turn_patch_transport_one() -> Result<UiTurnPatchTransportProgress, &'static str> {
+    close_ui_turn_patch_transport_with_grant(1, 4096)
+}
+
+/// ♻️ One retirement unit of a closing turn-patch transport, against the caller's PAGE grant.
+///
+/// The transport owns the patch the turn hands to the host, so a document-scaled publication parks a
+/// document-scaled owner here; retiring it one item per unit is one host round trip per item, because
+/// the reactor answers `MoreWork` for as long as anything is outstanding (ticket 26/09/02, W-S2 §7
+/// left this ladder ungranted, W-B2 grants it).
+pub fn close_ui_turn_patch_transport_with_grant(items: usize, bytes: usize) -> Result<UiTurnPatchTransportProgress, &'static str> {
     let mut arena = match UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() {
         Ok(arena) => arena,
         Err(std::sync::TryLockError::WouldBlock) => return Ok(UiTurnPatchTransportProgress::Blocked),
@@ -1763,7 +1773,7 @@ pub fn close_ui_turn_patch_transport_one() -> Result<UiTurnPatchTransportProgres
         arena.close_cursor = (index + 1) % UI_TURN_PATCH_TRANSPORT_SLOTS;
         return Ok(UiTurnPatchTransportProgress::Pending { released_items: 0, released_bytes: 0 });
     }
-    arena.close_one()
+    arena.close_one(items, bytes)
 }
 
 pub fn close_ui_turn_patch_transport_session_one(session: u64) -> Result<UiTurnPatchTransportProgress, &'static str> {

@@ -95,7 +95,7 @@
     "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
     "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
     "source=${localWorkspaceFolderBasename}-kiro,target=/home/vscode/.kiro,type=volume",
-    "source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
+    "source=${localWorkspaceFolderBasename}-semio-cache,target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume"
   ],
   "remoteUser": "vscode",
   "containerEnv": {
@@ -104,7 +104,7 @@
     "NX_NATIVE_LOGGING": "nx=warn",
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
-    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
+    "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "compose",
     "SEMIO_GITKRAKEN_AUTO_START": "false",
     "SEMIO_F3D_AUTO_START": "true",
@@ -124,7 +124,7 @@
     "NEO4J_EXTRA_GRAPH_DATABASE": ""
   },
   "remoteEnv": {
-    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
+    "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SSH_AUTH_SOCK": "/home/vscode/.ssh/compose-ssh-agent.sock",
     "NEO4J_URI": "bolt://localhost:7687",
     "NEO4J_USERNAME": "neo4j",

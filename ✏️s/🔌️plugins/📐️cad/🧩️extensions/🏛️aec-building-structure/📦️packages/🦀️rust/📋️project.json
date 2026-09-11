@@ -48,7 +48,11 @@
         "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🔣️.json"
+      ]
     }
   }
 }

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cargoProfileDir, getWorkspaceRoot, selectComponentWasmProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { publicationWasmPath } from "../../📜️script.ts";
 import { pluginWasmArtifactPath } from "../../../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
@@ -118,10 +119,11 @@ describe("WASI codegen profile policy", () => {
 
   it("never substitutes a first-found development artifact for publication identity", () => {
     const root = getWorkspaceRoot();
-    const release = join(root, "target", "wasm32-wasip2", "wasm-release", "fixture.wasm");
+    const wasmTarget = join(cargoTargetDirectory(root), "wasm32-wasip2");
+    const release = join(wasmTarget, "wasm-release", "fixture.wasm");
     const available = new Map([
-      [join(root, "target", "wasm32-wasip2", "wasm-dev", "fixture.wasm"), "dev-hash"],
-      [join(root, "target", "wasm32-wasip2", "debug", "fixture.wasm"), "stale-hash"],
+      [join(wasmTarget, "wasm-dev", "fixture.wasm"), "dev-hash"],
+      [join(wasmTarget, "debug", "fixture.wasm"), "stale-hash"],
       [release, "release-hash"],
     ]);
     expect(publicationWasmPath(root, "fixture.wasm")).toBe(release);

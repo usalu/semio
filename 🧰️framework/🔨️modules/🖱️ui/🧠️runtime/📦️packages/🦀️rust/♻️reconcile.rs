@@ -2474,69 +2474,99 @@ impl SurfaceReconcileRetained {
         self.close_step_with(None)
     }
 
-    fn close_step_with(&mut self, mut registry: Option<&mut SurfaceReconcileHandbackRegistry>) -> bool {
+    fn close_step_with(&mut self, registry: Option<&mut SurfaceReconcileHandbackRegistry>) -> bool {
+        self.close_unit(1, SURFACE_RECONCILE_PAGE_BYTES, registry).0
+    }
+
+    /// 🧹️ One retirement unit of this retained surface against the caller's grant, answering
+    /// `(complete, consumed)`. A PAGED owner (the pending patch) spends the whole grant in one call
+    /// and reports it; every other owner on the ladder is a single retained value and consumes one
+    /// item, so [`Self::close_run`] can spend a page grant either way without squaring it.
+    fn close_unit(&mut self, items: usize, bytes: usize, mut registry: Option<&mut SurfaceReconcileHandbackRegistry>) -> (bool, usize) {
         self.phase = SurfaceReconcileJobPhase::Closing;
         if self.fault.take().is_some() {
-            return false;
+            return (false, 1);
         }
         if !self.patch.terminal_is_empty() {
-            let _ = self.patch.close_step(1, SURFACE_RECONCILE_PAGE_BYTES);
-            return false;
+            let _ = self.patch.close_step(items, bytes);
+            return (false, items);
         }
         if let Some(candidate) = self.candidate.as_mut() {
             if !candidate.retire_one() {
-                return false;
+                return (false, 1);
             }
             self.candidate = None;
-            return false;
+            return (false, 1);
         }
         if let Some(cursor) = self.cursor.as_mut() {
             if !cursor.retire_one() {
-                return false;
+                return (false, 1);
             }
             self.cursor = None;
-            return false;
+            return (false, 1);
         }
         if let Some(current) = self.current.as_mut() {
             if !current.retire_one() {
-                return false;
+                return (false, 1);
             }
             self.current = None;
-            return false;
+            return (false, 1);
         }
         if !self.retire_tree.step() {
-            return false;
+            return (false, 1);
         }
         if self.retire_tree.try_begin_tree(&mut self.source) {
-            return false;
+            return (false, 1);
         }
         if let Some(credit) = self.credit.take() {
             release_surface_reconcile(credit);
-            return false;
+            return (false, 1);
         }
         if let Some(handback) = self.handback.take() {
             match registry.as_deref_mut() {
                 Some(registry) => release_surface_reconcile_handback_in(registry, handback),
                 None => release_surface_reconcile_handback(handback),
             }
-            return false;
+            return (false, 1);
         }
         if let Some(handback) = self.output_handback.take() {
             match registry.as_deref_mut() {
                 Some(registry) => release_surface_reconcile_handback_in(registry, handback),
                 None => release_surface_reconcile_handback(handback),
             }
-            return false;
+            return (false, 1);
         }
-        true
+        (true, 1)
+    }
+
+    /// 🧹️ Retires this retained surface for a bounded RUN priced by the caller's page grant instead
+    /// of the single owner per call [`Self::close_step`] retires. Every unit the reactor cannot
+    /// finish this turn is answered as `MoreWork` and costs the host one round trip, so a
+    /// document-scaled retained surface must not be retired one value per turn (ticket 26/09/02,
+    /// W-S2 §2.4 measured 1 092 units for one 180-object world publication, W-B2 1 093 turns for the
+    /// mixed surface set the same interaction touches).
+    fn close_run(&mut self, items: usize, bytes: usize) -> bool {
+        let mut remaining = items.max(1);
+        while remaining > 0 {
+            let (complete, consumed) = self.close_unit(remaining, bytes, None);
+            if complete {
+                return true;
+            }
+            remaining = remaining.saturating_sub(consumed.max(1));
+        }
+        false
     }
 
     fn close_admitted_step(&mut self) -> bool {
+        self.close_admitted_run(1, SURFACE_RECONCILE_PAGE_BYTES)
+    }
+
+    fn close_admitted_run(&mut self, items: usize, bytes: usize) -> bool {
         if self.source.is_some() && self.handback.is_none() {
             self.handback = self.output_handback.take().or_else(|| try_reserve_surface_reconcile_handback(self.generation));
             if self.handback.is_none() { return false; }
         }
-        self.close_step()
+        self.close_run(items, bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3314,7 +3344,16 @@ impl SurfaceReconcileTerminal {
     }
 
     pub fn close_step(&mut self) -> bool {
-        self.state.as_mut().is_none_or(|state| state.close_admitted_step())
+        self.close_step_with_grant(1, SURFACE_RECONCILE_PAGE_BYTES)
+    }
+
+    /// 🧹️ Retires this terminal against the caller's PAGE grant — the same pricing
+    /// [`SurfaceReconcileReadyPatch::close_step_with_grant`] and the pending-patch authority already
+    /// take. A terminal holding a document-scaled retained surface keeps the reactor turn in
+    /// `MoreWork`, and the host answers every `MoreWork` with one more round trip, so one owner per
+    /// call is one host round trip per retained value (ticket 26/09/02, W-B2).
+    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> bool {
+        self.state.as_mut().is_none_or(|state| state.close_admitted_run(items, bytes))
     }
 
     pub fn terminal_is_empty(&self) -> bool {

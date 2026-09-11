@@ -48,7 +48,11 @@
         "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🔣️.json"
+      ]
     }
   }
 }

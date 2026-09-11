@@ -6,7 +6,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { describe, expect, it } = vitest;
 
   describe("resolveMcpBinaryPath", () => {
-    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧱️binary-gate.json", source.url), "utf8")) as {
+    const fixture = JSON.parse(readFileSync(new URL("./🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
       pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
     };
 

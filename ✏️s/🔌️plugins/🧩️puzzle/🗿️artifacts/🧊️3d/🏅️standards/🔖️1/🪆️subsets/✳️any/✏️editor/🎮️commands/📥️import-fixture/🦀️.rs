@@ -7,6 +7,11 @@ use dsl::FromValue;
 
 /// 📥 Replaces the live fixture with the supplied JSON as one document edit.
 pub fn import_fixture(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+    eprintln!(
+        "[DEBUG] puzzle3d.import.ingress args={} payload_len={}",
+        args.is_some(),
+        args.and_then(|value| value.get("payload")).and_then(Value::as_str).map_or(0, str::len)
+    );
     let Some(args) = args else {
         ctx.notice(|labels| labels.import_invalid.as_str());
         ctx.abort = true;
@@ -32,5 +37,6 @@ pub fn import_fixture(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     if fixture.schema.is_empty() {
         fixture.schema = PUZZLE3D_FIXTURE_SCHEMA.into();
     }
+    eprintln!("[DEBUG] puzzle3d.import.parsed objects={} before={}", fixture.objects.len(), ctx.scene.fixture.objects.len());
     ctx.scene.fixture = fixture;
 }

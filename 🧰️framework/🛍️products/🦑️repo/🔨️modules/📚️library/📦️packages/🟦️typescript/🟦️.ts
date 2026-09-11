@@ -4,8 +4,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { devToolingEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
-export { devToolingEnv };
+import { devToolingEnv, repoToolCacheEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
+export { devToolingEnv, repoToolCacheEnv };
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
@@ -14,6 +14,8 @@ import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep 
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { preparedBinaryen } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
+import { cargoTargetDirectory } from "../../⚡️caching/🦀️cargo/🟦️.ts";
+import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { canonicalFilenameForKind, fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -954,7 +956,7 @@ export async function runPolicyScript(
 
   const { mkdirSync, writeFileSync } = await import("node:fs");
   const sanitizeCacheKey = (id: string) => id.replace(/[^\w.-]+/g, "_").slice(0, 200);
-  const cacheDir = join(getRepoMetaDir(repoRoot), "⚡️cache", "breaches");
+  const cacheDir = repoCacheDirectory(repoRoot, "breaches");
   mkdirSync(cacheDir, { recursive: true });
   const cacheName = `${sanitizeCacheKey(entity.id)}.json`;
   const cachePath = join(cacheDir, cacheName);
@@ -2046,7 +2048,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   const configuredEnv = options.env ?? process.env;
   const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot || !isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated artifactDir or SEMIO_TEST_ARTIFACT_DIR");
-  const cargoTargetDir = configuredEnv.CARGO_TARGET_DIR ? resolve(options.cwd, configuredEnv.CARGO_TARGET_DIR) : join(getWorkspaceRoot(), "target");
+  const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot(), configuredEnv);
   const targetBoundary = process.platform === "win32" ? cargoTargetDir.toLowerCase() : cargoTargetDir;
   const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);
   if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
@@ -2658,9 +2660,9 @@ export function consumePlaygroundExampleArgv(segments: string[], resolveExampleI
   };
 }
 
-/** ▶️Playwright test run in bundle directory. */
+/** ▶️Playwright test run in bundle directory; browsers land in the shared cache root. */
 export function runPlaywright(bundleRoot: string, config: string, segments: string[] = []): void {
-  runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, playPollingEnv());
+  runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, repoToolCacheEnv(findRepoRoot(bundleRoot), playPollingEnv()));
 }
 
 /** @emoji 🔌️ True when host:port already accepts TCP (existing dev server). */
@@ -2900,9 +2902,9 @@ function wasmPackSnippetFiles(pkgDir: string): string[] {
   return out;
 }
 
-/** 🏗️ Shares browser compiler state across crates while keeping it independent of native editor checks. */
+/** 🏗️ Shares the browser compiler environment across crates; Cargo's own config governs where it writes, no private default. */
 export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  return { ...env, CARGO_TARGET_DIR: resolve(repoRoot, env.CARGO_TARGET_DIR ?? ".🧬semio/🦑️repo/⚡️cache/cargo/browser") };
+  return { ...env };
 }
 
 /** 🧭️ Makes wasm-pack resolve the selected optimizer while preserving the pinned binding generator. */
@@ -2966,7 +2968,7 @@ export function runWasmPackWebBuild(opts: {
       console.error(`[${logPrefix}] missing package name in Cargo.toml`);
       process.exit(1);
     }
-    const cargoWasm = join(buildEnv.CARGO_TARGET_DIR!, `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
+    const cargoWasm = join(cargoTargetDirectory(repoRoot, buildEnv), `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
     const threadedCargoArgs = ["build", "--locked", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
     status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
     if (status !== 0) {
@@ -3081,7 +3083,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
   if (runCmdStatus("cargo", ["build", "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`extension component build failed: ${parsed.packageName}`);
   }
-  const wasmArtifact = join(resolve(repoRoot, process.env.CARGO_TARGET_DIR ?? "target"), EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
+  const wasmArtifact = join(cargoTargetDirectory(repoRoot), EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
   if (!existsSync(wasmArtifact)) throw new Error(`missing wasm artifact ${wasmArtifact}`);
   const componentWasm = new Uint8Array(readFileSync(wasmArtifact));
   const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts");

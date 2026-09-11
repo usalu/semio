@@ -12,7 +12,7 @@
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4, leadingEmojiIdentity } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4, leadingEmojiIdentity, repoToolCacheEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 type OwnedSvgElement = {
   getAttribute(name: string): string | null;
@@ -931,7 +931,7 @@ class GenerateLogoScript extends BundleScript {
 
 class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
-    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(this.repoRoot, "node_modules/.cache/ms-playwright");
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoToolCacheEnv(this.repoRoot).PLAYWRIGHT_BROWSERS_PATH;
     const logoDir = join(assetsRoot(), "🪧️logos");
     const inputPath = join(logoDir, "🎞️animation/⚡️animated.svg");
     const outputPath = join(logoDir, "🎞️animation/🎬️animation.mp4");

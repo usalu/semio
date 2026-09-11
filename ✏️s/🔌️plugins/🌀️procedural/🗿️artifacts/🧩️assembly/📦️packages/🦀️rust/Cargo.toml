@@ -29,6 +29,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

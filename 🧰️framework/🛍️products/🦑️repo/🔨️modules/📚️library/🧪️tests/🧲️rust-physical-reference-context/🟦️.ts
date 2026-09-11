@@ -210,7 +210,7 @@ test("scoped joins bind the real target instead of a sibling and survive rollbac
   expect(plan.edits.map((edit) => [edit.path, edit.oldValue, edit.newValue])).toEqual([[vector.consumer, vector.source, vector.destination]]);
   expect(plan.edits[0]!.structuredLocation.startsWith("rust-path-join:")).toBe(true);
   const runtime = () => {
-    const result = Bun.spawnSync(["cargo", "run", "--quiet", "--offline", "--manifest-path", join(row.directory, vector.manifest), "--target-dir", join(row.directory, "🧪️build"), "--bin", "reader"], { cwd: row.directory, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe" });
+    const result = Bun.spawnSync(["cargo", "run", "--quiet", "--offline", "--manifest-path", join(row.directory, vector.manifest), "--target-dir", join(row.directory, "🧪️build"), "--bin", "reader"], { cwd: row.directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     expect(result.stdout.toString().trim()).toBe(vector.runtimeOutput);
   };
@@ -342,7 +342,7 @@ test("independent syn parsing reproduces assertion-message, manifest-path and jo
   writeFileSync(join(directory, "🦀️.rs"), readFileSync(join(root, golden.oracle.sourceInput)));
   let passed = false;
   try {
-    const result = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe" });
+    const result = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, exitCode] = await Promise.all([new Response(result.stdout).text(), new Response(result.stderr).text(), result.exited]);
     expect({ exitCode, stderr }).toEqual({ exitCode: 0, stderr: "" });
     expect(JSON.parse(stdout)).toEqual({
@@ -365,7 +365,7 @@ test("rustc independently confirms delimiter strings and actual custom or standa
       const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
       mkdirSync(owner);
       writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
-      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "join_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "join_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
       expect(compiled.exitCode, `${row.id}: ${compiled.stderr.toString()}`).toBe(0);
       const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
       expect(runtime.exitCode, `${row.id}: ${runtime.stderr.toString()}`).toBe(0);
@@ -398,7 +398,7 @@ test("rustc confirms correlated finite receiver targets and missing-target rejec
       mkdirSync(manifestDirectory, { recursive: true });
       for (const path of row.physicalTargets.slice(missing ? 1 : 0)) { mkdirSync(dirname(join(owner, path)), { recursive: true }); writeFileSync(join(owner, path), "exact finite target\n", { flag: "wx" }); }
       writeFileSync(input, row.source + '\nfn main() { inspect(); println!("finite-targets-confirmed"); }\n', { flag: "wx" });
-      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_candidate_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_candidate_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
       expect(compiled.exitCode, row.id + ": " + compiled.stderr.toString()).toBe(0);
       const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
       if (missing) { expect(runtime.exitCode).not.toBe(0); expect(runtime.stderr.toString()).toContain("leaf.rs"); }
@@ -420,7 +420,7 @@ for (const row of golden.manifestCandidates.adversarial.cases) test(`finite cand
     mkdirSync(manifestDirectory);
     for (const [path, bytes] of Object.entries(row.runtimeProof.files ?? {})) writeFileSync(join(directory, path), bytes as string, { flag: "wx" });
     writeFileSync(input, row.source + `\nfn main() { ${row.runtimeProof.call}; }\n`, { flag: "wx" });
-    const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "candidate_adversarial", input, "-o", executable], { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+    const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "candidate_adversarial", input, "-o", executable], { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
     expect(compiled.exitCode, compiled.stderr.toString()).toBe(0);
     const runtime = Bun.spawnSync([executable], { cwd: directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
     expect(runtime.exitCode, runtime.stderr.toString()).toBe(0);
@@ -443,7 +443,7 @@ test("finite candidate generic std namespace and expanded env ambiguities are re
       mkdirSync(owner);
       for (const [path, bytes] of Object.entries(row.files ?? {})) writeFileSync(join(owner, path), bytes as string, { flag: "wx" });
       writeFileSync(input, row.source, { flag: "wx" });
-      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "namespace_review", input, "-o", join(owner, "🧪️.bin")], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "namespace_review", input, "-o", join(owner, "🧪️.bin")], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
       expect(compiled.exitCode).not.toBe(0);
       expect(compiled.stderr.toString()).toContain(row.errorCode);
     }
@@ -461,7 +461,7 @@ test("rustc independently confirms manifest-root PathBuf construction and format
       const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
       mkdirSync(owner);
       writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
-      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "manifest_pathbuf_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "manifest_pathbuf_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
       expect(compiled.exitCode, `${row.id}: ${compiled.stderr.toString()}`).toBe(0);
       const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
       expect(runtime.exitCode, `${row.id}: ${runtime.stderr.toString()}`).toBe(0);

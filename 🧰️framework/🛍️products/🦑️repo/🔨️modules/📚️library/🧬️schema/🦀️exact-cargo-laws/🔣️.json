@@ -19,7 +19,7 @@
   "properties": {
     "compilerStorage": {
       "const": {
-        "defaultDirectory": "target",
+        "defaultDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/target",
         "base": "workspace"
       }
     },

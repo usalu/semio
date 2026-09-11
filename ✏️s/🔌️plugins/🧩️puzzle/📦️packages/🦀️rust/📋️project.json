@@ -68,7 +68,8 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fixtures lint",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "describe": {
       "executor": "nx:run-commands",
@@ -76,7 +77,11 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🔣️.json"
+      ]
     }
   }
 }

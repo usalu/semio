@@ -87,8 +87,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 /** 🦀️ Shells `cargo run` in the crate directory — cargo needs to run FROM there, so every path this
  * file passes it (`--out`) is resolved to an absolute path first. */
 function runCodec(args: readonly string[]): { status: number | null; stderr: string } {
-  const target = process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(CRATE_DIR, "target"), "generator");
-  const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8", env: { ...process.env, CARGO_TARGET_DIR: target } });
+  const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
   return { status: run.status, stderr: (run.stderr ?? "").trim() };
 }
 

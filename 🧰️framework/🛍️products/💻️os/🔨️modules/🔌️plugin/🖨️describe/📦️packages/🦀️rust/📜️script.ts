@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { createFreshComponentTests } from "../../🧪️tests/🆕️fresh-component/🟦️.ts";
 import { buildCargoArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 /**
  * 🛂️ `@semio-tech/os-plugin-describe-rs` task router: `bun ./📜️script.ts <build|test|describe>`.
  * `describe <component.wasm> --core <core.wasm> --out <dir>` builds (if needed) and execs the
@@ -335,10 +336,9 @@ class TestScript extends BundleScript {
   }
 }
 
-/** @emoji 🎯️ Resolves cargo's real target dir, honouring a `CARGO_TARGET_DIR` override (ticket-scoped
- * builds always set one — `important.md` binding rule 4) instead of assuming the repo-root `target/`. */
+/** @emoji 🎯️ Cargo's effective deliverable root: the shared repo cache unless the environment overrides it. */
 function cargoTargetRoot(repoRoot: string): string {
-  return process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
+  return cargoTargetDirectory(repoRoot);
 }
 
 /** @emoji 🛠️ Resolves the debug-profile binary path for the current platform, after ensuring it is built (cargo's incremental cache makes a no-op rebuild fast — never exec a possibly-stale binary). */
@@ -357,8 +357,8 @@ class DescribeScript extends BundleScript {
   }
 }
 
-/** @emoji 🎯️ WASI-development artifact path cargo just built for `packageName`, honouring
- * the same `CARGO_TARGET_DIR` override as {@link ensureBuiltBin}. */
+/** @emoji 🎯️ WASI-development artifact path cargo just built for `packageName`, resolved through
+ * the same {@link cargoTargetRoot} cargo used in {@link ensureBuiltBin}. */
 export function pluginWasmArtifactPath(repoRoot: string, packageName: string, profile = "wasm-dev", targetRoot = cargoTargetRoot(repoRoot)): string {
   return join(targetRoot, "wasm32-wasip2", profile, `${packageName.replace(/-/g, "_")}.wasm`);
 }
@@ -762,13 +762,13 @@ export async function produceFreshComponentV1<T>(
   if (control.diagnosticsRoot && (freshPathIsWithin(targetRoot, resolve(control.diagnosticsRoot)) || freshPathIsWithin(stageRoot, resolve(control.diagnosticsRoot)))) throw new Error("fresh process evidence must outlive target and stage cleanup");
   const workRoot = join(targetRoot, ".semio-fresh-component-work");
   mkdirSync(workRoot, { mode: 0o700 });
-  const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" });
+  const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0" });
   const total = 8;
   let componentBytes: Uint8Array | undefined, coreBytes: Uint8Array | undefined, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>> | undefined;
   try {
     const cargo = request.rootCdylib
-      ? ["--config", 'build.rustc-wrapper=""', "rustc", "-p", request.cargoPackage, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", request.componentProfile]
-      : ["--config", 'build.rustc-wrapper=""', "build", "-p", request.cargoPackage, "--target", "wasm32-wasip2", "--profile", request.componentProfile];
+      ? ["rustc", "-p", request.cargoPackage, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", request.componentProfile]
+      : ["build", "-p", request.cargoPackage, "--target", "wasm32-wasip2", "--profile", request.componentProfile];
     await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
     const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
     if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
@@ -795,7 +795,7 @@ export async function produceFreshComponentV1<T>(
     if (Buffer.byteLength(wit) > FRESH_COMPONENT_MAX_BYTES) throw new Error("fresh component WIT exceeds its fixed boundary");
     const witExports = [...wit.matchAll(/\bexport\s+([a-z][a-z0-9-]*)\s*;/gu)].map((match) => match[1]!).sort();
     if (!["checkpoint", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
-    await freshRun("cargo", ["--config", 'build.rustc-wrapper=""', "build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
+    await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
     const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
     const descriptorRoot = join(workRoot, "descriptor");
     mkdirSync(descriptorRoot, { mode: 0o700 });

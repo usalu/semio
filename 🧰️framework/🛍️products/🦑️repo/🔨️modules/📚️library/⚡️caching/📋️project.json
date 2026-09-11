@@ -66,10 +66,16 @@
         "command": "bun ./📜️script.ts disk-report"
       }
     },
-    "disk-prune": {
+    "cache-report": {
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts disk-prune"
+        "command": "bun ./📜️script.ts cache-report"
+      }
+    },
+    "cache-prune": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cache-prune"
       }
     },
     "cache-verify": {

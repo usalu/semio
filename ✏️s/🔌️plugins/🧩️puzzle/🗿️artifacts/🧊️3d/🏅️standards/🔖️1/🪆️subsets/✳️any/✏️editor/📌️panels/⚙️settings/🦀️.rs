@@ -37,9 +37,13 @@ fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> 
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field admission failed"))
 }
 
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+/// ⚙️ Renders the app settings for ONE window instance. `window_id` is not decoration: every stepper
+/// here dispatches without a `windowId` arg, so the edit lands on whichever window the host's ambient
+/// view currently names — the section title says which one, so a split layout cannot silently retune
+/// the pane the user is not looking at.
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let runtime = &envelope.runtime;
-    ui::section(ui_label(labels.settings.as_str())?)
+    ui::section(ui_label(if window_id.is_empty() { labels.settings.as_str().to_string() } else { format!("{} — {window_id}", labels.settings.as_str()) })?)
         .try_id("puzzle3d-play-settings")
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
         .default_open(true)

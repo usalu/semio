@@ -455,8 +455,13 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     retire_until_complete(retirement_deadline, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
     retire_until_complete(retirement_deadline, ui_contract::close_built_node_page_one);
     retire_while_progress(retirement_deadline, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
-    let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
-    let _ = crate::app::close_table_rows_view_one();
+    retire_while_progress(retirement_deadline, || {
+        matches!(
+            semio_framework::kernel::close_ui_turn_patch_transport_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT),
+            Ok(semio_framework::kernel::UiTurnPatchTransportProgress::Pending { .. })
+        )
+    });
+    retire_while_progress(retirement_deadline, || crate::app::close_table_rows_view_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
         if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {

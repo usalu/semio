@@ -22,7 +22,6 @@
 
 //#region 🔌️Adapters
 import { spawnSync } from "node:child_process";
-import { join } from "node:path";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry
@@ -34,13 +33,11 @@ function main(argv: readonly string[]): number {
     console.error(`[bridge] unknown command ${JSON.stringify(command)} — expected list-mutations <artifact> <standard> <subset>`);
     return 2;
   }
-  // 🏭️`--offline` and an agent-scoped target directory: the bridge runs inside a test sweep alongside
-  // peer sessions, and a shared target directory is the single biggest source of lock contention here.
-  const target = process.env.CARGO_TARGET_DIR ?? join(process.env.SEMIO_AGENT_CACHE ?? join(import.meta.dir, "target"), "bridge");
+  // 🏭️`--offline`: the bridge runs inside a test sweep alongside peer sessions; the shared build-dir
+  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-bridge override here.
   const built = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-step-ap214-cc6-bridge", "--", command, artifact, standard, subset], {
     cwd: import.meta.dir,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: target },
   });
   if (built.status !== 0) {
     // 🚫️A bridge that cannot run must SAY SO and exit non-zero. Emitting a plausible-looking inventory

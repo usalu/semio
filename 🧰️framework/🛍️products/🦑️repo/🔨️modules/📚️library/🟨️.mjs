@@ -23,11 +23,11 @@ const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revis
 const nxPath = (path) => path.split("\\").join("/");
 const owned = (path, root) => root === "." || path === root || path.startsWith(`${root}/`);
 const matchesCommand = (name, commands) => commands.some((command) => name === command || name.startsWith(`${command}-`));
-const matchesUncached = (name, commands) => commands.some((command) => command === "format" ? name === "format" : name === command || name.startsWith(`${command}-`));
+const matchesUncached = (name, policy) => policy.uncachedExact.includes(name) || matchesCommand(name, policy.uncached);
 const mutatingName = (name) => /write-baseline$|(?:^|-)(?:reset|clean|gc|prune|report|setup|fuzz)(?:-|$)/.test(name);
 const liveName = (name) => /(?:^|-)(?:e2e|live)(?:-|$)/.test(name);
 const verifyCommand = (target) => /(?:^|[\s"'])verify(?:[\s"']|$)/.test(target?.options?.command ?? "");
-const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /generator/.test(name) && !name.includes("generator-inputs");
+const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /^generator(?:-|$)/.test(name) && !name.includes("generator-inputs");
 
 /** 🧶️ Models Bun's locked package locations without merging distinct dependency contexts. */
 function bunLockGraph(lock, patches = {}) {
@@ -336,7 +336,8 @@ function relativeScriptInputs(entries, workspaceRoot) {
       catch (error) {
         if (error.code !== "MODULE_NOT_FOUND") throw error;
         resolved = compiler.resolveModuleName(entry, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, compiler.sys).resolvedModule?.resolvedFileName;
-        if (!resolved || /\.d\.[cm]?ts$/.test(resolved)) throw error;
+        if (!resolved) continue;
+        if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
       }
       if (nxPath(relative(workspaceRoot, resolved)).startsWith("../")) throw new Error(`Command import escapes workspace: ${resolved}`);
       visit(resolved);
@@ -361,24 +362,69 @@ function nativeCommandInputs(workspaceRoot) {
   ];
 }
 
-/** 🧭️ Adds the selected native target's local router and executable import closure. */
-function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot)) {
+/** 🧭️ Parses a target's own script entry points from its command, or reports that none exist. */
+function targetScriptClosure(target, workspaceRoot) {
   const command = target.options?.command;
-  if (typeof command !== "string") return fallback;
+  if (typeof command !== "string") return undefined;
   const cwd = resolve(workspaceRoot, target.options?.cwd ?? ".");
   const entries = [...command.matchAll(/"([^"\n]+)"|'([^'\n]+)'|([^\s"';&|]+)/g)]
     .map((match) => match[1] ?? match[2] ?? match[3])
     .filter((token) => token.endsWith(SCRIPT_BASENAME))
     .map((token) => resolve(cwd, token))
     .filter((path) => existsSync(path) && !nxPath(relative(workspaceRoot, path)).startsWith("../"));
-  if (!entries.length) return fallback;
-  return [...new Set([...relativeScriptInputs(entries, workspaceRoot), ...fallback])];
+  return entries.length ? relativeScriptInputs(entries, workspaceRoot) : undefined;
+}
+
+/** 🧭️ Adds the selected native target's local router and executable import closure. */
+function nativeTargetCommandInputs(target, workspaceRoot, fallback = nativeCommandInputs(workspaceRoot)) {
+  const closure = targetScriptClosure(target, workspaceRoot);
+  return closure ? [...new Set([...closure, ...fallback])] : fallback;
+}
+
+/** 🎯️ Hashes any script-backed target's own command closure, exactly, instead of the whole router. */
+function genericTargetCommandInputs(target, workspaceRoot, fallback) {
+  return targetScriptClosure(target, workspaceRoot) ?? fallback;
+}
+
+/** 🪢️ The previous blanket router contract, kept only as a correctness fallback for a command naming no script. */
+function genericCommandFallbackInputs(workspaceRoot) {
+  const runner = nxPath(relative(workspaceRoot, LIBRARY_ROOT));
+  return [
+    "{workspaceRoot}/📜️script.ts",
+    `{workspaceRoot}/${runner}/**/*.{ts,tsx,js,mjs,cjs,json}`,
+    `{workspaceRoot}/${runner}/🟨️.mjs`,
+    `{workspaceRoot}/${runner}/⚡️caching/**/*`,
+  ];
+}
+
+/** 🧬️ A generator contract's own declared source inputs, plus the input-discovery fingerprint dependency it authors, if any. */
+function generatorContractInputs(contract) {
+  const fingerprint = contract.inputDiscovery ? POLICY.generatorInputs[contract.inputDiscovery.kind] : undefined;
+  if (contract.inputDiscovery && !fingerprint) throw new Error(`Generator input discovery has no fingerprint owner: ${contract.inputDiscovery.kind}`);
+  return {
+    inputs: [...contract.inputPatterns.map((path) => `{workspaceRoot}/${path}`), ...(fingerprint ? [{ dependentTasksOutputFiles: fingerprint.output }] : [])],
+    dependsOn: fingerprint ? [fingerprint.target] : [],
+  };
+}
+
+/** 🌲️ Reads one root's current bytes into a stable digest, independently of directory-vs-file shape or a missing path. */
+const OUTPUT_ROOT_DIGEST_SCRIPT = 'const c=require("crypto"),f=require("fs"),p=require("path"),r=process.argv[1],h=c.createHash("sha256");(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join("/")+"\\0");h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest("hex"));';
+
+/**
+ * 🧮️ A committed generated output root as a live positive input. Nx's own fileset hashing only ever
+ * sees files its native git-based walker can see, which silently excludes anything `.gitignore` covers —
+ * exactly every `outputRoots` entry with `inclusion: "ignored"`. A `runtime` input instead spawns a fresh
+ * read of the current bytes at every hash computation, so it is immune to that exclusion in either direction.
+ */
+function outputRootInputs(output, workspaceRoot) {
+  const absolute = resolve(workspaceRoot, output.path);
+  return { runtime: `node -e ${JSON.stringify(OUTPUT_ROOT_DIGEST_SCRIPT)} ${JSON.stringify(absolute)}` };
 }
 
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
 function targetPolicy(name, target, policy = POLICY) {
   if (matchesCommand(name, policy.continuous)) return { ...target, cache: false, continuous: true };
-  if (matchesUncached(name, policy.uncached) || mutatingName(name) || liveName(name)) return { ...target, cache: false };
+  if (matchesUncached(name, policy) || mutatingName(name) || liveName(name)) return { ...target, cache: false };
   if (cacheableFamily(name) || verifyCommand(target)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
   return { ...target, cache: target.cache !== false };
 }
@@ -528,10 +574,6 @@ function projectInputs(json, root, workspaceRoot, facts) {
   const runner = nxPath(relative(workspaceRoot, LIBRARY_ROOT));
   const inputs = [
     "{projectRoot}/**/*",
-    "{workspaceRoot}/📜️script.ts",
-    `{workspaceRoot}/${runner}/**/*.{ts,tsx,js,mjs,cjs,json}`,
-    `{workspaceRoot}/${runner}/🟨️.mjs`,
-    `{workspaceRoot}/${runner}/⚡️caching/**/*`,
     { runtime: 'node -p "process.platform.concat(process.arch)"' },
   ];
   const deliveryOffsets = TAXONOMY.testDeliveryScopeDirectoryNames.map((name) => root.indexOf(`/${name}/`)).filter((index) => index >= 0);
@@ -626,31 +668,30 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
     const name = contract.target.slice(contract.target.lastIndexOf(":") + 1), target = declared[name];
     if (!target || contract.target !== `${json.name}:${name}`) throw new Error(`Generator target has no project owner: ${contract.target}`);
-    const inputs = [...(target.inputs ?? ["default", "^default"]), ...contract.inputPatterns.map((path) => `{workspaceRoot}/${path}`)];
-    const fingerprint = contract.inputDiscovery ? POLICY.generatorInputs[contract.inputDiscovery.kind] : undefined;
-    if (contract.inputDiscovery && !fingerprint) throw new Error(`Generator input discovery has no fingerprint owner: ${contract.inputDiscovery.kind}`);
-    if (fingerprint) inputs.push({ dependentTasksOutputFiles: fingerprint.output });
-    declared[name] = { ...target, inputs, ...(fingerprint ? { dependsOn: [...new Set([...(target.dependsOn ?? []), fingerprint.target])] } : {}), outputs: contract.outputRoots.map((output) => `{workspaceRoot}/${output.path}`) };
-    if (contract.checkTarget) {
-      const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1);
-      if (declared[check]) declared[check] = { ...declared[check], cache: false };
-    }
+    const discovery = generatorContractInputs(contract);
+    const inputs = [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs];
+    declared[name] = { ...target, inputs, ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}), outputs: contract.outputRoots.map((output) => `{workspaceRoot}/${output.path}`) };
   }
   const normalized = {};
+  const genericFallback = genericCommandFallbackInputs(workspaceRoot);
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
     const policy = targetPolicy(name, targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target }, root, ownsScript));
     const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
+    const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
       policy.parallelism ??= false;
       policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
     }
-    if (artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name)) policy.inputs = ["artifactSources", "artifactCommandSources"];
+    if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
+    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback)];
     normalized[name] = policy;
   }
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root || !contract.checkTarget) continue;
-    const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1);
-    if (normalized[check]) normalized[check] = { ...normalized[check], cache: false };
+    const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1), target = normalized[check];
+    if (!target) continue;
+    const discovery = generatorContractInputs(contract);
+    normalized[check] = { ...target, cache: true, inputs: [...target.inputs, ...discovery.inputs, ...contract.outputRoots.map((output) => outputRootInputs(output, workspaceRoot))], ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}) };
   }
   return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
 }
@@ -754,7 +795,14 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
   }]));
 }
 
-/** 🎮️ Declares the runtime component closure and browser producers before any catalog is generated. */
+/**
+ * 🎮️ Declares the runtime component closure and browser producers before any catalog is generated.
+ * React's `prepare` only validates already Nx-materialized bytes (no write), so it caches on its
+ * `dependsOn` closure with no outputs; WGPU's `prepare` additionally copies into `PLUGIN_MODULES_ROOT`
+ * (`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`), one fixed, live, shared directory a running
+ * `dev`/hot-swap session also writes into and that is not scoped per variant/profile, so it stays
+ * uncached for the same reason as this project's own `plugin` target in `📋️project.json`.
+ */
 function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const components = new Map(), playgrounds = [];
   const projectAt = (root) => {
@@ -773,6 +821,9 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const composition = JSON.parse(readFileSync(join(workspaceRoot, projectRoot, "package.json"), "utf8"));
   const baseline = ["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"];
   const linked = (composition.semio?.browserSessionFactories ?? []).map((row) => row.engine);
+  const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"), wgpuProject = projectAt(wgpuRoot);
+  if (!wgpuProject?.name || !wgpuProject.targets?.wasm) throw new Error(`WGPU renderer must name an authored wasm producer: ${wgpuRoot}`);
+  const wgpuEngine = `${wgpuProject.name}:wasm`;
   const result = {};
   for (const playground of playgrounds) {
     const own = components.get(playground.pluginId), selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
@@ -785,10 +836,19 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
       result[`activate-${playground.variant}-react-${profile}`] = { cache: false, parallelism: false, outputs: [], dependsOn: [`prepare-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` } };
       result[`prepare-${playground.variant}-react-${profile}`] = {
-      cache: false,
+      cache: true,
       outputs: [],
+      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
+      };
+      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ./📜️script.ts dev ${playground.variant} served`, env: { SEMIO_RENDERER: "wgpu" } } };
+      result[`activate-${playground.variant}-wgpu-${profile}`] = { cache: false, parallelism: false, outputs: [], dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`], options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` } };
+      result[`prepare-${playground.variant}-wgpu-${profile}`] = {
+      cache: false,
+      outputs: [],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", wgpuEngine, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }
     const name = `build-${playground.variant}-react-release`;
@@ -811,7 +871,7 @@ function rootCommandTargets(script) {
   const inspect = (node) => {
     if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && ts.isStringLiteral(node.arguments[0])) {
       const name = node.arguments[0].text;
-      if (name !== "nx") targets[name] = { executor: DEFAULT_EXECUTOR, options: { command: `bun ./📜️script.ts ${name}`, forwardAllArgs: true } };
+      if (name !== "nx") targets[name] = { executor: DEFAULT_EXECUTOR, outputs: [], options: { command: `bun ./📜️script.ts ${name}`, forwardAllArgs: true } };
       inspect(node.expression.expression);
     }
   };
@@ -982,4 +1042,4 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { declaredSourceInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, projectInputs, rootCommandTargets };

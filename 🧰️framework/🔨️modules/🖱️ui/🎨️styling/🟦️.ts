@@ -75,9 +75,15 @@ export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]):
   };
 }
 
-/** @emoji 🔗️ True when a request targets Vite prebundled `node_modules/.vite/deps` chunks. */
-export function isPlaygroundOptimizedDepUrl(url: string): boolean {
-  return url.includes("/node_modules/.vite/deps/");
+/** @emoji 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
+export function playgroundOptimizedDepUrlPrefix(root: string, cacheDir: string): string {
+  const path = relative(root, cacheDir).replaceAll("\\", "/");
+  return path.startsWith("..") || isAbsolute(path) ? `/@fs/${resolve(cacheDir).replaceAll("\\", "/").replace(/^\/+/, "")}/deps/` : `/${path}/deps/`;
+}
+
+/** @emoji 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
+export function isPlaygroundOptimizedDepUrl(url: string, prefix: string): boolean {
+  try { return decodeURI(url).includes(prefix); } catch { return false; }
 }
 
 /** @emoji 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
@@ -255,8 +261,9 @@ export function playgroundStaleOptimizeDepPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-stale-optimize-dep",
     configureServer(server) {
+      const prefix = playgroundOptimizedDepUrlPrefix(server.config.root, server.config.cacheDir);
       server.middlewares.use((req, res, next) => {
-        if (!isPlaygroundOptimizedDepUrl(req.url ?? "")) {
+        if (!isPlaygroundOptimizedDepUrl(req.url ?? "", prefix)) {
           next();
           return;
         }
@@ -1587,6 +1594,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

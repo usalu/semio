@@ -1,0 +1,26 @@
+syntax = "proto3";
+package semio.s.procedural.assembly.mutation;
+
+message AssemblyMutation {
+  oneof kind {
+    CreateSlot create_slot = 1;
+    DeleteSlot delete_slot = 2;
+    CreateRule create_rule = 3;
+    DeleteRule delete_rule = 4;
+    ChangeWeight change_weight = 5;
+    RemoveWeight remove_weight = 6;
+    ConnectSlots connect_slots = 7;
+    DisconnectSlots disconnect_slots = 8;
+    ChangeSeed change_seed = 9;
+  }
+}
+
+message CreateSlot { uint64 index = 1; }
+message DeleteSlot { string id = 1; }
+message CreateRule { uint64 index = 1; }
+message DeleteRule { string id = 1; }
+message ChangeWeight { string module_id = 1; double weight = 2; }
+message RemoveWeight { string module_id = 1; }
+message ConnectSlots { uint64 index = 1; }
+message DisconnectSlots { string id = 1; }
+message ChangeSeed { uint64 seed = 1; }

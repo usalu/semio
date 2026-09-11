@@ -85,7 +85,7 @@ fn find_repo_root() -> Result<PathBuf, String> {
     }
 }
 
-/// 🗺️ Resolves every plugin id this run needs to its compiled `.wasm` under `target/wasm32-wasip2/`,
+/// 🗺️ Resolves every plugin id this run needs to its compiled `.wasm` under `PLUGIN_WASM_TARGET_DIR/`,
 /// trying `PLUGIN_WASM_PROFILE_DIRS` in order (`wasm-dev` before `wasm-release`).
 fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = String>) -> Result<HashMap<String, PathBuf>, String> {
     let artifact_by_plugin: HashMap<&str, &str> = PLUGIN_WASM_ARTIFACTS.iter().map(|(plugin_id, wasm_out)| (*plugin_id, *wasm_out)).collect();

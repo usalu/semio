@@ -38,7 +38,8 @@
         {
           "runtime": "bun --version"
         }
-      ]
+      ],
+      "outputs": []
     },
     "fonts": {
       "executor": "nx:run-commands",

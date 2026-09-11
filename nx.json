@@ -8,9 +8,6 @@
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
-      "{workspaceRoot}/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**/*",
       {
         "runtime": "node -p \"process.platform.concat(process.arch)\""
       },
@@ -60,7 +57,7 @@
     }
   ],
   "parallel": 3,
-  "cacheDirectory": ".nx/cache",
-  "maxCacheSize": "8GB",
+  "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/nx",
+  "maxCacheSize": "16GB",
   "analytics": false
 }

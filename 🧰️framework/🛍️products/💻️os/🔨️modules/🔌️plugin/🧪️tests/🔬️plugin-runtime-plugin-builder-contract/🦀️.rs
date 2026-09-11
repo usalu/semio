@@ -1388,6 +1388,11 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn typed_operation_ingress_pre_admits_the_exact_slot_before_it_mints_an_operation_id() {
+        test_typed_operation_slot_preadmission::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
         fn clock() -> Option<u64> {
             Some(1_000)

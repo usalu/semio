@@ -11,6 +11,7 @@ import { browserArtifactVitePlugin } from "../../🧰️framework/🛍️product
 import { demonstratorRuntimeAssetSources } from "./🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { readDemonstratorActivation } from "./🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🔨️modules/🧩️runtime/🟦️.ts";
+import { repoCacheDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,7 +42,7 @@ export default defineConfig(({ command }) => {
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   return {
   root: playDir,
-  cacheDir: path.join(repoRoot, "node_modules/.vite-mit-bestand-demonstrator"),
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },

@@ -12,6 +12,7 @@
     "canonical-bootstrap-folder-mirror-check": {
       "executor": "nx:run-commands",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-bootstrap-folder-mirror-check source"
@@ -20,6 +21,7 @@
     "canonical-bootstrap-folder-mirror-process-check": {
       "executor": "nx:run-commands",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-bootstrap-folder-mirror-check process"
@@ -28,6 +30,7 @@
     "browser-host-staging-check": {
       "executor": "nx:run-commands",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick --testNamePattern='ticket-owned browser host staging'"
@@ -36,6 +39,7 @@
     "closed-browser-component-factory-check": {
       "executor": "nx:run-commands",
       "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts closed-browser-component-factory-check"
@@ -114,6 +118,9 @@
     },
     "plugin": {
       "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udd0c\ufe0fplugin-modules"
+      ],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts plugin",
@@ -130,6 +137,7 @@
     },
     "layer-lint": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts layer-lint",
@@ -138,6 +146,7 @@
     },
     "index-lint": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts index-lint",
@@ -146,6 +155,7 @@
     },
     "host-handle-lint": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts host-handle-lint",
@@ -181,6 +191,7 @@
     },
     "preview-distribution": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts distribution preview",
@@ -205,6 +216,7 @@
     },
     "preview-generated": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts preview-generated",
@@ -213,6 +225,7 @@
     },
     "scale-fixture-check": {
       "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",

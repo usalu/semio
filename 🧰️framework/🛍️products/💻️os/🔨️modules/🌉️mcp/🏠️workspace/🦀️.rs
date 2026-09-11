@@ -79,7 +79,11 @@ pub struct PluginRegistryEntry {
     pub wasm_out: String,
 }
 
-const PLUGIN_WASM_TARGET_DIR: &str = "target/wasm32-wasip2";
+// 🎯️ Cargo's configured deliverable root (`.cargo/config.toml`'s `build.target-dir`), joined with
+// `wasm32-wasip2` — mirrors `🔌️plugin/📇️registry/📜️script.ts`'s `emitRustArtifacts`, which bakes the
+// same resolved value (via the shared `cargoTargetDirectory` resolver) into the generated
+// `PLUGIN_WASM_TARGET_DIR` this constant duplicates; hand-kept in sync until the filed lease lands.
+const PLUGIN_WASM_TARGET_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2";
 const PLUGIN_WASM_PROFILE_DIRS: [&str; 2] = ["wasm-dev", "wasm-release"];
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🚀️bin.rs::find_repo_root` (walk up from
@@ -128,7 +132,7 @@ pub fn find_plugin_entry<'a>(entries: &'a [PluginRegistryEntry], plugin_id: &str
     entries.iter().find(|entry| entry.plugin_id == plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` is not in the plugin registry")))
 }
 
-/// 🗺️ Resolves one plugin's compiled `.wasm` under `target/wasm32-wasip2/{wasm-dev,wasm-release}` —
+/// 🗺️ Resolves one plugin's compiled `.wasm` under `PLUGIN_WASM_TARGET_DIR/{wasm-dev,wasm-release}` —
 /// same profile-dir fallback order as `🏃️run/🚀️bin.rs::resolve_plugin_paths`.
 pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -> Result<PathBuf, GatewayError> {
     let mut tried = Vec::new();

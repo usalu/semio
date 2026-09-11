@@ -36,6 +36,8 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -43,13 +45,13 @@ const HERE = import.meta.dir;
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 
 const LEGACY_ENGINE_DIR = join(HERE, "🦀️engine");
-const LEGACY_ENGINE_BIN = join(LEGACY_ENGINE_DIR, "target", "release", process.platform === "win32" ? "generate.exe" : "generate");
+const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const LEGACY_RECIPE = "pattern-shell";
 const LEGACY_DIRECTORY = "🐚️pattern-shell";
 const LEGACY_FIXTURE_FILE = "🐚️pattern-shell.obj";
 
 const READER_MANIFEST = join(HERE, "📖️tobj-obj-reader", "Cargo.toml");
-const READER_BIN = join(HERE, "📖️tobj-obj-reader", "target", "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
+const READER_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
 
 /** 🍳️ One entry per reader-oracle corpus recipe — mirrors `📖️tobj-obj-reader/src/main.rs`'s own
  *  `RECIPES` table (id + whether it has an `after.obj`), kept in sync by hand since this file never

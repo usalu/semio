@@ -32,6 +32,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import JSZip from "jszip";
 import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
 import { toMarkdown } from "mdast-util-to-markdown";
@@ -531,7 +533,7 @@ async function main(argv: readonly string[]): Promise<number> {
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const fixturesDir = join(import.meta.dir, "..", "🧫️fixtures");
     if (command === "carrier") {
-      const run = spawnSync(join(engineDir, "target", "release", "generate"), [fixturesDir], { stdio: "inherit" });
+      const run = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [fixturesDir], { stdio: "inherit" });
       if (run.status !== 0) return run.status ?? 1;
     }
     const kinds = CARRIER_KINDS;

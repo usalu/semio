@@ -16,7 +16,8 @@
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publication-authority-audit",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     }
   }
 }

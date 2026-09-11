@@ -2,13 +2,16 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoCacheDirectory } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(root, "../../../../../../..");
 
 /** @emoji 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */
 export default defineConfig({
   root,
+  cacheDir: repoCacheDirectory(repoRoot, "vite", "ui-react"),
   resolve: {
     alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "🟦️.tsx") }],
   },

@@ -48,7 +48,7 @@ use semio_framework_trace::{TraceEvent, Watchdog, record_cancelled, record_check
 
 pub use semio_framework_async::CancelToken;
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
-pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id, interactive_step_contract_violated, runtime_diagnostics_enabled, set_runtime_diagnostics, INTERACTIVE_STEP_CEILING_US, RUNTIME_DIAGNOSTICS_ENV};
+pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id, allocate_operation_id_in_slot, interactive_step_contract_violated, runtime_diagnostics_enabled, set_runtime_diagnostics, INTERACTIVE_STEP_CEILING_US, RUNTIME_DIAGNOSTICS_ENV};
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —

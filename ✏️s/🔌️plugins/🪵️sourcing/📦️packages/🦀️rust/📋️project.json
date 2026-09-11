@@ -43,7 +43,11 @@
         "cwd": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🔣️.json"
+      ]
     }
   }
 }

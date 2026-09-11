@@ -463,7 +463,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
     const receipts = await runExactCargoLaws({
       cwd: repoRoot,
       artifactDir: resolve(artifactDir),
-      env: { ...process.env, CARGO_BUILD_JOBS: "1", RUSTC_WRAPPER: "" },
+      env: { ...process.env, CARGO_BUILD_JOBS: "1" },
       groups: [{
         package: crateName,
         target: { kind: "lib" },
@@ -513,7 +513,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
     const receipts = await runExactCargoLaws({
       cwd: repoRoot,
       artifactDir: resolve(artifactDir),
-      env: { ...process.env, CARGO_BUILD_JOBS: "1", RUSTC_WRAPPER: "" },
+      env: { ...process.env, CARGO_BUILD_JOBS: "1" },
       groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }],
     });
     assert.equal(receipts[0]!.assertions, 1);

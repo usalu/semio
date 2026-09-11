@@ -1,0 +1,22 @@
+# 🧬️ Assembly mutation vocabulary.
+
+type CreateSlot { index: Int! }
+type DeleteSlot { id: String! }
+type CreateRule { index: Int! }
+type DeleteRule { id: String! }
+type ChangeWeight { moduleId: String! weight: Float! }
+type RemoveWeight { moduleId: String! }
+type ConnectSlots { index: Int! }
+type DisconnectSlots { id: String! }
+type ChangeSeed { seed: Float! }
+
+union AssemblyMutation =
+  CreateSlot
+  | DeleteSlot
+  | CreateRule
+  | DeleteRule
+  | ChangeWeight
+  | RemoveWeight
+  | ConnectSlots
+  | DisconnectSlots
+  | ChangeSeed

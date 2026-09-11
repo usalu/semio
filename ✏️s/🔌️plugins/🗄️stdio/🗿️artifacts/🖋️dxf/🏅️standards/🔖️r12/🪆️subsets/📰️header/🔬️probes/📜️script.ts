@@ -35,6 +35,8 @@
 //#region 🔌️Adapters
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -52,7 +54,7 @@ type ProbeReport = {
 
 const ENGINE = { family: "dxf-rs", implementation: "engine (dxf 0.6 + this artifact's own semantic-dxf-r12-v1 projection)", version: "dxf@0.6.1" } as const;
 const PROBE_VERSION = "dxf@0.6.1";
-const ENGINE_BIN = join(import.meta.dir, "..", "🏭️generator", "🦀️engine", "target", "release", "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const TOLERANCE = 0.0001;
 /** ⚖️ `semantic-dxf-r12-v1`'s own named-vs-ordered split, per its `description` and this subset's
  *  real production dispatch (`validate_named_targets` for these three tables, `validate_indexed_targets`

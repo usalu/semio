@@ -270,7 +270,7 @@ export async function verifyPrintBundleContract(output = outputRoot): Promise<vo
   const require = createRequire(import.meta.url), manifest = JSON.parse(readFileSync(join(modulePath, "🔒️dependencies.json"), "utf8"));
   assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://semio.tech/schema/print/tectonic-template-compilation/bundle/schema.json"), manifest), true);
   const vectors = JSON.parse(readFileSync(join(modulePath, "🧫️cases.json"), "utf8"));
-  const api = await import("../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts");
+  const api = await import("../../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts");
   mkdirSync(output, { recursive: true });
   const root = mkdtempSync(join(output, "print-bundle-contract-")), original = globalThis.fetch;
   try {

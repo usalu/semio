@@ -19,12 +19,14 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE = join(HERE, "🦀️json-engine");
-const TARGET = process.env.CARGO_TARGET_DIR ?? join(ENGINE, "target");
+const TARGET = cargoTargetDirectory(getWorkspaceRoot());
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const CATALOG = join(HERE, "..", "🧪️oracle", "🔣️.json");
 const ORACLE_ID = "serde-json-equation-carrier-reader";
@@ -34,7 +36,9 @@ const KINDS: readonly string[] = ["change-coefficient", "change-graph-directed",
 
 //#region 🔨️Build
 function build(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--offline", "--target-dir", TARGET, "--manifest-path", join(ENGINE, "Cargo.toml")], { stdio: "inherit" });
+  // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
+  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.
+  const result = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(ENGINE, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 

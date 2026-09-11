@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/assembly/1/any/snapshot.json",
+  "title": "AssemblySnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "seed", "slots", "edges", "modules", "weights", "rules"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "seed": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "slots": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "z"],
+        "properties": {
+          "id": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "z": { "type": "number" },
+          "pinnedModuleId": { "type": "string" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "fromSlotId", "toSlotId"],
+        "properties": {
+          "id": { "type": "string" },
+          "fromSlotId": { "type": "string" },
+          "toSlotId": { "type": "string" }
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["childId", "target"],
+        "properties": {
+          "childId": { "type": "string" },
+          "target": { "type": "object" }
+        }
+      }
+    },
+    "weights": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["moduleId", "weight"],
+        "properties": {
+          "moduleId": { "type": "string" },
+          "weight": { "type": "number" }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "moduleAId", "moduleBId", "allowed", "params"],
+        "properties": {
+          "id": { "type": "string" },
+          "moduleAId": { "type": "string" },
+          "moduleBId": { "type": "string" },
+          "allowed": { "type": "boolean" },
+          "params": { "type": "object" }
+        }
+      }
+    }
+  }
+}

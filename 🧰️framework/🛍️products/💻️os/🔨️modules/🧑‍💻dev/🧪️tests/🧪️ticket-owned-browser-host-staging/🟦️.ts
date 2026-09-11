@@ -50,8 +50,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindChoice" }] }] })).toBe(true);
       expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindId" }] }] })).toBe(false);
       const scriptSource = readFileSync(fileURLToPath(source.url), "utf8");
-      expect(scriptSource).toContain('buildPluginCargo(space, join(artifactRoot, "browser-host-wasi-target"))');
-      expect(scriptSource).toContain('CARGO_TARGET_DIR: cargoTargetRoot, CARGO_BUILD_JOBS: "1", CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: ""');
+      // 🔒️ `buildPluginCargo` now always builds into the ONE shared, fine-grain-locked `cargoTargetDirectory`
+      // (no private per-caller target dirs) — this asserts the ticket-owned COPY step that still makes the
+      // fresh Space artifact eligible for `ownedTestBrowserHostInput`'s bounded-regular-file check survives.
+      expect(scriptSource).toContain("const builtSpace = await buildPluginCargo(space);");
+      expect(scriptSource).toContain('const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));');
+      expect(scriptSource).toContain("writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });");
       const materializerStart = scriptSource.indexOf("async function materializeTestBrowserPluginV1(");
       const materializerEnd = scriptSource.indexOf("export async function stageTestBrowserHostV1", materializerStart);
       const materializerOwner = scriptSource.slice(materializerStart, materializerEnd);

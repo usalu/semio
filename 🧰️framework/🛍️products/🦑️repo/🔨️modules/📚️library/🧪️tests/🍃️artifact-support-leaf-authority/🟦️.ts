@@ -165,7 +165,7 @@ async function verifyRustPointerAssertion(repo: string, aggregate: string, descr
   ].join("\n"));
   let completed = false;
   try {
-    const child = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(root, "Cargo.toml"), "--target-dir", join(root, "🎯️target"), "--", dirname(join(repo, descriptor)), join(repo, descriptor)], { cwd: root, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(root, "Cargo.toml"), "--target-dir", join(root, "🎯️target"), "--", dirname(join(repo, descriptor)), join(repo, descriptor)], { cwd: root, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]);
     expect(code, stderr).toBe(0);
     expect(stdout).toBe(`[DEBUG] descriptor pointer checked: ${dirname(join(repo, descriptor))}\n`);

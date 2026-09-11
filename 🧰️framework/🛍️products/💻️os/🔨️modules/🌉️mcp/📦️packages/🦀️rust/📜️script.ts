@@ -18,7 +18,7 @@ import {
   runCmd,
   runProbe,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveMcpTargetDirectory, requireMcpBinary } from "../../🟦️.ts";
+import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 
 import { buildCargoArtifacts } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 
@@ -48,8 +48,7 @@ function workspaceContract(root: string, exportId: string) {
 }
 
 function buildMcpBinary(repoRoot: string, root: string): string {
-  const targetDirectory = resolveMcpTargetDirectory(repoRoot);
-  runCargo(["build", "--manifest-path", "Cargo.toml", "--package", binaryContract.cargoPackage, "--bin", binaryContract.cargoBinary, "--target-dir", targetDirectory], root);
+  runCargo(["build", "--manifest-path", "Cargo.toml", "--package", binaryContract.cargoPackage, "--bin", binaryContract.cargoBinary], root);
   const binary = resolveBuiltMcpBinaryPath(repoRoot);
   if (!statSync(binary).isFile()) throw new Error(`cargo succeeded without producing ${binary}`);
   return binary;

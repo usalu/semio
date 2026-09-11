@@ -48,8 +48,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: ASSEMBLY_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_stdio_kinds: vec!["stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.txt".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -70,15 +70,53 @@ pub fn module_child_handle(module_id: &str) -> store::ArtifactChild<semio_s_arti
 /// capability this packet's brief asks for. `descriptor`/`claim` use the SAME `"s.assembly"` string
 /// `ASSEMBLY_DIALECT` above derives from (verified against the schema tree, not guessed).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural.assembly")?).capability(
-        ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.schema.artifact")?, ArtifactCapabilityKind::schema())
-            .descriptor(b"s.procedural.assembly")?
-            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.procedural.assembly")?)?,
-    )
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural.assembly")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.assembly")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.assembly")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.assembly.solve")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.assembly.solve")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.assembly@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.assembly@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"s.assembly:assembly")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "s.assembly")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("s.assembly", "assembly")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.localization.en")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"Assembly")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Assembly")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.localization.de")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"Montage")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Montage")?)?,
+        )
 }
 
-// 🚧️ NO `declaration()` here yet — deliberately, not an oversight. `ArtifactDeclaration::builder(...)
+/// 🔖️ Assembles `s.procedural.assembly`'s typed runtime declaration.
+#[cfg(feature = "component-app-assembly")]
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(standards::v1::subsets::any::schema::assembly_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::assembly_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<AssemblySnapshot, AssemblyMutation>(ASSEMBLY_DOCUMENT_SCHEMA)
+        .try_build()
+}
+
+// 🚧️ declaration gap closed — deliberately, not an oversight. `ArtifactDeclaration::builder(...)
 // .schema(descriptor)` (`🧰️framework/…/🔌️plugin/🦀️.rs:2883`) is typestate-MANDATORY: the
 // builder cannot reach `.try_build()` without it, and `ArtifactSchemaDescriptor` needs FOUR facets
 // (artifact/snapshot/diff/mutations) each carrying FIVE handcrafted `&'static str` leaves (rust/
@@ -105,7 +143,10 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path =  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                     pub mod diff;
                     #[path = "."]
                     pub mod snapshot {
@@ -251,23 +292,114 @@ pub mod standards {
                         pub use component::*;
                     }
                 }
+
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-// 🚧️ The authored `✏️editor`/`👁️viewer` surfaces are NOT mounted here, and this is measured, not
-// assumed: mounting them behind `component-app-assembly` and running
-// `cargo check -p semio-s-artifact-procedural-assembly --features component-app-assembly`
-// (26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-10) fails on exactly five unsatisfied codec bounds,
-// every one of them owed by this artifact's own schema tree, none by the surfaces:
-//   `AssemblySnapshot: store::ArtifactDsl`, `AssemblySnapshot: store::ArtifactPack`,
-//   `AssemblyMutation: protocol::OpText`, `AssemblyMutation: protocol::OpBinary`,
-//   `AssemblyEditorCommand: protocol::OpBinary` (and its viewer twin).
-// `generation3d` carries the same five as hand-written impls in its `🧬️schema/📸️snapshot/📝️text/🦀️.rs`
-// and `🧬️schema/🧬️mutations/💾️binary/🦀️.rs` leaves, which assembly's schema tree does not yet have.
-// Author those two representation leaves and the mount is a pure addition — nothing in the surfaces
-// themselves has to change.
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod assembly {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️.rs"]
+                    pub mod structure;
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod assembly {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️.rs"]
+                    pub mod structure;
+                }
+            }
+        }
+    }
+}
 
 //#region 📚️Examples
 /// 📚️ The bundled WFC problem specs this subset ships — one forced path, one cyclic lattice. Each
@@ -307,3 +439,7 @@ pub mod inferences {
 pub use crate::standards::v1::subsets::any::schema::diff::AssemblyDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::AssemblyMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::AssemblySnapshot;
+
+#[cfg(all(test, feature = "component-app-assembly"))]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/mount-contract/🦀️.rs"]
+mod mount_contract;

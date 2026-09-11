@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync } = dependencies;
+  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync } = dependencies;
   type PlaygroundAssetSpec = any;
 
   const { describe, expect, it } = vitest;
@@ -29,8 +29,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("isPlaygroundOptimizedDepUrl", () => {
     it("matches Vite prebundle chunk URLs", () => {
-      expect(isPlaygroundOptimizedDepUrl("/node_modules/.vite/deps/chunk-ABC.js?v=1")).toBe(true);
-      expect(isPlaygroundOptimizedDepUrl("/index.ts")).toBe(false);
+      const classic = playgroundOptimizedDepUrlPrefix("/repo", "/repo/node_modules/.vite");
+      const shared = playgroundOptimizedDepUrlPrefix("/repo", "/repo/.🧬semio/🦑️repo/⚡️cache/vite/os-dev/draw-react");
+      expect(classic).toBe("/node_modules/.vite/deps/");
+      expect(isPlaygroundOptimizedDepUrl("/node_modules/.vite/deps/chunk-ABC.js?v=1", classic)).toBe(true);
+      expect(isPlaygroundOptimizedDepUrl(encodeURI("/.🧬semio/🦑️repo/⚡️cache/vite/os-dev/draw-react/deps/chunk-ABC.js?v=1"), shared)).toBe(true);
+      expect(isPlaygroundOptimizedDepUrl("/index.ts", shared)).toBe(false);
+      expect(isPlaygroundOptimizedDepUrl("/%E0%A4%A", shared)).toBe(false);
+      expect(playgroundOptimizedDepUrlPrefix("/repo/app", "/cache/vite")).toBe("/@fs/cache/vite/deps/");
     });
   });
 

@@ -30,14 +30,16 @@
       "options": {
         "command": "bun 📜️script.ts inference-proposal-conversion-check",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "lifecycle-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun 📜️script.ts lifecycle-check",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "guest-fault-check": {
       "executor": "nx:run-commands",
@@ -45,7 +47,8 @@
         "command": "bun 📜️script.ts guest-fault-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "ui-patch-marshalling-check": {
       "executor": "nx:run-commands",
@@ -53,7 +56,8 @@
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": []
     },
     "ui-patch-marshalling-native-check": {
       "executor": "nx:run-commands",
@@ -64,7 +68,8 @@
       },
       "dependsOn": [
         "@semio-tech/framework-os-scale-fixture:build-wasm"
-      ]
+      ],
+      "outputs": []
     }
   },
   "implicitDependencies": [

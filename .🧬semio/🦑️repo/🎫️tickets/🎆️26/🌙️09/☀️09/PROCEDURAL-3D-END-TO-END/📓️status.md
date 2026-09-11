@@ -625,3 +625,19 @@ resolve a `NonZeroU64` schema `$ref`; unrelated, added to the gates item.
 Remaining for geometry: `meshes=0`, still gated on `brep` reaching the guest, which is the
 contributions lane's scoping work. With the OOM gone and bodies rendering, the viewer lane is no
 longer blocked on infrastructure and has been re-dispatched.
+
+## 2026-09-11 contributions example scope
+
+Landed host fallback: unresolved ReadDocument uses `manifest.examples[].artifactJson`. Tests 6+7 passed. Browser probe next (`bodies-mesh`). Do not mark goal complete.
+
+## 2026-09-11 runtime after example-scope
+
+`setContributions` lands from published example graphs (8 examples, brep+math kinds, one pack). `invokeExtension` then fails `extension.requester-unavailable` (math/evaluate). meshes=0. Goal not complete.
+
+## 2026-09-11 evening
+
+Scoped pack **248635 chars** with `manifestJson` + brep kinds. `setContributions` settles. Preview left `extension-not-contributed` and now faults `unknown kind: brep.curve.polygon` (evalLen 779, meshes=0). Goal not complete.
+
+## 2026-09-11 restage wasm 14:15
+
+Wasm 94 138 842 B served on 6018. Playwright Chromium installed. After contributions, still `unknown kind` + `invokeExtension` fails `window-transient publication is retiring a rejected authority`. Details: `📓️unknown-kind-after-restage-2026-09-11.md`. Goal not complete.

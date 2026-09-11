@@ -10,28 +10,32 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
-      }
+      },
+      "cache": false
     },
     "artifact-directory-wiring-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
-      }
+      },
+      "outputs": []
     },
     "subset-directory-wiring-generate": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
-      }
+      },
+      "cache": false
     },
     "subset-directory-wiring-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
-      }
+      },
+      "outputs": []
     },
     "flow-retained-decode-check": {
       "executor": "nx:run-commands",
@@ -39,7 +43,8 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts flow-retained-decode-check",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",
@@ -79,7 +84,11 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🛂️.descriptor.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔣️.json"
+      ]
     },
     "catalog-root": {
       "executor": "nx:run-commands",
@@ -87,21 +96,24 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts catalog-root",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false
     },
     "home-io-surface-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts home-io-surface source"
-      }
+      },
+      "outputs": []
     },
     "home-io-surface-native-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts home-io-surface native"
-      }
+      },
+      "outputs": []
     }
   }
 }
