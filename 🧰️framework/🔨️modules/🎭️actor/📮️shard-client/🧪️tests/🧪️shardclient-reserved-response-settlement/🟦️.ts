@@ -3154,7 +3154,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const pages = createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, command });
       expect(pages).toHaveLength(2);
       expect(pages.map((page) => page.page.length)).toEqual([ACTOR_BYTE_PAGE_BYTES, 5]);
-      expect(pages.map((page) => Object.keys(page))).toEqual([["cursor", "page"], ["cursor", "page"]]);
+      expect(pages.map((page) => Object.keys(page))).toEqual([["cursor", "bytes", "page"], ["cursor", "bytes", "page"]]);
       expect(pages[0]!.cursor).toMatchObject({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, kind: 0, pageIndex: 0, pageCount: 2 });
       const oracle = new DataView(command.buffer, command.byteOffset, command.byteLength);
       expect(pages[0]!.page.block00.word0).toBe(oracle.getBigUint64(0, true));
@@ -3162,6 +3162,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(pages[1]!.page.block00.word0).toBe(0x0000000403020100n);
       expect(pages[1]!.page.block00.word1).toBe(0n);
       expect(pages[1]!.page.block63.word7).toBe(0n);
+      expect(pages[0]!.bytes.length).toBe(pages[0]!.page.length);
+      expect(pages[1]!.bytes.length).toBe(pages[1]!.page.length);
+    });
+
+    it("defines reactor page.length so wasm poll can destructure a bytes-shaped ingress", () => {
+      const page = createShardCommandIngressPages({ owner: 1n, generation: 1n, commandIndex: 0, commandCount: 1, instance: 1, seq: 1n, command: Uint8Array.of(9, 8, 7) })[0]!;
+      expect(page.page).toEqual(expect.objectContaining({ length: 3 }));
+      const { length } = page.page;
+      expect(length).toBe(3);
+      expect(page.bytes).toEqual(Uint8Array.of(9, 8, 7));
     });
 
     it("forwards the fixed page as the dedicated turn argument", async () => {
@@ -3170,7 +3180,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const page = createShardCommandIngressPages({ owner: 1n, generation: 1n, commandIndex: 0, commandCount: 1, instance: 1, seq: 1n, command: Uint8Array.of(9, 8, 7) })[0]!;
       void client.turn("paged", [], BUDGET, page);
       expect(workers[0]!.sent.at(-1)).toMatchObject({ kind: "turn", actorId: "paged", events: [], commandPage: page });
-      expect(Object.keys(page)).toEqual(["cursor", "page"]);
+      expect(Object.keys(page)).toEqual(["cursor", "bytes", "page"]);
     });
   });
 

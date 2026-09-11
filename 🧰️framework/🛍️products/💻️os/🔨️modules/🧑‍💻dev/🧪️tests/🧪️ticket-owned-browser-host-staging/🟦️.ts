@@ -590,7 +590,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("pluginComponentBridgeSource", () => {
-    itLong("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
+    itLong("stages canonical command-page bytes unchanged and leaves poll carrying no page", async () => {
       const { execFileSync } = await import("node:child_process");
       const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures/🔣️.json"), "utf8"));
@@ -604,8 +604,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         import { readFileSync } from "node:fs";
         const input = JSON.parse(readFileSync(0, "utf8"));
         let received;
-        const context = createContext({ URL, Uint8Array, record: page => { received = page; } });
-        const component = new SourceTextModule("export const reactor = { poll: async (_events, page) => { record(page); return { uiPatches: [], status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
+        let pollArity;
+        const context = createContext({ URL, Uint8Array, record: (cursor, bytes) => { received = { cursor, bytes }; }, recordPollArity: count => { pollArity = count; } });
+        const component = new SourceTextModule("export const reactor = { stageCommandPage: async (cursor, bytes) => { record(cursor, bytes); }, poll: async (...args) => { recordPollArity(args.length); return { uiPatches: [], status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
         const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
         for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
         const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
@@ -615,18 +616,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         for (const entry of input.inputs) {
           const page = entry.page;
           for (const key of ["owner", "generation", "seq"]) page.cursor[key] = BigInt(page.cursor[key]);
-          for (let block = 0; block < 64; block++) for (let word = 0; word < 8; word++) {
-            const value = page.page["block" + block.toString().padStart(2, "0")];
-            value["word" + word] = BigInt(value["word" + word]);
-          }
-          await api.poll([], page, { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 });
-          const bytes = Buffer.alloc(4096);
-          for (let block = 0; block < 64; block++) for (let word = 0; word < 8; word++) bytes.writeBigUInt64LE(received.page["block" + block.toString().padStart(2, "0")]["word" + word], block * 64 + word * 8);
-          rows.push({ same: received === page, keys: Object.keys(received), length: received.page.length, hex: bytes.subarray(0, received.page.length).toString("hex"), zeroTail: bytes.subarray(received.page.length).every(byte => byte === 0) });
+          page.bytes = Uint8Array.from(Object.values(page.bytes));
+          await api.poll([], page, undefined, { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 });
+          rows.push({ sameCursor: received.cursor === page.cursor, sameBytes: received.bytes === page.bytes, length: received.bytes.length, hex: Buffer.from(received.bytes).toString("hex"), pollArity });
         }
         console.log(JSON.stringify(rows));
       `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), inputs }, (_key, value) => typeof value === "bigint" ? value.toString() : value), encoding: "utf8", timeout: 10_000 });
-      expect(JSON.parse(output)).toEqual(inputs.map((entry: { hex: string }, index: number) => ({ same: true, keys: ["cursor", "page"], length: vectors[index].length, hex: entry.hex, zeroTail: true })));
+      expect(JSON.parse(output)).toEqual(inputs.map((entry: { hex: string }, index: number) => ({ sameCursor: true, sameBytes: true, length: vectors[index].length, hex: entry.hex, pollArity: 2 })));
     });
 
     itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {

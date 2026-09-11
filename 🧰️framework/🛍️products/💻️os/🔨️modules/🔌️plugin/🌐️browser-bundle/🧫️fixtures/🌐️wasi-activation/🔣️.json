@@ -1,9 +1,74 @@
 {
   "schema": "semio.browser-wasi-activation/v1",
-  "limits": { "resources": 256, "waiters": 128, "writeBytes": 65536, "outputBytes": 1048576 },
-  "output": [65, 0, 128, 255],
-  "readyIndices": [0],
-  "emptyAmbient": { "environment": [], "arguments": [], "cwd": null, "terminal": null },
-  "terminal": { "phase": "closed", "resources": 0, "waiters": 0, "timers": 0 },
-  "laws": ["fresh-resource-classes", "foreign-resource-denied", "closed-stdin", "no-ambient-process", "bounded-write-permits", "aggregate-output-bound", "exact-u64-clock", "asynchronous-poll", "close-retires-timers-waiters", "resource-capacity", "waiter-capacity", "invalid-poll-denied", "sink-failure-credit-at-capacity", "reentrant-sink-close-releases-credit-once", "reentrant-clock-close-never-rearms"]
+  "limits": {
+    "resources": 256,
+    "waiters": 128,
+    "writeBytes": 65536,
+    "outputBytes": 1048576
+  },
+  "output": [
+    65,
+    0,
+    128,
+    255
+  ],
+  "readyIndices": [
+    0
+  ],
+  "emptyAmbient": {
+    "environment": [],
+    "arguments": [],
+    "cwd": null,
+    "terminal": null
+  },
+  "terminal": {
+    "phase": "closed",
+    "resources": 0,
+    "waiters": 0,
+    "timers": 0
+  },
+  "laws": [
+    "fresh-resource-classes",
+    "foreign-resource-denied",
+    "closed-stdin",
+    "no-ambient-process",
+    "bounded-write-permits",
+    "aggregate-output-bound",
+    "exact-u64-clock",
+    "asynchronous-poll",
+    "close-retires-timers-waiters",
+    "resource-capacity",
+    "waiter-capacity",
+    "invalid-poll-denied",
+    "sink-failure-credit-at-capacity",
+    "reentrant-sink-close-releases-credit-once",
+    "reentrant-clock-close-never-rearms",
+    "one-logical-message-one-host-call",
+    "debug-lines-use-debug-level"
+  ],
+  "lineBuffer": {
+    "chunks": [
+      "[DEBUG] cooperative-maintenance instance=",
+      "1",
+      " turn=",
+      "2",
+      " generation=",
+      "1",
+      "\n",
+      "guest trapped: rust_oom\n"
+    ],
+    "hostCalls": [
+      {
+        "channel": "stderr",
+        "text": "[DEBUG] cooperative-maintenance instance=1 turn=2 generation=1",
+        "level": "debug"
+      },
+      {
+        "channel": "stderr",
+        "text": "guest trapped: rust_oom",
+        "level": "error"
+      }
+    ],
+    "preview2HostCalls": 8
+  }
 }

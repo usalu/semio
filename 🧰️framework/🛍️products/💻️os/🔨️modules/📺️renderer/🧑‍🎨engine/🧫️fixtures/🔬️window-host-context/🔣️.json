@@ -1,0 +1,76 @@
+{
+  "instanceId": 1,
+  "view": {
+    "locale": "de",
+    "terminology": "reuse",
+    "windowInstances": [
+      {
+        "id": "puzzle3d-main-top",
+        "windowKindId": "puzzle3dMain"
+      },
+      {
+        "id": "puzzle3d-main-perspective",
+        "windowKindId": "puzzle3dMain"
+      }
+    ],
+    "activeUtilityByWindowId": {
+      "puzzle3d-main-top": "orbit",
+      "puzzle3d-main-perspective": "orbit"
+    }
+  },
+  "windows": [
+    {
+      "key": "puzzle3d-main-top",
+      "bodyKey": "world"
+    },
+    {
+      "key": "puzzle3d-main-perspective",
+      "bodyKey": "world"
+    },
+    {
+      "key": "missing",
+      "bodyKey": "world"
+    },
+    {
+      "key": "no-body"
+    }
+  ],
+  "expected": [
+    {
+      "surface": {
+        "instance": 1,
+        "surface": "puzzle3d-main-top"
+      },
+      "bodyKey": "world",
+      "windowKey": "puzzle3d-main-top"
+    },
+    {
+      "surface": {
+        "instance": 1,
+        "surface": "puzzle3d-main-perspective"
+      },
+      "bodyKey": "world",
+      "windowKey": "puzzle3d-main-perspective"
+    },
+    {
+      "surface": {
+        "instance": 1,
+        "surface": "window"
+      },
+      "bodyKey": "world",
+      "windowKey": "puzzle3d-main-perspective"
+    }
+  ],
+  "inspectionRefresh": [
+    {
+      "selectedIds": [],
+      "kind": null
+    },
+    {
+      "selectedIds": [
+        "seed-left-001"
+      ],
+      "kind": "full"
+    }
+  ]
+}

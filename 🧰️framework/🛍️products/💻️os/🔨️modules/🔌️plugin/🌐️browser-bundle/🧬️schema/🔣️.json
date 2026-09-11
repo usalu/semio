@@ -557,7 +557,31 @@
             "timers": { "type": "integer", "minimum": 0, "maximum": 65536 }
           }
         },
-        "laws": { "$ref": "#/$defs/BrowserLawList" }
+        "laws": { "$ref": "#/$defs/BrowserLawList" },
+        "lineBuffer": { "$ref": "#/$defs/WasiLineBufferLaw" }
+      }
+    },
+    "WasiLineBufferLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunks", "hostCalls", "preview2HostCalls"],
+      "properties": {
+        "chunks": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "hostCalls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["channel", "text", "level"],
+            "properties": {
+              "channel": { "enum": ["stdout", "stderr"] },
+              "text": { "type": "string" },
+              "level": { "enum": ["debug", "error", "log"] }
+            }
+          }
+        },
+        "preview2HostCalls": { "type": "integer", "minimum": 1 }
       }
     },
     "WitFunctionId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(?:@[0-9]+\\.[0-9]+\\.[0-9]+)?#[A-Za-z0-9._\\[\\]-]+$" },

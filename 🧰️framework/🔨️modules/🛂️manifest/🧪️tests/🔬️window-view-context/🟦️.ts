@@ -39,5 +39,11 @@ export function testWindowViewContext(): void {
     assert.equal(actual.activeUtilityId, test.activeUtilityId ?? undefined);
   }
   assert.deepEqual(view, before);
+
+  const windowedMenu = windowViewContext(view, "left");
+  assert.equal(windowedMenu?.activeToolId, undefined, "windowViewContext alone drops the armed tool — requestContextMenu must not use it");
+  const armedMenu = hostArmedViewContext(view, "fill", "left");
+  assert.equal(armedMenu?.activeToolId, "fill", "windowed requestContextMenu must use hostArmedViewContext so the tool overlay is present");
+
   console.log(`window-view-context cases=${fixture.cases.length} hostArmed=${fixture.hostArmed.length} isolation=valid preferences=preserved`);
 }

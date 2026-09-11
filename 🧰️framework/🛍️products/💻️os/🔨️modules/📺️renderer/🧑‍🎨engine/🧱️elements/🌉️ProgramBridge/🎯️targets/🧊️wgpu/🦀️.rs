@@ -58,8 +58,11 @@ mod wasm_program_exchange {
     }
 
     fn app_frame_fault_summary(fault: &[u8]) -> String {
-        let fault = dsl_core::os_dsl::decode_fault_bytes(fault);
-        format!("{}: {}", fault.code.0, fault.message)
+        let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| from_dsl_value::<semio_framework::Fault>(value).ok());
+        match decoded {
+            Some(fault) => format!("{}: {}", fault.code.0, fault.message),
+            None => String::from_utf8_lossy(fault).into_owned(),
+        }
     }
 
     /// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`,
@@ -461,6 +464,20 @@ impl ProgramBridgeEntry {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub async fn dispatch_invoke_extension(&self, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Js(handle) => dispatch_invoke_extension_js(handle, instance_id, extension_id, capability, request_json, req).await,
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, reachability_json: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Js(handle) => push_scoped_contributions_js(handle, instance_id, app_id, reachability_json, view_state_json).await,
+        }
+    }
+
     pub async fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -653,6 +670,43 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
 }
 
 #[cfg(target_arch = "wasm32")]
+async fn dispatch_invoke_extension_js(handle: &Rc<JsValue>, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, String> {
+    let dispatch = get_fn(handle.as_ref(), "dispatchInvokeExtension")?;
+    let args = Array::new();
+    args.push(&JsValue::from_f64(instance_id as f64));
+    args.push(&JsValue::from_str(extension_id));
+    args.push(&JsValue::from_str(capability));
+    args.push(&JsValue::from_str(request_json));
+    args.push(&JsValue::from_f64(req as f64));
+    let result = dispatch.apply(&JsValue::NULL, &args).map_err(|error| format!("dispatchInvokeExtension failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("dispatchInvokeExtension promise failed: {}", describe_js_rejection(&error)))?
+    } else {
+        result
+    };
+    let text = resolved.as_string().ok_or_else(|| "dispatchInvokeExtension result not string".to_string())?;
+    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("dispatchInvokeExtension result parse failed: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, app_id: &str, reachability_json: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
+    let push = get_fn(handle.as_ref(), "pushScopedContributions")?;
+    let args = Array::new();
+    args.push(&JsValue::from_f64(instance_id as f64));
+    args.push(&JsValue::from_str(app_id));
+    args.push(&JsValue::from_str(reachability_json));
+    args.push(&JsValue::from_str(view_state_json));
+    let result = push.apply(&JsValue::NULL, &args).map_err(|error| format!("pushScopedContributions failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("pushScopedContributions promise failed: {}", describe_js_rejection(&error)))?
+    } else {
+        result
+    };
+    let text = resolved.as_string().ok_or_else(|| "pushScopedContributions result not string".to_string())?;
+    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("pushScopedContributions result parse failed: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
     let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
@@ -709,12 +763,9 @@ const BROWSER_DOCUMENT_ASSEMBLY_BYTES: usize = 32 * 1024;
 /// `open_into` until the surface is consumed, `place_one` per record until the source is taken, then
 /// `finish_into` until the lease materialises.
 ///
-/// 🚧️ `refresh_effects` stays unfilled: the native path drains `outcome.effects` from the same exchange,
-/// whereas `renderDocument` returns only the published document. Effects still reach the shell through the
-/// ordinary turn path, so nothing is dropped — but a caller relying on THIS sink for render-time effects
-/// gets an empty one.
+/// 📜️ `renderDocument` returns `{ document, effects }` so render-time host effects reach `refresh_effects`.
 #[cfg(target_arch = "wasm32")]
-async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, _refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
     let render = get_fn(handle.as_ref(), "renderDocument")?;
     let view_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
     let result = render
@@ -726,7 +777,17 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
         result
     };
     let text = resolved.as_string().ok_or_else(|| "renderDocument result not string".to_string())?;
-    let published: BrowserRetainedDocument = serde_json::from_str(&text).map_err(|error| format!("renderDocument result parse failed: {error}"))?;
+    #[derive(serde::Deserialize)]
+    struct BrowserRenderEnvelope {
+        document: BrowserRetainedDocument,
+        #[serde(default)]
+        effects: Vec<Effect>,
+    }
+    let envelope: BrowserRenderEnvelope = serde_json::from_str(&text).map_err(|error| format!("renderDocument result parse failed: {error}"))?;
+    if let Some(sink) = refresh_effects {
+        sink.extend(envelope.effects);
+    }
+    let published = envelope.document;
     let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{surface_id}'"))?;
     if published.nodes.is_empty() {
         return Err(format!("plugin published an empty retained document for surface '{surface_id}'"));

@@ -476,7 +476,7 @@ fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
     }
     drive_fill_preparation(&mut engine);
     engine.fill.as_ref().expect("fill").lock().expect("fill lock").max_count = FILL_COUNT_MAX;
-    Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
+    Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()), brush_live_target: None }
 }
 
 fn close_fill_envelope(session: &mut Puzzle3dPrecomputeSession) {

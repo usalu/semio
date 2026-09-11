@@ -52,7 +52,7 @@ fn delete_slot_cascades_incident_edges() {
 
 #[test]
 fn create_rule_inverse_law_round_trips() {
-    let base = AssemblySnapshot::default();
+    let base = AssemblySnapshot { modules: vec![crate::module_child_handle("a"), crate::module_child_handle("b")], ..Default::default() };
     let mutation = create_rule(0, AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
     let after = round_trip(&base, &mutation);
     assert_eq!(after.rules.len(), 1);
@@ -60,7 +60,7 @@ fn create_rule_inverse_law_round_trips() {
 
 #[test]
 fn delete_rule_inverse_law_round_trips() {
-    let mut base = AssemblySnapshot::default();
+    let mut base = AssemblySnapshot { modules: vec![crate::module_child_handle("a"), crate::module_child_handle("b")], ..Default::default() };
     base.rules.push(AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
     let mutation = delete_rule("r1".into());
     let after = round_trip(&base, &mutation);
@@ -69,7 +69,7 @@ fn delete_rule_inverse_law_round_trips() {
 
 #[test]
 fn change_weight_inverse_law_restores_the_prior_value() {
-    let mut base = AssemblySnapshot::default();
+    let mut base = AssemblySnapshot { modules: vec![crate::module_child_handle("m1")], ..Default::default() };
     base.weights.push(crate::schema::snapshot::AssemblyModuleWeight { module_id: "m1".into(), weight: 1.0 });
     let mutation = change_weight("m1".into(), 9.0);
     let after = round_trip(&base, &mutation);
@@ -78,7 +78,7 @@ fn change_weight_inverse_law_restores_the_prior_value() {
 
 #[test]
 fn change_weight_on_unknown_module_inserts_and_inverse_removes() {
-    let base = AssemblySnapshot::default();
+    let base = AssemblySnapshot { modules: vec![crate::module_child_handle("m1")], ..Default::default() };
     let mutation = change_weight("m1".into(), 4.0);
     let after = round_trip(&base, &mutation);
     assert_eq!(after.weights.len(), 1);
@@ -97,6 +97,8 @@ fn connect_slots_inverse_law_round_trips() {
 #[test]
 fn disconnect_slots_inverse_law_round_trips() {
     let mut base = AssemblySnapshot::default();
+    base.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
+    base.slots.push(AssemblySlot { id: "s2".into(), ..Default::default() });
     base.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s2".into() });
     let mutation = disconnect_slots("e1".into());
     let after = round_trip(&base, &mutation);

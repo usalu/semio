@@ -107,11 +107,12 @@ export interface ShardCommandPageCursor {
   readonly metadata: number;
 }
 
-export type ShardCommandIngressPage = { readonly cursor: ShardCommandPageCursor; readonly page: ActorBytePage };
+export type ShardCommandIngressPage = { readonly cursor: ShardCommandPageCursor; readonly bytes: Uint8Array; readonly page: ActorBytePage };
 
 export const SHARD_COMMAND_MAXIMUM_PAGES = 64;
 
-/** 📥️ Encodes channel command bytes into the exact fixed WIT command-page authority shared with Rust. */
+/** 📥️ Splits channel command bytes into the `reactor.stage-command-page` pages shared with Rust — a
+ * cursor and the page's live bytes, never a fixed 4 KiB block record. */
 export function createShardCommandIngressPages(input: {
   readonly owner: bigint;
   readonly generation: bigint;
@@ -142,6 +143,7 @@ export function createShardCommandIngressPages(input: {
         itemCount: 0,
         metadata: 0,
       },
+      bytes: bytes.slice(),
       page: createActorBytePage(bytes),
     });
   }

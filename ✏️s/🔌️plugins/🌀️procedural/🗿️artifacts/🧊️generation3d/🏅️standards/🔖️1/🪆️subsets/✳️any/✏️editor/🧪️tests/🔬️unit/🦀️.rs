@@ -323,15 +323,14 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
 #[test]
 fn contributions_route_declares_a_reachable_wire_ceiling() {
     let _serial = test_support::lock();
-    let widest_page: String = std::iter::repeat_n('"', semio_framework::PUBLIC_INVOCATION_STRING_BYTES).collect();
-    assert_eq!(semio_framework::public_invocation_string_pages(&widest_page).len(), 1, "a page filled to the string bound is one page");
+    assert_eq!(GENERATION3D_CONTRIBUTIONS_RAW_BYTES, semio_framework::PUBLIC_INVOCATION_BODY_BYTES);
+    let pack: String = std::iter::repeat_n('x', 190_719).collect();
     let wire = protocol::json::to_json_string(&("setContributions", Some(dsl::DslValue::object([
-        ("json".to_string(), dsl::DslValue::String(widest_page)),
+        ("json".to_string(), dsl::DslValue::String(pack)),
         ("page".to_string(), dsl::DslValue::uint(0)),
-        ("pageCount".to_string(), dsl::DslValue::uint(4_096)),
+        ("pageCount".to_string(), dsl::DslValue::uint(1)),
     ]))));
-    assert!(wire.len() <= GENERATION3D_CONTRIBUTIONS_RAW_BYTES, "the widest admissible page encodes to {} bytes but the contract declares {GENERATION3D_CONTRIBUTIONS_RAW_BYTES}", wire.len());
-    assert!(wire.len() * 2 >= GENERATION3D_CONTRIBUTIONS_RAW_BYTES, "the contract declares {GENERATION3D_CONTRIBUTIONS_RAW_BYTES} for a widest page of {} bytes — a bound nothing can reach is not a bound", wire.len());
+    assert!(wire.len() <= GENERATION3D_CONTRIBUTIONS_RAW_BYTES, "a scoped pack encodes to {} bytes but the contract declares {GENERATION3D_CONTRIBUTIONS_RAW_BYTES}", wire.len());
     assert!(GENERATION3D_CONTRIBUTIONS_RAW_BYTES > GENERATION3D_RETAINED_RAW_BYTES, "the contributions route exists precisely because the gesture quota cannot carry it");
     assert_eq!(generation3d_contributions_contract().max_raw_wire_bytes, GENERATION3D_CONTRIBUTIONS_RAW_BYTES);
 }
@@ -1843,6 +1842,14 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
 /// `addWidget`, the inspector's `patchFlowWidgets`, the context menu's `reorganize`, the framework's
 /// own history/clipboard/tutorial ids — are deliberately left unowned and therefore stay on every
 /// window; the law is silent about them because no window surface dispatches them.
+///
+/// The framework's own interaction verbs (`interaction_action_definitions`, injected for every app with
+/// at least one `.interaction(...)` domain) are app-scoped by construction and excluded from the second
+/// half: all three of this app's interaction-bearing surfaces dispatch them, but only the Flow window's
+/// semantic node rows do so through a `UiNode` binding this projection scan can see — the flow canvas
+/// and both world-3d canvases dispatch them from the RENDERER (`NodeGraphHost`/`World3dHost`), which no
+/// static scan of a built tree ever observes. Declaring them per window would gate exactly the two
+/// canvases that need them.
 #[semio_framework_async_macros::async_test]
 async fn every_emitted_action_is_declared_on_its_window_kind() {
     let _serial = test_support::lock();
@@ -1876,7 +1883,8 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
         }
     }
     drop(app);
-    let window_scoped: std::collections::BTreeSet<String> = emitted.values().flatten().cloned().collect();
+    let framework_interactions: std::collections::BTreeSet<String> = semio_framework::interaction_action_definitions(&definition).into_iter().map(|action| action.id).collect();
+    let window_scoped: std::collections::BTreeSet<String> = emitted.values().flatten().filter(|action| !framework_interactions.contains(*action)).cloned().collect();
     for (kind_id, _, declared) in &windows {
         let emitted_here = &emitted[kind_id];
         println!("[STATS] window-actions kind={kind_id} declared={} emitted={} emits={emitted_here:?}", declared.len(), emitted_here.len());

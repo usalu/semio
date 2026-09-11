@@ -52,7 +52,7 @@ import {
   windowViewContext,
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./packed-text.ts";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -155,7 +155,7 @@ export type PluginWasmHandle = {
   ) => Promise<{ readonly mergeReport: MergeReport | null; readonly conflicts: readonly Conflict[] | null }>;
   /** 📖️ Binary pack+spr document read (`AppCommand::ReadDocument`) — the channel-native counterpart
    * to {@link loadAppDocumentPack}; `null` when the reply carries no `AppFrame::Document` frame. */
-  readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>;
+  readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array; readonly ops?: string } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🪟️ Reads every concrete window's persisted-local config envelope. */
@@ -911,6 +911,20 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return { clipboardWrite: { fragment: packField("fragment") } };
     case "replay-shell-command":
       return { replayShellCommand: { actionId: str("actionId"), args: packField("args") } };
+    case "request-file-open": {
+      const readAsRaw = optionValue(params["read-as"] ?? params.readAs);
+      const mapped = {
+        requestFileOpen: {
+          req: num("req"),
+          accept: paramStr("accept"),
+          readAs: typeof readAsRaw === "string" ? readAsRaw : undefined,
+          importAction: paramStr("import-action") || paramStr("importAction"),
+          multiple: Boolean(optionValue(params.multiple) ?? params.multiple),
+        },
+      };
+      console.warn(`[DEBUG] request-file-open mapped ${JSON.stringify({ keys: Object.keys(params), mapped: mapped.requestFileOpen })}`);
+      return mapped;
+    }
     case "set-active-utility":
       return { setActiveUtility: { windowId: str("windowId"), utilityId: str("utilityId") } };
     case "set-active-tool":
@@ -1080,9 +1094,9 @@ function getThunkScheduler(): TurnScheduler<ThunkTurnPayload, undefined> {
  * this file's pre-existing contract), while independent `actorId`s run fully concurrently. Backed by
  * {@link getThunkScheduler} — bounded, so a caller that floods one `actorId` gets a rejected promise
  * once {@link SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} is exceeded rather than growing memory forever. */
-export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
+export function serializePerActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive"): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const backpressure = getThunkScheduler().enqueue(actorId, { lane: "Interactive", payload: { run, resolve: resolve as (value: unknown) => void, reject } });
+    const backpressure = getThunkScheduler().enqueue(actorId, { lane, payload: { run, resolve: resolve as (value: unknown) => void, reject } });
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
   });
 }
@@ -1090,8 +1104,40 @@ export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Pr
 /** 📥️ Holds the actor's complete paged command-ingress sequence as one serialized unit. Every
  * direct poll operation uses the same key so redraw/completion turns cannot consume the command's
  * retained pending/terminal status and response effects before its channel caller observes them. */
-export function serializeCommandIngressForActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
-  return serializePerActor(`command-ingress:${actorId}`, run);
+export function serializeCommandIngressForActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive"): Promise<T> {
+  return serializePerActor(`command-ingress:${actorId}`, run, lane);
+}
+
+/** 🎚 Catalog mesh registration is Background so reserved/user verbs stay Interactive and are not starved. */
+export function commandIngressLaneForActionV1(actionId: string): "Interactive" | "Background" {
+  return actionId === "registerBrushMesh" ? "Background" : "Interactive";
+}
+
+/** 🏷️ A command waiter hangs forever when the outcome has no in_reply_to matching its seq. */
+export function commandIngressNeedsReplyStampV1(replySequences: readonly (number | null)[], seq: number | null): boolean {
+  return seq !== null && !replySequences.some((reply) => reply === seq);
+}
+
+function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background" } {
+  try {
+    const command = decodeAppCommand(events[0]!);
+    const seq = "Command" in command ? command.Command.seq : "ConfigCommand" in command ? command.ConfigCommand.seq : null;
+    if (!("Command" in command)) return { actionId: null, seq, lane: "Interactive" };
+    const invocation = decodePackValue(new Uint8Array(command.Command.command)) as { readonly address?: { readonly actionId?: unknown } } | null;
+    const actionId = typeof invocation?.address?.actionId === "string" ? invocation.address.actionId : null;
+    return { actionId, seq, lane: actionId === null ? "Interactive" : commandIngressLaneForActionV1(actionId) };
+  } catch {
+    return { actionId: null, seq: null, lane: "Interactive" };
+  }
+}
+
+function encodedFrameReplySequence(bytes: Uint8Array): number | null {
+  try {
+    const value = Object.values(decodeAppFrame(bytes))[0] as { readonly in_reply_to?: unknown } | undefined;
+    return value && typeof value.in_reply_to === "number" ? value.in_reply_to : null;
+  } catch {
+    return null;
+  }
 }
 //#endregion 🔖️GenericThunkQueue
 
@@ -1340,18 +1386,25 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     results.push(...accepted.turns);
     return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
+  const requiredEmpty = requiredSurfaceIds !== undefined && requiredSurfaceIds.size === 0;
   const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   let acknowledgements = await acknowledge(initial);
+  let emptyRequiredStopped = false;
   for (let continuation = 0; (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     const continued = await submitPluginTurn(actorId, acknowledgements, lane, undefined, undefined, activation);
     results.push(continued);
     acknowledgements = await acknowledge(continued);
+    if (requiredEmpty && acknowledgements.length === 0) {
+      emptyRequiredStopped = true;
+      console.warn(`[DEBUG] settle ${actorId} empty-required stop continuation=${continuation + 1} status=${wireTurnStatusTag(continued.status)} drain=${drainOperations}`);
+      break;
+    }
     if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork()) {
       await yieldPluginUiContinuation();
     }
     if ((continuation + 1) % 512 === 0) console.warn(`[DEBUG] settle ${actorId} continuation ${continuation + 1} status=${wireTurnStatusTag(continued.status)} acks=${acknowledgements.length} drain=${drainOperations}`);
   }
-  if (acknowledgements.length > 0 || hasWork()) {
+  if (!emptyRequiredStopped && (acknowledgements.length > 0 || hasWork())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
@@ -1397,6 +1450,32 @@ const retainedWindowByActor = new Map<string, Map<string, RetainedSurface>>();
 
 function pluginSurfaceRef(instance: number, bodyKey: string): { readonly instance: number; readonly surface: string } {
   return { instance, surface: bodyKey };
+}
+
+/** 🪟 Leftover Viewport patches omit a window instance and default the guest dirty surface to `window`. */
+export const DEFAULT_LEFTOVER_WINDOW_SURFACE = "window";
+
+/** 📌️ Full chrome refresh once leftover InteractionView carries a selection the Inspection body must re-render. */
+export function leftoverInspectionRefreshScope(selectedIds: readonly string[]): { readonly kind: "full" } | null {
+  return selectedIds.length > 0 ? { kind: "full" } : null;
+}
+
+/** 🪟 Binds each authored window plus the leftover default `window` surface to a host view. */
+export function windowHostContextBindings(
+  instanceId: number,
+  windows: readonly { readonly key: string; readonly bodyKey?: string }[],
+  viewState: Parameters<typeof windowViewContext>[0],
+): ReadonlyArray<{ readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string }> {
+  const bindings: Array<{ readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string }> = [];
+  let alias: (typeof bindings)[number] | undefined;
+  for (const target of windows) {
+    if (!target.bodyKey) continue;
+    if (!windowViewContext(viewState, target.key)) continue;
+    bindings.push({ surface: pluginSurfaceRef(instanceId, target.key), bodyKey: target.bodyKey, windowKey: target.key });
+    alias = { surface: pluginSurfaceRef(instanceId, DEFAULT_LEFTOVER_WINDOW_SURFACE), bodyKey: target.bodyKey, windowKey: target.key };
+  }
+  if (alias) bindings.push(alias);
+  return bindings;
 }
 
 function retainedSurfaceId(instance: number, surface: string): string {
@@ -1454,13 +1533,12 @@ function sectionValueFromBuiltNode(bodyKey: string, node: BuiltNode, producer: s
 
 /** 🪟️ Binds each concrete host surface to its authored body and projected ViewModel. */
 function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequest) {
-  const windows = (request.windows ?? []).flatMap((target) => {
-    if (!target.bodyKey) return [];
-    const viewState = windowViewContext(request.viewState, target.key);
+  const windows = windowHostContextBindings(instanceId, request.windows ?? [], request.viewState).flatMap((binding) => {
+    const viewState = windowViewContext(request.viewState, binding.windowKey);
     if (!viewState) return [];
     return [{
       kind: "surface-visible",
-      payload: { surface: pluginSurfaceRef(instanceId, target.key), bodyKey: target.bodyKey, viewState: encodePackValue(viewState) },
+      payload: { surface: binding.surface, bodyKey: binding.bodyKey, viewState: encodePackValue(viewState) },
     } satisfies ShardEventEnvelope];
   });
   const panels = (request.panels ?? []).flatMap((target) => target.bodyKey ? [{
@@ -1806,6 +1884,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   /** 💼️ In-flight `spawn-job` drives, keyed `actorId#job`. A guest re-emitting the same `job` id
    * (a replayed turn, a checkpoint restore) must never open a second `start-job` for one owner. */
   const drivingJobs = new Set<string>();
+  const finishedReservedJobs = new Set<string>();
+  const pendingReservedJobDrives: Promise<void>[] = [];
+  const flushReservedJobDrives = async (): Promise<void> => {
+    const batch = pendingReservedJobDrives.splice(0);
+    if (batch.length === 0) return;
+    await Promise.all(batch);
+  };
 
   /** ⛽️ The budget one `step-job` is granted. `fuel` is a WIT `u64`, hence a `bigint` — the same
    * reshaping `ShardLoop::pump` does natively (`🖥️host/🧵️shard/🦀️.rs:146-147`,
@@ -1823,15 +1908,23 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * finished. `job-progress` is deliberately NOT delivered per slice: the guest ignores its payload
    * (`⚛️reactor/🔄️turn/🦀️.rs:317` only marks the surface dirty) and one whole actor turn per slice
    * would cost more than the repaint is worth. */
-  const deliverJobCompletion = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
+  const deliverJobCompletionTurn = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
     if (outcome.status === "running") throw new Error("plugin.job-completion-not-terminal");
     const val = Array.from(outcome.value);
     const payload = { job, outcome: outcome.status === "done" ? { tag: "ok", val } : { tag: "fault", val } };
     const activation = shardClient.captureActorActivation(actorId);
-    await withTypedOperationCall(actorId, `job-completion#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
+    const settled = await withTypedOperationCall(actorId, `job-completion#${instanceId}`, async (call) => {
       activation.assertActive();
       return settlePluginTurn(actorId, await submitTurn(actorId, [{ kind: "job-completed", payload }], { lane: "Background", activation }), "Background", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
-    }));
+    });
+    const leftover = pendingTurnEffects.get(instanceId) ?? [];
+    for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) leftover.push(effect);
+    pendingTurnEffects.set(instanceId, leftover);
+    console.warn(`[DEBUG] job-completed leftover job=${job} effects=${leftover.map((effect) => effect.tag).join(",") || "none"}`);
+  };
+  const deliverJobCompletion = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
+    await serializeCommandIngressForActor(actorId, () => deliverJobCompletionTurn(instanceId, actorId, job, outcome));
+    await flushReservedJobDrives();
   };
 
   /** 💼️ The host half of `Effect::SpawnJob` on this target: `start-job` once, then one `step-job`
@@ -1873,6 +1966,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           return last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
         });
         if (outcome.status !== "running") {
+          console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
           if (live()) await deliverJobCompletion(instanceId, actorId, job, outcome);
           return;
         }
@@ -1880,6 +1974,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         await yieldPluginUiContinuation();
       }
     } catch (error) {
+      console.warn(`[DEBUG] job drive failed kind=${kind} job=${job}`, error);
       turnOutcomes.push({ instanceId, error });
     } finally {
       endIsolatedJobDrive();
@@ -1887,7 +1982,77 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }
   };
 
-  /** 🚦 The one choke point every consumer of a turn's `effects` passes through: backbone
+  /** 💼️ Reserved-tool Isolated jobs are two dummy steps plus `job-completed` commit. The guest
+   * keeps one job-render binding per instance; a later hover/undo spawn steals it and
+   * `complete_reserved_spawned_job` never runs. Hold command-ingress through start/step/commit
+   * so the binding stays on this job until chrome undo publishes. */
+  const commitReservedToolJobWhileSerialized = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
+    const key = `${actorId}#${job}`;
+    if (drivingJobs.has(key)) return;
+    drivingJobs.add(key);
+    try {
+      beginIsolatedJobDrive();
+      await shardClient.startJob(actorId, job, kind, input);
+      let step = 0;
+      let last: ShardJobStep | undefined;
+      const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
+      for (let i = 0; i < batch; i += 1) {
+        last = await shardClient.stepJob(actorId, job, jobStepBudget);
+        step += 1;
+        if (last.status !== "running") break;
+      }
+      const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
+      if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
+      console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
+      await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
+    } finally {
+      endIsolatedJobDrive();
+      finishedReservedJobs.add(key);
+      drivingJobs.delete(key);
+    }
+  };
+  const commitReservedToolSpawnsWhileSerialized = async (instanceId: number, actorId: string, effects: readonly WireVariant[]): Promise<void> => {
+    for (const effect of effects) {
+      if (effect.tag !== "spawn-job") continue;
+      const value = effect.val as { job?: unknown; kind?: unknown; input?: unknown } | undefined;
+      if (typeof value?.job !== "bigint" || value.kind !== "framework.reserved.tool") continue;
+      console.warn(`[DEBUG] spawn-job routed kind=${value.kind} job=${value.job} inline=1`);
+      await commitReservedToolJobWhileSerialized(instanceId, actorId, value.job, value.kind, coerceWireBytes(value.input));
+    }
+  };
+
+    const driveReservedToolJob = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
+    const key = `${actorId}#${job}`;
+    if (drivingJobs.has(key)) return;
+    drivingJobs.add(key);
+    const live = (): boolean => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId;
+    try {
+      beginIsolatedJobDrive();
+      await serializeCommandIngressForActor(actorId, async () => {
+        await shardClient.startJob(actorId, job, kind, input);
+        let step = 0;
+        let last: ShardJobStep | undefined;
+        const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
+        for (let i = 0; i < batch; i += 1) {
+          last = await shardClient.stepJob(actorId, job, jobStepBudget);
+          step += 1;
+          if (last.status !== "running") break;
+        }
+        const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
+        if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
+        console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
+        if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
+      });
+    } catch (error) {
+      console.warn(`[DEBUG] job drive failed kind=${kind} job=${job}`, error);
+      turnOutcomes.push({ instanceId, error });
+    } finally {
+      endIsolatedJobDrive();
+      drivingJobs.delete(key);
+    }
+  };
+
+    /** 🚦 The one choke point every consumer of a turn's `effects` passes through: backbone
    * `send-message`s go to the document port, `spawn-job`/`cancel-job` go to {@link driveSpawnedJob}
    * (they are host WORK, never a `requestedEffects` entry for `applyHostEffects` to branch on), and
    * everything else is returned for the caller's own shell-frame/leftover split. */
@@ -1895,7 +2060,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (effect.tag === "spawn-job") {
       const value = effect.val as { job?: unknown; kind?: unknown; input?: unknown } | undefined;
       if (typeof value?.job !== "bigint" || typeof value.kind !== "string") throw new Error("plugin.spawn-job-authority-invalid");
-      void driveSpawnedJob(instanceId, requireActorId(instanceId), value.job, value.kind, coerceWireBytes(value.input));
+      const actorId = requireActorId(instanceId);
+      if (drivingJobs.has(`${actorId}#${value.job}`) || finishedReservedJobs.has(`${actorId}#${value.job}`)) return false;
+      console.warn(`[DEBUG] spawn-job routed kind=${value.kind} job=${value.job}`);
+      const input = coerceWireBytes(value.input);
+      const drive = value.kind === "framework.reserved.tool"
+        ? driveReservedToolJob(instanceId, actorId, value.job, value.kind, input)
+        : driveSpawnedJob(instanceId, actorId, value.job, value.kind, input);
+      if (value.kind === "framework.reserved.tool") pendingReservedJobDrives.push(drive);
+      else void drive;
       return false;
     }
     if (effect.tag === "cancel-job") {
@@ -1925,6 +2098,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const actorId = requireActorId(instanceId);
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
+      const inspected = inspectEncodedAppCommand(events);
+      console.warn("[DEBUG] command ingress lane", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, lane: inspected.lane }));
       const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         const results: WireTurnResult[] = [];
@@ -1964,18 +2139,26 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           console.warn(`[DEBUG] command ingress settled status=${terminal ?? "missing"} observed=${[...observedStatuses].join(",")}`);
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
-      }));
+        const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
+        await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
+        return settled;
+      }, inspected.lane));
       requireActorId(instanceId);
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
-      const leftover: WireVariant[] = [];
+      const leftover: WireVariant[] = [...(pendingTurnEffects.get(instanceId) ?? [])];
       for (const effect of routeHostEffects(instanceId, result.effects, documentPort)) {
         const frame = shellFrameBytes(effect, instanceId);
         if (frame) outFrames.push(frame);
         else leftover.push(effect);
       }
-      pendingTurnEffects.set(instanceId, leftover);
+      const promoted = promoteShellSendMessages(instanceId, leftover, outFrames);
+      pendingTurnEffects.set(instanceId, promoted);
+      await flushReservedJobDrives();
+      if (commandIngressNeedsReplyStampV1(outFrames.map(encodedFrameReplySequence), inspected.seq)) {
+        outFrames.push(encodeAppFrame({ Done: { in_reply_to: inspected.seq! } }));
+        console.warn("[DEBUG] command ingress stamped Done", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, leftover: leftover.length, frames: outFrames.length }));
+      }
       turnOutcomes.push({ instanceId, frames: outFrames });
       if (wireTurnStatusTag(result.status) === "more-work") void drainTypedOperations(instanceId);
     } catch (error) {
@@ -2338,6 +2521,38 @@ function retainTurnUiPatches(actorId: string, result: Pick<WireTurnResult, "uiPa
 /** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }`
  * object — used both for the old DSL-pack byte fields AND (H1-react) for `pack`-typed fields inside a
  * raw WIT `effect`/`patch-op` variant, which jco represents as a plain byte array or `Uint8Array`. */
+
+function leftoverShellInvocationFrames(leftover: readonly WireVariant[]): AppFrameValue[] {
+  const frames: AppFrameValue[] = [];
+  for (const effect of leftover) {
+    const value = effect.val as { target?: WireVariant; payload?: unknown } | undefined;
+    if (effect.tag !== "send-message" || value?.target?.tag !== "shell" || value.payload === undefined) continue;
+    try {
+      const frame = decodeAppFrame(coerceWireBytes(value.payload));
+      if ("Invocation" in frame) frames.push(frame);
+    } catch {
+      /* leftover host effect, not an AppFrame */
+    }
+  }
+  return frames;
+}
+
+function leftoverClipboardWriteEffects(leftover: readonly WireVariant[]): WireVariant[] {
+  const writes = leftover.filter((effect) => effect.tag === "clipboard-write");
+  if (writes.length === 0 && leftover.some((effect) => effect.tag === "send-message")) {
+    console.warn(`[DEBUG] leftover clipboard-write missing tags=${leftover.map((effect) => effect.tag).join(",")}`);
+  }
+  return writes;
+}
+
+function promoteShellSendMessages(instanceId: number, leftover: readonly WireVariant[], _outFrames: Uint8Array[]): WireVariant[] {
+  for (const frame of leftoverShellInvocationFrames(leftover)) {
+    console.warn(`[DEBUG] job-completed leftover frame instance=${instanceId} kind=Invocation history=${frame.Invocation.history_patch.length}`);
+  }
+  leftoverClipboardWriteEffects(leftover);
+  return [...leftover];
+}
+
 export function coerceWireBytes(raw: unknown): Uint8Array {
   if (raw instanceof Uint8Array) return raw;
   if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
@@ -2364,10 +2579,26 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
  * native `invocation_from_frames` already flags identically). */
 async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
   assertAddressedInvocation(invocation, invocationKind, instanceId);
+  const invocationRecord = invocation as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown }; readonly arguments?: Record<string, unknown> } | null;
+  const address = invocationRecord?.address;
+  const actionId = address?.actionId ?? address?.commandId ?? null;
+  console.warn("[DEBUG] performInvocation", JSON.stringify({ invocationKind, instanceId, actionId }));
+  if (actionId === "importFixture") {
+    const args = invocationRecord?.arguments;
+    const payload = args?.payload;
+    console.warn("[DEBUG] importFixture ingress", JSON.stringify({
+      name: typeof args?.name === "string" ? args.name : null,
+      payloadType: payload === undefined ? "missing" : typeof payload,
+      payloadLen: typeof payload === "string" ? payload.length : payload && typeof payload === "object" ? Object.keys(payload as object).length : null,
+      argKeys: args ? Object.keys(args) : [],
+    }));
+  }
   const frames = await client.command(encodePackValue(invocation), viewState);
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   pendingTurnEffects.delete(instanceId);
-  return invocationFromFrames(frames, leftover, invocationKind);
+  const response = invocationFromFrames(frames, leftover, invocationKind);
+  console.warn("[DEBUG] performInvocation settled", JSON.stringify({ invocationKind, instanceId, actionId, frames: frames.length, frameKinds: frames.map((frame) => Object.keys(frame)[0] ?? "?"), historyCursor: response.historyPatch?.cursor ?? null, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null, effects: (response.requestedEffects ?? []).length }));
+  return response;
 }
 
 /** 🚫️ Refuses an unaddressed invocation at the renderer edge, naming the window kind and instance it
@@ -2402,24 +2633,30 @@ function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readon
   let inverseGroup: InvocationResponse["inverseGroup"] = { invocationId: "", mutations: [], inverseMutations: [] };
   let uiScope: InvocationResponse["uiScope"];
   let historyPatch: InvocationResponse["historyPatch"];
+  const applyInvocationFrame = (frame: Extract<AppFrameValue, { readonly Invocation: unknown }>): void => {
+    if (frame.Invocation.output.length) output = decodePackValue(new Uint8Array(frame.Invocation.output));
+    if (frame.Invocation.diagnostics.length) {
+      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
+      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+    }
+    if (frame.Invocation.ui_scope.length) uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
+    if (frame.Invocation.history_patch.length) {
+      const decodedHistoryPatch = decodePackWire(new Uint8Array(frame.Invocation.history_patch), "$.historyPatch");
+      historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
+    }
+    ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame.Invocation));
+  };
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      if (frame.Invocation.output.length) output = decodePackValue(new Uint8Array(frame.Invocation.output));
-      if (frame.Invocation.diagnostics.length) {
-        const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
-        diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
-      }
-      if (frame.Invocation.ui_scope.length) uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
-      if (frame.Invocation.history_patch.length) {
-        const decodedHistoryPatch = decodePackWire(new Uint8Array(frame.Invocation.history_patch), "$.historyPatch");
-        historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
-      }
-      ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame.Invocation));
+      applyInvocationFrame(frame);
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
       throw new Error(`${invocationKind} failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
+  }
+  for (const frame of leftoverShellInvocationFrames(leftover)) {
+    if ("Invocation" in frame) applyInvocationFrame(frame);
   }
   if (leftover.some((effect) => effect.tag === TYPED_OPERATION_PENDING_OUTPUT)) throw new Error("directory projection receipt was exposed before typed-operation terminal publication");
   const terminalOutputs = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT);
@@ -2534,7 +2771,9 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] readAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const documentFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Document: unknown }> => "Document" in frame);
-      return documentFrame ? { pack: new Uint8Array(documentFrame.Document.pack), spr: new Uint8Array(documentFrame.Document.spr) } : null;
+      return documentFrame
+        ? { pack: new Uint8Array(documentFrame.Document.pack), spr: new Uint8Array(documentFrame.Document.spr), ops: documentFrame.Document.ops }
+        : null;
     },
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
@@ -3110,7 +3349,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, leftoverShellInvocationFrames, leftoverInspectionRefreshScope, windowHostContextBindings, DEFAULT_LEFTOVER_WINDOW_SURFACE, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

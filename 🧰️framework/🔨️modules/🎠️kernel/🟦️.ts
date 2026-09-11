@@ -244,6 +244,119 @@ export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId
   return JSON.stringify(entries);
 }
 
+const CONTRIBUTION_KIND_KEYS = new Set(["kind", "neuron-kind", "neuronKind", "operator", "operatorKind", "operator-kind", "id"]);
+const CONTRIBUTION_KIND_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/;
+
+function collectOperatorKinds(value: unknown, into: Set<string>, keyed = false): void {
+  if (value == null) return;
+  if (typeof value === "string") {
+    if (keyed && CONTRIBUTION_KIND_RE.test(value) && value !== "flow.extension") into.add(value);
+    for (const match of value.matchAll(/neuronKind"\s*:\s*"([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
+    for (const match of value.matchAll(/neuron-kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
+    for (const match of value.matchAll(/neuron_kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
+    for (const match of value.matchAll(/neuronKind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
+    if (/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(value)) {
+      for (const match of value.matchAll(/\b([A-Za-z][A-Za-z0-9]+(?:\.[A-Za-z][A-Za-z0-9]+)+)\b/g)) {
+        if (match[1] !== "flow.extension") into.add(match[1]!);
+      }
+    }
+    const trimmed = value.trim();
+    if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length <= 524288) {
+      try { collectOperatorKinds(JSON.parse(trimmed) as unknown, into, keyed); } catch { /* not JSON */ }
+    }
+    return;
+  }
+  if (typeof value === "number" || typeof value === "boolean") return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectOperatorKinds(item, into, keyed);
+    return;
+  }
+  if (typeof value === "object") {
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      collectOperatorKinds(item, into, keyed || CONTRIBUTION_KIND_KEYS.has(key) || key === "fixtureJson" || key === "fixture");
+    }
+  }
+}
+
+/** 🕸️ Operator kinds reachable from a document/UI tree — keyed dotted identifiers, never an allowlist. */
+export function reachableKindsFromUnknown(values: readonly unknown[]): string[] {
+  const kinds = new Set<string>();
+  for (const value of values) collectOperatorKinds(value, kinds);
+  return [...kinds];
+}
+
+function contributionReachesKinds(topicContribution: unknown, kinds: ReadonlySet<string>): boolean {
+  if (kinds.size === 0) return false;
+  const contributed = new Set<string>();
+  collectOperatorKinds(topicContribution, contributed);
+  for (const kind of kinds) {
+    if (contributed.has(kind)) return true;
+  }
+  return false;
+}
+
+/** ✂️ Host→guest contributions cut by reachability from the document graph, plus the receiver's own. */
+export function scopeContributionsJson(
+  loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
+  receiverPluginId: string,
+  reachableKinds: readonly string[],
+): string {
+  const kinds = new Set(reachableKinds);
+  const entries: ProgramContributionEntry[] = [];
+  for (const entry of loaded) {
+    const own = entry.pluginId === receiverPluginId;
+    for (const topicContribution of entry.manifest.topicContributions ?? []) {
+      if (own || contributionReachesKinds(topicContribution, kinds)) {
+        entries.push({ pluginId: entry.pluginId, topicContribution });
+      }
+    }
+  }
+  return JSON.stringify(entries);
+}
+
+/** 🕸️ True when `value` is a flow graph (or DSL text of one), including a graph with no operators. */
+export function documentFlowGraphPresent(value: unknown): boolean {
+  if (typeof value === "string") return /neuron-kind=/.test(value) || /neuron_kind=/.test(value) || /widgets\s*\{/.test(value) || /"widgets"\s*:/.test(value);
+  if (value == null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (Array.isArray(record.widgets)) return true;
+  const fixture = record.fixture;
+  return fixture != null && typeof fixture === "object" && Array.isArray((fixture as Record<string, unknown>).widgets);
+}
+
+export type DocumentOperatorScope =
+  | { readonly status: "resolved"; readonly kinds: readonly string[] }
+  | { readonly status: "unresolved"; readonly reason: string };
+
+/** 📚️ Published example graphs on the host — the live ReadDocument envelope can still be genesis. */
+export function exampleArtifactSources(
+  examples: readonly { readonly id?: string; readonly appId?: string; readonly artifactJson?: string }[],
+  appId?: string,
+  exampleId?: string,
+): string[] {
+  const take = (matchApp: (id: string | undefined) => boolean): string[] => {
+    const sources: string[] = [];
+    for (const example of examples) {
+      if (!matchApp(example.appId)) continue;
+      if (exampleId !== undefined && example.id !== exampleId) continue;
+      if (typeof example.artifactJson === "string" && example.artifactJson.length > 0) sources.push(example.artifactJson);
+    }
+    return sources;
+  };
+  const exact = take((id) => appId === undefined || id === appId);
+  if (exact.length > 0 || appId === undefined) return exact;
+  const stem = appId.split("#")[0] ?? appId;
+  return take((id) => (id ?? "").split("#")[0] === stem);
+}
+
+/** 📄️ Kinds from an open document. Empty kinds with a present graph is resolved; a missing graph is not. */
+export function resolveDocumentOperatorKinds(sources: readonly unknown[]): DocumentOperatorScope {
+  if (sources.length === 0) return { status: "unresolved", reason: "no-document-sources" };
+  const kinds = reachableKindsFromUnknown(sources);
+  if (sources.some(documentFlowGraphPresent) || kinds.length > 0) return { status: "resolved", kinds };
+  return { status: "unresolved", reason: "no-operator-graph" };
+}
+
 export function resolveLayoutForMode(
   app: { readonly defaultLayout?: WindowLayout; readonly namedLayouts?: readonly NamedLayout[]; readonly modes: readonly { readonly id: string; readonly layoutId?: string }[] },
   modeId: string,
@@ -3004,3 +3117,73 @@ if (import.meta.vitest) {
   await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️IoRouterTests
+
+//#region 🧪️ScopeContributionsTests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  
+  describe("exampleArtifactSources", () => {
+    const examples = [
+      { id: "box-shell-preview", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron id=box neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" },
+      { id: "face-sweep-extrude", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron-kind=brep.surf.planarFaceWire neuron-kind=brep.sweep.extrude" },
+    ];
+    it("reads neuron-kind from published example artifactJson", () => {
+      const sources = exampleArtifactSources(examples, "s.procedural.generation3d@1/*#editor", "box-shell-preview");
+      expect(resolveDocumentOperatorKinds(sources)).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
+    });
+    it("uses the editor graphs when the open app is the viewer of the same artifact", () => {
+      const sources = exampleArtifactSources(examples, "s.procedural.generation3d@1/*#viewer");
+      const scope = resolveDocumentOperatorKinds(sources);
+      expect(scope.status).toBe("resolved");
+      if (scope.status === "resolved") {
+        expect(scope.kinds).toContain("brep.prim3d.box");
+        expect(scope.kinds).toContain("brep.surf.planarFaceWire");
+      }
+    });
+  });
+
+describe("scopeContributionsJson", () => {
+    const manifest = (topic: string, payload: unknown) =>
+      ({ topicContributions: [{ topic, payload }], apps: [], workflows: [] }) as PluginManifest;
+    const loaded = [
+      { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
+      { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },
+      { pluginId: "flow-extension-bim", manifest: manifest("flow.extension", { operators: [{ kind: "bim.wall" }] }) },
+      { pluginId: "flow-extension-math", manifest: manifest("flow.extension", { operators: [{ kind: "math.vector" }] }) },
+    ];
+    it("keeps the receiver and only plugins whose operators the document graph can reach", () => {
+      const kinds = reachableKindsFromUnknown([
+        { widgets: [{ neuronKind: "brep.solid.extrude" }, { neuronKind: "math.vector" }] },
+      ]);
+      expect(kinds.sort()).toEqual(["brep.solid.extrude", "math.vector"]);
+      const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", kinds)) as { pluginId: string }[];
+      expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "flow-extension-math", "procedural"]);
+    });
+    it("drops every foreign contribution when the graph names no operator kind", () => {
+      const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", [])) as { pluginId: string }[];
+      expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural"]);
+    });
+    it("reaches operators nested in a flow-extension manifestJson string", () => {
+      const brep = {
+        pluginId: "flow-extension-brep",
+        manifest: manifest("flow.extension", { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "brep.solid.extrude" }, { id: "brep.curve.polygon" }] } }) }),
+      };
+      const kinds = reachableKindsFromUnknown([{ widgets: [{ "neuron-kind": "brep.solid.extrude" }] }, "neuron-kind=brep.solid.extrude"]);
+      expect(kinds).toContain("brep.solid.extrude");
+      const scoped = JSON.parse(scopeContributionsJson([loaded[0]!, brep, loaded[2]!], "procedural", kinds)) as { pluginId: string }[];
+      expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "procedural"]);
+    });
+    it("resolves neuron-kind from the open document DSL and refuses a missing graph", () => {
+      const dsl =
+        'widgets {\n  neuron id="profile" neuron-kind=brep.curve.polygon\n  neuron id="extrusion-axis" neuron-kind=math.vector\n  neuron id="extrude" neuron-kind=brep.solid.extrude\n}';
+      const fromDsl = resolveDocumentOperatorKinds([dsl]);
+      expect(fromDsl.status).toBe("resolved");
+      if (fromDsl.status === "resolved") expect([...fromDsl.kinds].sort()).toEqual(["brep.curve.polygon", "brep.solid.extrude", "math.vector"]);
+      const emptyGraph = resolveDocumentOperatorKinds([{ fixture: { widgets: [] } }]);
+      expect(emptyGraph).toEqual({ status: "resolved", kinds: [] });
+      expect(resolveDocumentOperatorKinds([{ surface: "lane-split" }])).toEqual({ status: "unresolved", reason: "no-operator-graph" });
+      expect(resolveDocumentOperatorKinds([])).toEqual({ status: "unresolved", reason: "no-document-sources" });
+    });
+  });
+}
+//#endregion 🧪️ScopeContributionsTests

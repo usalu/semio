@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
@@ -53,6 +53,9 @@ import {
   type CommandAddress,
   type CommandInvocation,
   buildContributionsJson,
+  exampleArtifactSources,
+  resolveDocumentOperatorKinds,
+  scopeContributionsJson,
   type ContextMenuItemSpec,
   createBrowserStoragePort,
   createDevPluginSource,
@@ -69,6 +72,7 @@ import {
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   type Effect,
   type HistoryEntry,
   type HistoryPatch,
@@ -84,7 +88,6 @@ import {
   pendingPanelUiNode,
   pendingWindowUiNode,
   parseResolvedPluginViewState,
-  publicInvocationStringPages,
   type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
@@ -398,6 +401,8 @@ import {
   endInteractivePluginAction,
   mapContextMenuSpecs,
   registerPendingWorldProjection,
+  leftoverWorldSelectionOverlayV1,
+  publishLeftoverWorldSelectionV1,
   WindowInstanceIdContext,
 } from "../🌐️World3dHost/🟦️.tsx";
 import {
@@ -421,6 +426,10 @@ import {
   applyTutorialUiSnapshotToShell,
   applyUiRefreshResponseToCache,
   buildActiveExampleAction,
+  SET_ACTIVE_EXAMPLE_ACTION_ID,
+  navbarExampleIdFromHistoryUpserts,
+  interactionViewFromLeftoverOutput,
+  leftoverInteractionStateV1,
   buildActiveUtilityByWindowId,
   buildCommandCategoryTabs,
   buildNoteShellCommandAction,
@@ -498,6 +507,8 @@ import {
   resolvePanelTabLabel,
   resolveUtilityActivation,
   undeclaredActionDiagnostic,
+  historyPatchShouldApplyV1,
+  historyRefreshNeededV1,
   resolveUtilityNodes,
   resolveWindowEngagement,
   retitleWindowLayoutNode,
@@ -557,7 +568,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { PluginBootShardLostError, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { PluginBootShardLostError, leftoverInspectionRefreshScope, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
@@ -851,6 +862,20 @@ function encodeWindowActionInvocation(session: ActiveSession, action: ActionDesc
   return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId));
 }
 
+/** 📄️ Decode a live document pack for operator-kind reachability — pack value, then UTF-8 of pack/spr. */
+function documentSourcesFromPack(pack: Uint8Array, spr: Uint8Array, ops?: string): unknown[] {
+  const sources: unknown[] = [];
+  try {
+    sources.push(decodePackValue(pack));
+  } catch {
+    /* `.spk` / non-pack snapshot — UTF-8, spr, and ops still get a walk */
+  }
+  sources.push(new TextDecoder().decode(pack));
+  sources.push(new TextDecoder().decode(spr));
+  if (ops) sources.push(ops);
+  return sources;
+}
+
 /** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */
 function encodeAppCommandInvocation(pluginId: string, app: AppDefinition, commandId: string, args: Readonly<Record<string, unknown>>): string {
   const invocation: CommandInvocation = {
@@ -865,11 +890,10 @@ export function appOwnsCommand(app: AppDefinition, commandId: string): boolean {
   return (app.commands ?? []).some((command) => command.id === commandId);
 }
 
-/** @emoji 📄️ Tests whether the app's OWN declaration of a host-pushed command takes a page run — the
- * shell sends exactly the arguments the addressed command declares, so an app whose `setContributions`
- * is a single-`json` command is never handed a `page`/`pageCount` it would ignore while silently
- * overwriting itself with the last page. The declaration is the contract, not this file's assumption
- * about it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+/** @emoji 📄️ Tests whether the app's OWN declaration of a host-pushed command includes `pageCount`.
+ * The shell still sends exactly those arguments (`page: 0`, `pageCount: 1`) as ONE pack-encoded
+ * `handleCommand`. It does not cut the payload into 4 KiB JSON pages
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function appCommandTakesPageRun(app: AppDefinition, commandId: string): boolean {
   const command = (app.commands ?? []).find((entry) => entry.id === commandId);
   return (command?.args ?? []).some((arg) => arg.id === "pageCount");
@@ -1825,13 +1849,21 @@ function FrameworkOsShellInner({
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
   const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean; readonly currentCheckpointId: string | undefined }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined });
   const historyOrderRef = useRef(0);
+  const exampleOptionsRef = useRef<readonly { readonly id: string }[]>([]);
+  const lastDispatchedExampleIdRef = useRef("");
   const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
     if (!patch) return;
+    let applied = false;
     setHistoryProjection((current) => {
-      if (!replace && patch.cursor <= current.cursor) return current;
+      if (!historyPatchShouldApplyV1(current.cursor, patch, replace)) {
+        console.warn("[DEBUG] history patch skipped", JSON.stringify({ replace, currentCursor: current.cursor, patchCursor: patch.cursor, upserts: patch.upserts?.length ?? 0, canUndo: patch.canUndo ?? null }));
+        return current;
+      }
+      applied = true;
+      console.warn("[DEBUG] history patch applied", JSON.stringify({ replace, currentCursor: current.cursor, patchCursor: patch.cursor, upserts: patch.upserts?.length ?? 0, labels: (patch.upserts ?? []).map((entry) => entry.label), canUndo: patch.canUndo ?? null }));
       localHistoryOrderRef.current = ++historyOrderRef.current;
       const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
       for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
@@ -1840,7 +1872,45 @@ function FrameworkOsShellInner({
       // landed (see `touchSpaceIndexArtifact`'s call site).
       return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId) };
     });
+    if (applied) {
+      const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
+      if (navbarExample !== undefined) {
+        console.warn("[DEBUG] navbar example from history", JSON.stringify({ navbarExample, remembered: lastDispatchedExampleIdRef.current }));
+        dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
+      }
+    }
   }, []);
+  const leftoverInspectionEpochRef = useRef(0);
+  const [leftoverInspectionEpoch, setLeftoverInspectionEpoch] = useState(0);
+  const leftoverInspectionHasSelectionRef = useRef(false);
+  const leftoverInspectionSelectedKeyRef = useRef("");
+  const applyLeftoverInteractionView = useCallback((output: unknown) => {
+    const published = interactionViewFromLeftoverOutput(output);
+    if (!published) return;
+    publishLeftoverWorldSelectionV1({ ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId });
+    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1(published) });
+    leftoverInspectionHasSelectionRef.current = published.selectedIds.length > 0;
+    const selectedKey = published.selectedIds.join("\0");
+    if (published.selectedIds.length > 0 && leftoverInspectionSelectedKeyRef.current !== selectedKey) {
+      leftoverInspectionSelectedKeyRef.current = selectedKey;
+      leftoverInspectionEpochRef.current += 1;
+      setLeftoverInspectionEpoch(leftoverInspectionEpochRef.current);
+    }
+    console.warn("[DEBUG] leftover InteractionView", JSON.stringify({ selectedIds: published.selectedIds, locked: published.locked, gumball: published.gumballActive, hoverTarget: published.hoverTarget }));
+  }, []);
+  const refreshHistorySnapshot = useCallback((instanceId: number) => {
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === sessionRef.current?.pluginId)?.handle;
+    if (!plugin?.readHistory) return;
+    const orderAtRequest = historyOrderRef.current;
+    void plugin.readHistory(instanceId).then((snapshot) => {
+      if (historyOrderRef.current > orderAtRequest) {
+        console.warn("[DEBUG] history snapshot skipped — projection newer than request", JSON.stringify({ orderAtRequest, current: historyOrderRef.current }));
+        return;
+      }
+      console.warn("[DEBUG] history snapshot refresh", JSON.stringify({ instanceId, cursor: snapshot.cursor, upserts: snapshot.upserts?.length ?? 0, canUndo: snapshot.canUndo ?? null }));
+      applyHistoryPatch(snapshot, true);
+    }).catch((error) => console.error("[DEBUG] history snapshot failed", error));
+  }, [applyHistoryPatch]);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostAppsResolution = useMemo(() => {
     if (!hostPlugin || !hostConfig) return { apps: undefined, error: null };
@@ -1876,8 +1946,14 @@ function FrameworkOsShellInner({
     const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     let cancelled = false;
+    const orderAtRequest = historyOrderRef.current;
     void plugin.readHistory(session.instanceId).then((snapshot) => {
-      if (!cancelled) applyHistoryPatch(snapshot, true);
+      if (cancelled) return;
+      if (historyOrderRef.current > orderAtRequest) {
+        console.warn("[DEBUG] history snapshot skipped — projection newer than request", JSON.stringify({ orderAtRequest, current: historyOrderRef.current }));
+        return;
+      }
+      applyHistoryPatch(snapshot, true);
     }).catch((error) => console.error("[DEBUG] history snapshot failed", error));
     return () => {
       cancelled = true;
@@ -1930,6 +2006,7 @@ function FrameworkOsShellInner({
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const contributionsJsonRef = useRef<string | null>(null);
+  const documentOperatorKindsRef = useRef<readonly string[] | null>(null);
   const clipboardFragmentRef = useRef<unknown>(undefined);
   const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshGenerationRef = useRef(0);
@@ -2264,6 +2341,10 @@ function FrameworkOsShellInner({
   const failDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, failure: unknown) => {
     if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
     const error = failure instanceof Error ? failure : new Error(String(failure));
+    if (entry.replacements.pending) {
+      console.error("[DEBUG] document backbone failed during replacement — keeping owner", error);
+      return;
+    }
     entry.creationMount?.close(error);
     entry.rejectReady(error);
     console.error("[DEBUG] document backbone failed", error);
@@ -2274,7 +2355,10 @@ function FrameworkOsShellInner({
     try {
       if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decodeBackboneMessage(message).kind !== "mutations") throw new Error("document-backbone.invalid-message");
       if (entry.port === null) {
-        if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) throw new Error("document-backbone.pending-capacity");
+        if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) {
+          console.warn("[DEBUG] document backbone pending overflow — dropping while rebound", JSON.stringify({ runtimeKey, clientInstanceId: entry.clientInstanceId, pending: entry.pending.length }));
+          return;
+        }
         entry.pending.push(message.slice());
         entry.pendingBytes += message.length;
       } else void entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message).catch(error => failDocumentBackbone(runtimeKey, entry, error));
@@ -2731,7 +2815,7 @@ function FrameworkOsShellInner({
           const active = sessionRef.current;
           if (shellDialogSessionIsCurrentV1(active, entry.session)) {
             rebootstrapDiscardedSessionsRef.current.set(runtimeKey, entry.session);
-            dispatch({ type: "SET_SESSION", value: null });
+            console.warn("[DEBUG] document rebootstrap kept session", JSON.stringify({ runtimeKey, instanceId: entry.session.instanceId }));
           }
         }
         return;
@@ -3759,6 +3843,7 @@ function FrameworkOsShellInner({
   // 🧰️ Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
   // active window without re-creating those callbacks on every utility switch.
   const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
+  const lastUtilityArmAtRef = useRef(0);
   activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
   const activeToolIdRef = useRef(activeToolId);
   activeToolIdRef.current = activeToolId;
@@ -4123,7 +4208,7 @@ function FrameworkOsShellInner({
         windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
       };
-      const viewState = request.windowInstanceId ? windowViewContext(baseViewState, request.windowInstanceId) : panelViewContext(injectActiveTool(baseViewState));
+      const viewState = request.windowInstanceId ? hostArmedViewContext(baseViewState, activeToolIdRef.current, request.windowInstanceId) : panelViewContext(injectActiveTool(baseViewState));
       if (!viewState) return [];
       return plugin.contextMenu(session.instanceId, request, viewState);
     },
@@ -4173,6 +4258,14 @@ function FrameworkOsShellInner({
       // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
+      dispatch({
+        type: "SET_WINDOW_UI_BY_WINDOW_ID",
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            windowInstances.map((instance) => [instance.id, current[instance.id] ?? pendingWindowUiNode()] as const),
+          ),
+      });
       const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
       // 🩹️ `buildContributionsJson`'s own `PluginManifest` (kernel/component.ts) is a stale, narrower
       // mirror of this file's real one (`Shell/🟦️.tsx`'s, deliberately richer — see that
@@ -4246,73 +4339,6 @@ function FrameworkOsShellInner({
         // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
         if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession, { kind: "full" }, refreshOwner);
       }
-      // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
-      // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
-      // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
-      // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
-      // which doesn't own either catalogue command). Folding `instanceId` into the key makes a
-      // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
-      // of being silently swallowed by a guard that already considered this content "delivered".
-      if (contributionsJson) {
-        const contributionsPushKey = `${nextSession.instanceId}::${contributionsJson}`;
-        if (contributionsPushKey !== contributionsJsonRef.current) {
-          contributionsJsonRef.current = contributionsPushKey;
-          for (const pluginEntry of loadedPlugins) {
-            if (!pluginEntry.manifest.apps?.length) continue;
-            if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, nextSession.pluginId, hostMode)) continue;
-            const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
-            const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
-            const instanceId = targetApp ? (isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
-            // 🩺️ The push has four independent gates and a silent `continue` on each, so a boot where
-            // the closure never reached the guest was indistinguishable from one where it did — boot
-            // #11 could not tell "no push ran" from "the push ran and nothing re-armed"
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Gated, so a normal boot pays nothing.
-            const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
-            const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
-            if (runtimeDiagnosticsEnabled()) {
-              const pageCount = skipped !== undefined ? 0 : takesPageRun ? publicInvocationStringPages(contributionsJson).length : 1;
-              console.log(
-                "[DEBUG] contributions push",
-                JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount, chars: contributionsJson.length, skipped: skipped ?? null }),
-              );
-            }
-            if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand || instanceId == null) continue;
-            const pages = takesPageRun ? publicInvocationStringPages(contributionsJson) : [contributionsJson];
-            // 📄️ The closure cannot cross whole: the guest's own public-invocation envelope caps EVERY
-            // string in a command body at `PUBLIC_INVOCATION_STRING_BYTES` (4 KiB) BEFORE the addressed
-            // tool's `max_raw_wire_bytes` is consulted, so no tool contract can widen it and a 293 KiB
-            // contributions payload was silently refused as `command contains an oversized string`. The
-            // page budget is read off that one framework bound (mirrored from
-            // `🎛️public-invocation/🧬️schema/🔣️.json`), never spelled here
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-            try {
-              for (const [page, json] of pages.entries()) {
-                const args = takesPageRun ? { json, page, pageCount: pages.length } : { json };
-                const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
-                await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
-              }
-            } catch (error) {
-              console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
-            }
-          }
-        }
-      }
-      if (appRegistrationsJson) {
-        const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
-        if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
-          appRegistrationsJsonRef.current = appRegistrationsPushKey;
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-          // 🪐️ The space app explicitly declares this hidden app command; other apps never receive it.
-          if (pluginEntry?.handle.handleCommand && appOwnsCommand(nextSession.app, "setAppRegistrations")) {
-            try {
-              const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
-              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, resolvedTargetViewState(nextSession));
-            } catch (error) {
-              console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
-            }
-          }
-        }
-      }
       // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
       // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
@@ -4363,6 +4389,124 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
         dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      }
+      // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
+      // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
+      // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
+      // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
+      // which doesn't own either catalogue command). Folding `instanceId` into the key makes a
+      // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
+      // of being silently swallowed by a guard that already considered this content "delivered".
+      const receiverPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+      let operatorScope: ReturnType<typeof resolveDocumentOperatorKinds> | { status: "unresolved"; reason: string };
+      const cachedKinds = documentOperatorKindsRef.current;
+      if (cachedKinds && cachedKinds.length > 0) {
+        operatorScope = { status: "resolved", kinds: cachedKinds };
+      } else if (!receiverPlugin?.handle.readAppDocumentPack) {
+        operatorScope = { status: "unresolved", reason: receiverPlugin ? "no-document-read" : "no-receiver" };
+      } else {
+        let liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId);
+        if (generation !== refreshGenerationRef.current) return;
+        const opsLooksEmpty = (ops: string | undefined) => ops == null || !/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(ops);
+        if (liveDocument && opsLooksEmpty(liveDocument.ops)) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          if (generation !== refreshGenerationRef.current) return;
+          liveDocument = await receiverPlugin.handle.readAppDocumentPack(nextSession.instanceId) ?? liveDocument;
+          if (generation !== refreshGenerationRef.current) return;
+        }
+        if (!liveDocument) {
+          operatorScope = { status: "unresolved", reason: "no-document-pack" };
+        } else {
+          const sources = documentSourcesFromPack(liveDocument.pack, liveDocument.spr, liveDocument.ops);
+          operatorScope = liveDocument.ops == null
+            ? { status: "unresolved", reason: "document-ops-missing" }
+            : resolveDocumentOperatorKinds(sources);
+          console.error(
+            "[DEBUG] contributions document sources",
+            JSON.stringify({
+              packBytes: liveDocument.pack.byteLength,
+              sprBytes: liveDocument.spr.byteLength,
+              opsChars: liveDocument.ops?.length ?? null,
+              opsHead: (liveDocument.ops ?? "").slice(0, 280),
+              status: operatorScope.status,
+              reason: operatorScope.status === "unresolved" ? operatorScope.reason : undefined,
+              kinds: operatorScope.status === "resolved" ? operatorScope.kinds : [],
+            }),
+          );
+        }
+        if (operatorScope.status === "resolved" && operatorScope.kinds.length > 0) documentOperatorKindsRef.current = operatorScope.kinds;
+      }
+      if (operatorScope.status === "unresolved") {
+        const exampleSources = exampleArtifactSources(receiverPlugin?.manifest.examples ?? [], nextSession.app.id);
+        const fromExamples = resolveDocumentOperatorKinds(exampleSources);
+        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) {
+          operatorScope = fromExamples;
+          documentOperatorKindsRef.current = fromExamples.kinds;
+          console.error("[DEBUG] contributions scoped from published examples", JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, kinds: fromExamples.kinds, examples: exampleSources.length }));
+        } else {
+          console.error(
+            "[DEBUG] contributions push skipped unresolved document operators",
+            JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, reason: operatorScope.reason }),
+          );
+        }
+      }
+      if (operatorScope.status === "resolved") {
+        const loadedForScope = loadedPlugins
+          .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
+          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
+        const scopedContributionsJson = scopeContributionsJson(loadedForScope, nextSession.pluginId, operatorScope.kinds);
+        if (scopedContributionsJson === "[]") {
+          console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: nextSession.pluginId, app: nextSession.app.id, chars: 2, kinds: operatorScope.kinds }));
+        } else if (scopedContributionsJson) {
+          const contributionsPushKey = `${nextSession.instanceId}::${scopedContributionsJson}`;
+          if (contributionsPushKey !== contributionsJsonRef.current) {
+            contributionsJsonRef.current = contributionsPushKey;
+            for (const pluginEntry of loadedPlugins) {
+              if (!pluginEntry.manifest.apps?.length) continue;
+              if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, nextSession.pluginId, hostMode)) continue;
+              const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
+              const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
+              const instanceId = targetApp ? (isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
+              const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
+              const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
+              if (runtimeDiagnosticsEnabled()) {
+                console.log(
+                  "[DEBUG] contributions push",
+                  JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount: skipped !== undefined ? 0 : 1, crossings: skipped !== undefined ? 0 : 1, chars: scopedContributionsJson.length, kinds: operatorScope.kinds, encoding: "pack", skipped: skipped ?? null }),
+                );
+              }
+              if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand || instanceId == null) continue;
+              // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
+              // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
+              // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
+              // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
+              // receives page 0 of 1 so the addressed schema matches.
+              const args = takesPageRun ? { json: scopedContributionsJson, page: 0, pageCount: 1 } : { json: scopedContributionsJson };
+              try {
+                const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
+                await pluginEntry.handle.handleCommand(instanceId, wire, resolvedTargetViewState(nextSession));
+              } catch (error) {
+                console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
+              }
+            }
+          }
+        }
+      }
+      if (appRegistrationsJson) {
+        const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
+        if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
+          appRegistrationsJsonRef.current = appRegistrationsPushKey;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+          // 🪐️ The space app explicitly declares this hidden app command; other apps never receive it.
+          if (pluginEntry?.handle.handleCommand && appOwnsCommand(nextSession.app, "setAppRegistrations")) {
+            try {
+              const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
+              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, resolvedTargetViewState(nextSession));
+            } catch (error) {
+              console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
+            }
+          }
+        }
       }
     },
     // 🐢️ `applyHostEffects` is declared later in this component (its own deps need `updateSpacePanel`/
@@ -4790,14 +4934,17 @@ function FrameworkOsShellInner({
         }
         if ("requestFileOpen" in effect) {
           const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
+          const resolvedImport = importAction || "importFixture";
+          console.warn(`[DEBUG] import-picker hop accept=${accept} importAction=${importAction || "<empty>"} resolved=${resolvedImport} multiple=${Boolean(multiple)}`);
           const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
+          console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
           if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
               // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
               // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
+              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
             }
           }
           continue;
@@ -4903,6 +5050,15 @@ function FrameworkOsShellInner({
             } catch (openingError) {
               console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
             }
+          } else {
+            if (actionId === SET_ACTIVE_EXAMPLE_ACTION_ID) {
+              const raw = typeof argsRecord?.exampleId === "string" ? argsRecord.exampleId : "";
+              const exampleId = raw || resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId);
+              if (raw) lastDispatchedExampleIdRef.current = raw;
+              dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+            }
+            console.warn("[DEBUG] replayShellCommand dispatch", JSON.stringify({ actionId }));
+            onActionRef.current({ controllerId: baseSession.app.controllerId, action: actionId, args: argsRecord });
           }
           continue;
         }
@@ -4942,6 +5098,7 @@ function FrameworkOsShellInner({
             const spawned = parsePanelState(current.viewState)?.spawnedApps.some((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
             if (!primary && !spawned) throw new Error("extension.requester-retired");
             applyHistoryPatch(response.historyPatch);
+            applyLeftoverInteractionView(response.output);
             await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope), effectOwner);
           }).catch((error) => {
             const { extensionId, capability, req } = effect.invokeExtension;
@@ -5067,7 +5224,7 @@ function FrameworkOsShellInner({
       console.error("[DEBUG] typed-operation completion subscription failed", error);
       return;
     }
-  }, [applyHistoryPatch, applyHostEffects, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, session, settleOperation]);
+  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, session, settleOperation]);
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
@@ -5208,13 +5365,17 @@ function FrameworkOsShellInner({
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = openingAttempt;
-      if (!admitDocumentOpeningV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, closeDocumentRef.current)) return null;
-      retireBrowserActorUi(runtimeKey, "browser-actor-action: opening replaced");
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
       const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), creationMount, ready, resolveReady, rejectReady };
-      openDocumentSessionsRef.current.set(runtimeKey, entry);
+      const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, entry);
+      if (parked === null) return null;
+      const predecessorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+      if (predecessorActor !== undefined && predecessorActor.clientInstanceId !== clientInstanceId) {
+        retireBrowserActorUi(runtimeKey, "browser-actor-action: opening parked");
+      }
+      console.warn("[DEBUG] document opening parked", JSON.stringify({ runtimeKey, clientInstanceId, restored: parked.previous?.clientInstanceId ?? null, superseded: parked.superseded.length, yieldedActor: predecessorActor?.clientInstanceId ?? null }));
       const request: BackboneWorkerRequest = {
         kind: "open",
         clientInstanceId,
@@ -5242,7 +5403,18 @@ function FrameworkOsShellInner({
           const waiter = socketActorReadyRef.current.get(runtimeKey);
           if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         },
-        close: () => closeDocumentRef.current(runtimeKey, clientInstanceId),
+        close: () => {
+          entry.creationMount?.close(new Error("document opening aborted"));
+          entry.rejectReady(new Error("document opening aborted"));
+          entry.replacements.invalidate();
+          void entry.port?.retire().catch(() => {});
+          const restored = settleDocumentOpeningReplacementV1(openDocumentSessionsRef.current, parked, false);
+          const successorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+          if (successorActor?.clientInstanceId === clientInstanceId) {
+            retireBrowserActorUi(runtimeKey, "browser-actor-action: opening aborted");
+          }
+          console.warn("[DEBUG] document opening aborted — predecessor restored", JSON.stringify({ runtimeKey, clientInstanceId, restored: parked.previous?.clientInstanceId ?? null, retired: restored.length }));
+        },
         detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
         attach: async () => {
           if (hubBinding && scope) {
@@ -5269,6 +5441,18 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
         },
       });
+      if (committed) {
+        for (const [key, owner] of settleDocumentOpeningReplacementV1(openDocumentSessionsRef.current, parked, true)) {
+          if (key === runtimeKey) {
+            void owner.port?.retire().catch(() => {});
+            void retireDocumentAttachment(owner.plugin, owner.session.instanceId, owner.clientInstanceId).catch((error) => console.error("[DEBUG] parked predecessor attachment retirement failed", error));
+            backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: owner.documentId, clientInstanceId: owner.clientInstanceId, ...(owner.scope === undefined ? {} : { spaceId: owner.scope.spaceId }) }) });
+            continue;
+          }
+          closeDocumentRef.current(key, owner.clientInstanceId);
+        }
+        console.warn("[DEBUG] document opening committed", JSON.stringify({ runtimeKey, clientInstanceId, actor: browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.clientInstanceId ?? null }));
+      }
       return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
     [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, postBrowserActorViewState, resolveSyncTargetSession, hubEnv, retireDocumentAttachment, retireBrowserActorUi],
@@ -5290,6 +5474,7 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    console.warn("[DEBUG] closeDocument", JSON.stringify({ runtimeKey, clientInstanceId: entry.clientInstanceId, instanceId: entry.session.instanceId }));
     entry.creationMount?.close(new Error("document closed"));
     entry.rejectReady(new Error("document closed"));
     entry.replacements.invalidate();
@@ -5505,7 +5690,21 @@ function FrameworkOsShellInner({
         if (!windowId) return;
         const requested = typeof args.utilityId === "string" ? args.utilityId : "";
         const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
+        if (!next && performance.now() - lastUtilityArmAtRef.current < 8000) {
+          console.warn(`[DEBUG] setActiveUtility hop ignored echo-off window=${windowId} requested=${requested}`);
+          return;
+        }
+        if (next) lastUtilityArmAtRef.current = performance.now();
         setActiveUtilityForWindow(windowId, next);
+        const priorLeftover = leftoverWorldSelectionOverlayV1();
+        publishLeftoverWorldSelectionV1({
+          ids: priorLeftover?.ids ?? [],
+          hoveredId: priorLeftover?.hoveredId ?? null,
+          hoveredDomain: priorLeftover?.hoveredDomain,
+          gumballActive: priorLeftover?.gumballActive ?? false,
+          gumballAnchorId: priorLeftover?.gumballAnchorId ?? null,
+          activeUtility: next ?? "select",
+        });
         // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
         // utility clears any active mode-level tool.
         if (next && activeToolIdRef.current) {
@@ -5529,10 +5728,12 @@ function FrameworkOsShellInner({
           );
           if (!viewState) return;
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
+          console.warn(`[DEBUG] setActiveUtility hop window=${windowId} next=${next ?? ""}`);
           void program
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
+            applyLeftoverInteractionView(response.output);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
               return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
             })
@@ -5572,6 +5773,7 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
+            applyLeftoverInteractionView(response.output);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
               return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
             })
@@ -5643,7 +5845,7 @@ function FrameworkOsShellInner({
         return;
       }
 
-      const targetSession =
+      let targetSession =
         hostMode && action.controllerId !== session.app.controllerId
           ? (() => {
               const spawned = panel?.spawnedApps.find((entry) => {
@@ -5663,6 +5865,7 @@ function FrameworkOsShellInner({
         });
         const remote = mounted.length === 1 ? mounted[0] : undefined;
         const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+        console.warn("[DEBUG] undo route", JSON.stringify({ route, canUndo: historyProjection.canUndo, localOrder: localHistoryOrderRef.current, mounted: mounted.length }));
         if (route === "blocked") return;
         if (route === "remote") {
           const history = remote![1];
@@ -5671,10 +5874,29 @@ function FrameworkOsShellInner({
           return;
         }
       }
+      // ⏪️ Reserved history verbs act on the DOCUMENT owner, not the app-chrome session the navbar/
+      // keybinding dispatch carries — the retained browser actor is keyed to the open document session,
+      // so without this remap `directBrowserActorForSession` misses and the dispatch dies on the retired
+      // `plugin.handleAction` path (ticket 26/09/02/PUZZLE-3D-END-TO-END).
+      if (action.action === "undo" || action.action === "redo") {
+        const directNow = (() => { try { return directBrowserActorForSession(targetSession) !== null ? "yes" : "null"; } catch (error) { return `throw:${String(error)}`; } })();
+        const owners = [...openDocumentSessionsRef.current.values()].map((entry) => ({ pluginId: entry.session.pluginId, instanceId: entry.session.instanceId }));
+        console.warn("[DEBUG] undo remap state", JSON.stringify({ directNow, sameAsSession: targetSession === session, targetPluginId: targetSession.pluginId, targetInstanceId: targetSession.instanceId, sessionInstanceId: session?.instanceId, owners }));
+        if (directNow === "null") {
+          const documentOwners = [...openDocumentSessionsRef.current.values()].filter((entry) => entry.session.pluginId === targetSession.pluginId);
+          if (documentOwners.length === 1) {
+            targetSession = documentOwners[0]!.session;
+            console.warn("[DEBUG] undo remapped to document session", JSON.stringify({ instanceId: targetSession.instanceId }));
+          }
+        }
+      }
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
       const actionOwner = captureEffectOwner(targetSession, actionOrigin);
-      if (!isCurrentEffectOwner(actionOwner)) return;
+      if (!isCurrentEffectOwner(actionOwner)) {
+        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked effect-owner", JSON.stringify({ action: action.action }));
+        return;
+      }
 
       // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
       // os document) is deleted — app content no longer embeds on the os document at all
@@ -5694,12 +5916,16 @@ function FrameworkOsShellInner({
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
       };
       const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
-      if (!dispatchViewState) return;
+      if (!dispatchViewState) {
+        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked view-state", JSON.stringify({ action: action.action, windowId: dispatchWindowId ?? null }));
+        return;
+      }
       // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
       // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
       // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
       if (undeclared) {
+        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked undeclared", JSON.stringify({ action: action.action }));
         console.error(undeclared.message, undeclared);
         return;
       }
@@ -5715,6 +5941,17 @@ function FrameworkOsShellInner({
         return;
       }
 
+      if (action.action === "openImportFixture") {
+        console.warn("[DEBUG] import-picker hop host-arm openImportFixture");
+        void requestFileOpen("application/json,.json", "text", false)
+          .then(async (opened) => {
+            console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
+            if (!opened[0]) return;
+            onAction({ controllerId: action.controllerId, action: "importFixture", args: { payload: opened[0].contents, name: opened[0].name } });
+          })
+          .catch((error) => console.error("[DEBUG] import-picker host-arm failed", error));
+        return;
+      }
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
       try {
@@ -5725,6 +5962,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (directBrowserActor !== null) {
+        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route action=" + action.action);
         if (interactiveAction) beginInteractivePluginAction();
         return dispatchDirectBrowserActorCommand(
           directBrowserActor,
@@ -5738,12 +5976,21 @@ function FrameworkOsShellInner({
           if (interactiveAction) endInteractivePluginAction();
         });
       }
+      if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
         .then(async (response) => {
-          if (!isCurrentEffectOwner(actionOwner)) return;
+          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] undo handleAction resolved", JSON.stringify({ uiScope: response.uiScope, effects: (response.requestedEffects ?? []).length, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null }));
           applyHistoryPatch(response.historyPatch);
+            applyLeftoverInteractionView(response.output);
+          const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
+          if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
+          const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
+          if (!isCurrentEffectOwner(actionOwner)) {
+            if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
+            return;
+          }
           await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
           if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
           // 🏁️ `handleAction` answers on the guest's FIRST reactor turn — a typed command is only ADMITTED
@@ -5751,6 +5998,7 @@ function FrameworkOsShellInner({
           // frame here is what makes this promise mean "the action finished", which every self-gating
           // background tick loop depends on (`ComponentSceneHostProps.onAction`).
           await awaitOperationSettle(response.output);
+          if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
         })
         .catch((actionError) => {
           if (propagateFailure) throw actionError;
@@ -5770,6 +6018,7 @@ function FrameworkOsShellInner({
     },
     [
       applyHostEffects,
+      refreshHistorySnapshot,
       awaitOperationSettle,
       captureDialogOrigin,
       isCurrentDialogOrigin,
@@ -5778,6 +6027,7 @@ function FrameworkOsShellInner({
       dispatchDirectBrowserActorCommand,
       isCurrentEffectOwner,
       applyHistoryPatch,
+      applyLeftoverInteractionView,
       attachSyncBackbone,
       clearAllWindowUtilities,
       detachSyncBackbone,
@@ -7947,6 +8197,7 @@ function FrameworkOsShellInner({
         icon: "file" as IconName,
       }));
   }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
+  exampleOptionsRef.current = exampleOptions;
 
   const dispatchActiveExample = useCallback(
     (exampleId: string) => {
@@ -7968,6 +8219,7 @@ function FrameworkOsShellInner({
         value={activeExampleId}
         options={exampleOptions}
         onValueChange={(exampleId) => {
+          if (exampleId) lastDispatchedExampleIdRef.current = exampleId;
           dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
           dispatchActiveExample(exampleId || "");
         }}
@@ -8117,6 +8369,7 @@ function FrameworkOsShellInner({
         .then((response) => {
           if (!isCurrentEffectOwner(commandOwner)) return;
           applyHistoryPatch(response.historyPatch);
+            applyLeftoverInteractionView(response.output);
           return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), commandOwner);
         })
         .catch((error) => {
@@ -8131,7 +8384,7 @@ function FrameworkOsShellInner({
           console.error("Command execution failed", error);
         });
     },
-    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, directBrowserActorForSession, dispatchDirectBrowserActorCommand, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
+    [applyHostEffects, applyHistoryPatch, applyLeftoverInteractionView, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, directBrowserActorForSession, dispatchDirectBrowserActorCommand, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
 
   const handleCommandKeydown = useCallback(
@@ -8515,6 +8768,19 @@ function FrameworkOsShellInner({
     return result;
   }, [panels, dock]);
 
+  const historyTabOpenRef = useRef(false);
+  useEffect(() => {
+    if (!session) {
+      historyTabOpenRef.current = false;
+      return;
+    }
+    const historyOpen = Object.values(panelActivePaths).some((path) => path.includes(FRAMEWORK_PANEL_TAB_HISTORY_ID));
+    const opened = historyOpen && !historyTabOpenRef.current;
+    historyTabOpenRef.current = historyOpen;
+    if (!opened) return;
+    refreshHistorySnapshot(session.instanceId);
+  }, [panelActivePaths, refreshHistorySnapshot, session]);
+
   /**
    * 🧭️ Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
    * tab" overrides across all eight anchors. Write-through rather than read-time: each override dispatches
@@ -8540,6 +8806,24 @@ function FrameworkOsShellInner({
     const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], hostOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
   }, [hostOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
+
+  useEffect(() => {
+    if (leftoverInspectionEpoch === 0 || !leftoverInspectionHasSelectionRef.current) return;
+    const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_INSPECTION_ID);
+    if (located) {
+      const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_INSPECTION_ID);
+      const current = panels[located.anchor]?.path ?? [];
+      if (resolved && current.join("/") !== resolved.join("/")) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
+      if (!panels[located.anchor]?.visible) dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
+      console.warn("[DEBUG] leftover Inspection tab", JSON.stringify({ anchor: located.anchor, path: resolved ?? [FRAMEWORK_PANEL_TAB_INSPECTION_ID] }));
+    }
+    const scope = leftoverInspectionRefreshScope(["leftover"]);
+    const currentSession = sessionRef.current;
+    if (scope && currentSession) {
+      console.warn("[DEBUG] leftover Inspection refresh", JSON.stringify({ epoch: leftoverInspectionEpoch }));
+      void refreshUi(currentSession, scope);
+    }
+  }, [leftoverInspectionEpoch, refreshUi]);
 
   const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -8895,7 +9179,6 @@ function FrameworkOsShellInner({
         ];
       }
     }
-    if (Object.keys(windowUiByWindowId).length === 0 && currentBrowserActorUi === undefined) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
       const browserActorStore = currentBrowserActorUi?.sessionInstanceId === session.instanceId && currentBrowserActorUi.windowKindId === kind.id ? currentBrowserActorUi.store : undefined;
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);

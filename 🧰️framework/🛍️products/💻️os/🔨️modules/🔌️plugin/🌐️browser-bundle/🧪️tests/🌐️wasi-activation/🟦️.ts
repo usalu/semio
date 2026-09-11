@@ -1,4 +1,4 @@
-import { fileURLToPath as testFileUrlToPath } from "node:url";
+import { fileURLToPath as testFileUrlToPath, pathToFileURL } from "node:url";
 const testSourceDirectory = testFileUrlToPath(new URL("../../🧫️fixtures/🌐️wasi-activation/", import.meta.url));
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
 import assert from "node:assert/strict";
@@ -15,7 +15,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   ajv.addSchema(schemaDocument);
   const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/WasiActivationV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
-  const { createBrowserWasiActivation } = await import("../../🌐️wasi/🟦️.ts");
+  const { createBrowserWasiActivation, createGuestLogLineSink, classifyGuestLogLine } = await import("../../🌐️wasi/🟦️.ts");
   const program = ts.createProgram([join(testSourceDirectory, "../../🌐️wasi/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.esnext.disposable.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });
   const diagnostics = ts.getPreEmitDiagnostics(program);
   assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: path => path, getCurrentDirectory: () => testSourceDirectory, getNewLine: () => "\n" }));
@@ -104,5 +104,19 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
     console.log(JSON.stringify({ writes, ready: [...ready], preview2: 1 }));
   `, join(testSourceDirectory, "🔣️.json"), repoRoot], { cwd: repoRoot, env: process.env, budgetMs: 60_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "oracle.stdout.json"), stderrPath: join(evidence, "oracle.stderr"), cancelled: () => false });
   assert.equal(oracle.status, 0, oracle.stderr);
+  const hostCalls = [];
+  const sink = createGuestLogLineSink((line) => hostCalls.push(line));
+  for (const chunk of fixture.lineBuffer.chunks) sink.write("stderr", new TextEncoder().encode(chunk));
+  assert.deepEqual(hostCalls, fixture.lineBuffer.hostCalls);
+  assert.equal(hostCalls.length, 2);
+  assert.equal(sink.pendingBytes("stderr"), 0);
+  assert.equal(classifyGuestLogLine("stderr", hostCalls[0].text), "debug");
+  assert.equal(classifyGuestLogLine("stderr", hostCalls[1].text), "error");
+  const preview2Writes = [];
+  const io = await import(pathToFileURL(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/io.js")).href);
+  const preview2 = io.outputStreamCreate({ write(bytes) { preview2Writes.push(new TextDecoder().decode(bytes)); } });
+  for (const chunk of fixture.lineBuffer.chunks) preview2.write(new TextEncoder().encode(chunk));
+  assert.equal(preview2Writes.length, fixture.lineBuffer.preview2HostCalls);
+
   console.log(`browser-wasi-activation: AJV=1 TypeScript=1 Preview2=1 actors=2 laws=${fixture.laws.length} resources=${fixture.limits.resources} waiters=${fixture.limits.waiters} evidence=${evidence}`);
 }

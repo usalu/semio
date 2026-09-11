@@ -1,0 +1,1800 @@
+warning: unnecessary qualification
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🦀️.rs:8:15
+  |
+8 |     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+  |
+8 -     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+8 +     let view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+  |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🦀️.rs:29:18
+   |
+29 |     let updated: semio_framework::ViewModel = serde_json::from_value(updated).unwrap();
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+29 -     let updated: semio_framework::ViewModel = serde_json::from_value(updated).unwrap();
+29 +     let updated: ViewModel = serde_json::from_value(updated).unwrap();
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/⏱️execution/🦀️.rs:11:37
+   |
+11 |     let observed = std::rc::Rc::new(std::cell::Cell::new(None));
+   |                                     ^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+11 -     let observed = std::rc::Rc::new(std::cell::Cell::new(None));
+11 +     let observed = std::rc::Rc::new(Cell::new(None));
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🔬️reconcile-budget/🦀️.rs:70:51
+   |
+70 | fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, usize) {
+   |                                                   ^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+70 - fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, usize) {
+70 + fn publish_nakagin_world_patch(surface: &str) -> (UiPatch, usize, usize) {
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🔬️reconcile-budget/🦀️.rs:95:54
+   |
+95 | ...payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication gr...
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+95 -     ready.publish_into(&mut payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
+95 +     ready.publish_into(&mut payload, &mut published, SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🔬️reconcile-budget/🦀️.rs:112:28
+    |
+112 | fn retirement_turns(patch: ui_contract::UiPatch, items_per_unit: usize, bytes_per_unit: usize, units_per_turn: usize) -> (usize, us...
+    |                            ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+112 - fn retirement_turns(patch: ui_contract::UiPatch, items_per_unit: usize, bytes_per_unit: usize, units_per_turn: usize) -> (usize, usize) {
+112 + fn retirement_turns(patch: UiPatch, items_per_unit: usize, bytes_per_unit: usize, units_per_turn: usize) -> (usize, usize) {
+    |
+
+warning: unnecessary qualification
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️testkit/📢️scalar-publication/🦀️.rs:9:23
+  |
+9 | const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
+  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+help: remove the unnecessary path segments
+  |
+9 - const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
+9 + const _: () = assert!(size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
+  |
+
+warning: unnecessary qualification
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️testkit/📢️scalar-publication/🦀️.rs:9:61
+  |
+9 | const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
+  |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+help: remove the unnecessary path segments
+  |
+9 - const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
+9 + const _: () = assert!(std::mem::size_of::<State>() <= 16 && size_of::<Mutation>() <= 16);
+  |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️testkit/📢️scalar-publication/🦀️.rs:23:78
+   |
+23 |     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: std::mem::size_of::<Mutation>() })
+   |                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+23 -     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: std::mem::size_of::<Mutation>() })
+23 +     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: size_of::<Mutation>() })
+   |
+
+warning: unused doc comment
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:6442:5
+     |
+6442 | /     /// 🎯️ M1 retained typed-command bridge fixtures, kept separate from intent dispatch so
+6443 | |     /// cursor, cancellation, deadline, and depth regressions fail at their owner boundary.
+     | |_____--------------------------------------------------------------------------------------^
+     |       |
+     |       rustdoc does not generate documentation for macro invocations
+     |
+     = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:10826:5
+      |
+10826 | /     /// 🧪️ Minimal serde-free end-to-end proof for `app_commands!`. The fake payloads deliberately do not
+10827 | |     /// implement `serde::Serialize`/`serde::Deserialize`, so restoring those derives on the generated enum
+10828 | |     /// is a compile-time regression. The fixture exercises enum construction, `command_id()`, `dispatch()`,
+10829 | |     /// and the `dsl::DslOps` wire round trip (`OpText`/`OpBinary`) via the same `store::test_support` helper every
+10830 | |     /// real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
+10831 | |     /// `flow_command_text_binary_round_trips_document_mutating_variants`).
+      | |_____----------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:125:17
+    |
+125 | ...   assert!(std::mem::size_of::<OwnedDocumentMemberIngressRegistry>() < 1024, "the 1,024 request slots stay behind one heap owner");
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+125 -         assert!(std::mem::size_of::<OwnedDocumentMemberIngressRegistry>() < 1024, "the 1,024 request slots stay behind one heap owner");
+125 +         assert!(size_of::<OwnedDocumentMemberIngressRegistry>() < 1024, "the 1,024 request slots stay behind one heap owner");
+    |
+
+warning: unnecessary qualification
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🔁️document-replacement/🦀️.rs:6:22
+  |
+6 | ...   let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️trans...
+  |                    ^^^^^^^^^^^^^^^^^
+  |
+help: remove the unnecessary path segments
+  |
+6 -         let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️transient/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
+6 +         let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️transient/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
+  |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🔁️document-replacement/🦀️.rs:32:10
+   |
+32 |     impl crate::WindowTransientOwner for RetirementWindow {
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+32 -     impl crate::WindowTransientOwner for RetirementWindow {
+32 +     impl WindowTransientOwner for RetirementWindow {
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🔁️document-replacement/🦀️.rs:37:30
+   |
+37 |         fn build_owners() -> crate::component::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+37 -         fn build_owners() -> crate::component::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+37 +         fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+   |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1302:22
+     |
+1302 | ...   let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️re...
+     |                    ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1302 -         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+1302 +         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+     |
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28673:9
+      |
+28673 | /         /// 🧪️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C Task 4 — the executable
+28674 | |         /// specification: a synthetic TWO-standard, THREE-subset artifact (`crate::app::declarations::
+28675 | |         /// fixture`) declared entirely through this tree, proving open→mutate→save works end to end
+28676 | |         /// and that `io_route` finds the `standard 1 / subset strict` conformance-profile hop back to
+28677 | |         /// `standard 1 / subset any`. Plugin waves reading this ticket copy this shape verbatim.
+      | |_________----------------------------------------------------------------------------------------^
+      |           |
+      |           rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30309:5
+      |
+30309 | /     /// 🩺️ Language-neutral decode conformance: every declared cleanup-fault variant must round-trip
+30310 | |     /// through its status atom and produce exactly the fixture's wire code and message shape, so the
+30311 | |     /// React shell's classifier and this module can never drift apart silently.
+      | |_____---------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33586:5
+      |
+33586 | /     /// 🏗️ Plugin registration lives in each owner's root `🦀️.rs` via
+33587 | |     /// [`Plugin::builder`](crate::Plugin::builder) + [`plugin_exports!`](crate::plugin_exports).
+33588 | |     /// The retired `semio_plugin!` macro is gone — typestate on the builder makes missing identity fields a compile error.
+      | |_____----------------------------------------------------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:65:37
+   |
+65 | ...   if !matches!(scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its dec...
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+65 -                 if !matches!(scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its declared full UI scope")); }
+65 +                 if !matches!(scope, UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its declared full UI scope")); }
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:69:51
+   |
+69 | ...   if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion ch...
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -                 if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope")); }
+69 +                 if !matches!(completion.ui_scope, UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope")); }
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:976:135
+    |
+976 | ...>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+976 -         async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+976 +         async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:976:173
+    |
+976 | ...ewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+976 -         async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+976 +         async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:977:86
+    |
+977 | ...   view_state.window_instances.iter().map(|window| (window.id.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!(...
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+977 -             view_state.window_instances.iter().map(|window| (window.id.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
+977 +             view_state.window_instances.iter().map(|window| (window.id.clone(), vec![WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:981:133
+    |
+981 | ...>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+981 -         async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+981 +         async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:981:171
+    |
+981 | ...ewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+981 -         async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
+981 +         async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:982:77
+    |
+982 | ...   view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-m...
+    |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+982 -             view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+982 +             view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1665:75
+     |
+1665 |     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::I...
+     |                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1665 -     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
+1665 +     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: InvocationResult) -> semio_framework::InvocationResult {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1665:113
+     |
+1665 | ...dmitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1665 -     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
+1665 +     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> InvocationResult {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1666:9
+     |
+1666 |         crate::app::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1666 -         crate::app::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+1666 +         settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1669:107
+     |
+1669 | ...pp>, action: &str, args: Option<&DslValue>) -> semio_framework::InvocationResult {
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1669 -     async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>) -> semio_framework::InvocationResult {
+1669 +     async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>) -> InvocationResult {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1677:17
+     |
+1677 |                 crate::app::PluginCloseStep::Complete => return,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1677 -                 crate::app::PluginCloseStep::Complete => return,
+1677 +                 PluginCloseStep::Complete => return,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1678:17
+     |
+1678 |                 crate::app::PluginCloseStep::Pending { .. } => {}
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1678 -                 crate::app::PluginCloseStep::Pending { .. } => {}
+1678 +                 PluginCloseStep::Pending { .. } => {}
+     |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:150:22
+    |
+150 |             surface: semio_framework_ui_contract::SurfaceId::try_from("7:window").unwrap(),
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+150 -             surface: semio_framework_ui_contract::SurfaceId::try_from("7:window").unwrap(),
+150 +             surface: SurfaceId::try_from("7:window").unwrap(),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:151:28
+    |
+151 | ...   base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default...
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+151 -             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
+151 +             base_revision: UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:151:82
+    |
+151 | ...   base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default...
+    |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+151 -             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
+151 +             base_revision: semio_framework_ui_contract::UiRevision(0), revision: UiRevision(2), ops: Default::default(),
+    |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs:56:9
+   |
+56 |     let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit C...
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+56 -     let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+56 +     let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:39:99
+   |
+39 | ...: u64, command: &protocol::AppCommand) -> (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage) {
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+39 - async fn command_page_authority_page(instance: u32, seq: u64, command: &protocol::AppCommand) -> (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage) {
+39 + async fn command_page_authority_page(instance: u32, seq: u64, command: &protocol::AppCommand) -> (CommandPageCursor, semio_framework::kernel::FixedCommandPage) {
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:39:143
+   |
+39 | ...semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage) {
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+39 - async fn command_page_authority_page(instance: u32, seq: u64, command: &protocol::AppCommand) -> (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage) {
+39 + async fn command_page_authority_page(instance: u32, seq: u64, command: &protocol::AppCommand) -> (semio_framework::kernel::CommandPageCursor, FixedCommandPage) {
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:41:25
+   |
+41 |     let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().expect("fixed command batch authority");
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+41 -     let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().expect("fixed command batch authority");
+41 +     let mut envelopes = CommandEnvelopeSet::try_new().expect("fixed command batch authority");
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:42:24
+   |
+42 |     envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command: encoded }).unwrap_or_else(|(fault, _)| pan...
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+42 -     envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command: encoded }).unwrap_or_else(|(fault, _)| panic!("admit fixture command: {fault:?}"));
+42 +     envelopes.try_push(CommandEnvelope { instance, seq, command: encoded }).unwrap_or_else(|(fault, _)| panic!("admit fixture command: {fault:?}"));
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:43:17
+   |
+43 |     let batch = semio_framework::kernel::CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit fixture bat...
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+43 -     let batch = semio_framework::kernel::CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit fixture batch: {fault:?}"));
+43 +     let batch = CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit fixture batch: {fault:?}"));
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:44:22
+   |
+44 |     let mut driver = semio_framework::kernel::CommandBatchDriver::new(seq, batch);
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+44 -     let mut driver = semio_framework::kernel::CommandBatchDriver::new(seq, batch);
+44 +     let mut driver = CommandBatchDriver::new(seq, batch);
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:53:100
+   |
+53 | ...me::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)...
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+53 - async fn drive_one_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)) -> (bool, usize) {
+53 + async fn drive_one_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, page: (CommandPageCursor, semio_framework::kernel::FixedCommandPage)) -> (bool, usize) {
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:53:144
+   |
+53 | ...semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)) -> (bool, usize) {
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+53 - async fn drive_one_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)) -> (bool, usize) {
+53 + async fn drive_one_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, FixedCommandPage)) -> (bool, usize) {
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:60:13
+   |
+60 |             semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+60 -             semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
+60 +             CommandIngressStatus::CommandComplete(_) => return (true, turns),
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:61:13
+   |
+61 |             semio_framework::kernel::CommandIngressStatus::Fault { .. } => return (false, turns),
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+61 -             semio_framework::kernel::CommandIngressStatus::Fault { .. } => return (false, turns),
+61 +             CommandIngressStatus::Fault { .. } => return (false, turns),
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:76:36
+   |
+76 |     for declared in [1usize, 2, 8, semio_framework::kernel::COMMAND_MAXIMUM_PAGES] {
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+76 -     for declared in [1usize, 2, 8, semio_framework::kernel::COMMAND_MAXIMUM_PAGES] {
+76 +     for declared in [1usize, 2, 8, COMMAND_MAXIMUM_PAGES] {
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:77:24
+   |
+77 |         let reserved = semio_framework::kernel::CommandPageSet::reservation_bytes(declared) as isize;
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+77 -         let reserved = semio_framework::kernel::CommandPageSet::reservation_bytes(declared) as isize;
+77 +         let reserved = CommandPageSet::reservation_bytes(declared) as isize;
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:78:52
+   |
+78 |         assert_eq!(reserved, (declared * size_of::<semio_framework::kernel::FixedCommandPage>()) as isize);
+   |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+78 -         assert_eq!(reserved, (declared * size_of::<semio_framework::kernel::FixedCommandPage>()) as isize);
+78 +         assert_eq!(reserved, (declared * size_of::<FixedCommandPage>()) as isize);
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:81:21
+   |
+81 |         let pages = semio_framework::kernel::CommandPageSet::try_new(declared).expect("a declared page authority");
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -         let pages = semio_framework::kernel::CommandPageSet::try_new(declared).expect("a declared page authority");
+81 +         let pages = CommandPageSet::try_new(declared).expect("a declared page authority");
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:86:24
+   |
+86 | ...   measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize...
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+86 -             measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+86 +             measured < CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:86:83
+   |
+86 | ...   measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize...
+   |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+86 -             measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+86 +             measured < semio_framework::kernel::CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:86:155
+   |
+86 | ...D_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+86 -             measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
+86 +             measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == COMMAND_MAXIMUM_PAGES,
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:91:20
+   |
+91 |     let one_page = semio_framework::kernel::CommandPageSet::reservation_bytes(1);
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+91 -     let one_page = semio_framework::kernel::CommandPageSet::reservation_bytes(1);
+91 +     let one_page = CommandPageSet::reservation_bytes(1);
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:98:9
+   |
+98 | ...   semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_t...
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 -         semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+98 +         CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:98:68
+   |
+98 | ...   semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_t...
+   |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 -         semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+98 +         semio_framework::kernel::CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES) > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+   |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:108:16
+    |
+108 |     assert_eq!(semio_framework::kernel::CommandPageSet::try_new(0).expect_err("a zero-page command has no authority").code.0, "plug...
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+108 -     assert_eq!(semio_framework::kernel::CommandPageSet::try_new(0).expect_err("a zero-page command has no authority").code.0, "plugin.command-page-count");
+108 +     assert_eq!(CommandPageSet::try_new(0).expect_err("a zero-page command has no authority").code.0, "plugin.command-page-count");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:110:9
+    |
+110 | ...   semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 1).expect_err("a command ma...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+110 -         semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 1).expect_err("a command may not declare more than the ceiling").code.0,
+110 +         CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 1).expect_err("a command may not declare more than the ceiling").code.0,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:110:58
+    |
+110 | ...   semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 1).expect_err("a command ma...
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+110 -         semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 1).expect_err("a command may not declare more than the ceiling").code.0,
+110 +         semio_framework::kernel::CommandPageSet::try_new(COMMAND_MAXIMUM_PAGES + 1).expect_err("a command may not declare more than the ceiling").code.0,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:113:21
+    |
+113 |     let mut pages = semio_framework::kernel::CommandPageSet::try_new(2).expect("a two-page authority");
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+113 -     let mut pages = semio_framework::kernel::CommandPageSet::try_new(2).expect("a two-page authority");
+113 +     let mut pages = CommandPageSet::try_new(2).expect("a two-page authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:115:24
+    |
+115 | ...   pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BY...
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+115 -         pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the declared pages are admitted");
+115 +         pages.try_push(FixedCommandPage::try_copy_from(&[7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the declared pages are admitted");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:115:86
+    |
+115 | ...:FixedCommandPage::try_copy_from(&[7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the d...
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+115 -         pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the declared pages are admitted");
+115 +         pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[7; COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the declared pages are admitted");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:117:44
+    |
+117 |     let (fault, returned) = pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"third").expect("a page")).exp...
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+117 -     let (fault, returned) = pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"third").expect("a page")).expect_err("a third page is over the declared authority");
+117 +     let (fault, returned) = pages.try_push(FixedCommandPage::try_copy_from(b"third").expect("a page")).expect_err("a third page is over the declared authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:121:25
+    |
+121 |     let mut saturated = semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES).expect("th...
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+121 -     let mut saturated = semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES).expect("the ceiling authority");
+121 +     let mut saturated = CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES).expect("the ceiling authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:121:74
+    |
+121 |     let mut saturated = semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES).expect("th...
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+121 -     let mut saturated = semio_framework::kernel::CommandPageSet::try_new(semio_framework::kernel::COMMAND_MAXIMUM_PAGES).expect("the ceiling authority");
+121 +     let mut saturated = semio_framework::kernel::CommandPageSet::try_new(COMMAND_MAXIMUM_PAGES).expect("the ceiling authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:122:17
+    |
+122 |     for _ in 0..semio_framework::kernel::COMMAND_MAXIMUM_PAGES {
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+122 -     for _ in 0..semio_framework::kernel::COMMAND_MAXIMUM_PAGES {
+122 +     for _ in 0..COMMAND_MAXIMUM_PAGES {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:123:28
+    |
+123 | ...   saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMU...
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+123 -         saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("64 full pages are the whole byte authority");
+123 +         saturated.try_push(FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("64 full pages are the whole byte authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:123:90
+    |
+123 | ...:FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("64 fu...
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+123 -         saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("64 full pages are the whole byte authority");
+123 +         saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[3; COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("64 full pages are the whole byte authority");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:125:41
+    |
+125 |     let (fault, _) = saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"over").expect("a page")).expect_...
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+125 -     let (fault, _) = saturated.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"over").expect("a page")).expect_err("the byte authority is spent");
+125 +     let (fault, _) = saturated.try_push(FixedCommandPage::try_copy_from(b"over").expect("a page")).expect_err("the byte authority is spent");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:128:33
+    |
+128 |     while !saturated.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+128 -     while !saturated.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {
+128 +     while !saturated.close_step(COMMAND_PAGE_MAXIMUM_BYTES).0 {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:130:29
+    |
+130 |         assert!(released <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES, "closing a saturated authority must terminate");
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+130 -         assert!(released <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES, "closing a saturated authority must terminate");
+130 +         assert!(released <= COMMAND_MAXIMUM_PAGES, "closing a saturated authority must terminate");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📄️command-page-authority/🦀️.rs:151:9
+    |
+151 |     let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit ...
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+151 -     let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+151 +     let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:139:6
+    |
+139 | impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, NoConfigMutation> for ReadyComposedParentInitializati...
+    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+139 - impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, NoConfigMutation> for ReadyComposedParentInitialization {
+139 + impl ArtifactStoreInitializationAuthority<ComposedParentSnapshot, NoConfigMutation> for ReadyComposedParentInitialization {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:186:7
+    |
+186 | ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+186 - ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+186 + ) -> (ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:186:58
+    |
+186 | ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+    |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+186 - ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+186 + ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, OwnedDocumentMemberIngress) {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:196:15
+    |
+196 |     let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization { candidate: Some(candidat...
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+196 -     let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization { candidate: Some(candidate), closing: false }));
+196 +     let job = ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization { candidate: Some(candidate), closing: false }));
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:200:9
+    |
+200 |         crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 -         crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
+200 +         ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:219:19
+    |
+219 |     let ingress = crate::app::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("ca...
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 -     let ingress = crate::app::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
+219 +     let ingress = OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:220:6
+    |
+220 |     (crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
+    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+220 -     (crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
+220 +     (ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:225:13
+    |
+225 |     handle: crate::app::ArtifactEnvelopeDecodeOperationHandle,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+225 -     handle: crate::app::ArtifactEnvelopeDecodeOperationHandle,
+225 +     handle: ArtifactEnvelopeDecodeOperationHandle,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:226:13
+    |
+226 |     target: crate::app::ActiveArtifactStoreReplacementState,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+226 -     target: crate::app::ActiveArtifactStoreReplacementState,
+226 +     target: ActiveArtifactStoreReplacementState,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:255:53
+    |
+255 |     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+255 -     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+255 +     drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:273:59
+    |
+273 |         if app.poll_artifact_store_replacement(handle) == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+273 -         if app.poll_artifact_store_replacement(handle) == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
+273 +         if app.poll_artifact_store_replacement(handle) == ArtifactEnvelopeDecodeOperationPoll::Ready {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:280:61
+    |
+280 |     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+280 -     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
+280 +     assert_eq!(app.poll_artifact_store_replacement(handle), ArtifactEnvelopeDecodeOperationPoll::Ready);
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:289:25
+    |
+289 |         ("member-open", crate::app::ActiveArtifactStoreReplacementState::OpeningMembers),
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+289 -         ("member-open", crate::app::ActiveArtifactStoreReplacementState::OpeningMembers),
+289 +         ("member-open", ActiveArtifactStoreReplacementState::OpeningMembers),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:290:21
+    |
+290 |         ("closure", crate::app::ActiveArtifactStoreReplacementState::ValidatingClosure),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+290 -         ("closure", crate::app::ActiveArtifactStoreReplacementState::ValidatingClosure),
+290 +         ("closure", ActiveArtifactStoreReplacementState::ValidatingClosure),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:291:19
+    |
+291 |         ("views", crate::app::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+291 -         ("views", crate::app::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
+291 +         ("views", ActiveArtifactStoreReplacementState::PreparingCandidateViews),
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:297:57
+    |
+297 |         drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+297 -         drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+297 +         drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:308:57
+    |
+308 |         drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+308 -         drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+308 +         drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::Complete).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:309:65
+    |
+309 |         assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
+    |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+309 -         assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
+309 +         assert_eq!(app.poll_artifact_store_replacement(handle), ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:325:53
+    |
+325 |     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+325 -     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+325 +     drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:329:53
+    |
+329 |     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady).await;
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+329 -     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady).await;
+329 +     drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::CandidateReady).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:332:53
+    |
+332 |     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+332 -     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+332 +     drive_composed_replacement_to(&mut app, handle, ActiveArtifactStoreReplacementState::Complete).await;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:333:61
+    |
+333 |     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+333 -     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault);
+333 +     assert_eq!(app.poll_artifact_store_replacement(handle), ArtifactEnvelopeDecodeOperationPoll::Fault);
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:406:6
+    |
+406 | ) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 - ) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+406 + ) -> ArtifactEnvelopeDecodeOperationHandle {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:415:98
+    |
+415 | ...mposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeO...
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+415 - async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+415 + async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:415:152
+    |
+415 | ...tifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+415 - async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+415 + async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:416:20
+    |
+416 |     let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+416 -     let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
+416 +     let mut poll = ArtifactEnvelopeDecodeOperationPoll::Pending;
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:420:20
+    |
+420 |         if poll != crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending {
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+420 -         if poll != crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending {
+420 +         if poll != ArtifactEnvelopeDecodeOperationPoll::Pending {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:437:59
+    |
+437 |     assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending);
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+437 -     assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending);
+437 +     assert_eq!(app.poll_artifact_envelope_decode(handle), ArtifactEnvelopeDecodeOperationPoll::Pending);
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:440:9
+    |
+440 |         crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -         crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending,
+440 +         ArtifactEnvelopeDecodeOperationPoll::Pending,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:445:9
+    |
+445 |         crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+445 -         crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault,
+445 +         ArtifactEnvelopeDecodeOperationPoll::Fault,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:464:22
+    |
+464 |     assert_ne!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending, "the reactor-turn pump left the decode pending after...
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+464 -     assert_ne!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending, "the reactor-turn pump left the decode pending after {driven} steps");
+464 +     assert_ne!(poll, ArtifactEnvelopeDecodeOperationPoll::Pending, "the reactor-turn pump left the decode pending after {driven} steps");
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3541:17
+     |
+3541 |                 crate::app::PluginCloseStep::Complete => break,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3541 -                 crate::app::PluginCloseStep::Complete => break,
+3541 +                 PluginCloseStep::Complete => break,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3542:17
+     |
+3542 |                 crate::app::PluginCloseStep::Pending { .. } => {}
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3542 -                 crate::app::PluginCloseStep::Pending { .. } => {}
+3542 +                 PluginCloseStep::Pending { .. } => {}
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3580:122
+     |
+3580 | ...t, Effect::SpawnJob { kind, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3580 -         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
+3580 +         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3588:17
+     |
+3588 |                 crate::app::PluginCloseStep::Complete => break,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3588 -                 crate::app::PluginCloseStep::Complete => break,
+3588 +                 PluginCloseStep::Complete => break,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3589:17
+     |
+3589 |                 crate::app::PluginCloseStep::Pending { .. } => {}
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3589 -                 crate::app::PluginCloseStep::Pending { .. } => {}
+3589 +                 PluginCloseStep::Pending { .. } => {}
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3605:117
+     |
+3605 | ...ct, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_...
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3605 -         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+3605 +         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3605:182
+     |
+3605 | ...el::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3605 -         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+3605 +         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND)));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3613:17
+     |
+3613 |                 crate::app::PluginCloseStep::Complete => break,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3613 -                 crate::app::PluginCloseStep::Complete => break,
+3613 +                 PluginCloseStep::Complete => break,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3614:17
+     |
+3614 |                 crate::app::PluginCloseStep::Pending { .. } => {}
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3614 -                 crate::app::PluginCloseStep::Pending { .. } => {}
+3614 +                 PluginCloseStep::Pending { .. } => {}
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3633:45
+     |
+3633 | ...   super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::...
+     |                                           ^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -         super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
+3633 +         super::test_push_instance(&runtime, AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3647:113
+     |
+3647 | ...ct, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_...
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3647 -             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+3647 +             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3647:178
+     |
+3647 | ...el::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3647 -             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+3647 +             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND)),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3656:17
+     |
+3656 |                 crate::app::PluginCloseStep::Complete => break,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                 crate::app::PluginCloseStep::Complete => break,
+3656 +                 PluginCloseStep::Complete => break,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3657:17
+     |
+3657 |                 crate::app::PluginCloseStep::Pending { .. } => {}
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3657 -                 crate::app::PluginCloseStep::Pending { .. } => {}
+3657 +                 PluginCloseStep::Pending { .. } => {}
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4195:39
+     |
+4195 |         assert_eq!(view_state.locale, crate::Locale::De);
+     |                                       ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4195 -         assert_eq!(view_state.locale, crate::Locale::De);
+4195 +         assert_eq!(view_state.locale, Locale::De);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4196:44
+     |
+4196 |         assert_eq!(view_state.terminology, crate::Terminology::Reuse);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4196 -         assert_eq!(view_state.terminology, crate::Terminology::Reuse);
+4196 +         assert_eq!(view_state.terminology, Terminology::Reuse);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4326:54
+     |
+4326 | ...   assert!(count_projected_nodes(&projected) <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a reserved measures carrier mu...
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4326 -         assert!(count_projected_nodes(&projected) <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a reserved measures carrier must fit the document node table");
+4326 +         assert!(count_projected_nodes(&projected) <= UI_DOCUMENT_NODES, "a reserved measures carrier must fit the document node table");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4372:36
+     |
+4372 |     fn project_scene_surface(node: crate::app::BuiltNode) -> (Value, BTreeMap<String, Value>) {
+     |                                    ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4372 -     fn project_scene_surface(node: crate::app::BuiltNode) -> (Value, BTreeMap<String, Value>) {
+4372 +     fn project_scene_surface(node: BuiltNode) -> (Value, BTreeMap<String, Value>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4373:96
+     |
+4373 | ...str(&testkit::project_and_retire_fixture_tree(crate::app::built_to_component_tree(node)).unwrap()).unwrap();
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4373 -         let projection: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(crate::app::built_to_component_tree(node)).unwrap()).unwrap();
+4373 +         let projection: Value = serde_json::from_str(&testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap()).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4423:35
+     |
+4423 | ...   assert!(assembled_bytes > semio_framework_ui_contract::UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling...
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4423 -         assert!(assembled_bytes > semio_framework_ui_contract::UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling to prove anything");
+4423 +         assert!(assembled_bytes > UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling to prove anything");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4425:20
+     |
+4425 |         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4425 -         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+4425 +         let node = scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4425:58
+     |
+4425 |         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4425 -         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+4425 +         let node = crate::app::scene_surface("viewport", SurfaceKind::World3d, &scene).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4429:30
+     |
+4429 |         assert!(doc_bytes <= semio_framework_ui_contract::UI_FIXED_BYTES);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4429 -         assert!(doc_bytes <= semio_framework_ui_contract::UI_FIXED_BYTES);
+4429 +         assert!(doc_bytes <= UI_FIXED_BYTES);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4455:48
+     |
+4455 | ...   let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World...
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4455 -         let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+4455 +         let (_, first) = project_scene_surface(scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4455:86
+     |
+4455 | ...(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selectio...
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4455 -         let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+4455 +         let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4457:63
+     |
+4457 | ...   let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::Sur...
+     |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4457 -         let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+4457 +         let (moved_projection, moved) = project_scene_surface(scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4457:101
+     |
+4457 | ...(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position"...
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4457 -         let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+4457 +         let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4461:71
+     |
+4461 | ...   let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contr...
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4461 -         let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+4461 +         let (picked_projection, picked_lanes) = project_scene_surface(scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4461:109
+     |
+4461 | ...(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked))...
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4461 -         let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+4461 +         let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4473:48
+     |
+4473 | ...   let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World...
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4473 -         let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+4473 +         let (_, lanes) = project_scene_surface(scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4473:86
+     |
+4473 | ...(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4473 -         let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+4473 +         let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", SurfaceKind::World3d, &scene).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4483:57
+     |
+4483 | ...   let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKin...
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4483 -         let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+4483 +         let (projection, lanes) = project_scene_surface(scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4483:94
+     |
+4483 | ...ce(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4483 -         let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", semio_framework_ui_contract::SurfaceKind::Table, &scene).unwrap());
+4483 +         let (projection, lanes) = project_scene_surface(crate::app::scene_surface("results", SurfaceKind::Table, &scene).unwrap());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4492:20
+     |
+4492 |         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4492 -         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+4492 +         let node = scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4492:58
+     |
+4492 |         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4492 -         let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+4492 +         let node = crate::app::scene_surface("viewport", SurfaceKind::World3d, &scene).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4495:26
+     |
+4495 | ...   assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes ove...
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4495 -         assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");
+4495 +         assert!(nodes <= UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4496:94
+     |
+4496 | ...face presented {nodes} nodes (cap {})", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4496 -         eprintln!("[DEBUG] Nakagin-scale world-3d surface presented {nodes} nodes (cap {})", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+4496 +         eprintln!("[DEBUG] Nakagin-scale world-3d surface presented {nodes} nodes (cap {})", UI_DOCUMENT_NODES);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4506:26
+     |
+4506 | ...   assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a 100 KiB measures section presented {nodes} nodes over UI...
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4506 -         assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "a 100 KiB measures section presented {nodes} nodes over UI_DOCUMENT_NODES");
+4506 +         assert!(nodes <= UI_DOCUMENT_NODES, "a 100 KiB measures section presented {nodes} nodes over UI_DOCUMENT_NODES");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4624:35
+     |
+4624 |         assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
+     |                                   ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4624 -         assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
+4624 +         assert_eq!(event.payload, DslValue::from(json!({ "utilityId": "brush" })));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4761:29
+     |
+4761 |                     output: dsl::DslValue::Null,
+     |                             ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4761 -                     output: dsl::DslValue::Null,
+4761 +                     output: DslValue::Null,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4977:36
+     |
+4977 |         assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4977 -         assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
+4977 +         assert_eq!(update.surface, SurfaceId::try_from("window").expect("bounded fixture"));
+     |
+
+warning: unused import: `SpaceMember`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:5:54
+  |
+5 | use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
+  |                                                      ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `SpaceMember`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:5:28
+  |
+5 | use store::{ArtifactStore, SpaceMember};
+  |                            ^^^^^^^^^^^
+
+warning: unused import: `SpaceMember`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:7:54
+  |
+7 | use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
+  |                                                      ^^^^^^^^^^^
+
+warning: value assigned to `owner` is never read
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🔬️reconcile-budget/🦀️.rs:76:32
+   |
+76 |     let (mut turns, mut steps, mut owner) = (0usize, 0usize, None);
+   |                                ^^^^^^^^^ this value is reassigned later and never used
+...
+87 |                 owner = Some(ready);
+   |                 ----- `owner` is overwritten here before the previous value is read
+   |
+   = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `new` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:14351:31
+      |
+14350 |             impl $job {
+      |             --------- associated function in this implementation
+14351 |                 pub(crate) fn new(raw: Vec<u8>, total_items: usize) -> Self {
+      |                               ^^^
+...
+14524 |     framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608);
+      |     ---------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `semio-framework-plugin` (lib test) generated 150 warnings (run `cargo fix --lib -p semio-framework-plugin --tests` to apply 140 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.39s
+     Running unittests 🦀️.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/9e1e818a-6033-494e-beec-7c9a689f4b82/scratchpad/target-p3d/debug/deps/semio_framework_plugin-5a693ce1ba58f4fd)
+
+running 1 test
+test component::plugin_runtime::plugin_builder_contract_tests::undo_on_empty_history_is_a_benign_no_operation ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 634 filtered out; finished in 0.01s
+

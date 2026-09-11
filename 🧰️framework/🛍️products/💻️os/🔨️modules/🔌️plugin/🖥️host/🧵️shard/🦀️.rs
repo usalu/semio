@@ -2300,12 +2300,12 @@ fn interactive_stage_for(lane: semio_framework_actor::Lane) -> InteractiveStage 
 }
 
 /// 🧯️ Encodes a host-side `TurnFault` (a `start-job` admission failure, or a `step_job` runtime
-/// fault) into the same `dsl::encode_fault_bytes` wire shape `Event::JobCompleted{result: Err
-/// (bytes), ..}`'s bytes always carry — every other fault-bearing `RequestOutcome::Err` in this
-/// crate already uses this encoding, so the guest's `crate::host::outcome_to_result` decodes it
-/// exactly like a normal `Event::Completed` failure, with no special-casing for jobs.
+/// fault) into the same `pack` wire shape `Event::JobCompleted{result: Err(bytes), ..}`'s bytes
+/// always carry — every other fault-bearing `RequestOutcome::Err` in this crate writes a fault
+/// `pack`, so the guest's `outcome_to_result` decodes it exactly like a normal `Event::Completed`
+/// failure, with no special-casing for jobs.
 fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
-    dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string()))
+    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string())))
 }
 
 //#region 🚚️ShardTransports

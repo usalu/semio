@@ -246,20 +246,26 @@ fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Optio
     fallback.into()
 }
 
-/// 👁️ True when this object's vortices should render — always when `vortex_show` is Always, otherwise
-/// only while the object itself (or one of its own vortex markers) is selected or hovered in the
-/// framework-owned `vortex` domain, which is what the `PUZZLE3D_VORTEX_SHOW_SELECTED` mode means.
-fn object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot) -> bool {
-    runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS || interaction.touches_object(object)
+/// 🖌️ Placement utilities that publish every object's vortex markers so the host can hit-test them
+/// without a prior object selection (those utilities block instance pick).
+fn vortex_markers_publish_for_utility(active_utility: &str) -> bool {
+    matches!(active_utility, "brush" | "volumeBrush")
+}
+
+/// 👁️ True when this object's vortices should render — Always mode, a live hover/selection touch, or
+/// an armed placement utility. `PUZZLE3D_VORTEX_SHOW_SELECTED` otherwise hides markers until the
+/// object (or one of its own vortices) is marked.
+fn object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot, active_utility: &str) -> bool {
+    runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS || interaction.touches_object(object) || vortex_markers_publish_for_utility(active_utility)
 }
 
 /// 🌀️ Per-vortex marker records. `selected`/`hovered` are painted from the live `vortex` domain —
 /// `WorldVortexMarkers` reads them off each record (its own palette lookup), not off `selectionJson`.
-pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot) -> String {
+pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot, active_utility: &str) -> String {
     let selected_vortices = interaction.selected_vortex_ids();
     let mut records = Vec::new();
     for object in &fixture.objects {
-        if !object_vortices_visible(object, runtime, interaction) {
+        if !object_vortices_visible(object, runtime, interaction, active_utility) {
             continue;
         }
         for vortex in &object.vortices {
@@ -372,6 +378,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                     .collect();
                 (result.unknown_pending, candidates)
             } else { (false, Vec::new()) };
+        eprintln!("[DEBUG] puzzle3d.openVortex.cache menu vortex={} pending={pending} candidates={}", menu.vortex_full_id, candidates.len());
         json!({
             "open": true,
             "x": menu.x,
@@ -433,26 +440,48 @@ pub fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
 
 /// 👻️ Ghost placement for the brush utility, or for a one-shot context-menu / Alt+right-click
 /// suggestion popup (`suggestion_menu`) that must not switch the host-owned active utility into brush.
-pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
-    if envelope.active_utility != utilities::brush::UTILITY_ID && envelope.runtime.suggestion_menu.is_none() {
-        return None;
-    }
-    // 🕹️ The one-shot suggestion menu pins its own explicit target (`menu.vortex_full_id`); the plain
-    // brush-utility path follows the live selection/hover through `puzzle3d_brush_target_vortex`.
-    let vortex_id = envelope
+pub fn world_brush_preview_target(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
+    envelope
         .runtime
         .suggestion_menu
         .as_ref()
         .map(|menu| menu.vortex_full_id.clone())
         .filter(|id| !id.is_empty())
-        .or_else(|| crate::editor::puzzle3d::puzzle3d_brush_target_vortex(envelope, interaction))?;
-    let preview = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index)?;
+        .or_else(|| crate::editor::puzzle3d::puzzle3d_brush_target_vortex(envelope, interaction))
+        .or_else(|| session.brush_live_target().map(str::to_string))
+}
+
+pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
+    let brush = envelope.active_utility == utilities::brush::UTILITY_ID;
+    let menu = envelope.runtime.suggestion_menu.is_some();
+    if !brush && !menu {
+        return None;
+    }
+    let vortex_id = world_brush_preview_target(session, envelope, interaction);
+    eprintln!("[DEBUG] puzzle3d.brushPreview.hover utility={} brush={brush} menu={menu} vortex={:?}", envelope.active_utility, vortex_id);
+    let Some(vortex_id) = vortex_id else {
+        eprintln!("[DEBUG] puzzle3d.brushPreview.gate reason=no-target utility={} brush={brush} menu={menu}", envelope.active_utility);
+        return None;
+    };
+    let cache = session.brush_candidates(&vortex_id);
+    eprintln!("[DEBUG] puzzle3d.brushPreview.cache vortex={vortex_id} free={} pending={} resume={}", cache.free.len(), cache.unknown_pending, cache.resume_candidate_index);
+    let Some(preview) = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index) else {
+        eprintln!(
+            "[DEBUG] puzzle3d.brushPreview.gate reason=no-free-candidate vortex={vortex_id} free={} pending={} index={}",
+            cache.free.len(),
+            cache.unknown_pending,
+            envelope.runtime.brush_candidate_index
+        );
+        return None;
+    };
     let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
     let mut value = dsl::ToValue::to_value(&preview);
     if let dsl::DslValue::Object(entries) = &mut value {
         entries.push(("color".to_string(), dsl::DslValue::String(color)));
     }
-    Some(dsl::json::to_json_string(&value))
+    let json = dsl::json::to_json_string(&value);
+    eprintln!("[DEBUG] puzzle3d.brushPreview.compute vortex={vortex_id} bytes={}", json.len());
+    Some(json)
 }
 
 /// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection.
@@ -533,8 +562,16 @@ fn hovered_kind_id<'a>(fixture: &Puzzle3dFixture, interaction: &'a Puzzle3dInter
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
 pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String, interaction: &Puzzle3dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope, interaction));
+    let vortices = world_vortices_json(&envelope.fixture, &envelope.runtime, interaction, envelope.active_utility.as_str());
+    eprintln!(
+        "[DEBUG] puzzle3d.brushPreview.lane utility={} preview={} vortices={}",
+        envelope.active_utility,
+        brush_preview.as_ref().map(String::len).unwrap_or(0),
+        vortices.len()
+    );
+    eprintln!("[DEBUG] puzzle3d.vortices.publish utility={} bytes={} brush_or_volume={}", envelope.active_utility, vortices.len(), matches!(envelope.active_utility.as_str(), "brush" | "volumeBrush"));
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
-    scene.vortices_json = Some(world_vortices_json(&envelope.fixture, &envelope.runtime, interaction));
+    scene.vortices_json = Some(vortices);
     scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
     scene.references_json = Some(world_references_json(&envelope.fixture));
@@ -590,3 +627,92 @@ fn engagement_session_active(active_utility: &str) -> bool {
     matches!(active_utility, "brush" | "fill" | "worldRelocate")
 }
 //#endregion 🔖️Render
+
+#[cfg(test)]
+mod vortex_payload_laws {
+    use super::*;
+    use crate::editor::puzzle3d::{empty_fixture, PUZZLE3D_VORTEX_SHOW_SELECTED};
+
+    fn forest_table_object() -> Puzzle3dObject {
+        let positions = [
+            [4.05001, 4.676537, 3.0],
+            [6.75001, 4.676537, 3.0],
+            [9.45001, 4.676537, 3.0],
+            [6.75001, 0.0, 3.0],
+            [4.05001, 0.0, 3.0],
+            [1.35001, 0.0, 3.0],
+            [9.45001, 2.338269, 3.0],
+            [2.70001, 2.338269, 0.0],
+            [2.70001, 2.338269, 3.0],
+            [8.10001, 2.338269, 0.0],
+            [8.10001, 2.338269, 3.0],
+        ];
+        Puzzle3dObject {
+            id: "seed-left-001".into(),
+            label: None,
+            object_kind: None,
+            origin: [0.0; 3],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: positions
+                .iter()
+                .copied()
+                .enumerate()
+                .map(|(index, position)| Puzzle3dVortex { id: format!("seed-left-001:v{index}"), position, radius: Some(0.36), ..Default::default() })
+                .collect(),
+            hidden: false,
+            locked: false,
+            reveal_index: None,
+        }
+    }
+
+    fn forest_store() -> Puzzle3dFixture {
+        let mut fixture = empty_fixture();
+        fixture.objects.push(forest_table_object());
+        fixture
+    }
+
+    fn parse_records(json: &str) -> Vec<Value> {
+        serde_json::from_str(json).expect("vorticesJson")
+    }
+
+    #[test]
+    fn world_vortices_json_carries_store_vortices_when_show_is_always() {
+        let fixture = forest_store();
+        assert_eq!(fixture.objects[0].vortices.len(), 11, "Concrete Forest seed-left-001 ships 11 vortex records");
+        let mut runtime = Puzzle3dRuntime::default();
+        runtime.vortex_show = PUZZLE3D_VORTEX_SHOW_ALWAYS.into();
+        let records = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
+        assert_eq!(records.len(), 11);
+    }
+
+    #[test]
+    fn world_vortices_json_carries_store_vortices_when_brush_is_armed() {
+        let fixture = forest_store();
+        let runtime = Puzzle3dRuntime::default();
+        assert_eq!(runtime.vortex_show, PUZZLE3D_VORTEX_SHOW_SELECTED);
+        let brush = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "brush"));
+        assert_eq!(brush.len(), 11);
+        let volume = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "volumeBrush"));
+        assert_eq!(volume.len(), 11);
+    }
+
+    #[test]
+    fn world_vortices_json_stays_empty_in_selected_mode_without_a_touch_or_brush() {
+        let fixture = forest_store();
+        let runtime = Puzzle3dRuntime::default();
+        let idle = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
+        assert_eq!(idle.len(), 0);
+        let transform = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "transform"));
+        assert_eq!(transform.len(), 0);
+    }
+
+    #[test]
+    fn brush_preview_target_falls_back_to_session_live_target() {
+        let mut session = Puzzle3dPrecomputeSession::new();
+        session.set_brush_live_target(Some("seed-left-001:v0".into()));
+        let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
+        assert_eq!(world_brush_preview_target(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).as_deref(), Some("seed-left-001:v0"));
+    }
+}

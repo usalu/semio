@@ -11,18 +11,29 @@ use dsl::os_pack::json::Value;
 /// `interactionSelect` on the same target if it still wants the vortex to read as selected.
 pub fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string) else {
+        eprintln!("[DEBUG] puzzle3d.openVortex.enter fullId=missing utility={}", ctx.scene.active_utility);
         return;
     };
+    eprintln!("[DEBUG] puzzle3d.openVortex.enter fullId={full_id} utility={}", ctx.scene.active_utility);
     ctx.scene.runtime.brush_candidate_index = 0;
     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let window_id = args.and_then(|value| value.get("windowId")).and_then(|value| value.as_str()).filter(|id| !id.is_empty()).unwrap_or(ctx.window_id).to_string();
     ctx.scene.runtime.suggestion_menu = Some(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id: full_id.clone() });
-    // 🧊️ Drop any stale empty/pending cache for this vortex, then refresh so the popup does not open
-    // on a previous "No placement" result while meshes/candidates are ready. The session is ALREADY
-    // synced: `openVortexSuggestions` is in `puzzle3d_action_uses_precompute`, so `Puzzle3dActionPrologue`
-    // spent its own bounded sync turns on this very scene before dispatching here — a second sync cost a
-    // measured 3.5 ms of pure re-conversion on the 180-object Nakagin document, per popup.
-    ctx.app.precompute.borrow_mut().invalidate_brush_target(&full_id);
-    ctx.app.precompute.borrow_mut().refresh_brush_candidates(&full_id);
+    let mut precompute = ctx.app.precompute.borrow_mut();
+    precompute.invalidate_brush_target(&full_id);
+    let mut slices = 0_u32;
+    precompute.refresh_brush_candidates(&full_id);
+    slices += 1;
+    for _ in 0..7 {
+        let status = precompute.brush_candidates(&full_id);
+        if !status.unknown_pending || !status.free.is_empty() {
+            break;
+        }
+        precompute.refresh_brush_candidates(&full_id);
+        slices += 1;
+    }
+    let after = precompute.brush_candidates(&full_id);
+    eprintln!("[DEBUG] puzzle3d.openVortex.cache vortex={full_id} free={} pending={} slices={slices}", after.free.len(), after.unknown_pending);
+    eprintln!("[DEBUG] puzzle3d.brushPreview.cache open-vortex vortex={full_id} free={} pending={} slices={slices}", after.free.len(), after.unknown_pending);
 }

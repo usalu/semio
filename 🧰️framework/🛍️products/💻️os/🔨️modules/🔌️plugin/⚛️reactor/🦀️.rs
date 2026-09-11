@@ -1164,7 +1164,7 @@ mod command_ingress_terminal_tests;
 /// build (mirrors the OLD `host_port`'s per-function `#[cfg(...)]` pattern, just hoisted to one
 /// module instead of repeated per function).
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-pub use wit_bridge::poll;
+pub use wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
 
 #[path = "🔄️turn/🦀️.rs"]
 mod turn;
@@ -1189,112 +1189,117 @@ mod wit_bridge {
     use crate::component::wasip2::semio::framework::types as wit_types;
     use crate::component::wasip2::semio::framework::ui as wit_ui;
 
+    crate::component_persistent_local! {
+        /// 📥️ The one command-ingress page staged for the next turn, and the one cold document-pair
+        /// page beside it. Staged by their own exports and TAKEN by `poll`, never left behind.
+        static STAGED_PAGES: RefCell<StagedTurnPages> = RefCell::new(StagedTurnPages { command: None, cold_pair: None });
+    }
+
+    /// 📦️ Both pages are BOXED. A staged `FixedCommandPage` is 4 KiB by value, and every `.with()`
+    /// take on the deepest frame of the turn would memcpy it across the guest's 64 KiB shadow stack —
+    /// measured as `memory fault at wasm address 0xffff3798`, a stack-pointer underflow, on turn 0.
+    #[derive(Default)]
+    struct StagedTurnPages {
+        command: Option<(semio_framework::kernel::CommandPageCursor, Box<semio_framework::kernel::FixedCommandPage>)>,
+        cold_pair: Option<Box<semio_framework::kernel::ColdDocumentPairPage>>,
+    }
+
+    fn staging_fault(reason: &'static str) -> semio_framework::Fault {
+        semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-page-staging"), reason)
+    }
+
+    /// 📥️ `reactor::stage-command-page` body — see the WIT for why the page is staged instead of
+    /// riding `poll`'s parameter list.
+    pub async fn stage_command_page(
+        cursor: crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor,
+        bytes: Vec<u8>,
+    ) -> Result<(), semio_framework::Fault> {
+        let staged = wit_command_page_to_kernel(cursor, bytes)?;
+        let staged = (staged.0, Box::new(staged.1));
+        STAGED_PAGES.with(|pages| {
+            let mut pages = pages.try_borrow_mut().map_err(|_| staging_fault("turn page staging authority busy"))?;
+            if pages.command.is_some() {
+                return Err(staging_fault("a command page is already staged for the next turn"));
+            }
+            pages.command = Some(staged);
+            Ok(())
+        })
+    }
+
+    /// 🧊️ `reactor::stage-cold-pair-page` body — the cold-pair twin of [`stage_command_page`].
+    pub async fn stage_cold_pair_page(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), semio_framework::Fault> {
+        let staged = Box::new(wit_cold_pair_page_to_kernel(page)?);
+        STAGED_PAGES.with(|pages| {
+            let mut pages = pages.try_borrow_mut().map_err(|_| staging_fault("turn page staging authority busy"))?;
+            if pages.cold_pair.is_some() {
+                return Err(staging_fault("a cold document-pair page is already staged for the next turn"));
+            }
+            pages.cold_pair = Some(staged);
+            Ok(())
+        })
+    }
+
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
-    /// module's `TurnResult`.
+    /// module's `TurnResult`. The turn's pages come from [`STAGED_PAGES`], which this call empties.
     pub async fn poll<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::wasip2::exports::semio::framework::reactor::Event>,
-        command_page: Option<crate::component::wasip2::exports::semio::framework::reactor::CommandIngressPage>,
-        cold_pair_page: Option<crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage>,
         budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+        turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
         let mut kernel_events = Vec::with_capacity(events.len());
         for event in events {
             kernel_events.push(wit_event_to_kernel(event));
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-        let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
-        let cold_pair_page = cold_pair_page.map(wit_cold_pair_page_to_kernel).transpose()?;
-        turn::poll_kernel_output(runtime, kernel_events, command_page, cold_pair_page, kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
+        let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
+        turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
     }
 
-    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes `instance-open-event.quotas` (a wire
-    /// `pack`) into the real `QuotaSchema` — see `wit_event_to_kernel`'s `InstanceOpen` arm. Falls
-    /// back to `default()` (no field set — read as "no limit declared" by every reader, e.g.
-    /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
-    /// outright.
-    fn wit_command_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::CommandIngressPage) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
-        let cursor = page.cursor;
-        let page = page.page;
-        if page.length as usize > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
+    /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`
+    /// field, which is all a turn can retain that scales with its input. Fixed-shape variants
+    /// (`timer`, `wake`, `surface-resized`, …) contribute nothing by construction, so a turn reading
+    /// `eventsBytes=0` genuinely carried no payload. Read by the per-turn guest memory trace.
+    fn wit_events_payload_bytes(events: &[crate::component::wasip2::exports::semio::framework::reactor::Event]) -> usize {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
+        let completion_bytes = |outcome: &wit_events::CompletionResult| match outcome {
+            wit_events::CompletionResult::Ok(pack) | wit_events::CompletionResult::Fault(pack) => pack.len(),
+        };
+        events
+            .iter()
+            .map(|event| match event {
+                wit::Event::InstanceOpen(open) => open.config.len() + open.quotas.len() + open.assets.iter().map(|(name, pack)| name.len() + pack.len()).sum::<usize>(),
+                wit::Event::QuotaChanged(changed) => changed.quotas.len(),
+                wit::Event::UiIntent(intent) => intent.intent.len(),
+                wit::Event::SurfaceVisible(visible) => visible.body_key.len() + visible.view_state.len(),
+                wit::Event::PatchRejected(rejected) => rejected.reason.len(),
+                wit::Event::Completed(completed) => completion_bytes(&completed.outcome),
+                wit::Event::HttpChunk(chunk) => chunk.params.bytes.len(),
+                wit::Event::JobProgress(progress) => progress.progress.len(),
+                wit::Event::JobCompleted(completed) => completion_bytes(&completed.outcome),
+                wit::Event::Message(message) => message.payload.len(),
+                wit::Event::Request(request) => request.params.capability.len() + request.params.payload.len(),
+                wit::Event::InstanceClose(_) | wit::Event::InstanceLifecycleAck(_) | wit::Event::Activate(_) | wit::Event::SuspendRequest(_) | wit::Event::CapabilityChanged(_) => 0,
+                wit::Event::SurfaceHidden(_) | wit::Event::SurfaceResized(_) | wit::Event::PatchAck(_) | wit::Event::Timer(_) | wit::Event::Wake => 0,
+            })
+            .sum()
+    }
+
+    /// 📄️ Lifts one staged command page into the kernel's fixed 4 KiB owner. The bytes arrive as a
+    /// `list<u8>` the guest owns and drops; the fixed page they are copied into is the authority the
+    /// ingress assembler reads.
+    fn wit_command_page_to_kernel(
+        cursor: crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor,
+        bytes: Vec<u8>,
+    ) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
+        if bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-lift-cap"), "fixed command page declares more than 4096 bytes"));
         }
-        let mut bytes = [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES];
-        let mut offset = 0usize;
-        for block in [
-            &page.block_00,
-            &page.block_01,
-            &page.block_02,
-            &page.block_03,
-            &page.block_04,
-            &page.block_05,
-            &page.block_06,
-            &page.block_07,
-            &page.block_08,
-            &page.block_09,
-            &page.block_10,
-            &page.block_11,
-            &page.block_12,
-            &page.block_13,
-            &page.block_14,
-            &page.block_15,
-            &page.block_16,
-            &page.block_17,
-            &page.block_18,
-            &page.block_19,
-            &page.block_20,
-            &page.block_21,
-            &page.block_22,
-            &page.block_23,
-            &page.block_24,
-            &page.block_25,
-            &page.block_26,
-            &page.block_27,
-            &page.block_28,
-            &page.block_29,
-            &page.block_30,
-            &page.block_31,
-            &page.block_32,
-            &page.block_33,
-            &page.block_34,
-            &page.block_35,
-            &page.block_36,
-            &page.block_37,
-            &page.block_38,
-            &page.block_39,
-            &page.block_40,
-            &page.block_41,
-            &page.block_42,
-            &page.block_43,
-            &page.block_44,
-            &page.block_45,
-            &page.block_46,
-            &page.block_47,
-            &page.block_48,
-            &page.block_49,
-            &page.block_50,
-            &page.block_51,
-            &page.block_52,
-            &page.block_53,
-            &page.block_54,
-            &page.block_55,
-            &page.block_56,
-            &page.block_57,
-            &page.block_58,
-            &page.block_59,
-            &page.block_60,
-            &page.block_61,
-            &page.block_62,
-            &page.block_63,
-        ] {
-            for word in [block.word_0, block.word_1, block.word_2, block.word_3, block.word_4, block.word_5, block.word_6, block.word_7] {
-                let fixed = word.to_le_bytes();
-                bytes[offset..offset + fixed.len()].copy_from_slice(&fixed);
-                offset += fixed.len();
-            }
-        }
-        let bytes = semio_framework::kernel::FixedCommandPage::try_from_array(bytes, page.length)?;
+        let length = bytes.len() as u32;
+        let mut fixed = [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES];
+        fixed[..bytes.len()].copy_from_slice(&bytes);
+        let bytes = semio_framework::kernel::FixedCommandPage::try_from_array(fixed, length)?;
         Ok((
             semio_framework::kernel::CommandPageCursor {
                 owner: cursor.owner,

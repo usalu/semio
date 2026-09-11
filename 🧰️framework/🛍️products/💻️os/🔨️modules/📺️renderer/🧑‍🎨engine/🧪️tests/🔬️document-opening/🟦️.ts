@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import documentOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/📄️document/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 
 describe("Shell document opening", () => {
   it("publishes direct document readiness only for the exact acknowledged mounted actor", async () => {
@@ -107,16 +107,36 @@ describe("Shell document opening", () => {
 
   it("never lets a background admission replace an existing document or app instance", () => {
     for (const row of documentOpeningFixture.admissions) {
-      const closed: string[] = [];
       const owners = new Map([
         ["document-a", { plugin: "plugin-a", session: { instanceId: 1 }, clientInstanceId: "owner-a" }],
         ["document-c", { plugin: "plugin-b", session: { instanceId: 2 }, clientInstanceId: "owner-c" }],
       ]);
-      const admitted = admitDocumentOpeningV1({ ...row, plugin: "plugin-a" }, owners, (key, owner) => { closed.push(`${key}:${owner}`); owners.delete(key); });
+      const admitted = admitDocumentOpeningV1({ ...row, plugin: "plugin-a" }, owners);
       expect(admitted).toBe(row.admitted);
-      expect(deepEqual(closed, row.closed)).toBe(true);
+      expect(owners.has("document-a")).toBe(true);
       expect(owners.has("document-c")).toBe(true);
     }
+  });
+
+  it("restores a parked predecessor when the successor opening does not commit", () => {
+    for (const row of documentOpeningFixture.replacements) {
+      const owners = new Map([
+        ["document-a", { plugin: "plugin-a", session: { instanceId: 1 }, clientInstanceId: "owner-a" }],
+        ["document-c", { plugin: "plugin-b", session: { instanceId: 2 }, clientInstanceId: "owner-c" }],
+      ]);
+      const next = { plugin: "plugin-a", session: { instanceId: row.instanceId }, clientInstanceId: "owner-next" };
+      const parked = parkDocumentOpeningReplacementV1({ runtimeKey: row.runtimeKey, plugin: "plugin-a", instanceId: row.instanceId, background: row.background }, owners, next);
+      if (row.parked === false) {
+        expect(parked).toBeNull();
+        expect([...owners].map(([key, owner]) => `${key}:${owner.clientInstanceId}`).sort()).toEqual([...row.remaining].sort());
+        continue;
+      }
+      expect(parked).not.toBeNull();
+      const retired = settleDocumentOpeningReplacementV1(owners, parked!, row.committed);
+      expect(retired.map(([key, owner]) => `${key}:${owner.clientInstanceId}`)).toEqual(row.closed);
+      expect([...owners].map(([key, owner]) => `${key}:${owner.clientInstanceId}`).sort()).toEqual([...row.remaining].sort());
+    }
+    console.log("[DEBUG] Document opening replacement: failed-restored=1 committed-retired=2 background-refused=1");
   });
 
   it("serializes background admissions and reaps them on invalidation, failure, and close", async () => {

@@ -1,0 +1,11 @@
+{
+  "id": "extension-result-fault-pack",
+  "fault": {
+    "origin": "os",
+    "code": "extension.missing",
+    "severity": "error",
+    "message": "no such extension",
+    "scope": { "pluginId": "flow-extension-brep" },
+    "retryable": false
+  }
+}

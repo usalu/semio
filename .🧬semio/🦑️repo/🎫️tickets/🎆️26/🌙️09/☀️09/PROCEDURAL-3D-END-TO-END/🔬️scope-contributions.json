@@ -1,0 +1,49 @@
+{
+  "schema": "semio.kernel.scope-contributions/1",
+  "receiverPluginId": "procedural",
+  "document": {
+    "widgets": [
+      {
+        "neuronKind": "brep.solid.extrude"
+      },
+      {
+        "neuronKind": "math.vector"
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "pluginId": "procedural",
+      "operators": [
+        "procedural.example"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-brep",
+      "operators": [
+        "brep.solid.extrude",
+        "brep.curve.polygon"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-bim",
+      "operators": [
+        "bim.wall"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-math",
+      "operators": [
+        "math.vector"
+      ]
+    }
+  ],
+  "expectPluginIds": [
+    "flow-extension-brep",
+    "flow-extension-math",
+    "procedural"
+  ],
+  "expectEmptyGraphPluginIds": [
+    "procedural"
+  ]
+}

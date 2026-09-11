@@ -249,7 +249,7 @@ impl DirectAwaitCapabilityRegistry {
 /// `fault_bytes` — same three-line duplication precedent both of those already establish.
 async fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
-    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
+    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message)))
 }
 //#endregion 🧯️Fault encoding
 

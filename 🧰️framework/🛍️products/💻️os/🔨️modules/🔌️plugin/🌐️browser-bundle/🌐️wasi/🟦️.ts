@@ -5,6 +5,47 @@ export interface BrowserWasiPort {
   exit?(status: "ok" | "err"): void;
 }
 
+
+export type GuestLogLevel = "debug" | "error" | "log";
+
+export type GuestLogLine = {
+  channel: "stdout" | "stderr";
+  text: string;
+  level: GuestLogLevel;
+};
+
+/** 🗣️ `[DEBUG]` prefixes are routine guest chatter; anything else on stderr is a fault. */
+export function classifyGuestLogLine(channel: "stdout" | "stderr", text: string): GuestLogLevel {
+  if (channel === "stdout") return "log";
+  return text.startsWith("[DEBUG]") ? "debug" : "error";
+}
+
+/** 🧵 One logical guest line is one host emit — tokens without a newline stay pending. */
+export function createGuestLogLineSink(emit: (line: GuestLogLine) => void) {
+  const pending: Record<"stdout" | "stderr", Uint8Array> = { stdout: new Uint8Array(0), stderr: new Uint8Array(0) };
+  const decoder = new TextDecoder();
+  return {
+    write(channel: "stdout" | "stderr", bytes: Uint8Array) {
+      const prev = pending[channel];
+      const merged = new Uint8Array(prev.length + bytes.byteLength);
+      merged.set(prev);
+      merged.set(bytes, prev.length);
+      let start = 0;
+      for (let i = 0; i < merged.length; i++) {
+        if (merged[i] === 10) {
+          const text = decoder.decode(merged.subarray(start, i));
+          emit({ channel, text, level: classifyGuestLogLine(channel, text) });
+          start = i + 1;
+        }
+      }
+      pending[channel] = start === 0 ? merged : merged.subarray(start);
+    },
+    pendingBytes(channel: "stdout" | "stderr") {
+      return pending[channel].byteLength;
+    },
+  };
+}
+
 export const browserWasiInterfaces = Object.freeze([
   "wasi:cli/environment@0.2.0", "wasi:cli/exit@0.2.0", "wasi:cli/stdin@0.2.0", "wasi:cli/stdout@0.2.0", "wasi:cli/stderr@0.2.0",
   "wasi:cli/terminal-input@0.2.0", "wasi:cli/terminal-output@0.2.0", "wasi:cli/terminal-stdin@0.2.0", "wasi:cli/terminal-stdout@0.2.0", "wasi:cli/terminal-stderr@0.2.0",

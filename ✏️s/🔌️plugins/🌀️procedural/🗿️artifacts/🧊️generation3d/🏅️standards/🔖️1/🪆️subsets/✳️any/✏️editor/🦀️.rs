@@ -239,7 +239,7 @@ fn generation3d_render_body(
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let node = match body_key {
-        flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks),
+        flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),
         edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, active_utility, marks),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
@@ -785,8 +785,7 @@ const GENERATION3D_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.3d.contribut
 /// `📓️extension-addressing-2026-09-10.md` §6.3 proposed 512 KiB instead, on the assumption that the
 /// payload could cross whole. It cannot, and a 512 KiB declaration would be a bound nothing could
 /// ever reach — this one is measured by `contributions_route_declares_a_reachable_wire_ceiling`.
-const GENERATION3D_CONTRIBUTIONS_ENVELOPE_BYTES: usize = 4_096;
-const GENERATION3D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES * semio_framework::PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR + GENERATION3D_CONTRIBUTIONS_ENVELOPE_BYTES;
+const GENERATION3D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
 
 /// 🧾️ The contributions route's ONE execution contract — deliberately NOT
 /// [`generation3d_bounded_contract`]: raising the 8 KiB gesture quota every interactive command

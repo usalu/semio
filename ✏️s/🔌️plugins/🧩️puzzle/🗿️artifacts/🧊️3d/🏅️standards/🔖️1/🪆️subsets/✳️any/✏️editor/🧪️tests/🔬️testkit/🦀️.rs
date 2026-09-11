@@ -514,6 +514,31 @@ pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>
     dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
 }
 
+/// 🖱️ Browser pointermove over vortices admits many `interactionHover`s before Isolated reserved
+/// jobs finish. Laws that reproduce that storm must not `settle` between admits.
+pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+    app.ensure_window(window_id);
+    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+    let dsl_args = args.map(json::to_dsl_value);
+    app.handle_action(action, dsl_args.as_ref(), &action_meta).await
+}
+
+pub async fn hover_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
+    let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
+    let targets_json = to_json_string(&targets);
+    dispatch_reserved_unsettled(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
+}
+
+pub async fn select_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+    let targets = to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
+    dispatch_reserved_unsettled(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
+}
+
+pub async fn settle_reserved(app: &mut Puzzle3dApp, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
+    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await
+}
+
 /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
 ///
 /// 🪟️ The ViewModel is addressed at the very window the body key names (`<body>:<windowInstanceId>`,

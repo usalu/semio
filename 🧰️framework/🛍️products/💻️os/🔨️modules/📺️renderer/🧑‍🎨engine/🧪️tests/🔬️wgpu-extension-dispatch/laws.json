@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.os.renderer.wgpu-extension-dispatch/1",
+  "title": "Wgpu Extension Dispatch Laws",
+  "laws": {
+    "pagedCompletion": {
+      "contiguousRequestCeilingBytes": 65536,
+      "hostAnswerCeilingBytes": 8388608,
+      "oneMibAnswerBytes": 1048576,
+      "oneMibProloguePages": 15,
+      "oneMibTerminalBytes": 65536,
+      "oneMibEventCount": 16,
+      "largestBlockBytes": 65536
+    },
+    "contributionsBeforeEval": {
+      "timeline": [
+        {
+          "kind": "refresh-ui"
+        },
+        {
+          "kind": "contributions-push",
+          "crossings": 1,
+          "encoding": "pack"
+        },
+        {
+          "kind": "flush-deferred"
+        },
+        {
+          "kind": "flowEvalTick"
+        }
+      ]
+    },
+    "nestedBootPhase": {
+      "parent": "shell-boot",
+      "child": "shell-boot:render:procedural-main",
+      "parentCeilingMs": 900000
+    },
+    "scopedContributionsPack": {
+      "crossings": 1,
+      "encoding": "pack",
+      "bodyCeilingBytes": 262144,
+      "stringCeilingBytes": 4096,
+      "receiverPluginId": "procedural",
+      "expectPluginIds": [
+        "flow-extension-brep",
+        "flow-extension-math",
+        "procedural"
+      ],
+      "expectEmptyGraphPluginIds": [
+        "procedural"
+      ],
+      "expectManifestJsonPluginIds": [
+        "flow-extension-brep",
+        "procedural"
+      ]
+    },
+    "commandIngress": {
+      "maximumPages": 64,
+      "pageBytes": 4096,
+      "encoding": "pack",
+      "crossings": 1,
+      "slimView": {
+        "locale": "en",
+        "terminology": "native"
+      },
+      "payloadChars": 190719
+    }
+  }
+}

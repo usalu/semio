@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "dlmalloc-probe"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+path = "lib.rs"
+
+[profile.release]
+opt-level = 1
+panic = "abort"

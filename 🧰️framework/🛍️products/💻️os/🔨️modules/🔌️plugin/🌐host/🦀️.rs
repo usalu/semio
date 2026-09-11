@@ -35,17 +35,30 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod body;
 pub use body::BodyReader;
 
-/// 🩹️ Decodes a `RequestOutcome` into the `Result<Vec<u8>, Fault>` every `host::*` async call
-/// resolves to — `Err` bytes are `dsl::encode_fault_bytes` output, the SAME convention every
-/// synchronous `host_*` wrapper already used. Called from `⚛️reactor/🦀️.rs`'s
-/// `Event::Completed` routing step before it hands the result to `RequestRegistry::resolve` —
-/// that routing step lives in `wit_bridge`, so this is gated identically (native never reaches it).
-// 🚫️async: E1 pure decode consumed by `⚛️reactor/🦀️.rs`'s sync `world actor` boundary —
-// `dsl::{decode_fault_bytes,encode_fault_bytes}` are both plain `fn`, zero suspension here — R9.
+/// 📦️ Encodes a fault as the ABI `pack` `completion-result.fault` and every `host-async` Err arm carry.
+/// Schema: `🔌️plugin/🧬️schema/📜️.wit` `type pack = list<u8>` — no JSON string on this data path.
+pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(fault))
+}
+
+/// 📦️ Inverse of [`encode_fault_pack`] — the guest decode of a host-written fault pack.
+pub(crate) fn decode_fault_pack(bytes: &[u8]) -> Fault {
+    match store::pack_rt::decode_wire_value(bytes) {
+        Ok(value) => dsl::FromValue::from_value(value).unwrap_or_else(|_| {
+            Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())
+        }),
+        Err(_) => Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned()),
+    }
+}
+
+/// 📦️ Decodes a `RequestOutcome` into the `Result<Vec<u8>, Fault>` every `host::*` async call
+/// resolves to. `Err` bytes are a `pack` of the fault value — the same shape the shell writes with
+/// `encodePackValue(fault)` and the native host writes with [`encode_fault_pack`].
+// 🚫️async: E1 pure decode consumed by `⚛️reactor/🦀️.rs`'s sync `world actor` boundary — R9.
 pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),
-        RequestOutcome::Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
+        RequestOutcome::Err(bytes) => Err(decode_fault_pack(&bytes)),
     }
 }
 
@@ -226,7 +239,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::blob_load(direct::effects::BlobLoadParams { hash }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::blob_load(direct::effects::BlobLoadParams { hash }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -244,7 +257,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::blob_write(direct::effects::BlobWriteParams { media_type: pack(&media_type), bytes }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::blob_write(direct::effects::BlobWriteParams { media_type: pack(&media_type), bytes }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -276,7 +289,7 @@ impl Host {
                 {
                     match direct::host_async::blob_read(hash).await {
                         Ok(stream) => Ok(BodyReader::direct(stream).await),
-                        Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
+                        Err(bytes) => Err(decode_fault_pack(&bytes)),
                     }
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -300,7 +313,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: stream }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))?;
+                    let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: stream }).await.map_err(|bytes| decode_fault_pack(&bytes))?;
                     let body = collect_direct_body(response.body).await?;
                     Ok(dsl::os_pack::json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers, body }).into_bytes())
                 }
@@ -338,7 +351,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: true }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))?;
+                    let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: true }).await.map_err(|bytes| decode_fault_pack(&bytes))?;
                     Ok(HttpFetchResponse { status: response.status, headers: response.headers, body: BodyReader::direct(response.body).await })
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -360,7 +373,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::document_read(direct::effects::DocumentReadParams { doc: doc.0 as u64, lane }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::document_read(direct::effects::DocumentReadParams { doc: doc.0 as u64, lane }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -379,7 +392,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::document_write(direct::effects::DocumentWriteParams { doc: doc.0 as u64, lane, ops }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::document_write(direct::effects::DocumentWriteParams { doc: doc.0 as u64, lane, ops }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -400,7 +413,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::link_resolve(link.into_bytes()).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::link_resolve(link.into_bytes()).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -455,7 +468,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::io_run(direct::effects::IoRunParams { source, target, payload }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::io_run(direct::effects::IoRunParams { source, target, payload }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -475,7 +488,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::io_compose(direct::effects::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::io_compose(direct::effects::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -496,7 +509,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::registry_query(direct::effects::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::registry_query(direct::effects::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -517,7 +530,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::cache_derive(direct::effects::CacheDeriveParams { engine_id, input }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::cache_derive(direct::effects::CacheDeriveParams { engine_id, input }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -537,7 +550,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::cache_read(direct::effects::CacheReadParams { engine_id, key: key.into_bytes() }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::cache_read(direct::effects::CacheReadParams { engine_id, key: key.into_bytes() }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -560,7 +573,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::invoke_extension(direct::effects::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::invoke_extension(direct::effects::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -622,7 +635,7 @@ impl Host {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
                     let job = next_direct_job_id().await;
-                    direct::host_async::spawn_job(job, kind, input, kernel_placement_to_direct_wit(placement)).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::spawn_job(job, kind, input, kernel_placement_to_direct_wit(placement)).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -651,7 +664,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::open_window(direct::effects::OpenWindowParams { kind: kind.0, params: pack(&params) }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::open_window(direct::effects::OpenWindowParams { kind: kind.0, params: pack(&params) }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -715,7 +728,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::request_file_open(direct::effects::RequestFileOpenParams { accept, read_as, import_action, multiple }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::request_file_open(direct::effects::RequestFileOpenParams { accept, read_as, import_action, multiple }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -763,7 +776,7 @@ impl Host {
                         args: args.map(|value| pack(&value)),
                     })
                     .await
-                    .map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    .map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -787,7 +800,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::spawn_plugin_instance(direct::effects::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, document_json }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::spawn_plugin_instance(direct::effects::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, document_json }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -816,7 +829,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::dispatch_action(direct::effects::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::dispatch_action(direct::effects::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -835,7 +848,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::open_dialog(direct::effects::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::open_dialog(direct::effects::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -863,7 +876,7 @@ impl Host {
                     match direct::host_async::storage_read(direct::effects::StorageReadParams { key }).await {
                         Ok(Some(bytes)) => Ok(bytes),
                         Ok(None) => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.storage.not-found"), "storage-read: no value at this key")),
-                        Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
+                        Err(bytes) => Err(decode_fault_pack(&bytes)),
                     }
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -883,7 +896,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::storage_write(direct::effects::StorageWriteParams { key, value: bytes }).await.map(|_| Vec::new()).map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::storage_write(direct::effects::StorageWriteParams { key, value: bytes }).await.map(|_| Vec::new()).map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -902,7 +915,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::storage_delete(direct::effects::StorageDeleteParams { key }).await.map(|_| Vec::new()).map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::storage_delete(direct::effects::StorageDeleteParams { key }).await.map(|_| Vec::new()).map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -922,7 +935,7 @@ impl Host {
                 {
                     direct::host_async::request_capability(direct::effects::RequestCapabilityParams { id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional })
                         .await
-                        .map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                        .map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {

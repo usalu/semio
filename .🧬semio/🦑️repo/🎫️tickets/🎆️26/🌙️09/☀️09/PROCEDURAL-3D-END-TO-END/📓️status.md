@@ -101,3 +101,527 @@ Repo MCP timed out at session start; ticket bookkeeping is done on disk.
 - 12:10 contributions re-arm lane landed → `📓️contributions-rearm-2026-09-10.md` (setContributions published nothing; now invalidates the retained session on registry generation and re-arms flowEvalTick per attached preview; 0 → 3 meshes natively). Restage required. gen3d 334/2.
 - 12:18 wgpu boot-watchdog lane landed → `📓️wgpu-boot-watchdog-2026-09-10.md` (declare-phase liveness protocol, streaming compile progress, IndexedDB module cache; served 12:14). wgpu boot #6 in progress (wasm-compile 100 %, 15 % overall after 130 s).
 - 12:25 wgpu boot #6: no watchdog kill; stalls silently at shell-boot 86 % (≥5 min, no fault/console) → dispatched wgpu shell-boot silence lane → `📓️wgpu-shell-boot-silence-2026-09-10.md`. Killed the taxonomy lane's leftover `verify taxonomy report` (1h52m). In flight: window-kind actions, idle turns, extension-result realloc, assembly, wgpu shell-boot silence.
+- 12:44 window-kind actions lane landed → `📓️window-kind-actions-2026-09-10.md` (per-window owned action refs; audit's gate hypothesis refuted — all 44 actions were declared; found+fixed an unretired FlowFixture abort in generate_preview::render; stable DOM ids). Restage pending on idle-turns + realloc lanes.
+
+## Session 2 — Opus 5 High (cursor-chat), resumed 2026-09-10 21:18
+
+Coordinator handover: session 1 (Fable 5.1, claude-code, ⚪9f5f6952) went idle at 12:44 with five lanes
+mid-flight and no restage since 10:54. Its process is still alive but has not acted for eight hours.
+This session takes over the same ticket at HEAD f39d4b0db3. Repo MCP is again unavailable
+(no `repo` namespace in this client's dynamic tool catalog), so ticket bookkeeping stays on disk.
+Fleet for this session: Opus 5 High coordinating, Cursor Grok 4.6 Extra High for execution lanes,
+Composer 2.5 for read-only exploration and audits, maximum parallelism.
+
+- 21:20 reclaimed 145 GB of dead-lane cargo target clones from session 1's scratchpad
+  (`target-asm`, `target-idle`, `target-realloc`, `target-realloc-trace`, `target-wgpu`; no process
+  held them). Kept `target-wgpu-boot`, which session 1's still-live `trunk serve` on 6118 uses, and
+  kept the puzzle3d session's dirs untouched. Disk was at 91 %.
+- 21:21 restage started for boot #13 — the first one that carries the realloc paging, contributions
+  re-arm, example-switch, window-kind-actions, idle-turns and taxonomy-move work:
+  `CARGO_PROFILE_WASM_DEV_DEBUG=false RUSTC_WRAPPER="" SEMIO_BUILD_BUDGET_MS=14400000
+  SEMIO_CMD_BUDGET_MS=14400000 NX_DAEMON=false SEMIO_RENDERER=react bun nx run
+  @semio-tech/framework-os-dev:activate-generation3d-react-dev` → `🗑️generated/s13-restage.txt`.
+  It doubles as this session's compile gate over session 1's mid-flight edits.
+- 21:24 procedural react serve restored on **6018** (`📜️serve-generation3d-react.sh`, this ticket).
+  Session 1's note that "agent-started serves die with the agent" is a process-group teardown:
+  `nohup … &` from a tool shell is killed when the shell session ends. `screen -dmS g3dreact` with
+  the script redirecting its own stdout survives. Ports in use by OTHER sessions: 6013 and 6014 are
+  the puzzle3d agent's react serves, 6118 is session 1's wgpu trunk serve.
+- 21:25 wave 1 dispatched — one execution lane (Grok 4.6 xhigh) and three read-only audits
+  (Composer 2.5), all forbidden from running cargo/nx while the restage holds the shared target:
+  browser probe harness → `📓️browser-probe-harness-2026-09-10.md`; user-facing gap inventory →
+  `📓️gap-inventory-2026-09-10.md`; wgpu React-vs-wgpu boot divergence (resuming session 1's
+  truncated shell-boot-silence report) → `📓️wgpu-boot-divergence-2026-09-10.md`; open-debt
+  punchlist harvested from all ~60 lane reports → `📓️open-debt-punchlist-2026-09-10.md`.
+- 21:29 restage GREEN in 7 m 45 s — `Successfully ran … and 38 tasks`, `Activated generation3d react
+  dev: 11 completed components (changed)`, 2/39 cache hits, no errors. **Session 1's five mid-flight
+  lanes all compile**, so the working tree needed no repair: the tree is healthy at HEAD f39d4b0db3
+  plus session 1's uncommitted edits.
+- 21:29 **staging-root correction, important for reading older reports.** There are two
+  `🔌️plugin-modules/` trees and only one of them is served:
+  | tree | state | role |
+  |---|---|---|
+  | `💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🌀️procedural/` | stale, frozen at 09:30, 81 219 866 B | NOT served |
+  | `💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/` | fresh 21:28, 82 273 400 B | **what vite serves** |
+  `⚙️vite.config.ts:32` resolves `pluginModulesDir` to the `🔌️plugin/…/dist/<profile>/` tree; the
+  `🧑‍💻dev/` tree is a leftover. Verified by hash: the descriptor fetched over HTTP from 6018
+  (200 880 B, sha256 `1dec7265…`) is the fresh one, not the 09:30 copy (`0139b8e8…`).
+  Consequence for prior art: `📓️extension-result-realloc-2026-09-10.md` §2 ran `🐍️realloc-probe.mjs`
+  against the STALE `🧑‍💻dev/` tree, so its measurements came off a 09:30 module. Its conclusions are
+  structural (jco lowers a `pack` as one `cabi_realloc`) so they still hold, but any future probe
+  must point at the `dist/dev/` tree.
+- 21:33 dispatched the fault-arm symmetry lane (the `STILL OPEN` item from
+  `📓️extension-result-realloc-2026-09-10.md` §4.5, confirmed first-hand: `🏛️ShellHost/🟦️.tsx:1663`
+  writes `encodePackValue(fault)` while `🔌️plugin/🌐host/🦀️.rs:48` reads `dsl::decode_fault_bytes`,
+  and the same `decode_fault_bytes` appears on ~15 other host-effect error arms) →
+  `📓️fault-arm-symmetry-2026-09-10.md`.
+- 21:55 **boot #13 observed** on the 21:28 restage → `📓️boot-13-2026-09-10.md` (headless Chromium via
+  Playwright, which is already a devDependency; traces armed with
+  `localStorage.SEMIO_RUNTIME_DIAGNOSTICS=1`). This retires the class of failure the last twenty
+  lanes were chasing and replaces it with a narrower, further-upstream one:
+  - **no trap, no fault, no page error, no failed request.** Boot #12's `cabi_realloc` abort is gone
+    and nothing replaced it. Chrome is finished work: navbar, all four panels, example picker reading
+    `Hexagonal Mushroom Column`, Edit/Generate mode buttons, Flow + Preview dock panes, full footer;
+    viewer state live (`show-mode=shaded`, `preview-camera { position=@4,-4,3 fov=45 }`, real sun).
+  - **no `canvas` element exists on the page at all** — `[]` after a 60 s settle, after clicking the
+    Preview tab, after clicking the Flow tab, and after clicking Generate. Both window bodies are
+    blank rectangles. A regression against boot #5, where `📓️node-graph-attach-2026-09-10.md` had the
+    flow canvas drawing.
+  - **generate mode opens nothing**: the DOM id set is byte-identical after clicking
+    `#playground.navbar.modes.generate`, though the artifact declares `👁️preview`/`📝️form`/`🗂️generations`
+    and the descriptor carries their labels. Generate mode has never been exercised at runtime in
+    this ticket — every boot only ever looked at the two edit-mode windows.
+  - **`flowEvalTick` 184×, `invokeExtension` 0×.** Not invoked-and-faulted like boot #12 —
+    never invoked. All nine extensions hot-swap cleanly incl. `flow-extension-brep v0.3.0`.
+  - **idle invocation storm**: `setContributions` (an install action with a 73-page ~294 KB payload)
+    93× in 90 s, `plugin_exchange … branch=command-invocation` 949×, full-scope `applyHostEffects
+    refresh` 314× → `guest linear memory at 322 240 512 B — 60 % of the 536 870 912 B budget, past the
+    60 % install-peak ceiling`, monotonic, while displaying two empty rectangles.
+  - **the guest trace writer emits one `console.error` per token** (5 750 raw lines ⇒ 1 452 logical
+    messages, 4× fan-out; 7 775 lines armed), and emits routine `[DEBUG]` chatter at `error` level.
+    `📓️hotpath-optimization-2026-09-10.md`'s "hot-path console lines 15+→0" does not hold for these
+    two traces with the flag off.
+- 21:57 dispatched the two decisive lanes off boot #13, file-disjoint:
+  blank window bodies + generate-mode windows + `flowEvalTick`→`invokeExtension`
+  → `📓️window-bodies-and-eval-dispatch-2026-09-10.md`; idle invocation storm + trace fan-out and
+  level → `📓️idle-storm-and-trace-fanout-2026-09-10.md`.
+  In flight: browser probe harness, gap inventory, wgpu divergence, open-debt punchlist, fault-arm
+  symmetry, window bodies, idle storm.
+- 21:40 wave 1 landed, four of seven cleanly:
+  - **probe harness** → `🔍️browser-probe.ts` + `📓️browser-probe-harness-2026-09-10.md`. Playwright with
+    swiftshader/WebGPU flags; `--url`/`--port`/`--plugin`, `--mode=boot|interact`,
+    `--steps=example,hover,select,orbit`, `--settle`, `--label`, and a
+    `semio.procedural3d.browser-probe/1` JSON summary. Runtime verification is now one command
+    instead of hand-driving a browser, and it works against 6118 too.
+    Its baseline run adds two facts boot #13 did not have: the example picker opens with **9 options**
+    and selecting one DOES relabel and settle a second `setActiveExample` with `effects: 2` — so the
+    picker and switch path are alive — while `hover`, `select` and `orbit` all fail with
+    **`no preview canvas`**. This also **refutes** `📓️gap-inventory-2026-09-10.md`'s Lane G
+    ("demo-session unreachable, 9th example"): all nine options are in the picker.
+  - **gap inventory** → `📓️gap-inventory-2026-09-10.md`: ten file-disjoint lanes; edit mode judged
+    complete in source, with generate mode, viewer, wgpu and assembly independently broken.
+  - **wgpu divergence** → `📓️wgpu-boot-divergence-2026-09-10.md`: **refutes** the extension-await
+    hypothesis for the 86 % stall — it is retained-UI intake across `create_app` plus multi-surface
+    `refresh_ui` (`renderDocument` per window/panel/catalogue, ~163 M steps in 4096-step slices)
+    inside one declared phase. But it confirms wgpu drops `InvokeExtension` in `queue_host_effects`
+    (`_ => {}`), never sends `setContributions`, never flushes `deferred_actions` in `settle_boot`,
+    and does not import `GUEST_HOST_ANSWER_CEILING_BYTES` — so adding dispatch without paging would
+    re-create boot #12's abort. Ordered five-step fix plan with file ownership.
+  - **open-debt punchlist** → `📓️open-debt-punchlist-2026-09-10.md`: 91 items — 38 still open
+    (12 blocker, 14 degraded), 47 confirmed fixed later, 6 unclear — grouped into ten lanes.
+  Three lanes (fault-arm symmetry, window bodies, idle storm) exited after ~2 minutes with no report
+  and no source edits; re-dispatched as resumes with the probe's contract and its new evidence.
+- 21:42 wave 2 dispatched, six lanes, file-disjoint:
+  resumed fault-arm symmetry, resumed window bodies + generate mode + eval dispatch, resumed idle
+  storm + trace fan-out; new wgpu extension dispatch + boot instrumentation (executing the divergence
+  audit's plan, owns `🎯️targets/🧊️wgpu/**` and manages the 6118 serve itself) →
+  `📓️wgpu-extension-dispatch-2026-09-10.md`; new assembly artifact mount (five codec bounds, mount,
+  taxonomy, real content; owns `🗿️artifacts/🧩️assembly/**` + the mount block) →
+  `📓️assembly-artifact-mount-2026-09-10.md`; new viewer preview round trip (owns
+  `✳️any/👁️viewer/**`, proves itself natively since the shared no-canvas defect belongs to the window
+  bodies lane) → `📓️viewer-preview-pipeline-2026-09-10.md`.
+- 21:45 the assembly lane exited after ~3 minutes having only noted that the repo MCP is unavailable.
+  **Lane-hygiene note for whoever coordinates next:** five execution lanes have now ended their turn
+  early with a mid-thought status line as their final answer. Two causes seen so far — reaching for
+  ticket bookkeeping (the repo MCP is unavailable to every client in this session; bookkeeping is the
+  coordinator's job, and saying so explicitly in the brief fixes it), and simply stopping after
+  orientation. Verify every lane against disk (`git status` plus the expected report path) instead of
+  trusting a completion signal; four of the five had produced no edits at all.
+- 21:48 coordinator traced the blank body end to end while the lanes ran, and handed the chain to the
+  window-bodies lane → `📓️boot-13-2026-09-10.md` §4. Summary: the tabpanel has **zero children**, so
+  this is not a canvas that failed to size. `🎨️Canvas/🟦️.tsx:1229` renders `<Window>` only when
+  `activeDescriptor` is truthy; `:1194` looks it up in `windowsById`; `:1364` builds that map from the
+  `windows` prop; and `:1176` feeds the TAB BAR from the layout node instead — which is exactly why
+  correct `Flow`/`Preview` tabs sit above blank bodies. `windows` is `modeWindows`
+  (`🏛️ShellHost/🟦️.tsx:9344`), and `:9085` returns `[]` whenever `windowUiByWindowId` is empty, which
+  it is (`:1948`, from `shellState.windowUi`) because **the guest delivers no window UI at all** —
+  very likely the same root cause as `flowEvalTick` 184× / `invokeExtension` 0×. Second, separable
+  defect: that early return converts "no UI yet" into "no windows at all", defeating the
+  `PENDING_WINDOW_UI_NODE` fallback the same function already uses at `:9113`/`:9159`, which is why
+  the failure is silent. Owed law: a window whose UI has not arrived renders its pending node, never
+  an empty body.
+
+### Root cause closed by the coordinator — the contributions push (2026-09-10 ~22:00)
+
+Wave 2 produced nothing on disk: six execution lanes dispatched, zero reports, zero source edits,
+no cargo/vitest/playwright ever running. Rather than dispatch a seventh, I traced the defect myself
+from the boot #13 console. It is closed, and written up in `📓️boot-13-2026-09-10.md` §5.
+
+`🏛️ShellHost/🟦️.tsx` hands the procedural plugin the **aggregated contributions of all thirteen
+plugins** — 397 921 chars, 98 % of it unaddressable by procedural — through the 4 KiB
+public-invocation string envelope as **99 sequentially awaited pages** at ≈ **2.04 s each**, so
+≈ **202 s**. The **only writer of `windowUiByWindowId` anywhere in the codebase** is the dispatch at
+`:4386`, which sits *after* that loop in the same function. Hence `{}` for the first ~3.4 minutes of
+every boot, hence `:9085`'s `return []`, hence `🎨️Canvas:1229` rendering no `<Window>` while
+`:1176` still draws correct tabs from the layout node. Correct tabs over empty bodies is the exact
+signature, and it matches boot #13's DOM. `flowEvalTick`'s 184 firings with `invokeExtension` at 0
+are the same defect, not a second one: contributions never landed.
+
+Every settle used in this ticket — 60 s, 90 s — expires less than halfway through the push. That is
+why ~20 lanes chased traps and faults: **there was never anything wrong at the point they were
+looking**, and the window in which they looked was inside the blockade.
+
+Two of my own earlier readings were wrong and are superseded:
+- §2.4's "93 `setContributions` invocations / invocation storm" — it is **one** push of 99 pages.
+- §4's "the guest delivers no window UI" — one link short; the guest is not at fault at all, and
+  `app.windowKinds` is fully populated (all five editor kinds present in the staged manifest).
+
+Re-scoped ownership to keep two lanes off the same lines:
+- **window-bodies lane** — sole owner of `:4344`–`:4400` and `:9085`. Three ordered parts: unblock
+  the first paint (pending nodes must not sit downstream of a data push; drop the `:9085` early
+  return so the `?? PENDING_WINDOW_UI_NODE` fallback works), scope the payload by flow-graph
+  reachability, then move contributions onto the `pack` path — one crossing, not 99.
+- **turn-cost lane** (was idle-storm) — the 2.04 s *per 4 KiB page*. A 4 KiB command cannot cost two
+  seconds; whatever each guest turn drags behind it is worth more than the paging, because cutting
+  99 crossings to 1 still leaves every interaction unusable at 2 s a crossing.
+
+Also settled in passing: the staged manifest declares apps for `generation2d` and `generation3d`
+only — there is **no assembly app at all**, confirming the assembly lane's premise independently.
+
+### Lane hygiene — delegation is not holding in this client
+
+Six of six wave-2 execution dispatches ended their turn on a mid-thought plan with nothing on disk.
+Two causes identified: reaching for ticket bookkeeping via the unavailable repo MCP, and simply
+stopping after orientation. Every resume now states that bookkeeping is the coordinator's job, that
+the MCP is unavailable to everyone by design, and that the turn may not end until the report exists
+on disk and `git status` shows edits. Read-only Composer audit lanes have not shown this failure —
+all four produced substantial reports. **Verify every lane against disk, never against its
+completion signal.**
+
+### Viewer lane parked, not restarted (2026-09-10 ~21:58)
+
+Seventh consecutive execution-lane early exit ("I'll keep gathering the viewer preview window,
+ViewEmit, and the editor's drain/tessellate helpers…", nothing on disk). Deliberately **not**
+restarted: the viewer app is `s.procedural.generation3d@1/*#viewer` with a single window kind, so it
+sits behind exactly the same contributions blockade as the editor. Its preview cannot render until
+the window-bodies lane lands part 1. Restarting it now would burn a lane on work that cannot be
+verified. Re-dispatch after boot #14 confirms bodies fill.
+
+### Example envelopes are generated, not hand-authored — todo de-scoped
+
+The empty 171 B / 170 B / 73 B `🎒️.pack.semio`, `📡️*.spr.semio` and `🔧️*.op.semio` beside each
+example are **not** assets to handcraft. Two independent confirmations:
+
+- Each example's `🦀️.rs` references only the DSL: `PRIMARY_TEXT =
+  include_str!("🖼️assets/…/🗣️.dsl.semio")`, passed to `ExampleSource::new(ID, label(),
+  PRIMARY_TEXT, ICON)`. The other three envelopes are never read by the example at all, so they
+  cannot be blocking example loading, preview, hover or selection.
+- The assembly subset's mutation tests state the rule outright: "the
+  `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are **derived from it
+  by `fixtures generate`**".
+
+So they are stale generator output, and the fix is to run `fixtures generate` for the generation3d
+subset and check that it fills them — a codec round-trip fixture concern, not a user-facing one.
+Moved off the critical path.
+
+### Long-settle probe — the falsification test for §5
+
+Running detached as `screen -S b14probe`, label `b14-longsettle`, **settle 260 s**, deliberately
+longer than the ≈ 202 s projected push. §5 predicts bodies stay at 0 for ~200 s and then fill. If
+they fill, the diagnosis is confirmed at runtime rather than by reading; if they never fill, §5.2's
+ordering claim is wrong even though §5.1's measurements stand, and the blockade is only half the
+story. Either outcome is worth the 4.5 minutes.
+
+Note for anyone launching long jobs here: `nohup … &` from an agent tool shell **does not survive** —
+process-group teardown kills it (this killed the first attempt at this very probe, and earlier
+killed the react serve). Use `screen -dmS <name> zsh -c '… > log 2>&1'`; this screen build is
+4.00.03 and does not support `-Logfile`.
+
+### Boot #14 (260 s settle) — the terminal failure is a guest OOM (2026-09-10 ~22:05)
+
+The falsification test came back and it both confirmed §5 and overturned boot #13's headline.
+Written up in `📓️boot-13-2026-09-10.md` §6.
+
+Bodies and canvases stayed at 0 for 114 s exactly as §5.2 predicts, then at 121 s ten window UI
+nodes and **three canvases** appeared. So "no canvas anywhere" and "the guest delivers no window UI"
+were both artefacts of probing inside the blockade. The ordering defect is a two-minute *delay*, not
+the terminal failure.
+
+The terminal failure is that the guest is already dead by then: at 116.1 s the actor aborts with
+**`rust_oom` → `process::abort` → `abort_internal` → `unreachable`**. Guest linear memory was at
+**322 371 584 B (307 MiB) of a 536 870 912 B (512 MiB) budget at 65.7 s** — the codebase's own
+install-peak diagnostic flagged it — and exhausted the rest by 116 s. The worker error carries
+**`framesBytes=63345194`** (63.3 MB of retained frames) at the moment of death. `meshes=0` is
+therefore unrecoverable on this boot: the actor died five seconds before its windows existed.
+
+Boot #13 reported "no trap, no fault, no page error" only because its window was 60 s. **Every probe
+in this ticket, across both sessions, expired before the OOM.** That is why ~20 lanes hunted a trap
+and found nothing: the trap is real, it is an OOM, and it is caused by the contributions push.
+Session 1's realloc/abort instinct had the mechanism right and the trigger wrong. All probes from
+here use `--settle=260`.
+
+One root cause, two amplifiers, and the two live lanes are aimed at exactly one each — now confirmed
+rather than guessed:
+- **payload size** (window-bodies lane): 398 KB, 98 % unaddressable, 99 sequential turns → scope it
+  and move it to the `pack` path so it crosses once.
+- **per-turn retention** (turn-cost lane): linear memory never shrinks, so ~3 MB left behind per
+  turn is permanent. Handed them `framesBytes` and the existing install-peak sampler as leads.
+
+Raising the 512 MiB budget is not on the table; it only moves the abort later.
+
+### `framesBytes` was lying by 10×, and one fix landed from the coordinator (2026-09-10 ~22:10)
+
+The turn-cost lane came back with an empty response — my second interrupt of it almost certainly
+destroyed its context. **Lesson: stop interrupting working lanes.** Deliver corrections at their
+natural completion instead. That is eight execution dispatches with nothing on disk.
+
+So I chased the memory number myself and it turned out to be wrong. `replyError` in
+`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts` sized the turn's `events` with `JSON.stringify(frames).length`
+whenever `frames` was not itself a buffer — and a turn's `events` is always an **array** of buffers,
+so every report took that path. `JSON.stringify` renders a `Uint8Array` as `{"0":12,…}`, measured at
+7.9× per byte at 1 KB, 9.9× at 100 KB, 11.8× for large values. So `framesBytes=63345194` meant
+roughly **5.8–10.6 MB of real wire bytes**, not 63 MB. §6's OOM conclusion is unaffected — that
+comes from the guest's own `rust_oom` stack and the 512 MiB budget line — but the payload figure I
+handed the turn-cost lane was off by an order of magnitude. Corrected in `📓️boot-13…` §7.
+
+**Fixed it myself** (file unowned by any lane): an array whose members are all buffers is now summed
+by `byteLength`; a lone buffer still reports `byteLength`; anything else still falls back to
+stringify. Validated on six cases — lone buffer, array of three, empty array, `undefined`, non-buffer
+object, and a mixed array that must still fall back — all six pass, and `bun build` bundles the
+module (95 modules). The comment now records why the array path is the only correct one, because the
+old comment asserted the exact property the code did not have.
+
+Method note worth keeping: **a diagnostic never checked against a known input is not evidence.**
+This one had a docstring claiming it avoided stringify, and it sent the memory hunt off by 10×.
+
+Retention work re-dispatched as a **fresh Opus lane** rather than a resume, briefed with the
+corrected numbers, the turn plumbing I traced (`runQueuedTurn` at `🔌️PluginRuntime:2064`,
+`typedOperationAcknowledgements` at `:537`, the lease deliver at `📮️shard-client:1584`–`:1593`), the
+`rg -a` note for PluginRuntime's intentional NUL separators, and a hard boundary off ShellHost
+`:4344`–`:4400`/`:9085`. Fresh dispatch chosen deliberately: every resume so far has died, while the
+one hardened resume that survived (wgpu) is the only Grok lane with real edits on disk.
+
+Also confirmed: the **wgpu lane is genuinely working** — unstaged edits present in
+`🌐️browser-worker/🦀️.rs`, `🎞️frame-worker/🟦️.ts`, `🐚️plugin-bridge.ts`,
+`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`, `🩺️window-fault/🟦️.ts`, `🎠️kernel/🟦️.ts`, `🏃️run/🦀️.rs`.
+
+### Fault-arm lane landed and I verified it against disk (2026-09-10 ~22:22)
+
+**First execution lane of session 2 to actually deliver.** Report:
+`📓️fault-arm-symmetry-2026-09-10.md` (5.3 KB). I checked every claim against the logs in
+`🗑️generated/fault-*.txt` rather than trusting the summary, and all seven hold:
+
+| Claim | Log evidence |
+| --- | --- |
+| `cargo check` plugin | `Finished dev profile … in 36.53s`, no errors |
+| `cargo check` plugin-host | `Finished … 1m 08s` |
+| `cargo check` procedural native | `Finished … 2m 11s` |
+| `cargo check` procedural `wasm32-wasip2` | `Finished … 2m 33s` |
+| `a_packed_host_fault_round_trips_through_outcome_to_result` | `test result: ok. 1 passed; 0 failed` |
+| `a_faulted_invocation` | `test result: ok. 1 passed; 0 failed` |
+| vitest `packs completion-result.fault` | `Tests 1 passed \| 92 skipped (93)` |
+
+Edits confirmed present in `🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs`, `🔌️plugin/🌐host/🦀️.rs`,
+`🔌️plugin/🦀️.rs`, `⚛️reactor/🧪️tests/🔬️extension-continuation/🦀️.rs`, plus a new fixture
+`⚛️reactor/🧫️fixtures/extension-result-fault-pack.json`. The extension-result fault arm is now
+`pack` on both sides, matching the OK arm; live-path mismatch 1 → 0 and AppFrame summaries 2 → 0.
+
+The lane correctly flagged that it did **not** restage and did **not** probe Chrome, so the on-screen
+error surface is unverified. Worth being precise about what that means: the shell's TypeScript side
+was already `encodePackValue` from a session-1 lane, so the currently served guest (built 21:28)
+decodes JSON while the host encodes pack. **That mismatch predates this lane** — this lane is the fix
+for it, not the cause — and it only affects fault paths.
+
+**Restage deliberately deferred.** Not restaging now, for two reasons: the window-bodies and
+guest-memory lanes are mid-flight and a restage would bake their partial state into the module their
+own probes read, and a restage costs ~7m45s of shared cargo time. The guest-memory lane restages
+itself after Rust changes per its brief, which picks this up for free. One clean restage before
+boot #15.
+
+### wgpu lane landed — verified, with one attribution corrected (2026-09-10 ~22:25)
+
+Report `📓️wgpu-extension-dispatch-2026-09-10.md` (10 KB). Verified against disk, and in one case by
+re-running the tests myself rather than reading its log:
+
+| Claim | How I checked it |
+| --- | --- |
+| `cargo check` wgpu renderer, native + wasm32, 0 errors | `Finished dev profile … 15.68s` / `0.93s`, zero `^error` lines |
+| new suite registered in three places | present at react `vitest.config.ts:24`, wgpu `vitest.config.ts:8`, wgpu `📜️script.ts:527` |
+| "4/4 extension-dispatch tests passed" | **re-ran it myself**: `Test Files 1 passed (1)`, `Tests 4 passed (4)`, 1.48 s — matches its claimed 1.43 s |
+| `shell-boot` finished in 2.6 s (was pinned at 86 % indefinitely) | `wgpu-boot-14` probe capture present |
+
+One scare that was not this lane's doing: `🗑️generated/wgpu-world-suite.txt` records
+`test result: FAILED. 105 passed; 10 failed`. Its mtime is **04:30:32**, so it is session 1's log,
+not this lane's run. The ten `world::tests::*` failures (marquee publish/cursor, object registry
+capacity/ABA, saturation FIFO, terrain tile sync, prepared-resource dedup, live-renderer generation
+wake) are **pre-existing debt nobody has touched**, and their current status is unknown. Added to the
+punchlist rather than attributed here.
+
+**Correction to the lane's conclusion.** It reported empty windows with `invokeExtension` 0× and
+called it "the same shared blank-body reason as React". It is not. I checked its own capture:
+`wgpu-boot-14-console.jsonl` has **24 records total** (React's boot has 895), **zero mentions of
+`contributions`**, and 29 × `effects=0`. So on wgpu the contributions push **never happens at all** —
+the registry is empty because nothing was ever sent, not because a send is slow. Same symptom,
+different defect:
+
+| | React | wgpu |
+| --- | --- | --- |
+| contributions push | happens once, 99 pages, ≈ 202 s | **never happens** |
+| windows | appear at 121 s | never appear |
+| guest memory | OOM at 116 s | no pressure — 2.6 s boot, nothing pushed |
+
+The consequence matters for sequencing: **the React fix will not fix wgpu.** The window-bodies lane's
+payload scoping and pack transport change a push that wgpu does not make. This lane built the
+*receiving* end (paged `setContributions` in the wgpu Shell Rust) while the *sending* end does not
+exist there. Resumed the lane with exactly that.
+
+### Window bodies render — first user-visible win (2026-09-10 ~22:40)
+
+`📓️window-bodies-and-eval-dispatch-2026-09-10.md`. Part 1 of three landed. Verified from the lane's
+own capture `🗑️generated/probe-bodies-1-2026-09-10T20-09-14` rather than from its summary:
+
+| | before | after |
+| --- | --- | --- |
+| tabpanels with content | 0 of 1 (`role="tabpanel"></div>`) | **2 of 2, zero empty** |
+| canvases | 0 | **3** |
+| time to window UI | 121 s (boot #14), never inside a 90 s settle | **9.7 s** |
+| window UI nodes | none | all ten (`proceduralMain`, `proceduralPreview`, controls/measures/engagement/utilityBar) |
+
+The `:9085` early return is gone from `🏛️ShellHost/🟦️.tsx`, confirmed by grep. Pending window UI now
+dispatches ahead of the contributions push instead of behind it. TS-only, so no restage was needed.
+
+Parts 2 and 3 did not land, and the lane was straight about it rather than rounding up:
+- **Part 2 (scoping) is on disk but inert.** `reachableKinds: []` every time, so the fallback restores
+  the full payload and the push is still `397921 chars / 99 pages / ≈ 202 s`. Cause: the cached
+  `BuiltNode` is lane-split and carries no `neuronKind` at push time. A greenfield repo cannot keep a
+  path that always falls back, so the resume tells it to either resolve reachability from the
+  document's flow graph (where the graph actually lives) or remove the scoping and defer it honestly.
+  Hazard noted: a broken scoped run briefly pushed `chars: 2` / 1 page, so an empty scoped payload
+  must fail loudly rather than install nothing.
+- **Part 3 (one `pack` crossing) not started.** This is now the critical path for the whole ticket:
+  it takes the push from ≈ 202 s to roughly one crossing, which puts `brep` in front of the first
+  eval tick. The preview's current failure is exactly `flow.extension-not-contributed / brep`.
+
+New gap the fix exposed, and now its own lane: **the Flow window paints a placeholder instead of the
+example's 7-node graph.** It mounts correctly at 966×836, so this is content, not mount. Dispatched
+as a fresh Opus lane against
+`✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/`, file-disjoint from everything else in flight, with
+hover and selection in scope since the objective requires them. Generate mode does mount its three
+bodies (Generations / Form / Preview).
+
+Still true and unchanged: bodies now appear at 9.7 s but the guest still aborts with `rust_oom` at
+~116 s, so the user-visible state is "windows appear, then the plugin dies". Both remaining
+amplifiers are owned.
+
+### Turn-cost lane landed; a transient tree break found and cleared (2026-09-10 ~22:47)
+
+`📓️idle-storm-and-trace-fanout-2026-09-10.md` (11.5 KB), plus capture
+`🗑️generated/probe-turncost-after-2026-09-10T20-43-49`. The lane I thought my interrupt had
+destroyed came back with real work — **the interrupt was survivable after all**, so the earlier empty
+response was transient rather than fatal. Worth remembering before I avoid interrupts on principle.
+
+It independently reached the same `framesBytes` conclusion I did, from the other direction, and named
+the actual retain: **each 4 KiB `setContributions` page runs a full `plugin_exchange`, allocating
+Invocation + Ephemeral even when `Emit` is empty.** Those peak temporaries stick in `dlmalloc`, and
+since wasm linear memory never shrinks the guest only climbs — 322 MB at 65.7 s, `rust_oom` at
+116.1 s. So the 99-crossing payload and the retention are not two independent defects: **the crossing
+count is the multiplier on a per-exchange allocation peak.** That makes the other lane's single-pack
+crossing the fix for both, and this lane's honesty is worth noting — it did **not** claim the OOM was
+gone, and it is not.
+
+Verified claims: plugin `cargo check` and procedural native `cargo check` both `Finished`, 0 errors;
+`storm-plugin-debug-law.txt` shows `test result: ok. 1 passed`. What it cut are the guest trace
+amplifiers, not the allocation: per-token `console.error` fan-out (8 writes → 1 sink emit on the law
+fixture), one host call per newline, `[DEBUG]` to `console.debug`, and the ungated
+`plugin_exchange` / `cooperative-maintenance` traces that produced boot #13's 5 750 console lines.
+Restage needed before its per-turn curve prints.
+
+**Transient tree break, found and now clear.** Its `storm-procedural-wasm-check2.txt` recorded
+`could not compile semio-framework-plugin (lib) due to 6 previous errors` on `wasm32-wasip2` — two
+concurrent lanes colliding in `⚛️reactor/`: `note_turn_events` defined twice (lines 136 and 181 of
+`🔄️turn/🦀️.rs`, one instrumentation function added by each lane) and `wit::CompletionResult`
+unresolved in `⚛️reactor/🦀️.rs`. **A broken wasm build blocks every restage, and a restage blocks
+every lane's runtime verification, so this was the highest-priority thing in the ticket.** Both have
+since healed on their own: one definition at `:138`, no `wit::` uses left. I re-ran it myself rather
+than trusting the stale log — `cargo check --target wasm32-wasip2` **Finished in 1m 10s, 0 errors**.
+The tree is restageable.
+
+New gate debt this exposed: the wasm build carries **`warning: function encode_fault_pack is never
+used`** (from the fault-arm lane) plus an unused `new` in the `framework_reserved_job!` macro. The
+repo has a `verify rust-warnings` gate, so these fail it. Added to the gates item, not patched here.
+
+Restage still deliberately deferred: the guest-memory lane's probe (`screen memchk4`) is live against
+6018 and a restage would swap the module under it. One clean restage once the in-flight probes land.
+
+### One crossing landed; two sizing decisions reversed (2026-09-10 ~23:05)
+
+The pack crossing is in: **one `setContributions` `handleCommand` instead of 99 JSON pages.** That is
+the structural change the ticket needed, and removing the always-firing scoping fallback was right.
+Two follow-on decisions were backwards and I have reversed them.
+
+**Reverted: the ingress ceiling raise.** The lane raised `SHARD_COMMAND_MAXIMUM_PAGES`
+(`📮️shard-client/🟦️.ts:112`) and `COMMAND_MAXIMUM_PAGES` (`📡️spr/🧵️channel/🦀️.rs:57`) from 64 to
+128 so the 397 921-char pack would fit. Wrong direction on three compounding counts: it doubles the
+permitted burst into a guest that is already dying of memory exhaustion; it leaves the payload
+O(number of plugins), so plugin fourteen breaks it again and the ceiling gets raised again; and the
+objective is to optimise the architecture, not widen limits until today's data fits. A 4 KiB envelope
+was the wrong shape for bulk data and a 256 KiB one is the same mistake larger.
+
+**Its own capture shows the damage the raise did:** `probe-bodies-2` has
+`command ingress exceeds 64 pages` twice and then **43 `v102_1` faults**. Host raised to 128, staged
+guest still enforcing 64, guest refuses, everything downstream faults. Which also means the lane's
+"no `rust_oom` in the 9.9 s probe" is **not evidence about the OOM** — the probe died at 9.9 s and
+the abort is at 116 s. Recorded so nobody carries it forward as a positive result.
+
+**Direction given instead: scope the payload, which needs no new machinery.** The lane kept exactly
+the right pieces in `🎠️kernel/🟦️.ts` — `reachableKindsFromUnknown` (`:271`), `scopeContributionsJson`
+(`:288`) and a `describe("scopeContributionsJson")` suite (`:3070`). The helpers were never the
+problem; **their input was.** Fed the cached lane-split `BuiltNode`, they always saw `[]`. The kinds
+must come from the open document, whose graph is the example's seven nodes in its `🗣️.dsl.semio`.
+Scoped that way the payload is kilobytes and fits inside the original 64-page cap comfortably.
+
+I checked whether a manifest declaration could substitute for the graph and it cannot: procedural
+declares `activationEvents` for its two artifact kinds and one `documents.write` capability request,
+and nothing that names brep. The document graph is the only honest source.
+
+**Recorded as the end state, not built now:** push-based contributions are O(what exists) however
+well scoped. The design that stays O(what is used) is **demand-driven** — the guest asks for a kind's
+contribution the first time it meets one it does not know. Graph scoping gets a working app; pull is
+what stops this recurring as plugins are added.
+
+### The OOM is gone — root cause was the async-lift parameter area (2026-09-10 ~23:20)
+
+`📓️guest-memory-retention-2026-09-10.md` (14 KB). This is the biggest result of the session and I
+verified it hard, because it is the headline claim of the ticket.
+
+**What actually retained the memory** — and it is none of the four things we suspected. Not the
+events arrays, not retained UI/`BuiltNode` state, not the guest's operation log, and **not dlmalloc
+reuse**: a standalone allocator probe measured 0 bytes of growth for every alloc/free pattern
+thrown at it. It was the canonical-ABI **indirect parameter area of the async-lifted `reactor.poll`
+export** — 4 360 B allocated in guest memory by the host through `cabi_realloc` every turn and never
+freed, because wit-bindgen 0.57.1 emits the `GuestDeallocate` for a guest export's parameter area
+only when the lift is *not* async (`wit-bindgen-core` `abi::call`, `if sig.indirect_params &&
+!async_`). The area existed only because `option<command-ingress-page>` carried a fixed 4 096-byte
+64-block record **by value on every turn**, `None` on virtually all of them, pushing the call past
+the canonical ABI's 16-flat-parameter limit.
+
+**This supersedes the turn-cost lane's diagnosis.** That lane said the retain was `plugin_exchange`
+allocating Invocation + Ephemeral per page with the peak sticking in `dlmalloc`. The allocator probe
+disproves it. Two lanes, two confident diagnoses, and the one with a controlled experiment won.
+
+**Verified independently, not taken on trust:**
+
+| Claim | How I checked it |
+| --- | --- |
+| ~4 368 B/turn leaked before | `🗑️generated/leak-wasm-idle-turns-before.txt`: 19 529 728 B at turn 0 → 19 791 872 B at turn 60 = **4 369 B/turn**, which is 4 360 B area + dlmalloc's 8 B header **exactly** |
+| 0 B/turn after | report's 512-turn curve, flat at 36 438 016 B from turn 0 through 480, same `2 of 512` MoreWork answers before and after so it is not the guest doing less work |
+| `rust_oom` gone | `probe-mem-1` console: **zero** matches for `rust_oom`, `process::abort`, `unreachable` or the 60 % install-peak line |
+| boot settles at 9.9 s | `probe-mem-1/probe.log`: settled 9.9 s, ten window nodes, 3 canvases (baseline aborted at 116 s and only rendered at 121 s) |
+| staging path works at runtime | `probe-mem-2-interact`: 146.7 s, orbit step ok, 10 windows, **67 `command-complete` settlements** |
+
+**The fix is a schema change, not a workaround.** Bulk payload comes off `poll`, which now flattens
+to 7 values and is passed directly; pages move to their own `stage-command-page(cursor, bytes:
+list<u8>)` and `stage-cold-pair-page` exports, staged one per turn. The 4 KiB record and the reactor's
+`use byte-page` are deleted outright — no compatibility layer — and the 512 MiB budget is untouched,
+which is what I asked for. The WIT now carries a law ("exactly one staged page per `poll`") and
+documents the wit-bindgen internal that caused it. `byte-page` still exists for `return-page`, which
+is correct.
+
+Two things it flagged. It fixed guest-trap classification, which had been reading only the first
+line of the wasmtime error and discarding the trap code — that is why session 1's turn-0 trap was
+undiagnosable. And the actor package's vitest has **12 pre-existing failures**, all ajv failing to
+resolve a `NonZeroU64` schema `$ref`; unrelated, added to the gates item.
+
+Remaining for geometry: `meshes=0`, still gated on `brep` reaching the guest, which is the
+contributions lane's scoping work. With the OOM gone and bodies rendering, the viewer lane is no
+longer blocked on infrastructure and has been re-dispatched.

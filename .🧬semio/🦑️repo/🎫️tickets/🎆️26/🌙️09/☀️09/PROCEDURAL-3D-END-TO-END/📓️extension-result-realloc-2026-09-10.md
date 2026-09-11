@@ -120,4 +120,125 @@ SDK never needed the body itself, only the app's correlation fields.
 
 ## 4. The fix
 
-(filled in below as it landed)
+### 4.1 The budget is declared, in both languages, pinned to one schema
+
+`🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧬️schema/🔣️.json` gains `hostAnswerCeilingBytes: 8388608` —
+*"Largest ASSEMBLED answer the host may deliver into a guest for one outstanding request"* — beside
+the `contiguousRequestCeilingBytes: 65536` that was already there and already said what the
+extension-result path was violating.
+
+| side | file | what it holds |
+|---|---|---|
+| Rust | `⏱️trace/🧮️memory/🦀️.rs` | `GUEST_HOST_ANSWER_CEILING_BYTES`, `guest_host_answer_pages(bytes)` |
+| TS (new) | `⏱️trace/🧮️memory/🟦️.ts` | the same two constants + `guestAnswerPages(answer)`, the cutter |
+
+The TS twin is not a convenience: **the party that lowers a payload into a guest is the only party
+that can keep it inside the bound**, because the guest's refusal is an abort, not a fault. It is
+re-exported from `@semio-tech/framework` beside `PUBLIC_INVOCATION_STRING_BYTES`, the bound that
+already governs the same class of problem on the command channel.
+
+### 4.2 The host pages the answer; the completion carries the terminal page
+
+`🔌️PluginRuntime/🟦️.tsx`'s `captureExtensionCompletion().complete` now refuses an answer past the
+host-answer ceiling with `extension.answer-too-large` (a `SemioFaultError`, surfaced through the
+`invokeExtension dispatch failed` path the shell already has) and otherwise cuts it with
+`guestAnswerPages`, submitting ONE turn:
+
+```
+[ http-chunk{req, bytes: page0, done:false} ... http-chunk{req, bytes: pageN} , completed{req, ok: terminal} ]
+```
+
+`Event::Completed` stays THE one completion door for a `req` — the pages are strictly prologue — so
+the guest's turn generator gains NO second dispatch await site (the size the poll-leak lane shrank,
+`📓️poll-task-leak-2026-09-10.md` section 3, is untouched).
+
+### 4.3 The guest accumulates, bounded, and answers with a fault instead of trapping
+
+- `⚛️reactor/📮️requests/🦀️.rs` — `Slot::Continuation` gains `partial: Result<Vec<u8>, Fault>`; new
+  `RequestRegistry::append_continuation_chunk` refuses a page over
+  `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` or an assembled body over
+  `GUEST_HOST_ANSWER_CEILING_BYTES` into the slot's POISON
+  (`plugin.request-registry.answer-too-large`) rather than growing the guest;
+  `ExtensionContinuation::into_response` joins prologue + terminal, poison winning over both.
+- `⚛️reactor/🦀️.rs` — `take_extension_response` takes the outcome BY VALUE and hands it back
+  (`Err(unclaimed)`) when the id owns no continuation, so `RequestRegistry::resolve` still gets it
+  with no clone; new `append_extension_response_page`.
+- `⚛️reactor/🔄️turn/🦀️.rs` — `Event::HttpChunk` offers each page to the continuation table first and
+  falls through to the parked-future accumulator otherwise.
+
+### 4.4 The echoed correlation is correlation, not the request body
+
+`extension_response_args` now drops any echoed request field whose string exceeds
+`PUBLIC_INVOCATION_STRING_BYTES` — the bound every structurally addressed command argument already
+crosses. A string the shell could not have SENT as an argument is not one the SDK hands back. The
+procedural evaluate request's `inputJson` (the operator's whole input) stops riding back into the
+guest on every answer; `nodeHash`/`windowId`/`handle` — the actual correlation — are untouched.
+
+### 4.5 The answer is a pack on BOTH sides (second defect, found on the way)
+
+The ABI field is `pack` and `📜️.wit:8-10` says so explicitly ("no JSON string ... anywhere on this
+ABI's data path"). The shell packs — `outcome = { ok: encodePackValue(JSON.parse(outputJson)) }`,
+`🏛️ShellHost/🟦️.tsx:1648` — and the SDK was doing
+`DslValue::String(String::from_utf8_lossy(bytes))`, i.e. handing the app the CONTAINER BYTES as
+text. Measured with the real `encodePackValue` under `bun`:
+
+```
+encodePackValue(JSON.parse('{"channels":{"sum":{"schema":"number","value":3}}}'))  ->  58 B
+new TextDecoder().decode(those 58 bytes)  ->  "\u0001\u0006number\u0001\u0001\u0011\u0010\u0001\u0007\bchannels..."
+JSON.parse(that text)                     ->  SyntaxError: Unrecognized token
+```
+
+So every browser-served answer would have reached `flowEvalResolve` as mojibake and
+`seed_node_cache` would have failed even once the trap was gone. The native suite never saw it
+because `testkit::settle_extension_invocations` handed the capability's RAW JSON bytes over — a
+shape the shell never sends. Both halves are fixed in the two framework-owned places:
+`extension_response_args` decodes the pack (`store::pack_rt::decode_wire_value`) and serialises the
+app's own value into `outputJson`, faulting `extension.answer-not-a-pack` if the bytes are not one;
+`settle_extension_invocations` packs the served answer exactly the way the shell does. No plugin
+file changed, and there is now ONE shape.
+
+STILL OPEN, adjacent, NOT fixed here (flagged for the coordinator): the FAULT arm has the same
+asymmetry in reverse — the shell sends `encodePackValue(fault)` while `🌐host/🦀️.rs:49` decodes with
+`dsl::decode_fault_bytes`. Every `extension.missing` / `extension.invoke-failed` reaching a guest
+today decodes from a shape it was not written in.
+
+## 5. Payload sizes, before to after
+
+Same probe, same staged module: `🗑️generated/realloc-probe-4.txt` (after) against
+`realloc-probe-3.txt` (before). What matters is the LARGEST SINGLE `cabi_realloc` — the one number
+that decides whether the guest aborts.
+
+| answer | before: events / largest block | after: events / largest block |
+|---|---|---|
+| 1 KiB | 1 / 4 360 (the poll return area) | 1 / 4 360 |
+| 64 KiB | 1 / **65 536** | 1 / **65 536** |
+| 256 KiB | 1 / **262 144** | 4 / **65 536** |
+| 1 MiB | 1 / **1 048 576** | 16 / **65 536** |
+| 4 MiB | 1 / **4 194 304** | 64 / **65 536** |
+| 16 MiB | 1 / 16 777 216 | refused at the host: `extension.answer-too-large` |
+| 572 MiB | 1 / 600 000 000 -> **ABORT** | refused at the host |
+
+Guest linear memory over the same run: 11.88 MB instantiated -> 35.00 MB after `instance-open` ->
+35.19 MB settled (a settled idle turn moves it by **0 B**; the per-turn fixed cost is jco's 4 360 B
+return area and it IS released), and a 1 MiB paged answer costs 35.31 -> 36.13 MB, i.e. **7.1 % of
+the 512 MiB ceiling** — against 82-87 % for a single unpaged 384 MiB answer.
+
+### 5.1 Paging must not move the oversized block into the event LIST
+
+`realloc-probe-4.txt` shows the trap trying to relocate: at 64 MiB the largest block becomes
+81 920 B, at 384 MiB it becomes 491 520 B — jco lowers the events list as ONE
+`cabi_realloc(0, 0, 8, events * 80)`. The host-answer ceiling closes that door too: a maximal 8 MiB
+answer is 129 events, and at a generous 256 B/event that list is 33 024 B, inside the same one-page
+bound. Pinned by `a_maximal_answers_own_event_list_still_fits_one_page`.
+
+## 6. Laws
+
+| law | where | verdict |
+|---|---|---|
+| `the_budget_matches_the_neutral_schema` (extended) | `⏱️trace/🧮️memory/🧪️tests/🔬️memory/🦀️.rs` | PASS |
+| `the_host_answer_ceiling_is_a_whole_number_of_pages_inside_the_install_headroom` | same | PASS |
+| `a_maximal_answers_own_event_list_still_fits_one_page` | same | PASS |
+| `a_paged_answer_reaches_the_response_action_whole` (1 MiB, paged) | `⚛️reactor/🧪️tests/🔬️extension-continuation/🦀️.rs` | PASS |
+| `an_over_ceiling_answer_faults_instead_of_growing_the_guest` | same | PASS |
+| `the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_sent` | same | PASS |
+| the four pre-existing continuation laws | same | PASS (re-pinned on the pack shape) |

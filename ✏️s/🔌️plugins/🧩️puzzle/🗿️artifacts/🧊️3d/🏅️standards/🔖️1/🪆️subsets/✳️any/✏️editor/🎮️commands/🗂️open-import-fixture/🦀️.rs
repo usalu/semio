@@ -5,6 +5,7 @@ use semio_framework_plugin::kernel::Effect;
 
 /// 🗂 Opens a file picker that re-dispatches `importFixture` with the picked bytes.
 pub fn open_import_fixture(ctx: &mut Puzzle3dActionCtx<'_>) {
+    eprintln!("[DEBUG] puzzle3d.openImport.enter action=openImportFixture path=command-arm");
     ctx.effects.push(Effect::RequestFileOpen {
         req: semio_framework_plugin::RequestId(121),
         accept: "application/json,.json".into(),

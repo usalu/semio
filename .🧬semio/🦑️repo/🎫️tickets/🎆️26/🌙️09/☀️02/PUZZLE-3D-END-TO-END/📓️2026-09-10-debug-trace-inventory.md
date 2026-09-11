@@ -106,3 +106,298 @@ Scoped `rg -c '\[DEBUG\] '` on the fleet-touched RUNTIME files (tests excluded f
 Sweep order at close-out: TS files first (vite hot-reloads, re-probe to confirm no behavior change),
 then host Rust, then the guest eprintln inside the final wasm rebuild. Re-run the scoped grep before
 sweeping — waves W-G3/W-Z are still active and may add/remove traces.
+
+---
+
+---
+
+## 5. Refresh 19:25 — W-AB close-out inventory (no traces removed)
+
+Captured 2026-09-10 19:25 CEST while W-G3 runs the #40 battery. **Inventory only — zero traces stripped.**
+Walker: `.ts/.tsx/.js/.mjs/.cjs/.rs`, pruning `node_modules`/`target`/`dist` and `generated/` dumps.
+Repo-wide `[DEBUG]` hits: **2763** (1114 ticket · 1032 test/law · 485 host-ts including artifacts · 132 guest-rs runtime).
+
+### Phase counts
+
+| Phase | Meaning | Count |
+|---|---|---:|
+| **(a)** | host TS — strip after final battery + vite-live re-probe | **51** |
+| **(b)** | guest Rust — strip inside the final rebuild | **8** |
+| **(c)** | keep — law output, ticket scripts, named-file comments | **2153** |
+| **peer** | outside this fleet — do not strip at our close-out | **134** in named files |
+
+**(c) breakdown:** this-ticket scripts 6; puzzle law eprintlns 22; other ticket files 1108; other test/law files 1010; named-file comments 7.
+
+Named-file owner mix: W-AB 10, W-G3 12, comment 7, coordinator 37, peer 134.
+
+### 12:13 peer sweep (foreign traces)
+
+At 12:13 a peer swept **all** `[DEBUG]` lines out of ShellHost/PluginRuntime mid-diagnosis
+(coordination 12:15). Coordinator re-added a minimal set: `undo route`, `undo handleAction resolved`,
+`spawn-job routed`, `job done`. Later waves re-instrumented (W-AB import/brush hops, W-G3
+history-route/reserved-tool, coordinator command-ingress/`performInvocation`). W-Z then removed the
+`undo funnel*` cluster and guest `history route`/`group history` eprintlns — those stay gone.
+**Foreign traces still in the named files:** tutorial / document-opening / hot-swap / extension-ledger /
+GIS in ShellHost; shard/actor/program/`wireEffectToFriendly`/TransactionCoordinator in PluginRuntime;
+reactor `turn phase` / `guest linear memory` / `more-work streak` (peer idle-turns / guest-memory /
+close-ladder). Marked `peer` — not our strip list.
+
+### Named runtime files — line items
+
+| File | Ln | Prefix | Owner | Phase |
+|---|---:|---|---|---|
+|`PluginRuntime`|340|`PluginRuntime: shard $`|peer|peer|
+|`PluginRuntime`|364|`PluginRuntime: actor $`|peer|peer|
+|`PluginRuntime`|836|`retained UI surface $`|peer|peer|
+|`PluginRuntime`|865|`* here degrades to an honest '[DEBUG]'-logged drop rather than guessing `|comment|c|
+|`PluginRuntime`|925|`request-file-open mapped $`|W-AB|a|
+|`PluginRuntime`|942|`wireEffectToFriendly: dispatch-action req=$`|peer|peer|
+|`PluginRuntime`|956|`wireEffectToFriendly: unmapped effect`|peer|peer|
+|`PluginRuntime`|1100|`serializePerActor: actor $`|peer|peer|
+|`PluginRuntime`|1222|`PluginRuntime: turn failed for actor $`|peer|peer|
+|`PluginRuntime`|1279|`PluginRuntime: actor $`|peer|peer|
+|`PluginRuntime`|1285|`PluginRuntime: actor $`|peer|peer|
+|`PluginRuntime`|1398|`settle $`|peer|peer|
+|`PluginRuntime`|1403|`PluginRuntime: actor $`|peer|peer|
+|`PluginRuntime`|1411|`PluginRuntime: actor $`|peer|peer|
+|`PluginRuntime`|1724|`// recorded: one console record per dropped body, permanent (not a '[DEB`|comment|c|
+|`PluginRuntime`|1811|`program $`|peer|peer|
+|`PluginRuntime`|1891|`job-completed leftover job=$`|coordinator|a|
+|`PluginRuntime`|1937|`job done kind=$`|coordinator|a|
+|`PluginRuntime`|1945|`job drive failed kind=$`|peer|peer|
+|`PluginRuntime`|1973|`reserved-tool job $`|W-G3|a|
+|`PluginRuntime`|1974|`job done kind=$`|coordinator|a|
+|`PluginRuntime`|1987|`spawn-job routed kind=$`|coordinator|a|
+|`PluginRuntime`|2010|`reserved-tool job $`|W-G3|a|
+|`PluginRuntime`|2011|`job done kind=$`|coordinator|a|
+|`PluginRuntime`|2015|`job drive failed kind=$`|peer|peer|
+|`PluginRuntime`|2033|`spawn-job routed kind=$`|coordinator|a|
+|`PluginRuntime`|2070|`command ingress lane`|coordinator|a|
+|`PluginRuntime`|2099|`plugin $`|coordinator|a|
+|`PluginRuntime`|2100|`plugin $`|coordinator|a|
+|`PluginRuntime`|2105|`command ingress continuation $`|coordinator|a|
+|`PluginRuntime`|2107|`command ingress settled status=$`|coordinator|a|
+|`PluginRuntime`|2108|`plugin $`|coordinator|a|
+|`PluginRuntime`|2128|`command ingress stamped Done`|coordinator|a|
+|`PluginRuntime`|2175|`typed-operation drain for instance $`|coordinator|a|
+|`PluginRuntime`|2360|`extension completion submitted`|peer|peer|
+|`PluginRuntime`|2470|`applyRetainedWindowPatches: actor $`|peer|peer|
+|`PluginRuntime`|2510|`job-completed leftover frame instance=$`|coordinator|a|
+|`PluginRuntime`|2530|`coerceWireBytes: unsupported payload $`|peer|peer|
+|`PluginRuntime`|2544|`performInvocation`|coordinator|a|
+|`PluginRuntime`|2548|`importFixture ingress`|W-AB|a|
+|`PluginRuntime`|2559|`performInvocation settled`|coordinator|a|
+|`PluginRuntime`|2680|`program $`|peer|peer|
+|`PluginRuntime`|2713|`readHistory: missing HistorySnapshot frame`|peer|peer|
+|`PluginRuntime`|2720|`applyMutations failed: $`|peer|peer|
+|`PluginRuntime`|2731|`readAppDocumentPack failed: $`|peer|peer|
+|`PluginRuntime`|2738|`loadAppDocumentPack failed: $`|peer|peer|
+|`PluginRuntime`|2763|`program $`|peer|peer|
+|`PluginRuntime`|2775|`program $`|peer|peer|
+|`PluginRuntime`|2790|`program $`|peer|peer|
+|`PluginRuntime`|2795|`program $`|peer|peer|
+|`PluginRuntime`|2806|`program $`|peer|peer|
+|`PluginRuntime`|3126|`TransactionCoordinator rollback($`|peer|peer|
+|`PluginRuntime`|3140|`TransactionCoordinator undo($`|peer|peer|
+|`PluginRuntime`|3167|`TransactionCoordinator redo($`|peer|peer|
+|`PluginRuntime`|3279|`loadPluginModulesInDependencyOrder: $`|peer|peer|
+|`PluginRuntime`|3285|`loadPluginModulesInDependencyOrder: $`|peer|peer|
+|`ShellHost`|892|`tutorial blob asset src not resolvable in this scope`|peer|peer|
+|`ShellHost`|1667|`extension invocation faulted`|peer|peer|
+|`ShellHost`|1697|`invokeExtension unresolved`|peer|peer|
+|`ShellHost`|1845|`history patch skipped`|coordinator|a|
+|`ShellHost`|1849|`history patch applied`|coordinator|a|
+|`ShellHost`|1861|`navbar example from history`|peer|peer|
+|`ShellHost`|1871|`leftover InteractionView`|W-G3|a|
+|`ShellHost`|1879|`history snapshot skipped — projection newer than request`|peer|peer|
+|`ShellHost`|1882|`history snapshot refresh`|coordinator|a|
+|`ShellHost`|1884|`history snapshot failed`|peer|peer|
+|`ShellHost`|1925|`history snapshot skipped — projection newer than request`|peer|peer|
+|`ShellHost`|1929|`history snapshot failed`|peer|peer|
+|`ShellHost`|2065|`shell uri apply failed Error: Maximum call stack size exceeded`|comment|c|
+|`ShellHost`|2316|`document backbone failed during replacement — keeping owner`|peer|peer|
+|`ShellHost`|2321|`document backbone failed`|peer|peer|
+|`ShellHost`|2330|`document backbone pending overflow — dropping while rebound`|peer|peer|
+|`ShellHost`|2789|`document rebootstrap kept session`|peer|peer|
+|`ShellHost`|3290|`ShellHost: primary $`|peer|peer|
+|`ShellHost`|3338|`boot fault text`|peer|peer|
+|`ShellHost`|3388|`hot-swap $`|peer|peer|
+|`ShellHost`|3417|`hot-swap $`|peer|peer|
+|`ShellHost`|3443|`hot-swap rolled back for $`|peer|peer|
+|`ShellHost`|3465|`refusing to uninstall the host/primary plugin: $`|peer|peer|
+|`ShellHost`|3469|`refusing to uninstall the active session`|peer|peer|
+|`ShellHost`|3538|`space extension ledger op dispatched`|peer|peer|
+|`ShellHost`|3540|`space extension ledger op skipped`|peer|peer|
+|`ShellHost`|3568|`extension store install ok`|peer|peer|
+|`ShellHost`|3570|`extension store unavailable or install failed; falling back to catalog i`|peer|peer|
+|`ShellHost`|3577|`installExtension could not resolve moduleUrl`|peer|peer|
+|`ShellHost`|3647|`extension store install from file ok`|peer|peer|
+|`ShellHost`|3649|`installExtensionFromFile failed`|peer|peer|
+|`ShellHost`|3750|`setExtensionEnabled`|peer|peer|
+|`ShellHost`|3883|`local interaction observation failed`|peer|peer|
+|`ShellHost`|4084|`shell plugin retirement failed`|peer|peer|
+|`ShellHost`|4330|`contributions push`|peer|peer|
+|`ShellHost`|4541|`render failed [$`|peer|peer|
+|`ShellHost`|4562|`spawned render failed [$`|peer|peer|
+|`ShellHost`|4625|`spawned program document sync failed`|peer|peer|
+|`ShellHost`|4807|`loadDocument pack/spr for instance`|peer|peer|
+|`ShellHost`|4849|`import-picker hop accept=$`|W-AB|a|
+|`ShellHost`|4851|`import-picker opened=$`|W-AB|a|
+|`ShellHost`|4971|`replayShellCommand dispatch`|W-G3|a|
+|`ShellHost`|5016|`invokeExtension dispatch failed`|peer|peer|
+|`ShellHost`|5048|`openPluginInstance focused spawned app`|peer|peer|
+|`ShellHost`|5103|`applyHostEffects refresh`|coordinator|a|
+|`ShellHost`|5106|`applyHostEffects skipped refresh: session not current`|coordinator|a|
+|`ShellHost`|5131|`completion apply`|coordinator|a|
+|`ShellHost`|5132|`typed-operation completion effects failed`|coordinator|a|
+|`ShellHost`|5135|`typed-operation completion subscription failed`|coordinator|a|
+|`ShellHost`|5146|`applyShellUri: reentrant call blocked at depth $`|peer|peer|
+|`ShellHost`|5216|`applyShellUri openSpace`|peer|peer|
+|`ShellHost`|5241|`shell uri apply failed`|peer|peer|
+|`ShellHost`|5289|`document opening parked`|peer|peer|
+|`ShellHost`|5327|`document opening aborted — predecessor restored`|peer|peer|
+|`ShellHost`|5359|`parked predecessor attachment retirement failed`|peer|peer|
+|`ShellHost`|5365|`document opening committed`|peer|peer|
+|`ShellHost`|5388|`closeDocument`|peer|peer|
+|`ShellHost`|5393|`document backbone retirement failed`|peer|peer|
+|`ShellHost`|5399|`background document retirement failed`|peer|peer|
+|`ShellHost`|5419|`document attachment retirement failed`|peer|peer|
+|`ShellHost`|5428|`tutorial retirement failed`|peer|peer|
+|`ShellHost`|5526|`recovery diagnostics`|peer|peer|
+|`ShellHost`|5636|`setActiveUtility failed`|peer|peer|
+|`ShellHost`|5764|`undo route`|coordinator|a|
+|`ShellHost`|5780|`undo remap state`|coordinator|a|
+|`ShellHost`|5785|`undo remapped to document session`|coordinator|a|
+|`ShellHost`|5793|`history route blocked effect-owner`|W-G3|a|
+|`ShellHost`|5816|`history route blocked view-state`|W-G3|a|
+|`ShellHost`|5819|`// 🚨️ Undeclared-action drop — ALWAYS visible, never '[DEBUG]'/diagnosti`|comment|c|
+|`ShellHost`|5824|`history route blocked undeclared`|W-G3|a|
+|`ShellHost`|5846|`authenticated browser actor action owner failed`|peer|peer|
+|`ShellHost`|5850|`history route action=`|W-G3|a|
+|`ShellHost`|5858|`authenticated browser actor action failed`|peer|peer|
+|`ShellHost`|5864|`history route fallback handleAction`|W-G3|a|
+|`ShellHost`|5869|`undo handleAction resolved`|coordinator|a|
+|`ShellHost`|5898|`action failed`|peer|peer|
+|`ShellHost`|5992|`authenticated browser actor intent failed`|peer|peer|
+|`ShellHost`|5997|`authenticated browser actor requires the complete UI intent`|peer|peer|
+|`ShellHost`|6015|`tutorial retirement failed`|peer|peer|
+|`ShellHost`|6075|`tutorial sandbox restore failed`|peer|peer|
+|`ShellHost`|6085|`tutorial retirement failed`|peer|peer|
+|`ShellHost`|6100|`tutorial sandbox start failed`|peer|peer|
+|`ShellHost`|6183|`tutorial director failed`|peer|peer|
+|`ShellHost`|6235|`tutorial rebuild`|peer|peer|
+|`ShellHost`|6236|`tutorial seek failed`|peer|peer|
+|`ShellHost`|6312|`tutorial sandbox restore failed`|peer|peer|
+|`ShellHost`|6327|`tutorial transition failed`|peer|peer|
+|`ShellHost`|6335|`tutorial sandbox restore failed`|peer|peer|
+|`ShellHost`|6350|`tutorial recording validation failed`|peer|peer|
+|`ShellHost`|6352|`tutorial recording`|peer|peer|
+|`ShellHost`|6371|`tutorial interaction capture failed`|peer|peer|
+|`ShellHost`|6793|`setDefaultApp failed`|peer|peer|
+|`ShellHost`|6804|`clearDefaultApp failed`|peer|peer|
+|`ShellHost`|6821|`setMergePolicy failed`|peer|peer|
+|`ShellHost`|6842|`resolveConflict failed`|peer|peer|
+|`ShellHost`|6859|`openArtifact failed`|peer|peer|
+|`ShellHost`|6861|`openArtifact failed`|peer|peer|
+|`ShellHost`|6885|`openArtifactWithAppRef: $`|peer|peer|
+|`ShellHost`|7038|`readConflicts failed [$`|peer|peer|
+|`ShellHost`|7773|`background document authority retirement failed`|peer|peer|
+|`ShellHost`|7827|`touchSpaceIndexArtifact failed`|peer|peer|
+|`ShellHost`|8239|`authenticated browser actor command owner failed`|peer|peer|
+|`ShellHost`|8244|`authenticated browser actor command failed`|peer|peer|
+|`ShellHost`|9535|`/** 🧯️ One console record per plugin the router excluded — permanent, no`|comment|c|
+|`ShellHost`|9680|`gis-map-inference-request`|peer|peer|
+|`World3dHost`|4828|`suggestions-rightdown hop alt=$`|W-AB|a|
+|`World3dHost`|4948|`interactionHover dispatch domain=$`|W-AB|a|
+|`World3dHost`|4979|`vortex-hover hop fullId=$`|W-AB|a|
+|`World3dHost`|5089|`brush-place hop preview=$`|W-AB|a|
+|`World3dHost`|5105|`brush-place deferred addBrushObject $`|W-AB|a|
+|`World3dHost`|5658|`suggestions-contextmenu hop alt=$`|W-AB|a|
+|`os.ts`|3489|`operation completion subscriber failed`|peer|peer|
+|`plugin-bridge`|186|`wgpu plugin-bridge: actor $`|peer|peer|
+|`plugin-bridge`|188|`wgpu plugin-bridge: shard $`|peer|peer|
+|`plugin-bridge`|624|`program $`|peer|peer|
+|`plugin-bridge`|629|`program $`|peer|peer|
+|`plugin-bridge`|707|`plugin $`|coordinator|a|
+|`plugin-bridge`|708|`plugin $`|coordinator|a|
+|`plugin-bridge`|713|`plugin $`|coordinator|a|
+|`plugin.rs`|17191|`registered keyed dispatch progress stage=`|peer|peer|
+|`plugin.rs`|17216|`actual registered keyed dispatch`|W-G3|b|
+|`plugin.rs`|17274|`actual registered keyed dispatch`|W-G3|b|
+|`plugin.rs`|22285|`chrome history action=redo seq=`|peer|peer|
+|`plugin.rs`|22311|`chrome history action=undo seq=`|coordinator|b|
+|`plugin.rs`|22320|`history route action=`|W-G3|b|
+|`plugin.rs`|24272|`/// 🐞️ '[DEBUG]' last maintenance stage entered — temporary, ticket 26/0`|comment|c|
+|`plugin.rs`|29594|`[semio-plugin panic]`|peer|peer|
+|`plugin.rs`|29948|`maintenance stage=`|peer|peer|
+|`plugin.rs`|30031|`cooperative maintenance callback overran the interactive ceiling for ins`|peer|peer|
+|`plugin.rs`|30383|`runtime close pending authority turn=`|peer|peer|
+|`plugin.rs`|30570|`native close deadline instance=`|peer|peer|
+|`plugin.rs`|30736|`cooperative-maintenance instance=`|peer|peer|
+|`plugin.rs`|31053|`plugin_handle_action entry instance=`|peer|peer|
+|`plugin.rs`|31059|`plugin_handle_action actionId=`|peer|peer|
+|`plugin.rs`|32453|`plugin_exchange entry instance=`|coordinator|b|
+|`plugin.rs`|32607|`plugin_exchange actionId=`|coordinator|b|
+|`plugin.rs`|32629|`plugin_exchange actionId=`|coordinator|b|
+|`plugin.rs`|32652|`plugin_exchange actionId=<undecoded> branch=command-frame`|coordinator|b|
+|`reactor/turn`|58|`/// 🐞️ '[DEBUG]' more-work streak trace: (current streak, total more-wor`|comment|c|
+|`reactor/turn`|147|`turn phase`|peer|peer|
+|`reactor/turn`|185|`guest linear memory`|peer|peer|
+|`reactor/turn`|561|`continuation resolve dropped req=`|peer|peer|
+|`reactor/turn`|1172|`reactor more-work streak=`|peer|peer|
+|`reactor/turn`|1179|`reactor more-work streak ended after`|peer|peer|
+
+### Empty / law-only named sites
+
+- `ShellHelpers` — **0** `[DEBUG]` (runtime).
+- Puzzle guest `fill-build-tick` / editor production — **0** (W-Z already stripped the fill eprintln).
+- Document admission + `UiDocumentStore` **runtime** — **0**. Hits are test/law oracles → phase **(c)**.
+- ShellHost dialog-origin admission runtime — **0**.
+
+### Prefix-less guest eprintln (no snuck taps)
+
+Every `eprintln!` in `plugin.rs` / `reactor/turn` that looked prefix-less is a wrapped `[DEBUG]` line
+(`eprintln!(` then `"[DEBUG] …"` on the next line) or `eprintln!("{line}")` printing a string already
+formatted by `trace_guest_line("[DEBUG] turn phase …")`. No new unprefixed guest taps in the fleet.
+PluginRuntime still has the two intentional permanent `refreshUi dropped requested body` `console.error`s
+(00:00 §3) — not `[DEBUG]`, not to strip.
+
+### (a) host TS strip list after final battery
+
+W-AB hops: World3dHost `suggestions-rightdown`, `interactionHover dispatch`, `vortex-hover hop`,
+`brush-place hop`, `brush-place deferred`, `suggestions-contextmenu`; ShellHost `import-picker hop` /
+`import-picker opened`; PluginRuntime `request-file-open mapped`, `importFixture ingress`.
+
+Coordinator / W-G3 diagnosis on the same files: `performInvocation` + settled, `spawn-job` / `job done` /
+`job-completed leftover`, `command ingress *`, `undo route` / `undo remap*` / `undo handleAction resolved`,
+`history patch *`, `applyHostEffects *`, `completion apply *`, `leftover InteractionView`,
+`replayShellCommand dispatch`, `history route blocked*` / `history route action` / fallback,
+`reserved-tool job`. Strip with the W-AB hops once the #40 battery + final re-probe are green.
+
+### (b) guest Rust strip list inside the final rebuild
+
+`plugin.rs`: `chrome history action`, `history route action`, `actual registered keyed dispatch`,
+`plugin_exchange *`. No fill-build-tick eprintln remains. Reactor `turn phase` / `guest linear memory` /
+`more-work streak` stay **peer** (not this ticket's rebuild strip unless the coordinator expands scope).
+
+### (c) keep
+
+- This ticket: `browser-probe.ts` (native pointerdown + console collector), `ws2-scene-latency-probe.ts`,
+  `trace-publication-authority.ts`.
+- Puzzle law eprintlns (unit / example-switch / panels) — one-shot summaries at the end of passing laws.
+- Plugin-builder-contract / UiDocumentStore typedwire / input-admission oracles.
+- Other tickets' leftover scripts — not this close-out.
+
+### Anywhere-else host TS (not named files; peer unless noted)
+
+- ShellHost presence-scope browser: 4 `scoped-presence *` — peer.
+- `os.ts`: 1 `operation completion subscriber failed` — peer (00:00 §1 #29).
+- NodeGraph 12 / Paint2d 2 / TextEditor 1 / Shell 2 / frame-worker / turn-budget — peer products.
+- `storybook-static/`, repo `cache/`, `bundles/`, `temp/` — build/cache copies, not strip sources.
+
+### Sweep order at close-out
+
+1. Host TS phase (a) — vite hot-reload, re-probe import + history + #40 battery items.
+2. Guest Rust phase (b) — inside the final wasm rebuild after W-G3 reports.
+3. Leave (c) and `peer` rows.
+Re-walk before sweeping: W-G3 #40 may add more hops.

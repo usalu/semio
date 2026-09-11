@@ -171,6 +171,21 @@ fn worker_now_ms() -> f64 {
     use wasm_bindgen::JsCast;
     js_sys::global().dyn_into::<web_sys::WorkerGlobalScope>().ok().and_then(|scope| scope.performance()).map(|performance| performance.now()).unwrap_or(0.0)
 }
+
+
+fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
+    let global = js_sys::global();
+    if let Ok(func) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioDeclareBootSubphase")) {
+        if let Ok(func) = func.dyn_into::<js_sys::Function>() {
+            let _ = func.call3(
+                &wasm_bindgen::JsValue::NULL,
+                &wasm_bindgen::JsValue::from_str(phase),
+                &wasm_bindgen::JsValue::from_str(state),
+                &wasm_bindgen::JsValue::from_f64(elapsed_ms),
+            );
+        }
+    }
+}
 //#endregion 📥️Wire
 
 //#region 🧵️Runtime
@@ -656,7 +671,14 @@ impl BrowserRendererBootstrap {
         if self.phase != 6 {
             return Err(js_error("boot-phase", "shell boot requested outside its owned phase"));
         }
-        self.shell.as_mut().expect("bootstrap shell exists").boot().await.map_err(|error| js_error("shell-boot", &error.to_string()))?;
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("[DEBUG] wgpu-worker boot_shell enter"));
+        declare_boot_subphase("shell-boot:select-program", "enter", 0.0);
+        let started = worker_now_ms();
+        let result = self.shell.as_mut().expect("bootstrap shell exists").boot().await;
+        let elapsed = (worker_now_ms() - started).max(0.0);
+        declare_boot_subphase("shell-boot:select-program", "leave", elapsed);
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker boot_shell leave {elapsed:.0} ms")));
+        result.map_err(|error| js_error("shell-boot", &error.to_string()))?;
         self.phase = 7;
         Ok(self)
     }

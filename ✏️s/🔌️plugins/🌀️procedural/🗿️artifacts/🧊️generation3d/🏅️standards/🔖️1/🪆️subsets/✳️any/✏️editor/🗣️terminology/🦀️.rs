@@ -25,6 +25,18 @@ semio_framework_plugin::app_labels! {
         window_generate_form: native_en "Form", native_de "Formular", reuse_en "Form", reuse_de "Formular";
         window_generate_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
         delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
+        graph_nodes: native_en "Nodes", native_de "Knoten", reuse_en "Nodes", reuse_de "Knoten";
+        graph_wires: native_en "Wires", native_de "Leitungen", reuse_en "Wires", reuse_de "Leitungen";
+        graph_input_port: native_en "Input", native_de "Eingang", reuse_en "Input", reuse_de "Eingang";
+        graph_output_port: native_en "Output", native_de "Ausgang", reuse_en "Output", reuse_de "Ausgang";
+        graph_empty: native_en "(no nodes)", native_de "(keine Knoten)", reuse_en "(no nodes)", reuse_de "(keine Knoten)";
+        graph_unwired: native_en "(no wires)", native_de "(keine Leitungen)", reuse_en "(no wires)", reuse_de "(keine Leitungen)";
+        status_ok: native_en "Evaluated", native_de "Ausgewertet", reuse_en "Evaluated", reuse_de "Ausgewertet";
+        status_stale: native_en "Stale", native_de "Veraltet", reuse_en "Stale", reuse_de "Veraltet";
+        status_queued: native_en "Queued", native_de "In Warteschlange", reuse_en "Queued", reuse_de "In Warteschlange";
+        status_computing: native_en "Computing", native_de "Berechnet", reuse_en "Computing", reuse_de "Berechnet";
+        status_error: native_en "Error", native_de "Fehler", reuse_en "Error", reuse_de "Fehler";
+        status_blocked: native_en "Blocked", native_de "Blockiert", reuse_en "Blocked", reuse_de "Blockiert";
     }
 }
 

@@ -1079,7 +1079,6 @@ interface return-page {
 /// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
 /// runs on an async-capable Store like every other export in this world.
 interface reactor {
-  use byte-page.{block, page};
   use types.{plugin-error, pack, instance-id};
   use effects.{effect};
   use events.{event};
@@ -1109,10 +1108,6 @@ interface reactor {
     page-count: u32,
     item-count: u32,
     metadata: u32,
-  }
-  record command-ingress-page {
-    cursor: command-page-cursor,
-    page: page,
   }
   record command-ingress-status {
     kind: u8,
@@ -1202,7 +1197,30 @@ interface reactor {
     lifecycle-receipt: option<receipt>,
     ui-patch-receipt: option<ui-patch-receipt>,
   }
-  poll: async func(events: list<event>, command-page: option<command-ingress-page>, cold-pair-page: option<cold-document-pair-page>, budget: budget) -> result<turn-result, plugin-error>;
+  /// 📥️ Hands the next `poll` the ONE command-ingress page it may admit. Staged rather than passed
+  /// as a `poll` parameter, and carried as `bytes` rather than the fixed 64-block `byte-page.page`,
+  /// for one measured reason: an ASYNC-LIFTED export whose parameters exceed the canonical ABI's
+  /// 16 flat values is called through an indirect parameter area the caller allocates in guest
+  /// memory with `cabi_realloc` — and `wit-bindgen`'s async lift never deallocates it
+  /// (`wit-bindgen-core` `abi::call`, `if sig.indirect_params && !async_`). With the page by value
+  /// `poll`'s area was 4 360 B, leaked on EVERY turn: the whole 512 MiB guest budget in ~118 000
+  /// turns, which a browser boot reaches in about a minute (ticket
+  /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️guest-memory-retention-2026-09-10.md`). `cursor` plus a
+  /// `list<u8>` is 13 flat values, so this call is passed directly and the bytes cross as a list the
+  /// guest owns and drops.
+  ///
+  /// ⚖️ LAW: exactly one staged page per `poll`. Staging twice without an intervening turn is a host
+  /// defect and faults here rather than silently replacing the page the guest has not read yet.
+  stage-command-page: async func(cursor: command-page-cursor, bytes: list<u8>) -> result<_, plugin-error>;
+
+  /// 🧊️ Hands the next `poll` the ONE cold document-pair page it may admit — same staging contract
+  /// and the same reason as `stage-command-page`.
+  stage-cold-pair-page: async func(page: cold-document-pair-page) -> result<_, plugin-error>;
+
+  /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
+  /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
+  /// thousands of times per session — allocates nothing in guest memory that outlives it.
+  poll: async func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse). `world actor`'s async import

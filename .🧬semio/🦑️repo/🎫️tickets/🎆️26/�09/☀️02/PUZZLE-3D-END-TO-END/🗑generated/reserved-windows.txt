@@ -1,0 +1,930 @@
+
+===== 11540-11620 =====
+11540|
+11541|    /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
+11542|    /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
+11543|    /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
+11544|    /// operations are dispatched with real inverses; operations flow to/from the backbone as the wire format.
+11545|    /// 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` captures every
+11546|    /// method signature into a hidden `__semio_dispatch_PluginApp!` macro. Each fleet plugin closes
+11547|    /// its OWN per-plugin app enum with `dyn_enum_close! { pub enum <Name>Apps: PluginApp { .. } }`
+11548|    /// (cross-crate — that call site needs `use semio_framework_plugin::__semio_dispatch_PluginApp;`
+11549|    /// immediately above it, per 📓️terra-dyn-enum-macro-report.md finding 1/recipe §5). `PluginApp:
+11550|    /// Send` is a TYPE bound (R3) — it constrains the state an app enum's variants hold, not the
+11551|    /// futures its async methods return, which stay `?Send` per the guest ruling.
+11552|    #[dyn_enum]
+11553|    pub trait PluginApp: Send + 'static {
+11554|        /// 🪪️ Binds the host's live instance identity before any operation-scoped work starts.
+11555|        async fn bind_instance_id(&mut self, _instance_id: u32) {}
+11556|        /// 🧹 Releases one synchronous, bounded close unit. Implementations must never suspend and
+11557|        /// may return `Complete` only after their final destructor is constant-time.
+11558|        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+11559|        /// 🧹 Proves that every deep owner has reached its terminal empty shell. The runtime checks
+11560|        /// this after `close_step` returns `Complete` and before releasing the erased app allocation.
+11561|        fn close_terminal_is_empty(&self) -> bool;
+11562|        /// 🧹 Releases one bounded nonterminal quarantine unit while the app remains live. This is
+11563|        /// scheduled on the shared maintenance worker and must never perform application-visible work.
+11564|        fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+11565|        async fn app_id(&self) -> &str;
+11566|        async fn document_schema(&self) -> &str;
+11567|        /// 🧬️ Compiler-derived concrete `ArtifactApp` identity used by fail-closed tool proof admission.
+11568|        async fn tool_owner_witness(&self) -> ToolOwnerWitness;
+11569|        async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
+11570|        /// 📬️ Advances at most one typed-operation store or host publication unit.
+11571|        async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault>;
+11572|        /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
+11573|        fn has_pending_typed_operations(&self) -> bool;
+11574|        /// ▶️ Distinguishes retained operation ownership from work that can advance without
+11575|        /// another host input. A presented result page remains pending but is not runnable until ACK.
+11576|        fn has_runnable_typed_operations(&self) -> bool;
+11577|        /// 📖️ Captures exact current local roots into the app's single ACK-owned query slot.
+11578|        fn begin_local_interaction_query(&mut self, request_id: u64, _query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
+11579|            Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed })
+11580|        }
+11581|        /// 📨️ ACK and cancellation validate the full runtime-generation and frozen-root token.
+11582|        fn acknowledge_local_interaction_query(&mut self, _token: &protocol::LocalInteractionQueryToken) -> bool {
+11583|            false
+11584|        }
+11585|        fn cancel_local_interaction_query(&mut self, _token: &protocol::LocalInteractionQueryToken) -> bool {
+11586|            false
+11587|        }
+11588|        /// 📤️ Drains at most one bounded page, start token, or terminal outcome.
+11589|        fn take_local_interaction_query_reply(&mut self) -> Option<protocol::LocalInteractionQueryReply> {
+11590|            None
+11591|        }
+11592|        /// 📬️ Transfers a reply only after fixed frame bytes and an output slot are admitted.
+11593|        fn publish_local_interaction_query_reply(&mut self, _frames: &mut Vec<Vec<u8>>, _maximum_frames: usize) -> bool {
+11594|            false
+11595|        }
+11596|        /// 📤️ Borrows one fixed result page while its operation retains ACK authority.
+11597|        fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage>;
+11598|        /// 📨️ ACKs one exact receiver/operation/generation/sequence/attempt token.
+11599|        fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault>;
+11600|        /// 📤️ Drains one effect already accepted by the typed-operation host receiver.
+11601|        fn take_typed_operation_effect(&mut self) -> Option<Effect>;
+11602|        /// 📤️ Drains one event already accepted by the typed-operation host receiver.
+11603|        fn take_typed_operation_event(&mut self) -> Option<AppEvent>;
+11604|        /// 📤️ Drains one UI scope already accepted by the typed-operation host receiver.
+11605|        fn take_typed_operation_ui_scope(&mut self) -> Option<UiDirtyScope>;
+11606|        /// 🏁️ Drains one terminal typed-operation witness, resolving its command-log delta and
+11607|        /// content revision against CURRENT state — the payload of one `AppFrame::OperationCompleted`.
+11608|        async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault>;
+11609|        /// 📨️ Starts one command-scoped report at the app's live merge policy.
+11610|        async fn begin_dispatch_report(&mut self);
+11611|        /// 📨️ Returns the current command's authoritative merge-policy report.
+11612|        async fn dispatch_report(&self) -> &protocol::DispatchReport;
+11613|        /// ⚖️ Sets this instance's local merge policy without creating shared document history.
+11614|        async fn set_merge_policy(&mut self, policy: protocol::MergePolicy);
+11615|        /// ⚔️ Resolves one current open conflict through the authoritative document store.
+11616|        async fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault>;
+11617|        /// ⚔️ Returns the authoritative projection of currently open document conflicts.
+11618|        async fn open_conflicts(&self) -> Vec<protocol::Conflict>;
+11619|        /// @emoji 🕰️ FRAMEWORK-reserved action dispatch only (undo/redo/checkpoint/alternative/clipboard/
+11620|        /// revert-to-command/history-filter/noteShellCommand) — B1 deleted the generic app-declared-action
+
+===== 15610-15680 =====
+15610|            }
+15611|            if scope.claim.strong_count() == 0 {
+15612|                self.update = Some(map.begin_remove_shared(scope.key.clone()));
+15613|                self.update_closing = false;
+15614|            }
+15615|            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+15616|        }
+15617|
+15618|        fn begin_close(&mut self) {
+15619|            self.closing = true;
+15620|            if let Some(update) = self.update.as_mut() {
+15621|                update.begin_close();
+15622|                self.update_closing = true;
+15623|            }
+15624|        }
+15625|
+15626|        fn terminal_is_empty(&self) -> bool {
+15627|            self.closing && self.map.is_none() && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none()
+15628|        }
+15629|    }
+15630|    //#endregion 🗝️RetainedLatestWinsKeys
+15631|
+15632|    struct FrameworkReservedCommitPermit {
+15633|        operation: semio_framework_job::Operation,
+15634|        lease: ToolCancellationLease,
+15635|    }
+15636|
+15637|    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+15638|    enum ActiveMediaExportCloseStage {
+15639|        Live,
+15640|        Worker,
+15641|        DisposeJob,
+15642|        DrainChunks,
+15643|        DrainCompletion,
+15644|        Complete,
+15645|    }
+15646|
+15647|    struct ActiveMediaExport {
+15648|        handle: ArtifactMediaExportHandle,
+15649|        port: String,
+15650|        operation: semio_framework_job::Operation,
+15651|        contract: semio_framework::ToolExecutionContract,
+15652|        session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
+15653|        session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
+15654|        closing_job: Option<ArtifactReservedToolJob>,
+15655|        retained_outcome: Option<semio_framework_job::StepOutcome>,
+15656|        output_credit: ArtifactMediaExportCredit,
+15657|        output_chunks: ArtifactOutputChunks,
+15658|        completion: ArtifactMediaExportCompletion,
+15659|        lease: ToolCancellationLease,
+15660|        checkpoint_available: bool,
+15661|        applied_progress: u64,
+15662|        close_stage: ActiveMediaExportCloseStage,
+15663|    }
+15664|
+15665|    impl ActiveMediaExport {
+15666|        fn running_poll(&self) -> ArtifactMediaExportPoll {
+15667|            ArtifactMediaExportPoll::Running { applied_progress: self.applied_progress, checkpoint_available: self.checkpoint_available }
+15668|        }
+15669|
+15670|        fn retire_nonterminal_outcome(&mut self) -> Result<PluginCloseStep, Fault> {
+15671|            let Some(outcome) = self.retained_outcome.as_mut() else {
+15672|                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+15673|            };
+15674|            if outcome.is_terminal() {
+15675|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-terminal-retirement"), "terminal media outcome cannot resume its mounted job"));
+15676|            }
+15677|            let step = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+15678|            if outcome.terminal_is_empty() {
+15679|                self.retained_outcome = None;
+15680|                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-session-missing"), "media outcome handback lost its mounted session"))?;
+
+===== 15770-15880 =====
+15770|                            self.close_stage = ActiveMediaExportCloseStage::DrainCompletion;
+15771|                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+15772|                        }
+15773|                    }
+15774|                }
+15775|                ActiveMediaExportCloseStage::DrainCompletion => match self.completion.close_step(maximum_items, maximum_bytes)? {
+15776|                    PluginCloseStep::Complete => {
+15777|                        self.checkpoint_available = false;
+15778|                        self.close_stage = ActiveMediaExportCloseStage::Complete;
+15779|                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+15780|                    }
+15781|                    step => Ok(step),
+15782|                },
+15783|                ActiveMediaExportCloseStage::Complete => Ok(PluginCloseStep::Complete),
+15784|            }
+15785|        }
+15786|    }
+15787|
+15788|    pub(crate) const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
+15789|
+15790|    pub(crate) struct ArtifactFixedRegistry<T> {
+15791|        slots: Box<[std::mem::MaybeUninit<(u64, T)>]>,
+15792|        occupied: u64,
+15793|        allocation_admitted: bool,
+15794|    }
+15795|
+15796|    impl<T> ArtifactFixedRegistry<T> {
+15797|        fn new() -> Self {
+15798|            let mut slots = Vec::new();
+15799|            let allocation_admitted = slots.try_reserve_exact(ARTIFACT_LIVE_OUTPUT_SLOTS).is_ok();
+15800|            if allocation_admitted {
+15801|                slots.resize_with(ARTIFACT_LIVE_OUTPUT_SLOTS, std::mem::MaybeUninit::uninit);
+15802|            }
+15803|            Self { slots: slots.into_boxed_slice(), occupied: 0, allocation_admitted }
+15804|        }
+15805|
+15806|        fn occupied(&self, index: usize) -> bool {
+15807|            self.occupied & (1u64 << index) != 0
+15808|        }
+15809|
+15810|        fn entry(&self, index: usize) -> Option<&(u64, T)> {
+15811|            if !self.occupied(index) {
+15812|                return None;
+15813|            }
+15814|            self.slots.get(index).map(|slot| {
+15815|                // SAFETY: the occupied bit is set only after `write` and cleared before `assume_init_read`.
+15816|                unsafe { slot.assume_init_ref() }
+15817|            })
+15818|        }
+15819|
+15820|        fn entry_mut(&mut self, index: usize) -> Option<&mut (u64, T)> {
+15821|            if !self.occupied(index) {
+15822|                return None;
+15823|            }
+15824|            self.slots.get_mut(index).map(|slot| {
+15825|                // SAFETY: the occupied bit is set only after `write` and cleared before `assume_init_read`.
+15826|                unsafe { slot.assume_init_mut() }
+15827|            })
+15828|        }
+15829|
+15830|        #[cfg(test)]
+15831|        pub(crate) fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
+15832|            if !self.allocation_admitted {
+15833|                return Err(value);
+15834|            }
+15835|            let index = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+15836|            if self.entry(index).is_some() {
+15837|                return Err(value);
+15838|            }
+15839|            self.slots[index].write((id, value));
+15840|            self.occupied |= 1u64 << index;
+15841|            Ok(())
+15842|        }
+15843|
+15844|        fn can_insert(&self, id: u64) -> bool {
+15845|            self.allocation_admitted && self.entry(id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS).is_none()
+15846|        }
+15847|
+15848|        pub(crate) fn insert_admitted(&mut self, id: u64, value: T) {
+15849|            let index = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+15850|            assert!(self.can_insert(id), "fixed artifact registry admission changed before exact owner insertion");
+15851|            self.slots[index].write((id, value));
+15852|            self.occupied |= 1u64 << index;
+15853|        }
+15854|
+15855|        pub(crate) fn get(&self, id: u64) -> Option<&T> {
+15856|            self.entry(id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS).and_then(|(candidate, value)| (*candidate == id).then_some(value))
+15857|        }
+15858|
+15859|        fn get_mut(&mut self, id: u64) -> Option<&mut T> {
+15860|            self.entry_mut(id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS).and_then(|(candidate, value)| (*candidate == id).then_some(value))
+15861|        }
+15862|
+15863|        fn has_capacity(&self) -> bool {
+15864|            self.allocation_admitted && self.occupied != u64::MAX
+15865|        }
+15866|
+15867|        fn remove(&mut self, id: u64) -> Option<T> {
+15868|            let index = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+15869|            if self.entry(index).is_none_or(|(candidate, _)| *candidate != id) {
+15870|                return None;
+15871|            }
+15872|            self.occupied &= !(1u64 << index);
+15873|            // SAFETY: exact identity and occupied state were checked, and the bit is now cleared.
+15874|            Some(unsafe { self.slots[index].assume_init_read().1 })
+15875|        }
+15876|
+15877|        fn id_at(&self, index: usize) -> Option<u64> {
+15878|            self.entry(index).map(|(id, _)| *id)
+15879|        }
+15880|
+
+===== 18550-18590 =====
+18550|
+18551|    /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
+18552|    /// `result_from_last_edit`'s own `ArtifactHandle(meta.instance_id as u128)` only identifies the
+18553|    /// ONE wasm-hosted document this plugin instance runs (the parent) — a child pulled in through
+18554|    /// `dispatch_emit_group` is a different document with its own string `artifact_id` and no
+18555|    /// instance id of its own, so `KernelMutation.document` needs a handle derived from THAT id
+18556|    /// instead, so history correctly attributes a child's edit to the child, not the parent. FNV-1a
+18557|    /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
+18558|    /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
+18559|    /// byte-identical value the SAME child id must always map to.
+18560|    pub(crate) async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+18561|        const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+18562|        const PRIME: u64 = 0x0000_0100_0000_01b3;
+18563|        let mut lane0 = OFFSET;
+18564|        let mut lane1 = OFFSET ^ 0x9e37_79b9_7f4a_7c15;
+18565|        for byte in artifact_id.as_bytes() {
+18566|            lane0 = (lane0 ^ *byte as u64).wrapping_mul(PRIME);
+18567|            lane1 = (lane1 ^ (*byte as u64).rotate_left(7)).wrapping_mul(PRIME);
+18568|        }
+18569|        ArtifactHandle(((lane0 as u128) << 64) | lane1 as u128)
+18570|    }
+18571|
+18572|    const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
+18573|
+18574|    const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
+18575|
+18576|    /// 🕹️ The six framework-owned interaction actions `dispatch_action` intercepts before any of the
+18577|    /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
+18578|    const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
+18579|
+18580|    pub(crate) fn is_framework_reserved_action_id(action: &str) -> bool {
+18581|        HISTORY_ACTION_IDS.contains(&action)
+18582|            || CLIPBOARD_ACTION_IDS.contains(&action)
+18583|            || INTERACTION_ACTION_IDS.contains(&action)
+18584|            || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
+18585|    }
+18586|
+18587|    pub(crate) fn framework_reserved_action_kind(action: &str) -> Option<ActionKind> {
+18588|        if !is_framework_reserved_action_id(action) {
+18589|            return None;
+18590|        }
+
+===== 18650-18840 =====
+18650|                .map(|(tool_id, registration)| (tool_id.clone(), (registration.key.clone(), registration.schema_id.clone(), registration.factory_type_id, registration.factory_type_name, registration.contract)))
+18651|                .collect()
+18652|        }
+18653|
+18654|        pub fn tool_cancellation_handle(&self) -> ToolCancellationHandle {
+18655|            self.tool_cancellations.clone()
+18656|        }
+18657|
+18658|        /// 🏃️ On wasm the process pool has no threads: this loop is driven synchronously under
+18659|        /// `drive_self_waking_ready` (one host poll), so a submitted step only runs if the loop pumps
+18660|        /// the pool itself. `resolve_ready` samples once and would drop the first `plugin_job_yield_once`.
+18661|        async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
+18662|            &mut self,
+18663|            verb: &str,
+18664|            raw: &[u8],
+18665|            decoded_items: usize,
+18666|            job: J,
+18667|            meta: &ActionMeta,
+18668|            supplied_admission: Option<semio_framework::ToolWireAdmission>,
+18669|        ) -> Result<FrameworkReservedCommitPermit, Fault> {
+18670|            let proof = self.qualified_tool_proof(verb)?;
+18671|            if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
+18672|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory")));
+18673|            }
+18674|            let key = proof.key();
+18675|            let admission = match supplied_admission {
+18676|                Some(admission) => admission,
+18677|                None => self.tool_jobs.admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), raw).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?,
+18678|            };
+18679|            if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
+18680|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission")));
+18681|            }
+18682|            let canonical_base_revision = self.store.content_revision();
+18683|            let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
+18684|            let generation = semio_framework_job::Generation(self.store.generation());
+18685|            let _parent_document_id = self.store.envelope().id.clone();
+18686|            let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
+18687|            let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
+18688|            let operation_id = operation.operation;
+18689|            let dispatch = self
+18690|                .tool_jobs
+18691|                .dispatch(semio_framework::ToolOperationSpec::new(key.controller_id, key.tool_id, proof.schema_id(), job, operation))
+18692|                .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
+18693|            let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
+18694|            let cancellation_lease = self.tool_cancellations.begin(operation_key)?;
+18695|            let params = semio_framework_job::BatchJobParams {
+18696|                operation: operation_id,
+18697|                generation,
+18698|                cancel: cancellation_lease.cancel_token(),
+18699|                config: semio_framework_job::BatchDriveConfig {
+18700|                    site: "plugin_framework_reserved_route",
+18701|                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+18702|                    fuel_per_step: proof.contract().max_work_units_per_step,
+18703|                    step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US,
+18704|                },
+18705|                now_us: semio_framework_job::default_now_us,
+18706|            };
+18707|            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+18708|            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+18709|            let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+18710|                Ok(session) => session,
+18711|                Err(mut rejected) => {
+18712|                    loop {
+18713|                        plugin_job_yield_once().await;
+18714|                        match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+18715|                            semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => {}
+18716|                            semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => break,
+18717|                            semio_framework_job::InteractiveJobCloseStep::Complete => {
+18718|                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-false-terminal"), "framework reserved worker admission rejection did not reach terminal-empty authority"));
+18719|                            }
+18720|                        }
+18721|                    }
+18722|                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-capacity"), "framework reserved worker session capacity is exhausted"));
+18723|                }
+18724|            };
+18725|            let mut checkpoint_progress = 0u64;
+18726|            let mut step_overruns = semio_framework_trace::StepOverrunLedger::new();
+18727|            loop {
+18728|                plugin_job_yield_once().await;
+18729|                let poll = match session.pump_one(&pool, semio_framework_async::Lane::Interactive) {
+18730|                    Ok(poll) => poll,
+18731|                    Err(fault) if reserved_pump_fault_is_transient(&fault) => {
+18732|                        #[cfg(target_arch = "wasm32")]
+18733|                        if let Some(now_ms) = semio_framework_job::default_now_ms() {
+18734|                            pool.pump(now_ms);
+18735|                        }
+18736|                        continue;
+18737|                    }
+18738|                    Err(fault) => {
+18739|                        return Err(Fault::new(
+18740|                            FaultOrigin::Framework,
+18741|                            FaultCode::new("interactive-job.worker-pump"),
+18742|                            format!("framework route '{verb}' lost its mounted worker transition: {}", reserved_pump_fault_detail(&fault)),
+18743|                        ));
+18744|                    }
+18745|                };
+18746|                if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
+18747|                    #[cfg(target_arch = "wasm32")]
+18748|                    if let Some(now_ms) = semio_framework_job::default_now_ms() {
+18749|                        pool.pump(now_ms);
+18750|                    }
+18751|                    continue;
+18752|                }
+18753|                let mut outcome = session.take_checked_out_outcome().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-missing"), "framework reserved mounted worker checkout lost its exact outcome"))?;
+18754|                let terminal = outcome.is_terminal();
+18755|                let mut protocol_fault = None;
+18756|                let terminal_kind = match &outcome {
+18757|                    semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) => 0,
+18758|                    semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
+18759|                        if checkpoint.applied_progress < checkpoint_progress || checkpoint.state.len() > proof.contract().max_output_bytes {
+18760|                            protocol_fault = Some("interactive-job.checkpoint");
+18761|                        }
+18762|                        checkpoint_progress = checkpoint.applied_progress;
+18763|                        0
+18764|                    }
+18765|                    semio_framework_job::StepOutcome::Complete(candidate) => {
+18766|                        if candidate.output.len() > proof.contract().max_output_bytes || !retained_payload_eq_slice(&candidate.output, raw) {
+18767|                            protocol_fault = Some("interactive-job.output-envelope");
+18768|                        }
+18769|                        1
+18770|                    }
+18771|                    semio_framework_job::StepOutcome::Cancelled => 2,
+18772|                    semio_framework_job::StepOutcome::Fault(_) => 3,
+18773|                };
+18774|                let overrun = session.callback_verdict().copied().is_some_and(|verdict| step_overruns.admit(&verdict).is_terminal());
+18775|                loop {
+18776|                    plugin_job_yield_once().await;
+18777|                    match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+18778|                        semio_framework_job::JobPayloadCloseStep::Pending { .. } => {}
+18779|                        semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => break,
+18780|                        semio_framework_job::JobPayloadCloseStep::Complete => {
+18781|                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-false-terminal"), "framework reserved outcome did not reach terminal-empty payload authority"));
+18782|                        }
+18783|                    }
+18784|                }
+18785|                if !terminal {
+18786|                    if let Some(code) = protocol_fault {
+18787|                        cancellation_lease.cancel();
+18788|                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' returned an invalid retained checkpoint")));
+18789|                    }
+18790|                    if overrun {
+18791|                        cancellation_lease.cancel();
+18792|                    }
+18793|                    session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved outcome lost its exact resume authority"))?;
+18794|                    continue;
+18795|                }
+18796|                session.begin_close();
+18797|                loop {
+18798|                    plugin_job_yield_once().await;
+18799|                    match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+18800|                        semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => {}
+18801|                        semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => break,
+18802|                        semio_framework_job::WorkerJobCloseStep::Complete => {
+18803|                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.session-false-terminal"), "framework reserved session did not reach terminal-empty authority"));
+18804|                        }
+18805|                    }
+18806|                }
+18807|                if overrun {
+18808|                    return Err(Fault::new(
+18809|                        FaultOrigin::Framework,
+18810|                        FaultCode::new("interactive-job.step-overrun"),
+18811|                        format!("framework route '{verb}' overran the 8 ms step ceiling for {} consecutive steps, worst {}us", step_overruns.consecutive_overruns(), step_overruns.worst_elapsed_us()),
+18812|                    ));
+18813|                }
+18814|                if let Some(code) = protocol_fault {
+18815|                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' did not preserve its admitted envelope")));
+18816|                }
+18817|                match terminal_kind {
+18818|                    1 => break,
+18819|                    2 => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled"))),
+18820|                    3 => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.fault"), format!("framework route '{verb}' returned a retained fault"))),
+18821|                    _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.terminal-kind"), "framework reserved session closed without a terminal outcome")),
+18822|                }
+18823|            }
+18824|            if cancellation_lease.is_cancelled().await {
+18825|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled-or-output"), format!("framework route '{verb}' was cancelled before commit")));
+18826|            }
+18827|            let live_revision_bytes = self.store.content_revision();
+18828|            let live_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision_bytes[..8].try_into().expect("revision lane width")));
+18829|            let live_generation = semio_framework_job::Generation(self.store.generation());
+18830|            if !matches!(semio_framework_job::validate_commit(&operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
+18831|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("framework route '{verb}' completed against a stale revision or generation")));
+18832|            }
+18833|            Ok(FrameworkReservedCommitPermit { operation, lease: cancellation_lease })
+18834|        }
+18835|
+18836|        async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
+18837|            if permit.lease.is_cancelled().await {
+18838|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled before commit")));
+18839|            }
+18840|            let live_revision_bytes = self.store.content_revision();
+
+===== 21980-22120 =====
+21980|                        .and_then(|value| value.get("fragment"))
+21981|                        .and_then(|value| <ClipboardFragment as protocol::FromValue>::from_value(value.clone()).ok())
+21982|                        .map(|fragment| fragment.pack_bytes.map_or(fragment.dsl_text.len(), |bytes| bytes.len()))
+21983|                        .unwrap_or_default();
+21984|                    Ok(fragment_bytes.div_ceil(4_096).max(1))
+21985|                }
+21986|                _ => Ok(1),
+21987|            }
+21988|        }
+21989|
+21990|        async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+21991|            let contract = self.qualified_tool_proof(action)?.contract();
+21992|            let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
+21993|            let wire_args = args.cloned();
+21994|            let raw = protocol::json::to_json_string(&(action, wire_args)).into_bytes();
+21995|            let work_items = self.framework_reserved_work_items(action, args).await?;
+21996|            let mut app_completion = None;
+21997|            let job = if CLIPBOARD_ACTION_IDS.contains(&action) {
+21998|                match self.build_artifact_reserved_action_job(action, args, raw.clone(), meta).await? {
+21999|                    Some((job, completion)) => {
+22000|                        app_completion = Some(completion);
+22001|                        job
+22002|                    }
+22003|                    None => framework_reserved_route_job(action, raw.clone(), work_items)?,
+22004|                }
+22005|            } else {
+22006|                framework_reserved_route_job(action, raw.clone(), work_items)?
+22007|            };
+22008|            let permit = self.run_framework_reserved_job(action, &raw, decoded_items, job, meta, None).await?;
+22009|            self.validate_framework_reserved_commit(action, &permit).await?;
+22010|            let result = if HISTORY_ACTION_IDS.contains(&action) {
+22011|                self.commit_framework_history_route(action, args, meta, &permit).await
+22012|            } else if action == REVERT_TO_COMMAND_ACTION_ID {
+22013|                self.commit_framework_revert_route(args, meta, &permit).await
+22014|            } else if CLIPBOARD_ACTION_IDS.contains(&action) {
+22015|                self.commit_framework_clipboard_completion(action, app_completion, meta, &permit).await
+22016|            } else {
+22017|                self.commit_framework_shared_host_route(action, args, meta, &permit).await
+22018|            };
+22019|            permit.finish();
+22020|            result
+22021|        }
+22022|
+22023|        async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+22024|            if permit.lease.is_cancelled().await {
+22025|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
+22026|            }
+22027|            if action == "undo" || action == "redo" {
+22028|                let group_id = if action == "undo" { self.store.tail_group_id().await } else { self.store.redo_tail().await.and_then(|(_, group_id)| group_id) };
+22029|                if let Some(group_id) = group_id {
+22030|                    return self.dispatch_group_history_action(action, &group_id, meta).await;
+22031|                }
+22032|            }
+22033|            let command = Self::history_command(action, args).await.ok_or_else(|| format!("history action {action} missing required argument"))?;
+22034|            let pending_pins = match &command {
+22035|                ArtifactCommand::CommitCheckpoint { message, authors } => self.commit_children_for_checkpoint(message.clone(), authors.clone(), permit).await?,
+22036|                _ => Vec::new(),
+22037|            };
+22038|            match self.store.dispatch(command).await {
+22039|                Ok(_) => {
+22040|                    self.stamp_checkpoint_composition_pins(pending_pins).await?;
+22041|                    if action == "checkoutCheckpoint" {
+22042|                        self.cascade_checkout_to_children(permit).await?;
+22043|                    }
+22044|                    self.cache = None;
+22045|                    self.record_command(action, ActionKind::History, None, None, None, None).await;
+22046|                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+22047|                }
+22048|                Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::NothingToRedo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
+22049|                Err(vcs::VcsError::ValidationFailed(ref message)) if message.as_str() == vcs::EMPTY_CHECKPOINT_MESSAGE => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
+22050|                Err(error) => Err(error.into_fault()),
+22051|            }
+22052|        }
+22053|
+22054|        async fn commit_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+22055|            let action = REVERT_TO_COMMAND_ACTION_ID;
+22056|            self.refresh_cache().await?;
+22057|            let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
+22058|            let target = entry_seq.and_then(|seq| {
+22059|                self.cache.as_ref().and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible)).map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
+22060|            });
+22061|            match target {
+22062|                Some((Some(edit_id), _, _, _)) => {
+22063|                    let applied = self.store.applied_edit_ids();
+22064|                    let Some(position) = applied.iter().position(|id| *id == edit_id) else {
+22065|                        return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
+22066|                    };
+22067|                    let undo_count = applied.len() - (position + 1);
+22068|                    for _cursor in 0..undo_count {
+22069|                        if permit.is_cancelled().await {
+22070|                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "revert was cancelled between document-history steps"));
+22071|                        }
+22072|                        match self.store.dispatch(ArtifactCommand::Undo).await {
+22073|                            Ok(_) => {}
+22074|                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
+22075|                            Err(error) => return Err(error.into_fault()),
+22076|                        }
+22077|                        semio_framework_async::yield_once().await;
+22078|                    }
+22079|                    self.cache = None;
+22080|                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None).await;
+22081|                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+22082|                }
+22083|                Some((None, Some(config_edit_id), _, _)) => {
+22084|                    let applied = self.config_store.applied_edit_ids();
+22085|                    let Some(position) = applied.iter().position(|id| *id == config_edit_id) else {
+22086|                        return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
+22087|                    };
+22088|                    let undo_count = applied.len() - (position + 1);
+22089|                    for _cursor in 0..undo_count {
+22090|                        if permit.is_cancelled().await {
+22091|                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "revert was cancelled between configuration-history steps"));
+22092|                        }
+22093|                        match self.config_store.dispatch(ArtifactCommand::Undo).await {
+22094|                            Ok(_) => {}
+22095|                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
+22096|                            Err(error) => return Err(error.into_fault()),
+22097|                        }
+22098|                        semio_framework_async::yield_once().await;
+22099|                    }
+22100|                    self.cache = None;
+22101|                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None).await;
+22102|                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+22103|                }
+22104|                Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await),
+22105|                _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
+22106|            }
+22107|        }
+22108|
+22109|        async fn ensure_reserved_emit_bounded(action: &str, emit: &Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, contract: semio_framework::ToolExecutionContract) -> Result<(), Fault> {
+22110|            let item_count = emit.artifact_mutations.len().saturating_add(emit.config_mutations.len()).saturating_add(emit.draft_mutations.len()).saturating_add(emit.effects.len()).saturating_add(emit.extension_invocations.len());
+22111|            if item_count > contract.max_decoded_items {
+22112|                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.clipboard-items"), format!("clipboard route '{action}' emitted too many operations")));
+22113|            }
+22114|            let mut bytes = 0usize;
+22115|            for chunk in emit.artifact_mutations.chunks(32) {
+22116|                for operation in chunk {
+22117|                    bytes = bytes.saturating_add(::protocol::OpBinary::encode_op(operation).map_err(|error| error.into_fault())?.len());
+22118|                }
+22119|                if bytes > contract.max_output_bytes {
+22120|                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.clipboard-output"), format!("clipboard route '{action}' exceeded its output cap")));
+
+===== 23870-24020 =====
+23870|        }
+23871|    }
+23872|
+23873|    impl<A: ArtifactApp, M: SpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
+23874|        fn drop(&mut self) {
+23875|            self.tool_cancellations.cancel_scope_generation();
+23876|        }
+23877|    }
+23878|
+23879|    /// @emoji 📣️ Signals the shell that the document's checkpoint/alternative history changed (after an
+23880|    /// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+23881|    async fn history_changed_event() -> AppEvent {
+23882|        AppEvent { kind: "history-changed".into(), payload: DslValue::Null }
+23883|    }
+23884|
+23885|    /// 🕰️ Length of [`PluginApp::maintenance_step`]'s fixed cooperative round robin. Every stage
+23886|    /// runs at most one bounded unit per call, so a step-budget law needs exactly this many calls
+23887|    /// to observe each stage once.
+23888|    pub const MAINTENANCE_STAGES: u8 = 24;
+23889|
+23890|    /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
+23891|    pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+23892|
+23893|    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
+23894|        async fn bind_instance_id(&mut self, instance_id: u32) {
+23895|            self.live_runtime_instance_id = Some(instance_id);
+23896|        }
+23897|
+23898|        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+23899|            if maximum_items == 0 {
+23900|                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+23901|            }
+23902|            if !self.close_started {
+23903|                self.tool_cancellations.cancel_scope_generation();
+23904|                self.peer_roster_scope.cancel_now();
+23905|                self.local_interaction_authority.close();
+23906|                if let Some(query) = self.local_interaction_query.as_mut() {
+23907|                    query.begin_close();
+23908|                }
+23909|                self.close_started = true;
+23910|                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23911|            }
+23912|            if self.local_interaction_query.is_some() {
+23913|                let step = self.advance_local_interaction_query_one(maximum_items, maximum_bytes)?;
+23914|                drop(self.take_local_interaction_query_reply());
+23915|                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+23916|            }
+23917|            if !self.snapshot_read_returns_terminal_is_empty() {
+23918|                let step = self.advance_snapshot_read_returns_one(maximum_bytes)?;
+23919|                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+23920|            }
+23921|            if !self.presence_store.retirement_started() && !self.presence_store.local_read_maintenance_is_idle() {
+23922|                return self.presence_store.maintenance_local_reads_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+23923|                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+23924|                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence returned local owner is held during app close" },
+23925|                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+23926|                });
+23927|            }
+23928|            if let Some(instance_id) = self.live_runtime_instance_id {
+23929|                let mounted = A::mounted_job_close_step(instance_id, maximum_items.min(1), maximum_bytes)?;
+23930|                if mounted != PluginCloseStep::Complete {
+23931|                    return Ok(mounted);
+23932|                }
+23933|                if !A::mounted_jobs_terminal_is_empty(instance_id) {
+23934|                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-mounted-false-terminal"), "mounted app jobs reported Complete without an exact terminal-empty witness"));
+23935|                }
+23936|            }
+23937|            if self.close_cancellation_cursor < TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS {
+23938|                let released = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
+23939|                self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
+23940|                let _ = released;
+23941|                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23942|            }
+23943|            if !self.latest_wins_keys.terminal_is_empty() {
+23944|                self.latest_wins_keys.begin_close();
+23945|                let step = self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes);
+23946|                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
+23947|            }
+23948|            if let Some(operation_id) = self.latest_wins_order.items.front().copied() {
+23949|                return self.close_latest_wins_command_step(operation_id, maximum_items, maximum_bytes);
+23950|            }
+23951|            if !self.tool_operations.is_empty() {
+23952|                return self.close_typed_operation_step(maximum_items, maximum_bytes);
+23953|            }
+23954|            if !self.close_instance_operation_owner_drained {
+23955|                let step = self.instance_operation_owner.close_step(maximum_items.min(1), maximum_bytes)?;
+23956|                if step != PluginCloseStep::Complete {
+23957|                    return Ok(step);
+23958|                }
+23959|                if !self.instance_operation_owner.terminal_is_empty()? {
+23960|                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-instance-owner-false-terminal"), "app-instance operation owner reported Complete without an exact terminal-empty witness"));
+23961|                }
+23962|                self.close_instance_operation_owner_drained = true;
+23963|                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23964|            }
+23965|            if self.close_media_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
+23966|                let Some(operation_id) = self.media_exports.id_at(self.close_media_cursor) else {
+23967|                    self.close_media_cursor = self.close_media_cursor.saturating_add(1);
+23968|                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23969|                };
+23970|                let step = self
+23971|                    .media_exports
+23972|                    .get_mut(operation_id)
+23973|                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-authority"), "media close authority changed during one fixed step"))?
+23974|                    .close_step(maximum_items, maximum_bytes)?;
+23975|                if step == PluginCloseStep::Complete {
+23976|                    let active = self.media_exports.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-authority"), "completed media close lost its exact fixed owner"))?;
+23977|                    if !active.terminal_is_empty()? {
+23978|                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-terminal-not-empty"), "media close reported Complete without an exact terminal-empty witness"));
+23979|                    }
+23980|                    self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-quarantine"), error.to_string()))?;
+23981|                    let active = self.media_exports.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-authority"), "terminal media owner changed before exact removal"))?;
+23982|                    drop(active);
+23983|                    self.close_media_cursor = self.close_media_cursor.saturating_add(1);
+23984|                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23985|                }
+23986|                return Ok(step);
+23987|            }
+23988|            if self.close_media_cleanup_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
+23989|                let Some(operation_id) = self.media_closures.id_at(self.close_media_cleanup_cursor) else {
+23990|                    self.close_media_cleanup_cursor = self.close_media_cleanup_cursor.saturating_add(1);
+23991|                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+23992|                };
+23993|                let step = self
+23994|                    .media_closures
+23995|                    .get_mut(operation_id)
+23996|                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-cleanup-authority"), "media cleanup authority changed during one fixed step"))?
+23997|                    .close_step(maximum_items, maximum_bytes)?;
+23998|                if step == PluginCloseStep::Complete {
+23999|                    let active = self.media_closures.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-cleanup-authority"), "completed media cleanup lost its exact fixed owner"))?;
+24000|                    if !active.terminal_is_empty()? {
+24001|                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-terminal-not-empty"), "media cleanup reported Complete without an exact terminal-empty witness"));
+24002|                    }
+24003|                    self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-quarantine"), error.to_string()))?;
+24004|                    let active = self.media_closures.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-cleanup-authority"), "terminal media cleanup changed before exact removal"))?;
+24005|                    drop(active);
+24006|                    self.close_media_cleanup_cursor = self.close_media_cleanup_cursor.saturating_add(1);
+24007|                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+24008|                }
+24009|                return Ok(step);
+24010|            }
+24011|            if self.close_segment_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
+24012|                let Some(operation_id) = self.segmented_downloads.id_at(self.close_segment_cursor) else {
+24013|                    self.close_segment_cursor = self.close_segment_cursor.saturating_add(1);
+24014|                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+24015|                };
+24016|                if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
+24017|                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+24018|                }
+24019|                let chunk = self
+24020|                    .segmented_downloads
+
+===== 20620-20660 =====
+20620|        pub async fn preview(&self, ops: &[A::Mutation]) -> protocol::DispatchReport {
+20621|            let mut op_bytes: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
+20622|            for op in ops.iter() {
+20623|                op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
+20624|            }
+20625|            let messages = SpaceMember::preview_wire(&self.store, &op_bytes).await;
+20626|            protocol::DispatchReport { policy: self.store.merge_policy(), worst: protocol::worst_level(&messages), messages }
+20627|        }
+20628|
+20629|        /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
+20630|        /// no-operation commands, and history notifications produce no `KernelMutation`s).
+20631|        async fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: UiDirtyScope) -> InvocationResult {
+20632|            let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
+20633|            InvocationResult {
+20634|                output: DslValue::Null,
+20635|                mutations: Vec::new(),
+20636|                inverse_group: UndoGroup { invocation_id, mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
+20637|                diagnostics: Vec::new(),
+20638|                requested_effects: effects,
+20639|                events,
+20640|                ui_scope,
+20641|                history_patch: None,
+20642|            }
+20643|        }
+20644|
+20645|        /// @emoji 🧱️ Builds the `InvocationResult` for a just-dispatched edit: one `KernelMutation` per
+20646|        /// forward operation NEW in this dispatch (`tail_offset`), each carrying just this dispatch's
+20647|        /// `inverse` as its inverse diff. For a coalesced (`AmendLast`) edit, `edit_mutations()` returns
+20648|        /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
+20649|        /// serialize every `KernelMutation` since the gesture started (O(edit-size) per dispatch, O(edit-
+20650|        /// size²) over the whole gesture) purely to report operations the caller already knows about.
+20651|        async fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
+20652|            let schema = A::DOCUMENT_SCHEMA.to_string();
+20653|            let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
+20654|            let document = ArtifactHandle(meta.instance_id as u128);
+20655|            let mut mutations: Vec<KernelMutation> = Vec::new();
+20656|            if let Some((forwards, inverse, mutation_meta)) = self.store.edit_mutations() {
+20657|                let (forwards_offset, backwards_offset) = tail_offset;
+20658|                let forwards = &forwards[forwards_offset.min(forwards.len())..];
+20659|                let inverse = &inverse[backwards_offset.min(inverse.len())..];
+20660|                let mutation_meta = &mutation_meta[forwards_offset.min(mutation_meta.len())..];
+
+===== 31540-31600 =====
+31540|                    }
+31541|                }
+31542|                Self::ClosingDecoded { mut owner, fault } => {
+31543|                    let (complete, _, _) = owner.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+31544|                    if complete && owner.terminal_is_empty() {
+31545|                        PluginCommandIngressStep::TerminalFault(fault)
+31546|                    } else {
+31547|                        PluginCommandIngressStep::Pending(Self::ClosingDecoded { owner, fault })
+31548|                    }
+31549|                }
+31550|            }
+31551|        }
+31552|    }
+31553|
+31554|    #[cfg(test)]
+31555|    include!("🧪️tests/🔬️plugin-runtime-paged-command-ingress/🦀️.rs");
+31556|
+31557|    #[derive(Default)]
+31558|    pub struct PluginExchangeOutput {
+31559|        pub frames: Vec<Vec<u8>>,
+31560|        pub effects: Vec<Vec<u8>>,
+31561|        pub events: Vec<Vec<u8>>,
+31562|        pub retry_command: Option<(u64, PluginCommandIngress)>,
+31563|        pub command_terminal_fault: Option<Vec<u8>>,
+31564|        pub presence_pending: Option<u64>,
+31565|        pub presence_terminal: Option<u64>,
+31566|        pub presence_terminal_fault: Option<Vec<u8>>,
+31567|        pub typed_operation_result: Option<TypedOperationResultPage>,
+31568|    }
+31569|
+31570|    //#region 🔁️TypedOperationContinuation
+31571|    fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
+31572|        resolve_ready(app.advance_typed_operation_publication())?;
+31573|        let mut output = PluginExchangeOutput { typed_operation_result: app.take_typed_operation_result_page(instance), ..PluginExchangeOutput::default() };
+31574|        if let Some(effect) = app.take_typed_operation_effect() {
+31575|            output.effects.push(encode_wire_serialized(&effect));
+31576|        }
+31577|        if let Some(event) = app.take_typed_operation_event() {
+31578|            output.events.push(encode_wire_serialized(&event));
+31579|        }
+31580|        if let Some(completion) = resolve_ready(app.take_typed_operation_completion())? {
+31581|            output.frames.push(resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::OperationCompleted {
+31582|                operation: completion.operation,
+31583|                revision: completion.revision,
+31584|                ui_scope: encode_wire_serialized(&completion.ui_scope),
+31585|                history_patch: completion.history_patch.as_ref().map(encode_wire_serialized).unwrap_or_default(),
+31586|            })));
+31587|        }
+31588|        if let Some(scope) = app.take_typed_operation_ui_scope() {
+31589|            output.frames.push(resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation {
+31590|                in_reply_to: 0,
+31591|                output: Vec::new(),
+31592|                diagnostics: Vec::new(),
+31593|                ui_scope: encode_wire_serialized(&scope),
+31594|                history_patch: Vec::new(),
+31595|                messages: Vec::new(),
+31596|                mutations: Vec::new(),
+31597|                inverse_group: Vec::new(),
+31598|            })));
+31599|        }
+31600|        app.publish_local_interaction_query_reply(&mut output.frames, 4);
+
+===== 220-240 =====
+220|pub use wasip2::component_export_anchor;
+221|
+222|#[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+223|pub fn component_export_anchor() {}
+224|
+225|#[path = "⚛️reactor/🦀️.rs"]
+226|pub mod reactor;
+227|
+228|#[path = "🌐host/🦀️.rs"]
+229|pub mod host;
+230|
+231|#[path = "🛂️describe/🦀️.rs"]
+232|pub mod describe;
+233|
+234|#[path = "🧵️retained-command/🦀️.rs"]
+235|pub mod retained_command;
+236|
+237|#[path = "📡️backbone/🔗️binding/🦀️.rs"]
+238|pub mod document_backbone_binding;
+239|
+240|#[path = "👥️presence/♻️retirement/🦀️.rs"]

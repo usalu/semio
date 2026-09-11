@@ -524,7 +524,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", ...segments], "vitest.config.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", ...segments], "vitest.config.ts");
   }
 }
 

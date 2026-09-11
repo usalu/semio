@@ -71,6 +71,17 @@ mod dff_public_action_admission_tests {
     }
 
     #[test]
+    fn set_contributions_pack_keeps_body_cap_and_skips_string_cap() {
+        let json = "x".repeat(200_000);
+        let body = format!(r#"{{"address":{{"owner":{{"app":{{"pluginId":"procedural","appId":"generation3d"}}}},"commandId":"setContributions"}},"arguments":{{"json":"{json}","page":0,"pageCount":1}}}}"#);
+        assert!(body.len() <= MAX_PUBLIC_ACTION_BODY_BYTES, "scoped pack fixture must fit the public body");
+        assert!(admit_command(&body, "s.flow.flow@1/*#editor").is_ok(), "setContributions must cross as one body-bounded pack");
+        let over = format!(r#"{{"address":{{"owner":{{"app":{{"pluginId":"procedural","appId":"generation3d"}}}},"commandId":"setContributions"}},"arguments":{{"json":"{}","page":0,"pageCount":1}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_BODY_BYTES));
+        assert!(over.len() > MAX_PUBLIC_ACTION_BODY_BYTES);
+        assert!(admit_command(&over, "s.flow.flow@1/*#editor").is_err(), "setContributions must still refuse an over-body pack");
+    }
+
+    #[test]
     fn command_classifier_uses_only_the_exact_address_command_id() {
         let mut decoy = r#"{"address":{"owner":"os","commandId":"ordinary"},"arguments":{"commandId":"canvasPointerDown"}}"#.to_string();
         decoy.extend(std::iter::repeat(' ').take(8_193 - decoy.len()));
@@ -93,20 +104,22 @@ mod dff_public_action_admission_tests {
     }
 
     #[test]
-    fn action_entry_points_await_the_retained_job_instead_of_single_polling_it() {
+    fn action_entry_points_drive_spawn_admit_instead_of_awaiting_the_retained_job() {
         let source = include_str!("../../🦀️.rs");
         let public_start = source.find("pub async fn plugin_handle_action").expect("public action entry point");
         let public_end = source[public_start..].find("pub async fn plugin_handle_command").map(|offset| public_start + offset).expect("public action boundary");
         let public_action = &source[public_start..public_end];
         assert!(public_action.contains("runtime_instance_cell(runtime, instance_id)?"));
-        assert!(public_action.contains("handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await"));
+        assert!(public_action.contains("drive_self_waking_ready(instance.app.handle_action_invocation"));
         assert!(!public_action.contains("resolve_ready(instance.app.handle_action_invocation"));
+        assert!(!public_action.contains("run_framework_reserved_job"));
 
         let exchange_start = source.find("protocol::AppCommand::Command { seq, command, view_state }").expect("reactor command exchange");
-        let exchange_end = source[exchange_start..].find("protocol::AppCommand::ConfigRead").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
+        let exchange_end = source[exchange_start..].find("protocol::AppCommand::CommandText").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
         let exchange = &source[exchange_start..exchange_end];
         assert!(exchange.contains("runtime_instance_cell(runtime, instance_id)?"));
-        assert!(exchange.contains("handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await"));
+        assert!(exchange.contains("drive_self_waking_ready(instance.app.handle_action_invocation"));
         assert!(!exchange.contains("resolve_ready(instance.app.handle_action_invocation"));
+        assert!(!exchange.contains("run_framework_reserved_job"));
     }
 }

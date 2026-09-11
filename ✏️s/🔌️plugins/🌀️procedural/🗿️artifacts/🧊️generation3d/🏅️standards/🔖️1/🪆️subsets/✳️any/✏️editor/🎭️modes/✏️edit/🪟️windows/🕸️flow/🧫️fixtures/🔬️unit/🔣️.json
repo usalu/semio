@@ -1,0 +1,30 @@
+{
+  "law": "The Flow window's graph outline carries one row per node of the open flow graph, that node's ports nested beneath it as the graph interaction domain's handle ids, and one row per wire — every node row bound to both framework interaction verbs against the graph domain.",
+  "interactionDomain": "graph",
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+    "widgets": [
+      { "kind": "inputSlider", "id": "height", "label": "Height", "value": 3.0, "min": 0.0, "max": 10.0, "step": 0.5 },
+      { "kind": "inputNote", "id": "caption", "text": "Tower" },
+      { "kind": "outputPreview", "id": "result" }
+    ],
+    "synapses": [
+      { "id": "wire-height", "from": "height", "to": "result", "fromPort": "out", "toPort": "in" },
+      { "id": "wire-caption", "from": "caption", "to": "result", "fromPort": "out", "toPort": "in" }
+    ],
+    "layout": {
+      "height": { "x": 0.0, "y": 0.0 },
+      "caption": { "x": 0.0, "y": 120.0 },
+      "result": { "x": 260.0, "y": 60.0 }
+    }
+  },
+  "expected": {
+    "nodes": [
+      { "id": "height", "label": "Height", "ports": ["height@number"] },
+      { "id": "caption", "label": "Note", "ports": ["caption@text"] },
+      { "id": "result", "label": "Preview", "ports": ["result@"] }
+    ],
+    "wires": [{ "id": "wire-height" }, { "id": "wire-caption" }]
+  }
+}

@@ -55,6 +55,54 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
     if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
     copyFileSync(join(sourceDir, entry.name), join(preview2VendorDir, entry.name));
   }
+  patchPreview2ShimCliLineBuffer(join(preview2VendorDir, "cli.js"));
+}
+
+/** 🗣️ Preview2's default `cli.js` console.errors every `write()` token. One logical guest line must be one host call, and `[DEBUG]` must not use `error`. */
+export function patchPreview2ShimCliLineBuffer(cliPath: string): void {
+  if (!existsSync(cliPath)) return;
+  const source = readFileSync(cliPath, "utf8");
+  if (source.includes("semioGuestLogCarry")) return;
+  const patched = source.replace(
+    /const textDecoder = new TextDecoder\(\);[\s\S]*?const stdin = \{/,
+    `const textDecoder = new TextDecoder();
+const stdoutCarry = { bytes: new Uint8Array(0) };
+const stderrCarry = { bytes: new Uint8Array(0) };
+function writeSemioGuestLogLine(channel, contents, carry) {
+    const merged = new Uint8Array(carry.bytes.length + contents.length);
+    merged.set(carry.bytes);
+    merged.set(contents, carry.bytes.length);
+    let start = 0;
+    for (let i = 0; i < merged.length; i++) {
+        if (merged[i] === 10) {
+            const text = textDecoder.decode(merged.subarray(start, i));
+            if (channel === "stdout") console.log(text);
+            else if (text.startsWith("[DEBUG]")) console.debug(text);
+            else console.error(text);
+            start = i + 1;
+        }
+    }
+    carry.bytes = start === 0 ? merged : merged.subarray(start);
+}
+writeSemioGuestLogLine.semioGuestLogCarry = true;
+const stdoutStream = outputStreamCreate({
+    write(contents) {
+        writeSemioGuestLogLine("stdout", contents, stdoutCarry);
+    },
+    blockingFlush() { },
+    [symbolDispose]() { },
+});
+const stderrStream = outputStreamCreate({
+    write(contents) {
+        writeSemioGuestLogLine("stderr", contents, stderrCarry);
+    },
+    blockingFlush() { },
+    [symbolDispose]() { },
+});
+export const stdin = {`
+  );
+  if (patched === source) throw new Error(`preview2 cli.js line-buffer patch did not match: ${cliPath}`);
+  writeFileSync(cliPath, patched);
 }
 
 /**
@@ -83,7 +131,8 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
  * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
  * hand-rolled `Envelope`/`TurnResult` pack encoding (no TS mirror of that codec exists yet — tracked
- * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, commandPage, coldPairPage, budget)` call this worker makes
+ * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `stage-command-page`/`stage-cold-pair-page`
+ * then `poll(events, budget)` calls this worker makes
  * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
  * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
  * interim JSON rather than pack bytes.
@@ -256,7 +305,10 @@ function reply(requestId, value) {
 // 🩺️ \`frames\` is the request's own bulk payload (the \`turn\` message's \`events\` array — the largest,
 // most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
 // unless it isn't already a binary buffer, so a huge/cyclic payload can't itself blow the stack while
-// we're trying to report a stack overflow.
+// we're trying to report a stack overflow. A \`turn\`'s \`events\` is an ARRAY of wire buffers, never a
+// lone buffer, so summing member byte lengths is the only path that reports wire bytes: the stringify
+// fallback renders each byte as \`"index":value\` and inflated a 6 MB payload to 63 MB, which is a
+// memory diagnosis this ticket had to walk back (26/09/09/PROCEDURAL-3D-END-TO-END).
 function replyError(requestId, error, frames, retryableLifecycle) {
   const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
   const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
@@ -266,7 +318,9 @@ function replyError(requestId, error, frames, retryableLifecycle) {
   try { type = (error && error.constructor && error.constructor.name) || typeof error; } catch { type = typeof error; }
   let framesBytes;
   try {
-    framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength : frames !== undefined ? JSON.stringify(frames).length : undefined;
+    framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength
+      : Array.isArray(frames) && frames.every((frame) => frame instanceof Uint8Array || frame instanceof ArrayBuffer) ? frames.reduce((total, frame) => total + frame.byteLength, 0)
+      : frames !== undefined ? JSON.stringify(frames).length : undefined;
   } catch { framesBytes = undefined; }
   // 🩺️ A guest plugin rejects with a LIFTED FAULT RECORD, not an \`Error\` — a plain object whose
   // \`String()\` is the useless \`[object Object]\` that used to be all the host, the console, and the
@@ -626,7 +680,9 @@ export async function createActorApi(actorId, activationGeneration) {
   const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
   return {
     poll: async (events, commandPage, coldPairPage, budget) => {
-      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), commandPage, coldPairPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
+      if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
+      if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
+      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
       return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),

@@ -38,7 +38,7 @@ mod plugin_builder_contract_tests {
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
     /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
     /// import too, rather than relying on `mod app`'s outer glob.
-    use semio_framework_ui_contract::{ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision};
+    use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX};
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::collections::BTreeMap;
@@ -1662,6 +1662,26 @@ mod plugin_builder_contract_tests {
         ActionMeta { actor: "local".into(), instance_id: 1, view_state: None }
     }
 
+    async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
+        crate::app::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+    }
+
+    async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>) -> semio_framework::InvocationResult {
+        let admitted = app.handle_action(action, args, &meta()).await.expect(action);
+        settle_reserved(app, admitted).await
+    }
+
+    fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>) {
+        for _ in 0..100_000 {
+            match app.close_step(1, 4096).expect("reserved fixture closes") {
+                crate::app::PluginCloseStep::Complete => return,
+                crate::app::PluginCloseStep::Pending { .. } => {}
+                other => panic!("reserved fixture close stalled: {other:?}"),
+            }
+        }
+        panic!("reserved fixture close did not complete");
+    }
+
     async fn synthetic_play_app() -> App {
         App::from_builder(
             App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
@@ -2612,7 +2632,7 @@ mod plugin_builder_contract_tests {
         // non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
         // the pick as an unknown id and the domain never shows up in `interaction_state()`.
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
 
         let snapshot = app.ephemeral_snapshot().await;
         assert!(!snapshot.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
@@ -2641,7 +2661,7 @@ mod plugin_builder_contract_tests {
             .spawn(|| {
                 semio_framework_async::block_on(async {
                     let mut app = interaction_app_under_test().await;
-                    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+                    reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
                     testkit::close_registered_fixture_app(&mut app);
                 });
             })
@@ -3346,7 +3366,7 @@ mod plugin_builder_contract_tests {
         let seq = select_a.seq;
         let log_len_before = history.commands.len();
 
-        app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a config-edit row");
+        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq })))).await;
 
         assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
         let after = app.test_history().await;
@@ -3360,9 +3380,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &meta())
-            .await
-            .expect("noteShellCommand with inverse");
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })))).await;
 
         let history = app.test_history().await;
         let entry = history.commands.first().expect("one logged shell row");
@@ -3370,7 +3388,7 @@ mod plugin_builder_contract_tests {
         assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
         let seq = entry.seq;
 
-        let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a Shell row");
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq })))).await;
 
         // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
         // instead of replaying anything locally, and does NOT append a new log entry on its own.
@@ -3415,7 +3433,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
         // One undo restores the cut label — cut is a single coalesced edit, not two.
-        app.handle_action("undo", None, &meta()).await.expect("undo");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "hello");
     }
 
@@ -3476,7 +3494,7 @@ mod plugin_builder_contract_tests {
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
         // One undo reverts the whole coalesced gesture back to the empty label.
-        app.handle_action("undo", None, &meta()).await.expect("undo");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
 
@@ -3487,15 +3505,15 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
         assert_eq!(app.test_snapshot().await.count, 2);
 
-        let undo = app.handle_action("undo", None, &meta()).await.expect("undo");
+        let undo = reserved_action(&mut app, "undo", None).await;
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1);
 
-        app.handle_action("redo", None, &meta()).await.expect("redo");
+        reserved_action(&mut app, "redo", None).await;
         assert_eq!(app.test_snapshot().await.count, 2);
 
-        let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).await.expect("checkpoint");
+        let checkpoint = reserved_action(&mut app, "commitCheckpoint", None).await;
         assert!(checkpoint.mutations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
     }
@@ -3515,7 +3533,8 @@ mod plugin_builder_contract_tests {
             },
             arguments: Default::default(),
         };
-        let result = app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("reserved undo without window ownership");
+        let admitted = app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("reserved undo without window ownership");
+        let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
         for _ in 0..100_000 {
             match app.close_step(1, 4096).expect("reserved undo fixture closes") {
@@ -3556,7 +3575,11 @@ mod plugin_builder_contract_tests {
         assert!(super::addressed_action_view(&view, &invocation).is_err(), "strict window projection rejects a missing instance");
         let admitted = super::admit_addressed_action_view(&view, &invocation).expect("reserved undo is admitted without window ownership");
         let meta = ActionMeta { view_state: Some(admitted), ..meta() };
-        let result = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta)).expect("actor reserved undo");
+        let admitted = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta)).expect("actor reserved undo");
+        assert!(admitted.mutations.is_empty());
+        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
+        assert_eq!(app.test_snapshot().await.count, 1, "first turn must not commit history");
+        let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_snapshot().await.count, 0, "history order must regress through actor ingress");
         assert!(app.test_store().await.applied_edit_ids().len() < before);
@@ -3567,6 +3590,295 @@ mod plugin_builder_contract_tests {
                 other => panic!("actor reserved undo fixture close stalled: {other:?}"),
             }
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_first_turn_admits_spawn_job_and_drive_commits_history_route() {
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        app.test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .await
+            .expect("seed document edit");
+        assert_eq!(app.test_snapshot().await.count, 1);
+        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit undo");
+        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+        assert!(admitted.events.iter().all(|event| event.kind != "history-changed"));
+        assert_eq!(app.test_snapshot().await.count, 1, "first turn answers without committing");
+        let settled = settle_reserved(&mut app, admitted).await;
+        assert!(settled.events.iter().any(|event| event.kind == "history-changed"));
+        assert_eq!(app.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
+        for _ in 0..100_000 {
+            match app.close_step(1, 4096).expect("spawn-job undo fixture closes") {
+                crate::app::PluginCloseStep::Complete => break,
+                crate::app::PluginCloseStep::Pending { .. } => {}
+                other => panic!("spawn-job undo fixture close stalled: {other:?}"),
+            }
+        }
+    }
+
+    /// 🧪 Browser #37 chrome: [Set Active Example, Resize Window] then spawn-admit undo.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_pops_chrome_top_shell_then_publishes_history_patch() {
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({
+                "commandId": "setActiveExample",
+                "label": "Set Active Example",
+                "inverseCommandId": "setActiveExample",
+                "inverseArgs": { "exampleId": "forest" }
+            }))),
+        )
+        .await;
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({
+                "commandId": "os.resizeWindow",
+                "label": "Resize Window",
+                "inverseCommandId": "os.resizeWindow",
+                "inverseArgs": { "width": 800, "height": 600 }
+            }))),
+        )
+        .await;
+        let before = app.test_history().await;
+        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
+        assert!(before.can_undo);
+        assert!(!before.can_redo);
+
+        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit chrome undo");
+        assert!(
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            "first turn must admit Isolated framework.reserved.tool"
+        );
+        assert!(admitted.history_patch.is_none(), "first turn answers with an empty patch");
+        assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
+
+        let settled = settle_reserved(&mut app, admitted).await;
+        assert_eq!(
+            settled.requested_effects,
+            vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
+        );
+        let patch = settled.history_patch.expect("chrome undo publishes history_patch");
+        assert!(patch.cursor > 0, "cursor must advance past the populated snapshot");
+        assert!(!patch.upserts.is_empty(), "patch must carry upserts the host chrome applies");
+        assert!(patch.can_undo, "Set Active Example must remain reachable");
+        assert!(patch.can_redo);
+        let after_resize = app.test_history().await;
+        let resize = after_resize.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").expect("resize stays in the append-only log");
+        assert!(!resize.revertible, "popped chrome-top shell is no longer revertible");
+        let example = after_resize.commands.iter().find(|entry| entry.action_id == "setActiveExample").expect("example");
+        assert!(example.revertible);
+
+        let second = reserved_action(&mut app, "undo", None).await;
+        assert_eq!(
+            second.requested_effects,
+            vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: Some(dv(json!({ "exampleId": "forest" }))) }]
+        );
+        let patch2 = second.history_patch.expect("second undo publishes history_patch");
+        assert!(!patch2.can_undo);
+        assert!(patch2.can_redo);
+
+        let redo_example = reserved_action(&mut app, "redo", None).await;
+        assert_eq!(redo_example.requested_effects, vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: None }]);
+        let redo_patch = redo_example.history_patch.expect("redo publishes history_patch");
+        assert!(redo_patch.can_undo);
+        assert!(redo_patch.can_redo);
+        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
+
+        let redo_resize = reserved_action(&mut app, "redo", None).await;
+        assert_eq!(redo_resize.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: None }]);
+        let redo_resize_patch = redo_resize.history_patch.expect("second redo publishes history_patch");
+        assert!(redo_resize_patch.can_undo);
+        assert!(!redo_resize_patch.can_redo);
+        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").is_some_and(|entry| entry.revertible));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 #38 host-drive contract: spawn-admit undo reaches Done in 2 Isolated steps with the browser budget.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_reaches_done_within_host_drive_contract() {
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({
+                "commandId": "setActiveExample",
+                "label": "Set Active Example",
+                "inverseCommandId": "setActiveExample",
+                "inverseArgs": { "exampleId": "forest" }
+            }))),
+        )
+        .await;
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({
+                "commandId": "os.resizeWindow",
+                "label": "Resize Window",
+                "inverseCommandId": "os.resizeWindow",
+                "inverseArgs": { "width": 800, "height": 600 }
+            }))),
+        )
+        .await;
+        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit chrome undo");
+        assert!(
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            "first turn must admit Isolated framework.reserved.tool"
+        );
+        let (settled, steps) = crate::app::drive_framework_reserved_spawn_like_host(&mut app, admitted).await.expect("host-like Isolated drive");
+        assert_eq!(steps, 2, "dummy reserved job must Done in 2 steps, same as noteShellCommand");
+        assert_eq!(
+            settled.requested_effects,
+            vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
+        );
+        assert!(settled.history_patch.is_some_and(|patch| patch.can_undo && patch.can_redo && !patch.upserts.is_empty()));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 Browser #37 mixed stack: document example under chrome-top Resize Window.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_pops_shell_then_falls_through_to_document_store() {
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        app.test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Set Active Example".into()) })
+            .await
+            .expect("document example");
+        let _ = app.test_history().await;
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({
+                "commandId": "os.resizeWindow",
+                "label": "Resize Window",
+                "inverseCommandId": "os.resizeWindow",
+                "inverseArgs": { "width": 800, "height": 600 }
+            }))),
+        )
+        .await;
+        assert_eq!(app.test_snapshot().await.count, 1);
+        let before = app.test_history().await;
+        assert!(before.commands.iter().any(|entry| entry.label.contains("Set Active Example")));
+        assert_eq!(before.commands.first().map(|entry| entry.label.as_str()), Some("Resize Window"));
+
+        let first = reserved_action(&mut app, "undo", None).await;
+        assert_eq!(
+            first.requested_effects,
+            vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
+        );
+        assert_eq!(app.test_snapshot().await.count, 1, "first undo must pop the chrome-top shell, not the document example");
+        assert!(first.history_patch.as_ref().is_some_and(|patch| patch.can_undo && !patch.upserts.is_empty()));
+
+        let second = reserved_action(&mut app, "undo", None).await;
+        assert!(second.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })));
+        assert_eq!(app.test_snapshot().await.count, 0, "second undo must apply the document inverse");
+        assert!(second.history_patch.as_ref().is_some_and(|patch| patch.can_redo && !patch.upserts.is_empty()));
+
+        reserved_action(&mut app, "redo", None).await;
+        assert_eq!(app.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 Host `handleAction` JSON (`windowKindId=puzzle3d-main`, `actionId=undo`) through `plugin_handle_action`.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_host_json_export_admits_isolated_spawn_job() {
+        use semio_framework::manifest::ViewWindowInstance;
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        app.bind_instance_id(1).await;
+        app.test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .await
+            .expect("seed document edit");
+        let runtime = super::PluginRuntime::<TestRuntimeApps>::new();
+        super::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("host-wire bundle"));
+        super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
+        let action_json = format!(
+            r#"{{"address":{{"pluginId":"test","appId":"{}","modeId":"edit","windowKindId":"puzzle3d-main","windowInstanceId":"puzzle3d-main-perspective","actionId":"undo"}},"arguments":{{"windowId":"puzzle3d-main-perspective"}}}}"#,
+            TestApp::<false>::APP_ID,
+        );
+        let view = ViewModel {
+            active_mode_id: Some("edit".into()),
+            window_id: Some("puzzle3d-main-perspective".into()),
+            window_instances: vec![ViewWindowInstance { id: "puzzle3d-main-perspective".into(), window_kind_id: "puzzle3d-main".into() }],
+            ..Default::default()
+        };
+        let context_json = serde_json::to_string(&json!({ "actor": "local", "viewState": view })).expect("context json");
+        let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json).await.expect("host JSON undo through plugin_handle_action");
+        assert!(
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            "export first turn must admit Isolated framework.reserved.tool, got {:?}",
+            admitted.requested_effects,
+        );
+        assert!(admitted.output.get("operationId").and_then(DslValue::as_str).is_some(), "first-turn output names the spawn-job");
+        let cell = runtime.instances.borrow().get(1).cloned().expect("live export instance");
+        let mut instance = cell.instance.lock().expect("export instance");
+        for _ in 0..100_000 {
+            match instance.app.close_step(1, 4096).expect("export fixture closes") {
+                crate::app::PluginCloseStep::Complete => break,
+                crate::app::PluginCloseStep::Pending { .. } => {}
+                other => panic!("export fixture close stalled: {other:?}"),
+            }
+        }
+    }
+
+
+    /// 🧪 Browser-shaped `noteShellCommand` (no `inverseCommandId`): chrome-order undo pops Resize.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_browser_note_without_inverse_pops_chrome_resize() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        for entry in fixture["stack"].as_array().expect("stack") {
+            reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone()))).await;
+        }
+        let before = app.test_history().await;
+        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
+        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit browser-note undo");
+        assert!(
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            "first turn must admit Isolated framework.reserved.tool"
+        );
+        assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
+        let settled = settle_reserved(&mut app, admitted).await;
+        let replay_id = fixture["undo"]["replayActionId"].as_str().expect("replayActionId");
+        assert_eq!(settled.requested_effects, vec![Effect::ReplayShellCommand { action_id: replay_id.into(), args: None }], "chrome branch must pop Resize, not fall through to the document group");
+        let patch = settled.history_patch.expect("chrome undo publishes history_patch");
+        assert!(patch.can_undo, "Set Active Example must remain reachable");
+        assert!(patch.can_redo);
+        assert!(!patch.upserts.is_empty());
+        let after = app.test_history().await;
+        let resize = after.commands.iter().find(|entry| entry.action_id == replay_id).expect("resize stays in the append-only log");
+        assert!(!resize.revertible, "popped chrome-top shell is no longer revertible");
+        assert!(after.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
+        let redo = reserved_action(&mut app, "redo", None).await;
+        assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: replay_id.into(), args: None }]);
+        assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
+        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 `ReplayShellCommand` survives the leftover `pack_rt` encode/`decode_wire_effect` path.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_replay_shell_command_survives_wire_roundtrip() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
+        let wire = &fixture["wire"];
+        let effect = Effect::ReplayShellCommand { action_id: wire["actionId"].as_str().expect("actionId").into(), args: Some(dv(wire["args"].clone())) };
+        let packed = store::pack_rt::encode_wire_value(&protocol::ToValue::to_value(&effect));
+        let value = store::pack_rt::decode_wire_value(&packed).expect("leftover pack decode");
+        let decoded = match dsl::from_dsl_value::<Effect>(value.clone()) {
+            Ok(decoded) => decoded,
+            Err(_) => {
+                let replay = value.get("replayShellCommand").or_else(|| value.get("ReplayShellCommand")).expect("replayShellCommand leftover key");
+                Effect::ReplayShellCommand {
+                    action_id: replay.get("actionId").or_else(|| replay.get("action_id")).and_then(DslValue::as_str).expect("actionId").into(),
+                    args: replay.get("args").cloned(),
+                }
+            }
+        };
+        assert_eq!(decoded, effect);
     }
 
     //#region 🔖️CommandLogTests
@@ -3601,11 +3913,11 @@ mod plugin_builder_contract_tests {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
         assert_eq!(app.test_history().await.commands.len(), 1);
-        app.handle_action("undo", None, &meta()).await.expect("undo");
+        reserved_action(&mut app, "undo", None).await;
         let after_undo = app.test_history().await;
         assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
         assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
-        app.handle_action("redo", None, &meta()).await.expect("redo");
+        reserved_action(&mut app, "redo", None).await;
         let after_redo = app.test_history().await;
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
@@ -3621,7 +3933,7 @@ mod plugin_builder_contract_tests {
         let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.test_history().await.commands.len();
 
-        let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &meta()).await.expect("revertToCommand");
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq })))).await;
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
         let history = app.test_history().await;
@@ -3657,7 +3969,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-        let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
+        let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" })))).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
     }
@@ -3794,6 +4106,62 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    /// 🕰️ Wave W-AB: Commands admission is a `UI_BUILT_CHILDREN_MAX`-ary tree over the live filtered
+    /// command-row count. A session log past one page must assemble — hops3 aborted every later
+    /// publish at `history-panel.commands`. Bound is derived from the fixture's row count, not a
+    /// bumped children ceiling. needs #40.
+    #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_pages_command_rows_from_the_live_count() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/history-panel-command-pages/🔣️.json")).unwrap();
+        let page_arity = fixture["pageArity"].as_u64().unwrap() as usize;
+        assert_eq!(page_arity, UI_BUILT_CHILDREN_MAX, "fixture page arity must be the live BuiltChildren page, not a bumped stand-in");
+        let overflow = fixture["overflowPastArity"].as_u64().unwrap() as usize;
+        let n = page_arity + overflow;
+        assert_eq!(n, fixture["commandRowCount"].as_u64().unwrap() as usize);
+        let expected_pages = fixture["expectedCommandSectionChildren"].as_u64().unwrap() as usize;
+        assert_eq!(expected_pages, n.div_ceil(page_arity));
+        let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
+        let entry = |seq: u64| CommandView {
+            seq,
+            action_id: "hover".into(),
+            label: format!("Hover {seq}"),
+            kind: ActionKind::Interaction,
+            timestamp: "0".into(),
+            edit_id: None,
+            config_edit_id: None,
+            child_edit_ids: Vec::new(),
+            op_lines: Vec::new(),
+            applied: false,
+            revertible: false,
+            count: 1,
+            inverse: None,
+        };
+        let history = HistoryView {
+            columns: Vec::new(),
+            can_undo: false,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: (1..=n as u64).map(entry).collect(),
+            command_filter: HistoryCommandFilter::All,
+        };
+        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("command rows past one page must not fail admission at history-panel.commands");
+        assert_eq!(panel.children[1].children.len(), expected_pages, "Commands section children are pages derived from the live row count");
+        fn collect_entry_keys(node: &BuiltNode, prefix: &str, keys: &mut Vec<String>) {
+            if node.key.as_str().starts_with(prefix) {
+                keys.push(node.key.as_str().to_string());
+            }
+            for child in node.children.iter() {
+                collect_entry_keys(child, prefix, keys);
+            }
+        }
+        let mut keys = Vec::new();
+        collect_entry_keys(&panel, prefix, &mut keys);
+        assert_eq!(keys.len(), n, "every live command row must stay reachable under the paged tree: {keys:?}");
+        assert_eq!(panel.children[1].children[0].children.len(), page_arity);
+        assert_eq!(panel.children[1].children[1].children.len(), overflow);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
@@ -3836,7 +4204,7 @@ mod plugin_builder_contract_tests {
     async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
         let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
-        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand");
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args)).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 1);
@@ -3845,7 +4213,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(entry.kind, ActionKind::Shell);
         assert!(entry.label.contains("dark"));
 
-        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand again");
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args)).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty());
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 2);
@@ -3879,16 +4247,17 @@ mod plugin_builder_contract_tests {
     async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         let before_len = app.test_history().await.commands.len();
-        let result = app.handle_action("undo", None, &meta()).await.expect("undo");
+        let result = reserved_action(&mut app, "undo", None).await;
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
         assert_eq!(app.test_history().await.commands.len(), before_len);
+        close_reserved_app(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_is_never_logged() {
         let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         let before_len = app.test_history().await.commands.len();
-        app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
+        reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" })))).await;
         assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
     }
 
@@ -3919,9 +4288,10 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_on_empty_history_is_a_benign_no_operation() {
         let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-        let result = app.handle_action("undo", None, &meta()).await.expect("undo");
+        let result = reserved_action(&mut app, "undo", None).await;
         assert!(result.mutations.is_empty());
         assert!(result.events.is_empty());
+        close_reserved_app(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4539,7 +4909,7 @@ mod plugin_builder_contract_tests {
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
         // One undo reverts the whole coalesced amend gesture.
-        app.handle_action("undo", None, &meta()).await.expect("undo amend");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
 
         for value in ["x", "xy"] {
@@ -4547,7 +4917,7 @@ mod plugin_builder_contract_tests {
         }
         assert_eq!(app.test_snapshot().await.label, "xy");
         // Each commit is its own edit: one undo only reverts the last commit.
-        app.handle_action("undo", None, &meta()).await.expect("undo commit");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "x");
     }
 
@@ -4572,7 +4942,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
         assert_eq!(app.test_snapshot().await.label, "abc");
         // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
-        app.handle_action("undo", None, &meta()).await.expect("undo amend");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
 
@@ -4688,7 +5058,7 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
         assert_eq!(app.test_snapshot().await.count, 2);
-        app.handle_action("undo", None, &meta()).await.expect("undo");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.count, 1);
     }
 
@@ -4706,7 +5076,7 @@ mod plugin_builder_contract_tests {
         let mut app = interaction_app_under_test().await;
         // 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
         assert_eq!(selection.ids, vec!["item-1".to_string()]);
         assert_eq!(selection.granularity, "item");
@@ -4716,16 +5086,16 @@ mod plugin_builder_contract_tests {
     async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
 
-        app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).await.expect("interactionHover");
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
 
         assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
         // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
-        app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &meta()).await.expect("clear hover");
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })))).await;
         assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
     }
 
@@ -4733,12 +5103,12 @@ mod plugin_builder_contract_tests {
     async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
         // 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
         // DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
-        app.handle_action("undo", None, &meta()).await.expect("undo");
+        reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
     }
@@ -4746,10 +5116,10 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
         let mut app = interaction_app_under_test().await;
-        app.handle_action(SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &meta()).await.expect("setSelectionMode");
+        reserved_action(&mut app, SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" })))).await;
         assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(SelectionMode::Single));
 
-        app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &meta()).await.expect("setInteractionGranularity");
+        reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
         assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
         // 🛂️ An undeclared granularity is rejected, not silently accepted.
@@ -4762,10 +5132,10 @@ mod plugin_builder_contract_tests {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
 
-        app.handle_action(SELECT_ALL_ACTION_ID, None, &meta()).await.expect("selectAll");
+        reserved_action(&mut app, SELECT_ALL_ACTION_ID, None).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "selectAll must select every id `interaction_topology` reports for the declared granularity");
 
-        app.handle_action(CLEAR_SELECTION_ACTION_ID, None, &meta()).await.expect("clearSelection");
+        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None).await;
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
     }
 
@@ -4773,7 +5143,7 @@ mod plugin_builder_contract_tests {
     async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
         // 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
@@ -4787,7 +5157,7 @@ mod plugin_builder_contract_tests {
     async fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         let history = app.test_history().await;
         let row = history.commands.first().expect("one logged row");
         assert_eq!(row.action_id, INTERACTION_SELECT_ACTION_ID);
@@ -4822,7 +5192,7 @@ mod plugin_builder_contract_tests {
     async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
 
         // 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
         // this the real presence-derivation fixture the prior packet's own gap note anticipated.
@@ -4891,6 +5261,34 @@ mod plugin_builder_contract_tests {
         assert_eq!(update.peers[0].color, Some(3));
         assert!(update.peers[0].selected);
         assert!(!update.peers[0].hovered);
+    }
+
+    /// 🧪 W-G3 §8.21 — `interactionSelect` leftover `Invocation.output` carries InteractionView selected ids + lock.
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_select_job_completion_publishes_interaction_view_on_leftover() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let view = settled.output.get("interactionView").expect("leftover InteractionView");
+        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
+        let locked = view.get("locked").expect("lock state included on leftover InteractionView");
+        assert_eq!(locked.get("item-1").and_then(DslValue::as_bool), Some(false));
+        let gumball = view.get("gumball").expect("gumball leftover");
+        assert_eq!(gumball.get("active").and_then(DslValue::as_bool), Some(true));
+        assert_eq!(gumball.get("anchorId").and_then(DslValue::as_str), Some("item-1"));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 W-G3 §8.21 — `interactionHover` leftover publishes the hover target on the same leftover output.
+    #[semio_framework_async_macros::async_test]
+    async fn interaction_hover_job_completion_publishes_hover_target_on_leftover() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let view = settled.output.get("interactionView").expect("leftover InteractionView");
+        let hover = view.get("hoverTarget").expect("hover target");
+        assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
+        assert_eq!(hover.get("domain").and_then(DslValue::as_str), Some("items"));
+        close_reserved_app(&mut app);
     }
     //#endregion 🔖️InteractionDispatchTests
 

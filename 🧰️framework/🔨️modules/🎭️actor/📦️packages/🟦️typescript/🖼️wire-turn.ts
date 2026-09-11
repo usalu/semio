@@ -216,6 +216,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
+    case "dispatch-action":
+      return { dispatchAction: { req: num("req"), action: str("action"), args: packField("args"), delayMs: num("delayMs") } };
     default:
       console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion`);
       return null;

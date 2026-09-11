@@ -18,8 +18,13 @@ pub fn translate_selection(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>
     if ctx.refuse_without_selection(&[ids.as_slice(), volume_ids.as_slice()].concat()) {
         return;
     }
+    let unlocked: Vec<String> = ids.iter().filter(|id| ctx.scene.fixture.objects.iter().any(|object| &object.id == *id && !object.locked)).cloned().collect();
+    if unlocked.is_empty() && !ids.is_empty() {
+        ctx.refuse_when_locked();
+        return;
+    }
     let incoming = resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
-    puzzle3d_apply_translate(&mut ctx.scene.fixture, &ids, &volume_ids, dx, dy, dz);
-    puzzle3d_rederive_moved_attractions(&mut ctx.scene.fixture, &ids, &incoming);
+    puzzle3d_apply_translate(&mut ctx.scene.fixture, &unlocked, &volume_ids, dx, dy, dz);
+    puzzle3d_rederive_moved_attractions(&mut ctx.scene.fixture, &unlocked, &incoming);
     resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
 }

@@ -25,8 +25,9 @@ import {
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { resolveUiDirtyScope } from "@semio-tech/framework";
+import { hostArmedViewContext, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { openSurfaceContextMenu, uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
@@ -1609,7 +1610,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -1782,7 +1783,7 @@ import {
   resolveUtilityActivation,
   isWorldTransformGumballMode,
   worldGumballConfigForProjection,
-  gumballTransformDeltaBetweenPoses,
+  gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1,
   gumballLivePreviewDeltaBetweenPoses,
   applyGumballLivePreviewDeltaToPose,
   WindowActionPane,
@@ -4892,6 +4893,16 @@ describe("framework renderer hosts", () => {
     expect(world3dSuggestionsGestureArmed(true, "table@in")).toBe(true);
     expect(world3dSuggestionsGestureArmed(true, null)).toBe(false);
     expect(world3dSuggestionsGestureArmed(false, "table@in")).toBe(false);
+    expect(world3dRetainLocalVortexHover("seed-left-001:v0", null)).toBe("seed-left-001:v0");
+    expect(world3dRetainLocalVortexHover("seed-left-001:v0", undefined)).toBe("seed-left-001:v0");
+    expect(world3dRetainLocalVortexHover("seed-left-001:v0", "seed-left-001:v1")).toBe("seed-left-001:v1");
+    expect(world3dRetainLocalVortexHover(null, null)).toBeNull();
+    expect(world3dSuggestionsGestureConsumesContextMenu(true)).toBe(true);
+    expect(world3dSuggestionsGestureConsumesContextMenu(false)).toBe(false);
+    expect(world3dSuggestionsGestureArmed(true, world3dRetainLocalVortexHover("seed-left-001:v3", null))).toBe(true);
+    expect(world3dSuggestionsRightDownRoutesOnWindowCapture(2, true)).toBe(true);
+    expect(world3dSuggestionsRightDownRoutesOnWindowCapture(2, false)).toBe(false);
+    expect(world3dSuggestionsRightDownRoutesOnWindowCapture(0, true)).toBe(false);
   });
 
   it("frames world instances onto the table centroid without a guest selection", () => {
@@ -7718,6 +7729,17 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(reconcileToolTabSelection(hydrate.next, "fill", "fill").effect).toEqual({ kind: "idle" });
   });
 
+  it("windowed context-menu view overlays the armed tool like handleAction", () => {
+    const view = {
+      locale: "en",
+      terminology: "native",
+      windowInstances: [{ id: "left", windowKindId: "graph" }],
+      activeUtilityByWindowId: { left: "pan" },
+    };
+    expect(windowViewContext(view, "left")?.activeToolId).toBeUndefined();
+    expect(hostArmedViewContext(view, "fill", "left")?.activeToolId).toBe("fill");
+  });
+
   it("reconcileToolTabSelection disarms the tool when its leaf collapses, and re-arms on the next press", () => {
     const armed: ToolTabSelection = { toolId: "fill", selected: "fill" };
     const collapsed = reconcileToolTabSelection(armed, "fill", null);
@@ -7901,6 +7923,78 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(resolveBootExampleId("rectangle-extrude-volume", options, "sphere-cut-with-torus")).toBe("rectangle-extrude-volume");
     expect(resolveBootExampleId("missing", options)).toBe("hexagonal-mushroom-column");
     expect(resolveBootExampleId("", [])).toBe("");
+  });
+
+  it("navbar example id follows Set Active Example revertible, not chrome-only upserts", () => {
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", label: "Resize Window", revertible: false }], "nakagin", "forest")).toBeUndefined();
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: true }], "nakagin", "forest")).toBe("nakagin");
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: false }], "nakagin", "forest")).toBe("forest");
+  });
+
+  it("leftover InteractionView publication populates selection, lock, and gumball", () => {
+    const published = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: ["seed-left-001"],
+        hoverTarget: { domain: "vortex", channel: "pointer", id: "seed-left-001" },
+        locked: { "seed-left-001": false },
+        gumball: { active: true, anchorId: "seed-left-001" },
+        selection: { vortex: { granularity: "object", ids: ["seed-left-001"] } },
+        hover: { vortex: { channel: "pointer", ids: ["seed-left-001"] } },
+        activeMode: { vortex: "single" },
+        activeGranularity: { vortex: "object" },
+      },
+    });
+    expect(published?.selectedIds).toEqual(["seed-left-001"]);
+    expect(published?.locked["seed-left-001"]).toBe(false);
+    expect(published?.gumballActive).toBe(true);
+    expect(published?.gumballAnchorId).toBe("seed-left-001");
+    expect(leftoverInteractionStateV1(published!).selection.vortex?.ids).toEqual(["seed-left-001"]);
+    expect(interactionViewFromLeftoverOutput(null)).toBeNull();
+    const pose = leftoverWorldGumballPoseV1({ gumballActive: true, gumballAnchorId: "seed-left-001", ids: ["seed-left-001"] }, [{ id: "seed-left-001", position: [1, 2, 3] }]);
+    expect(pose.transformMode).toBe("move");
+    expect(pose.gumballTarget).toEqual([1, 2, 3]);
+    const gumballArgs = world3dGumballSelectionArgsV1({ ids: ["seed-left-001"], gumballActive: true, componentIds: [9] });
+    expect(gumballArgs.ids).toEqual(["seed-left-001"]);
+    expect(gumballArgs.mode).toBe("object");
+  });
+
+  it("hover-only leftover InteractionView overlays vortex hover without selected ids", () => {
+    const published = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: [],
+        hoverTarget: { domain: "vortex", channel: "pointer", id: "seed-left-001:v0" },
+        locked: {},
+        gumball: { active: false, anchorId: null },
+        selection: {},
+        hover: { vortex: { channel: "pointer", ids: ["seed-left-001:v0"] } },
+        activeMode: { vortex: "multiple" },
+        activeGranularity: { vortex: "vortex" },
+      },
+    });
+    expect(published?.hoverTarget).toEqual({ domain: "vortex", channel: "pointer", id: "seed-left-001:v0" });
+    expect(leftoverWorldOverlayAppliesV1({ ids: published!.selectedIds, hoveredId: published!.hoverTarget?.id ?? null, hoveredDomain: published!.hoverTarget?.domain ?? null, gumballActive: false, gumballAnchorId: null })).toBe(true);
+    expect(leftoverHoveredVortexFullIdV1({ hoveredId: published!.hoverTarget!.id, hoveredDomain: published!.hoverTarget!.domain })).toBe("seed-left-001:v0");
+    expect(mergeWorldInteractionWithLeftoverV1({}, { ids: [], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: false, gumballAnchorId: null }).hoveredVortexFullId).toBe("seed-left-001:v0");
+    expect(mergeWorldSelectionWithLeftoverV1({ method: "rectangle", ids: [] }, { ids: [], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: false, gumballAnchorId: null }).hoveredId).toBe("seed-left-001:v0");
+    expect(leftoverHoveredVortexFullIdV1({ hoveredId: "seed-left-001", hoveredDomain: "vortex" })).toBeUndefined();
+  });
+
+  it("leftover activeUtility overlays guest select without a hover id", () => {
+    const leftover = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
+    expect(leftoverWorldOverlayAppliesV1(leftover)).toBe(true);
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, leftover).activeUtility).toBe("brush");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, { ids: [], hoveredId: null, gumballActive: false, gumballAnchorId: null }).activeUtility).toBe("select");
+  });
+
+  it("retains last brush preview JSON for the leftover hover after a guest no-target wipe", () => {
+    const published = JSON.stringify({ targetVortexFullId: "seed-left-001:v3", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });
+    const warm = retainWorldBrushPreviewJsonV1(published, "seed-left-001:v3", {});
+    expect(warm.json).toBe(published);
+    expect(warm.retained["seed-left-001:v3"]).toBe(published);
+    const wiped = retainWorldBrushPreviewJsonV1("", "seed-left-001:v3", warm.retained);
+    expect(wiped.json).toBe(published);
+    const other = retainWorldBrushPreviewJsonV1("", "seed-left-001:v7", warm.retained);
+    expect(other.json).toBe("");
   });
 
   it("the example picker dispatches the chosen example id and its completion refreshes the whole shell", () => {
@@ -9335,9 +9429,9 @@ const PROCEDURAL_SERVED_DESCRIPTOR = "../../../../🔌️plugin/📦️packages/
 
 describe("contributions push declaration", () => {
   /** ⚖️ LAW: every procedural app that opts into the host's `setContributions` push declares the
-   * `pageCount` argument, so the shell's own gate pages it. An app that declares only `json` is
-   * handed one command carrying the whole closure, which `validate_public_json_envelope` refuses —
-   * the gate is `appCommandTakesPageRun`, so the law runs THAT, never a copy of it
+   * `pageCount` argument so the addressed schema matches. The shell sends page 0 of 1 as one
+   * pack-encoded `handleCommand` (`PluginRuntime` `encodePackValue`), not 4 KiB JSON pages.
+   * The gate is `appCommandTakesPageRun`, so the law runs THAT, never a copy of it
    * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   it("declares pageCount on every procedural app the shell pushes contributions to", () => {
     for (const [label, relativeUrl] of [
@@ -9499,3 +9593,18 @@ describe("undeclared action diagnostic", () => {
   });
 });
 //#endregion 🚨️UndeclaredActionDiagnostic
+
+describe("history patch apply", () => {
+  it("applies an equal-cursor history patch when it carries upserts", () => {
+    expect(historyPatchShouldApplyV1(0, { cursor: 0, upserts: [{ seq: 1 }] })).toBe(true);
+    expect(historyPatchShouldApplyV1(0, { cursor: 1, upserts: [{ seq: 1 }] })).toBe(true);
+    expect(historyPatchShouldApplyV1(1, { cursor: 0, upserts: [{ seq: 1 }] })).toBe(false);
+    expect(historyPatchShouldApplyV1(1, { cursor: 1 })).toBe(false);
+    expect(historyPatchShouldApplyV1(1, { cursor: 0 }, true)).toBe(true);
+    expect(historyRefreshNeededV1("setActiveExample", undefined)).toBe(true);
+    expect(historyRefreshNeededV1("setActiveExample", { upserts: [] })).toBe(true);
+    expect(historyRefreshNeededV1("setActiveExample", { upserts: [{ seq: 1 }] })).toBe(false);
+    expect(historyRefreshNeededV1("undo", undefined)).toBe(false);
+    console.log("[DEBUG] History patch apply: equal-cursor-upserts=1 newer=1 older-skipped=1 equal-empty-skipped=1 replace=1 example-refresh=1 example-has-upserts=0 undo-skip=1");
+  });
+});

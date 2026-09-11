@@ -11,6 +11,24 @@
 use crate::schema::snapshot::AssemblySnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
+//#region 📦️RetainedPayload
+/// 📦️ One single-page payload, with the job module's EXACT source handback on refusal. Dropping a
+/// `JobPayloadRejectedPage` without taking its source back trips that module's own lifecycle
+/// assertion (`🧰️framework/🔨️modules/🧵️job/🦀️.rs:483`) and then aborts the process from a second
+/// panic inside `RetainedJobPayload::drop` (`:663`) — which is exactly what every inference test in
+/// this facet was taking before `26/09/09/PROCEDURAL-3D-END-TO-END` measured it. An empty payload is
+/// the honest answer to a refused admission; leaking the page never was.
+fn retained_payload(context: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+    match context.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            semio_framework_job::RetainedJobPayload::empty(stream)
+        }
+    }
+}
+//#endregion 📦️RetainedPayload
+
 //#region 🔖️Compile
 pub const ASSEMBLY_INFERENCE_JOB_KIND: &str = "semio.infer";
 pub const ASSEMBLY_INFERENCE_TOOL_ID: &str = "s.assembly.solve";
@@ -199,7 +217,7 @@ impl AssemblyInferenceJob {
         preview[24] = self.stage as u8;
         self.preview_units = 0;
         self.last_preview_ms = context.now_us().map(|now_us| now_us / 1_000);
-        let payload = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &preview).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
+        let payload = retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &preview);
         semio_framework_job::StepOutcome::PreviewReady(payload)
     }
 
@@ -382,7 +400,7 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-assembly-inference-operation").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            let detail = retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-assembly-inference-operation");
             return StepOutcome::Fault(semio_framework_job::JobFault { detail });
         }
         loop {
@@ -411,7 +429,7 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                 | AssemblyInferenceStage::Topology
                 | AssemblyInferenceStage::Fixed => {
                     if let Err(error) = self.advance_compile() {
-                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes());
                         return StepOutcome::Fault(semio_framework_job::JobFault { detail });
                     }
                 }
@@ -443,7 +461,7 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                 }
                 AssemblyInferenceStage::MapCommit => {
                     if let Err(error) = self.map_one() {
-                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes());
                         return StepOutcome::Fault(semio_framework_job::JobFault { detail });
                     }
                 }
@@ -464,7 +482,7 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                     }
                     Ok(false) => {}
                     Err(error) => {
-                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        let detail = retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes());
                         return StepOutcome::Fault(semio_framework_job::JobFault { detail });
                     }
                 },

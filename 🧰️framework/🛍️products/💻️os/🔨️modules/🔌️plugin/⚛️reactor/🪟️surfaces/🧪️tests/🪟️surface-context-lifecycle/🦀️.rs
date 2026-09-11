@@ -102,3 +102,16 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     assert_eq!(contexts.len(), 0);
     eprintln!("[DEBUG] reserved section surfaces retained the unnarrowed host view across sibling mounts and window closure");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn default_window_surface_has_host_context() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+    let alias = &fixture["defaultWindowSurface"];
+    let mut contexts = SurfaceContexts::default();
+    let projected = view.for_window_instance(alias["windowId"].as_str().unwrap()).unwrap();
+    contexts.insert(alias["id"].as_str().unwrap().into(), alias["bodyKey"].as_str().unwrap().into(), projected).unwrap();
+    let actual = contexts.get(alias["id"].as_str().unwrap()).expect("leftover default window surface must retain host context");
+    assert_eq!(actual.body_key, alias["bodyKey"].as_str().unwrap());
+    assert_eq!(actual.view_state.window_id.as_deref(), alias["windowId"].as_str());
+}

@@ -337,8 +337,7 @@ const GENERATION3D_VIEW_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.3d.view
 /// 📐️ The REAL wire ceiling of one contributions page: the framework's own public-invocation string
 /// bound — which no tool contract can widen, because `validate_public_json_envelope` runs before the
 /// addressed tool's contract — at its worst-case escaped width, plus the addressed envelope.
-const GENERATION3D_VIEW_CONTRIBUTIONS_ENVELOPE_BYTES: usize = 4_096;
-const GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES * semio_framework::PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR + GENERATION3D_VIEW_CONTRIBUTIONS_ENVELOPE_BYTES;
+const GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
 
 fn generation3d_view_contributions_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, 32, 32, 16_384, 7_500)

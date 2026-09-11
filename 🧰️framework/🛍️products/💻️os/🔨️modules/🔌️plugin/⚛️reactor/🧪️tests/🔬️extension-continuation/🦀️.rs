@@ -143,3 +143,27 @@ async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_se
     assert!(args.get("inputJson").is_none(), "the request body must not ride back into the guest: {args:?}");
     assert_eq!(args.get("outputJson").and_then(dsl::DslValue::as_str), Some(r#"{"value":1}"#));
 }
+
+/// ⚖️ LAW: `completion-result.fault` is a `pack` of the fault value — the same bytes the shell
+/// writes with `encodePackValue(fault)` and the native host writes with `encode_fault_pack`.
+/// JSON (`encode_fault_bytes`) is not this ABI arm. Guest `outcome_to_result` must recover
+/// `code` and `message` from that pack, or a readable error is mojibake.
+#[semio_framework_async_macros::async_test]
+async fn a_packed_host_fault_round_trips_through_outcome_to_result() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/extension-result-fault-pack.json")).expect("fault-pack fixture");
+    let fault_json = serde_json::to_string(&fixture["fault"]).expect("fault object");
+    let fault_value = dsl::json::from_json_str::<dsl::DslValue>(&fault_json).expect("fixture fault is a DSL value");
+    let fault: semio_framework::Fault = dsl::from_dsl_value(fault_value).expect("fixture fault is a Fault");
+    let packed = crate::host::encode_fault_pack(&fault);
+    assert!(serde_json::from_slice::<serde_json::Value>(&packed).is_err(), "the ABI fault arm must not be a JSON string: {packed:?}");
+    let decoded = crate::host::outcome_to_result(semio_framework::kernel::RequestOutcome::Err(packed)).expect_err("the err arm decodes a fault");
+    assert_eq!(decoded.code.0, "extension.missing");
+    assert_eq!(decoded.message, "no such extension");
+    let req = queue_extension_invocation(2, &brep_invocation("flowEvalResolve", r#"{"nodeHash":8}"#)).expect("continuation admission");
+    let _ = REGISTRY.with(|registry| registry.drain());
+    let (_, action, args) = take_extension_response(req, Err(decoded)).expect("a packed host fault must reach the response action readable");
+    assert_eq!(action, "flowEvalResolve");
+    assert_eq!(args.get("ok").and_then(dsl::DslValue::as_bool), Some(false));
+    assert_eq!(args.get("faultCode").and_then(dsl::DslValue::as_str), Some("extension.missing"));
+    assert_eq!(args.get("faultMessage").and_then(dsl::DslValue::as_str), Some("no such extension"));
+}

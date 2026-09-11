@@ -288,3 +288,168 @@ coordinator(s).
 - Export FIXED + browser-proven on :6014 (menu rows inherited `pointer-events: none` from dimmed chrome; `pointer-events-auto` on leaf + active ContextMenuChrome body; puzzle-3d.json downloaded). Frame control PROVEN (instances-group AABB, table fills Perspective). Laws 4/0.
 - Remaining: vortex marker hit-testing (blocks brush placement item 6 + suggestions menu item 8) — clicks on visible geometry never dispatch `addBrushObject`, hover never arms. W-AB resumed to root-cause the r3f pick path / hit proxies.
 - Checklist item 4 residual: numbered Import lands `importFixture {}` (no file picker) — assess after reserved lane lands.
+
+## 12:40 coordinator — vortex root shifted to GUEST: scene payload publishes vorticesJson=[]
+- W-AB's hit-testing fix landed (no-op raycast pass-through in brush mode + visible hit proxy, laws 6/0) but coordinator DOM-dump proved both windows carry `data-vortices-json="[]"` — the guest payload has ZERO vortices (Concrete Forest, wasm #35). Hit fix has nothing to hit.
+- Probe 10-31-36: scene loads (table renders, brush arms, menu opens, 0 faults); "Agent disconnected"/"Remote: detached" is presence chrome, not a shard fault. Frame overshot right edge (possible race with census — instanceCount=1 at click).
+- W-AB resumed: root-cause guest vortices (fixture/store vs payload assembler; possibly blocked-on-reserved-lane if publication rides it). Guest fixes ride rebuild #36.
+- :6014 recycled again after World3dHost HMR wedge; serving #35, healthy.
+
+## 13:10 coordinator — #36 deployed: spawn lane WORKS in browser (job 28 done), undo still hangs
+- W-G3's conversion landed (laws 6/0), rebuild #36 built+activated first-try, serve recycled.
+- Probe 11-05-11: `[DEBUG] job done kind=framework.reserved.tool job=28 status=done steps=2` — a reserved verb spawned + completed through the new lane in the REAL browser (likely interactionSelect from pick-object). But undo: 4 dispatches route local → handleAction never resolves — identical hang. Hypothesis: an older in-stack undo intercept earlier in the guest funnel wins before the converted admit. W-G3 resumed to find/remove it + add entry eprintlns for #37 ground truth.
+- ⚠️ a peer swept ALL [DEBUG] traces from ShellHost/PluginRuntime at 12:13 (mid-debug!). Coordinator re-added minimal ones: ShellHost `undo route` + `undo handleAction resolved`, PluginRuntime `spawn-job routed` + `job done`. Please leave them until the undo defect closes; they're on the close-out sweep list.
+- Oddity for later: `spawn-job routed` never printed though `job done` did — job 28 started via a path other than routeHostEffects' spawn-job filter?
+
+## 13:15 coordinator — W-AB vortices root-caused + fixed; resumed on import file picker
+- Concrete Forest stores 11 vortices on seed-left-001; guest assembler published [] in Selected+idle AND brush. Fix: brush/volumeBrush modes now publish markers (laws 3/0, counts 11/11/0). Rides rebuild #37 (after W-G3's undo-intercept work lands).
+- Frame race fixed probe-side (re-frame after census; table fills Perspective).
+- W-AB resumed: workspace-menu Import → real file-picker flow feeding importFixture (guest, rides #37; host TS half live via vite if needed).
+- #37 queue so far: W-G3 undo intercept removal + entry eprintlns; W-AB vortex publication; W-AB import picker (pending).
+
+## 13:25 coordinator — W-AB import picker landed; W-AB now on fill leftovers
+- Import: workspace-menu row is now `openImportFixture` → `RequestFileOpen` → host re-dispatches `{payload,name}` into `importFixture` (host was already wired; no TS change). Laws 2/0. Rides #37.
+- W-AB resumed on the two fill leftovers from §8.8–8.9: `setActiveTool ""` mid-flow bounce + `requestContextMenu` skipping the host tool overlay.
+- Still waiting on W-G3 (undo in-stack intercept hunt) before rebuild #37.
+
+## 13:50 coordinator — #37 deployed; ROOT FOUND ONE LEVEL UP: document session detaches after example switch
+- #37 (spawn-admit doors + entry eprintlns + vortices + import picker) built first-try, deployed, probed with FULL console (probe tail raised 120→1200 lines).
+- Ground truth: guest doors fine — setActiveExample reached plugin_exchange (branch=catalog) via direct actor EARLY in the run; by undo time `openDocumentSessionsRef` is EMPTY (owners:[]), "Agent disconnected"/"Remote: detached". No direct actor → legacy plugin.handleAction path delivers NOTHING (plugin_handle_action entry eprintln: 0 hits all run). registerBrushMesh keeps flowing on a captured retained-actor ref that outlives the registry entry.
+- The example switch permanently detaches the document session — umbrella defect over undo/redo/selection/clipboard/locked/gumball after any switch. Probe 10-31-36's "switch dispatched but navbar stayed Concrete Forest" is the same detach reverting state.
+- W-G3 resumed on the host document-lifecycle fix (TS, vite-live; no rebuild needed for verification since #37's guest doors are ready).
+- Coordinator host edits in place: undo/redo document-session remap + [DEBUG] remap-state trace in ShellHost (keep until close-out).
+
+## 13:55 coordinator — W-AB fill leftovers closed
+- Guest: `engagementAbort` no longer emits empty `SetActiveTool` mid-fill (law 1/0) — finished AFTER #37 built → rides rebuild #38 (not #37 as noted in its report).
+- Host: `requestContextMenu` now uses `hostArmedViewContext` (vitest 1/0) — live via vite, browser-verified (fill stayed selected, ticks 26–29, :6014 stayed 200).
+- W-AB idle; W-G3 on the document-detach umbrella. Rebuild #38 queue: W-AB fill bounce fix (+ anything guest-side from W-G3's detach work).
+
+## 14:20 coordinator — W-G3 park/settle landed; undo boxed to channel consumption gap
+- §8.14: park/settle document-owner lifecycle fixed with law (2/0 + fixture vectors); `owners:[]` is the playground steady state (never opens a document) — NOT a switch regression. Undo correctly falls back to handleAction.
+- Coordinator probe 12-16-12 answered W-G3's open question: fallback DOES enqueue (`performInvocation actionId=undo`), something settles frames=2 right after, but NEITHER guest door logs actionId=undo, and the host promise neither resolves nor rejects. interactionSelect/hover/setCamera flow fine on the same channel.
+- W-G3 resumed on the consumption gap: tag settles with actionId, trace the undo frames (silent-drop branch in decodeInvocationResultPacks?), check worker routing for reserved verbs. Host fix vite-live; guest fix rides #38 (queued: W-AB fill bounce).
+
+## 14:35 coordinator — undo channel hang DEAD (§8.15); history chrome regression suspected
+- W-G3 root-caused the hang: undo starved behind 181 Interactive registerBrushMesh turns in the same mailbox. Fix: catalog mesh → Background lane, reserved verbs stay Interactive; Done-stamp for waiters whose outcome lacks in_reply_to. Law green. Its probe 12-26-56 proved `plugin_exchange actionId=undo branch=spawn-admit` ×3 + `undo handleAction resolved` ×3.
+- Coordinator verify probe 12-30-16: setActiveExample settles, but history chrome EMPTY (`entryCount:0`, `canUndo:false`) → ShellHost routes undo to none, never dispatches. Pre-fix run 12-16-12 HAD the `Set Active Example↶` entry; both post-fix runs don't. Suspect the Done-stamp or lane split swallowed/starved the history projection publication.
+- W-G3 resumed: §8.16, prove which link is missing (stamp short-circuit vs Background starvation vs flake), fix host-side, deliver the full navbar-revert proof.
+
+## 14:58 coordinator — §8.16 host chrome closed; last link = guest undo pop
+- W-G3 root-caused the empty chrome: §8.15 lane split made boot readHistory complete instantly (empty, never refires) while setActiveExample carries no history_patch. Fix: re-snapshot after example settle + edge-triggered refresh on History tab open. Law green. Probe 12-55-03: entryCount:2, undo route local canUndo:true, spawn-admit ×3, resolved ×3.
+- Remaining: guest #37 undo settles empty (no pop, no patch) despite populated guest history. W-G3 resumed on §8.17: fix guest reserved-history job to pop + apply inverse + publish patch, with laws. Rides rebuild #38 (with W-AB fill bounce).
+
+## 15:50 coordinator — rebuild #38 DEPLOYED; undo stalls at job drive; fleet split
+- W-G3 §8.17: guest undo pop fixed in source (chrome-order shell undo + empty-group VCS fallthrough, reserved_undo 6/6). Coordinator ran rebuild #38 (build 4m46s → support → materialize → prepare → activate, all green), recycled :6014 by port, serve healthy.
+- Probe 13-42-13 on #38: chrome entryCount:2, undo route local ×4, spawn-admit, `spawn-job routed job=99` — but `job done` NEVER fires for undo jobs (99,103–107) while pick/hover jobs 89/90 completed steps=2 same run. `chrome history action=undo` zero. Navbar stays Nakagin. Undo reserved job spawns but is never driven to done.
+- W-G3 resumed on the stall (§8.18): why the law's drive completes but the browser's doesn't. W-AB launched in parallel on the #38 proof battery: vortex markers/brush placement, suggestions, fill bounce regression, import round trip.
+
+## 16:13 coordinator — W-AB #38 battery: 2 proven, 3 defects converging on the reserved-job stall
+- Browser-PROVEN on #38: vortex publication+render (11 pins on seed-left-001 in brush mode), fill bounce gone (emptyBounce=0, fill stays armed after Escape). Host fix landed vite-live: Alt+right-click consumed, local hover kept (workspace-menu steal gone), engine-contract law green.
+- Defects "needs #39": vortex click → addBrushObject (guest spawn-admit drops interactionHover/interactionSelect), suggestions menu missing, openImportFixture settles effects:0 (laws emit RequestFileOpen).
+- Coordinator read: these correlate with W-G3's §8.18 stall — on #38 framework.reserved.tool jobs 99+ never reach `job done`, and interactionHover/Select ride that same lane. One root cause may close undo + brush placement + suggestions at once. Import (catalog lane) may be separate.
+
+## 16:50 coordinator — UNDO END-TO-END IN THE BROWSER (coordinator-verified)
+- W-G3 §8.18: the stalled jobs were actually completing a dummy body; the real chrome commit ran after Done and its leftover Invocation (in_reply_to:0) was lost to the seq-filter. Host now reads history from leftover send-messages. Probe 14-47-36 verified by coordinator: navbar → Concrete Forest after meta-z, jobs done, zero faults. reserved_undo 7/7.
+- #39 guest queue launched in parallel (same guest file, workers instructed not to revert each other):
+  - W-G3 §8.19: noteShellCommand inverses (chrome-order pop of Resize/Toggle/Switch/Activate) + ReplayShellCommand decode_wire_effect drop + host replay handler.
+  - W-AB: spawn-admit drop of interactionHover/Select (vortex click → addBrushObject, suggestions), openImportFixture effects:0 (possibly same wire-effect table).
+- After both report: coordinator runs rebuild #39 + full remaining battery (chrome pops, redo, selection→Inspection, clipboard, locked, gumball, brush place, suggestions, import).
+
+## 17:41 coordinator — W-G3 §8.19 done: shell inverses + ReplayShellCommand decode (reserved_undo 9/9)
+- noteShellCommand always records a shell inverse; decode_wire_effect keeps ReplayShellCommand on leftover (chrome pop of Resize proven natively: `chrome history action=undo seq=2 inverse=shell.windowResize`). Host vite-live: ShellHelpers sends inverseCommandId/inverseArgs; applyHostEffects applies replayShellCommand.
+- Rebuild #39 waits on W-AB (spawn-admit hover/select drop + openImportFixture), still running.
+
+## 18:02 coordinator — rebuild #39 DEPLOYED; chrome-order undo browser-proven; final battery launched
+- W-AB closed its three guest defects (latest-wins reserved-slot retirement for hover storms, suggestions publication, RequestFileOpen decode arm on the same wire table as W-G3's Replay fix). Coordinator ran #39 chain (build ~5m, all green), recycled :6014 by port, serve 200.
+- Coordinator probe 16-00-15 on #39: `chrome history action=undo` fires, `replayShellCommand dispatch` applies shell.panelTab/windowResize/windowActivate, zero faults. Chrome-order undo LIVE. Navbar stayed Nakagin only because 3 probe undos were consumed by newer chrome entries — correct ordering; full unwind proof assigned.
+- Final battery in parallel: W-G3 §8.20 (full unwind → Concrete Forest, redo, selection→Inspection, clipboard, locked, gumball), W-AB #39-proof section (vortex hover-storm + click → addBrushObject, suggestions menu, import round trip).
+
+## 18:19 coordinator — W-AB #39 verdicts: 2 proven, 2 law-vs-browser gaps
+- Browser-PROVEN on #39: hover-storm admit (70 pointermoves, faults=0), import picker (RequestFileOpen → chooser=yes, after vite-live wireEffectToFriendly request-file-open map).
+- Still dark: vortex click → preview/addBrushObject, suggestions menu (menus=0), and importFixture census delta after file selection.
+- Coordinator overruled "wait for #40": the fixes ARE in #39 — these are law-vs-browser gaps (undo-saga pattern). W-AB resumed with hop-by-hop instrumentation mandate: DOM click → raycast → dispatched actionId → ingress lane → exchange branch → job → guest engagement state → leftover effect → host application → scene delta; likely gaps OUTSIDE the law entry (marker onClick wiring, window addressing, wire-encode drop like RequestFileOpen).
+
+## 18:50 coordinator — UNDO FAMILY CLOSED (unwind + redo proven on #39); one convergent blocker left
+- W-G3 §8.20: full chrome-order unwind → Concrete Forest, redo → Nakagin, both browser-proven (probe 16-46-05). Host label sync vite-live.
+- Failing four (selection→Inspection, clipboard, locked, gumball) all ride guest InteractionView publication on the reserved leftover — same lane W-AB's dark items (brush place, suggestions) sit downstream of. Single convergent blocker.
+- W-G3 resumed on §8.21: guest InteractionView publication + FULL wire-table audit (decode_wire_effect has eaten ReplayShellCommand, RequestFileOpen — audit every effect kind at once, completeness law). W-AB continues hop-tracing in parallel. Rebuild #40 after both report.
+
+## 18:57 coordinator — W-AB hop trace CONFIRMS the convergent blocker
+- Named hop for the dark items: `interactionHover` Interactive settle commits nothing (effects:0) — guest never stores hoveredVortexFullId → no preview, no addBrushObject, no openVortexSuggestions. This is the same guest interaction-commit/publication gap W-G3 is implementing in §8.21 (W-G3: fold W-AB's hop evidence in — hover commit belongs in the same fix as select publication).
+- Host side hardened vite-live by W-AB: Alt tracked via keydown, brush+local-hover right-click armed (altKey was missing on the synthetic event path).
+- Import picker fully proven (importAction=importFixture). Two loose ends for W-AB: same-file reimport census delta absent; one run faulted `ui.fixed-capacity` at history-panel.commands.
+
+## 19:23 coordinator — rebuild #40 DEPLOYED (InteractionView leftover + wire-table completeness)
+- W-G3 §8.21: root cause was leftover encode — guest computed selection/hover on job Done but Invocation.output stayed Null. Now publishes on the proven reserved-leftover lane. Wire table: every Effect kind round-trips (45/45 completeness law; new variants fail compile or the count).
+- Coordinator ran #40 chain (green, ~6 min), recycled :6014 by port, boot probe zero faults. First-turn interactionSelect settle still effects:0 — expected (view rides job-completion leftover).
+- W-G3 launched on §8.22 battery: selection→Inspection, clipboard, locked, gumball on #40. W-AB still on import census delta + history-panel.commands capacity fault.
+
+## 19:24 coordinator — W-AB loose ends CLOSED; history-panel paging queued for #41
+- Import: NOT a defect — same-file reimport reaches the guest and folds to store identity (correct dedupe). Distinct 2-object fixture browser-proven: instances 1→2 + create-object history row. Import round trip fully CLOSED.
+- history-panel.commands capacity: one 32-slot BuiltChildren ate the whole log; command rows now page from the live filtered count (32+7 law green). Guest-side — landed ~during/after the #40 compile, so assume NOT in deployed #40; rides #41 (collect with any §8.22 guest gaps).
+- Awaiting W-G3 §8.22 battery (selection/clipboard/locked/gumball on #40).
+
+## 19:46 coordinator — §8.22 verdicts: InteractionView WORKS, clipboard PASS; 3 named hops → #41
+- #40 battery: InteractionView leftover published (seed-left-001, gumball:true), Inspection panel opened, clipboard PASS (census 1→3, Copy+Paste history rows).
+- Remaining hops (all named, guest-side unless noted): Inspection selected_section doesn't consume Puzzle3dInteractionSnapshot (empty summary); locked flag_row chrome never assembles; gumball drag → no translateSelection (host or guest half TBD).
+- W-G3 on §8.23 (three hops); W-AB re-testing vortex hover→preview→place + suggestions on #40 (hover publication may feed them now). #41 = collect all + history-panel paging; then close-out.
+
+## 20:17 coordinator — W-G3 §8.23: all three hops fixed in source (laws 3/3 + host vitest)
+- Inspection: leftover snapshots had empty granularity → selected_section now resolves interaction.selected against fixture objects; lock flag_row existed but object fields never assembled (fixed with it).
+- Locked: all-locked translateSelection refuses with selection_locked; scale work skips locked with same notice.
+- Gumball: host WAS dispatching but sent face componentIds instead of leftover selection ids — world3dGumballSelectionArgsV1 now prefers leftover ids (vite-live, law-proven). Guest moves unlocked objects via explicit_ids. NOTE: probe swipe missed the drag handle on #40 — #41 battery needs a handle-accurate drag step.
+- Inspection/lock chrome + locked skip ride #41 (with W-AB history-panel paging). Awaiting W-AB vortex/suggestions retest before building.
+
+## 20:29 coordinator — hover ids CLOSED; last two hops assigned; #41 battery prep in parallel
+- W-AB retest: leftover hover carries vortex ids on #40; host overlay merge (hover-only leftovers were dropped when selectedIds=[]) fixed vite-live — probe saw hover=seed-left-001:v0. Guest law for hover ids green (rides #41).
+- Last two dark hops: guest brushPreviewJson never publishes (rawLen=0 — engagement gating or scene-payload encode gap), suggestions right-down never reaches World3dHost (DOM routing swallow). W-AB on both.
+- W-G3 on §8.24: turnkey `--battery` probe (handle-accurate gumball drag via projected overlay geometry, inspection field assertions, locked refusal step, full end-to-end pass with [expect-41] markers).
+- #41 = LAST fix rebuild: W-G3 §8.23 trio + W-AB hover-id/preview/suggestions guest bits + history-panel paging. Then final battery + close-out.
+
+## 20:46 coordinator — §8.24 battery turnkey; dry-run green on proven steps
+- `--battery` runs boot → example → undo/redo → selection → clipboard → locked → gumball → brush → suggestions → import with per-step verdicts; handle-projected gumball drag via data-gumball-hits; Inspection/lock asserts. Dry-run 18-35-03: proven steps PASS, rest [expect-41].
+- Watch item: drag did not enter the handler on #40 even with projected handle — if host-side, it survives #41; battery will surface it.
+- Waiting on W-AB (brushPreviewJson + suggestions right-down) → then #41 build → `--battery` → close-out.
+
+## 21:15 coordinator — #41 DEPLOYED (hash-verified); battery: 6 PASS incl. gumball-handle-enter, 9 FAIL
+- Deploy integrity PROVEN: served core.wasm hash == disk (79fbc10d…), 20:56 build, ReplayShellCommand marker present. Failures are functional/probe gaps, NOT staleness.
+- PASS: boot, example-switch, undo-unwind, undo-redo, gumball-handle-enter (probe handle projection works), battery-faults (zero).
+- FAIL split: W-G3 §8.25 → inspection-object-fields (nothing rendered), lock chrome ×2, locked-refusal ("Agent disconnected" presence), clipboard delta=0 (REGRESSION vs #40 standalone; treeItems 4→106 there — paging rows may confuse counts), gumball sceneDelta. W-AB → brush preview null under 180-instance load, suggestions hops=0 in battery (worked standalone), import-distinct no delta.
+- Battery-ordering suspicion flagged to both: steps that pass standalone but fail in sequence (state pollution, capacity, presence drop after heavy paste).
+
+## 21:28 coordinator — W-G3 §8.25 diagnosis in; guest fix wave for #42 assigned
+- Probe/host fixed vite-live: probe id lookup needed panel-namespaced suffix match; leftover gumball mode forced `transform` (drag fell into rotateZ) → now `move` + diagonal drag.
+- Clipboard: treeItems 4→106 was history paging (census flat — measurement fine); Copy/Paste genuinely no-op'd (clipboard-instack ran, no instance added) → guest fix.
+- Inspection: leftover selected + tab opened; guest selected_section ?-returns before leftover fallback → guest fix; lock chrome should follow.
+- W-G3 on §8.26: land inspection fall-through + lock chrome + clipboard paste with laws → "ready for #42". W-AB still on brush/suggestions/import.
+
+## 21:34 coordinator — W-G3 §8.26 READY FOR #42 (leftover_ 6/6)
+- Inspection falls through leftover/vortex selection to namespaced object.id + object.locked; copy uses leftover selected ids; paste emits typed CreateObject (Value-delta bridge was dropping the clone). Awaiting W-AB before building #42.
+
+## 21:59 coordinator — W-AB isolation in; #42 becomes the instrumented build
+- W-AB isolated: Concrete standalone arms brush (11 vortices) + imports 1→2; preview rawLen=0 EVERYWHERE despite laws green on the serving wasm (law-vs-browser divergence); Nakagin never republishes activeUtility/vortices on utility switch; suggestions dispatch without menu body; openImportFixture hangs under 180 instances. Probe hardening landed (ring buffer vs 4000-line console cap, brush-arm poll, longer filechooser wait); host echo-off guard live; a forced composite refresh wedged and was reverted.
+- W-AB resumed: land guest [DEBUG] taps on brushPreview publication path, utility republish decision, import job loop + derivable fixes (menu payload likely same cache as preview; import loop paging). Then coordinator builds #42 (W-G3 §8.26 fixes + W-AB taps/fixes) and runs the battery reading the taps.
+
+## 22:40 coordinator — #42 battery: SUGGESTIONS PASS; 6 fails remain, taps captured
+- #42 deployed (build+chain green, serve recycled). Battery 867s, probe 20-22-03: boot/example/undo-unwind/undo-redo/gumball-handle-enter/suggestions PASS.
+- Fails: inspection (empty summary NOW RENDERS — fall-through partially engaged, id=null), clipboard (historyHasCopyPaste=false — copy never dispatched in battery), locked ×2 (notices=[] — presence held), gumball sceneDelta (pose/drag taps fired ×6 — readable), brush preview null (W-AB taps in wasm, readable), import flat.
+- New fault ×1: interactionSelect vortex pick timed out at 4096 continuations with required=[] — host driver bug suspect (W-G3).
+- W-G3 on §8.27 (inspection/clipboard/locked/gumball + fault), W-AB on tap readout (preview publication gate, import sequence). Next: #43 only if guest gaps confirmed.
+
+## 22:53 coordinator — W-G3 §8.27: vortex-UUID mismatch is the thread; #43 guest hops written
+- Root causes: leftover selection carries VORTEX UUIDs — inspection fall-through only matched object.id (empty fields), copy leftover degenerated to send-message frames (history never saw Copy/Paste). Guest #43 fixes WRITTEN: inspection + copy resolve leftover vortex uuid.
+- Host vite-live: empty-required continuation stop (kills the 4096-spin fault, law passed); gumball synthesize-translateSelection when move-axis pose deltas all skip (<1e-6).
+- WATCH: W-G3's targeted re-run hit a NEW live worker fault `v102_1` (not present in the 20:22 battery evidence) — needs eyes next round.
+- Awaiting W-AB tap readout (preview gate, import) → then #43.
+
+## 23:10 coordinator — REGRESSION STORM: bridge worker fault v102_1 kills the actor (faults=200)
+- Coordinator targeted probe 21-04-08 (--brush --import): `shard 0 worker fault [handler/turn] actor=puzzle#1 bridge.js: Cannot destructure property 'length' of 'v102_1' as it is undefined` ×200, first at frame-perspective (~15.6s). Actor dies → "Window is not responding"/"Agent disconnected" → setActiveUtility hang + import-apply death are collateral (W-AB's dying hops explained).
+- 20:22 battery on the SAME wasm had faults=1 → regressed via a vite-live host edit in the last hour (candidates: continuation stop, gumball synthesize-translate, host-arm chooser/leftover overlay).
+- W-G3 on §8.28: bisect, fix (make the data defined, no blanket reverts), law, re-probe to zero faults. W-AB idle; #43 (guest vortex-uuid hops) waits until the storm clears so verification is trustworthy.
+
+## 12:25 coordinator — #44 guest hops in flight (Finish)
+- #43 battery: clipboard/suggestions/undo PASS; remaining = leftover first-pick selectedIds empty, Inspection empty summary, gumball pre-admit, brush preview wipe (live-target in source), importFixture settle no-op.
+- Host vite-live already: `1:window` alias, leftover Inspection refresh, gumball mode move. Serve :6014 still 200 (wasm #43).
+- W-G3 §8.30: leftover selectedIds on first pick + translateSelection pre-admit.
+- W-AB: importFixture apply/fold (distinct payload must upsert). Brush live-target already law-green, rides #44.
+- Then rebuild #44 + `--battery`.

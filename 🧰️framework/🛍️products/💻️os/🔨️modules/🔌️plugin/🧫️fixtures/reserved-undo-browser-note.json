@@ -1,0 +1,27 @@
+{
+  "stack": [
+    {
+      "commandId": "setActiveExample",
+      "label": "Set Active Example",
+      "inverseCommandId": "setActiveExample",
+      "inverseArgs": { "exampleId": "forest" }
+    },
+    {
+      "commandId": "shell.windowResize",
+      "label": "Resize Window"
+    }
+  ],
+  "undo": {
+    "replayActionId": "shell.windowResize",
+    "canUndo": true,
+    "canRedo": true,
+    "poppedActionId": "shell.windowResize"
+  },
+  "redo": {
+    "replayActionId": "shell.windowResize"
+  },
+  "wire": {
+    "actionId": "os.resizeWindow",
+    "args": { "width": 800, "height": 600 }
+  }
+}

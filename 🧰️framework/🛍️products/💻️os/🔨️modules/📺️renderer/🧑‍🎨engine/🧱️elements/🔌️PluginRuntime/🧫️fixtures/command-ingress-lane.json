@@ -1,0 +1,15 @@
+{
+  "lanes": [
+    { "actionId": "undo", "lane": "Interactive" },
+    { "actionId": "redo", "lane": "Interactive" },
+    { "actionId": "setActiveExample", "lane": "Interactive" },
+    { "actionId": "interactionSelect", "lane": "Interactive" },
+    { "actionId": "registerBrushMesh", "lane": "Background" }
+  ],
+  "stamps": [
+    { "id": "empty-frames-need-stamp", "replySequences": [], "seq": 7, "stamp": true },
+    { "id": "matching-reply-skips-stamp", "replySequences": [7], "seq": 7, "stamp": false },
+    { "id": "foreign-reply-needs-stamp", "replySequences": [3], "seq": 7, "stamp": true },
+    { "id": "missing-seq-never-stamps", "replySequences": [], "seq": null, "stamp": false }
+  ]
+}

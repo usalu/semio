@@ -1,3 +1,4 @@
+import { exampleArtifactSources, reachableKindsFromUnknown, resolveDocumentOperatorKinds, scopeContributionsJson, type PluginManifest } from "@semio-tech/framework";
 /** 🩺 Window-fault classification conformance against the SAME language-neutral vector fixture the
  * Rust plugin runtime decodes (`🔌️plugin/🩺️runtime-fault-vectors.json`), with strict Ajv as the
  * independent oracle for the fixture's own shape. */
@@ -99,3 +100,91 @@ describe("window fault discriminators", () => {
     expect(de).not.toEqual(en);
   });
 });
+
+describe("pending window body", () => {
+  it("a window whose UI has not arrived renders its pending node, never an empty body", () => {
+    expect(shellSource).not.toMatch(/Object\.keys\(windowUiByWindowId\)\.length === 0 && currentBrowserActorUi === undefined\) return \[\]/);
+    expect(shellSource).toMatch(/windowUiByWindowId\[kind\.id\] \?\? PENDING_WINDOW_UI_NODE/);
+    expect(shellSource).toMatch(/current\[instance\.id\] \?\? pendingWindowUiNode\(\)/);
+  });
+});
+
+
+describe("scopeContributionsJson", () => {
+  const manifest = (topic: string, payload: unknown) =>
+    ({ topicContributions: [{ topic, payload }], apps: [], workflows: [] }) as PluginManifest;
+  const loaded = [
+    { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
+    { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },
+    { pluginId: "flow-extension-bim", manifest: manifest("flow.extension", { operators: [{ kind: "bim.wall" }] }) },
+    { pluginId: "flow-extension-math", manifest: manifest("flow.extension", { operators: [{ kind: "math.vector" }] }) },
+  ];
+  it("keeps the receiver and only plugins whose operators the document graph can reach", () => {
+    const kinds = reachableKindsFromUnknown([{ widgets: [{ neuronKind: "brep.solid.extrude" }, { neuronKind: "math.vector" }] }]);
+    expect(kinds.sort()).toEqual(["brep.solid.extrude", "math.vector"]);
+    const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", kinds)) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "flow-extension-math", "procedural"]);
+  });
+  
+  it("extracts neuronKind from an embedded fixture JSON string", () => {
+    const kinds = reachableKindsFromUnknown([{ data: "{\"widgets\":[{\"neuronKind\":\"brep.solid.extrude\"}]}" }]);
+    expect(kinds).toContain("brep.solid.extrude");
+  });
+
+  it("drops every foreign contribution when the graph names no operator kind", () => {
+    const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", [])) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural"]);
+  });
+
+  it("treats a present empty graph as resolved and a missing graph as unresolved", () => {
+    expect(resolveDocumentOperatorKinds([{ fixture: { widgets: [] } }])).toEqual({ status: "resolved", kinds: [] });
+    expect(resolveDocumentOperatorKinds([{ surface: "lane-split" }])).toEqual({ status: "unresolved", reason: "no-operator-graph" });
+    const dsl = 'neuron id="extrude" neuron-kind=brep.solid.extrude';
+    const scoped = resolveDocumentOperatorKinds([dsl]);
+    expect(scoped.status).toBe("resolved");
+    if (scoped.status === "resolved") expect(scoped.kinds).toContain("brep.solid.extrude");
+  });
+
+  it("an empty loaded table serializes as [] and that payload is not installable", () => {
+    expect(scopeContributionsJson([], "procedural", ["brep.solid.extrude"])).toBe("[]");
+    expect(shellSource).toContain('scopedContributionsJson === "[]"');
+    expect(shellSource).toContain("refused empty pack");
+  });
+});
+
+describe("contributions pack crossing", () => {
+  it("the live shell sends one pack-encoded setContributions, never 4 KiB string pages", () => {
+    expect(shellSource).not.toContain("publicInvocationStringPages");
+    expect(shellSource).not.toContain("reachableKinds.length > 0 ? scopeContributionsJson");
+    expect(shellSource).toContain("resolveDocumentOperatorKinds");
+    expect(shellSource).toContain("scopeContributionsJson");
+    expect(shellSource).toContain("unresolved document operators");
+    expect(shellSource).toContain("exampleArtifactSources");
+    expect(shellSource).toContain("contributions scoped from published examples");
+    expect(shellSource).toContain("readAppDocumentPack");
+    expect(shellSource).toContain('encoding: "pack"');
+    expect(shellSource).toContain("page: 0, pageCount: 1");
+    expect(shellSource).toContain("crossings:");
+  });
+
+  it("published example graphs recover operator kinds when ReadDocument is genesis", () => {
+    const sources = exampleArtifactSources(
+      [{ id: "box-shell-preview", appId: "s.procedural.generation3d@1/*#editor", artifactJson: "neuron-kind=brep.prim3d.box neuron-kind=brep.solid.shell" }],
+      "s.procedural.generation3d@1/*#editor",
+    );
+    const scope = resolveDocumentOperatorKinds(sources);
+    expect(scope).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
+    const scoped = JSON.parse(scopeContributionsJson(
+      [
+        { pluginId: "procedural", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "procedural.example" }] } }], apps: [], workflows: [] } as PluginManifest },
+        { pluginId: "flow-extension-brep", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "brep.prim3d.box" }, { kind: "brep.solid.shell" }] } }], apps: [], workflows: [] } as PluginManifest },
+        { pluginId: "flow-extension-bim", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "bim.wall" }] } }], apps: [], workflows: [] } as PluginManifest },
+      ],
+      "procedural",
+      scope.status === "resolved" ? scope.kinds : [],
+    )) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "procedural"]);
+    expect(JSON.stringify(scoped).includes("bim.wall")).toBe(false);
+  });
+});
+

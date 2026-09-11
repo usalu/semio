@@ -1,0 +1,7 @@
+{
+  "pageArity": 32,
+  "overflowPastArity": 7,
+  "commandRowCount": 39,
+  "expectedCommandSectionChildren": 2,
+  "entryKeyPrefix": "framework.history.entry."
+}

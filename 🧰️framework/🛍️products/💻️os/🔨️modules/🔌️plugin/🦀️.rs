@@ -6502,13 +6502,23 @@ pub mod app {
             })
         }
 
-        /// 🎬️ Decodes the exact typed scene carried by a projected fixture's surface root.
+        /// 🎬️ The projected fixture node carrying `T`'s scene — the root itself when a body IS a bare
+        /// surface, otherwise the one surface of that schema anywhere beneath it. A window body is free
+        /// to compose its scene alongside semantic siblings (generation3d's Flow window renders the
+        /// graph's node/port/wire rows beside the GPU canvas), and a scene assertion may not care which
+        /// of the two shapes the body under test happens to be.
+        pub fn fixture_scene_node<T: semio_framework_ui_scene::SceneDoc>(tree: &serde_json::Value) -> Option<&serde_json::Value> {
+            let component = &tree["component"];
+            if component["type"].as_str() == Some("surface") && component["docSchema"].as_str() == Some(T::SCHEMA) {
+                return Some(tree);
+            }
+            tree["children"].as_array().and_then(|children| children.iter().find_map(fixture_scene_node::<T>))
+        }
+
+        /// 🎬️ Decodes the exact typed scene a projected fixture carries.
         pub fn decode_fixture_scene<T: semio_framework_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
             let tree: serde_json::Value = serde_json::from_str(projection).map_err(|_| "fixture-scene-json")?;
-            let component = &tree["component"];
-            if component["type"].as_str() != Some("surface") || component["docSchema"].as_str() != Some(T::SCHEMA) {
-                return Err("fixture-scene-schema");
-            }
+            let component = &fixture_scene_node::<T>(&tree).ok_or("fixture-scene-schema")?["component"];
             let bytes = component["doc"]["bytes"].as_array().ok_or("fixture-scene-bytes")?.iter().map(|value| value.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or("fixture-scene-byte")).collect::<Result<Vec<_>, _>>()?;
             T::decode_pack(&bytes).map_err(|_| "fixture-scene-pack")
         }
@@ -6585,7 +6595,7 @@ pub mod app {
         pub fn decode_fixture_scene_with_lanes<T: semio_framework_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
             let tree: serde_json::Value = serde_json::from_str(projection).map_err(|_| "fixture-scene-json")?;
             let mut scene = decode_fixture_scene::<T>(projection)?;
-            for child in tree["children"].as_array().ok_or("fixture-scene-children")? {
+            for child in fixture_scene_node::<T>(&tree).ok_or("fixture-scene-schema")?["children"].as_array().ok_or("fixture-scene-children")? {
                 let key = child["key"].as_str().ok_or("fixture-scene-lane-key")?;
                 scene.merge_lane(key, fixture_carrier_text(child));
             }
@@ -9730,6 +9740,12 @@ pub mod app {
         pub args: Option<DslValue>,
     }
 
+    /// ⏪️ One undone shell row waiting on the redo stack — chrome-order counterpart to VCS redo.
+    struct ShellHistoryReplay {
+        seq: u64,
+        redo: InverseAction,
+    }
+
     /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
     struct CommandLogAppend<'a> {
         action_id: &'a str,
@@ -9858,6 +9874,30 @@ pub mod app {
     /// per-command "Backwards" revert action is omitted entirely, regardless of `can_undo`/`can_redo`
     /// or `entry.revertible` — the filter control and Commands list themselves stay fully live, since
     /// browsing history is not a mutation.
+    ///
+    /// Commands children are a `UI_BUILT_CHILDREN_MAX`-ary tree over the live filtered command-row
+    /// count. One `BuiltChildren` page cannot grow with the session log; paging from that count is
+    /// the admission bound (a bumped ceiling aborted publishes at `history-panel.commands`).
+    fn page_history_command_nodes(nodes: Vec<BuiltNode>) -> UiAssemblyResult<Vec<BuiltNode>> {
+        let mut level = nodes;
+        let mut generation = 0usize;
+        while level.len() > UI_BUILT_CHILDREN_MAX {
+            let mut source = level.into_iter();
+            let mut next = Vec::new();
+            loop {
+                let page: Vec<BuiltNode> = source.by_ref().take(UI_BUILT_CHILDREN_MAX).collect();
+                if page.is_empty() {
+                    break;
+                }
+                let id = format!("framework.history.commands.page.{generation}.{}", next.len());
+                next.push(column().try_id(id).map_err(|_| ui_assembly_error("history-panel.command-page-id"))?.try_children(page).map_err(|_| ui_assembly_error("history-panel.commands"))?.try_build().map_err(|_| ui_assembly_error("history-panel.command-page-build"))?);
+            }
+            level = next;
+            generation += 1;
+        }
+        Ok(level)
+    }
+
     pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiAssemblyResult<BuiltNode> {
         let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
             let label = if is_de { label_de } else { label_en };
@@ -9889,12 +9929,13 @@ pub mod app {
         let filter_builder = filter_builder.try_id("framework.history.filter").map_err(|_| ui_assembly_error("history-panel.filter-item-id"))?;
         let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
-        let mut command_items = BuiltChildren::default();
-        for entry in history.commands.iter().filter(|entry| match history.command_filter {
+        let command_rows: Vec<&CommandView> = history.commands.iter().filter(|entry| match history.command_filter {
             HistoryCommandFilter::All => true,
             HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
             HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
-        }) {
+        }).collect();
+        let mut command_nodes = Vec::with_capacity(command_rows.len());
+        for entry in command_rows {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
             let label =
                 if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
@@ -9924,7 +9965,10 @@ pub mod app {
                 };
                 builder = builder.try_row_action(row_action).map_err(|_| ui_assembly_error("history-panel.row-actions"))?;
             }
-            let command = builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))?;
+            command_nodes.push(builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))?);
+        }
+        let mut command_items = BuiltChildren::default();
+        for command in page_history_command_nodes(command_nodes)? {
             command_items.try_push(command).map_err(|_| ui_assembly_error("history-panel.commands"))?;
         }
 
@@ -11622,6 +11666,11 @@ pub mod app {
         /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
         /// An unrecognized `action` id is a hard error pointing at the typed channel.
         async fn handle_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// 🕰️ Completes one host-driven framework-reserved spawn-job. Default is a no-op so only
+        /// `VcsArtifactApp` owns the pending-admit registry.
+        async fn complete_reserved_spawned_job(&mut self, _job: u64, _output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
+            Ok(None)
+        }
         /// @emoji 📍️ Validates and dispatches a window-instance-owned action invocation.
         async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 🎯️ Dispatches the manifest protocol's structurally addressed app- or mode-owned
@@ -15878,6 +15927,14 @@ pub mod app {
             self.entry(index).map(|(id, _)| *id)
         }
 
+        fn each_id(&self, mut visit: impl FnMut(u64)) {
+            for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                if let Some(id) = self.id_at(index) {
+                    visit(id);
+                }
+            }
+        }
+
         fn next_id_from(&self, cursor: usize) -> Option<(usize, u64)> {
             if self.occupied == 0 {
                 return None;
@@ -15920,6 +15977,77 @@ pub mod app {
         fn finish(self) {
             self.lease.finish();
         }
+    }
+
+    pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
+    const FRAMEWORK_RESERVED_JOB_MAGIC: &[u8; 8] = b"FRRESV01";
+
+    fn initialize_framework_reserved_jobs() {
+        crate::reactor::jobs::register_bounded_job_kind(FRAMEWORK_RESERVED_JOB_KIND, framework_reserved_job_factory);
+    }
+
+    fn encode_framework_reserved_job_input(work_items: u64, raw: &[u8]) -> Vec<u8> {
+        let mut input = Vec::with_capacity(16 + raw.len());
+        input.extend_from_slice(FRAMEWORK_RESERVED_JOB_MAGIC);
+        input.extend_from_slice(&work_items.to_le_bytes());
+        input.extend_from_slice(raw);
+        input
+    }
+
+    fn framework_reserved_job_factory(_job: u64, input: &[u8]) -> Result<Box<dyn crate::reactor::jobs::BoundedJob>, Vec<u8>> {
+        Ok(Box::new(FrameworkReservedBoundedJob::admit(input)))
+    }
+
+    enum FrameworkReservedBoundedPhase {
+        Cursor,
+        Retiring,
+    }
+
+    struct FrameworkReservedBoundedJob {
+        phase: FrameworkReservedBoundedPhase,
+        raw: Vec<u8>,
+        cancelled: bool,
+    }
+
+    impl FrameworkReservedBoundedJob {
+        fn admit(input: &[u8]) -> Self {
+            let raw = if input.len() >= 16 && input.starts_with(FRAMEWORK_RESERVED_JOB_MAGIC) { input[16..].to_vec() } else { input.to_vec() };
+            Self { phase: FrameworkReservedBoundedPhase::Cursor, raw, cancelled: false }
+        }
+    }
+
+    impl crate::reactor::jobs::BoundedJob for FrameworkReservedBoundedJob {
+        fn step(&mut self, _budget: crate::reactor::jobs::JobBudget) -> crate::reactor::jobs::JobStep {
+            if self.cancelled {
+                return crate::reactor::jobs::JobStep::Failed(b"cancelled".to_vec());
+            }
+            match self.phase {
+                FrameworkReservedBoundedPhase::Cursor => {
+                    self.phase = FrameworkReservedBoundedPhase::Retiring;
+                    crate::reactor::jobs::JobStep::Running(None)
+                }
+                FrameworkReservedBoundedPhase::Retiring => crate::reactor::jobs::JobStep::Done(self.raw.clone()),
+            }
+        }
+
+        fn cancel(&mut self) {
+            self.cancelled = true;
+        }
+
+        fn checkpoint(&self) -> Option<Vec<u8>> {
+            None
+        }
+
+        fn terminal_drop_is_shallow(&self) -> bool {
+            true
+        }
+    }
+
+    struct PendingFrameworkReserved {
+        action: String,
+        args: Option<DslValue>,
+        meta: ActionMeta,
+        permit: FrameworkReservedCommitPermit,
     }
 
     /// 🫧️ Yields one mounted plugin-job transition back to the host executor.
@@ -18398,6 +18526,7 @@ pub mod app {
         latest_wins_keys: ToolLatestWinsRegistry,
         latest_wins_turn: bool,
         media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
+        pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
         media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
         snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
         current_media_export: Option<u64>,
@@ -18473,6 +18602,10 @@ pub mod app {
         log_generation: u64,
         /// 🧾️ Sequence ids whose host-projected rows changed since the last invocation response.
         history_dirty_sequences: HashSet<u64>,
+        /// 🐚️ Shell rows (`noteShellCommand`) already undone — they stay in the append-only log.
+        shell_undone: HashSet<u64>,
+        /// 🐚️ Redo stack for those shell rows (chrome order: last undone is first redone after VCS redo empties).
+        shell_redo: Vec<ShellHistoryReplay>,
         history_filter: HistoryCommandFilter,
         /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
         /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
@@ -18990,6 +19123,7 @@ pub mod app {
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy(), worst: None, messages: Vec::new() };
             let mut framework_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
+            initialize_framework_reserved_jobs();
             register_framework_reserved_factories(&mut framework_tool_registry).expect("framework-owned reserved factories must preserve exact owner/controller/schema/tool authority");
             let framework_tool_registrations = framework_tool_registry.finish();
             let mut app_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
@@ -19121,6 +19255,7 @@ pub mod app {
                 latest_wins_keys: ToolLatestWinsRegistry::new(),
                 latest_wins_turn: true,
                 media_exports: ArtifactFixedRegistry::new(),
+                pending_reserved: ArtifactFixedRegistry::new(),
                 media_closures: ArtifactFixedRegistry::new(),
                 snapshot_retirements: ArtifactFixedRegistry::new(),
                 current_media_export: None,
@@ -19190,6 +19325,8 @@ pub mod app {
                 next_command_seq: 0,
                 log_generation: 0,
                 history_dirty_sequences: HashSet::new(),
+                shell_undone: HashSet::new(),
+                shell_redo: Vec::new(),
                 history_filter: HistoryCommandFilter::default(),
                 children: ChildMemberRegistry::new(),
                 child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
@@ -20353,6 +20490,8 @@ pub mod app {
             self.push_log_entry(CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, timestamp: None, inverse }).await;
             if matches!(kind, ActionKind::History) {
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
+            } else {
+                self.shell_redo.clear();
             }
         }
 
@@ -20432,7 +20571,7 @@ pub mod app {
                 // `InverseAction`, the remaining `🐚️Shell`-kind `noteShellCommand` path).
                 let revertible = (applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
-                    || entry.inverse.is_some();
+                    || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
                 commands.push(CommandView {
                     seq: entry.seq,
                     action_id: entry.action_id.clone(),
@@ -20452,8 +20591,9 @@ pub mod app {
             commands.reverse();
             HistoryView {
                 columns: build_history_columns(envelope).await,
-                can_undo: !self.store.applied_edit_ids().is_empty(),
-                can_redo: !self.store.redo_edit_ids().is_empty(),
+                can_undo: !self.store.applied_edit_ids().is_empty()
+                    || self.command_log.iter().any(|entry| entry.inverse.is_some() && entry.edit_id.is_none() && entry.config_edit_ids.is_empty() && !self.shell_undone.contains(&entry.seq)),
+                can_redo: !self.store.redo_edit_ids().is_empty() || !self.shell_redo.is_empty(),
                 active_alternative_id: envelope.active_alternative_id.clone(),
                 current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
                 commands,
@@ -21539,13 +21679,50 @@ pub mod app {
                 _ => unreachable!("dispatch_interaction_action called for non-interaction action {action} — INTERACTION_ACTION_IDS out of sync"),
             }
             state.hover = self.interaction_hover.clone();
+            let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover);
             self.validate_framework_reserved_commit(action, permit).await?;
             self.revalidate_and_persist_interaction_state(state, meta).await?;
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
             }
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
-            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await)
+            let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await;
+            result.output = leftover;
+            Ok(result)
+        }
+
+        /// 🕹️ Reserved leftover publication the host already peels (`leftoverShellInvocationFrames` →
+        /// leftover `Invocation.output`). Built from the just-computed InteractionView, not the
+        /// post-revalidate store snapshot, so a pick still lands on leftover when topology later prunes.
+        fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState) -> DslValue {
+            let mut selected_ids = Vec::new();
+            let mut locked = Vec::new();
+            for selection in state.selection.values() {
+                for id in &selection.ids {
+                    selected_ids.push(id.clone());
+                    locked.push((id.clone(), DslValue::Bool(false)));
+                }
+            }
+            let hover_target = hover.iter().find_map(|(domain, hover)| {
+                hover.ids.first().map(|id| DslValue::object([("domain".to_string(), DslValue::String(domain.clone())), ("channel".to_string(), DslValue::String(hover.channel.clone())), ("id".to_string(), DslValue::String(id.clone()))]))
+            });
+            let gumball = DslValue::object([
+                ("active".to_string(), DslValue::Bool(!selected_ids.is_empty())),
+                ("anchorId".to_string(), selected_ids.first().cloned().map(DslValue::String).unwrap_or(DslValue::Null)),
+            ]);
+            DslValue::object([(
+                "interactionView".to_string(),
+                DslValue::object([
+                    ("selection".to_string(), protocol::ToValue::to_value(&state.selection)),
+                    ("hover".to_string(), protocol::ToValue::to_value(hover)),
+                    ("activeMode".to_string(), protocol::ToValue::to_value(&state.active_mode)),
+                    ("activeGranularity".to_string(), protocol::ToValue::to_value(&state.active_granularity)),
+                    ("selectedIds".to_string(), protocol::ToValue::to_value(&selected_ids)),
+                    ("locked".to_string(), DslValue::Object(locked)),
+                    ("gumball".to_string(), gumball),
+                    ("hoverTarget".to_string(), hover_target.unwrap_or(DslValue::Null)),
+                ]),
+            )])
         }
         /// 🕹️ Task 5: recursively walks a just-presented `ComponentTree`, and for every `Component::Tree`
         /// carrying an `interaction_domain` caches a `DomainTopology` derived from its children (the
@@ -21987,47 +22164,183 @@ pub mod app {
             }
         }
 
+        /// 🖱️ Vortex pointermove is a storm of `interactionHover` (then a click `interactionSelect`)
+        /// before the host finishes any Isolated reserved job. Exclusive `job % 64` slots made that
+        /// storm `interactive-job.reserved-spawn-capacity`. Latest-wins: retire the same verb, and
+        /// any other interaction occupying this hash slot, so hover preview and place can commit.
+        fn retire_pending_reserved_latest_wins(&mut self, action: &str, job: u64) {
+            if !INTERACTION_ACTION_IDS.contains(&action) {
+                return;
+            }
+            let slot = job as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let mut ids = Vec::new();
+            self.pending_reserved.each_id(|id| ids.push(id));
+            let retire: Vec<u64> = ids
+                .into_iter()
+                .filter(|&id| {
+                    self.pending_reserved.get(id).is_some_and(|pending| {
+                        pending.action == action || (id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS == slot && INTERACTION_ACTION_IDS.contains(&pending.action.as_str()))
+                    })
+                })
+                .collect();
+            for id in retire {
+                if let Some(pending) = self.pending_reserved.remove(id) {
+                    pending.permit.finish();
+                }
+            }
+        }
+
         async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let contract = self.qualified_tool_proof(action)?.contract();
             let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
             let wire_args = args.cloned();
             let raw = protocol::json::to_json_string(&(action, wire_args)).into_bytes();
             let work_items = self.framework_reserved_work_items(action, args).await?;
-            let mut app_completion = None;
-            let job = if CLIPBOARD_ACTION_IDS.contains(&action) {
-                match self.build_artifact_reserved_action_job(action, args, raw.clone(), meta).await? {
+            if CLIPBOARD_ACTION_IDS.contains(&action) {
+                let mut app_completion = None;
+                let job = match self.build_artifact_reserved_action_job(action, args, raw.clone(), meta).await? {
                     Some((job, completion)) => {
                         app_completion = Some(completion);
                         job
                     }
                     None => framework_reserved_route_job(action, raw.clone(), work_items)?,
+                };
+                let permit = self.run_framework_reserved_job(action, &raw, decoded_items, job, meta, None).await?;
+                self.validate_framework_reserved_commit(action, &permit).await?;
+                let result = self.commit_framework_clipboard_completion(action, app_completion, meta, &permit).await;
+                permit.finish();
+                return result;
+            }
+            initialize_framework_reserved_jobs();
+            let permit = self.admit_framework_reserved_spawn(action, &raw, decoded_items, meta).await?;
+            let job = permit.operation.operation.0;
+            self.retire_pending_reserved_latest_wins(action, job);
+            if !self.pending_reserved.can_insert(job) {
+                permit.finish();
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-capacity"), format!("framework route '{action}' has no exact pending spawn slot")));
+            }
+            self.pending_reserved.insert_admitted(
+                job,
+                PendingFrameworkReserved { action: action.to_string(), args: args.cloned(), meta: meta.clone(), permit },
+            );
+            let mut admitted = Self::empty_result(action, meta, vec![Effect::SpawnJob { job, kind: FRAMEWORK_RESERVED_JOB_KIND.into(), input: encode_framework_reserved_job_input(work_items as u64, &raw), placement: semio_framework::kernel::JobPlacement::Isolated }], Vec::new(), UiDirtyScope::None).await;
+            admitted.output = DslValue::Object(vec![("operationId".into(), DslValue::String(job.to_string())), ("generation".into(), DslValue::String(self.store.generation().to_string()))]);
+            Ok(admitted)
+        }
+
+        async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta) -> Result<FrameworkReservedCommitPermit, Fault> {
+            let proof = self.qualified_tool_proof(verb)?;
+            if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory")));
+            }
+            let key = proof.key();
+            let admission = self.tool_jobs.admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), raw).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
+            if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission")));
+            }
+            let canonical_base_revision = self.store.content_revision();
+            let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
+            let generation = semio_framework_job::Generation(self.store.generation());
+            let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
+            let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
+            let operation_id = operation.operation;
+            let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
+            let lease = self.tool_cancellations.begin(operation_key)?;
+            Ok(FrameworkReservedCommitPermit { operation, lease })
+        }
+
+        async fn complete_reserved_spawned_job_inner(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
+            let Some(pending) = self.pending_reserved.remove(job) else {
+                return Ok(None);
+            };
+            if let Err(fault) = output {
+                pending.permit.finish();
+                return Err(fault);
+            }
+            let PendingFrameworkReserved { action, args, meta, permit } = pending;
+            let log_generation_before = self.log_generation;
+            let committed = async {
+                self.validate_framework_reserved_commit(&action, &permit).await?;
+                if HISTORY_ACTION_IDS.contains(&action.as_str()) {
+                    self.commit_framework_history_route(&action, args.as_ref(), &meta, &permit).await
+                } else if action == REVERT_TO_COMMAND_ACTION_ID {
+                    self.commit_framework_revert_route(args.as_ref(), &meta, &permit).await
+                } else {
+                    self.commit_framework_shared_host_route(&action, args.as_ref(), &meta, &permit).await
                 }
-            } else {
-                framework_reserved_route_job(action, raw.clone(), work_items)?
+            }
+            .await;
+            match committed {
+                Ok(result) => {
+                    let result = self.finish_recorded(log_generation_before, &action, result).await;
+                    let _ = self.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: permit.operation.operation.0, ui_scope: result.ui_scope.clone() });
+                    permit.finish();
+                    Ok(Some(result))
+                }
+                Err(fault) => {
+                    permit.finish();
+                    Err(fault)
+                }
+            }
+        }
+
+        async fn dispatch_chrome_history_action(&mut self, action: &str, meta: &ActionMeta) -> Result<Option<InvocationResult>, Fault> {
+            if action == "redo" {
+                if !self.store.redo_edit_ids().is_empty() {
+                    return Ok(None);
+                }
+                let Some(replay) = self.shell_redo.pop() else {
+                    return Ok(None);
+                };
+                crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] chrome history action=redo seq={}", replay.seq));
+                self.shell_undone.remove(&replay.seq);
+                self.history_dirty_sequences.insert(replay.seq);
+                self.record_command(action, ActionKind::History, None, None, None, None).await;
+                return Ok(Some(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: replay.redo.action_id, args: replay.redo.args }], vec![history_changed_event().await], UiDirtyScope::Full).await));
+            }
+            if action != "undo" {
+                return Ok(None);
+            }
+            let applied: HashSet<&str> = self.store.applied_edit_ids().iter().map(String::as_str).collect();
+            let config_applied: HashSet<&str> = self.config_store.applied_edit_ids().iter().map(String::as_str).collect();
+            let target = self.command_log.iter().rev().find(|entry| {
+                let shell = entry.inverse.is_some() && entry.edit_id.is_none() && entry.config_edit_ids.is_empty() && !self.shell_undone.contains(&entry.seq);
+                let document = entry.edit_id.as_deref().is_some_and(|id| applied.contains(id));
+                let config = entry.config_edit_ids.iter().any(|id| config_applied.contains(id.as_str()));
+                shell || document || config
+            });
+            let Some(entry) = target else {
+                return Ok(None);
             };
-            let permit = self.run_framework_reserved_job(action, &raw, decoded_items, job, meta, None).await?;
-            self.validate_framework_reserved_commit(action, &permit).await?;
-            let result = if HISTORY_ACTION_IDS.contains(&action) {
-                self.commit_framework_history_route(action, args, meta, &permit).await
-            } else if action == REVERT_TO_COMMAND_ACTION_ID {
-                self.commit_framework_revert_route(args, meta, &permit).await
-            } else if CLIPBOARD_ACTION_IDS.contains(&action) {
-                self.commit_framework_clipboard_completion(action, app_completion, meta, &permit).await
-            } else {
-                self.commit_framework_shared_host_route(action, args, meta, &permit).await
-            };
-            permit.finish();
-            result
+            if entry.edit_id.is_some() || !entry.config_edit_ids.is_empty() || entry.inverse.is_none() {
+                return Ok(None);
+            }
+            let seq = entry.seq;
+            let inverse = entry.inverse.clone().expect("chrome undo target has inverse");
+            let redo = InverseAction { action_id: entry.action_id.clone(), args: None };
+            crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] chrome history action=undo seq={seq} inverse={}", inverse.action_id));
+            self.shell_undone.insert(seq);
+            self.shell_redo.push(ShellHistoryReplay { seq, redo });
+            self.history_dirty_sequences.insert(seq);
+            self.record_command(action, ActionKind::History, None, None, None, None).await;
+            Ok(Some(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], vec![history_changed_event().await], UiDirtyScope::Full).await))
         }
 
         async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+            crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] history route action={action}"));
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
             }
             if action == "undo" || action == "redo" {
+                if let Some(result) = self.dispatch_chrome_history_action(action, meta).await? {
+                    return Ok(result);
+                }
                 let group_id = if action == "undo" { self.store.tail_group_id().await } else { self.store.redo_tail().await.and_then(|(_, group_id)| group_id) };
                 if let Some(group_id) = group_id {
-                    return self.dispatch_group_history_action(action, &group_id, meta).await;
+                    let grouped = self.dispatch_group_history_action(action, &group_id, meta).await?;
+                    if grouped.ui_scope != UiDirtyScope::None {
+                        return Ok(grouped);
+                    }
                 }
             }
             let command = Self::history_command(action, args).await.ok_or_else(|| format!("history action {action} missing required argument"))?;
@@ -22192,10 +22505,16 @@ pub mod app {
             if action == NOTE_SHELL_COMMAND_ACTION_ID {
                 let command_id = args.and_then(|value| value.get("commandId")).and_then(DslValue::as_str).ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
                 let label = args.and_then(|value| value.get("label")).and_then(DslValue::as_str).unwrap_or(command_id);
-                let detail = args.and_then(|value| value.get("detail")).and_then(DslValue::as_str);
-                let label = detail.map_or_else(|| label.to_string(), |detail| format!("{label} - {detail}"));
-                let inverse =
-                    args.and_then(|value| value.get("inverseCommandId")).and_then(DslValue::as_str).map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned() });
+                let detail = args.and_then(|value| value.get("detail")).cloned();
+                let label = match &detail {
+                    Some(DslValue::String(detail)) => format!("{label} - {detail}"),
+                    _ => label.to_string(),
+                };
+                let inverse_args = args.and_then(|value| value.get("inverseArgs")).cloned().or(detail);
+                let inverse = Some(InverseAction {
+                    action_id: args.and_then(|value| value.get("inverseCommandId")).and_then(DslValue::as_str).unwrap_or(command_id).to_string(),
+                    args: inverse_args,
+                });
                 self.validate_framework_reserved_commit(action, permit).await?;
                 self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse).await;
                 return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
@@ -23873,6 +24192,13 @@ pub mod app {
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
         fn drop(&mut self) {
             self.tool_cancellations.cancel_scope_generation();
+            while let Some((_, id)) = self.pending_reserved.next_id_from(0) {
+                if let Some(pending) = self.pending_reserved.remove(id) {
+                    pending.permit.finish();
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -23880,6 +24206,72 @@ pub mod app {
     /// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
     async fn history_changed_event() -> AppEvent {
         AppEvent { kind: "history-changed".into(), payload: DslValue::Null }
+    }
+
+    /// 🧪 Guest laws in dependent crates (puzzle 3d) settle Isolated reserved admits the host would.
+    pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
+        initialize_framework_reserved_jobs();
+        let Some((job, input)) = admitted.requested_effects.iter().find_map(|effect| match effect {
+            Effect::SpawnJob { job, kind, input, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
+            _ => None,
+        }) else {
+            return Ok(admitted);
+        };
+        crate::reactor::jobs::start_job(job, FRAMEWORK_RESERVED_JOB_KIND, &input).await;
+        let mut terminal = None;
+        for _ in 0..8 {
+            match crate::reactor::jobs::step_job(job, crate::reactor::jobs::JobBudget { fuel: 1, deadline_ms: 1 }).await {
+                crate::reactor::jobs::JobStep::Running(_) => {}
+                crate::reactor::jobs::JobStep::Done(bytes) => {
+                    terminal = Some(Ok(bytes));
+                    break;
+                }
+                crate::reactor::jobs::JobStep::Failed(bytes) => {
+                    terminal = Some(Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-failed"), String::from_utf8_lossy(&bytes).into_owned())));
+                    break;
+                }
+            }
+        }
+        let output = terminal.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-stall"), "framework reserved spawn-job did not reach a terminal step"))?;
+        app.complete_reserved_spawned_job_inner(job, output).await?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"))
+    }
+
+    /// 🧪 Browser `driveSpawnedJob` contract: one Isolated admission of 32 `step-job`s with the host's
+    /// static budget. The dummy reserved job must reach Done in 2 steps — the #38 stall was the host
+    /// never finishing that pump, not the guest body needing more slices.
+    #[cfg(test)]
+    pub async fn drive_framework_reserved_spawn_like_host<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<(InvocationResult, u32), Fault> {
+        initialize_framework_reserved_jobs();
+        let Some((job, input)) = admitted.requested_effects.iter().find_map(|effect| match effect {
+            Effect::SpawnJob { job, kind, input, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
+            _ => None,
+        }) else {
+            return Ok((admitted, 0));
+        };
+        crate::reactor::jobs::start_job(job, FRAMEWORK_RESERVED_JOB_KIND, &input).await;
+        let host_budget = crate::reactor::jobs::JobBudget { fuel: 50_000_000, deadline_ms: 100 };
+        let mut steps = 0u32;
+        let mut terminal = None;
+        for _ in 0..32 {
+            steps += 1;
+            match crate::reactor::jobs::step_job(job, host_budget).await {
+                crate::reactor::jobs::JobStep::Running(_) => {}
+                crate::reactor::jobs::JobStep::Done(bytes) => {
+                    terminal = Some(Ok(bytes));
+                    break;
+                }
+                crate::reactor::jobs::JobStep::Failed(bytes) => {
+                    terminal = Some(Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-failed"), String::from_utf8_lossy(&bytes).into_owned())));
+                    break;
+                }
+            }
+        }
+        let output = terminal.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-stall"), format!("framework reserved spawn-job did not reach Done within one host drive admission ({steps} steps)")))?;
+        if steps > 2 {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-budget"), format!("framework reserved dummy job took {steps} steps; host noteShellCommand finishes in 2")));
+        }
+        let settled = app.complete_reserved_spawned_job_inner(job, output).await?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"))?;
+        Ok((settled, steps))
     }
 
     /// 🕰️ Length of [`PluginApp::maintenance_step`]'s fixed cooperative round robin. Every stage
@@ -23907,6 +24299,12 @@ pub mod app {
                     query.begin_close();
                 }
                 self.close_started = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some((_, id)) = self.pending_reserved.next_id_from(0) {
+                if let Some(pending) = self.pending_reserved.remove(id) {
+                    pending.permit.finish();
+                }
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if self.local_interaction_query.is_some() {
@@ -24389,6 +24787,7 @@ pub mod app {
                 && self.close_instance_operation_owner_drained
                 && self.instance_operation_owner.terminal_is_empty().unwrap_or(false)
                 && self.media_exports.is_empty()
+                && self.pending_reserved.is_empty()
                 && self.media_closures.is_empty()
                 && self.snapshot_retirements.is_empty()
                 && self.segmented_downloads.is_empty()
@@ -25070,6 +25469,10 @@ pub mod app {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_action(action, args, meta).await?;
             Ok(self.finish_recorded(log_generation_before, action, result).await)
+        }
+
+        async fn complete_reserved_spawned_job(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
+            self.complete_reserved_spawned_job_inner(job, output).await
         }
 
         async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -29096,6 +29499,18 @@ pub mod plugin_runtime {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
 
+    pub(crate) fn debug_runtime_line(line: impl std::fmt::Display) {
+        if semio_framework_trace::runtime_diagnostics_enabled() {
+            eprintln!("{line}");
+        }
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn debug_runtime_lines_are_silent_when_diagnostics_are_off() {
+        assert!(!semio_framework_trace::runtime_diagnostics_enabled());
+    }
+
     /// 🌉️ Twin of `encode_wire_serialized` above — wire decode over `T: FromValue` directly.
     pub(crate) async fn decode_wire_serialized<T: FromValue>(bytes: &[u8]) -> Result<T, Fault> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| plugin_internal_fault(error.to_string()))?;
@@ -29987,7 +30402,7 @@ pub mod plugin_runtime {
     fn runtime_close_pending_authority(reason: &'static str) {
         let seen = RUNTIME_CLOSE_PENDING_AUTHORITY_TURNS.fetch_add(1, Ordering::Relaxed).saturating_add(1);
         if seen.is_power_of_two() {
-            eprintln!("[DEBUG] runtime close pending authority turn={seen} reason={reason}");
+            debug_runtime_line(format_args!("[DEBUG] runtime close pending authority turn={seen} reason={reason}"));
         }
     }
 
@@ -30174,7 +30589,7 @@ pub mod plugin_runtime {
         state.last_callback_elapsed_us.store(elapsed_us, Ordering::SeqCst);
         let verdict = if !matches!(status, RuntimeCloseStatus::Fault(_)) && semio_framework_trace::interactive_step_contract_violated(elapsed_us) {
             #[cfg(test)]
-            eprintln!("[DEBUG] native close deadline instance={} generation={} candidate={status:?} elapsed_us={elapsed_us}", state.instance_id, state.generation.0);
+            debug_runtime_line(format_args!("[DEBUG] native close deadline instance={} generation={} candidate={status:?} elapsed_us={elapsed_us}", state.instance_id, state.generation.0));
             state.deadline_resume.store(status.repr(), Ordering::SeqCst);
             let _ = state.deadline_elapsed_us.compare_exchange(0, elapsed_us, Ordering::SeqCst, Ordering::SeqCst);
             RuntimeCloseStatus::DeadlineYield
@@ -30333,7 +30748,7 @@ pub mod plugin_runtime {
             cell.maintenance_fault_us.store(RUNTIME_CLEANUP_UNMEASURED_US, Ordering::SeqCst);
             cell.maintenance_status.store(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CooperativeClock).repr(), Ordering::SeqCst);
         }
-        if turn <= 4096 && turn.is_power_of_two() {
+        if turn <= 4096 && turn.is_power_of_two() && semio_framework_trace::runtime_diagnostics_enabled() {
             let phase = cell
                 .maintenance_pump
                 .try_lock()
@@ -30419,14 +30834,15 @@ pub mod plugin_runtime {
     }
 
     /// 📏️ The ONE public invocation envelope, read off the language-neutral contract
-    /// (`🛂️manifest/🎛️public-invocation/🧬️schema/🔣️.json`) the shell's pager reads too — never a
-    /// second literal here. `MAX_PUBLIC_ACTION_STRING_BYTES` in particular is checked BEFORE the
-    /// addressed tool's own `max_raw_wire_bytes`, so no tool contract can widen it and every
-    /// oversized host push must be paged by its producer
+    /// (`🛂️manifest/🎛️public-invocation/🧬️schema/🔣️.json`). `MAX_PUBLIC_ACTION_STRING_BYTES` is
+    /// checked BEFORE the addressed tool's own `max_raw_wire_bytes`, so no tool contract can widen
+    /// it. `setContributions` is the host pack crossing: it keeps the body cap and skips the per-string
+    /// cap so one scoped contributions pack can land without 4 KiB paging
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const MAX_PUBLIC_ACTION_BODY_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
     const MAX_PUBLIC_ACTION_STRING_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
     const MAX_PUBLIC_ACTION_DEPTH: usize = semio_framework::PUBLIC_INVOCATION_DEPTH;
+    const HOST_CONTRIBUTIONS_PACK_COMMAND_ID: &str = "setContributions";
 
     fn dff_interactive_wire_limit(owner: crate::app::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[crate::app::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
         let registration = app_contracts.iter().find(|registration| registration.controller_id == addressed_controller_id && registration.tool_id == command_id);
@@ -30555,7 +30971,20 @@ pub mod plugin_runtime {
         }
     }
 
+    fn public_address_command_id(body: &str) -> Option<String> {
+        serde_json::from_str::<serde_json::Value>(body).ok()?.get("address")?.get("commandId")?.as_str().map(str::to_owned)
+    }
+
     fn validate_public_json_envelope(body: &str, label: &str) -> Result<(), Fault> {
+        validate_public_json_envelope_with(body, label, true)
+    }
+
+    fn validate_public_command_json(body: &str) -> Result<(), Fault> {
+        let cap_strings = public_address_command_id(body).as_deref() != Some(HOST_CONTRIBUTIONS_PACK_COMMAND_ID);
+        validate_public_json_envelope_with(body, "command", cap_strings)
+    }
+
+    fn validate_public_json_envelope_with(body: &str, label: &str, cap_strings: bool) -> Result<(), Fault> {
         if body.len() > MAX_PUBLIC_ACTION_BODY_BYTES {
             return Err(plugin_internal_fault(format!("{label} exceeds the bounded public action body")));
         }
@@ -30575,7 +31004,7 @@ pub mod plugin_runtime {
                 } else {
                     string_bytes = string_bytes.saturating_add(1);
                 }
-                if string_bytes > MAX_PUBLIC_ACTION_STRING_BYTES {
+                if cap_strings && string_bytes > MAX_PUBLIC_ACTION_STRING_BYTES {
                     return Err(plugin_internal_fault(format!("{label} contains an oversized string")));
                 }
                 continue;
@@ -30613,7 +31042,7 @@ pub mod plugin_runtime {
     }
 
     fn validate_public_command_envelope(body: &str, owner: crate::app::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[crate::app::ArtifactToolPublicContract]) -> Result<(), Fault> {
-        validate_public_json_envelope(body, "command")?;
+        validate_public_command_json(body)?;
         if let Some(limit) = dff_invocation_wire_limit(body, "commandId", "command", owner, runtime_controller_id, app_contracts)? {
             if body.len() > limit {
                 return Err(plugin_internal_fault("interactive Draw/Flow/Forms command exceeds its command-specific wire bound"));
@@ -30633,6 +31062,16 @@ pub mod plugin_runtime {
         Ok(projected)
     }
 
+    fn debug_action_dispatch_branch(action_id: &str) -> &'static str {
+        if !crate::app::is_framework_reserved_action_id(action_id) {
+            "catalog"
+        } else if matches!(action_id, "copy" | "cut" | "paste") {
+            "clipboard-instack"
+        } else {
+            "spawn-admit"
+        }
+    }
+
     /// 🎯️ Window projection for a catalog action, or the unprojected view for a framework-reserved verb.
     /// Actor ingress (`AppCommand::Command`) and `plugin_handle_action` share this rule so undo/redo
     /// reach `dispatch_framework_reserved_action` when the chrome addresses a window that does not
@@ -30647,11 +31086,13 @@ pub mod plugin_runtime {
 
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_handle_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
+        debug_runtime_line(format_args!("[DEBUG] plugin_handle_action entry instance={instance_id}"));
         validate_public_json_envelope(action_json, "action")?;
         let (runtime_controller_id, owner, app_contracts) = live_tool_identity(runtime, instance_id).await?;
         validate_public_action_envelope(action_json, owner, &runtime_controller_id, &app_contracts)?;
         validate_public_json_envelope(context_json, "action context")?;
         let invocation: ManifestActionInvocation = dsl::os_pack::json::from_json_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        debug_runtime_line(format_args!("[DEBUG] plugin_handle_action actionId={} branch={}", invocation.address.action_id, debug_action_dispatch_branch(&invocation.address.action_id)));
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
         let owner_matches = runtime.plugin.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id);
@@ -30672,7 +31113,7 @@ pub mod plugin_runtime {
     /// execute on the program registry; app/mode commands execute on the addressed app instance, with
     /// active-mode gating for mode ownership. OS commands never enter a plugin runtime.
     pub async fn plugin_handle_command<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
-        validate_public_json_envelope(command_json, "command")?;
+        validate_public_command_json(command_json)?;
         let (runtime_controller_id, owner, app_contracts) = live_tool_identity(runtime, instance_id).await?;
         validate_public_command_envelope(command_json, owner, &runtime_controller_id, &app_contracts)?;
         validate_public_json_envelope(context_json, "command context")?;
@@ -31796,6 +32237,56 @@ pub mod plugin_runtime {
         }
     }
 
+    /// 🕰️ Host-driven completion for one framework-reserved spawn-job. Missing pending state is a
+    /// no-op so fill and other isolated jobs keep their existing JobCompleted path.
+    pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, job: u64, output: Result<Vec<u8>, Fault>) -> PluginExchangeOutput {
+        let dispatched = with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            resolve_ready(instance.app.complete_reserved_spawned_job(job, output))
+        })
+        .await;
+        let mut frames: Vec<protocol::AppFrame> = Vec::new();
+        let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
+        let mut event_bytes: Vec<Vec<u8>> = Vec::new();
+        match dispatched {
+            Ok(Some(result)) => {
+                frames.push(protocol::AppFrame::Invocation {
+                    in_reply_to: 0,
+                    output: encode_wire_serialized(&result.output),
+                    diagnostics: encode_wire_serialized(&result.diagnostics),
+                    ui_scope: encode_wire_serialized(&result.ui_scope),
+                    history_patch: encode_wire_serialized(&result.history_patch),
+                    messages: Vec::new(),
+                    mutations: encode_wire_serialized(&result.mutations),
+                    inverse_group: encode_wire_serialized(&result.inverse_group),
+                });
+                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
+                let typed = with_instances_mut(runtime, |list| {
+                    let mut instance = find_instance(list, instance_id)?;
+                    advance_typed_operation_output(&mut instance.app, instance_id)
+                })
+                .await;
+                let mut frame_bytes = Vec::with_capacity(frames.len() + 1);
+                for frame in frames.iter() {
+                    frame_bytes.push(protocol::encode_app_frame(frame).await);
+                }
+                if let Ok(typed) = typed {
+                    frame_bytes.extend(typed.frames);
+                    effect_bytes.extend(typed.effects);
+                    event_bytes.extend(typed.events);
+                }
+                return PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None };
+            }
+            Ok(None) => {}
+            Err(fault) => push_app_fault(&mut frames, None, fault).await,
+        }
+        let mut frame_bytes = Vec::with_capacity(frames.len());
+        for frame in frames.iter() {
+            frame_bytes.push(protocol::encode_app_frame(frame).await);
+        }
+        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None }
+    }
+
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
     /// `instance_id` against the app's live `dyn PluginApp` via `PluginApp::handle_intent_frame` —
     /// the ONLY dispatch path this takes, which resolves a typed `Command` through
@@ -31995,6 +32486,7 @@ pub mod plugin_runtime {
 
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
+        debug_runtime_line(format_args!("[DEBUG] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
@@ -32148,6 +32640,7 @@ pub mod plugin_runtime {
                     .await?;
                     let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command).await {
                         Ok(invocation) => {
+                            debug_runtime_line(format_args!("[DEBUG] plugin_exchange actionId={} branch={}", invocation.address.action_id, debug_action_dispatch_branch(&invocation.address.action_id)));
                             let addressed_view = meta.view_state.as_ref().ok_or_else(|| plugin_internal_fault("action context is missing viewState")).and_then(|view| admit_addressed_action_view(view, &invocation));
                             let view = match addressed_view {
                                 Ok(view) => view,
@@ -32169,6 +32662,7 @@ pub mod plugin_runtime {
                         }
                         Err(_) => match decode_wire_serialized::<ManifestCommandInvocation>(&command).await {
                             Ok(invocation) => {
+                                debug_runtime_line(format_args!("[DEBUG] plugin_exchange actionId={} branch=command-invocation", invocation.address.command_id));
                                 let active_mode_id = meta.view_state.as_ref().and_then(|view| view.active_mode_id.as_deref());
                                 match &invocation.address.owner {
                                     ManifestCommandOwnerAddress::Os => Err(plugin_internal_fault("os commands must be dispatched by the os host")),
@@ -32191,6 +32685,7 @@ pub mod plugin_runtime {
                                 }
                             }
                             Err(_) => {
+                                debug_runtime_line("[DEBUG] plugin_exchange actionId=<undecoded> branch=command-frame");
                                 with_instances_mut(runtime, |list| {
                                     let mut instance = find_instance(list, instance_id)?;
                                     resolve_ready(instance.app.handle_command_frame(&command, &meta))
@@ -32699,14 +33194,27 @@ pub mod plugin_runtime {
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             impl $crate::component::wasip2::exports::semio::framework::reactor::Guest for $guest {
+                async fn stage_command_page(
+                    cursor: $crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor,
+                    bytes: Vec<u8>,
+                ) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $crate::app::resolve_ready($crate::reactor::stage_command_page(cursor, bytes)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn stage_cold_pair_page(
+                    page: $crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage,
+                ) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $crate::app::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
                 async fn poll(
                     events: Vec<$crate::component::wasip2::exports::semio::framework::reactor::Event>,
-                    command_page: Option<$crate::component::wasip2::exports::semio::framework::reactor::CommandIngressPage>,
-                    cold_pair_page: Option<$crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage>,
                     budget: $crate::component::wasip2::exports::semio::framework::reactor::Budget,
                 ) -> Result<$crate::component::wasip2::exports::semio::framework::reactor::TurnResult, $crate::component::wasip2::semio::framework::types::PluginError> {
                     $ensure();
-                    $runtime.with(|runtime| $crate::plugin_runtime::drive_self_waking_ready($crate::reactor::poll(runtime, events, command_page, cold_pair_page, budget))).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                    $runtime.with(|runtime| $crate::plugin_runtime::drive_self_waking_ready($crate::reactor::poll(runtime, events, budget))).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
                 }
             }
 

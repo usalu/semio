@@ -394,8 +394,11 @@ fn decode_fingerprint_wire(bytes: &[u8]) -> Result<String, RunError> {
 }
 
 fn app_frame_fault_summary(fault: &[u8]) -> String {
-    let fault = dsl::decode_fault_bytes(fault);
-    format!("{}: {}", fault.code.0, fault.message)
+    let decoded = store::pack_rt::decode_wire_value(fault).ok().and_then(|value| from_dsl_value::<semio_framework::Fault>(value).ok());
+    match decoded {
+        Some(fault) => format!("{}: {}", fault.code.0, fault.message),
+        None => String::from_utf8_lossy(fault).into_owned(),
+    }
 }
 
 /// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`, present

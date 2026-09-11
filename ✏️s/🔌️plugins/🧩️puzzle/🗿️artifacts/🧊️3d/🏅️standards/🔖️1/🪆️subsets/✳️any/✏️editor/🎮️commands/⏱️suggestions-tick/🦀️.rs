@@ -23,11 +23,28 @@ pub fn suggestions_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
         .map(|menu| menu.vortex_full_id.clone())
         .filter(|id| !id.is_empty())
         .or_else(|| (ctx.scene.active_utility == brush::UTILITY_ID).then(|| puzzle3d_brush_target_vortex(ctx.scene, ctx.interaction)).flatten());
+    eprintln!("[DEBUG] puzzle3d.suggestionsTick.enter utility={} menu={} target={:?}", ctx.scene.active_utility, ctx.scene.runtime.suggestion_menu.is_some(), target);
     drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
-    if let Some(target) = target {
+    let mut slices = 0_u32;
+    if let Some(target) = target.as_deref() {
         let mut precompute = ctx.app.precompute.borrow_mut();
-        if precompute.brush_candidates(&target).unknown_pending {
-            precompute.refresh_brush_candidates(&target);
+        precompute.set_brush_live_target(Some(target.to_string()));
+        let before = precompute.brush_candidates(target);
+        eprintln!("[DEBUG] puzzle3d.brushPreview.cache tick-before vortex={target} free={} pending={}", before.free.len(), before.unknown_pending);
+        if before.free.is_empty() {
+            precompute.refresh_brush_candidates(target);
+            slices += 1;
+            for _ in 0..7 {
+                let status = precompute.brush_candidates(target);
+                if !status.unknown_pending || !status.free.is_empty() {
+                    break;
+                }
+                precompute.refresh_brush_candidates(target);
+                slices += 1;
+            }
         }
+        let after = precompute.brush_candidates(target);
+        eprintln!("[DEBUG] puzzle3d.brushPreview.cache tick-after vortex={target} free={} pending={} slices={slices}", after.free.len(), after.unknown_pending);
     }
+    eprintln!("[DEBUG] puzzle3d.suggestionsTick.exit target={:?} slices={slices}", target);
 }

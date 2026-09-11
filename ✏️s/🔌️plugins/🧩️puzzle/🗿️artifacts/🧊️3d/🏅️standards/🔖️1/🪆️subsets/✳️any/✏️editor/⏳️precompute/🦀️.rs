@@ -2363,6 +2363,7 @@ pub struct Puzzle3dPrecomputeSession {
     /// used to retry in silence with the planned count frozen at zero.
     fill_fault_notice: bool,
     last_emitted_fill_checkpoint: RefCell<Vec<u8>>,
+    brush_live_target: Option<String>,
 }
 
 /// 🎟 The fill-lane cursor one document instance carries across `with_puzzle3d_app_for`.
@@ -2440,7 +2441,7 @@ impl Default for Puzzle3dPrecomputeSession {
 
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
-        Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
+        Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()), brush_live_target: None }
     }
 
     fn read_fill<R>(&self, read: impl FnOnce(&FillBuilder) -> R) -> Option<R> {
@@ -2621,6 +2622,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+        eprintln!("[DEBUG] puzzle3d.brushPreview.cache refresh vortex={vortex_full_id}");
         self.engine.refresh_brush_candidates(vortex_full_id);
     }
 
@@ -2630,7 +2632,22 @@ impl Puzzle3dPrecomputeSession {
         self.engine.brush_cache.get(vortex_full_id).cloned().unwrap_or(BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 })
     }
 
+    pub fn set_brush_live_target(&mut self, vortex_full_id: Option<String>) {
+        self.brush_live_target = vortex_full_id.filter(|id| !id.is_empty());
+    }
+
+    pub fn brush_live_target(&self) -> Option<&str> {
+        self.brush_live_target.as_deref()
+    }
+
     pub fn brush_preview(&self, vortex_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
+        let cached = self.engine.brush_cache.get(vortex_full_id);
+        eprintln!(
+            "[DEBUG] puzzle3d.brushPreview.compute lookup vortex={vortex_full_id} hit={} free={} pending={}",
+            cached.is_some(),
+            cached.map(|entry| entry.free.len()).unwrap_or(0),
+            cached.map(|entry| entry.unknown_pending).unwrap_or(true)
+        );
         self.engine.brush_preview(vortex_full_id, candidate_index)
     }
 

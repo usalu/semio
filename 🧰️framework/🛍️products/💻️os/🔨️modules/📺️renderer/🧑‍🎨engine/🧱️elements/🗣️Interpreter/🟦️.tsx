@@ -1234,7 +1234,7 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
-    isSelected: presence.selected ?? false,
+    isSelected: presence.selected,
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
     isHidden: props.dimmed ?? undefined,

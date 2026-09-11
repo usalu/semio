@@ -7,7 +7,7 @@ import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTa
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
-import { loadPluginModule, pluginHandleForBridge } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 
 //#region 🔖️Bindings
@@ -478,6 +478,9 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
     const plugins = await mountPluginHandles(bootPlan.plugins);
+    await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
+      console.warn(`[DEBUG] contributions prime failed plugin=${target.pluginId}`, error instanceof Error ? error.message : String(error));
+    })));
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), suspensionLedger);
@@ -574,11 +577,29 @@ function progress(stage: string, value: number): void {
  * never does. The UI-isolate watchdog measures a declared phase against its own ceiling
  * (`../🫀️boot-liveness/🟦️.ts`) instead of against silence, so it can no longer terminate a Worker that is
  * merely busy, and `elapsedMs` on the withdrawal is the per-phase cost the next boot is measured by. */
+const bootPhaseStack: string[] = [];
+
 function declarePhase(phase: string, state: "enter" | "leave", elapsedMs: number): void {
   if (!bootDeclarationsOpen || closed || closing || failed) return;
+  if (state === "enter") {
+    bootPhaseStack.push(phase);
+    post({ kind: "boot-phase", lifecycle, phase, state, elapsedMs });
+    return;
+  }
   post({ kind: "boot-phase", lifecycle, phase, state, elapsedMs });
-  if (state === "leave" && elapsedMs >= BOOT_LIVENESS_INTERVAL_MS) console.log(`[DEBUG] boot-phase ${phase} ${elapsedMs.toFixed(0)} ms`);
+  if (elapsedMs >= BOOT_LIVENESS_INTERVAL_MS) console.log(`[DEBUG] boot-phase ${phase} ${elapsedMs.toFixed(0)} ms`);
+  const top = bootPhaseStack[bootPhaseStack.length - 1];
+  if (top === phase) bootPhaseStack.pop();
+  const parent = bootPhaseStack[bootPhaseStack.length - 1];
+  if (parent) post({ kind: "boot-phase", lifecycle, phase: parent, state: "enter", elapsedMs: 0 });
 }
+
+/** @emoji 🧭️ Nested `boot-phase` under an already-declared parent. Re-enters the parent on leave so the watchdog never sees an undeclared Worker. */
+function declareBootSubphase(phase: string, state: "enter" | "leave", elapsedMs: number): void {
+  declarePhase(phase, state, elapsedMs);
+}
+
+(globalThis as { semioDeclareBootSubphase?: typeof declareBootSubphase }).semioDeclareBootSubphase = declareBootSubphase;
 
 function post(message: BrowserFrameWorkerMessage): void {
   scope.postMessage(message);

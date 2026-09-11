@@ -83,7 +83,7 @@ import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorC
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
-import { createShardCommandIngressPages } from "../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt } from "../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
@@ -1620,11 +1620,13 @@ class DocumentBrowserActorReservation {
     return this.retirement;
   }
 
-  private invokeWithPages(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], commandPage: BrowserActorChildValue | null, coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
+  private invokeWithPages(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], commandPage: ShardCommandIngressPage | null, coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
     const work = this.pollTail.then(async () => {
       if ((!allowClosing && this.closed) || this.child !== child) throw new Error("document browser actor: closed poll lane");
       assertCurrent();
-      const value = await child.invoke(["reactor", "poll"], [events, commandPage, coldPairPage, browserActorTurnBudget()]);
+      if (commandPage) await child.invoke(["reactor", "stageCommandPage"], [commandPage.cursor as unknown as BrowserActorChildValue, commandPage.bytes as unknown as BrowserActorChildValue]);
+      if (coldPairPage) await child.invoke(["reactor", "stageColdPairPage"], [coldPairPage]);
+      const value = await child.invoke(["reactor", "poll"], [events, browserActorTurnBudget()]);
       assertCurrent();
       return value;
     });
@@ -1636,7 +1638,7 @@ class DocumentBrowserActorReservation {
     return this.invokeWithPages(child, events, null, coldPairPage, assertCurrent, allowClosing);
   }
 
-  private invokeCommandPage(child: DocumentBrowserActorChild, page: BrowserActorChildValue | null, assertCurrent: () => void): Promise<BrowserActorChildValue> {
+  private invokeCommandPage(child: DocumentBrowserActorChild, page: ShardCommandIngressPage | null, assertCurrent: () => void): Promise<BrowserActorChildValue> {
     return this.invokeWithPages(child, [], page, null, assertCurrent);
   }
 
@@ -1941,7 +1943,7 @@ class DocumentBrowserActorReservation {
           let terminal = "idle";
           for (const page of pages) {
             invoked = true;
-            const result = await this.invokeCommandPage(child, page as unknown as BrowserActorChildValue, () => this.assertDocumentOwnerCurrent());
+            const result = await this.invokeCommandPage(child, page, () => this.assertDocumentOwnerCurrent());
             terminal = browserActorCommandIngressStatus(result);
             mutationCount += await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent(), publication);
             if (terminal === "backpressure" || terminal === "fault") throw new Error("action-command-ingress-refused");

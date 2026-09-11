@@ -30,7 +30,7 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 }
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
@@ -39,6 +39,33 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(isolatedJobStepsPerSerializedAdmission(32)).toBe(32);
       expect(isolatedJobStepsPerSerializedAdmission(0)).toBe(1);
     });
+    it("reads history_patch from a leftover job-completed Invocation send-message", () => {
+      const { invocationFromFrames, encodePackValue } = dependencies;
+      const patch = { cursor: 3, canUndo: true, canRedo: true, upserts: [{ seq: 2, actionId: "os.resizeWindow", label: "Resize Window", kind: "shell", timestamp: "0", revertible: false }] };
+      const leftover = [{
+        tag: "send-message",
+        val: {
+          target: { tag: "shell", val: "1" },
+          payload: Array.from(encodeAppFrame({
+            Invocation: {
+              in_reply_to: 0,
+              output: [],
+              diagnostics: [],
+              ui_scope: [],
+              history_patch: Array.from(encodePackValue(patch)),
+              messages: [],
+              mutations: [],
+              inverse_group: [],
+            },
+          })),
+        },
+      }, { tag: "replay-shell-command", val: { actionId: "os.resizeWindow", args: encodePackValue({ width: 800, height: 600 }) } }];
+      const response = invocationFromFrames([{ Invocation: { in_reply_to: 1, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } }], leftover, "action");
+      expect(response.historyPatch).toEqual(patch);
+      expect(response.requestedEffects).toEqual([{ replayShellCommand: { actionId: "os.resizeWindow", args: { width: 800, height: 600 } } }]);
+      expect(leftoverShellInvocationFrames(leftover)).toHaveLength(1);
+    });
+
     it("fails-before every step polls UI; passes-after a 128-step stride", () => {
       const { isolatedJobUiPollEverySteps } = dependencies;
       expect(isolatedJobUiPollEverySteps(1, 1), "fails-before: stride 1 polls every step").toBe(true);
@@ -2007,6 +2034,28 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         )).rejects.toThrow(`missing=${JSON.stringify(missing)}`);
       });
   
+      it("does not spin the continuation budget when drain-operations has an empty required set and no acknowledgements", async () => {
+        let continuationCount = 0;
+        await withFakeShardClient(
+          async () => {
+            continuationCount += 1;
+            return { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } };
+          },
+          async () => {
+            const result = await settlePluginTurn(
+              "empty-required-drain#1",
+              { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+              "Interactive",
+              new Set(),
+              undefined,
+              true,
+            );
+            expect(continuationCount).toBeLessThan(8);
+            expect(result.uiPatches).toHaveLength(0);
+          },
+        );
+      });
+
       it("does not chase background work during instance-open before a UI surface is requested", async () => {
         let continuationCount = 0;
         await withFakeShardClient(
@@ -2468,4 +2517,28 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       console.info("[DEBUG] one typed-operation completion reached its subscriber once with its own effects");
     });
   });
+
+  it("keeps reserved command ingress Interactive ahead of catalog Background and stamps a reply when none arrives", async () => {
+    const { commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1 } = dependencies;
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-lane.json");
+    for (const row of fixture.lanes) {
+      expect(commandIngressLaneForActionV1(row.actionId), row.actionId).toBe(row.lane);
+    }
+    for (const row of fixture.stamps) {
+      expect(commandIngressNeedsReplyStampV1(row.replySequences, row.seq), row.id).toBe(row.stamp);
+    }
+    console.log("[DEBUG] Command ingress: reserved-interactive=4 catalog-background=1 empty-stamp=1 matched-skip=1 foreign-stamp=1 missing-seq=1");
+  });
+
+
+  it("packs completion-result.fault the same way the guest decodes it", async () => {
+    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/extension-result-fault-pack.json");
+    const packed = encodePackValue(fixture.fault);
+    expect(() => JSON.parse(new TextDecoder().decode(packed))).toThrow();
+    const decoded = decodePackValue(packed) as { code: string; message: string };
+    expect(decoded.code).toBe("extension.missing");
+    expect(decoded.message).toBe("no such extension");
+    console.info("[DEBUG] completion-result.fault pack recovers code and message");
+  });
+
 }

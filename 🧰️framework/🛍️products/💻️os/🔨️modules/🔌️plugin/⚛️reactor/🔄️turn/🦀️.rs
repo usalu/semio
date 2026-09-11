@@ -61,6 +61,10 @@ thread_local! {
     static GUEST_MEMORY_WITNESS: Cell<usize> = const { Cell::new(0) };
     /// 🧮️ Whether the install-peak ceiling has already been reported for this actor.
     static GUEST_MEMORY_REPORTED: Cell<bool> = const { Cell::new(false) };
+    /// 🎯️ Turns sampled by [`trace_guest_memory_pressure`] on this actor.
+    static GUEST_MEMORY_TURN: Cell<u64> = const { Cell::new(0) };
+    /// 🩺️ `(event count, bulk payload bytes)` the current turn was handed, for the memory trace.
+    static TURN_EVENTS: Cell<(usize, usize)> = const { Cell::new((0, 0)) };
     /// 🧮️ Retained-heap reading at the previous [`trace_turn_phase_retention`] probe.
     static TURN_PHASE_RETENTION: Cell<isize> = const { Cell::new(0) };
     /// 🔦️ Which sources answered `MoreWork` on the most recent turn.
@@ -127,6 +131,14 @@ impl TurnMoreWorkSources {
     }
 }
 
+/// 🩺️ Records what this turn was handed so the per-turn memory line can put growth beside input
+/// size — the one comparison that separates "the events retain" from "the call itself leaks". Only
+/// the component boundary can price the events, and only wasm has a linear memory to price.
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+pub(super) fn note_turn_events(count: usize, payload_bytes: usize) {
+    TURN_EVENTS.set((count, payload_bytes));
+}
+
 /// 🔦️ The [`TurnMoreWorkSources`] of the most recent turn on this actor's thread.
 pub fn last_turn_more_work_sources() -> TurnMoreWorkSources {
     LAST_MORE_WORK_SOURCES.get()
@@ -166,23 +178,29 @@ fn trace_guest_line(line: &str) {
 /// [`semio_framework_trace::runtime_diagnostics_enabled`]
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn trace_guest_memory_pressure() {
-    const GROWTH_TRACE_STEP_BYTES: usize = 16 * 1024 * 1024;
     let Some(bytes) = semio_framework_trace::guest_linear_memory_bytes() else { return };
     let witnessed = GUEST_MEMORY_WITNESS.get();
-    if bytes <= witnessed {
-        return;
+    let turn = GUEST_MEMORY_TURN.get().saturating_add(1);
+    GUEST_MEMORY_TURN.set(turn);
+    let delta = bytes as i64 - witnessed as i64;
+    if bytes > witnessed {
+        GUEST_MEMORY_WITNESS.set(bytes);
+        if bytes >= semio_framework_trace::guest_linear_memory_install_peak_ceiling_bytes() && !GUEST_MEMORY_REPORTED.replace(true) {
+            eprintln!(
+                "guest linear memory at {bytes} B — {}% of the {} B budget, past the {}% install-peak ceiling",
+                semio_framework_trace::guest_linear_memory_percent(bytes),
+                semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
+                semio_framework_trace::GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT
+            );
+        }
     }
-    GUEST_MEMORY_WITNESS.set(bytes);
-    if bytes >= semio_framework_trace::guest_linear_memory_install_peak_ceiling_bytes() && !GUEST_MEMORY_REPORTED.replace(true) {
-        eprintln!(
-            "guest linear memory at {bytes} B — {}% of the {} B budget, past the {}% install-peak ceiling",
+    if semio_framework_trace::runtime_diagnostics_enabled() {
+        let (events, events_bytes) = TURN_EVENTS.get();
+        trace_guest_line(&format!(
+            "[DEBUG] guest linear memory turn={turn} bytes={bytes} delta={delta} percent={} events={events} eventsBytes={events_bytes} elapsed_us={}",
             semio_framework_trace::guest_linear_memory_percent(bytes),
-            semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
-            semio_framework_trace::GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT
-        );
-    }
-    if bytes / GROWTH_TRACE_STEP_BYTES > witnessed / GROWTH_TRACE_STEP_BYTES && semio_framework_trace::runtime_diagnostics_enabled() {
-        eprintln!("[DEBUG] guest linear memory {bytes} B ({}% of budget)", semio_framework_trace::guest_linear_memory_percent(bytes));
+            guest_turn_executing_us().map(|us| us.to_string()).unwrap_or_else(|| "unmeasured".into())
+        ));
     }
 }
 
@@ -601,6 +619,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 // an `Event::Completed{req, result}` would, closing the "no `req`-per-job
                 // correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
                 // needed: the request id already IS the job id).
+                let instance = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job).map(|binding| binding.instance));
                 if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
                     let surface = ui_contract::UiText::try_format(format_args!("{}:window", binding.instance))
                         .map(ui_contract::SurfaceId)
@@ -609,7 +628,30 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         .try_surface(binding.instance, surface)
                         .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
                 }
-                REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), crate::host::outcome_to_result(result)));
+                let outcome = crate::host::outcome_to_result(result);
+                if let Some(instance) = instance {
+                    if native_close_key(runtime, instance).is_ok() {
+                        let reserved_output = match &outcome {
+                            Ok(bytes) => Ok(bytes.clone()),
+                            Err(fault) => Err(fault.clone()),
+                        };
+                        let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output));
+                        for frame_bytes in output.frames {
+                            route_app_frame(instance, &frame_bytes, &mut document_backbone_effects);
+                        }
+                        for one in &output.effects {
+                            if let Ok(effect) = decode_wire_effect(one) {
+                                push_admitted_effect(&mut document_backbone_effects, instance, effect);
+                            }
+                        }
+                        for one in &output.events {
+                            if let Ok(event) = decode_wire_app_event(one) {
+                                document_backbone_effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+                            }
+                        }
+                    }
+                }
+                REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), outcome));
             }
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } => {
                 if let Some(token) = crate::app::TypedOperationResultPage::renderer_ack_token(&payload) {
@@ -1211,7 +1253,9 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 if result.ui_patch_receipt.is_some() {
                     pending.commit_emission();
                 }
-                Ok(publish(result, prepared))
+                let published = publish(result, prepared);
+                trace_turn_phase_retention("publish");
+                Ok(published)
             }
         }
     })
@@ -1459,7 +1503,36 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
 // `kernel_effect_to_wit`'s own `pack` helper above — `world actor` imports no `host-async`.
 fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
-    dsl::from_dsl_value(value).map_err(|_| ())
+    if let Ok(effect) = dsl::from_dsl_value::<Effect>(value.clone()) {
+        return Ok(effect);
+    }
+    if let Ok(effect) = serde_json::from_value::<Effect>(value.clone().into()) {
+        return Ok(effect);
+    }
+    if let Some(effect) = decode_wire_request_file_open(&value) {
+        return Ok(effect);
+    }
+    decode_wire_replay_shell_command(&value).ok_or(())
+}
+
+fn decode_wire_replay_shell_command(value: &dsl::DslValue) -> Option<Effect> {
+    let replay = value.get("replayShellCommand").or_else(|| value.get("ReplayShellCommand"))?;
+    let action_id = replay.get("actionId").or_else(|| replay.get("action_id")).and_then(dsl::DslValue::as_str)?;
+    Some(Effect::ReplayShellCommand { action_id: action_id.to_string(), args: replay.get("args").cloned() })
+}
+
+/// 📤️ W-G3's `ReplayShellCommand` fallback is the same table: `from_dsl_value` misses some
+/// camelCase effect objects, and a silent `Err(())` drops the host picker (`effects:0`).
+fn decode_wire_request_file_open(value: &dsl::DslValue) -> Option<Effect> {
+    let file = value.get("requestFileOpen").or_else(|| value.get("RequestFileOpen"))?;
+    let req = file
+        .get("req")
+        .and_then(|req| req.as_u64().or_else(|| req.get("id").and_then(dsl::DslValue::as_u64)))?;
+    let accept = file.get("accept").and_then(dsl::DslValue::as_str)?.to_string();
+    let import_action = file.get("importAction").or_else(|| file.get("import_action")).and_then(dsl::DslValue::as_str)?.to_string();
+    let read_as = file.get("readAs").or_else(|| file.get("read_as")).and_then(dsl::DslValue::as_str).map(str::to_string);
+    let multiple = file.get("multiple").and_then(dsl::DslValue::as_bool).unwrap_or(false);
+    Some(Effect::RequestFileOpen { req: semio_framework::kernel::RequestId(req), accept, read_as, import_action, multiple })
 }
 
 fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect) {
@@ -1483,4 +1556,155 @@ fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect
 fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
     dsl::from_dsl_value(value).map_err(|_| ())
+}
+
+
+#[cfg(test)]
+mod wire_effect_laws {
+    use super::*;
+    use protocol::ToValue;
+    use semio_framework::kernel::{Effect, RequestId};
+
+    #[test]
+    fn request_file_open_survives_wire_effect_round_trip() {
+        let effect = Effect::RequestFileOpen {
+            req: RequestId(121),
+            accept: "application/json,.json".into(),
+            read_as: Some("text".into()),
+            import_action: "importFixture".into(),
+            multiple: false,
+        };
+        let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
+        let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
+        match decoded {
+            Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
+                assert!(accept.contains("json"), "{accept}");
+                assert_eq!(read_as.as_deref(), Some("text"));
+                assert_eq!(import_action, "importFixture");
+                assert!(!multiple);
+            }
+            other => panic!("wire dropped RequestFileOpen: {other:?}"),
+        }
+    }
+
+    fn effect_wire_kind(effect: &Effect) -> &'static str {
+        match effect {
+            Effect::OpenWindow { .. } => "openWindow",
+            Effect::CloseWindow { .. } => "closeWindow",
+            Effect::Notify { .. } => "notify",
+            Effect::ClipboardWrite { .. } => "clipboardWrite",
+            Effect::RequestSync => "requestSync",
+            Effect::Navigate { .. } => "navigate",
+            Effect::LoadDocument { .. } => "loadDocument",
+            Effect::OpenExternalUrl { .. } => "openExternalUrl",
+            Effect::SetPanel { .. } => "setPanel",
+            Effect::DownloadMediaExport { .. } => "downloadMediaExport",
+            Effect::IconRenderExport { .. } => "iconRenderExport",
+            Effect::RequestFileOpen { .. } => "requestFileOpen",
+            Effect::RequestMediaFrames { .. } => "requestMediaFrames",
+            Effect::SpawnPluginInstance { .. } => "spawnPluginInstance",
+            Effect::OpenPluginInstance { .. } => "openPluginInstance",
+            Effect::SetActiveUtility { .. } => "setActiveUtility",
+            Effect::SetActiveTool { .. } => "setActiveTool",
+            Effect::OpenDialog { .. } => "openDialog",
+            Effect::DispatchAction { .. } => "dispatchAction",
+            Effect::ReplayShellCommand { .. } => "replayShellCommand",
+            Effect::InvokeExtension { .. } => "invokeExtension",
+            Effect::SendMessage { .. } => "sendMessage",
+            Effect::PublishEvent { .. } => "publishEvent",
+            Effect::BlobWrite { .. } => "blobWrite",
+            Effect::BlobLoad { .. } => "blobLoad",
+            Effect::HttpRequest { .. } => "httpRequest",
+            Effect::DocumentRead { .. } => "documentRead",
+            Effect::DocumentWrite { .. } => "documentWrite",
+            Effect::LinkResolve { .. } => "linkResolve",
+            Effect::RegistryQuery { .. } => "registryQuery",
+            Effect::IoCompose { .. } => "ioCompose",
+            Effect::CacheDerive { .. } => "cacheDerive",
+            Effect::CacheRead { .. } => "cacheRead",
+            Effect::SetTimer { .. } => "setTimer",
+            Effect::SpawnJob { .. } => "spawnJob",
+            Effect::CancelJob { .. } => "cancelJob",
+            Effect::Respond { .. } => "respond",
+            Effect::StorageRead { .. } => "storageRead",
+            Effect::StorageWrite { .. } => "storageWrite",
+            Effect::StorageDelete { .. } => "storageDelete",
+            Effect::RequestCapability { .. } => "requestCapability",
+            Effect::ReleaseCapability { .. } => "releaseCapability",
+            Effect::Subscribe { .. } => "subscribe",
+            Effect::Unsubscribe { .. } => "unsubscribe",
+            Effect::RequestInferenceProposal { .. } => "requestInferenceProposal",
+        }
+    }
+
+    fn all_effect_wire_fixtures() -> Vec<Effect> {
+        use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, InferenceProposalKind, JobPlacement, MessageEndpoint, PluginInstanceId, RequestOutcome, WindowHandle, WindowKindId};
+        use semio_framework::{MediaClass, MediaForm, MediaType};
+        let req = RequestId(7);
+        let media = MediaType { class: MediaClass::Data, form: MediaForm::Value };
+        vec![
+            Effect::OpenWindow { req, kind: WindowKindId("main".into()), params: dsl::DslValue::Null },
+            Effect::CloseWindow { window: WindowHandle(1) },
+            Effect::Notify { message: "n".into() },
+            Effect::ClipboardWrite { fragment: ClipboardFragment { schema: "s".into(), media_type: media.clone(), dsl_text: "{}".into(), pack_bytes: None, source_app: "a".into(), label: "l".into() } },
+            Effect::RequestSync,
+            Effect::Navigate { uri: "semio://x".into() },
+            Effect::LoadDocument { pack: vec![1], spr: vec![2] },
+            Effect::OpenExternalUrl { url: "https://example.test".into() },
+            Effect::SetPanel { panel_json: "{}".into() },
+            Effect::DownloadMediaExport { filename: "a.bin".into(), mime_type: "application/octet-stream".into(), data: "AA==".into(), encoding: None },
+            Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: dsl::DslValue::Null }] },
+            Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false },
+            Effect::RequestMediaFrames { req, accept: "video/*".into(), frame_action: "frame".into(), done_action: "done".into(), fallback_action: "fallback".into(), sample_stride: 0, max_frames: 0, max_long_edge_px: 0, fps_hint: 0.0, payload: None, args: None },
+            Effect::SpawnPluginInstance { req, plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None, label: None, document_json: None },
+            Effect::OpenPluginInstance { plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None },
+            Effect::SetActiveUtility { window_id: "w".into(), utility_id: "u".into() },
+            Effect::SetActiveTool { tool_id: "t".into() },
+            Effect::OpenDialog { req, dialog_id: "d".into(), args: None },
+            Effect::DispatchAction { req, action: "act".into(), args: None, delay_ms: 0 },
+            Effect::ReplayShellCommand { action_id: "panelTab".into(), args: None },
+            Effect::invoke_extension(req, "ext".into(), "cap".into(), "{}".into()),
+            Effect::SendMessage { target: MessageEndpoint::Topic { name: "t".into() }, payload: vec![1] },
+            Effect::PublishEvent { topic: "t".into(), payload: vec![1] },
+            Effect::BlobWrite { req, media_type: media, bytes: vec![1] },
+            Effect::BlobLoad { req, hash: "h".into() },
+            Effect::HttpRequest { req, method: "GET".into(), url: "https://example.test".into(), headers: Vec::new(), body: None, stream: false },
+            Effect::DocumentRead { req, doc: ArtifactHandle(1), lane: "main".into() },
+            Effect::DocumentWrite { req, doc: ArtifactHandle(1), lane: "main".into(), ops: vec![1] },
+            Effect::LinkResolve { req, link: "l".into() },
+            Effect::RegistryQuery { req, kind: "k".into(), filter: None },
+            Effect::IoCompose { req, key: "k".into(), sources: vec!["s".into()] },
+            Effect::CacheDerive { req, engine_id: "e".into(), input: vec![1] },
+            Effect::CacheRead { req, engine_id: "e".into(), key: "k".into() },
+            Effect::SetTimer { id: 1, after_ms: 1, repeat: false },
+            Effect::SpawnJob { job: 1, kind: "framework.reserved.tool".into(), input: vec![1], placement: JobPlacement::Isolated },
+            Effect::CancelJob { job: 1 },
+            Effect::Respond { req, result: RequestOutcome::Ok(vec![1]) },
+            Effect::StorageRead { req, key: "k".into() },
+            Effect::StorageWrite { req, key: "k".into(), bytes: vec![1] },
+            Effect::StorageDelete { req, key: "k".into() },
+            Effect::RequestCapability { req, capability: CapabilityRequest { id: CapabilityId("c".into()), scope: "s".into(), reason: "r".into(), optional: false } },
+            Effect::ReleaseCapability { id: CapabilityId("c".into()) },
+            Effect::Subscribe { topic: "t".into() },
+            Effect::Unsubscribe { topic: "t".into() },
+            Effect::RequestInferenceProposal { kind: InferenceProposalKind::GisMapBoundsRegion },
+        ]
+    }
+
+    /// 🧪 W-G3 §8.21 — every `Effect` kind survives leftover `pack_rt` encode / `decode_wire_effect`.
+    /// A new variant that is not in `effect_wire_kind` fails compile; a fixture gap fails this count.
+    #[test]
+    fn every_effect_kind_survives_wire_effect_round_trip() {
+        let fixtures = all_effect_wire_fixtures();
+        let mut seen = std::collections::BTreeSet::new();
+        for effect in &fixtures {
+            let kind = effect_wire_kind(effect);
+            assert!(seen.insert(kind), "duplicate wire-table fixture {kind}");
+            let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
+            let decoded = decode_wire_effect(&bytes).unwrap_or_else(|_| panic!("wire table dropped {kind}"));
+            assert_eq!(effect_wire_kind(&decoded), kind, "{kind} decoded as a different arm");
+        }
+        assert_eq!(seen.len(), fixtures.len(), "wire-table completeness fixtures must be unique");
+        assert_eq!(fixtures.len(), 45, "every Effect kind must have a leftover wire-table fixture");
+    }
 }

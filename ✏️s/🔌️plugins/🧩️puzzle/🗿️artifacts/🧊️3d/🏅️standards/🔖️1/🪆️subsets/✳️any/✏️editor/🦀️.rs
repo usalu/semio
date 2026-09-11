@@ -42,7 +42,7 @@ use semio_framework_plugin::{
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, PluginCloseStep,
     MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
-    WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID,
+    WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
@@ -304,7 +304,12 @@ fn puzzle3d_fixture_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzl
 }
 
 fn puzzle3d_mutations_between(before: &Puzzle3dFixture, after: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
-    puzzle3d_operations_from_values(&puzzle3d_projection_value(dsl::ToValue::to_value(before)), &puzzle3d_projection_value(dsl::ToValue::to_value(after)))
+    let before_snapshot = puzzle3d_snapshot_from_fixture(before);
+    let after_snapshot = puzzle3d_snapshot_from_fixture(after);
+    if before_snapshot == after_snapshot {
+        return Vec::new();
+    }
+    puzzle3d_snapshot_mutations(&before_snapshot, &after_snapshot)
 }
 
 fn puzzle3d_selected_objects(fixture: &Puzzle3dFixture, interaction: &InteractionView<'_>) -> Vec<Puzzle3dObject> {
@@ -313,7 +318,21 @@ fn puzzle3d_selected_objects(fixture: &Puzzle3dFixture, interaction: &Interactio
 
 fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, fixture: &Puzzle3dFixture) -> Vec<Puzzle3dObject> {
     let ids = snapshot.selected_object_ids();
-    fixture.objects.iter().filter(|object| ids.contains(&object.id)).cloned().collect()
+    let mut objects: Vec<Puzzle3dObject> = fixture.objects.iter().filter(|object| ids.contains(&object.id)).cloned().collect();
+    if objects.is_empty() {
+        objects = fixture.objects.iter().filter(|object| snapshot.selected.iter().any(|id| id == &object.id)).cloned().collect();
+    }
+    if objects.is_empty() {
+        objects = fixture
+            .objects
+            .iter()
+            .filter(|object| {
+                object.vortices.iter().any(|vortex| snapshot.selected.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id)))
+            })
+            .cloned()
+            .collect();
+    }
+    objects
 }
 
 /// 📋️ Copies the selected objects as a fixture-shaped fragment.
@@ -1005,7 +1024,7 @@ impl Puzzle3dInteractionSnapshot {
 /// 🧲️ Applies one absolute gumball translate (total delta from drag-start) onto a fixture snapshot.
 pub fn puzzle3d_apply_translate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], dx: f64, dy: f64, dz: f64) {
     for object in &mut fixture.objects {
-        if object_ids.contains(&object.id) {
+        if object_ids.contains(&object.id) && !object.locked {
             object.origin[0] += dx;
             object.origin[1] += dy;
             object.origin[2] += dz;
@@ -2197,6 +2216,7 @@ pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
         "setObjectKindWeight" | "setVortexKindWeight" => Puzzle3dScopeClass::FillOptions,
         "suggestionsTick" => Puzzle3dScopeClass::SuggestionsTick,
         "registerBrushMesh" | "exportFixture" | "openImportFixture" => Puzzle3dScopeClass::Quiet,
+        "setActiveUtility" | "setActiveTool" => Puzzle3dScopeClass::Viewport,
         "selectSameKindSelection" => Puzzle3dScopeClass::Selection,
         "duplicateSelection" | "deleteSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "patchInspector" | "setSelectionFlag" | "setTargetVolumeFlag" | "deleteAttraction" | "deleteTargetVolume" | "createAttraction"
         | "worldRelocate" | "relocateTargetVolume" | "addObjectKind" | "addTargetVolume" | "importFixture" => Puzzle3dScopeClass::Document,
@@ -2553,6 +2573,12 @@ impl<'a> Puzzle3dActionCtx<'a> {
             return false;
         }
         self.notice(|labels| labels.nothing_selected.as_str());
+        self.abort = true;
+        true
+    }
+
+    pub fn refuse_when_locked(&mut self) -> bool {
+        self.notice(|labels| labels.selection_locked.as_str());
         self.abort = true;
         true
     }
@@ -3080,13 +3106,37 @@ impl Puzzle3dPlayApp {
         interaction: &Puzzle3dInteractionSnapshot,
     ) -> Puzzle3dActionEmission {
         let action = command.action_id();
+        if action == "openImportFixture" {
+            eprintln!("[DEBUG] puzzle3d.openImport.enter action={action} window={window_id:?} payload=shell-only");
+        }
         if let Some(shell) = puzzle3d_shell_only_emit(action) {
+            if action == "openImportFixture" {
+                eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} path=shell-only effects=1");
+            }
             return shell;
         }
         let mut prologue = Puzzle3dActionPrologue::default();
         prologue.scene_step(action, snapshot, config, view_state, window_id);
-        while prologue.sync_step(self, action, config, view_state, window_id) {}
-        prologue.dispatch_step(self, command, window_id, config, view_state, interaction)
+        let mut sync_turns = 0_u32;
+        while prologue.sync_step(self, action, config, view_state, window_id) {
+            sync_turns += 1;
+            eprintln!("[DEBUG] puzzle3d.prologue.sync action={action} turn={sync_turns} stage={:?}", prologue.sync_stage);
+            if action == "openImportFixture" {
+                eprintln!("[DEBUG] puzzle3d.openImport.step action={action} turn={sync_turns} stage={:?}", prologue.sync_stage);
+            }
+            if sync_turns >= 8 {
+                eprintln!("[DEBUG] puzzle3d.prologue.sync action={action} hang-point=sync-budget turns={sync_turns}");
+                if action == "openImportFixture" {
+                    eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} hang-point=sync-budget turns={sync_turns}");
+                }
+                break;
+            }
+        }
+        let emission = prologue.dispatch_step(self, command, window_id, config, view_state, interaction);
+        if action == "openImportFixture" {
+            eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} path=dispatch sync_turns={sync_turns} effects={}", emission.0.effects.len());
+        }
+        emission
     }
 }
 
@@ -3134,6 +3184,8 @@ impl Puzzle3dActionPrologue {
     /// (`puzzle3d_operations_from_fixture_change`'s `before`).
     pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
+        let map_hit = window_id.and_then(|wid| view_state.and_then(|view| view.active_utility_by_window_id.get(wid))).is_some();
+        eprintln!("[DEBUG] puzzle3d.utility.publish action={action} window={window_id:?} utility={active_utility} map_hit={map_hit}");
         self.before = puzzle3d_action_document_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
     }
@@ -3231,19 +3283,19 @@ impl Puzzle3dActionPrologue {
             "setFillCount" => Some("fill-count".to_string()),
             _ => None,
         };
-        // 🧰️🛠️ Programmatic utility/tool switches (engagement submit/abort, suggestions, fill) push the
-        // active utility/tool back into the host session; `setActiveTool` itself never re-emits because
-        // the command is the direct switch. Fill transitions
-        // go through `SetActiveTool` exclusively — the window's real utility is untouched by entering or
-        // leaving the fill tool; a genuine utility transition (not involving fill on either side) still
-        // emits `SetActiveUtility` exactly as before.
-        let is_direct_utility_switch = action == SET_ACTIVE_TOOL_ACTION_ID;
+        // 🧰️🛠️ Programmatic utility/tool switches push the host session. `setActiveTool` itself never
+        // re-emits. Entering fill emits `SetActiveTool { fill }` only. Leaving fill is exclusively a
+        // host `setActiveTool ""` — an empty tool effect here bounce-disarms a just-armed fill (Escape
+        // `engagementAbort`, mid-flow utility-field rewrite). A real utility change still emits
+        // `SetActiveUtility` (host mutual exclusion clears the tool when the utility is non-empty).
+        let is_direct_tool_switch = action == SET_ACTIVE_TOOL_ACTION_ID;
+        let is_direct_utility_switch = action == SET_ACTIVE_UTILITY_ACTION_ID;
         let initial_is_fill_tool = active_utility_initial == fill_tool::TOOL_ID;
         let next_is_fill_tool = next_active_utility == fill_tool::TOOL_ID;
-        if !is_direct_utility_switch && next_is_fill_tool != initial_is_fill_tool {
-            effects.push(Effect::SetActiveTool { tool_id: if next_is_fill_tool { fill_tool::TOOL_ID.into() } else { String::new() } });
+        if !is_direct_tool_switch && next_is_fill_tool && !initial_is_fill_tool {
+            effects.push(Effect::SetActiveTool { tool_id: fill_tool::TOOL_ID.into() });
         }
-        if !is_direct_utility_switch && !next_is_fill_tool && !initial_is_fill_tool && next_active_utility != active_utility_initial {
+        if !is_direct_utility_switch && !is_direct_tool_switch && !next_is_fill_tool && next_active_utility != active_utility_initial {
             effects.push(Effect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
         }
         // 🧮️ B1: only a REAL config change becomes a `Puzzle3dConfigMutation` — `PartialEq` (derived)
@@ -3290,6 +3342,20 @@ impl Puzzle3dActionPrologue {
 fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
     match action {
         "openAddObjectDialog" => Some((Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default())),
+        "openImportFixture" => Some((
+            Emit {
+                effects: vec![Effect::RequestFileOpen {
+                    req: semio_framework_plugin::RequestId(121),
+                    accept: "application/json,.json".into(),
+                    read_as: Some("text".into()),
+                    import_action: "importFixture".into(),
+                    multiple: false,
+                }],
+                ui_scope: UiDirtyScope::None,
+                ..Default::default()
+            },
+            EphemeralEmit::default(),
+        )),
         "transformBegin" | "transformEnd" => Some((Emit::default(), EphemeralEmit::default())),
         _ => None,
     }
@@ -4344,7 +4410,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     return Ok(Self::progress("puzzle3d-scale-volume", "Scaling selected volume", "Ausgewähltes Volumen wird skaliert"));
                 };
                 self.object_cursor += 1;
-                if self.objects.contains(&object.id) {
+                if self.objects.contains(&object.id) && !object.locked {
                     self.mutations.push(self.object_mutation(object, command));
                 }
                 Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
@@ -4353,7 +4419,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let Some(volume) = snapshot.typed().target_volumes.get(self.volume_cursor) else {
                     self.stage = Puzzle3dScaleStage::Complete;
                     let mutations = std::mem::take(&mut self.mutations);
-                    if mutations.is_empty() && !self.volumes.is_empty() && self.objects.is_empty() {
+                    if mutations.is_empty() && (!self.objects.is_empty() || !self.volumes.is_empty()) {
                         return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
                     }
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }));
@@ -8103,8 +8169,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
             .action_with(ActionDefinition::bounded_catalog("exportFixture", LocalizedLabel::native("Export", "Exportieren"), ActionKind::Shell).category("file"))
-            .action_with(ActionDefinition::bounded_catalog("importFixture", LocalizedLabel::native("Import", "Importieren"), ActionKind::Mutation).category("file"))
-            .action_with(ActionDefinition::bounded_catalog("openImportFixture", LocalizedLabel::native("Import…", "Importieren…"), ActionKind::Shell).category("file"))
+            .action_with(ActionDefinition::bounded_catalog("importFixture", LocalizedLabel::native("Import", "Importieren"), ActionKind::Mutation).in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("openImportFixture", LocalizedLabel::native("Import", "Importieren"), ActionKind::Shell).category("file"))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))

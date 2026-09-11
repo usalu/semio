@@ -1332,6 +1332,20 @@ async fn tool_registry_declares_fill_tool() {
     assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill_tool::TOOL_ID).await]);
     assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
 }
+
+/// 🛠️ Wave W-AB: mid-fill actions must not bounce-disarm the host with an empty `setActiveTool`.
+#[semio_framework_async_macros::async_test]
+async fn fill_flow_does_not_emit_empty_set_active_tool() {
+    let empty_tool = |result: &semio_framework_plugin::InvocationResult| {
+        result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty()))
+    };
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    let tick = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+    assert!(!empty_tool(&tick), "fillBuildTick must not bounce-disarm: {:?}", tick.requested_effects);
+    let abort = dispatch(&mut app, "engagementAbort", None, None).await.expect("engagementAbort");
+    assert!(!empty_tool(&abort), "engagementAbort must not bounce-disarm fill: {:?}", abort.requested_effects);
+}
 //#endregion 🔖️Manifest
 
 //#region 🔖️Suggestions
@@ -1672,6 +1686,103 @@ async fn open_and_accept_vortex_suggestions_preserve_active_utility() {
     assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     assert_eq!(accept_interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
 }
+
+/// 🖱️ Wave W-AB: a vortex pointermove storm admits 70 `interactionHover`s (then a click
+/// `interactionSelect`) before Isolated reserved jobs finish — the #38 spawn-admit drop. Latest-wins
+/// keeps one pending hover so the last target commits, brush preview publishes, and place lands.
+#[semio_framework_async_macros::async_test]
+async fn vortex_hover_storm_admits_then_brush_preview_and_place() {
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
+    let vortex = first_vortex_full_id(&app);
+    let before = object_count(&app);
+    let mut last = None;
+    for _ in 0..70 {
+        last = Some(hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("vortex hover storm must keep admitting"));
+    }
+    settle_reserved(&mut app, last.expect("storm admitted at least one hover")).await.expect("latest hover must commit");
+    let select_admit = select_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("vortex click select must admit after the hover storm");
+    settle_reserved(&mut app, select_admit).await.expect("select commit");
+    for _ in 0..PUZZLE3D_BRUSH_PICKER_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("suggestionsTick");
+    }
+    let node = render_composite(&mut app).await;
+    let preview = brush_preview_of(&node);
+    assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "hover storm must still publish a brush preview: {preview}");
+    assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "brush preview must name a kind: {preview}");
+    dispatch(&mut app, "addBrushObject", Some(&preview), None).await.expect("addBrushObject from published preview");
+    assert!(object_count(&app) > before, "vortex click place must land an object from the published preview");
+}
+
+/// 🖱️ Wave W-AB: after a committed vortex hover, Alt+right-click (`openVortexSuggestions` with the
+/// hovered `fullId`) publishes `suggestionMenu.open` — the guest half of the host gesture.
+#[semio_framework_async_macros::async_test]
+async fn vortex_hover_then_open_vortex_suggestions_publishes_menu() {
+    let mut app = app().await;
+    let vortex = first_vortex_full_id(&app);
+    let mut last = None;
+    for _ in 0..70 {
+        last = Some(hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("suggestion hover storm must keep admitting"));
+    }
+    settle_reserved(&mut app, last.expect("storm")).await.expect("latest hover commits for suggestions");
+    dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 12.0, "y": 24.0 })), None).await.expect("openVortexSuggestions");
+    let interaction = interaction_of(&render_composite(&mut app).await);
+    assert_eq!(interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true), "vortex hover + openVortexSuggestions must publish the menu: {interaction}");
+    assert_eq!(interaction.pointer("/suggestionMenu/vortexFullId").or_else(|| interaction.pointer("/suggestionMenu/vortex_full_id")).and_then(Value::as_str), Some(vortex.as_str()));
+}
+
+/// Hover-committed leftover in brush mode publishes `brushPreviewJson` without a click-select.
+/// Preview is a world scene lane (not an Effect); leftover InteractionView cannot carry it —
+/// `suggestionsTick` must finish the hovered target so the dirty world body encodes the lane.
+#[semio_framework_async_macros::async_test]
+async fn hover_committed_in_brush_publishes_preview() {
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
+    let vortex = first_vortex_full_id(&app);
+    let admitted = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("hover admit");
+    settle_reserved(&mut app, admitted).await.expect("hover leftover commits");
+    for _ in 0..PUZZLE3D_BRUSH_PICKER_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("suggestionsTick");
+    }
+    let preview = brush_preview_of(&render_composite(&mut app).await);
+    assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "hover-committed brush must publish preview for the hovered vortex: {preview}");
+    assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "hover-committed preview must name a kind: {preview}");
+}
+
+/// Click place after hover-committed preview dispatches real `addBrushObject` with that vortex id.
+#[semio_framework_async_macros::async_test]
+async fn hover_committed_click_places_via_published_preview() {
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
+    let vortex = first_vortex_full_id(&app);
+    let before = object_count(&app);
+    let admitted = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("hover admit");
+    settle_reserved(&mut app, admitted).await.expect("hover leftover commits");
+    for _ in 0..PUZZLE3D_BRUSH_PICKER_TICKS {
+        dispatch(&mut app, "suggestionsTick", None, Some(main::WINDOW_KIND_ID)).await.expect("suggestionsTick");
+    }
+    let preview = brush_preview_of(&render_composite(&mut app).await);
+    assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "place must use the hovered vortex preview: {preview}");
+    dispatch(&mut app, "addBrushObject", Some(&preview), None).await.expect("addBrushObject from published hover preview");
+    assert!(object_count(&app) > before, "hover-committed click must land an object via addBrushObject");
+}
+
+
+/// leftover InteractionView after vortex-domain interactionHover must carry the vortex full id.
+#[semio_framework_async_macros::async_test]
+async fn interaction_hover_leftover_carries_vortex_full_id() {
+    let mut app = app().await;
+    let vortex = first_vortex_full_id(&app);
+    let admitted = hover_id_unsettled(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("vortex interactionHover admit");
+    let settled = settle_reserved(&mut app, admitted).await.expect("vortex interactionHover leftover");
+    let view = settled.output.get("interactionView").expect("leftover InteractionView");
+    let hover = view.get("hoverTarget").expect("hoverTarget on leftover");
+    assert_eq!(hover.get("id").and_then(dsl::DslValue::as_str), Some(vortex.as_str()), "leftover hoverTarget must be the vortex full id, got {hover:?}");
+    assert_eq!(hover.get("domain").and_then(dsl::DslValue::as_str), Some(PUZZLE3D_INTERACTION_DOMAIN));
+    assert_eq!(interaction_of(&render_composite(&mut app).await).get("hoveredVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "next scene render must project leftover hover onto hoveredVortexFullId");
+}
+
+
 //#endregion 🔖️Suggestions
 
 //#region 🔖️WindowOptions
@@ -2897,6 +3008,16 @@ async fn set_active_utility_emits_no_ops_and_no_history_entry() {
     assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
     assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
+}
+
+#[test]
+fn set_active_utility_dirties_the_world_body() {
+    use crate::editor::puzzle3d::{puzzle3d_command_scope_class, puzzle3d_scope, Puzzle3dScopeClass};
+    assert_eq!(puzzle3d_command_scope_class(SET_ACTIVE_UTILITY_ACTION_ID), Puzzle3dScopeClass::Viewport, "utility switch must republish the world body (interaction + vortices), not Full chrome and not None");
+    match puzzle3d_scope(Puzzle3dScopeClass::Viewport) {
+        UiDirtyScope::Partial { window_bodies, .. } => assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]),
+        other => panic!("utility switch scope must be the world body, got {other:?}"),
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4292,6 +4413,62 @@ async fn import_fixture_reproduces_the_exported_document() {
     assert_eq!(object_count(&app), 0, "one undo restores the empty document");
 }
 
+/// 📥️ Wave W-AB: workspace Import is `openImportFixture` (file picker). `importFixture` stays
+/// dispatchable for the host re-dispatch after the pick, but is not a file-menu row.
+#[test]
+fn file_menu_import_row_opens_the_file_picker() {
+    let definition = create_puzzle3d_app();
+    let file: Vec<(&str, bool)> = definition
+        .window_kinds
+        .iter()
+        .flat_map(|window| window.actions.iter())
+        .filter(|action| action.category.as_deref() == Some("file"))
+        .map(|action| (action.id.as_str(), action.in_palette))
+        .collect();
+    assert!(file.iter().any(|(id, _)| *id == "exportFixture"), "file menu keeps Export: {file:?}");
+    assert!(file.iter().any(|(id, in_palette)| *id == "openImportFixture" && *in_palette), "file menu Import is openImportFixture: {file:?}");
+    assert!(!file.iter().any(|(id, _)| *id == "importFixture"), "importFixture is the picker completion, not a menu row: {file:?}");
+    let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "importFixture").expect("importFixture stays dispatchable");
+    assert!(!import.in_palette);
+    assert_eq!(import.category.as_deref(), None);
+}
+
+/// 📥️ Wave W-AB: activating Import requests a file open; completing it with fixture JSON imports.
+#[semio_framework_async_macros::async_test]
+async fn open_import_fixture_requests_file_open_then_import_applies_payload() {
+    let mut app = app().await;
+    let source = projection_of(&app);
+    let opened = dispatch(&mut app, "openImportFixture", None, None).await.expect("openImportFixture");
+    let req = opened.requested_effects.iter().find_map(|effect| match effect {
+        Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
+            assert!(accept.contains("json"), "picker accepts JSON: {accept}");
+            assert_eq!(read_as.as_deref(), Some("text"));
+            assert_eq!(import_action, "importFixture");
+            assert!(!*multiple);
+            Some(())
+        }
+        _ => None,
+    });
+    assert!(req.is_some(), "Import must emit RequestFileOpen: {:?}", opened.requested_effects);
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    assert_eq!(object_count(&app), 0);
+    let imported = dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await.expect("import");
+    assert!(imported.history_patch.is_some(), "import must be one mutation edit");
+    assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "picked payload reproduces the exported objects");
+}
+
+/// 📥️ Wave W-AB: re-importing the live fixture is a store identity, not a guest payload dedupe.
+/// `import_fixture` always assigns; a no-op history row means the document fold saw equal content.
+#[semio_framework_async_macros::async_test]
+async fn import_fixture_of_the_live_document_records_whether_identical_content_is_an_edit() {
+    let mut app = app().await;
+    let source = projection_of(&app);
+    let imported = dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await.expect("reimport");
+    let objects_after = object_cores(&projection_of(&app));
+    assert_eq!(objects_after, object_cores(&source), "identical payload must not rewrite object cores");
+    assert!(imported.history_patch.is_none(), "identical live fixture is a store no-op, not a guest dedupe: ingress still delivers payload+name");
+}
+
 /// 🖱️ Wave W-Y: a selected-object context menu is puzzle-owned — never the shell fallback vocabulary.
 #[semio_framework_async_macros::async_test]
 async fn object_context_menu_owns_puzzle_rows_not_shell_fallback() {
@@ -4327,6 +4504,129 @@ async fn gumball_scale_on_locked_volume_refuses_without_edit() {
     assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED);
     assert!(result.mutations.is_empty(), "locked volume must emit no edit: {:?}", result.mutations);
     assert_eq!(projection_of(&app).get("targetVolumes"), before.get("targetVolumes"));
+}
+
+/// 📋️ leftover vortex-granularity selection still captures the object, and paste clones it with a new id.
+#[test]
+fn leftover_copy_paste_clones_selected_object() {
+    let mut fixture = empty_fixture();
+    fixture.objects.push(Puzzle3dObject {
+        id: "seed-left-001".into(),
+        label: Some("seed".into()),
+        object_kind: Some("Object".into()),
+        origin: [1.0, 2.0, 3.0],
+        orientation: None,
+        scale: None,
+        mesh_url: None,
+        vortices: Vec::new(),
+        hidden: false,
+        locked: false,
+        reveal_index: None,
+    });
+    let marks = Puzzle3dInteractionSnapshot {
+        granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),
+        selected: vec!["seed-left-001".into()],
+        hovered: Vec::new(),
+    };
+    let objects = puzzle3d_selected_objects_from(&marks, &fixture);
+    assert_eq!(objects.len(), 1, "leftover selected object id must copy even when granularity is vortex: {objects:?}");
+    assert_eq!(objects[0].id, "seed-left-001");
+    assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
+    let fragment = puzzle3d_copy_fragment_from(&fixture, objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations_on(&fixture, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let created: Vec<_> = mutations
+        .iter()
+        .filter_map(|op| match op {
+            Puzzle3dMutation::CreateObject(create) => Some(create),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(created.len(), 1, "paste must commit one create-object, got {mutations:?}");
+    assert_ne!(created[0].object.id, "seed-left-001", "clone must mint a fresh id");
+    assert!((created[0].object.origin[0] - 1.5).abs() < 1e-9, "clone origin must keep source fields plus paste offset: {:?}", created[0].object.origin);
+    assert_eq!(created[0].object.object_kind.as_deref(), Some("Object"));
+    assert_eq!(created[0].object.label.as_deref(), Some("seed"));
+}
+
+/// 📋️ leftover selected vortex uuid (not object.id) still captures the parent object for copy.
+#[test]
+fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
+    let mut fixture = empty_fixture();
+    fixture.objects.push(Puzzle3dObject {
+        id: "seed-left-001".into(),
+        label: Some("seed".into()),
+        object_kind: Some("Object".into()),
+        origin: [1.0, 2.0, 3.0],
+        orientation: None,
+        scale: None,
+        mesh_url: None,
+        vortices: vec![Puzzle3dVortex {
+            id: "5de35caa-0f02-43d7-ae74-aa730efd3386".into(),
+            vortex_kind: None,
+            position: [0.0, 0.0, 0.0],
+            direction: None,
+            radius: None,
+            hidden: false,
+            locked: false,
+        }],
+        hidden: false,
+        locked: false,
+        reveal_index: None,
+    });
+    let marks = Puzzle3dInteractionSnapshot {
+        granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),
+        selected: vec!["5de35caa-0f02-43d7-ae74-aa730efd3386".into()],
+        hovered: Vec::new(),
+    };
+    let objects = puzzle3d_selected_objects_from(&marks, &fixture);
+    assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
+    assert_eq!(objects[0].id, "seed-left-001");
+    let fragment = puzzle3d_copy_fragment_from(&fixture, objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations_on(&fixture, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let created: Vec<_> = mutations
+        .iter()
+        .filter_map(|op| match op {
+            Puzzle3dMutation::CreateObject(create) => Some(create),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(created.len(), 1, "vortex-uuid leftover copy must paste one create-object, got {mutations:?}");
+    assert_ne!(created[0].object.id, "seed-left-001");
+}
+
+/// 🕹️ leftover overlay → translateSelection on a locked object must refuse with a visible notice.
+#[semio_framework_async_macros::async_test]
+async fn leftover_translate_selection_on_locked_object_refuses_with_notice() {
+    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+        result.requested_effects.iter().filter_map(|effect| match effect {
+            Effect::Notify { message } => Some(message.clone()),
+            _ => None,
+        }).collect()
+    };
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "ids": [object_id.as_str()], "flag": "locked", "value": true })), None).await.expect("lock");
+    let before = object_origin_x(&app, &object_id);
+    let result = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 4.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("translate locked");
+    let raised = notices(&result);
+    assert_eq!(raised.len(), 1, "locked object must raise exactly one notice: {:?}", result.requested_effects);
+    assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED);
+    assert!(result.mutations.is_empty(), "locked object must emit no edit: {:?}", result.mutations);
+    assert!((object_origin_x(&app, &object_id) - before).abs() < 1e-9, "locked object origin must not move");
+}
+
+/// 🕹️ leftover overlay → translateSelection carries explicit ids; guest snapshot granularity may be empty.
+#[semio_framework_async_macros::async_test]
+async fn leftover_overlay_translate_selection_moves_unlocked_object() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
+    let object_id = first_object_id(&app);
+    let before = object_origin(&app, &object_id);
+    let result = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 4.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("leftover overlay translate");
+    assert!(result.requested_effects.iter().all(|effect| !matches!(effect, Effect::Notify { .. })), "unlocked leftover overlay must not refuse: {:?}", result.requested_effects);
+    assert!((object_origin(&app, &object_id)[0] - before[0] - 4.0).abs() < 1e-9, "leftover overlay ids must move the unlocked object by dx");
 }
 
 

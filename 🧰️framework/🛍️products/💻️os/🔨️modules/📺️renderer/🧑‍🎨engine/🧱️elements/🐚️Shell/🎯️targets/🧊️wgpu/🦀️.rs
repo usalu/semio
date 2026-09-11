@@ -3138,6 +3138,7 @@ impl ShellState {
     pub async fn boot(&mut self) -> Result<(), String> {
         self.plugin_faults.clear();
         self.error = None;
+        Self::debug_log("[DEBUG] wgpu-shell boot: begin");
         if let Some(cfg) = self.host_config() {
             let host_plugin_id = cfg.plugin_id.to_string();
             let semio_s_plugin_space = self.plugins.iter().find(|p| p.plugin_id == host_plugin_id).ok_or("host program missing")?;
@@ -3202,12 +3203,98 @@ impl ShellState {
                 },
             });
         }
+        if let Some(session) = &self.session {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell boot: program={} app={}", session.plugin_id, session.app.id));
+        }
         self.settle_boot().await
     }
 
     /// 🏁️ The boot tail every path shares — chrome sync plus the first UI refresh. A boot that opened
     /// no session (every requested plugin faulted) still runs it, so the shell paints its chrome and
     /// its per-plugin status instead of leaving the page on the loader.
+
+    fn instant_now_ms() -> f64 {
+        #[cfg(target_arch = "wasm32")]
+        {
+            js_sys::Date::now()
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            0.0
+        }
+    }
+
+    fn debug_log(line: &str) {
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
+        #[cfg(not(target_arch = "wasm32"))]
+        eprintln!("{line}");
+    }
+
+    fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
+        #[cfg(target_arch = "wasm32")]
+        {
+            use wasm_bindgen::JsCast;
+            let global = js_sys::global();
+            if let Ok(func) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioDeclareBootSubphase")) {
+                if let Ok(func) = func.dyn_into::<js_sys::Function>() {
+                    let _ = func.call3(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(phase), &wasm_bindgen::JsValue::from_str(state), &wasm_bindgen::JsValue::from_f64(elapsed_ms));
+                }
+            }
+        }
+        let _ = (phase, state, elapsed_ms);
+    }
+
+    fn app_owns_command(app: &semio_framework::AppDefinition, command_id: &str) -> bool {
+        app.commands.iter().any(|command| command.id == command_id)
+    }
+
+    fn contributions_reachability_json(&self, session: &ActiveSession) -> String {
+        let mut values = Vec::new();
+        if let Ok(value) = serde_json::to_value(self.live_view_state(session)) {
+            values.push(value);
+        }
+        for plugin in &self.plugins {
+            for example in &plugin.manifest.examples {
+                match serde_json::from_str::<serde_json::Value>(&example.artifact_json) {
+                    Ok(value) => values.push(value),
+                    Err(_) => values.push(serde_json::Value::String(example.artifact_json.clone())),
+                }
+            }
+        }
+        serde_json::to_string(&values).unwrap_or_else(|_| "[]".into())
+    }
+
+    async fn push_contributions(&mut self) -> Result<(), String> {
+        let Some(session) = self.session.clone() else {
+            return Ok(());
+        };
+        if !Self::app_owns_command(&session.app, "setContributions") {
+            Self::debug_log(&format!("[DEBUG] contributions push {}", serde_json::json!({ "plugin": session.plugin_id, "app": session.app.id, "skipped": "app-owns-no-setContributions", "encoding": "pack", "crossings": 0 })));
+            return Ok(());
+        }
+        Self::declare_boot_subphase("shell-boot:contributions-push", "enter", 0.0);
+        let started = Self::instant_now_ms();
+        #[cfg(target_arch = "wasm32")]
+        {
+            let reachability = self.contributions_reachability_json(&session);
+            let view_json = serde_json::to_string(&self.live_view_state(&session)).unwrap_or_else(|_| "{}".into());
+            if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
+                Self::debug_log(&format!("[DEBUG] contributions push {}", serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "active": true, "encoding": "pack", "crossings": 1, "reachableChars": reachability.len() })));
+                if let Err(error) = plugin.push_scoped_contributions(session.instance_id, &session.app.id, &reachability, &view_json).await {
+                    Self::debug_log(&format!("[DEBUG] setContributions command failed {} {error}", plugin.plugin_id));
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = session;
+            Self::debug_log("[DEBUG] contributions push skipped native-no-pack-sender");
+        }
+        Self::declare_boot_subphase("shell-boot:contributions-push", "leave", (Self::instant_now_ms() - started).max(0.0));
+        Ok(())
+    }
+
     async fn settle_boot(&mut self) -> Result<(), String> {
         self.sync_dock();
         self.sync_session_chrome();
@@ -3215,7 +3302,16 @@ impl ShellState {
         // `bootstrap_identity`'s own doc): a slow/unreachable hub must never delay the first frame.
         #[cfg(not(target_arch = "wasm32"))]
         self.bootstrap_identity();
-        self.refresh_ui().await
+        Self::declare_boot_subphase("shell-boot:refresh-ui", "enter", 0.0);
+        let refresh_started = Self::instant_now_ms();
+        self.refresh_ui().await?;
+        Self::declare_boot_subphase("shell-boot:refresh-ui", "leave", (Self::instant_now_ms() - refresh_started).max(0.0));
+        self.push_contributions().await?;
+        Self::declare_boot_subphase("shell-boot:flush-deferred", "enter", 0.0);
+        let flush_started = Self::instant_now_ms();
+        self.flush_deferred_actions().await?;
+        Self::declare_boot_subphase("shell-boot:flush-deferred", "leave", (Self::instant_now_ms() - flush_started).max(0.0));
+        Ok(())
     }
 
     fn sync_session_chrome(&mut self) {
@@ -3331,12 +3427,18 @@ impl ShellState {
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
+                Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={window_id} body={}", kind.body_key));
+                let render_started = Self::instant_now_ms();
+                Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "enter", 0.0);
                 match program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await {
                     Ok(document) => {
-                        self.window_ui.insert(window_id, document);
+                        self.window_ui.insert(window_id.clone(), document);
                     }
-                    Err(error) => faults.push((window_id, kind.body_key.clone(), error)),
+                    Err(error) => faults.push((window_id.clone(), kind.body_key.clone(), error)),
                 }
+                let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
+                Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "leave", elapsed);
+                Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={window_id} {elapsed:.0} ms"));
             }
         }
         if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.panel_documents)) {
@@ -3347,12 +3449,18 @@ impl ShellState {
         let panel_view = view_state.for_panel();
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             let Some(body_key) = tab.body_key.as_deref() else { continue };
+            Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={} body={body_key}", tab.id()));
+            let render_started = Self::instant_now_ms();
+            Self::declare_boot_subphase(&format!("shell-boot:render:{}", tab.id()), "enter", 0.0);
             match program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await {
                 Ok(document) => {
                     self.panel_documents.insert(tab.id().to_string(), document);
                 }
                 Err(error) => faults.push((tab.id().to_string(), body_key.to_string(), error)),
             }
+            let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
+            Self::declare_boot_subphase(&format!("shell-boot:render:{}", tab.id()), "leave", elapsed);
+            Self::debug_log(&format!("[DEBUG] wgpu-shell render leave surface={} {elapsed:.0} ms", tab.id()));
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
@@ -3601,7 +3709,29 @@ impl ShellState {
                 semio_framework::kernel::Effect::RequestInferenceProposal { .. } => {
                     self.open_inference_port();
                 }
-                _ => {}
+                semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        if let Some(session) = self.session.clone() {
+                            if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
+                                let instance_id = session.instance_id;
+                                Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension dispatch extension={extension_id} capability={capability} req={}", req.0));
+                                crate::spawn_app_task(async move {
+                                    if let Err(error) = plugin.dispatch_invoke_extension(instance_id, &extension_id, &capability, &request_json, req.0).await {
+                                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-shell invokeExtension failed: {error}")));
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        let _ = (req, extension_id, capability, request_json);
+                    }
+                }
+                other => {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell effect dropped tag={other:?}"));
+                }
             }
         }
     }

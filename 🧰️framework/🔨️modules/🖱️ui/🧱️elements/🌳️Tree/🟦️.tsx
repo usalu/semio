@@ -1765,6 +1765,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             data-tree-group
             data-draggable={isDragHandle ? "true" : undefined}
             role="treeitem"
+            aria-selected={isSelected}
             id={id}
             ref={setNodeRef}
             style={style}
@@ -1840,6 +1841,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           data-tree-row-kind="group"
           data-tree-group
           role="treeitem"
+          aria-selected={isSelected}
           id={id}
           ref={setNodeRef}
           style={style}
@@ -1918,6 +1920,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         data-hover-scope
         data-tree-row-kind="property"
         role="treeitem"
+        aria-selected={isSelected}
         id={id}
         ref={setNodeRef}
         style={style}
@@ -1957,6 +1960,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       data-hover-scope
       data-tree-row-kind="leaf"
       role="treeitem"
+      aria-selected={isSelected}
       id={id}
       ref={setNodeRef}
       style={style}

@@ -44,16 +44,72 @@ export function browserDocumentMountIsCurrentV1(opening: BrowserDocumentMountOpe
     && retained.revision === receipt.revision;
 }
 
-/** 🚦️ Only foreground openings may retire a document or app instance already in use. */
+export type DocumentOpeningOwnerV1<Plugin> = Readonly<{ plugin: Plugin; session: Readonly<{ instanceId: number }>; clientInstanceId: string }>;
+
+export type DocumentOpeningParkV1<Owner> = Readonly<{
+  key: string;
+  next: Owner;
+  previous: Owner | undefined;
+  superseded: ReadonlyArray<readonly [string, Owner]>;
+}>;
+
+/** 🚦️ Foreground admission may name predecessors; only a committed successor may retire them. */
+export function documentOpeningPredecessorsV1<Plugin>(
+  opening: Readonly<{ runtimeKey: string; plugin: Plugin; instanceId: number }>,
+  owners: ReadonlyMap<string, DocumentOpeningOwnerV1<Plugin>>,
+): ReadonlyArray<readonly [string, DocumentOpeningOwnerV1<Plugin>]> {
+  return [...owners].filter(([key, owner]) => key === opening.runtimeKey || (owner.plugin === opening.plugin && owner.session.instanceId === opening.instanceId));
+}
+
+/** 🚦️ Background openings never replace a live document or app instance. */
 export function admitDocumentOpeningV1<Plugin>(
   opening: Readonly<{ runtimeKey: string; plugin: Plugin; instanceId: number; background: boolean }>,
-  owners: ReadonlyMap<string, Readonly<{ plugin: Plugin; session: Readonly<{ instanceId: number }>; clientInstanceId: string }>>,
-  close: (runtimeKey: string, clientInstanceId: string) => void,
+  owners: ReadonlyMap<string, DocumentOpeningOwnerV1<Plugin>>,
 ): boolean {
-  const predecessors = [...owners].filter(([key, owner]) => key === opening.runtimeKey || (owner.plugin === opening.plugin && owner.session.instanceId === opening.instanceId));
-  if (opening.background && predecessors.length > 0) return false;
-  for (const [key, owner] of predecessors) close(key, owner.clientInstanceId);
-  return true;
+  return !(opening.background && documentOpeningPredecessorsV1(opening, owners).length > 0);
+}
+
+/** 🧵️ Parks the successor in the owner map without retiring the predecessor until commit. */
+export function parkDocumentOpeningReplacementV1<Owner extends DocumentOpeningOwnerV1<Owner["plugin"]>>(
+  opening: Readonly<{ runtimeKey: string; plugin: Owner["plugin"]; instanceId: number; background: boolean }>,
+  owners: Map<string, Owner>,
+  next: Owner,
+): DocumentOpeningParkV1<Owner> | null {
+  if (!admitDocumentOpeningV1(opening, owners)) return null;
+  const superseded = documentOpeningPredecessorsV1(opening, owners);
+  const previous = owners.get(opening.runtimeKey);
+  owners.set(opening.runtimeKey, next);
+  return {
+    key: opening.runtimeKey,
+    next,
+    previous: previous === next ? undefined : previous,
+    superseded: superseded.filter(([key, owner]) => owner !== next && (key !== opening.runtimeKey || owner !== previous)),
+  };
+}
+
+/** 🧹️ Failed parks restore the predecessor; committed parks return superseded owners to retire. */
+export function settleDocumentOpeningReplacementV1<Owner extends { clientInstanceId: string }>(
+  owners: Map<string, Owner>,
+  parked: DocumentOpeningParkV1<Owner>,
+  committed: boolean,
+): ReadonlyArray<readonly [string, Owner]> {
+  if (!committed) {
+    if (owners.get(parked.key) === parked.next) {
+      if (parked.previous === undefined) owners.delete(parked.key);
+      else owners.set(parked.key, parked.previous);
+    }
+    return [];
+  }
+  const retire: Array<readonly [string, Owner]> = [];
+  if (parked.previous !== undefined) retire.push([parked.key, parked.previous]);
+  for (const pair of parked.superseded) {
+    if (pair[0] === parked.key) continue;
+    if (owners.get(pair[0]) === pair[1]) {
+      owners.delete(pair[0]);
+      retire.push(pair);
+    }
+  }
+  return retire;
 }
 
 /** 🧹️ Failed or retired openings release only their admission; every socket deadline is retired. */

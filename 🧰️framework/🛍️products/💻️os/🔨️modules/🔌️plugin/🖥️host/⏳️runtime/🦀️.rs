@@ -168,7 +168,6 @@ impl actor_bindings::semio::framework::capabilities::Host for AsyncActorHostStat
 impl actor_bindings::semio::framework::effects::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::events::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::Host for AsyncActorHostState {}
-impl actor_bindings::semio::framework::byte_page::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::instance_lifetime::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::HostSurface for AsyncActorHostState {
     // 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
@@ -376,7 +375,7 @@ impl AsyncActorTask {
                                     instance: Arc<actor_bindings::Actor>,
                                     instance_id: u32,
                                     events: Vec<wit_events::Event>,
-                                    command_page: Option<wit_reactor::CommandIngressPage>,
+                                    command_page: Option<(wit_reactor::CommandPageCursor, Vec<u8>)>,
                                     cold_pair_page: Option<wit_reactor::ColdDocumentPairPage>,
                                     budget: wit_reactor::Budget,
                                     max_patch_bytes: u32,
@@ -384,7 +383,24 @@ impl AsyncActorTask {
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        let outcome = self.instance.semio_framework_reactor().call_poll(accessor, self.events, self.command_page, self.cold_pair_page, self.budget).await;
+                                        // 📥️ A turn's pages are STAGED before it, never carried through
+                                        // `poll`'s parameter list — see `reactor.stage-command-page` in
+                                        // the WIT for the leaked parameter area that shape cost.
+                                        let Self { instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, reply } = self;
+                                        let outcome = async {
+                                            if let Some((cursor, bytes)) = command_page {
+                                                if let Err(fault) = instance.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
+                                                    return Ok(Err(fault));
+                                                }
+                                            }
+                                            if let Some(page) = cold_pair_page {
+                                                if let Err(fault) = instance.semio_framework_reactor().call_stage_cold_pair_page(accessor, page).await? {
+                                                    return Ok(Err(fault));
+                                                }
+                                            }
+                                            instance.semio_framework_reactor().call_poll(accessor, events, budget).await
+                                        }
+                                        .await;
                                         let mapped = match outcome {
                                             Ok(Ok(turn)) => {
                                                 // 🚫️async: E5 executor bridge. `AsyncActorHostState::take_effects`/`take_patches`
@@ -398,12 +414,12 @@ impl AsyncActorTask {
                                                     let state = access.get();
                                                     (semio_framework_async::block_on(state.take_effects()), semio_framework_async::block_on(state.take_patches()))
                                                 });
-                                                convert_poll_success(turn, emitted, patches, self.instance_id, self.max_patch_bytes).await
+                                                convert_poll_success(turn, emitted, patches, instance_id, max_patch_bytes).await
                                             }
                                             Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault)),
                                             Err(trap) => Err(TurnFault::Trapped(trap.to_string())),
                                         };
-                                        let _ = self.reply.send(mapped);
+                                        let _ = reply.send(mapped);
                                         Ok(())
                                     }
                                 }

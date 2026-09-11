@@ -1614,7 +1614,7 @@ pub(crate) mod actor_bindings {
     });
 }
 
-use actor_bindings::semio::framework::{byte_page as wit_byte_page, capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
+use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
 use wasmtime::component::Accessor;
 // 🧬️ `reactor`/`jobs` are `export`s of `world actor` (design-runtime.md §2's `execute_turn`/`step_job`
 // exports), not `import`s, so their generated bindings live under `exports::` — unlike `pure`'s
@@ -1692,7 +1692,6 @@ impl wit_capabilities::Host for ActorHostState {}
 impl wit_effects::Host for ActorHostState {}
 impl wit_events::Host for ActorHostState {}
 impl wit_ui::Host for ActorHostState {}
-impl wit_byte_page::Host for ActorHostState {}
 impl wit_lifetime::Host for ActorHostState {}
 
 /// 🪧️ `ui.wit`'s `resource surface` is an empty MARKER resource — declared purely so the design
@@ -1740,11 +1739,11 @@ impl wit_host_async::Host for ActorHostState {
 /// `AsyncActorHostState` (24 real implementations, dispatching straight onto `AsyncServices`),
 /// mounted by the `async-plugin-runtime` packet.
 async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
-    dsl::encode_fault_bytes(&dsl::Fault::new(
+    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&dsl::Fault::new(
         dsl::FaultOrigin::Os,
         dsl::FaultCode::new("host-async.poll-backed"),
         format!("host-async {name} cannot be awaited directly on the poll-backed WasmtimeRuntime — emit the matching `effect` from `poll` and await its `event.completed` on a later turn"),
-    ))
+    )))
 }
 
 /// ⏳️ The 24 awaitable imports. Every one delegates to [`poll_backed_direct_await_fault`] — see its
@@ -1954,11 +1953,33 @@ impl GuestRuntime for WasmtimeRuntime {
         // directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
         // export, and it is what lets the guest suspend on a `host-async` import mid-turn without
         // unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
-        let call_result = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_command_page, wit_cold_pair_page, wit_budget).await).await.and_then(|inner| inner);
+        // A turn's pages are staged FIRST, in the same concurrent task, so the guest reads them off
+        // its staging slot instead of carrying them through `poll`'s leaked parameter area.
+        let call_result = store
+            .run_concurrent(async |accessor| {
+                if let Some((cursor, bytes)) = wit_command_page {
+                    if let Err(error) = bindings.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
+                        return Ok(Err(error));
+                    }
+                }
+                if let Some(page) = wit_cold_pair_page {
+                    if let Err(error) = bindings.semio_framework_reactor().call_stage_cold_pair_page(accessor, page).await? {
+                        return Ok(Err(error));
+                    }
+                }
+                bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await
+            })
+            .await
+            .and_then(|inner| inner);
         let poll_result = match call_result {
             Ok(inner) => inner,
             Err(trap) => {
-                let message = trap.to_string();
+                // 🩺️ `Display` on a wasmtime error is only its FIRST line ("error while executing at
+                // wasm backtrace: …"); the trap code itself ("out of fuel", "wasm trap: unreachable",
+                // the `rust_oom` abort this ticket chased) lives in the source chain, which `Debug`
+                // renders. Classifying — and reporting — off the first line alone made every guest
+                // trap arrive as an unattributed backtrace.
+                let message = format!("{trap:?}");
                 let lowered = message.to_ascii_lowercase();
                 return Err(if lowered.contains("fuel") {
                     TurnFault::FuelExhausted
@@ -2315,92 +2336,11 @@ async fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatu
     }
 }
 
-fn wit_actor_byte_page_block(bytes: &[u8], block: usize) -> wit_reactor::Block {
-    let mut words = [0u64; 8];
-    for (index, word) in words.iter_mut().enumerate() {
-        let start = block * 64 + index * 8;
-        let end = (start + 8).min(bytes.len());
-        if start < end {
-            let mut fixed = [0u8; 8];
-            fixed[..end - start].copy_from_slice(&bytes[start..end]);
-            *word = u64::from_le_bytes(fixed);
-        }
-    }
-    wit_reactor::Block { word_0: words[0], word_1: words[1], word_2: words[2], word_3: words[3], word_4: words[4], word_5: words[5], word_6: words[6], word_7: words[7] }
-}
-
-fn kernel_command_page_to_wit(cursor: &semio_framework::kernel::CommandPageCursor, page: &semio_framework::kernel::FixedCommandPage) -> wit_reactor::CommandIngressPage {
-    let bytes = page.as_slice();
-    wit_reactor::CommandIngressPage {
-        cursor: kernel_command_cursor_to_wit(cursor),
-        page: wit_reactor::Page {
-            length: bytes.len() as u32,
-            block_00: wit_actor_byte_page_block(bytes, 0),
-            block_01: wit_actor_byte_page_block(bytes, 1),
-            block_02: wit_actor_byte_page_block(bytes, 2),
-            block_03: wit_actor_byte_page_block(bytes, 3),
-            block_04: wit_actor_byte_page_block(bytes, 4),
-            block_05: wit_actor_byte_page_block(bytes, 5),
-            block_06: wit_actor_byte_page_block(bytes, 6),
-            block_07: wit_actor_byte_page_block(bytes, 7),
-            block_08: wit_actor_byte_page_block(bytes, 8),
-            block_09: wit_actor_byte_page_block(bytes, 9),
-            block_10: wit_actor_byte_page_block(bytes, 10),
-            block_11: wit_actor_byte_page_block(bytes, 11),
-            block_12: wit_actor_byte_page_block(bytes, 12),
-            block_13: wit_actor_byte_page_block(bytes, 13),
-            block_14: wit_actor_byte_page_block(bytes, 14),
-            block_15: wit_actor_byte_page_block(bytes, 15),
-            block_16: wit_actor_byte_page_block(bytes, 16),
-            block_17: wit_actor_byte_page_block(bytes, 17),
-            block_18: wit_actor_byte_page_block(bytes, 18),
-            block_19: wit_actor_byte_page_block(bytes, 19),
-            block_20: wit_actor_byte_page_block(bytes, 20),
-            block_21: wit_actor_byte_page_block(bytes, 21),
-            block_22: wit_actor_byte_page_block(bytes, 22),
-            block_23: wit_actor_byte_page_block(bytes, 23),
-            block_24: wit_actor_byte_page_block(bytes, 24),
-            block_25: wit_actor_byte_page_block(bytes, 25),
-            block_26: wit_actor_byte_page_block(bytes, 26),
-            block_27: wit_actor_byte_page_block(bytes, 27),
-            block_28: wit_actor_byte_page_block(bytes, 28),
-            block_29: wit_actor_byte_page_block(bytes, 29),
-            block_30: wit_actor_byte_page_block(bytes, 30),
-            block_31: wit_actor_byte_page_block(bytes, 31),
-            block_32: wit_actor_byte_page_block(bytes, 32),
-            block_33: wit_actor_byte_page_block(bytes, 33),
-            block_34: wit_actor_byte_page_block(bytes, 34),
-            block_35: wit_actor_byte_page_block(bytes, 35),
-            block_36: wit_actor_byte_page_block(bytes, 36),
-            block_37: wit_actor_byte_page_block(bytes, 37),
-            block_38: wit_actor_byte_page_block(bytes, 38),
-            block_39: wit_actor_byte_page_block(bytes, 39),
-            block_40: wit_actor_byte_page_block(bytes, 40),
-            block_41: wit_actor_byte_page_block(bytes, 41),
-            block_42: wit_actor_byte_page_block(bytes, 42),
-            block_43: wit_actor_byte_page_block(bytes, 43),
-            block_44: wit_actor_byte_page_block(bytes, 44),
-            block_45: wit_actor_byte_page_block(bytes, 45),
-            block_46: wit_actor_byte_page_block(bytes, 46),
-            block_47: wit_actor_byte_page_block(bytes, 47),
-            block_48: wit_actor_byte_page_block(bytes, 48),
-            block_49: wit_actor_byte_page_block(bytes, 49),
-            block_50: wit_actor_byte_page_block(bytes, 50),
-            block_51: wit_actor_byte_page_block(bytes, 51),
-            block_52: wit_actor_byte_page_block(bytes, 52),
-            block_53: wit_actor_byte_page_block(bytes, 53),
-            block_54: wit_actor_byte_page_block(bytes, 54),
-            block_55: wit_actor_byte_page_block(bytes, 55),
-            block_56: wit_actor_byte_page_block(bytes, 56),
-            block_57: wit_actor_byte_page_block(bytes, 57),
-            block_58: wit_actor_byte_page_block(bytes, 58),
-            block_59: wit_actor_byte_page_block(bytes, 59),
-            block_60: wit_actor_byte_page_block(bytes, 60),
-            block_61: wit_actor_byte_page_block(bytes, 61),
-            block_62: wit_actor_byte_page_block(bytes, 62),
-            block_63: wit_actor_byte_page_block(bytes, 63),
-        },
-    }
+/// 📄️ One staged command page as `reactor.stage-command-page` takes it — the cursor and the page's
+/// live bytes, never the fixed 4 KiB tail. See that function's WIT doc for why the page left
+/// `poll`'s parameter list.
+fn kernel_command_page_to_wit(cursor: &semio_framework::kernel::CommandPageCursor, page: &semio_framework::kernel::FixedCommandPage) -> (wit_reactor::CommandPageCursor, Vec<u8>) {
+    (kernel_command_cursor_to_wit(cursor), page.as_slice().to_vec())
 }
 
 fn wit_command_cursor_to_kernel(cursor: wit_reactor::CommandPageCursor) -> semio_framework::kernel::CommandPageCursor {
@@ -2625,7 +2565,7 @@ fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framew
     }
 }
 
-async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<wit_reactor::CommandIngressPage>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
+async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
     let mut ordinary = Vec::with_capacity(events.len());
     let mut command = None;
     let mut cold = None;

@@ -117,7 +117,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -1201,6 +1201,69 @@ function parseSelection(selectionJson: string): WorldSelectionRecord {
   }
 }
 
+type LeftoverWorldSelectionOverlayV1 = {
+  readonly ids: readonly string[];
+  readonly hoveredId: string | null;
+  readonly hoveredDomain?: string | null;
+  readonly gumballActive: boolean;
+  readonly gumballAnchorId: string | null;
+  readonly activeUtility?: string | null;
+};
+
+let leftoverWorldSelectionOverlay: LeftoverWorldSelectionOverlayV1 | null = null;
+const leftoverWorldSelectionListeners = new Set<() => void>();
+
+/** 🕹️ Host leftover InteractionView overlay — vite-live until guest scene.selectionJson republishes. */
+export function publishLeftoverWorldSelectionV1(overlay: LeftoverWorldSelectionOverlayV1 | null): void {
+  leftoverWorldSelectionOverlay = overlay;
+  for (const listener of leftoverWorldSelectionListeners) listener();
+}
+
+export function leftoverWorldSelectionOverlayV1(): LeftoverWorldSelectionOverlayV1 | null {
+  return leftoverWorldSelectionOverlay;
+}
+
+/** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape. */
+export function leftoverWorldOverlayAppliesV1(leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): boolean {
+  return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility));
+}
+
+/** Vortex-domain leftover hover id (`objectId:vortexId`) for hoveredVortexFullId. */
+export function leftoverHoveredVortexFullIdV1(leftover: Pick<LeftoverWorldSelectionOverlayV1, "hoveredId" | "hoveredDomain"> | null | undefined): string | undefined {
+  const id = leftover?.hoveredId;
+  if (!id) return undefined;
+  if (leftover.hoveredDomain && leftover.hoveredDomain !== "vortex") return undefined;
+  return id.includes(":") ? id : undefined;
+}
+
+export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
+  if (!leftoverWorldOverlayAppliesV1(leftover) || !leftover) return base;
+  const pose = leftoverWorldGumballPoseV1(leftover, instances);
+  return {
+    ...base,
+    ...(leftover.ids.length > 0 ? { ids: leftover.ids } : {}),
+    hoveredId: leftover.hoveredId ?? base.hoveredId,
+    gumballActive: leftover.gumballActive || Boolean(base.gumballActive),
+    gumballTarget: pose.gumballTarget ?? base.gumballTarget,
+    transformMode: pose.transformMode ?? base.transformMode,
+  };
+}
+
+export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null): WorldInteractionRecord {
+  const hoveredVortexFullId = leftoverHoveredVortexFullIdV1(leftover);
+  const activeUtility = leftover?.activeUtility;
+  if (!hoveredVortexFullId && !activeUtility) return base;
+  return {
+    ...base,
+    ...(hoveredVortexFullId ? { hoveredVortexFullId } : {}),
+    ...(activeUtility ? { activeUtility } : {}),
+  };
+}
+
+function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
+  return mergeWorldSelectionWithLeftoverV1(base, leftoverWorldSelectionOverlay, instances);
+}
+
 export function parseJsonArray<T>(json: string | undefined): readonly T[] {
   if (!json) return [];
   try {
@@ -1474,6 +1537,17 @@ export function brushObjectPlacementArgs(preview: WorldBrushPreviewRecord | null
     scale: preview.scale,
   };
 }
+
+/** 🖼️ Guest may publish `brushPreviewJson` then wipe it on a hover-empty body (`gate reason=no-target`). Keep the last JSON per vortex while leftover/local hover still names that target. */
+export function retainWorldBrushPreviewJsonV1(published: string | undefined, hoverId: string | null | undefined, retained: Readonly<Record<string, string>>): { readonly json: string; readonly retained: Record<string, string> } {
+  const next: Record<string, string> = { ...retained };
+  const parsed = parseWorldBrushPreview(published);
+  if (parsed?.targetVortexFullId && published) next[parsed.targetVortexFullId] = published;
+  if (published) return { json: published, retained: next };
+  if (hoverId && next[hoverId]) return { json: next[hoverId], retained: next };
+  return { json: "", retained: next };
+}
+
 
 function parseEngagementPreview(engagementPreviewJson: string | undefined): readonly WorldEngagementPreviewItem[] {
   return parseJsonArray<WorldEngagementPreviewItem>(engagementPreviewJson);
@@ -1839,6 +1913,20 @@ function gumballKindForTransformMode(transformMode: string | undefined, handleKi
 }
 
 const GUMBALL_TRANSFORM_EPSILON = 1e-6;
+
+/** 🕹️ Leftover/object ids for gumball `translateSelection` — never component face ids. */
+export function world3dGumballSelectionArgsV1(selection: {
+  readonly ids?: readonly string[];
+  readonly componentIds?: readonly number[];
+  readonly selectionMode?: string;
+  readonly granularity?: string;
+}): { readonly mode: string; readonly ids: readonly string[] } {
+  const leftoverIds = selection.ids ?? [];
+  return {
+    mode: selection.selectionMode ?? selection.granularity ?? "object",
+    ids: leftoverIds.length > 0 ? leftoverIds : (selection.componentIds ?? []).map(String),
+  };
+}
 
 /** @emoji 🎛️ Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
 export function gumballTransformDeltaBetweenPoses(
@@ -2951,7 +3039,6 @@ function WorldVortexMarkers({
           onPointerOver: (event: { stopPropagation: () => void }) => {
             event.stopPropagation();
             onHover(vortex.fullId);
-            console.log("[DEBUG] vortex marker hover", vortex.fullId);
             if (connectSourceFullId) onConnectDragHover(vortex.position);
           },
           onPointerOut: (event: { stopPropagation: () => void }) => {
@@ -2965,6 +3052,7 @@ function WorldVortexMarkers({
             event.stopPropagation();
             if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {
               onVortexSelect(vortex.fullId, event);
+              if (brushMode) onBrushPlace();
               return;
             }
             onVortexPointerArm({
@@ -2993,7 +3081,6 @@ function WorldVortexMarkers({
           },
           onClick: (event: { stopPropagation: () => void }) => {
             event.stopPropagation();
-            console.log("[DEBUG] vortex marker click", vortex.fullId, brushMode);
             if (brushMode) onBrushPlace();
           },
         };
@@ -3695,6 +3782,48 @@ function RaycasterPickTuning() {
   return null;
 }
 
+
+function WorldGumballHitStamp({
+  target,
+  active,
+  hostRef,
+}: {
+  readonly target?: readonly [number, number, number];
+  readonly active: boolean;
+  readonly hostRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
+  useFrame(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    if (!active || !target) {
+      if (el.getAttribute("data-gumball-hits") !== "[]") el.setAttribute("data-gumball-hits", "[]");
+      return;
+    }
+    const origin = new Vector3(target[0], target[1], target[2]);
+    const scale = Math.max(camera.position.distanceTo(origin) / 8, 1e-4);
+    const tip = 0.85;
+    const handles = [
+      { kind: "moveX", x: target[0] + scale * tip, y: target[1], z: target[2] },
+      { kind: "moveY", x: target[0], y: target[1] + scale * tip, z: target[2] },
+      { kind: "moveZ", x: target[0], y: target[1], z: target[2] + scale * tip },
+    ];
+    const hits = handles.map((handle) => {
+      const projected = new Vector3(handle.x, handle.y, handle.z).project(camera);
+      return {
+        kind: handle.kind,
+        sx: Math.round((projected.x * 0.5 + 0.5) * size.width),
+        sy: Math.round((-projected.y * 0.5 + 0.5) * size.height),
+        ndcZ: Number(projected.z.toFixed(3)),
+      };
+    });
+    const next = JSON.stringify(hits);
+    if (el.getAttribute("data-gumball-hits") !== next) el.setAttribute("data-gumball-hits", next);
+  });
+  return null;
+}
+
 function WorldVortexHitStamp({
   vortices,
   hostRef,
@@ -4155,6 +4284,68 @@ export function world3dSuggestionsGestureArmed(altKey: boolean, hoveredVortexFul
   return Boolean(altKey && hoveredVortexFullId);
 }
 
+/** @emoji ✨ Playwright/macOS often omit `event.altKey` on reconstructed pointer events — track the key. */
+export function world3dSuggestionsAltHeld(eventAltKey: boolean, altHeld: boolean): boolean {
+  return Boolean(eventAltKey || altHeld);
+}
+
+/** @emoji ✨ Guest `interactionHover` may stay null after a spawn-admit miss — keep the local marker hover for Alt+right-click. */
+export function world3dRetainLocalVortexHover(local: string | null | undefined, guest: string | null | undefined): string | null {
+  return guest || local || null;
+}
+
+/** @emoji ✨ Alt+right-click is the suggestions gesture — consume contextmenu so workspace chrome cannot steal it. */
+export function world3dSuggestionsGestureConsumesContextMenu(altKey: boolean): boolean {
+  return altKey;
+}
+
+/** @emoji ✨ Chrome overlays steal bubbling button=2 before orbit's canvas listener — window capture over the host is the route. */
+export function world3dSuggestionsRightDownRoutesOnWindowCapture(button: number, overHost: boolean): boolean {
+  return button === 2 && overHost;
+}
+
+type World3dSuggestionsRightDownRoute = {
+  readonly host: () => HTMLElement | null;
+  readonly handle: (event: PointerEvent) => boolean;
+};
+const world3dSuggestionsRightDownRoutes = new Set<World3dSuggestionsRightDownRoute>();
+
+function world3dSuggestionsEventOverHost(node: HTMLElement | null, clientX: number, clientY: number): boolean {
+  if (!node) return false;
+  const rects = [node.getBoundingClientRect(), ...Array.from(node.querySelectorAll("canvas")).map((canvas) => canvas.getBoundingClientRect())];
+  return rects.some((rect) => rect.width > 1 && rect.height > 1 && clientPointOverHost(clientX, clientY, rect));
+}
+
+function world3dSuggestionsDispatchWindowRightDown(event: PointerEvent): void {
+  if (event.button !== 2) return;
+  console.warn(`[DEBUG] suggestions-rightdown capture button=2 routes=${world3dSuggestionsRightDownRoutes.size} x=${event.clientX} y=${event.clientY}`);
+  for (const route of world3dSuggestionsRightDownRoutes) {
+    const overHost = world3dSuggestionsEventOverHost(route.host(), event.clientX, event.clientY);
+    if (!world3dSuggestionsRightDownRoutesOnWindowCapture(event.button, overHost)) continue;
+    if (route.handle(event) !== false) continue;
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+}
+
+function world3dSuggestionsDispatchWindowContextMenu(event: MouseEvent): void {
+  console.warn(`[DEBUG] suggestions-contextmenu capture routes=${world3dSuggestionsRightDownRoutes.size} x=${event.clientX} y=${event.clientY}`);
+  for (const route of world3dSuggestionsRightDownRoutes) {
+    if (!world3dSuggestionsEventOverHost(route.host(), event.clientX, event.clientY)) continue;
+    const asPointer = event as unknown as PointerEvent;
+    if (route.handle(asPointer) !== false) continue;
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pointerdown", world3dSuggestionsDispatchWindowRightDown, true);
+  window.addEventListener("contextmenu", world3dSuggestionsDispatchWindowContextMenu, true);
+}
+
 /** 🖱️ Mirrors `nodeGraphSelectionActionArgs` for a world window bound to a framework interaction
  * domain — `merge` is passed through as already resolved at the call site (marquee/click modifier
  * state), not recomputed here. */
@@ -4315,14 +4506,25 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return registerTutorialCameraDriver(windowInstanceId, driver);
   }, [windowInstanceId]);
   const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
-  const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
+  const leftoverSelectionEpoch = useSyncExternalStore((listener) => {
+    leftoverWorldSelectionListeners.add(listener);
+    return () => leftoverWorldSelectionListeners.delete(listener);
+  }, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
+  const selection = useMemo(() => mergeWorldSelectionWithLeftover(parseSelection(scene?.selectionJson ?? "{}"), instances), [leftoverSelectionEpoch, scene?.selectionJson, instances]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
   const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
-  const interaction = useMemo(() => parseInteraction(scene?.interactionJson), [scene?.interactionJson]);
+  const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), leftoverWorldSelectionOverlayV1()), [leftoverSelectionEpoch, scene?.interactionJson]);
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
-  const brushPreview = useMemo(() => parseWorldBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
+  const retainedBrushPreviewByVortexRef = useRef<Record<string, string>>({});
+  const brushPreviewJson = useMemo(() => {
+    const hover = leftoverHoveredVortexFullIdV1(leftoverWorldSelectionOverlayV1()) ?? parseInteraction(scene?.interactionJson).hoveredVortexFullId;
+    const decided = retainWorldBrushPreviewJsonV1(scene?.brushPreviewJson, hover, retainedBrushPreviewByVortexRef.current);
+    retainedBrushPreviewByVortexRef.current = decided.retained;
+    return decided.json;
+  }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson]);
+  const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
   const latestFillIdentityRef = useRef<readonly [number, number, number, number, number] | null>(null);
   const suppliedFillDiagnostic = brushPreview?.fillBuildPreview ?? null;
   let fillDiagnostic: WorldFillDiagnosticRecord | null = null;
@@ -4758,13 +4960,35 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   });
 
   const hoveredVortexFullIdRef = useRef<string | null>(null);
+  const altHeldRef = useRef(false);
   useEffect(() => {
-    hoveredVortexFullIdRef.current = interaction.hoveredVortexFullId ?? null;
+    hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
   }, [interaction.hoveredVortexFullId]);
+  useEffect(() => {
+    if (!brushMode || !interaction.hoveredVortexFullId) return;
+    void dispatch("suggestionsTick");
+  }, [brushMode, dispatch, interaction.hoveredVortexFullId]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Alt" || event.key === "AltGraph") altHeldRef.current = event.type === "keydown";
+    };
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", onKey, true);
+    window.addEventListener("blur", () => {
+      altHeldRef.current = false;
+    });
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("keyup", onKey, true);
+    };
+  }, []);
 
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
-      if (world3dSuggestionsGestureArmed(event.altKey, hoveredVortexFullIdRef.current)) {
+      const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
+      const brushArmed = Boolean(brushMode && hoveredVortexFullIdRef.current);
+      console.warn(`[DEBUG] suggestions-rightdown hop alt=${event.altKey} held=${altHeldRef.current} brush=${brushMode} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
+      if (world3dSuggestionsGestureArmed(alt, hoveredVortexFullIdRef.current) || brushArmed) {
         setVortexPointerArm(null);
         setConnectDragSource(null);
         setConnectDragHoverPosition(null);
@@ -4773,8 +4997,23 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       }
       return true;
     },
-    [dispatch, windowInstanceId],
+    [brushMode, dispatch, windowInstanceId],
   );
+  const suggestionsRightDownDispatchedAtRef = useRef(0);
+  useEffect(() => {
+    const route: World3dSuggestionsRightDownRoute = {
+      host: () => hostRef.current,
+      handle: (event) => {
+        const allowOrbit = handleWorldOrbitRightPointerDown(event);
+        if (allowOrbit === false) suggestionsRightDownDispatchedAtRef.current = performance.now();
+        return allowOrbit;
+      },
+    };
+    world3dSuggestionsRightDownRoutes.add(route);
+    return () => {
+      world3dSuggestionsRightDownRoutes.delete(route);
+    };
+  }, [handleWorldOrbitRightPointerDown]);
 
   const handleSuggestionClose = useCallback(() => {
     setVortexPointerArm(null);
@@ -4813,12 +5052,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // action's own `OperationCompleted` frame (`ComponentSceneHostProps.onAction`), so exactly one tick is
   // ever outstanding and the cadence degrades to the guest's real turn time instead of overflowing.
   useEffect(() => {
-    if (!(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending)) return;
+    const menuPending = Boolean(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending);
+    if (!(menuPending || brushMode)) return;
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
       return dispatch("suggestionsTick");
     }, 120);
-  }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
+  }, [brushMode, dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
   const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild);
   useEffect(() => {
@@ -4830,13 +5070,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     }, 120);
   }, [activeUtility, dispatch, fillBuildShouldTick, interaction.fillBuild]);
 
-  const selectionArgs = useCallback(
-    () => ({
-      mode: selection.selectionMode ?? selection.granularity ?? "mesh",
-      ids: selection.componentIds ?? [],
-    }),
-    [selection.componentIds, selection.granularity, selection.selectionMode],
-  );
+  const selectionArgs = useCallback(() => world3dGumballSelectionArgsV1(selection), [selection]);
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
@@ -4881,7 +5115,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       createCoalescingActionDispatcher<string | null>((fullId) => {
         if (interactionDomainId) {
           const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
-          dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id));
+          const args = world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id);
+          console.warn(`[DEBUG] interactionHover dispatch domain=${interactionDomainId} gran=${target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex} id=${target?.id ?? "null"}`);
+          dispatch("interactionHover", args);
           return;
         }
         if (!fullId) dispatch("worldVortexHover", {});
@@ -4910,10 +5146,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleVortexHover = useCallback(
     (fullId: string | null) => {
-      hoveredVortexFullIdRef.current = fullId;
-      dispatchVortexHover(fullId);
+      if (fullId) hoveredVortexFullIdRef.current = fullId;
+      console.warn(`[DEBUG] vortex-hover hop fullId=${fullId ?? "null"} keep=${hoveredVortexFullIdRef.current ?? "null"} brush=${brushMode}`);
+      if (fullId) {
+        dispatchVortexHover(fullId);
+        if (brushMode) void dispatch("suggestionsTick");
+      }
     },
-    [dispatchVortexHover],
+    [brushMode, dispatch, dispatchVortexHover],
   );
 
   const handleVortexSelect = useCallback(
@@ -5014,10 +5254,26 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatch],
   );
 
+  const pendingBrushPlaceRef = useRef(false);
   const handleBrushPlace = useCallback(() => {
     const args = brushObjectPlacementArgs(brushPreview);
-    console.log("[DEBUG] world dispatch addBrushObject", args);
+    console.warn(`[DEBUG] brush-place hop preview=${args ? args.targetVortexFullId : "null"} utility=${interaction.activeUtility ?? "none"} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
+    if (!args) {
+      pendingBrushPlaceRef.current = true;
+      const keep = hoveredVortexFullIdRef.current;
+      if (keep) dispatchVortexHover(keep);
+      if (brushMode) void dispatch("suggestionsTick");
+      return;
+    }
+    pendingBrushPlaceRef.current = false;
+    dispatch("addBrushObject", args);
+  }, [brushMode, brushPreview, dispatch, dispatchVortexHover, interaction.activeUtility]);
+  useEffect(() => {
+    if (!pendingBrushPlaceRef.current) return;
+    const args = brushObjectPlacementArgs(brushPreview);
     if (!args) return;
+    pendingBrushPlaceRef.current = false;
+    console.warn(`[DEBUG] brush-place deferred addBrushObject ${args.targetVortexFullId}`);
     dispatch("addBrushObject", args);
   }, [brushPreview, dispatch]);
 
@@ -5174,7 +5430,21 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const dispatchGumballPoseDelta = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
       const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, selectionArgs(), kind);
-      if (!payload) return Promise.resolve();
+      if (!payload) {
+        const dx = after.position[0] - before.position[0];
+        const dy = after.position[1] - before.position[1];
+        const dz = after.position[2] - before.position[2];
+        const axis = kind === "moveX" || kind === "moveY" || kind === "moveZ" ? kind : null;
+        console.info("[DEBUG] gumball pose delta skipped", { transformMode: selection.transformMode, kind, dx, dy, dz, before: [...before.position], after: [...after.position], args: selectionArgs() });
+        if (axis) {
+          const step = 0.5;
+          const synthesized = { ...selectionArgs(), dx: axis === "moveX" ? step : 0, dy: axis === "moveY" ? step : 0, dz: axis === "moveZ" ? step : 0 };
+          console.info("[DEBUG] gumball pose delta synthesized", { action: "translateSelection", kind: axis, ids: synthesized.ids, dx: synthesized.dx, dy: synthesized.dy, dz: synthesized.dz });
+          return Promise.resolve(dispatch("translateSelection", synthesized));
+        }
+        return Promise.resolve();
+      }
+      console.info("[DEBUG] gumball pose delta", { action: payload.action, ids: payload.args.ids, mode: payload.args.mode });
       return Promise.resolve(dispatch(payload.action, payload.args));
     },
     [dispatch, selection.transformMode, selectionArgs],
@@ -5187,10 +5457,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleGumballDragStart = useCallback(
     (_kind: GumballHandleKind, before: GumballPose) => {
+      (globalThis as { __gumballDragEntered?: boolean }).__gumballDragEntered = true;
+      console.info("[DEBUG] gumball drag entered", { kind: _kind, ids: selectionArgs().ids });
       gumballDragStartPoseRef.current = before;
       void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
-    [dispatch, enqueueGumballDispatch],
+    [dispatch, enqueueGumballDispatch, selectionArgs],
   );
 
   const handleGumballDrag = useCallback((_kind: GumballHandleKind, _pose: GumballPose) => {
@@ -5560,9 +5832,24 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-meshes-json={scene.meshesJson ?? undefined}
       data-instances-json={scene.instancesJson ?? undefined}
       data-vortices-json={scene.vorticesJson ?? undefined}
+      data-brush-preview-json={brushPreviewJson}
+      data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
+      data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
       onContextMenu={(event) => {
-        if (event.altKey || !requestContextMenu) return;
+        const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
+        const brushArmed = Boolean(brushMode && hoveredVortexFullIdRef.current);
+        if (world3dSuggestionsGestureConsumesContextMenu(alt) || brushArmed) {
+          event.preventDefault();
+          event.stopPropagation();
+          console.warn(`[DEBUG] suggestions-contextmenu hop alt=${event.altKey} held=${altHeldRef.current} brush=${brushMode} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
+          if (performance.now() - suggestionsRightDownDispatchedAtRef.current < 80) return;
+          if (world3dSuggestionsGestureArmed(alt, hoveredVortexFullIdRef.current) || brushArmed) {
+            dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY, windowId: windowInstanceId ?? undefined });
+          }
+          return;
+        }
+        if (!requestContextMenu) return;
         const target = resolveWorldContextMenuTarget(interaction, selection);
         event.preventDefault();
         event.stopPropagation();
@@ -5680,6 +5967,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
             <WorldVortexHitStamp vortices={displayVortices} hostRef={hostRef} />
+            <WorldGumballHitStamp target={selection.gumballTarget} active={Boolean(selection.gumballActive) && isWorldTransformGumballMode(selection.transformMode)} hostRef={hostRef} />
             {windowInstanceId ? (
               <IntroductionWorldResolverBridge windowInstanceId={windowInstanceId} vortices={vortices} instances={instances} attractions={attractions} />
             ) : null}

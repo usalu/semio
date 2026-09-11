@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     name: "@semio-tech/framework-renderer-wgpu",
     environment: "node",
-    include: ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🧩️package-integration/🟦️.ts"],
+    include: ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🧩️package-integration/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts"],
     coverage: { include: ["🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts"] },
     passWithNoTests: false,
   },

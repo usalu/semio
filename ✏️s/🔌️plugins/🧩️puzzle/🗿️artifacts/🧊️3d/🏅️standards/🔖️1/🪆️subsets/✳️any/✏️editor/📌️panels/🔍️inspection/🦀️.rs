@@ -198,31 +198,39 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
     match interaction.granularity.as_str() {
         PUZZLE3D_GRANULARITY_OBJECT => {
             let ids = interaction.selected_object_ids();
-            let object = fixture.objects.iter().find(|object| Some(&object.id) == ids.first())?;
-            Some(section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
+            fixture.objects.iter().find(|object| Some(&object.id) == ids.first()).map(|object| section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
         }
-        PUZZLE3D_GRANULARITY_VORTEX => {
-            let full_id = interaction.selected_vortex_ids().first()?;
-            let (object, vortex) = fixture.objects.iter().find_map(|object| object.vortices.iter().find(|vortex| &puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).map(|vortex| (object, vortex)))?;
-            Some(section(labels.vortex.as_str(), "vortex", vortex_fields(object, vortex, labels)))
-        }
+        PUZZLE3D_GRANULARITY_VORTEX => interaction.selected_vortex_ids().first().and_then(|full_id| {
+            fixture
+                .objects
+                .iter()
+                .find_map(|object| object.vortices.iter().find(|vortex| &puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).map(|vortex| (object, vortex)))
+                .map(|(object, vortex)| section(labels.vortex.as_str(), "vortex", vortex_fields(object, vortex, labels)))
+        }),
         PUZZLE3D_GRANULARITY_ATTRACTION => {
-            let id = interaction.selected_attraction_ids().first()?;
-            let attraction = fixture.attractions.iter().find(|attraction| &attraction.id == id)?;
-            Some(section(labels.attraction.as_str(), "attraction", attraction_fields(attraction, labels)))
+            let id = interaction.selected_attraction_ids().first();
+            id.and_then(|id| fixture.attractions.iter().find(|attraction| &attraction.id == id)).map(|attraction| section(labels.attraction.as_str(), "attraction", attraction_fields(attraction, labels)))
         }
         PUZZLE3D_GRANULARITY_TARGET_VOLUME => {
             let ids = interaction.selected_target_volume_ids();
-            let volume = fixture.target_volumes.iter().find(|volume| Some(&volume.id) == ids.first())?;
-            Some(section(labels.target_volume.as_str(), "target-volume", target_volume_fields(volume, ids, pages, labels)))
+            fixture.target_volumes.iter().find(|volume| Some(&volume.id) == ids.first()).map(|volume| section(labels.target_volume.as_str(), "target-volume", target_volume_fields(volume, ids, pages, labels)))
         }
         PUZZLE3D_GRANULARITY_REFERENCE => {
             let ids = interaction.selected_reference_ids();
-            let reference = fixture.references.iter().find(|reference| Some(&reference.id) == ids.first())?;
-            Some(section(labels.reference.as_str(), "reference", reference_fields(reference, ids, pages, labels)))
+            fixture.references.iter().find(|reference| Some(&reference.id) == ids.first()).map(|reference| section(labels.reference.as_str(), "reference", reference_fields(reference, ids, pages, labels)))
         }
         _ => None,
     }
+    .or_else(|| {
+        let ids = &interaction.selected;
+        fixture.objects.iter().find(|object| ids.iter().any(|id| id == &object.id)).map(|object| section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
+    })
+    .or_else(|| {
+        let ids = &interaction.selected;
+        fixture.objects.iter().find(|object| {
+            object.vortices.iter().any(|vortex| ids.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id)))
+        }).map(|object| section(labels.object.as_str(), "object", object_fields(object, std::slice::from_ref(&object.id), pages, labels)))
+    })
 }
 //#endregion 🔖️Sections
 
@@ -241,7 +249,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle3d::terminology::puzzle3d_labels;
     use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dObject, Puzzle3dScene, PUZZLE3D_GRANULARITY_OBJECT};
+    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dObject, Puzzle3dScene, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_VORTEX};
 
     fn labels() -> &'static Puzzle3dLabels {
         puzzle3d_labels(&semio_framework_plugin::ViewModel { terminology: semio_framework_plugin::Terminology::Native, ..Default::default() }).expect("admitted host axis")
@@ -292,6 +300,67 @@ mod tests {
         let scene = Puzzle3dScene { fixture, runtime, active_utility: String::new() };
         let interaction = Puzzle3dInteractionSnapshot { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), selected: ids.to_vec(), hovered: Vec::new() };
         (scene, interaction)
+    }
+
+    #[test]
+    fn leftover_browser_shaped_snapshot_wires_namespaced_object_fields_and_lock_row() {
+        drain();
+        let (scene, mut interaction) = scene(&["seed-left-001".into()], 0);
+        interaction.granularity.clear();
+        let node = render(&scene, &interaction, labels()).expect("leftover inspect");
+        let mut rows = Vec::new();
+        keys(&node, &mut rows);
+        assert!(
+            rows.iter().any(|key| key == "puzzle3d-play-inspector.object.id" || key.ends_with("puzzle3d-play-inspector.object.id")),
+            "leftover-only selection must render namespaced object.id: {rows:?}"
+        );
+        assert!(
+            rows.iter().any(|key| key == "puzzle3d-play-inspector.object.locked" || key.ends_with("puzzle3d-play-inspector.object.locked")),
+            "leftover-only selection must assemble namespaced object.locked flag_row: {rows:?}"
+        );
+        assert!(!rows.iter().any(|key| key.ends_with(".empty")), "leftover selectedIds must not keep the empty summary: {rows:?}");
+        drop(node);
+        drain();
+    }
+
+    #[test]
+    fn leftover_vortex_granularity_unresolved_falls_back_to_object_fields() {
+        drain();
+        let (scene, mut interaction) = scene(&["seed-left-001".into()], 0);
+        interaction.granularity = PUZZLE3D_GRANULARITY_VORTEX.into();
+        let node = render(&scene, &interaction, labels()).expect("vortex-mismatch inspect");
+        let mut rows = Vec::new();
+        keys(&node, &mut rows);
+        assert!(rows.iter().any(|key| key.ends_with("object.id")), "unresolved vortex granularity must fall back to object.id: {rows:?}");
+        assert!(rows.iter().any(|key| key.ends_with("object.locked")), "unresolved vortex granularity must assemble object.locked: {rows:?}");
+        assert!(!rows.iter().any(|key| key.ends_with(".empty")), "unresolved vortex granularity must not keep the empty summary: {rows:?}");
+        drop(node);
+        drain();
+    }
+
+    #[test]
+    fn leftover_selected_vortex_uuid_falls_through_to_object_fields() {
+        drain();
+        let (mut scene, mut interaction) = scene(&["seed-left-001".into()], 0);
+        scene.fixture.objects[0].vortices.push(Puzzle3dVortex {
+            id: "5de35caa-0f02-43d7-ae74-aa730efd3386".into(),
+            vortex_kind: None,
+            position: [0.0, 0.0, 0.0],
+            direction: None,
+            radius: None,
+            hidden: false,
+            locked: false,
+        });
+        interaction.granularity = PUZZLE3D_GRANULARITY_VORTEX.into();
+        interaction.selected = vec!["5de35caa-0f02-43d7-ae74-aa730efd3386".into()];
+        let node = render(&scene, &interaction, labels()).expect("vortex-uuid inspect");
+        let mut rows = Vec::new();
+        keys(&node, &mut rows);
+        assert!(rows.iter().any(|key| key.ends_with("object.id")), "leftover selected vortex uuid must fall through to object.id: {rows:?}");
+        assert!(rows.iter().any(|key| key.ends_with("object.locked")), "leftover selected vortex uuid must assemble object.locked: {rows:?}");
+        assert!(!rows.iter().any(|key| key.ends_with(".empty")), "leftover selected vortex uuid must not keep the empty summary: {rows:?}");
+        drop(node);
+        drain();
     }
 
     #[test]
