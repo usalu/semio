@@ -69,6 +69,45 @@ mod tests {
         assert_eq!(perspective_label, "Perspective");
     }
 
+    /// 🧪️ Every `world-3d` window-options family is addressable as `<prefix>-measure-<family>…` and mounts its
+    /// own controls without a second disclosure click — `WindowMeasureTreeGroup` renders no children at all for
+    /// a collapsed group, so a closed-by-default Projection/Sun group is indistinguishable from a missing one.
+    #[semio_framework_async_macros::async_test]
+    async fn projection_and_sun_measure_families_are_addressable_and_open_by_default() {
+        let ids_of = |measure: &WindowMeasure| -> Vec<String> {
+            fn walk(measure: &WindowMeasure, into: &mut Vec<String>) {
+                match measure {
+                    WindowMeasure::Group { id, children, default_open, .. } => {
+                        into.push(id.clone());
+                        if default_open != &Some(false) {
+                            for child in children {
+                                walk(child, into);
+                            }
+                        }
+                    }
+                    WindowMeasure::Toggle { id, .. } | WindowMeasure::Slider { id, .. } | WindowMeasure::Select { id, .. } => into.push(id.clone()),
+                }
+            }
+            let mut into = Vec::new();
+            walk(measure, &mut into);
+            into
+        };
+        let action = |action: &str, args: Option<serde_json::Value>| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) };
+
+        let sun_ids = ids_of(&world3d_sun_measures("puzzle3d", &WorldSunConfig::default(), action));
+        assert!(sun_ids.contains(&"puzzle3d-measure-sun".to_string()), "{sun_ids:?}");
+        assert!(sun_ids.contains(&"puzzle3d-measure-sun-enabled".to_string()), "the Sun enable toggle must mount without a second disclosure click: {sun_ids:?}");
+        for axis in ["azimuth", "elevation", "intensity"] {
+            assert!(sun_ids.contains(&format!("puzzle3d-measure-sun-{axis}")), "{axis} slider missing from {sun_ids:?}");
+        }
+
+        let projection_ids = ids_of(&world3d_projection_measures("puzzle3d", &WorldProjectionConfig::default(), action));
+        assert!(projection_ids.iter().all(|id| id.starts_with("puzzle3d-measure-projection")), "every projection id shares the measure family prefix: {projection_ids:?}");
+        assert!(projection_ids.contains(&"puzzle3d-measure-projection-parallel".to_string()), "{projection_ids:?}");
+        assert!(projection_ids.contains(&"puzzle3d-measure-projection-orthographic-view".to_string()), "the orthographic view select must mount without a second disclosure click: {projection_ids:?}");
+        assert!(projection_ids.contains(&"puzzle3d-measure-projection-perspective-kind".to_string()), "{projection_ids:?}");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn world3d_scene_fields_bind_the_domain_while_the_sun_helper_leaves_it_unset() {
         let sun = WorldSunConfig::default();

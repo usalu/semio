@@ -64,6 +64,14 @@ export const fireEvent = {
   drop(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.drop(target, init);
   },
+  /** 🖱️ `Stepper`'s +/− buttons drive a press-and-hold from `onMouseDown`/`onMouseUp`, never `click`,
+   * so a law about what one bump dispatches has to play the same two events a browser does. */
+  mouseDown(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.mouseDown(target, init);
+  },
+  mouseUp(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.mouseUp(target, init);
+  },
   keyDown(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.keyDown(target, init);
   },

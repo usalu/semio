@@ -1320,3 +1320,38 @@ Depends on 2. No separate hop this tick.
 - #44 guest: first-pick leftover `selectedIds` empty (hover object id only); gumball mesh `translateSelection` pre-admit if still failing after the alias
 - Re-probe `--selection --clipboard --gumball --locked --port=6014` on vite-live #43 (do not rebuild wasm)
 
+## 8.30 W-G3 leftover first-pick selectedIds + mesh translate pre-admit (ready for #44)
+
+Guest hops for rebuild **#44**. Vite-live `1:window` alias, leftover Inspection refresh, and gumball mode `move` were left in place. W-AB `importFixture` was not touched. No wasm rebuild, no serve kill, no git.
+
+### 1. First-pick leftover `selectedIds` empty
+
+Battery leftover at first canvas pick was `selectedIds:[]` with hover `{domain:vortex, id:seed-left-001}` (object id, not vortex uuid). Canvas pick published hover-only leftover.
+
+`dispatch_interaction_action` now keeps the exact pick targets on leftover `interactionSelect` when `next_selection` returns empty — including a vortex-domain pick of an object id. Hover leftover still restores a prior leftover selection so a later hover turn cannot wipe it. Vortex-uuid Inspection fall-through is unchanged.
+
+Law: leftover `interactionSelect` of `seed-left-001` → leftover `selectedIds` contains it.
+
+### 2. Gumball `translateSelection` pre-admit
+
+Leftover drag dispatched `translateSelection` `{ids, mode: mesh}` and the guest used to answer `fixed typed-operation and segmented-output authorities did not pre-admit the exact operation slot`. Ingress now pre-admits a vacant residue-class slot (`admit_typed_operation_slot`) before minting the operation id, so leftover mesh-mode translate with explicit ids commits a pose delta instead of colliding with a hover/tick/camera storm.
+
+Law: leftover `translateSelection` with explicit ids + mesh mode commits a pose delta.
+
+### Laws (this tick)
+
+Ran. Do not claim from compile-only.
+
+1. `cargo test -p semio-framework-plugin leftover_interaction_select_object_id` → `leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids` **ok** (1 passed / 660 filtered). Log `🗑️generated/w-g3-830-select-law.txt`.
+2. `RUST_MIN_STACK=134217728 cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib leftover_translate_selection -- --test-threads=1` → `leftover_translate_selection_mesh_mode_commits_pose_delta` **ok**, locked-object refuse **ok** (2 passed / 705 filtered). Log `🗑️generated/w-g3-830-mesh-translate-law.txt`.
+3. Same crate, filter `leftover_` with harness leftover_overlay_translate / leftover_selected_vortex / leftover_translate_selection_mesh → **13 passed / 0 failed / 694 filtered**, including overlay unlock translate and `leftover_selected_vortex_uuid_falls_through_to_object_fields`. Log `🗑️generated/w-g3-830-sibling-leftover-laws.txt`.
+
+### Files
+
+1. `framework/.../plugin/rs` — `interactionSelect` keeps object-id pick targets; typed-operation slot pre-admit
+2. `framework/.../plugin-runtime-plugin-builder-contract/rs` — object-id leftover `selectedIds` law
+3. `s/.../puzzle/3d/editor/tests/unit/rs` — mesh-mode leftover translate pose-delta law
+
+### Handoff
+
+Ready for **#44**. Re-probe `--selection --clipboard --gumball --locked --port=6014` on vite-live after the wasm rebuild. Do not revert W-AB importFixture.

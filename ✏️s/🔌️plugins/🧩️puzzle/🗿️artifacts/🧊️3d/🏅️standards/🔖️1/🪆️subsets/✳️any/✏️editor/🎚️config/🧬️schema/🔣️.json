@@ -4,11 +4,12 @@
   "title": "Puzzle3dConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["fillCount", "overlapBudget", "objectKindWeights", "vortexKindWeights"],
+  "required": ["fillCount", "overlapBudget", "objectKindWeights", "vortexKindWeights", "activeExampleId"],
   "properties": {
     "fillCount": { "type": "integer", "minimum": 0, "x-semio-state": "config" },
     "overlapBudget": { "type": "number", "x-semio-state": "config" },
     "objectKindWeights": { "type": "object", "additionalProperties": { "type": "number" }, "x-semio-state": "config" },
-    "vortexKindWeights": { "type": "object", "additionalProperties": { "type": "number" }, "x-semio-state": "config" }
+    "vortexKindWeights": { "type": "object", "additionalProperties": { "type": "number" }, "x-semio-state": "config" },
+    "activeExampleId": { "type": "string", "x-semio-state": "config" }
   }
 }

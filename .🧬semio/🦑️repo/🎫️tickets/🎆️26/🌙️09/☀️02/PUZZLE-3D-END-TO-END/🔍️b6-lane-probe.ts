@@ -191,6 +191,21 @@ if (booted && want("--brush")) {
       log(`brush hover ${fraction} ${JSON.stringify(await dumpInteraction())}`);
     }
   }
+  const pickSpot = await frameAndPick();
+  log(`brush after pick spot=${JSON.stringify(pickSpot)} ${JSON.stringify(await dumpInteraction())}`);
+  if (box) {
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.8);
+    await page.mouse.down({ button: "middle" });
+    await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.77, { steps: 4 });
+    await page.mouse.up({ button: "middle" });
+    await page.waitForTimeout(2500);
+    log(`brush after camera ${JSON.stringify(await dumpInteraction())}`);
+    for (const fraction of [0.52, 0.48]) {
+      await canvas.hover({ position: { x: Math.round(box.width * fraction), y: Math.round(box.height * 0.42) }, timeout: 4000, force: true }).catch(() => {});
+      await page.waitForTimeout(900);
+      log(`brush late hover ${fraction} ${JSON.stringify(await dumpInteraction())}`);
+    }
+  }
   log(`brush hop-census place=${grep(/brush-place hop/, 200).length} utilityHops=${JSON.stringify(grep(/setActiveUtility hop/, 4))}`);
 }
 

@@ -30,7 +30,7 @@ fn tessellate_result_resolves_the_pending_handle() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-1", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-1".into()), "a fresh handle must be admitted as in-flight");
     assert_eq!(session.preview_mesh_pack("brep:solid-1"), None, "no mesh may exist before the extension answers");
-    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: complete_envelope(&pack) }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
+    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: complete_envelope(&pack) }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
     assert!(emit.effects.is_empty(), "a completed tessellation terminates the round trip and emits no further effect");
     assert_eq!(session.preview_mesh_pack("brep:solid-1"), Some(pack.as_str()), "the resolved mesh body must be readable under its handle");
     assert!(!session.note_pending_tessellate(node_hash, "brep:solid-1".into()), "a resolved handle must never be re-requested");
@@ -51,7 +51,7 @@ fn a_partial_step_re_arms_the_tick_chain_with_progress() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-2", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-2".into()));
     let working = r#"{"done":false,"cancellable":true,"phase":"meshingFaces","unitsDone":12,"unitsTotal":30,"facesDone":4,"facesTotal":6}"#;
-    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: working.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
+    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: working.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
     assert_eq!(emit.effects.len(), 1, "an unfinished tessellation must re-arm the tick chain");
     let status = session.preview_tessellate_status();
     assert_eq!((status.units_done, status.units_total), (12, 30));
@@ -77,13 +77,13 @@ fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-3", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-3".into()));
     let first = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":2,"meshPack":"{}"}}"#, &pack[..split]);
-    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
+    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
     assert_eq!(emit.effects.len(), 1, "a partial mesh body must ask for the next chunk");
     assert_eq!(session.next_tessellate_chunk(node_hash), 1);
     assert!(session.preview_mesh_pack("brep:solid-3").is_none());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-3".into()), "the continuation re-admits the handle");
     let second = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":1,"chunks":2,"meshPack":"{}"}}"#, &pack[split..]);
-    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: second }, &doc, &cfg, &mut session).expect("second chunk");
+    let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: second }, &doc, &cfg, &mut session).expect("second chunk");
     assert!(emit.effects.is_empty(), "the last chunk completes the transfer");
     assert_eq!(session.preview_mesh_pack("brep:solid-3"), Some(pack.as_str()), "the reassembled body must equal the original");
     retire_flow_eval_session(session);
@@ -107,13 +107,13 @@ fn the_liveness_sweep_preserves_a_half_transferred_mesh_body() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-5", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-5".into()));
     let first = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"chunk":0,"chunks":2,"meshPack":"{}"}}"#, &pack[..split]);
-    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
+    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
     let live: std::collections::HashSet<String> = ["brep:solid-5".to_string()].into_iter().collect();
     session.retain_preview_meshes(&live);
     assert_eq!(session.next_tessellate_chunk(node_hash), 1, "the sweep must not rewind the chunk cursor");
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-5".into()));
     let second = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"chunk":1,"chunks":2,"meshPack":"{}"}}"#, &pack[split..]);
-    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: second }, &doc, &cfg, &mut session).expect("second chunk");
+    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: second }, &doc, &cfg, &mut session).expect("second chunk");
     assert_eq!(session.preview_mesh_pack("brep:solid-5"), Some(pack.as_str()), "the body must survive the sweep intact");
     retire_flow_eval_session(session);
 }
@@ -133,7 +133,7 @@ fn the_liveness_sweep_drops_a_dead_handles_partial_body() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-6", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-6".into()));
     let first = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"chunk":0,"chunks":2,"meshPack":"{}"}}"#, &pack[..pack.len() / 2]);
-    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
+    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
     session.retain_preview_meshes(&std::collections::HashSet::new());
     assert_eq!(session.next_tessellate_chunk(node_hash), 0, "a dead handle's transfer must be forgotten entirely");
     retire_flow_eval_session(session);
@@ -153,7 +153,7 @@ fn an_invalid_solid_becomes_a_typed_diagnostic_not_a_mesh() {
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-4", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-4".into()));
     let invalid = r#"{"done":true,"cancellable":false,"phase":"invalid","diagnostics":[{"entity":"shell-1","code":"shell-not-closed","message":"shell 1 is not closed"}]}"#;
-    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: invalid.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
+    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: invalid.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
     assert!(session.preview_mesh_pack("brep:solid-4").is_none(), "broken topology must never reach the renderer");
     let diagnostics = session.preview_diagnostics("brep:solid-4").expect("a typed diagnostic must be stored");
     assert!(diagnostics.contains("shell-not-closed"), "the diagnostic must carry the machine-readable code, got {diagnostics}");
@@ -172,7 +172,7 @@ fn unknown_node_hash_resolves_nothing() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = FlowEvalSession::new();
-    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash: 42, output_json: complete_envelope(&tessellated_triangle_pack()) }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
+    handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 42, output_json: complete_envelope(&tessellated_triangle_pack()) }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
     assert_eq!(session.preview_mesh_pack("brep:solid-1"), None);
     retire_flow_eval_session(session);
 }

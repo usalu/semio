@@ -4315,6 +4315,15 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub window_id: Option<String>,
+    /// 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane. Sent on
+    /// every call and, unlike [`Self::window_id`], deliberately kept by [`Self::for_panel`]: an
+    /// app-level panel is not rendered FOR a window, but a panel that authors per-window settings
+    /// still has to address the pane the user last touched instead of the roster's first entry
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured a Settings edit landing on the
+    /// base window kind, a pane nobody is looking at).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub focused_window_id: Option<String>,
     /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
     /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
     #[serde(default)]
@@ -4378,8 +4387,8 @@ pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
 /// 📏️ `windowInstances` capacity (schema `maxItems`).
 pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
 /// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
-/// `activeToolId`, `windowId`.
-pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 5;
+/// `activeToolId`, `windowId`, `focusedWindowId`.
+pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
 /// 🔢️ Long-string fields: `panelJson`, `contributionsJson`.
 pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 2;
 /// 📐️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire

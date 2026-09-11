@@ -38,7 +38,7 @@ mod plugin_builder_contract_tests {
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
     /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
     /// import too, rather than relying on `mod app`'s outer glob.
-    use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX};
+    use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX, UI_VALUE_PAGE_ROWS};
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::collections::BTreeMap;
@@ -164,8 +164,8 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
-        fn preflight(&self, mutation: &TestMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-            if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || description.is_some() || lane != store::HistoryLane::Document {
+        fn preflight(&self, mutation: &TestMutation, _description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+            if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || lane != store::HistoryLane::Document {
                 return Err("test count accepts exactly one scalar mutation".into());
             }
             Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 1_024 })
@@ -215,7 +215,7 @@ mod plugin_builder_contract_tests {
                         group_id: None,
                         origin: Default::default(),
                     }],
-                    description: None,
+                    description: request.description.clone(),
                     coalesce_key: None,
                     sequence_number: authority.next_sequence_number(),
                     started_at: String::new(),
@@ -1393,6 +1393,31 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn every_admitted_typed_operation_slot_is_released_by_the_host_continuation_that_reports_it_runnable() {
+        test_typed_operation_slot_retirement_under_storm::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_settled_a_replaced_and_a_cancelled_typed_operation_all_release_their_exact_slot() {
+        test_typed_operation_slot_release_on_every_outcome::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work() {
+        test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_status_only_host_call_finishes_every_typed_operation_it_admitted() {
+        test_typed_operation_completes_under_a_status_only_host_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn an_admitting_host_call_hands_back_the_terminal_lane_it_earned() {
+        test_typed_operation_lands_its_edit_inside_the_admitting_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
         fn clock() -> Option<u64> {
             Some(1_000)
@@ -1406,6 +1431,17 @@ mod plugin_builder_contract_tests {
         )
         .await;
         eprintln!("[DEBUG] registered 500us factory completed real dispatch/rebase/publication/ACK/close with exact fake microsecond clock");
+    }
+
+    /// ⏱️ Continuation turns a staged operation may spend beyond one per acknowledgeable result page —
+    /// the terminating turn on which the scan finally answers "nothing runnable".
+    const TYPED_OPERATION_CONTINUATION_SLACK: u64 = 1;
+
+    /// ⛽️ The per-turn ceiling a browser turn actually carries — `DEFAULT_SHARD_BUDGET` lifted through
+    /// `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`'s `poll`, which stamps `maxFrames: 8` — so a law that
+    /// drives the continuation reads the exact grant production does, not a generous test one.
+    fn reactor_native_budget() -> semio_framework::kernel::Budget {
+        semio_framework::kernel::Budget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1422,10 +1458,12 @@ mod plugin_builder_contract_tests {
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
         let mut receipts = 0;
+        let mut spent = 0;
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.unwrap();
             let more = scan.runnable || scan.contended;
+            spent += 1;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
                 if let Some(page) = output.typed_operation_result {
@@ -1442,6 +1480,15 @@ mod plugin_builder_contract_tests {
             }
             std::thread::yield_now();
         }
+        // ⚖️ LAW: a staged operation costs the host ONE turn per acknowledgeable result page, not one
+        // per publication unit. The host has to come back for a result page because the page is only
+        // released by its own ACK; every other unit is internal to the guest, and answering `MoreWork`
+        // after each of them cost this fixture 48 turns before ticket 26/09/02 wave B24.
+        assert!(
+            spent <= receipts + TYPED_OPERATION_CONTINUATION_SLACK,
+            "a {receipts}-receipt operation spent {spent} continuation turns (ceiling {}) — the continuation is pacing one publication unit per host round trip",
+            receipts + TYPED_OPERATION_CONTINUATION_SLACK
+        );
         let active = cell.instance.lock().unwrap();
         assert!(terminal);
         assert!(!active.app.has_pending_typed_operations());
@@ -1512,7 +1559,7 @@ mod plugin_builder_contract_tests {
                     pump.faulted
                 );
             }
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.expect("drive one production publication turn");
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -1525,7 +1572,7 @@ mod plugin_builder_contract_tests {
                         {
                             let active = cell.instance.lock().expect("delayed ACK retained app");
                             assert!(active.app.has_pending_typed_operations());
-                            assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
+                            assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, true)));
                         }
                         let maintenance_entries_before = cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed);
                         let pre_ack_polls = acknowledgement_fixture["resultAck"]["preAckPolls"].as_u64().unwrap();
@@ -1539,7 +1586,7 @@ mod plugin_builder_contract_tests {
                                 }
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                            let (output, _) = super::plugin_continue_typed_operations(&runtime).await.expect("delayed renderer ACK does not fault continuation");
+                            let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT).await.expect("delayed renderer ACK does not fault continuation");
                             assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_result.as_ref()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
@@ -1557,7 +1604,7 @@ mod plugin_builder_contract_tests {
                         assert!(cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment, "maintenance must process the presented result as an external input wait");
                         {
                             let active = cell.instance.lock().expect("stable delayed ACK retained app");
-                            assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
+                            assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, true)));
                         }
                         assert_eq!(cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), 0);
                         super::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
@@ -2483,6 +2530,15 @@ mod plugin_builder_contract_tests {
         if let DslValue::Object(entries) = &mut object {
             entries.retain(|(key, _)| key != "targets");
             entries.push(("targets".to_string(), DslValue::String(targets)));
+        }
+        object
+    }
+
+    fn interaction_empty_target_args(extra: Value) -> DslValue {
+        let mut object = DslValue::from(&extra);
+        if let DslValue::Object(entries) = &mut object {
+            entries.retain(|(key, _)| key != "targets");
+            entries.push(("targets".to_string(), DslValue::String("[]".into())));
         }
         object
     }
@@ -4021,7 +4077,7 @@ mod plugin_builder_contract_tests {
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, "ctrl", false, false).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
@@ -4036,12 +4092,12 @@ mod plugin_builder_contract_tests {
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false, 0).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false, 0).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -4071,7 +4127,7 @@ mod plugin_builder_contract_tests {
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -4101,7 +4157,7 @@ mod plugin_builder_contract_tests {
             inverse: None,
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -4115,6 +4171,57 @@ mod plugin_builder_contract_tests {
     /// command-row count. A session log past one page must assemble — hops3 aborted every later
     /// publish at `history-panel.commands`. Bound is derived from the fixture's row count, not a
     /// bumped children ceiling. needs #40.
+    /// 🎟️ Wave B9 lane 5: every revertible row materialises a `UiValue::Map` of revert arguments, and
+    /// the process-wide argument arena backs exactly `UI_VALUE_PAGE_ROWS` interactive rows. A session's
+    /// command log grows past that within minutes, so the alias table has to page with the rows: the
+    /// panel must assemble 200 entries without a single refused admission, every row must still be
+    /// reachable, and the inline revert must stay bounded by the page the arena actually backs.
+    #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_bounds_revert_row_actions_to_the_arena_page() {
+        let entries = 200_u64;
+        let entry = |seq: u64| CommandView {
+            seq,
+            action_id: "translateSelection".into(),
+            label: format!("Move {seq}"),
+            kind: ActionKind::Mutation,
+            timestamp: "0".into(),
+            edit_id: Some(format!("edit-{seq}")),
+            config_edit_id: None,
+            child_edit_ids: Vec::new(),
+            op_lines: Vec::new(),
+            applied: true,
+            revertible: true,
+            count: 1,
+            inverse: None,
+        };
+        let history = HistoryView {
+            columns: Vec::new(),
+            can_undo: true,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: (1..=entries).map(entry).collect(),
+            command_filter: HistoryCommandFilter::All,
+        };
+        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("200 revertible entries must assemble without an alias refusal");
+        fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
+            if node.key.as_str().starts_with("framework.history.entry.") {
+                *rows += 1;
+                if let Component::TreeItem(props) = &node.component {
+                    *actions += props.row_actions.len();
+                }
+            }
+            for child in node.children.iter() {
+                census(child, rows, actions);
+            }
+        }
+        let (mut rows, mut actions) = (0usize, 0usize);
+        census(&panel, &mut rows, &mut actions);
+        assert_eq!(rows, entries as usize, "every live command row stays reachable under the paged tree");
+        assert!(actions > 0, "the newest rows must still carry their inline revert");
+        assert!(actions <= UI_VALUE_PAGE_ROWS, "inline reverts must stay inside the arena page the contract declares: {actions} > {UI_VALUE_PAGE_ROWS}");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn ui_history_panel_pages_command_rows_from_the_live_count() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/history-panel-command-pages/🔣️.json")).unwrap();
@@ -4150,7 +4257,7 @@ mod plugin_builder_contract_tests {
             commands: (1..=n as u64).map(entry).collect(),
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false).await.expect("command rows past one page must not fail admission at history-panel.commands");
+        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("command rows past one page must not fail admission at history-panel.commands");
         assert_eq!(panel.children[1].children.len(), expected_pages, "Commands section children are pages derived from the live row count");
         fn collect_entry_keys(node: &BuiltNode, prefix: &str, keys: &mut Vec<String>) {
             if node.key.as_str().starts_with(prefix) {
@@ -5284,6 +5391,22 @@ mod plugin_builder_contract_tests {
         close_reserved_app(&mut app);
     }
 
+    /// 🧪 W-G3 §8.30 — leftover `interactionSelect` of an object id on a vortex-domain-shaped pick still lands in `selectedIds`.
+    #[semio_framework_async_macros::async_test]
+    async fn leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids() {
+        let mut app = interaction_app_under_test().await;
+        let settled = reserved_action(
+            &mut app,
+            INTERACTION_SELECT_ACTION_ID,
+            Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "seed-left-001")),
+        )
+        .await;
+        let view = settled.output.get("interactionView").expect("leftover InteractionView");
+        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        assert!(ids.iter().any(|id| id.as_str() == Some("seed-left-001")), "leftover selected ids {ids:?}");
+        close_reserved_app(&mut app);
+    }
+
     /// 🧪 W-G3 §8.21 — `interactionHover` leftover publishes the hover target on the same leftover output.
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_job_completion_publishes_hover_target_on_leftover() {
@@ -5293,6 +5416,20 @@ mod plugin_builder_contract_tests {
         let hover = view.get("hoverTarget").expect("hover target");
         assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
         assert_eq!(hover.get("domain").and_then(DslValue::as_str), Some("items"));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 Wave B15 — empty-target `interactionSelect` leftover `selectedIds` must name the hovered object.
+    #[semio_framework_async_macros::async_test]
+    async fn empty_target_interaction_select_leftover_selected_ids_name_the_hovered_object() {
+        let mut app = interaction_app_under_test().await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))).await;
+        let view = settled.output.get("interactionView").expect("leftover InteractionView");
+        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "empty-target interactionSelect leftover selectedIds must name the hovered object, got {ids:?}");
+        let hover = view.get("hoverTarget").expect("hoverTarget");
+        assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }
     //#endregion 🔖️InteractionDispatchTests
@@ -5539,4 +5676,9 @@ mod plugin_builder_contract_tests {
         assert_eq!(<TestRestartFactory<true> as ArtifactOwnedToolJobFactory>::TOOL_IDS, &[fixture["restartAuthority"]["tool"].as_str().unwrap()]);
     }
     //#endregion 🔖️AsyncTaskTests
+
+    // 🪟️ Included rather than a sibling module: the surface route's law drives `TestApp` through
+    // `plugin_mount_surface`/`plugin_render_surface`, and this module's fixtures (`TestApp`,
+    // `RENDER_CONTEXT_PROBE`, `reserved_action`, `interaction_target_args`) are private to it.
+    include!("../🔬️surface-view-state-routing/🦀️.rs");
 }

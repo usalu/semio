@@ -61,8 +61,8 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
 /// (`📓️runtime-verification-2026-09-09.md` boot #11 — "picker label changes; preview unchanged, no
 /// fault"). Arming from the gesture's own emit makes the restart a consequence of the switch, not of a
 /// host refresh (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn rearm_attached_previews(window_ids: &[&str]) -> Vec<semio_framework_plugin::Effect> {
-    window_ids.iter().map(|window_id| crate::editor::generation3d::commands::flow_eval_tick::rearm(window_id, 105)).collect()
+pub fn rearm_attached_previews(windows: &[(&str, &str)]) -> Vec<semio_framework_plugin::Effect> {
+    windows.iter().map(|(window_id, window_kind_id)| crate::editor::generation3d::commands::flow_eval_tick::rearm(window_id, window_kind_id, 105)).collect()
 }
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

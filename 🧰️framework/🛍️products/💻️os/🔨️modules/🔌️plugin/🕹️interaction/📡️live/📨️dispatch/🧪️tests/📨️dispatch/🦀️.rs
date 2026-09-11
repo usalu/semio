@@ -282,8 +282,14 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
     assert!(!lease.is_retired().unwrap());
     lease.begin_close(&runtime).unwrap();
     assert_eq!(lease.close_generation(), Some(1));
+    let worker = runtime.close_quarantine.borrow().get(7).expect("quarantined close worker").state.clone();
     drive_close_lease(&runtime, &lease);
     assert_eq!(lease.is_retired().unwrap(), fixture["nativeCases"]["quarantineRemovalPreservesTerminalWitness"].as_bool().unwrap());
+    {
+        let held = worker.pump.lock().expect("close worker pump");
+        assert_eq!(lease.is_retired().unwrap(), fixture["nativeCases"]["contendedWitnessStaysTerminal"].as_bool().unwrap(), "a terminal witness must not be retracted by a contended close worker pump");
+        drop(held);
+    }
     close_lease_app(&runtime).await;
     lease.begin_close(&runtime).unwrap();
     assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["repeatCloseKeepsReplacement"].as_bool().unwrap());
@@ -453,7 +459,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     let mut ephemeral = 0;
     for _ in 0..200_000 {
         if pending.is_empty() {
-            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime).await.unwrap();
+            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT).await.unwrap();
             if let Some((instance, batch)) = next {
                 assert_eq!(instance, 7);
                 for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }

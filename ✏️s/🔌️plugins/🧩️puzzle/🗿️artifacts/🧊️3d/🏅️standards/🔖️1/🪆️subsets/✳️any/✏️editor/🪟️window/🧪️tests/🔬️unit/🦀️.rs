@@ -16,7 +16,9 @@ use super::*;
         let shared = Puzzle3dConfig::default();
         let spr = dsl::json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(4));
+        // 🧮️ Four fill/distribution preferences plus `activeExampleId` (wave B26) — see the twin law in
+        // `✏️editor/🧪️tests/🔬️unit/🦀️.rs`.
+        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
         let pack = store::ArtifactPack::encode_pack(&shared);
         for forbidden in ["camera", "windowOptions", "engagementInput", "suggestionMenu", "fillCheckpoint", "fillApplyGeneration"] {
             assert!(!spr.contains(forbidden));

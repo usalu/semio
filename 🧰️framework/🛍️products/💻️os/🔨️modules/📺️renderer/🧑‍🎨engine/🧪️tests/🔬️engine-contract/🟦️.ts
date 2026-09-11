@@ -25,8 +25,8 @@ import {
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { resolveUiDirtyScope } from "@semio-tech/framework";
+import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope } from "@semio-tech/framework";
 import { hostArmedViewContext, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { openSurfaceContextMenu, uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
@@ -1610,7 +1610,9 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingUtilityV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -1777,6 +1779,11 @@ import {
   resolveUtilityNodes,
   resolveUtilities,
   panelTabDefinitionToNode,
+  panelAnchorForGroup,
+  SHELL_OWNED_PANEL_TAB_IDS,
+  shellLabel,
+  shellRendersPanelTabItself,
+  syncShellLabelLocale,
   uiIntentToActionDescriptor,
   actionStageKey,
   actionRequiresStagedForm,
@@ -1787,6 +1794,8 @@ import {
   gumballTransformDeltaBetweenPoses, world3dGumballSelectionArgsV1,
   world3dRelocateDragTargetV1,
   world3dRelocateDispatchArgsV1,
+  world3dVolumeBrushOriginV1,
+  world3dVolumeBrushCommits,
   gumballLivePreviewDeltaBetweenPoses,
   applyGumballLivePreviewDeltaToPose,
   WindowActionPane,
@@ -1875,7 +1884,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, pasteActionWithRetainedFragment, pasteArgsFragment } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, clipboardWriteFragmentFromEffect, pasteActionWithRetainedFragment, pasteArgsFragment, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -6947,6 +6956,52 @@ describe("s workflow flow routing", () => {
     expect(rendered.getByText("Draw")).toBeTruthy();
   });
 
+  // 🛍️ The catalogue row's OWN add gesture: `object_kind_item` (`📌️panels/🛍️catalogue/🦀️.rs`) authors an
+  // expandable `treeItem` — the kind's rim-vortex templates are its children — that ALSO binds
+  // `activate` to `addObjectKind` with its own `{objectKind}` args. Battery #48 measured
+  // `catalogue-add-object-kind before=1 after=1` while `catalogue-drag-drop` (a different route into the
+  // same command) passed, so the question this pins is whether a click on an EXPANDABLE authored row
+  // reaches the action channel at all, or is swallowed as a fold toggle.
+  it("fires an expandable catalogue row's own activate binding, args and all, instead of only folding it", () => {
+    const dispatched: ActionDescriptor[] = [];
+    const config = uiNodeToTreePanelConfig(
+      buildContractNode({
+        key: "puzzle3d-play-kinds",
+        component: { type: "tree", interactionDomain: null },
+        children: [
+          {
+            key: "puzzle3d-play-kinds.objects",
+            component: { type: "treeSection", label: "Objects", defaultOpen: true },
+            children: [
+              {
+                key: "Hexagonal Cut Concrete Forest Left",
+                component: { type: "treeItem", label: "Hexagonal Cut Concrete Forest Left", description: "Hexagonal Cut Concrete Forest Left", icon: "box", defaultOpen: false, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' }, dimmed: null, rowActions: [] },
+                bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "addObjectKind", version: 1 }, args: { objectKind: "Hexagonal Cut Concrete Forest Left" }, capability: null }],
+                children: [{ key: "puzzle3d-kind-vortex.0.b-l", component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] } }],
+              },
+            ],
+          },
+        ],
+      }),
+      (action) => dispatched.push(action),
+    );
+    const rendered = render(config.sections[0]?.items?.[0]?.control as ReactElement);
+    const row = rendered.container.querySelector("#panel\\:puzzle3d-play-kinds\\/Hexagonal\\ Cut\\ Concrete\\ Forest\\ Left");
+    expect(row).toBeTruthy();
+    // 🖱️ The row must announce its own activation in the DOM, so a red says WHICH hop broke rather than
+    // "nothing happened" — `data-activatable` is `Boolean(TreeDataItem.onClick)` reaching the shell.
+    expect(row?.getAttribute("data-activatable")).toBe("true");
+    const expected = { controllerId: "puzzle3d-play", action: "addObjectKind", args: { objectKind: "Hexagonal Cut Concrete Forest Left" } };
+    fireEvent.click(row as Element);
+    expect(dispatched).toEqual([expected]);
+    // 🏷️ And through the LABEL, which is what a real pointer lands on: a click on the row's text must
+    // reach the same action rather than being spent folding the group open.
+    const label = row?.querySelector('[data-slot="tree-label"]');
+    expect(label).toBeTruthy();
+    fireEvent.click(label as Element);
+    expect(dispatched).toEqual([expected, expected]);
+  });
+
   it("bridges semantic intent scope, version, args, and input into the plugin action channel", () => {
     const intent = { surface: "panel:settings", revision: 1, node: 7, nodeKey: "spacing", trigger: "change", action: { scope: "puzzle3d-play", name: "setSpacing", version: 1 }, args: { axis: "x", value: 1 }, input: { value: 2 }, seq: 1n } as UiIntent;
     expect(uiIntentToActionDescriptor(intent)).toEqual({ controllerId: "puzzle3d-play", action: "setSpacing", args: { axis: "x", value: 2 } });
@@ -7560,6 +7615,22 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
   });
 
+  it("Volume-Brush Alt+click reads the ground through the host, not an occludable canvas plane", () => {
+    // 🧊️ The commit predicate is the whole gesture contract: armed + Alt, nothing else. A plain press
+    // while the utility is armed must stay a marquee, and Alt while it is NOT armed must stay inert.
+    expect(world3dVolumeBrushCommits(true, true)).toBe(true);
+    expect(world3dVolumeBrushCommits(true, false)).toBe(false);
+    expect(world3dVolumeBrushCommits(false, true)).toBe(false);
+    // 🧊️ The origin is ALWAYS grid-snapped (the guest re-snaps by its own spacing), and a ray that
+    // misses the ground plane places nothing — which is also what keeps the ghost box off screen.
+    expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 1)).toEqual([1, -3, 0]);
+    expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 2)).toEqual([2, -2, 0]);
+    expect(world3dVolumeBrushOriginV1(null, 1)).toBeNull();
+    // 🧊️ One lattice for every ground gesture: a voxel placement and a catalogue drop at the same point
+    // must resolve to the same origin.
+    expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 1)).toEqual(snapWorldPointToGrid([1.4, -2.6, 0], true, 1));
+  });
+
   it("resolveWindowActions preserves every definition owned by the window", () => {
     const actionsApp = {
       controllerId: "draw",
@@ -7613,6 +7684,54 @@ describe("registry-derived utilities and activation (P5)", () => {
     const control = config.sections[0]?.items?.[0]?.control as ReactElement;
     const rendered = render(control);
     expect(rendered.getByText("Increment")).toBeTruthy();
+  });
+
+  it("anchors every declarable panel group on one of the four corners the dock fills from the session's own panel tabs", () => {
+    // 🧭️ `ShellHost`'s `defaultDock` reads `session.app.panelTabs` for all four corners. It used to read
+    // them for the two top corners only, so a `display`- or `settings`-group panel (puzzle3d's own settings
+    // section, with its grid-spacing/chunk-size/proximity/overlap steppers) was rendered by the guest,
+    // cached in `panelUiByKey`, and then dropped before any dock node existed — unreachable in every anchor.
+    expect(panelAnchorForGroup("workbench")).toBe("top-left");
+    expect(panelAnchorForGroup("document")).toBe("top-left");
+    expect(panelAnchorForGroup("details")).toBe("top-right");
+    expect(panelAnchorForGroup("display")).toBe("bottom-left");
+    expect(panelAnchorForGroup("settings")).toBe("bottom-right");
+    const dockFilledFromSession = new Set(["top-left", "top-right", "bottom-left", "bottom-right"]);
+    for (const group of ["workbench", "document", "details", "display", "settings", "unknown-group"]) {
+      expect(dockFilledFromSession.has(panelAnchorForGroup(group))).toBe(true);
+    }
+  });
+
+  it("never mounts an app-declared panel tab the shell already renders itself, so one anchor never carries two nodes with one id", () => {
+    // 🕰️ `framework.panel.history` is injected into EVERY app's `panelTabs` so the guest renders the history
+    // body, and `ShellHost` ALSO builds that tab host-side (`frameworkUtilitiesHistoryTab`). Filling
+    // bottom-right from `session.app.panelTabs` without this gate mounted both: two identically-named tab
+    // buttons, one DOM id, and the guest-rendered twin winning every `getElementById`, which renamed every
+    // command row to `panel:<key>/framework.history.entry.<seq>` and made the history rows unaddressable.
+    const panelTabs = [
+      { kind: { kind: "app" as const, id: "puzzle3d.panel.settings" }, group: "settings" as const },
+      { kind: { kind: "app" as const, id: "framework.panel.history" }, group: "settings" as const },
+    ];
+    const bottomRight = panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "bottom-right" && !shellRendersPanelTabItself(tab.kind.id));
+    expect(bottomRight.map((tab) => tab.kind.id)).toEqual(["puzzle3d.panel.settings"]);
+    expect(SHELL_OWNED_PANEL_TAB_IDS).toContain("framework.panel.history");
+    expect(shellRendersPanelTabItself("puzzle3d.panel.settings")).toBe(false);
+  });
+
+  it("moves every out-of-hook chrome label when the in-app language switch runs, and restores them on the way back", async () => {
+    // 🌐️ A shell owns TWO i18n ports: its `ShellScope` instance (what `useUiTranslation` resolves) and the
+    // shared module port (the only one a tree builder outside hook context can read). `ShellHost`'s locale
+    // effect used to move the scope instance alone, so picking Deutsch in `#framework.settings.language`
+    // relabelled the hook-rendered chrome and left every builder-produced name in English — measured live on
+    // :6013 as "Einstellungen"/"Vollbild"/"Remote: getrennt" beside "Settings"/"General"/"Hotkeys"/"History".
+    const keys = ["ui.panel.artifact", "ui.settings.tab.general", "ui.settings.tab.language"] as const;
+    const english = keys.map((key) => String(shellLabel(key)));
+    syncShellLabelLocale("de");
+    const german = keys.map((key) => String(shellLabel(key)));
+    expect(german).not.toEqual(english);
+    for (const [index, label] of german.entries()) expect(label).not.toBe(english[index]);
+    syncShellLabelLocale("en");
+    expect(keys.map((key) => String(shellLabel(key)))).toEqual(english);
   });
 });
 
@@ -7953,6 +8072,25 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(resolveBootExampleId("", [])).toBe("");
   });
 
+  // 🎨️ The REDO half of the navbar label, measured red on :6013 in wave B26: undo relabelled the picker
+  // (a popped `Set Active Example` row answers with the boot example, which needs no memory) and redo
+  // silently could not, because the only writer of the remembered id was `NavbarExampleSelect`'s own
+  // `onValueChange` — `navbar example from history {"navbarExample":"concrete-forest","remembered":""}`.
+  // Every dispatch of the verb now teaches the memory, so a row redone from anywhere relabels.
+  it("remembers the example id of every setActiveExample dispatch, so a redone row can relabel the picker", () => {
+    const remembered = rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "nakagin-capsule-tower" } }, "");
+    expect(remembered).toBe("nakagin-capsule-tower");
+    expect(rememberedExampleIdFromDispatchV1({ action: "setSpacing", args: { exampleId: "concrete-forest" } }, remembered)).toBe("nakagin-capsule-tower");
+    expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "" } }, remembered)).toBe("nakagin-capsule-tower");
+    expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID }, remembered)).toBe("nakagin-capsule-tower");
+    // ↩️ undo pops the row → the boot example; ↪️ redo makes it live again → exactly what was remembered.
+    const popped = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: false }];
+    const live = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: true }];
+    expect(navbarExampleIdFromHistoryUpserts(popped, remembered, "concrete-forest")).toBe("concrete-forest");
+    expect(navbarExampleIdFromHistoryUpserts(live, remembered, "concrete-forest")).toBe("nakagin-capsule-tower");
+    expect(navbarExampleIdFromHistoryUpserts(live, "", "concrete-forest")).toBeUndefined();
+  });
+
   it("navbar example id follows Set Active Example revertible, not chrome-only upserts", () => {
     expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", label: "Resize Window", revertible: false }], "nakagin", "forest")).toBeUndefined();
     expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: true }], "nakagin", "forest")).toBe("nakagin");
@@ -8021,8 +8159,180 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(carried.activeUtility).toBe("brush");
     expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, carried).activeUtility).toBe("brush");
     expect(leftoverOverlayCarryingUtilityV1(picked, null).activeUtility).toBeNull();
-    expect(leftoverOverlayCarryingUtilityV1({ ...picked, activeUtility: "select" }, armed).activeUtility).toBe("select");
-    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "brush" }, leftoverOverlayCarryingUtilityV1(picked, { ...armed, activeUtility: "select" })).activeUtility).toBe("select");
+    expect(leftoverOverlayArmedBrushUtilityV1("brush")).toBe(true);
+    expect(leftoverOverlayArmedBrushUtilityV1("volumeBrush")).toBe(true);
+    expect(leftoverOverlayArmedBrushUtilityV1("select")).toBe(false);
+    expect(leftoverOverlayCarryingUtilityV1({ ...picked, activeUtility: "select" }, armed).activeUtility).toBe("brush");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, leftoverOverlayCarryingUtilityV1({ ...picked, activeUtility: "select" }, armed)).activeUtility).toBe("brush");
+    expect(leftoverOverlayCarryingUtilityV1(picked, { ...armed, activeUtility: "select" }).activeUtility).toBe("select");
+  });
+
+  it("hover leftover select keeps an armed brush or volumeBrush", () => {
+    const hoverSelect = { ids: [] as const, hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null, activeUtility: "select" };
+    const brush = leftoverOverlayCarryingSelectionV1(hoverSelect, { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "brush" });
+    expect(brush.activeUtility).toBe("brush");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, brush).activeUtility).toBe("brush");
+    const volume = leftoverOverlayCarryingSelectionV1(hoverSelect, { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "volumeBrush" });
+    expect(volume.activeUtility).toBe("volumeBrush");
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, volume).activeUtility).toBe("volumeBrush");
+    const idle = leftoverOverlayCarryingSelectionV1(hoverSelect, { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select" });
+    expect(idle.activeUtility).toBe("select");
+    console.warn("[DEBUG] leftover hover select keeps armed brush", JSON.stringify({ brush: brush.activeUtility, volume: volume.activeUtility, idle: idle.activeUtility }));
+  });
+
+  it("every pane of one document names its OWN window surface, and publishes the selection it paints", async () => {
+    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json");
+    const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🟦️.tsx");
+    const { worldSurfaceSelectionDomV1, worldSurfaceGuestSelectionDomV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+
+    const identities = identity.panes.map((pane) => surfaceHostIdentityV1(pane.documentSurface, pane.recordKey, pane.recordId));
+    for (const [index, pane] of identity.panes.entries()) expect(identities[index], `pane ${pane.window}`).toEqual(pane.identity);
+    expect(new Set(identities.map((one) => one.surfaceId)).size, "two panes of one document must not share one surface identity").toBe(identity.panes.length);
+    expect(new Set(identity.panes.map((pane) => String(pane.recordId))).size, "the record id they used to be keyed on IS the same in both panes — that is the defect").toBe(1);
+    expect(surfaceHostIdentityV1(identity.keylessPane.documentSurface, identity.keylessPane.recordKey, identity.keylessPane.recordId)).toEqual({ ...identity.keylessPane.identity, paneId: undefined });
+
+    const publication = identity.selectionPublication;
+    const painted = mergeWorldSelectionWithLeftoverV1(publication.guestSelectionJson as never, publication.leftoverOverlay as never, []);
+    const interaction = mergeWorldInteractionWithLeftoverV1(publication.guestInteractionJson as never, publication.leftoverOverlay as never);
+    expect(worldSurfaceSelectionDomV1(painted, interaction)).toEqual(publication.published);
+
+    const objectHover = publication.objectHoverPublished;
+    const objectPainted = mergeWorldSelectionWithLeftoverV1(publication.guestSelectionJson as never, objectHover.leftoverOverlay as never, []);
+    const objectInteraction = mergeWorldInteractionWithLeftoverV1(publication.guestInteractionJson as never, objectHover.leftoverOverlay as never);
+    const objectDom = worldSurfaceSelectionDomV1(objectPainted, objectInteraction);
+    expect(objectDom.hoverTarget).toEqual(objectHover.hoverTarget);
+    expect(objectDom.hoveredVortexFullId).toBe(objectHover.hoveredVortexFullId);
+    expect(objectDom.activeUtility).toBe(objectHover.activeUtility);
+    const guestPublished = worldSurfaceGuestSelectionDomV1(JSON.stringify(publication.guestSelectionJson));
+    const { why: _guestWhy, ...guestExpected } = publication.guestPublished;
+    expect(guestPublished, "the guest's own lane must be published UNMERGED, or a guest that lost the pick reads identically to one that kept it").toEqual(guestExpected);
+    expect(guestPublished.selectedIds, "this fixture's guest sent nothing").toEqual([]);
+    expect(publication.published.selectedIds, "while the pane paints the leftover pick — the two attributes are the discriminator").toEqual(["seed-left-001"]);
+    const carried = publication.guestCarriedPick;
+    const { why: _carriedWhy, ...carriedExpected } = { why: carried.why, ...carried.guestPublished };
+    expect(worldSurfaceGuestSelectionDomV1(JSON.stringify(carried.guestSelectionJson)), "a guest that KEPT the pick must say so on its own lane").toEqual(carriedExpected);
+    console.warn("[DEBUG] world surface identity", JSON.stringify({ identities, published: worldSurfaceSelectionDomV1(painted, interaction), guestPublished }));
+  });
+
+  it("leftover fill tool overlays guest select so fillBuildTick still arms", () => {
+    const leftover = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: "fill" };
+    expect(leftoverOverlayArmedUtilityV1(leftover)).toBe("fill");
+    expect(leftoverWorldOverlayAppliesV1(leftover)).toBe(true);
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, leftover).activeUtility).toBe("fill");
+    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }, leftover.activeToolId)).toBe(true);
+    const hoverOnly = { ids: [] as const, hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null };
+    const carried = leftoverOverlayCarryingUtilityV1(hoverOnly, leftover);
+    expect(carried.activeToolId).toBe("fill");
+    expect(leftoverOverlayArmedUtilityV1(carried)).toBe("fill");
+    expect(worldFillBuildShouldTick(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, carried).activeUtility, { done: true, count: 0 }, carried.activeToolId)).toBe(true);
+    console.warn("[DEBUG] leftover fill tool hop", JSON.stringify({ armed: leftoverOverlayArmedUtilityV1(leftover), carriedTool: carried.activeToolId }));
+  });
+
+  it("first leftover pick keeps selection across hover leftover and busts the Inspection hash skip", () => {
+    const hoverOnly = { ids: [] as const, hoveredId: "seed-left-001", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null };
+    const priorPick = { ids: ["seed-left-001"], hoveredId: null, gumballActive: true, gumballAnchorId: "seed-left-001" };
+    const carried = leftoverOverlayCarryingSelectionV1(hoverOnly, priorPick);
+    expect(carried.ids).toEqual(["seed-left-001"]);
+    const emptyNoHover = leftoverOverlayCarryingSelectionV1({ ids: [] as const, hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, priorPick);
+    expect(emptyNoHover.ids).toEqual(["seed-left-001"]);
+    expect(leftoverTreeItemSelectedV1("seed-left-001", carried.ids)).toBe(true);
+    expect(leftoverTreeItemSelectedV1("surface/seed-left-001", carried.ids)).toBe(true);
+    expect(leftoverTreeItemSelectedV1("other", carried.ids)).toBe(false);
+    const idsOnly = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: ["seed-left-001"],
+        hoverTarget: null,
+        locked: {},
+        gumball: { active: true, anchorId: "seed-left-001" },
+        selection: {},
+        hover: {},
+        activeMode: { vortex: "single" },
+        activeGranularity: { vortex: "object" },
+      },
+    });
+    expect(leftoverInteractionStateV1(idsOnly!).selection.vortex?.ids).toEqual(["seed-left-001"]);
+    const emptyVortex = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: ["seed-left-001"],
+        hoverTarget: null,
+        locked: {},
+        gumball: { active: true, anchorId: "seed-left-001" },
+        selection: { vortex: { granularity: "object", ids: [] } },
+        hover: {},
+        activeMode: { vortex: "single" },
+        activeGranularity: { vortex: "object" },
+      },
+    });
+    expect(leftoverInteractionStateV1(emptyVortex!).selection.vortex?.ids).toEqual(["seed-left-001"]);
+    expect(leftoverInspectionRefreshScope(["seed-left-001"])).toEqual({ kind: "full" });
+    expect(leftoverInspectionPanelHash(["seed-left-001"], "abc")).toBeUndefined();
+    expect(leftoverInspectionPanelHash([], "abc")).toBe("abc");
+    expect(uiRefreshSectionUnchanged(leftoverInspectionPanelHash(["seed-left-001"], "abc"), { root: 0, hash: "abc" })).toBe(false);
+    expect(uiRefreshSectionUnchanged("abc", { root: 0, hash: "abc" })).toBe(true);
+    console.warn("[DEBUG] leftover first-pick Inspection hash bust", JSON.stringify({ selectedIds: carried.ids, omitHash: leftoverInspectionPanelHash(carried.ids, "abc") === undefined }));
+  });
+
+  it("empty-target interactionSelect leftover selectedIds names the hovered object; hover leftover does not invent a pick", () => {
+    const emptyWhileHover = leftoverSelectIdsMustNameHoverPickV1([], "seed-left-001");
+    expect(emptyWhileHover).toBe(false);
+    const published = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: ["seed-left-001"],
+        hoverTarget: { id: "seed-left-001", domain: "vortex", channel: "pointer" },
+        locked: {},
+        gumball: { active: true, anchorId: "seed-left-001" },
+        selection: {},
+        hover: {},
+        activeMode: { vortex: "single" },
+        activeGranularity: { vortex: "object" },
+      },
+    });
+    expect(published?.selectedIds).toEqual(["seed-left-001"]);
+    expect(published?.hoverTarget?.id).toBe("seed-left-001");
+    expect(leftoverSelectIdsMustNameHoverPickV1(published?.selectedIds, published?.hoverTarget?.id)).toBe(true);
+    const hoverOnly = leftoverOverlayCarryingSelectionV1({ ids: [] as const, hoveredId: "seed-left-001", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null }, null);
+    expect(hoverOnly.ids).toEqual([]);
+    expect(leftoverSelectIdsMustNameHoverPickV1(hoverOnly.ids, hoverOnly.hoveredId)).toBe(false);
+    console.warn("[DEBUG] leftover empty-target select ids", JSON.stringify({ selectedIds: published?.selectedIds, hoverId: published?.hoverTarget?.id, hoverOnlyIds: hoverOnly.ids }));
+  });
+
+  it("dirties the whole shell when a direct browser-actor dispatch applied a mutation", () => {
+    // 🖼️ Wave B9 lane 4: the actor handoff answers `{outcome, mutationCount}` and carries no
+    // `UiDirtyScope`, and the verbs that commit inline on it (`paste`, `undo`, a gumball commit) publish
+    // no `OperationCompleted` frame either — so an applied mutation must dirty the shell on the strength
+    // of `mutationCount` alone, or the world lane repaints only when some later action happens to.
+    expect(browserActorDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 1 })).toEqual({ kind: "full" });
+    expect(browserActorDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 7 })).toEqual({ kind: "full" });
+    expect(browserActorDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 })).toEqual({ kind: "none" });
+    expect(browserActorDispatchUiScopeV1({ outcome: "rejected", mutationCount: 3 })).toEqual({ kind: "none" });
+    expect(browserActorWindowConfigDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 }, "setGridVisible")).toEqual({ kind: "full" });
+    expect(browserActorWindowConfigDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 }, "setGridSpacing")).toEqual({ kind: "full" });
+    expect(browserActorWindowConfigDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 }, "setVortexShow")).toEqual({ kind: "full" });
+    expect(browserActorWindowConfigDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 }, "worldPointerDown")).toEqual({ kind: "none" });
+    expect(browserActorWindowConfigDispatchUiScopeV1({ outcome: "rejected", mutationCount: 0 }, "setGridVisible")).toEqual({ kind: "none" });
+  });
+
+  it("refreshes a typed operation on its completion's own scope and pays nothing for a completion that dirtied nothing", () => {
+    // 🏁️ Wave B27 §2. Every typed operation is merely ADMITTED on the reply that carries `mutationCount`
+    // — its edit publishes and logs on later continuations — so `browserActorDispatchUiScopeV1` above
+    // answers `none` for all of them and the refresh has to follow the COMPLETION frame instead. What the
+    // completion carries is the mutation's own scope, verbatim; a history patch with an empty scope still
+    // owes the reserved history body its row (wave B21 put the patch on the terminal completion).
+    const admission = browserActorDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 });
+    expect(admission).toEqual({ kind: "none" });
+    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.document", "puzzle.3d.play.inspector"], measures: true } as const;
+    expect(typedOperationCompletionRefreshV1({ uiScope: documentScope, historyPatch: { cursor: 3, upserts: [{ seq: 3 }] }, requestedEffects: [] })).toEqual(documentScope);
+    expect(typedOperationCompletionRefreshV1({ uiScope: undefined, historyPatch: undefined, requestedEffects: [] })).toEqual({ kind: "full" });
+    expect(typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: { cursor: 4, upserts: [{ seq: 4 }] }, requestedEffects: [] })).toEqual({
+      kind: "partial",
+      panelBodies: [FRAMEWORK_HISTORY_BODY_KEY],
+    });
+    // 🫥️ …and the other half: a retained operation completes on every drain poll, measured live on the
+    // puzzle 3d shell at 18 completions per idle 10 s, 12 of them empty. Those owe NO pass — paying for
+    // them is a refresh storm on View-kind completions. An effect still buys the effect pass, with a
+    // `none` scope so nothing is re-taken for it.
+    expect(typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: undefined, requestedEffects: [] })).toBeNull();
+    expect(typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: undefined, requestedEffects: ["requestSync"] })).toEqual({ kind: "none" });
   });
 
   it("retains last brush preview JSON for the leftover hover after a guest no-target wipe", () => {
@@ -9033,6 +9343,8 @@ import {
   puzzle3dBrushMeshDigest,
   Puzzle3dBrushMeshRegistry,
   puzzle3dBrushMeshPages,
+  puzzle3dBrushMeshQueueStep,
+  drainPuzzle3dBrushMeshQueue,
 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import brushMeshUploadFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🥽️brush-mesh-upload/🔣️.json";
 
@@ -9146,6 +9458,108 @@ describe("puzzle3d brush mesh paged upload", () => {
     registry.clear();
     expect(registry.residency).toBe(-1);
     expect(registry.size).toBe(0);
+  });
+
+  // 🪢️ Wave B22: the transfer is content-addressed. Every `dist/mesh/*.glb` in this repo is the same
+  // 771 728-byte capsule, so a scene placing several object kinds paged byte-identical geometry once per
+  // mesh id — browser-measured 2026-09-12 on wasm #47 as 202 `registerBrushMesh` commands for one example
+  // switch. A digest already resident under ANY id is announced instead, and the guest aliases its own
+  // derived page onto the new id (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`).
+  it("knows a digest this guest holds under another id, so the bytes cross once per geometry", () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const registry = new Puzzle3dBrushMeshRegistry();
+    expect(registry.holdsDigest(digest)).toBe(false);
+    expect(registry.holdsDigest("")).toBe(false);
+    registry.confirm("/test/capsule-a.glb", digest);
+    expect(registry.holdsDigest(digest)).toBe(true);
+    expect(registry.holds("/test/capsule-b.glb", digest)).toBe(false);
+    registry.alias("/test/capsule-b.glb", digest);
+    expect(registry.holds("/test/capsule-b.glb", digest)).toBe(true);
+    registry.forget("/test/capsule-a.glb");
+    expect(registry.holdsDigest(digest)).toBe(false);
+  });
+
+  // 🪢️ An alias is a claim about a SIBLING's bytes, never proof of its own, and a guest that refuses one
+  // must be handed the bytes next time. Without both halves an id whose alias was refused would be
+  // re-announced by digest forever — the guest asks for the bytes, the host answers with the same alias —
+  // and the brush utility would keep no collision body for it at all.
+  it("never re-aliases an identity the guest refused, and never chains one alias off another", () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const registry = new Puzzle3dBrushMeshRegistry();
+    registry.observeResidency(7);
+    registry.alias("/test/alias-only.glb", digest);
+    expect(registry.holdsDigest(digest)).toBe(false);
+    registry.confirm("/test/paged.glb", digest);
+    expect(registry.holdsDigest(digest)).toBe(true);
+    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
+    expect(registry.claimReupload("/test/alias-only.glb", 7)).toBe(true);
+    expect(registry.mayAlias("/test/alias-only.glb")).toBe(false);
+    expect(registry.holds("/test/alias-only.glb", digest)).toBe(false);
+    registry.confirm("/test/alias-only.glb", digest);
+    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
+    expect(registry.observeResidency(0)).toBe(true);
+    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
+  });
+
+  it("collapses a queued run whose geometry a sibling id already put into the guest", () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const queue = [
+      ...puzzle3dBrushMeshPages("/test/queue-a.glb", "world-3d", example.positions, example.indices),
+      ...puzzle3dBrushMeshPages("/test/queue-b.glb", "world-3d", example.positions, example.indices),
+    ];
+    const first = puzzle3dBrushMeshQueueStep(queue, () => false);
+    expect(first.kind).toBe("page");
+    const resident = puzzle3dBrushMeshQueueStep(queue, (page) => page.digest === digest);
+    expect(resident).toEqual({ kind: "adopt", url: "/test/queue-b.glb", digest });
+    expect(queue).toHaveLength(0);
+    expect(puzzle3dBrushMeshQueueStep(queue, () => false)).toEqual({ kind: "idle" });
+  });
+
+  // ⏳️ Wave B22: the run is back-pressured, so exactly ONE command is outstanding at a time. The macrotask
+  // drain it replaces queued every page of every mesh into the actor's one command queue inside a couple
+  // of hundred milliseconds — browser-measured 2026-09-12, 202 pages enqueued in 21 s, 40 settled over the
+  // next 420 s, and one user click that landed mid-run waited 44.3 s behind 15 pages.
+  it("keeps exactly one mesh command outstanding and confirms only on a run's last page", async () => {
+    const example = brushMeshUploadFixture.example;
+    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
+    const positions = Array.from({ length: 4_096 }, (_, index) => example.positions[index % example.positions.length]!);
+    const indices = Array.from({ length: 4_096 }, (_, index) => example.indices[index % example.indices.length]!);
+    const queue = [...puzzle3dBrushMeshPages("/test/backpressure.glb", "world-3d", positions, indices)];
+    expect(queue.length).toBeGreaterThan(4);
+    const confirmed: string[] = [];
+    const registry = { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: (url: string, held: string) => confirmed.push(`${url}@${held}`) };
+    let inFlight = 0;
+    let peak = 0;
+    let dispatched = 0;
+    const pending = queue.length;
+    await drainPuzzle3dBrushMeshQueue(
+      queue,
+      registry,
+      async () => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        dispatched += 1;
+        await Promise.resolve();
+        inFlight -= 1;
+      },
+      () => true,
+    );
+    expect(peak).toBe(1);
+    expect(dispatched).toBe(pending);
+    expect(confirmed).toEqual([`/test/backpressure.glb@${puzzle3dBrushMeshDigest(positions, indices)}`]);
+    expect(digest).not.toBe(puzzle3dBrushMeshDigest(positions, indices));
+  });
+
+  it("retires the drain without dispatching once the surface it belongs to is gone", async () => {
+    const example = brushMeshUploadFixture.example;
+    const queue = [...puzzle3dBrushMeshPages("/test/unmounted.glb", "world-3d", example.positions, example.indices)];
+    let dispatched = 0;
+    await drainPuzzle3dBrushMeshQueue(queue, { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: () => {} }, async () => { dispatched += 1; }, () => false);
+    expect(dispatched).toBe(0);
+    expect(queue.length).toBeGreaterThan(0);
   });
 });
 //#endregion 🥽️Puzzle3dBrushMeshUpload
@@ -9350,6 +9764,24 @@ describe("built-node store reloads", () => {
     }
   });
 
+  it("forceReload queues loadSnapshot even when the node identity did not change", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const first = contractNode("first");
+    const store = cache.storeFor("window:puzzle3d-main-perspective", first);
+    const textOf = () => (store.getNodeSnapshot(store.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    const patched = contractNode("preview");
+    cache.forceReload("window:puzzle3d-main-perspective", patched);
+    expect(cache.pendingReloadKeys()).toEqual(["window:puzzle3d-main-perspective"]);
+    expect(textOf()).toBe("first");
+    cache.flushPendingReloads();
+    expect(textOf()).toBe("preview");
+    cache.forceReload("window:puzzle3d-main-perspective", patched);
+    expect(cache.pendingReloadKeys()).toEqual(["window:puzzle3d-main-perspective"]);
+    cache.flushPendingReloads();
+    expect(textOf()).toBe("preview");
+  });
+
   it("never updates a subscribed UiNodeView while another component renders", () => {
     const messages: string[] = [];
     const consoleError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => { messages.push(args.map(String).join(" ")); });
@@ -9390,6 +9822,17 @@ test("world3d rectangle marquee draws a rectangle and pick draws nothing", () =>
   expect(world3dMarqueeOverlayShape("rectangle")).toBe("rect");
   expect(world3dMarqueeOverlayShape("lasso")).toBe("polygon");
   expect(world3dMarqueeOverlayShape("pick")).toBeNull();
+});
+
+test("InterpretedUiNode hands every surface host the shell's plugin context-menu resolver", () => {
+  // 🖱️ No `<InterpretedUiNode>` call site passes `requestContextMenu` as a prop — ShellHost publishes it
+  // through `PluginSurfaceActionsContext` instead — so until wave B11 every `ComponentSceneHost` saw
+  // `undefined` and `openSurfaceContextMenu` was unreachable in the React renderer: a right-click on a
+  // world/board/canvas surface could only ever produce ShellHost's window-level fallback menu. This is a
+  // source law because the wiring is one `??` that no render test would notice going missing again.
+  const body = String((InterpretedUiNode as unknown as { readonly type: (...args: never[]) => unknown }).type);
+  expect(body).toContain("usePluginSurfaceActions");
+  expect(body).toMatch(/requestContextMenu:\s*requestContextMenu\s*\?\?/);
 });
 
 test("openSurfaceContextMenu keeps an empty plugin answer off the shell fallback", async () => {

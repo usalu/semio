@@ -30,7 +30,7 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 }
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
@@ -1726,7 +1726,101 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           globalThis.fetch = previous.fetch;
         }
       });
-  
+
+      /** ⚖️ LAW: one 8 KiB command costs the host EXACTLY its page count plus the continuations the
+       * guest itself asked for — the host contributes no round trip of its own.
+       *
+       * 🥽️ Ticket 26/09/02 wave B22 §1.3 measured **84.2 worker round trips per `registerBrushMesh`**
+       * (842 posts over 10 consecutive mesh-only settles) and wave B24 attributed every one of them to
+       * the guest: `plugin_exchange` answered `Pending` after each ingress move, and
+       * `plugin_continue_typed_operations` advanced exactly one publication unit per call. This law
+       * pins the OTHER half — that `runQueuedTurn` never polls while the guest is busy, never re-sends
+       * an accepted page, and never issues a refresh per continuation — so the census stays readable as
+       * `pages + guestContinuations` and a host-side regression cannot hide inside the guest's number.
+       * Its native twins are `a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page` and
+       * the continuation bound in `retained_operation_continues_after_command_admission_until_
+       * publication_and_retirement`. */
+      it("spends one worker turn per command page plus the guest's own continuations and none of its own", async () => {
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const COMMAND_BYTES = 8_192;
+        const invocation = { address: { pluginId: "ingress-census", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
+        const census: Array<{ readonly guestContinuations: number; readonly bytes: number; readonly pages: number; readonly turns: number }> = [];
+        for (const guestContinuations of [0, 1, 4]) {
+          const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+          const plain = { uiPatches: [], effects: [], nextWake: null };
+          const more = { ...plain, status: { tag: "more-work" } };
+          const idle = { ...plain, status: { tag: "idle" } };
+          const kinds: string[] = [];
+          let counting = false;
+          let bytes = 0;
+          let declared = 0;
+          let remaining = guestContinuations;
+          let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+          const worker: ShardWorkerLike = {
+            onmessage: null, onerror: null, terminate() {},
+            postMessage(raw) {
+              const message = raw as { readonly kind: string; readonly requestId?: string; readonly events?: readonly ShardEventEnvelope[]; readonly commandPage?: { readonly cursor: { readonly pageIndex: number; readonly pageCount: number }; readonly bytes: Uint8Array } };
+              if (!message.requestId) return;
+              let value: unknown = idle;
+              if (message.kind === "turn") {
+                const first = message.events?.[0];
+                if (first?.kind === "instance-open") {
+                  const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+                  lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: 1n };
+                  value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured", lifetime, requestSequence: payload.requestSequence }) };
+                } else if (first?.kind === "instance-close") {
+                  value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: (first.payload as { readonly requestSequence: number }).requestSequence, closeGeneration: 1n }) };
+                } else if (first?.kind === "instance-lifecycle-ack") {
+                  const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+                  value = receipt.kind === "accepted" ? { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration: 1n }) } : idle;
+                } else if (message.commandPage) {
+                  const cursor = message.commandPage.cursor;
+                  if (counting) {
+                    kinds.push(`command-page#${cursor.pageIndex}`);
+                    bytes += message.commandPage.bytes.length;
+                    declared = cursor.pageCount;
+                  }
+                  value = cursor.pageIndex + 1 === cursor.pageCount
+                    ? { ...(remaining > 0 ? more : idle), commandIngress: { tag: "command-complete", val: {} } }
+                    : { ...more, commandIngress: { tag: "page-accepted", val: {} } };
+                } else if (counting) {
+                  kinds.push("settle-continuation");
+                  remaining -= 1;
+                  value = remaining > 0 ? more : idle;
+                }
+              }
+              queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
+            },
+          };
+          const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+          testState.sharedShardClient = client;
+          testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
+          globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "ingress-census", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+          let handle: PluginWasmHandle | null = null;
+          try {
+            handle = await loadPluginModule("ingress-census", "https://fixture.invalid/plugin.js");
+            const instance = await handle.createApp("fixture");
+            counting = true;
+            await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { windowInstances: [] } as never);
+            counting = false;
+            expect(bytes).toBeGreaterThan(COMMAND_BYTES - 1_024);
+            expect(bytes).toBeLessThanOrEqual(COMMAND_BYTES);
+            expect(declared).toBe(2);
+            expect(kinds).toEqual([...Array.from({ length: declared }, (_, page) => `command-page#${page}`), ...Array.from({ length: guestContinuations }, () => "settle-continuation")]);
+            census.push({ guestContinuations, bytes, pages: declared, turns: kinds.length });
+          } finally {
+            try { await handle?.dispose(); } finally {
+              client.disposeAll();
+              testState.sharedActivationRegistry = previous.registry;
+              testState.sharedShardClient = previous.shard;
+              globalThis.fetch = previous.fetch;
+            }
+          }
+        }
+        for (const row of census) expect(row.turns).toBe(row.pages + row.guestContinuations);
+        console.info("[DEBUG] command ingress census: %s", census.map((row) => `${row.bytes}B/${row.pages}p +${row.guestContinuations}cont → ${row.turns} worker turns`).join(" | "));
+      });
+
 
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
@@ -2082,7 +2176,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         )).rejects.toThrow(`missing=${JSON.stringify(missing)}`);
       });
   
-      it("does not spin the continuation budget when drain-operations has an empty required set and no acknowledgements", async () => {
+      /** 😴️ Wave W-B14 (ticket 26/09/02): a settle with nothing required used to stop at the FIRST
+       * acknowledgement-free continuation, which ended the turn of a mutation whose typed operation
+       * was still in flight. An actor that says `more-work` is quiesced FOR THIS TURN only once it
+       * has published, acknowledged and emitted nothing for a whole continuation batch — and that is
+       * a quiet return, not the stall fault, because nothing was requested of it. */
+      it("treats an actor answering more-work with nothing to publish as quiesced only after a whole silent batch", async () => {
         let continuationCount = 0;
         await withFakeShardClient(
           async () => {
@@ -2098,10 +2197,75 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               undefined,
               true,
             );
-            expect(continuationCount).toBeLessThan(8);
+            expect(continuationCount).toBe(PLUGIN_UI_QUIESCENT_CONTINUATIONS);
+            expect(PLUGIN_UI_QUIESCENT_CONTINUATIONS).toBe(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT);
             expect(result.uiPatches).toHaveLength(0);
           },
         );
+      });
+
+      /** 📄️ The drop W-B14 fixes: `addObjectKind`/`addTargetVolume` reached the guest and settled with
+       * `frameKinds:["Invocation","Ephemeral"]` and `historyUpserts:0` — the mutation's own frame is
+       * emitted several acknowledgement-free continuations after the command itself completed, and the
+       * old stop ended the turn before it, so the publication was dropped. */
+      it("collects a mutation frame emitted several acknowledgement-free continuations after the command completed", async () => {
+        const documentEffect = { tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload: [1, 2, 3] } };
+        let continuationCount = 0;
+        await withFakeShardClient(
+          async () => {
+            continuationCount += 1;
+            const publishing = continuationCount === PLUGIN_UI_QUIESCENT_CONTINUATIONS;
+            return { uiPatches: [], effects: publishing ? [documentEffect] : [], nextWake: null, status: { tag: publishing ? "idle" : "more-work" } };
+          },
+          async () => {
+            const result = await settlePluginTurn(
+              "mutation-publication#1",
+              { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+              "Interactive",
+              new Set(),
+              undefined,
+              true,
+            );
+            expect(continuationCount).toBe(PLUGIN_UI_QUIESCENT_CONTINUATIONS);
+            expect(result.effects).toEqual([documentEffect]);
+          },
+        );
+      });
+
+      /** 🔇️ A settle is silent while it works: its former per-continuation `console.warn` charged
+       * 108–244 ms of main thread per example switch (`📓️2026-09-11-wave-B4-main-thread-refresh.md`
+       * §5.2, 2 505–6 624 lines). Diagnosis belongs to the faults, which name the actor, the pending
+       * surfaces and the bound they hit. */
+      it("prints no console warning while a healthy actor settles its continuations", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        try {
+          let continuationCount = 0;
+          await withFakeShardClient(
+            async () => {
+              continuationCount += 1;
+              const done = continuationCount === 3;
+              return {
+                uiPatches: [{ surface: pluginSurfaceRef(7, "quiet"), revision: continuationCount, baseRevision: continuationCount - 1, ops: [] }],
+                effects: [], nextWake: null, status: { tag: done ? "idle" : "more-work" },
+              };
+            },
+            async () => {
+              const result = await settlePluginTurn(
+                "quiet-settle#1",
+                { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+                "Interactive",
+                new Set(),
+                undefined,
+                true,
+              );
+              expect(continuationCount).toBe(3);
+              expect(result.uiPatches).toHaveLength(3);
+            },
+          );
+          expect(warn).not.toHaveBeenCalled();
+        } finally {
+          warn.mockRestore();
+        }
       });
 
       /** 🛑️ Wave W-B2 (ticket 26/09/02): a guest that answers `more-work` while publishing,
@@ -2655,6 +2819,31 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     expect(decoded.code).toBe("extension.missing");
     expect(decoded.message).toBe("no such extension");
     console.info("[DEBUG] completion-result.fault pack recovers code and message");
+  });
+
+
+  describe("leftover brushPreview hash-bust", () => {
+    it("omits the cached world-body hash when leftover brush hover is a vortex", async () => {
+      const { leftoverBrushPreviewWindowHash, leftoverBrushPreviewRefreshScope, leftoverBrushPreviewRefreshReady } = await import("../../🧱️elements/🔌️PluginRuntime/🟦️.tsx");
+      expect(leftoverBrushPreviewWindowHash("brush", "seed-left-001:v0", "abc")).toBeUndefined();
+      expect(leftoverBrushPreviewWindowHash("select", "seed-left-001:v0", "abc")).toBe("abc");
+      expect(leftoverBrushPreviewWindowHash("brush", null, "abc")).toBe("abc");
+      expect(leftoverBrushPreviewRefreshScope("brush", "seed-left-001:v0")).toEqual({ kind: "full" });
+      expect(leftoverBrushPreviewRefreshScope("select", "seed-left-001:v0")).toBeNull();
+      expect(leftoverBrushPreviewRefreshReady("interactionHover", "brush", "seed-left-001:v0")).toBe(false);
+      expect(leftoverBrushPreviewRefreshReady("suggestionsTick", "brush", "seed-left-001:v0")).toBe(true);
+      expect(leftoverBrushPreviewRefreshReady("interactionHover", "brush", "seed-left-001:v0", '{"targetVortexFullId":"seed-left-001:v0"}')).toBe(true);
+    });
+  });
+
+  describe("leftover brush guest hover retain", () => {
+    it("keeps the leftover vortex id on an armed brush window", async () => {
+      const { leftoverBrushRetainGuestHoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+      const leftover = { ids: [], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
+      expect(leftoverBrushRetainGuestHoverV1("brush", leftover)).toBe("seed-left-001:v0");
+      expect(leftoverBrushRetainGuestHoverV1("select", leftover)).toBeUndefined();
+      expect(leftoverBrushRetainGuestHoverV1("brush", { ...leftover, hoveredId: null })).toBeUndefined();
+    });
   });
 
 }

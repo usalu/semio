@@ -9303,6 +9303,20 @@ pub mod app {
             self.state.selection.get(domain).unwrap_or_else(|| empty_domain_selection())
         }
 
+        /// 🕹️ Leftover.ids for Inspection: flatten every domain's selected ids. A pick can land on leftover
+        /// `selectedIds` while `selection(vortex)` is still the empty persist snapshot.
+        pub fn leftover_selected_ids(&self) -> Vec<String> {
+            let mut ids = Vec::new();
+            for selection in self.state.selection.values() {
+                for id in &selection.ids {
+                    if !ids.iter().any(|existing| existing == id) {
+                        ids.push(id.clone());
+                    }
+                }
+            }
+            ids
+        }
+
         /// 🐁️ `domain`'s current hover on `channel` — empty when nothing is hovered on that channel
         /// right now. `InteractionState.hover` holds exactly one live channel per domain at a time (the
         /// most recently hovered — see `next_hover`'s doc), so a `channel` mismatch also reads empty
@@ -9878,6 +9892,12 @@ pub mod app {
     /// Commands children are a `UI_BUILT_CHILDREN_MAX`-ary tree over the live filtered command-row
     /// count. One `BuiltChildren` page cannot grow with the session log; paging from that count is
     /// the admission bound (a bumped ceiling aborted publishes at `history-panel.commands`).
+    ///
+    /// 🎟️ Wave B9: rendered command rows are also capped at [`HISTORY_COMMAND_ROWS`] (the inspector
+    /// `IDS_ROWS` page) so a long battery cannot exhaust `UiText`/`UiValue` alias credits. Older rows
+    /// stay in the log and remain reachable through undo and `revertToCommand`.
+    pub const HISTORY_COMMAND_ROWS: usize = 16;
+
     fn page_history_command_nodes(nodes: Vec<BuiltNode>) -> UiAssemblyResult<Vec<BuiltNode>> {
         let mut level = nodes;
         let mut generation = 0usize;
@@ -9898,7 +9918,7 @@ pub mod app {
         Ok(level)
     }
 
-    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiAssemblyResult<BuiltNode> {
+    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool, command_page: u32) -> UiAssemblyResult<BuiltNode> {
         let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
             let label = if is_de { label_de } else { label_en };
             let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
@@ -9934,8 +9954,14 @@ pub mod app {
             HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
             HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
         }).collect();
-        let mut command_nodes = Vec::with_capacity(command_rows.len());
-        for entry in command_rows {
+        let max_page = if command_rows.is_empty() { 0 } else { (command_rows.len() - 1) / HISTORY_COMMAND_ROWS };
+        let page = (command_page as usize).min(max_page);
+        let start = page * HISTORY_COMMAND_ROWS;
+        let visible = if start >= command_rows.len() { &command_rows[..] } else { &command_rows[start..command_rows.len().min(start + HISTORY_COMMAND_ROWS)] };
+        let omitted = command_rows.len().saturating_sub(start + visible.len());
+        let mut revert_budget = PanelRowBudget::new(HISTORY_COMMAND_ROWS.min(panel_page_rows()));
+        let mut command_nodes = Vec::with_capacity(visible.len() + usize::from(omitted > 0));
+        for entry in visible {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
             let label =
                 if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
@@ -9949,7 +9975,7 @@ pub mod app {
             if entry.edit_id.is_some() && !entry.applied {
                 builder = builder.dimmed(true);
             }
-            if entry.revertible && !read_only {
+            if entry.revertible && !read_only && revert_budget.spend() {
                 let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.row-action-args"))?;
                 args.push("entrySeq".to_owned(), UiValue::Number(entry.seq as f64)).map_err(|_| ui_assembly_error("history-panel.row-action-args"))?;
                 let row_action = RowAction {
@@ -9966,6 +9992,27 @@ pub mod app {
                 builder = builder.try_row_action(row_action).map_err(|_| ui_assembly_error("history-panel.row-actions"))?;
             }
             command_nodes.push(builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))?);
+        }
+        if omitted > 0 {
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.more-args"))?;
+            args.push("page".to_owned(), UiValue::Number(f64::from((page as u32) + 1))).map_err(|_| ui_assembly_error("history-panel.more-args"))?;
+            args.push("value".to_owned(), UiValue::Text(ui_text(filter_value, "history-panel.more-filter")?)).map_err(|_| ui_assembly_error("history-panel.more-args"))?;
+            let more_action = RowAction {
+                icon: ui_text(IconName::ArrowDown.as_str(), "history-panel.more-icon")?,
+                label: Some(ui_label(if is_de { "Weiter" } else { "More" }, "history-panel.more-label")?),
+                action: ActionBinding {
+                    trigger: Trigger::Activate,
+                    action: ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.more-action"))?,
+                    args: Some(UiValue::Map(args.finish())),
+                    capability: None,
+                },
+                placement: RowActionPlacement::Menu,
+            };
+            let more_label = UiText::clipped(&format!("+{omitted}"));
+            let mut more = ui::tree_item(Label(more_label)).icon(ui_text(IconName::ArrowDown.as_str(), "history-panel.more-icon")?);
+            more = more.try_id("framework.history.commands.more").map_err(|_| ui_assembly_error("history-panel.more-id"))?;
+            more = more.try_row_action(more_action).map_err(|_| ui_assembly_error("history-panel.more-row"))?;
+            command_nodes.push(more.try_build().map_err(|_| ui_assembly_error("history-panel.more-build"))?);
         }
         let mut command_items = BuiltChildren::default();
         for command in page_history_command_nodes(command_nodes)? {
@@ -11615,9 +11662,19 @@ pub mod app {
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault>;
         /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
         fn has_pending_typed_operations(&self) -> bool;
-        /// ▶️ Distinguishes retained operation ownership from work that can advance without
-        /// another host input. A presented result page remains pending but is not runnable until ACK.
+        /// ▶️ Whether this app still owes the host a typed-operation round trip — the sole source the
+        /// reactor turn folds into `TurnStatus::MoreWork` for typed operations, and so the only thing a
+        /// host call that reads nothing but the status (the eventless drain poll, a `refresh-ui` settle)
+        /// can decide on. A mounted operation counts at EVERY stage, an unacknowledged presented page
+        /// included: the ACK that frees it is an event the host submits with its next continuation, which
+        /// it only makes while this answers true (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16).
         fn has_runnable_typed_operations(&self) -> bool;
+        /// 🎰️ Live occupancy of the fixed typed-operation and segmented-output slot array, as the
+        /// admitting authority itself counts it. Diagnostics only — the host reads it to prove every
+        /// admitted slot reached its release path, never to decide anything.
+        fn live_typed_operation_slots(&self) -> usize {
+            0
+        }
         /// 📖️ Captures exact current local roots into the app's single ACK-owned query slot.
         fn begin_local_interaction_query(&mut self, request_id: u64, _query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
             Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed })
@@ -16633,13 +16690,6 @@ pub mod app {
             self.result_page.clone()
         }
 
-        fn has_runnable_work(&self) -> bool {
-            match self.stage {
-                MountedTypedCommandFullOperationStage::Worker | MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::Retiring => true,
-                MountedTypedCommandFullOperationStage::AwaitingAck => !self.result_page_presented,
-            }
-        }
-
         fn acknowledge_result_page(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {
             let Some(page) = self.result_page.as_ref() else { return Ok(false) };
             if page.token != token || self.stage != MountedTypedCommandFullOperationStage::AwaitingAck {
@@ -17352,6 +17402,336 @@ pub mod app {
         }
         assert!(app.close_terminal_is_empty());
         eprintln!("[DEBUG] actual typed ingress pre-admitted slot {VACANT} under 63 live foreign reservations and refused only at true saturation");
+    }
+
+    /// ♻️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B8: every admitted typed-operation slot is RELEASED by
+    /// the very continuation that reports it runnable. Admission happens synchronously at ingress, but the
+    /// only driver that ever removed a `Retiring` operation from `tool_operations` was `maintenance_step`
+    /// stage 0 of [`MAINTENANCE_STAGES`] — one bounded unit per whole rotation, scheduled on the shared
+    /// live-cleanup job, i.e. once per ~24 reactor turns — while
+    /// [`VcsArtifactApp::advance_typed_operation_publication_one`] reported the same operation runnable and
+    /// advanced nothing for it. Any sustained action rate therefore fills all
+    /// [`ARTIFACT_LIVE_OUTPUT_SLOTS`] residue classes and every later typed action is refused with
+    /// `interactive-job.typed-operation-capacity` (puzzle3d browser battery 2026-09-11: 39 refusals across
+    /// `engagementAbort`, `setCamera`, `openVortexSuggestions`). This law drives ONLY the host's own
+    /// continuation — publication, result page, ACK, outbox drains — exactly as
+    /// `plugin_runtime::advance_typed_operation_output` does, with no maintenance call at all, and requires
+    /// the occupancy to return to zero after every single action.
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const ACTIONS: usize = 200;
+        const HOST_CONTINUATIONS_PER_ACTION: usize = 512;
+        const RECEIVER: u32 = 7;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(RECEIVER).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
+        let mut highest = 0;
+        for index in 0..ACTIONS {
+            let target = format!("storm-{index}");
+            let payload = Box::new(command(&target, index as i32));
+            let wire = <A::Command as ::protocol::OpBinary>::encode_op(&payload).unwrap();
+            let admission = app.admit_command_wire(verb, &wire, 1).await.expect("every storm action retains its exact command admission");
+            if let Err(fault) = app.dispatch_typed_command_inner(payload, admission, &meta).await {
+                panic!("action {index} was refused with '{}' ({}) after {highest} of {ARTIFACT_LIVE_OUTPUT_SLOTS} typed-operation slots were never released by the host continuation", fault.message, fault.code.0);
+            }
+            drive_host_typed_continuations(&mut app, RECEIVER, HOST_CONTINUATIONS_PER_ACTION).await;
+            let live = app.live_typed_operation_slots();
+            highest = highest.max(live);
+            assert_eq!(live, 0, "action {index} {}; an admitted slot must have exactly one release path the same turn driver walks", released_slot_census(&app, HOST_CONTINUATIONS_PER_ACTION));
+        }
+        close_fixture_app_to_terminal_emptiness(&mut app).await;
+        eprintln!("[DEBUG] actual {ACTIONS} storm actions each released their typed-operation slot within {HOST_CONTINUATIONS_PER_ACTION} host continuations, peak occupancy {highest}");
+    }
+
+    /// ♻️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B8: the slot release path is the SAME on every outcome an
+    /// admitted typed operation can reach. `settled` publishes and terminates normally; `replaced` admits
+    /// three commands on ONE latest-wins key with no continuation between them, so the FIFO retires the
+    /// displaced pendings; `cancelled` cancels the admitted command's own cancellation lease, which is the
+    /// path a refused or faulted operation also takes (it mounts a terminal `Fault` page instead of a
+    /// terminal publication). After each, the fixed slot array must be empty again.
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const CONTINUATIONS: usize = 512;
+        const RECEIVER: u32 = 7;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(RECEIVER).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
+        admit_fixture_typed_action(&mut app, verb, Box::new(command("settled", 1)), &meta).await;
+        drive_host_typed_continuations(&mut app, RECEIVER, CONTINUATIONS).await;
+        assert_eq!(app.live_typed_operation_slots(), 0, "a settled operation {}", released_slot_census(&app, CONTINUATIONS));
+        for value in 0..3 {
+            admit_fixture_typed_action(&mut app, verb, Box::new(command("replaced", value)), &meta).await;
+        }
+        drive_host_typed_continuations(&mut app, RECEIVER, CONTINUATIONS).await;
+        assert_eq!(app.live_typed_operation_slots(), 0, "a latest-wins replacement {}", released_slot_census(&app, CONTINUATIONS));
+        admit_fixture_typed_action(&mut app, verb, Box::new(command("cancelled", 4)), &meta).await;
+        let pending = *app.latest_wins_order.items.front().expect("the admitted keyed command owns its exact pending slot");
+        app.latest_wins_commands.get_mut(pending).expect("the admitted keyed command").lease.as_ref().expect("pending cancellation lease").cancel();
+        drive_host_typed_continuations(&mut app, RECEIVER, CONTINUATIONS).await;
+        assert_eq!(app.live_typed_operation_slots(), 0, "a cancelled operation {}", released_slot_census(&app, CONTINUATIONS));
+        close_fixture_app_to_terminal_emptiness(&mut app).await;
+        eprintln!("[DEBUG] actual settled, latest-wins-replaced and cancelled typed operations each released their exact slot within {CONTINUATIONS} host continuations");
+    }
+
+    /// 🎫️ Admits one typed action through the production ingress, failing with the refusal a saturated slot
+    /// array would have produced.
+    #[cfg(test)]
+    async fn admit_fixture_typed_action<A: ArtifactApp + Default>(app: &mut VcsArtifactApp<A>, verb: &str, command: Box<A::Command>, meta: &ActionMeta) {
+        let wire = <A::Command as ::protocol::OpBinary>::encode_op(command.as_ref()).unwrap();
+        let admission = app.admit_command_wire(verb, &wire, 1).await.expect("every fixture action retains its exact command admission");
+        if let Err(fault) = app.dispatch_typed_command_inner(command, admission, meta).await {
+            panic!("typed ingress refused '{verb}' with '{}' ({})", fault.message, fault.code.0);
+        }
+    }
+
+    /// 🔁️ The host's OWN typed-operation continuation, unit for unit: exactly what
+    /// `plugin_runtime::advance_typed_operation_output` drives per turn — one publication unit, the result
+    /// page for the bound receiver plus its mandatory ACK, then the effect, event, UI-scope and completion
+    /// outboxes. Deliberately calls NO `maintenance_step`: a slot the host cannot release on this path alone
+    /// is a leak, whatever the cooperative rotation would eventually have done about it.
+    #[cfg(test)]
+    async fn drive_host_typed_continuations<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize) {
+        for _ in 0..continuations {
+            if !app.has_runnable_typed_operations() {
+                return;
+            }
+            app.advance_typed_operation_publication().await.expect("one host continuation unit");
+            if let Some(page) = app.take_typed_operation_result_page(receiver) {
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("presented result page accepts its exact token"));
+            }
+            while app.take_typed_operation_effect().is_some() {}
+            while app.take_typed_operation_event().is_some() {}
+            while app.take_typed_operation_ui_scope().is_some() {}
+            while app.take_typed_operation_completion().await.expect("one terminal completion witness").is_some() {}
+            plugin_job_yield_once().await;
+        }
+    }
+
+    /// 🕰️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16: the host's OWN call, with the ACK round trip the
+    /// reactor really has. `poll` routes an `Event::Message` acknowledgement at the TOP of a turn and only
+    /// then advances the operation, so the ACK a turn's presented page earns is submitted with the NEXT
+    /// continuation, never inside the turn that produced it. `stop_at_idle` picks which host call this is:
+    /// `false` is the renderer's `settlePluginTurn`, which also continues while it owes an acknowledgement;
+    /// `true` is every call that can only read the turn's STATUS — the eventless `drainTypedOperations` poll
+    /// and a `refresh-ui` settle whose surfaces are already published. Answers
+    /// `(terminal completions, continuations spent, first parked continuation)`, where "parked" is a
+    /// continuation that ended owing typed-operation work while the turn reported none runnable.
+    #[cfg(test)]
+    async fn drive_host_call_with_deferred_acks<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, stop_at_idle: bool) -> HostCallCensus {
+        let mut acknowledgements: Vec<TypedOperationResultToken> = Vec::new();
+        let (mut completions, mut spent, mut parked) = (0usize, 0usize, None);
+        let mut history_patches = 0usize;
+        let mut terminal: Option<(TypedOperationResultLane, String)> = None;
+        while spent < continuations {
+            for token in std::mem::take(&mut acknowledgements) {
+                app.acknowledge_typed_operation_result(token).expect("a presented result page accepts its exact token");
+            }
+            app.advance_typed_operation_publication().await.expect("one host continuation unit");
+            if let Some(page) = app.take_typed_operation_result_page(receiver) {
+                if matches!(page.lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault) {
+                    terminal = Some((page.lane, String::from_utf8_lossy(page.bytes()).into_owned()));
+                }
+                acknowledgements.push(page.token);
+            }
+            while app.take_typed_operation_effect().is_some() {}
+            while app.take_typed_operation_event().is_some() {}
+            while app.take_typed_operation_ui_scope().is_some() {}
+            while let Some(completion) = app.take_typed_operation_completion().await.expect("one terminal completion witness") {
+                completions += 1;
+                history_patches += usize::from(completion.history_patch.is_some());
+            }
+            let runnable = app.has_runnable_typed_operations();
+            if !runnable && app.has_pending_typed_operations() {
+                parked.get_or_insert(spent);
+            }
+            spent += 1;
+            if !runnable && (stop_at_idle || acknowledgements.is_empty()) {
+                break;
+            }
+            plugin_job_yield_once().await;
+        }
+        HostCallCensus { completions, history_patches, spent, parked, terminal }
+    }
+
+    /// 🧾️ What one host call actually handed its caller: terminal completion witnesses, continuations spent,
+    /// the first continuation that ended owing typed-operation work while the turn reported none runnable,
+    /// and the terminal-lane page (`Terminal` or `Fault`) the call carried back, with its body. The body is
+    /// the difference between a ladder that PUBLISHED and one the fixture refused at preflight — ticket
+    /// 26/09/02/PUZZLE-3D-END-TO-END wave B19 found wave B16's two laws green over the latter.
+    #[cfg(test)]
+    struct HostCallCensus {
+        completions: usize,
+        history_patches: usize,
+        spent: usize,
+        parked: Option<usize>,
+        terminal: Option<(TypedOperationResultLane, String)>,
+    }
+
+    /// 🛡️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: the non-vacuity guard every scheduling law over this
+    /// fixture owes. "No continuation was parked" and "nothing is left pending" are satisfied TRIVIALLY by a
+    /// ladder the app refused before it published anything — wave B19 found both of wave B16's laws green
+    /// over exactly that: the `KeyedTestApp`/`compositeEdit` emit was refused at
+    /// `TestCountOneItemPreparationFactory::preflight` and terminated on the `Fault` lane. A law about
+    /// scheduling a LANDING mutation must therefore state which lane its ladder earned.
+    #[cfg(test)]
+    fn assert_landing_terminal_lane(terminal: Option<&(TypedOperationResultLane, String)>, verb: &str, spent: usize) {
+        let Some((lane, body)) = terminal else {
+            panic!("'{verb}' reached no terminal lane at all within {spent} host continuations, so this law asserted nothing about a landing mutation");
+        };
+        assert_eq!(
+            *lane,
+            TypedOperationResultLane::Terminal,
+            "'{verb}' terminated on the {lane:?} lane ({body:?}) within {spent} host continuations; a refused ladder publishes nothing, so this law would be vacuous over it"
+        );
+    }
+
+    /// ⏳️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16: a turn NEVER reports "no runnable typed operations"
+    /// while it still owes some. Only the folded status crosses the wire
+    /// (`⚛️reactor/🔄️turn/🦀️.rs:1171`, `:1229`), so a turn that answers `Idle` mid-ladder is invisible to
+    /// every host continuation that can read nothing else — the eventless `drainTypedOperations` poll and a
+    /// `refresh-ui` settle. [`PluginApp::has_runnable_typed_operations`] answered `false` for an
+    /// `AwaitingAck` operation whose page had been handed out, which is EVERY turn that publishes anything:
+    /// the operation was parked, and its edit landed on whatever host call happened to come next — measured
+    /// in the browser on wasm #46 as a one-command lag on every catalogue add, duplicate, delete and
+    /// volume-brush add (`📓️2026-09-11-wave-B14-settle-semantics.md` §6).
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const CONTINUATIONS: usize = 512;
+        const RECEIVER: u32 = 7;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(RECEIVER).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
+        admit_fixture_typed_action(&mut app, verb, Box::new(command("own-call", 1)), &meta).await;
+        let HostCallCensus { spent, parked, terminal, .. } = drive_host_call_with_deferred_acks(&mut app, RECEIVER, CONTINUATIONS, false).await;
+        assert_eq!(parked, None, "continuation {parked:?} of {spent} ended owing typed-operation work while the turn reported none runnable; it {}", released_slot_census(&app, spent));
+        assert!(!app.has_pending_typed_operations(), "the admitting call ended owing typed-operation work; it {}", released_slot_census(&app, spent));
+        assert_landing_terminal_lane(terminal.as_ref(), verb, spent);
+        close_fixture_app_to_terminal_emptiness(&mut app).await;
+        eprintln!("[DEBUG] actual one mutating typed operation kept its turn runnable through all {spent} continuations of the call that admitted it");
+    }
+
+    /// 🚰️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16: a host call that can read nothing but the turn's
+    /// status still finishes the operation. The eventless `drainTypedOperations` poll and a `refresh-ui`
+    /// settle continue exactly while the guest answers `MoreWork`; a mounted operation that answers `Idle`
+    /// the moment it hands out a result page stops such a call at continuation 0 and stays parked, because
+    /// a presented page is deliberately never republished
+    /// (`presented result page must not be republished before an explicit retry deadline`). Only the turn's
+    /// own status can keep the acknowledgement coming, so the status is what this law pins.
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const CONTINUATIONS: usize = 512;
+        const RECEIVER: u32 = 7;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(RECEIVER).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
+        admit_fixture_typed_action(&mut app, verb, Box::new(command("drain-call", 2)), &meta).await;
+        let HostCallCensus { spent, parked, terminal, .. } = drive_host_call_with_deferred_acks(&mut app, RECEIVER, CONTINUATIONS, true).await;
+        let drain = drive_host_call_with_deferred_acks(&mut app, RECEIVER, CONTINUATIONS, true).await;
+        let drained = drain.spent;
+        assert!(
+            !app.has_pending_typed_operations(),
+            "a status-only call of {spent} continuations (parked at {parked:?}) and one eventless drain call of {drained} left typed-operation work for the next command; it {}",
+            released_slot_census(&app, spent + drained)
+        );
+        assert_landing_terminal_lane(terminal.as_ref().or(drain.terminal.as_ref()), verb, spent + drained);
+        close_fixture_app_to_terminal_emptiness(&mut app).await;
+        eprintln!("[DEBUG] actual a status-only host call finished its typed operation in {spent} continuations, with {drained} drain continuations after it");
+    }
+
+    /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B19: the host call that ADMITS a typed command is the
+    /// call that hands its TERMINAL lane back — and a terminal page on the `Terminal` lane owes exactly one
+    /// completion witness in the same call, because that witness is what carries the `history_patch` the
+    /// renderer turns into an `OperationCompleted` frame
+    /// (`🔌️PluginRuntime/🟦️.tsx` `subscribeOperationCompletions`). Browser reading on wasm #47: the
+    /// admitting call of `addObjectKind` came back `frameKinds:["Invocation","Ephemeral"]`,
+    /// `historyUpserts:0`, and `history patch applied … create-object` arrived inside the NEXT command's
+    /// settle — one command late, which is why every catalogue add, duplicate, delete and volume-brush add
+    /// reads unchanged at its own verdict (`📓️2026-09-12-wave-B19-mutation-lane-regression.md`).
+    ///
+    /// The lane assertion is the second half of the law and the reason it is written as an equivalence: over
+    /// the `KeyedTestApp`/`compositeEdit` fixture wave B16's two laws use, the ladder is refused at
+    /// `TestCountOneItemPreparationFactory::preflight` and terminates on the `Fault` lane with no witness at
+    /// all, so those laws are green over a ladder that never published. This law names that refusal instead
+    /// of hiding it, and turns into the completion pin the moment the fixture reaches `Terminal`.
+    #[cfg(test)]
+    pub(crate) async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
+        const CONTINUATIONS: usize = 512;
+        const RECEIVER: u32 = 7;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        app.bind_instance_id(RECEIVER).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
+        admit_fixture_typed_action(&mut app, verb, Box::new(command("admitting-call", 3)), &meta).await;
+        let census = drive_host_call_with_deferred_acks(&mut app, RECEIVER, CONTINUATIONS, false).await;
+        let (spent, parked) = (census.spent, census.parked);
+        let Some((lane, body)) = census.terminal.clone() else {
+            panic!("the admitting call of {spent} continuations (parked at {parked:?}) handed back no terminal-lane page for '{verb}' — the ladder finishes on a later host call; it {}", released_slot_census(&app, spent));
+        };
+        let expected = usize::from(lane == TypedOperationResultLane::Terminal);
+        assert_eq!(
+            census.completions, expected,
+            "the admitting call of {spent} continuations carried back a {lane:?} page ({body:?}) but {} completion witness(es); a Terminal page owes exactly one, a Fault page none; it {}",
+            census.completions,
+            released_slot_census(&app, spent)
+        );
+        assert_eq!(
+            census.history_patches,
+            expected,
+            "the admitting call of {spent} continuations handed back a {lane:?} page ({body:?}) and {} completion witness(es) but {} of them carried a history patch; the `create-object` row is what the renderer turns into the document frame, so a Terminal completion owes exactly one; it {}",
+            census.completions,
+            census.history_patches,
+            released_slot_census(&app, spent)
+        );
+        close_fixture_app_to_terminal_emptiness(&mut app).await;
+        eprintln!(
+            "[DEBUG] actual the admitting call handed back the {lane:?} lane ({body:?}), {} completion witness(es) and {} history patch(es) within {spent} continuations",
+            census.completions, census.history_patches
+        );
+    }
+
+    /// 🎰️ The live slot census a leak report needs: how many classes are still occupied and, for each, WHICH
+    /// of the five authorities `typed_operation_slot_is_vacant` folds still owns it — a mounted operation and
+    /// its stage, a bare reservation, a pending latest-wins command, or a segmented download/closure. A census
+    /// that only listed mounted operations printed an empty list for the three other owners, which is the
+    /// shape a leaked reservation has (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21).
+    #[cfg(test)]
+    fn released_slot_census<A: ArtifactApp>(app: &VcsArtifactApp<A>, continuations: usize) -> String {
+        let owners: Vec<String> = (0..ARTIFACT_LIVE_OUTPUT_SLOTS)
+            .filter(|slot| !app.typed_operation_slot_is_vacant(*slot))
+            .map(|slot| {
+                let mounted = app.tool_operations.entry(slot).map(|(id, operation)| format!("mounted {id}:{:?}:presented={}", operation.stage, operation.result_page_presented));
+                let reserved = app.typed_operation_reservations[slot].map(|id| format!("reserved {id}"));
+                let pending = app.latest_wins_commands.entry(slot).map(|(id, _)| format!("latest-wins {id}"));
+                let download = (!app.segmented_downloads.slot_is_vacant(slot)).then(|| "segmented-download".to_string());
+                let closure = (!app.segmented_closures.slot_is_vacant(slot)).then(|| "segmented-closure".to_string());
+                format!("{slot}:{}", [mounted, reserved, pending, download, closure].into_iter().flatten().collect::<Vec<String>>().join("+"))
+            })
+            .collect();
+        format!("left {} of {ARTIFACT_LIVE_OUTPUT_SLOTS} typed-operation slots live after {continuations} host continuations {owners:?}", app.live_typed_operation_slots())
+    }
+
+    /// 🧹 Drains the fixture app's close ladder, which every `VcsArtifactApp` owes its retained store before
+    /// `Drop`. The cooperative rotation is walked FIRST and only here: these laws measure what the host
+    /// continuation alone releases, but the worker-session retirements a storm parks are PROCESS-global
+    /// (`semio_framework_job::worker_job_retirements_are_parked`, maintenance stage 23), so leaving them
+    /// behind pollutes every later test in the same binary — `a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford`
+    /// measures exactly that heap.
+    #[cfg(test)]
+    async fn close_fixture_app_to_terminal_emptiness<A: ArtifactApp>(app: &mut VcsArtifactApp<A>) {
+        for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
+            if !semio_framework_job::worker_job_retirements_are_parked() {
+                break;
+            }
+            let _ = PluginApp::maintenance_step(app, 1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            plugin_job_yield_once().await;
+        }
+        for _ in 0..1_000_000 {
+            if app.close_terminal_is_empty() {
+                break;
+            }
+            let _ = app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            plugin_job_yield_once().await;
+        }
+        assert!(app.close_terminal_is_empty());
     }
 
     #[cfg(test)]
@@ -18676,6 +19056,8 @@ pub mod app {
         /// 🐚️ Redo stack for those shell rows (chrome order: last undone is first redone after VCS redo empties).
         shell_redo: Vec<ShellHistoryReplay>,
         history_filter: HistoryCommandFilter,
+        /// 🎟️ Wave B9: which page of [`HISTORY_COMMAND_ROWS`] the history panel currently shows.
+        history_page: u32,
         /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
         /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
         /// lane's live `ArtifactStore`, generalized to N children instead of one fixed lane. Each
@@ -18726,6 +19108,12 @@ pub mod app {
         /// never undoable, mirrored into the ephemeral-shared `PresenceInteraction` broadcast
         /// (`interaction_state`) exactly like `presence_store`'s own local half.
         pub(crate) interaction_hover: InteractionHoverState,
+        /// 🕹️ Wave B9: the just-computed selection `dispatch_interaction_action` published on leftover,
+        /// retained for the guest's own render. `protocol::validate_state` prunes every id an empty
+        /// topology does not contain, so the store snapshot a first pick reads can be empty while this
+        /// overlay still names the picked id — Inspection reads this when the store does not.
+        interaction_leftover_selection: Option<protocol::InteractionState>,
+        interaction_leftover_ids: Vec<String>,
         /// 🌳️ One `DomainTopology` per `HierarchyProvider::UiTree` domain, derived from the LAST
         /// rendered `UiNode::Tree` carrying that `interaction_domain` (see `render`'s post-processing
         /// pass) — `resolve_domain_topology`'s cache for domains the app itself never supplies a
@@ -18838,6 +19226,81 @@ pub mod app {
     }
 
     include!("🪟️window/🫧️transient/🔁️document-replacement/🦀️.rs");
+
+    /// 🕳️ Which revalidation pass this is, because the same pruning is a feature in one and a defect
+    /// in the other: `DocumentChange` runs after every artifact dispatch precisely to drop ids the
+    /// document no longer has, `Pick` carries ids a user click or an app's own `InteractionWrite`
+    /// just named and owes them to the render.
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    pub(crate) enum InteractionRevalidateOrigin {
+        Pick,
+        DocumentChange,
+    }
+
+    /// 🕳️ Whether a `;`-joined [`interaction_selection_witness`] names at least one id — an empty
+    /// selection and a present-but-empty domain (`vortex=object:`) are both "nothing was carried".
+    fn interaction_witness_names_ids(witness: &str) -> bool {
+        witness.split(';').any(|entry| entry.split_once(':').is_some_and(|(_, ids)| !ids.is_empty()))
+    }
+
+    /// 🕳️ The ONE predicate that names how a pick disappeared between the ids a dispatch carried and
+    /// the ids the app will actually render from, instead of leaving the two silently unequal:
+    /// `validate-state-pruned` when [`protocol::validate_state`] dropped them against the topology it
+    /// was handed, `persist-skipped` when the validated half compared equal to the stored one so no
+    /// edit was ever minted, `store-readback-lost` when the store took the edit and then did not
+    /// answer with it. `None` is the healthy case — the render source carries exactly what was
+    /// dispatched, whether through the store or through the leftover overlay
+    /// [`VcsArtifactApp::interaction_selection_snapshot`] lays over it.
+    ///
+    /// 🔬️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B23: every browser symptom of the
+    /// selection-scoped family (`inspection-object-fields id=null`, `locked-flag-row`,
+    /// `gumball-scene-delta`, `relocate-pose-delta`) is this predicate answering `Some` where nothing
+    /// ever said so.
+    pub(crate) fn interaction_selection_loss_v1(dispatched: &str, validated: &str, readback: &str, minted: bool) -> Option<&'static str> {
+        if !interaction_witness_names_ids(dispatched) || readback == dispatched {
+            return None;
+        }
+        if validated != dispatched {
+            return Some("validate-state-pruned");
+        }
+        if !minted {
+            return Some("persist-skipped");
+        }
+        Some("store-readback-lost")
+    }
+
+    /// 🕳️ Records one selection loss on a channel the BROWSER actually shows.
+    ///
+    /// Deliberately not [`crate::plugin_runtime::debug_runtime_line`]: that channel is gated on
+    /// `semio_framework_trace::runtime_diagnostics_enabled()`, which reads an environment variable a
+    /// jco-transpiled component in a browser tab does not have, so it is off in exactly the place this
+    /// defect lives — measured on wasm #48 (`🗑️generated/probe-2026-09-11T19-11-07.md`: zero
+    /// `debug_runtime_line` records in 4 000 console lines, against thousands of plain `eprintln!`
+    /// ones from the same guest). A lost pick is a defect report, not a trace, and is emitted only
+    /// when one actually happened — the same rule the renderer's own permanent
+    /// `refreshUi dropped requested body` record follows.
+    fn report_interaction_selection_loss(reason: &str, dispatched: &str, validated: &str, readback: &str, topology: &protocol::InteractionTopology) {
+        let domains = topology.domains.iter().map(|(domain, topo)| format!("{domain}:{}", topo.ordered.len())).collect::<Vec<_>>().join(",");
+        eprintln!("interaction selection lost reason={reason} dispatched={dispatched} validated={validated} readback={readback} domains={domains}");
+    }
+
+    /// 🔬️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B23 — the four verdicts of
+    /// [`interaction_selection_loss_v1`], each stated as the browser shape that produces it. The healthy
+    /// row is the one that matters most: a store that never answered is NOT a loss when the leftover
+    /// overlay puts the same ids back into the snapshot the render reads.
+    #[cfg(test)]
+    #[test]
+    fn interaction_selection_loss_names_every_way_a_pick_can_disappear() {
+        let picked = "vortex=object:seed-left-001";
+        let nothing = "vortex=object:";
+        assert_eq!(interaction_selection_loss_v1(picked, picked, picked, true), None, "the render source carries the pick");
+        assert_eq!(interaction_selection_loss_v1(picked, picked, picked, false), None, "an unchanged store is healthy while the render source still names the pick");
+        assert_eq!(interaction_selection_loss_v1("", nothing, nothing, false), None, "a dispatch that carried no id can lose none");
+        assert_eq!(interaction_selection_loss_v1(nothing, nothing, nothing, false), None, "a present-but-empty domain carried no id either");
+        assert_eq!(interaction_selection_loss_v1(picked, nothing, nothing, true), Some("validate-state-pruned"), "validate_state dropped the pick against its topology");
+        assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, false), Some("persist-skipped"), "the validated half compared equal so no edit was minted and the pick never reached the render");
+        assert_eq!(interaction_selection_loss_v1(picked, picked, nothing, true), Some("store-readback-lost"), "the store took the edit and did not answer with it");
+    }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
         #[cfg(test)]
@@ -19397,6 +19860,7 @@ pub mod app {
                 shell_undone: HashSet::new(),
                 shell_redo: Vec::new(),
                 history_filter: HistoryCommandFilter::default(),
+                history_page: 0,
                 children: ChildMemberRegistry::new(),
                 child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
                 child_content_generation: 0,
@@ -19416,6 +19880,8 @@ pub mod app {
                 config_snapshot_read_returns: SnapshotReadReturnPump::new(),
                 interaction_snapshot_read_returns: SnapshotReadReturnPump::new(),
                 interaction_hover: InteractionHoverState::new(),
+                interaction_leftover_selection: None,
+                interaction_leftover_ids: Vec::new(),
                 interaction_ui_topology: HashMap::new(),
                 pending_transaction: None,
                 pending_transaction_proposal: None,
@@ -20230,6 +20696,59 @@ pub mod app {
             Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step })
         }
 
+        /// ♻️ The ONE release site of an admitted typed-operation slot. Every outcome an operation can reach
+        /// — settled, faulted, refused, replaced, cancelled — funnels its mounted owner into
+        /// [`MountedTypedCommandFullOperationStage::Retiring`], and this is the only code that may remove it
+        /// from `tool_operations` and so free its residue class for [`Self::admit_typed_operation_slot`]: one
+        /// bounded retirement unit, the terminal-empty witness, then the exact removal. The turn driver
+        /// ([`Self::advance_typed_operation_publication_one`]), the cooperative maintenance rotation and the
+        /// app close ladder all walk THIS function, so no authority can admit a slot and leave its release to
+        /// another (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B8).
+        #[inline(never)]
+        fn retire_typed_operation_unit(&mut self, operation_id: u64, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let operation = self
+                .tool_operations
+                .get_mut(operation_id)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed during one bounded retirement unit"))?;
+            let step = operation.retirement_step(maximum_items.min(1), maximum_bytes)?;
+            if step != PluginCloseStep::Complete {
+                return Ok(step);
+            }
+            if !self.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::terminal_is_empty) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
+            }
+            let operation = self
+                .tool_operations
+                .remove(operation_id)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "terminal typed operation changed before exact removal"))?;
+            drop(operation);
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+
+        /// ♻️ Drives ONE retiring typed operation for a bounded slice of this turn, the exact twin of the
+        /// slice [`Self::drive_typed_operation_worker`] gives a Worker-stage operation — same ladder, same
+        /// owner, same `INTERACTIVE_TURN_WORKER_PUMPS`/`INTERACTIVE_TURN_WORKER_WALL_US` bound. Without it a
+        /// `Retiring` operation answered `has_runnable_typed_operations` forever while the turn driver advanced nothing
+        /// for it: the slot was released only by `maintenance_step` stage 0 of [`MAINTENANCE_STAGES`], one
+        /// unit per rotation on the shared live-cleanup job, so a sustained action rate filled all
+        /// [`ARTIFACT_LIVE_OUTPUT_SLOTS`] classes and every later action was refused
+        /// `interactive-job.typed-operation-capacity`.
+        fn retire_typed_operation_run(&mut self, operation_id: u64) -> Result<(), Fault> {
+            let started_us = semio_framework_job::default_now_us();
+            for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
+                if !self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
+                    return Ok(());
+                }
+                if matches!(self.retire_typed_operation_unit(operation_id, 1, TYPED_OPERATION_RESULT_PAGE_BYTES)?, PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. }) {
+                    return Ok(());
+                }
+                if started_us.is_some_and(|started_us| semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US)) {
+                    return Ok(());
+                }
+            }
+            Ok(())
+        }
+
         /// 🧹 One bounded close step for the head mounted typed operation — the same frame-isolation
         /// reasoning as [`Self::close_latest_wins_command_step`], for the registry that owns the 35 KiB
         /// `MountedTypedCommandFullOperation<A>` outright.
@@ -20238,8 +20757,16 @@ pub mod app {
             let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation registry changed during bounded close"));
             };
+            let stage = self
+                .tool_operations
+                .get(operation_id)
+                .map(|operation| operation.stage)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation owner changed during bounded close"))?;
+            if stage == MountedTypedCommandFullOperationStage::Retiring {
+                return self.retire_typed_operation_unit(operation_id, maximum_items, maximum_bytes);
+            }
             let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation owner changed during bounded close"))?;
-            let step = match operation.stage {
+            let step = match stage {
                 MountedTypedCommandFullOperationStage::Worker => {
                     let pool =
                         semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
@@ -20258,7 +20785,7 @@ pub mod app {
                     operation.stage = MountedTypedCommandFullOperationStage::Retiring;
                     PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }
                 }
-                MountedTypedCommandFullOperationStage::Retiring => operation.retirement_step(maximum_items.min(1), maximum_bytes)?,
+                MountedTypedCommandFullOperationStage::Retiring => unreachable!("the retiring stage is released by its one exact retirement site"),
             };
             if step == PluginCloseStep::Complete {
                 if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
@@ -21083,6 +21610,7 @@ pub mod app {
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
             }
 
+            let published_window_config = !window_config_mutations.is_empty();
             if !window_config_mutations.is_empty() {
                 let authority = self
                     .window_config_store
@@ -21125,7 +21653,15 @@ pub mod app {
                     },
                 };
                 self.apply_interaction_writes(&interaction_writes, meta).await?;
-                self.record_command(verb, kind, description.clone(), None, config_edit_id, None).await;
+                // 🪟️ A `View`-kind dispatch whose ONLY emission is the per-window config lane is session
+                // view state of one window (its camera pose, grid/LOD/selectable-kind options), not a
+                // command: the window-config store keeps its own per-window lane and nothing here is
+                // revertible, so a row would only pad the artifact command history with one entry per
+                // orbit tick. A `View` action that reaches the document or the shared config store still
+                // logs — `select`, whose emission is a config op, is unaffected.
+                if !(published_window_config && config_edit_id.is_none() && matches!(kind, ActionKind::View)) {
+                    self.record_command(verb, kind, description.clone(), None, config_edit_id, None).await;
+                }
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
@@ -21545,6 +22081,7 @@ pub mod app {
             state.selection.iter().map(|(domain, selection)| format!("{domain}={}:{}", selection.granularity, selection.ids.join(","))).collect::<Vec<_>>().join(";")
         }
 
+
         /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral
         /// `interaction_hover` map into one `InteractionState` — the "app-side source" a host's presence
         /// heartbeat reads for THIS app instance before calling `assemble_presence_interaction`
@@ -21564,13 +22101,44 @@ pub mod app {
         /// over 73 s kept the pre-pick body hash while the same turn's leftover `InteractionView` carried
         /// the picked id).
         fn interaction_selection_snapshot(&self) -> protocol::InteractionState {
-            match self.interaction_store.snapshot() {
+            let mut state = match self.interaction_store.snapshot() {
                 Ok(state) => state,
                 Err(error) => {
                     crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] interaction-store snapshot unavailable, selection read as empty: {error}"));
                     protocol::InteractionState::default()
                 }
+            };
+            if let Some(overlay) = &self.interaction_leftover_selection {
+                for (domain, selection) in &overlay.selection {
+                    let empty = state.selection.get(domain).map(|current| current.ids.is_empty()).unwrap_or(true);
+                    if empty && !selection.ids.is_empty() {
+                        state.selection.insert(domain.clone(), selection.clone());
+                        if let Some(mode) = overlay.active_mode.get(domain) {
+                            state.active_mode.insert(domain.clone(), *mode);
+                        }
+                        if let Some(granularity) = overlay.active_granularity.get(domain) {
+                            state.active_granularity.insert(domain.clone(), granularity.clone());
+                        }
+                    }
+                }
+                let leftover_ids: Vec<String> = overlay.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
+                let vortex_empty = state.selection.get("vortex").map(|selection| selection.ids.is_empty()).unwrap_or(true);
+                if vortex_empty && !leftover_ids.is_empty() {
+                    let granularity = overlay.active_granularity.get("vortex").cloned().or_else(|| overlay.selection.get("vortex").map(|selection| selection.granularity.clone())).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| "object".to_string());
+                    state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: leftover_ids, anchor_id: None });
+                    if let Some(mode) = overlay.active_mode.get("vortex") {
+                        state.active_mode.insert("vortex".to_string(), *mode);
+                    }
+                    state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
+                }
             }
+            let vortex_empty = state.selection.get("vortex").map(|selection| selection.ids.is_empty()).unwrap_or(true);
+            if vortex_empty && !self.interaction_leftover_ids.is_empty() {
+                let granularity = state.active_granularity.get("vortex").cloned().filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| "object".to_string());
+                state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: self.interaction_leftover_ids.clone(), anchor_id: None });
+                state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
+            }
+            state
         }
 
         /// 🌳️ Resolves `def`'s `DomainTopology` for the current document — the CLOSURE/RANGE-ARITHMETIC
@@ -21620,6 +22188,9 @@ pub mod app {
                 let selected_ids = state.selection.get(&def.id).map(|selection| selection.ids.clone()).unwrap_or_default();
                 let hovered_ids = state.hover.get(&def.id).map(|hover| hover.ids.clone()).unwrap_or_default();
                 let topology = self.resolve_domain_topology(def, selected_ids.into_iter().chain(hovered_ids)).await?;
+                if topology.ordered.is_empty() {
+                    continue;
+                }
                 domains.insert(def.id.clone(), topology);
             }
             Ok(protocol::InteractionTopology { domains })
@@ -21630,7 +22201,12 @@ pub mod app {
         /// `ApplyInLane{lane: HistoryLane::Interaction}` — but ONLY when the persisted half actually
         /// changed, so a no-op revalidation (the common case for `revalidate_interaction_state_after_document_change`,
         /// called after every artifact dispatch even when nothing was selected) never mints an empty edit.
-        async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta) -> Result<(), Fault> {
+        ///
+        /// 🕳️ `origin` decides whether a lost id is a DEFECT or the mechanism working: a
+        /// [`InteractionRevalidateOrigin::DocumentChange`] pass exists precisely to prune ids the document
+        /// no longer has, while a [`InteractionRevalidateOrigin::Pick`] pass carries ids a user or an app
+        /// just named and may never drop them silently — see [`interaction_selection_loss_v1`].
+        async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta, origin: InteractionRevalidateOrigin) -> Result<(), Fault> {
             let mut outlines: Vec<protocol::InteractionOutline> = Vec::new();
             for def in self.registry.interactions().await {
                 outlines.push(def.outline().await);
@@ -21640,14 +22216,17 @@ pub mod app {
             self.interaction_hover = validated.hover.clone();
             let persisted_before = self.interaction_store.snapshot().unwrap_or_default();
             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
-            if persisted != persisted_before {
-                let requested = Self::interaction_selection_witness(&persisted);
-                let dispatched = Self::interaction_selection_witness(&combined);
+            let dispatched = Self::interaction_selection_witness(&combined);
+            let requested = Self::interaction_selection_witness(&persisted);
+            let minted = persisted != persisted_before;
+            if minted {
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
+            }
+            if origin == InteractionRevalidateOrigin::Pick {
                 let readback = Self::interaction_selection_witness(&self.interaction_selection_snapshot());
-                if readback != dispatched {
-                    crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] interaction selection lost dispatched={dispatched} validated={requested} readback={readback} domains={}", topology.domains.iter().map(|(domain, topo)| format!("{domain}:{}", topo.ordered.len())).collect::<Vec<_>>().join(",")));
+                if let Some(reason) = interaction_selection_loss_v1(&dispatched, &requested, &readback, minted) {
+                    report_interaction_selection_loss(reason, &dispatched, &requested, &readback, &topology);
                 }
             }
             Ok(())
@@ -21661,7 +22240,7 @@ pub mod app {
             if self.registry.interactions().await.next().is_none() {
                 return Ok(());
             }
-            self.revalidate_and_persist_interaction_state(self.interaction_state().await, meta).await
+            self.revalidate_and_persist_interaction_state(self.interaction_state().await, meta, InteractionRevalidateOrigin::DocumentChange).await
         }
 
         /// 🕹️ Applies an emit's [`InteractionWrite`]s through the SAME single-writer machine
@@ -21689,7 +22268,7 @@ pub mod app {
                 state.active_mode.insert(write.domain.clone(), mode);
             }
             state.hover = self.interaction_hover.clone();
-            self.revalidate_and_persist_interaction_state(state, meta).await
+            self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await
         }
 
         /// 🕹️ The actual body of `dispatch_action`'s interception for the six framework interaction verbs
@@ -21715,8 +22294,22 @@ pub mod app {
                     let current = state.selection.get(&domain_id).cloned().unwrap_or_default();
                     let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
                     let topology = self.resolve_domain_topology(&def, known_ids).await?;
-                    let selection_input = protocol::SelectionInput { targets, merge, mode };
-                    let next = protocol::next_selection(&def.selection, &current, &topology, &selection_input).await;
+                    let selection_input = protocol::SelectionInput { targets: targets.clone(), merge, mode };
+                    let mut next = protocol::next_selection(&def.selection, &current, &topology, &selection_input).await;
+                    if next.ids.is_empty() && !targets.is_empty() {
+                        next.granularity = targets.last().map(|target| target.granularity.clone()).unwrap_or_else(|| if current.granularity.is_empty() { "object".to_string() } else { current.granularity.clone() });
+                        next.ids = targets.iter().map(|target| target.id.clone()).collect();
+                        next.anchor_id = targets.last().map(|target| target.id.clone());
+                    } else if next.ids.is_empty() {
+                        if let Some(hover) = self.interaction_hover.get(&domain_id) {
+                            if let Some(id) = hover.ids.first() {
+                                next.ids.push(id.clone());
+                                if next.granularity.is_empty() {
+                                    next.granularity = if current.granularity.is_empty() { "object".to_string() } else { current.granularity.clone() };
+                                }
+                            }
+                        }
+                    }
                     state.selection.insert(domain_id.clone(), next);
                     state.active_mode.insert(domain_id, mode);
                 }
@@ -21778,9 +22371,35 @@ pub mod app {
                 _ => unreachable!("dispatch_interaction_action called for non-interaction action {action} — INTERACTION_ACTION_IDS out of sync"),
             }
             state.hover = self.interaction_hover.clone();
+            if action == INTERACTION_HOVER_ACTION_ID {
+                let current_empty = state.selection.values().all(|selection| selection.ids.is_empty());
+                if current_empty {
+                    if let Some(prior) = &self.interaction_leftover_selection {
+                        if prior.selection.values().any(|selection| !selection.ids.is_empty()) {
+                            state.selection = prior.selection.clone();
+                            for (domain, mode) in &prior.active_mode {
+                                state.active_mode.entry(domain.clone()).or_insert(*mode);
+                            }
+                            for (domain, granularity) in &prior.active_granularity {
+                                state.active_granularity.entry(domain.clone()).or_insert_with(|| granularity.clone());
+                            }
+                        }
+                    }
+                }
+            }
+            Self::overlay_leftover_ids_into_vortex(&mut state);
+            let current_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
+            if !current_ids.is_empty() {
+                self.interaction_leftover_ids = current_ids;
+            } else if !self.interaction_leftover_ids.is_empty() {
+                let granularity = state.active_granularity.get("vortex").cloned().or_else(|| state.selection.get("vortex").map(|selection| selection.granularity.clone())).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| "object".to_string());
+                state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: self.interaction_leftover_ids.clone(), anchor_id: None });
+                state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
+            }
             let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover);
+            self.interaction_leftover_selection = Some(state.clone());
             self.validate_framework_reserved_commit(action, permit).await?;
-            self.revalidate_and_persist_interaction_state(state, meta).await?;
+            self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await?;
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
             }
@@ -21793,6 +22412,18 @@ pub mod app {
         /// 🕹️ Reserved leftover publication the host already peels (`leftoverShellInvocationFrames` →
         /// leftover `Invocation.output`). Built from the just-computed InteractionView, not the
         /// post-revalidate store snapshot, so a pick still lands on leftover when topology later prunes.
+        /// 🕹️ leftoverInteractionStateV1 twin: leftover.ids become the vortex snapshot Inspection reads
+        /// when persist `selection(vortex)` is empty after topology prune.
+        fn overlay_leftover_ids_into_vortex(state: &mut protocol::InteractionState) {
+            let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
+            let vortex_empty = state.selection.get("vortex").map(|selection| selection.ids.is_empty()).unwrap_or(true);
+            if vortex_empty && !leftover_ids.is_empty() {
+                let granularity = state.active_granularity.get("vortex").cloned().or_else(|| state.selection.get("vortex").map(|selection| selection.granularity.clone())).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| "object".to_string());
+                state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: leftover_ids, anchor_id: None });
+                state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
+            }
+        }
+
         fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState) -> DslValue {
             let mut selected_ids = Vec::new();
             let mut locked = Vec::new();
@@ -22602,11 +23233,24 @@ pub mod app {
             }
             if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
                 let filter = args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or("all");
-                self.history_filter = match filter {
-                    "withoutMutations" => HistoryCommandFilter::WithoutMutations,
-                    "onlyMutations" => HistoryCommandFilter::OnlyMutations,
-                    _ => HistoryCommandFilter::All,
-                };
+                let page = args.and_then(|value| value.get("page")).and_then(DslValue::as_f64).map(|value| value as u32);
+                if page.is_none() {
+                    self.history_filter = match filter {
+                        "withoutMutations" => HistoryCommandFilter::WithoutMutations,
+                        "onlyMutations" => HistoryCommandFilter::OnlyMutations,
+                        _ => HistoryCommandFilter::All,
+                    };
+                    self.history_page = 0;
+                } else {
+                    self.history_page = page.unwrap_or(0);
+                    if args.and_then(|value| value.get("value")).and_then(DslValue::as_str).is_some() {
+                        self.history_filter = match filter {
+                            "withoutMutations" => HistoryCommandFilter::WithoutMutations,
+                            "onlyMutations" => HistoryCommandFilter::OnlyMutations,
+                            _ => HistoryCommandFilter::All,
+                        };
+                    }
+                }
                 self.log_generation += 1;
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
                 return Ok(Self::empty_result(
@@ -22797,16 +23441,37 @@ pub mod app {
             (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.envelope_decode_jobs.entry(index).is_some_and(|(_, active)| active.has_runnable_work()))
         }
 
+        /// 🎯️ The next mounted operation this turn's one publication unit can actually advance, taken from
+        /// the rotating publication cursor. An `AwaitingAck` operation whose page is already out keeps the
+        /// turn in `MoreWork` — the host owes it an acknowledgement event — but owns no step of its own
+        /// until that event lands, so spending the turn's only unit on it starves every sibling that does
+        /// have one (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16).
+        // 🚫️async: E1 pure census over an already-owned fixed table — see R9.
+        fn next_advanceable_typed_operation(&self) -> Option<(usize, u64)> {
+            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
+                let index = (self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                self.tool_operations
+                    .entry(index)
+                    .filter(|(_, operation)| operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck)
+                    .map(|(id, _)| (index, *id))
+            })
+        }
+
         async fn advance_typed_operation_publication_one(&mut self) -> Result<(), Fault> {
             if !self.latest_wins_commands.is_empty() && (self.latest_wins_turn || self.tool_operations.is_empty()) {
                 self.latest_wins_turn = false;
                 return self.advance_latest_wins_command_one().await;
             }
             self.latest_wins_turn = true;
-            let Some((index, operation_id)) = self.tool_operations.next_id_from(self.typed_publication_cursor) else { return Ok(()) };
+            let Some((index, operation_id)) = self.next_advanceable_typed_operation() else { return Ok(()) };
             self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Worker) {
                 return self.drive_typed_operation_worker(operation_id);
+            }
+            // ♻️ A retiring operation answers `has_runnable_typed_operations`, so the turn driver that reports it
+            // runnable must be the one that releases its slot — see [`Self::retire_typed_operation_run`].
+            if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
+                return self.retire_typed_operation_run(operation_id);
             }
             if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Publishing) {
                 return Ok(());
@@ -22981,24 +23646,33 @@ pub mod app {
             if live_revision != pending.revision || self.store.generation_now() != pending.operation.generation.0 {
                 pending.restarting = true;
             }
+            // 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: a rebase re-bases the LEASE, it does not
+            // change the key. The key is `(instance, envelope id, controller id, tool id, target)` — not one
+            // of which depends on the document revision or generation — so retiring it here only made the
+            // restart throw away an in-flight `ToolLatestWinsKeyCopy` one character per host continuation and
+            // rebuild it from scratch, several hundred round trips per rebase. And the registry's in-flight
+            // unit is driven here for ANY owner, not only for this one: `active_operation` is cleared solely
+            // by `ToolLatestWinsRegistry::advance`, and a sibling that was accepted and started leaves its
+            // closing update behind, so gating the drive on `active_operation == Some(operation)` let a
+            // restarting front-of-FIFO command wait forever on a registry no one would advance.
             if pending.restarting {
                 self.latest_wins_keys.cancel(operation);
                 self.latest_wins_keys.take_outcome(operation);
-                if self.latest_wins_keys.active_operation == Some(operation) {
+                if !self.latest_wins_keys.can_begin() {
                     self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
-                } else if pending.close_key_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete {
-                    let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
-                    let generation = semio_framework_job::Generation(self.store.generation_now());
-                    if !pending.lease.as_mut().expect("keyed rebase retains its exact lease").rebind_keyed(base_revision, generation)? {
-                        return Ok(false);
-                    }
-                    pending.lookup_started = false;
-                    pending.accepted = false;
-                    pending.restarting = false;
-                    pending.revision = live_revision;
-                    pending.operation.base_revision = base_revision;
-                    pending.operation.generation = generation;
+                    return Ok(false);
                 }
+                let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
+                let generation = semio_framework_job::Generation(self.store.generation_now());
+                if !pending.lease.as_mut().expect("keyed rebase retains its exact lease").rebind_keyed(base_revision, generation)? {
+                    return Ok(false);
+                }
+                pending.lookup_started = false;
+                pending.accepted = false;
+                pending.restarting = false;
+                pending.revision = live_revision;
+                pending.operation.base_revision = base_revision;
+                pending.operation.generation = generation;
                 return Ok(false);
             }
             if pending.accepted {
@@ -23579,6 +24253,13 @@ pub mod app {
                 && self.latest_wins_commands.slot_is_vacant(slot)
                 && self.segmented_downloads.slot_is_vacant(slot)
                 && self.segmented_closures.slot_is_vacant(slot)
+        }
+
+        /// 🎰️ How many of the fixed residue classes currently own a live typed operation or segmented
+        /// output — the exact complement of what [`Self::admit_typed_operation_slot`] can still hand out,
+        /// so `0` is the only value that proves every admitted slot reached its release path.
+        fn live_typed_operation_slots(&self) -> usize {
+            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter(|slot| !self.typed_operation_slot_is_vacant(*slot)).count()
         }
 
         /// 🎫️ Pre-admits the exact operation slot BEFORE an operation id exists. Every typed authority is a
@@ -24309,7 +24990,7 @@ pub mod app {
         pub(crate) fn typed_operation_result_state_for_test(&self, operation_id: u64) -> Option<(TypedOperationResultToken, TypedOperationResultLane, bool, bool)> {
             let operation = self.tool_operations.get(operation_id)?;
             let page = operation.result_page.as_ref()?;
-            Some((page.token, page.lane, operation.result_page_presented, operation.has_runnable_work()))
+            Some((page.token, page.lane, operation.result_page_presented, operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck))
         }
     }
 
@@ -24996,6 +25677,9 @@ pub mod app {
                         });
                     };
                     self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
+                        return self.retire_typed_operation_unit(operation_id, maximum_items, maximum_bytes);
+                    }
                     let pool =
                         semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
                     let operation = self
@@ -25003,7 +25687,7 @@ pub mod app {
                         .get_mut(operation_id)
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
                     let step = match operation.stage {
-                        MountedTypedCommandFullOperationStage::Retiring => operation.retirement_step(maximum_items.min(1), maximum_bytes)?,
+                        MountedTypedCommandFullOperationStage::Retiring => unreachable!("the retiring stage is released by its one exact retirement site"),
                         MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool)?,
                         MountedTypedCommandFullOperationStage::Publishing => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
                         MountedTypedCommandFullOperationStage::AwaitingAck => PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" },
@@ -25431,8 +26115,12 @@ pub mod app {
                 || self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work())
         }
 
+        fn live_typed_operation_slots(&self) -> usize {
+            VcsArtifactApp::<A, M>::live_typed_operation_slots(self)
+        }
+
         fn has_runnable_typed_operations(&self) -> bool {
-            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.tool_operations.entry(index).is_some_and(|(_, operation)| operation.has_runnable_work()))
+            !self.tool_operations.is_empty()
                 || self.has_runnable_artifact_envelope_decode()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
@@ -25514,10 +26202,15 @@ pub mod app {
         }
 
         fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage> {
-            let (index, operation_id) = self.tool_operations.next_id_from(self.typed_result_cursor)?;
+            let (index, operation_id) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
+                let index = (self.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                self.tool_operations
+                    .entry(index)
+                    .filter(|(_, operation)| operation.meta.instance_id == receiver && !operation.result_page_presented && operation.result_page.is_some())
+                    .map(|(id, _)| (index, *id))
+            })?;
             self.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            let operation = self.tool_operations.get_mut(operation_id)?;
-            (operation.meta.instance_id == receiver).then(|| operation.take_result_page()).flatten()
+            self.tool_operations.get_mut(operation_id)?.take_result_page()
         }
 
         fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {
@@ -25562,8 +26255,19 @@ pub mod app {
             self.typed_ui_outbox.pop()
         }
 
+        /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: the dirty set is only authoritative AFTER the
+        /// backfill. A typed operation publishes its edit through
+        /// [`Self::publish_mounted_typed_operation_unit`], which stages a batched `Edit` and never calls
+        /// `record_command` — that edit reaches the command log exclusively through
+        /// [`Self::backfill_command_log`], which runs inside [`Self::refresh_cache`], which
+        /// [`Self::history_patch`] runs FIRST. Reading `history_dirty_sequences` before that backfill
+        /// therefore answered "nothing dirty" on the very call whose publication had just landed, so the
+        /// terminal completion carried `history_patch: None` and the row surfaced on whatever later call
+        /// happened to refresh the cache — the one-command lag measured in the browser on wasm #47
+        /// (`📓️2026-09-12-wave-B19-mutation-lane-regression.md` §3).
         async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> {
             let Some(witness) = self.typed_completion_outbox.pop() else { return Ok(None) };
+            self.refresh_cache().await?;
             let history_patch = if self.history_dirty_sequences.is_empty() { None } else { Some(self.history_patch(false).await?) };
             let revision = self.store.content_revision_now();
             Ok(Some(TypedOperationCompletion { operation: witness.operation, revision: u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")), ui_scope: witness.ui_scope, history_patch }))
@@ -26049,7 +26753,7 @@ pub mod app {
                 let Some((_, _, _, history)) = self.cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer, self.history_page).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -32096,7 +32800,32 @@ pub mod plugin_runtime {
         TerminalFault(Fault),
     }
 
+    /// 📥️ Ingress moves one turn may spend driving a command from its assembled pages to dispatch.
+    ///
+    /// Every state [`PluginCommandIngress::step`] reaches is a bounded move: a decode state reads one
+    /// `read_bounded_bytes` field, a closing state releases exactly one page. Answering `Pending`
+    /// after each of them cost the HOST a whole turn round trip per move — measured 4.006 turns for a
+    /// ONE-page `AppCommand::CommandText` (`a_long_command_stream_never_pins_the_retained_ingress_
+    /// authority`: 320 commands, 1 282 turns), five for a one-page `AppCommand::Command`, and one more
+    /// for every further page. The grant is the whole close ladder — `COMMAND_MAXIMUM_PAGES` page
+    /// releases plus the three decoded field stages plus the header — so a command assembles, decodes
+    /// and dispatches inside the turn that carried its LAST page, and a cancelled one retires inside a
+    /// single turn too. Ticket 26/09/02 wave B24.
+    const COMMAND_INGRESS_MOVES_PER_TURN: usize = semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 8;
+
     impl PluginCommandIngress {
+        /// 📥️ Drives the owner until it is dispatchable, terminal, or the turn's move grant is spent.
+        fn advance(self, moves: usize) -> PluginCommandIngressStep {
+            let mut owner = self;
+            for _ in 0..moves {
+                match owner.step() {
+                    PluginCommandIngressStep::Pending(next) => owner = next,
+                    terminal => return terminal,
+                }
+            }
+            PluginCommandIngressStep::Pending(owner)
+        }
+
         pub(crate) fn retire_step(self) -> Option<Self> {
             match self.cancel(plugin_internal_fault("command lifetime is closing")).step() {
                 PluginCommandIngressStep::Pending(owner) => Some(owner),
@@ -32166,8 +32895,38 @@ pub mod plugin_runtime {
     }
 
     //#region 🔁️TypedOperationContinuation
+    /// 🎰️ Highest typed-operation slot occupancy any instance of this guest has reached, and whether that
+    /// peak still owes its drain witness — the two values that bound the diagnostic below to at most two
+    /// console lines per distinct peak, i.e. at most `2 × ARTIFACT_LIVE_OUTPUT_SLOTS` for a whole session.
+    static PEAK_TYPED_OPERATION_SLOTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    static TYPED_OPERATION_SLOT_DRAIN_PENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+    /// 🎰️ Reports the guest's live typed-operation slot occupancy on the console channel the rest of this
+    /// runtime's `[DEBUG]` diagnostics already use — no wire, no protocol frame, and nothing the host may
+    /// branch on. A browser probe reads `live=0` as the proof every admitted slot reached its release path;
+    /// a `peak` that rises and never drains is the retirement leak that refused
+    /// `engagementAbort`/`setCamera`/`openVortexSuggestions` 39 times in the 2026-09-11 puzzle3d battery
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B8). Every new peak and its first full drain print
+    /// unconditionally because that pair IS the leak signal and is self-limiting; every intermediate
+    /// transition prints only under [`semio_framework_trace::runtime_diagnostics_enabled`].
+    fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) {
+        let live = app.live_typed_operation_slots() as u64;
+        let previous = PEAK_TYPED_OPERATION_SLOTS.fetch_max(live, Ordering::Relaxed);
+        let peak = previous.max(live);
+        let raised = live > previous;
+        if raised {
+            TYPED_OPERATION_SLOT_DRAIN_PENDING.store(true, Ordering::Relaxed);
+        }
+        let drained = live == 0 && TYPED_OPERATION_SLOT_DRAIN_PENDING.swap(false, Ordering::Relaxed);
+        if !raised && !drained && !semio_framework_trace::runtime_diagnostics_enabled() {
+            return;
+        }
+        eprintln!("[DEBUG] typed-operation slots instance={instance} live={live}/{} peak={peak}", crate::app::ARTIFACT_LIVE_OUTPUT_SLOTS);
+    }
+
     fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
         resolve_ready(app.advance_typed_operation_publication())?;
+        trace_typed_operation_slot_occupancy(app, instance);
         let mut output = PluginExchangeOutput { typed_operation_result: app.take_typed_operation_result_page(instance), ..PluginExchangeOutput::default() };
         if let Some(effect) = app.take_typed_operation_effect() {
             output.effects.push(encode_wire_serialized(&effect));
@@ -32212,6 +32971,62 @@ pub mod plugin_runtime {
         pub contended: bool,
     }
 
+    /// ⏱️ Wall milliseconds one turn may spend driving typed-operation units — the reactor executor's
+    /// own slice, so the continuation phase and the executor phase cost an interactive turn the same.
+    pub const TYPED_OPERATION_SLICE_MS: u64 = 8;
+
+    /// 🔁️ Units one turn may drive before it hands the host its turn back regardless of the clock.
+    /// A guest whose host clock is missing still terminates; 256 covers every staged work this
+    /// runtime admits (the heaviest measured is a 5.7 KB `registerBrushMesh` at ~84).
+    pub const TYPED_OPERATION_UNITS_PER_TURN: u32 = 256;
+
+    /// 🔁️ What one turn may spend continuing typed operations, and what stops it early.
+    ///
+    /// [`plugin_continue_typed_operations`] advanced EXACTLY ONE publication unit per call and the
+    /// reactor calls it once per turn, so every unit of a staged operation cost the host a whole turn
+    /// round trip. A trivial `compositeEdit` reached its terminal result in 48 turns
+    /// (`retained_operation_continues_after_command_admission_until_publication_and_retirement`) and a
+    /// 5.7 KB `registerBrushMesh` in ~84 (`📓️2026-09-12-wave-B22-brush-mesh-upload.md` §1.3). A turn
+    /// now drives units until one of four bounds, and every one of them is the protocol's own rather
+    /// than a pacing constant: a result page the host must acknowledge before the operation may
+    /// continue, the turn's declared frame and effect capacity, [`Self::deadline`], and [`Self::units`].
+    /// Ticket 26/09/02 wave B24.
+    #[derive(Clone, Copy)]
+    pub struct TypedOperationGrant {
+        pub units: u32,
+        pub max_frames: usize,
+        pub max_effects: usize,
+        pub deadline: Option<std::time::Instant>,
+    }
+
+    impl TypedOperationGrant {
+        /// 🔁️ One unit and nothing more — for a law that steps the continuation deliberately.
+        pub const UNIT: Self = Self { units: 1, max_frames: usize::MAX, max_effects: usize::MAX, deadline: None };
+
+        /// 🔁️ The grant a turn's own [`semio_framework::kernel::Budget`] declares.
+        pub fn turn(budget: semio_framework::kernel::Budget) -> Self {
+            Self {
+                units: TYPED_OPERATION_UNITS_PER_TURN,
+                max_frames: budget.max_frames as usize,
+                max_effects: budget.max_effects as usize,
+                deadline: std::time::Instant::now().checked_add(std::time::Duration::from_millis(u64::from(budget.deadline_ms).min(TYPED_OPERATION_SLICE_MS))),
+            }
+        }
+
+        /// 🛑️ Whether the collected output has reached what one turn may carry. An EMPTY collection
+        /// never counts as reached, so a budget declaring zero frames still drives units rather than
+        /// silently restoring the one-unit-per-turn pacing this grant exists to remove.
+        fn spent(&self, output: &PluginExchangeOutput) -> bool {
+            output.typed_operation_result.is_some()
+                || (!output.frames.is_empty() && output.frames.len() >= self.max_frames)
+                || (!output.effects.is_empty() && output.effects.len() >= self.max_effects)
+        }
+
+        fn expired(&self) -> bool {
+            self.deadline.is_some_and(|deadline| std::time::Instant::now() >= deadline)
+        }
+    }
+
     fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, start: usize) -> Result<(Option<(usize, u32)>, TypedOperationScan), Fault> {
         let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut cursor = start;
@@ -32237,19 +33052,38 @@ pub mod plugin_runtime {
         Ok((None, TypedOperationScan { runnable: false, contended }))
     }
 
-    /// 📮️ Publishes one admitted operation without requiring another user command.
-    pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<(Option<(u32, PluginExchangeOutput)>, TypedOperationScan), Fault> {
-        let (next, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
-        let Some((index, instance)) = next else { return Ok((None, scan)) };
-        runtime.typed_continuation_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        let cell = runtime_instance_cell(runtime, instance)?;
-        let output = match cell.instance.try_lock() {
-            Ok(mut active) => advance_typed_operation_output(&mut active.app, instance)?,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok((None, TypedOperationScan { runnable: false, contended: true })),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}"))),
-        };
-        let (_, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
-        Ok((Some((instance, output)), scan))
+    /// 📮️ Publishes admitted operations without requiring another user command — as many units of ONE
+    /// instance as [`TypedOperationGrant`] allows, so a staged work costs the host one round trip per
+    /// acknowledgeable result page instead of one per unit. Units of a SECOND instance are left to the
+    /// next turn: the round-robin cursor is the fairness authority and one turn's output carries one
+    /// receiver.
+    pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>, grant: TypedOperationGrant) -> Result<(Option<(u32, PluginExchangeOutput)>, TypedOperationScan), Fault> {
+        let mut driven: Option<(u32, PluginExchangeOutput)> = None;
+        let mut units = 0;
+        loop {
+            let (next, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+            let Some((index, instance)) = next else { return Ok((driven, scan)) };
+            if units >= grant.units || driven.as_ref().is_some_and(|(owner, _)| *owner != instance) || (units > 0 && grant.expired()) {
+                return Ok((driven, scan));
+            }
+            runtime.typed_continuation_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
+            let cell = runtime_instance_cell(runtime, instance)?;
+            let output = match cell.instance.try_lock() {
+                Ok(mut active) => advance_typed_operation_output(&mut active.app, instance)?,
+                Err(std::sync::TryLockError::WouldBlock) => return Ok((driven, TypedOperationScan { runnable: false, contended: true })),
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}"))),
+            };
+            units += 1;
+            let collected = driven.get_or_insert((instance, PluginExchangeOutput::default()));
+            collected.1.frames.extend(output.frames);
+            collected.1.effects.extend(output.effects);
+            collected.1.events.extend(output.events);
+            collected.1.typed_operation_result = output.typed_operation_result;
+            if grant.spent(&collected.1) {
+                let (_, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+                return Ok((driven, scan));
+            }
+        }
     }
     //#endregion 🔁️TypedOperationContinuation
 
@@ -32655,7 +33489,7 @@ pub mod plugin_runtime {
         let mut mutated = false;
 
         let command = match command {
-            Some((envelope_seq, ingress)) => match ingress.step() {
+            Some((envelope_seq, ingress)) => match ingress.advance(COMMAND_INGRESS_MOVES_PER_TURN) {
                 PluginCommandIngressStep::Pending(ingress) => {
                     return Ok(PluginExchangeOutput {
                         frames: Vec::new(),
@@ -34052,12 +34886,15 @@ pub mod world3d_host {
         WindowMeasure::Group { id, label: label.into(), default_open, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }
     }
 
-    /** 🌞️ Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern. */
+    /** 🌞️ Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern.
+     * Open by default like every sibling group (grid/LOD/select): `WindowMeasureTreeGroup` does not render a
+     * collapsed group's children at all, so a closed-by-default Sun group put `<prefix>-measure-sun-enabled`
+     * outside the DOM entirely and the toggle read as missing rather than merely folded. */
     pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         measure_group_with_open(
             format!("{id_prefix}-measure-sun"),
             "Sun",
-            Some(false),
+            Some(true),
             vec![
                 WindowMeasure::Toggle { id: format!("{id_prefix}-measure-sun-enabled"), icon_id: "sun".into(), label: Some("Enabled".into()), pressed: sun.enabled, text: None, on_change: action("toggleSun", None) },
                 WindowMeasure::Slider {
@@ -34286,7 +35123,9 @@ pub mod world3d_host {
     }
 
     /** 📐️ Shared "Projection" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear —
-     * every leaf targets `action`, parameter sliders gated to the kind/variant they apply to (see `puzzle3d_fill_utility_options` for the sibling gating pattern). */
+     * every leaf targets `action`, parameter sliders gated to the kind/variant they apply to (see `puzzle3d_fill_utility_options` for the sibling gating pattern).
+     * Every id is `<prefix>-measure-projection…`, the same `<prefix>-measure-<family>` shape `world3d_sun_measures` uses — the
+     * bare `<prefix>-projection…` spelling it carried before matched nothing any window-options contract names. */
     pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         let select = |id: String, value: String, items: Vec<(&str, &str)>, field: &str| WindowMeasure::Select {
             id,
@@ -34312,11 +35151,11 @@ pub mod world3d_host {
 
         let orthographic_view = if p.kind == "orthographic" { p.orthographic_view.clone() } else { String::new() };
         let orthographic = measure_group_with_open(
-            format!("{id_prefix}-projection-orthographic"),
+            format!("{id_prefix}-measure-projection-orthographic"),
             "Orthographic",
             Some(true),
             vec![select(
-                format!("{id_prefix}-projection-orthographic-view"),
+                format!("{id_prefix}-measure-projection-orthographic-view"),
                 orthographic_view,
                 vec![("plan", "Plan"), ("top", "Top"), ("bottom", "Bottom"), ("front", "Front"), ("back", "Back"), ("left", "Left"), ("right", "Right")],
                 "orthographicView",
@@ -34325,36 +35164,36 @@ pub mod world3d_host {
 
         let mut axo_children = vec![
             select(
-                format!("{id_prefix}-projection-axonometric-variant"),
+                format!("{id_prefix}-measure-projection-axonometric-variant"),
                 if p.kind == "axonometric" { p.axonometric_variant.clone() } else { String::new() },
                 vec![("isometric", "Isometric"), ("dimetric", "Dimetric"), ("trimetric", "Trimetric")],
                 "axonometricVariant",
             ),
-            select(format!("{id_prefix}-projection-axonometric-quadrant"), if p.kind == "axonometric" { p.axonometric_quadrant.clone() } else { String::new() }, vec![("ne", "NE"), ("nw", "NW"), ("se", "SE"), ("sw", "SW")], "axonometricQuadrant"),
+            select(format!("{id_prefix}-measure-projection-axonometric-quadrant"), if p.kind == "axonometric" { p.axonometric_quadrant.clone() } else { String::new() }, vec![("ne", "NE"), ("nw", "NW"), ("se", "SE"), ("sw", "SW")], "axonometricQuadrant"),
         ];
         if p.kind == "axonometric" && p.axonometric_variant != "isometric" {
-            axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-a"), "Angle", p.axonometric_angle_a, 5.0, if p.axonometric_variant == "dimetric" { 60.0 } else { 75.0 }, 0.5, "axonometricAngleA"));
+            axo_children.push(slider(format!("{id_prefix}-measure-projection-axonometric-angle-a"), "Angle", p.axonometric_angle_a, 5.0, if p.axonometric_variant == "dimetric" { 60.0 } else { 75.0 }, 0.5, "axonometricAngleA"));
         }
         if p.kind == "axonometric" && p.axonometric_variant == "trimetric" {
-            axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
+            axo_children.push(slider(format!("{id_prefix}-measure-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
         }
-        let axonometric = measure_group_with_open(format!("{id_prefix}-projection-axonometric"), "Axonometric", Some(false), axo_children);
+        let axonometric = measure_group_with_open(format!("{id_prefix}-measure-projection-axonometric"), "Axonometric", Some(false), axo_children);
 
         let mut oblique_children = vec![select(
-            format!("{id_prefix}-projection-oblique-variant"),
+            format!("{id_prefix}-measure-projection-oblique-variant"),
             if p.kind == "oblique" { p.oblique_variant.clone() } else { String::new() },
             vec![("cabinet", "Cabinet"), ("cavalier", "Cavalier"), ("military", "Military")],
             "obliqueVariant",
         )];
         if p.kind == "oblique" {
-            oblique_children.push(slider(format!("{id_prefix}-projection-oblique-angle"), "Angle", p.oblique_angle, 5.0, 90.0, 1.0, "obliqueAngle"));
+            oblique_children.push(slider(format!("{id_prefix}-measure-projection-oblique-angle"), "Angle", p.oblique_angle, 5.0, 90.0, 1.0, "obliqueAngle"));
             if p.oblique_variant != "military" {
-                oblique_children.push(slider(format!("{id_prefix}-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
+                oblique_children.push(slider(format!("{id_prefix}-measure-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
             }
         }
-        let oblique = measure_group_with_open(format!("{id_prefix}-projection-oblique"), "Oblique", Some(false), oblique_children);
+        let oblique = measure_group_with_open(format!("{id_prefix}-measure-projection-oblique"), "Oblique", Some(false), oblique_children);
 
-        let parallel = measure_group_with_open(format!("{id_prefix}-projection-parallel"), "Parallel", Some(true), vec![orthographic, axonometric, oblique]);
+        let parallel = measure_group_with_open(format!("{id_prefix}-measure-projection-parallel"), "Parallel", Some(true), vec![orthographic, axonometric, oblique]);
 
         let perspective_kind_value = match p.kind.as_str() {
             "onePoint" => "onePoint",
@@ -34364,29 +35203,29 @@ pub mod world3d_host {
             _ => "",
         };
         let mut perspective_children =
-            vec![select(format!("{id_prefix}-projection-perspective-kind"), perspective_kind_value.into(), vec![("onePoint", "1-Point"), ("twoPoint", "2-Point"), ("threePoint", "3-Point"), ("curvilinear", "Curvilinear")], "perspectiveKind")];
+            vec![select(format!("{id_prefix}-measure-projection-perspective-kind"), perspective_kind_value.into(), vec![("onePoint", "1-Point"), ("twoPoint", "2-Point"), ("threePoint", "3-Point"), ("curvilinear", "Curvilinear")], "perspectiveKind")];
         match p.kind.as_str() {
             "onePoint" => {
-                perspective_children.push(select(format!("{id_prefix}-projection-one-point-axis"), p.one_point_axis.clone(), vec![("y", "Front (Y)"), ("x", "Side (X)"), ("z", "Down (Z)")], "onePointAxis"));
-                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+                perspective_children.push(select(format!("{id_prefix}-measure-projection-one-point-axis"), p.one_point_axis.clone(), vec![("y", "Front (Y)"), ("x", "Side (X)"), ("z", "Down (Z)")], "onePointAxis"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
             }
             "twoPoint" => {
-                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
-                perspective_children.push(slider(format!("{id_prefix}-projection-two-point-shift"), "Vertical Shift", p.two_point_shift, -1.0, 1.0, 0.01, "twoPointShift"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-two-point-shift"), "Vertical Shift", p.two_point_shift, -1.0, 1.0, 0.01, "twoPointShift"));
             }
             "threePoint" => {
-                perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
             }
             "curvilinear" => {
-                perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-fov"), "Field of View", p.curvilinear_fov, 60.0, 160.0, 1.0, "curvilinearFov"));
-                perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-strength"), "Strength", p.curvilinear_strength, 0.0, 1.0, 0.01, "curvilinearStrength"));
-                perspective_children.push(select(format!("{id_prefix}-projection-curvilinear-mapping"), p.curvilinear_mapping.clone(), vec![("fisheye", "Fisheye"), ("panini", "Panini")], "curvilinearMapping"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-curvilinear-fov"), "Field of View", p.curvilinear_fov, 60.0, 160.0, 1.0, "curvilinearFov"));
+                perspective_children.push(slider(format!("{id_prefix}-measure-projection-curvilinear-strength"), "Strength", p.curvilinear_strength, 0.0, 1.0, 0.01, "curvilinearStrength"));
+                perspective_children.push(select(format!("{id_prefix}-measure-projection-curvilinear-mapping"), p.curvilinear_mapping.clone(), vec![("fisheye", "Fisheye"), ("panini", "Panini")], "curvilinearMapping"));
             }
             _ => {}
         }
-        let perspective = measure_group_with_open(format!("{id_prefix}-projection-perspective"), "Perspective", Some(true), perspective_children);
+        let perspective = measure_group_with_open(format!("{id_prefix}-measure-projection-perspective"), "Perspective", Some(true), perspective_children);
 
-        measure_group_with_open(format!("{id_prefix}-projection"), "Projection", Some(false), vec![parallel, perspective])
+        measure_group_with_open(format!("{id_prefix}-measure-projection"), "Projection", Some(true), vec![parallel, perspective])
     }
 
     /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */

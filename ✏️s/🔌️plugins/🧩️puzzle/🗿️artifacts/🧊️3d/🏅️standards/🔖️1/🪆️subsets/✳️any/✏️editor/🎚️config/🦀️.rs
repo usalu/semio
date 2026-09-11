@@ -197,6 +197,9 @@ pub struct Puzzle3dRuntime {
     pub window_ids: Vec<String>,
     #[value(default)]
     pub panel_pages: HashMap<String, u32>,
+    /// 🏷️ Projected from [`Puzzle3dConfig::active_example_id`] — see its doc.
+    #[value(default)]
+    pub active_example_id: String,
 }
 
 impl Default for Puzzle3dRuntime {
@@ -231,6 +234,7 @@ impl Default for Puzzle3dRuntime {
             active_tool_id: None,
             window_ids: default_window_ids(),
             panel_pages: HashMap::new(),
+            active_example_id: String::new(),
         }
     }
 }
@@ -246,11 +250,19 @@ pub struct Puzzle3dConfig {
     pub object_kind_weights: HashMap<String, f64>,
     #[value(default)]
     pub vortex_kind_weights: HashMap<String, f64>,
+    /// 🏷️ The example id the document was last loaded from — `concrete-forest`,
+    /// `nakagin-capsule-tower`, or empty for a blank document. Document identity rather than a
+    /// preference, and the only thing `export_fixture` can name its download after: a
+    /// `Puzzle3dFixture` carries `schema`/`domain` only (both examples author the same pair), and
+    /// `set_active_example` replaces the fixture wholesale, so nothing downstream of it remembers
+    /// which example the user is looking at unless this field does.
+    #[value(default)]
+    pub active_example_id: String,
 }
 
 impl Default for Puzzle3dConfig {
     fn default() -> Self {
-        Self { fill_count: 0, overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new() }
+        Self { fill_count: 0, overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: String::new() }
     }
 }
 

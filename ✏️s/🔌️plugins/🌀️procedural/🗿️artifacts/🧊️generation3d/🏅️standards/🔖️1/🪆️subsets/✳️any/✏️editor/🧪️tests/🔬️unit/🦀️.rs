@@ -486,9 +486,9 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }),
         Generation3dCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::generation3d::config::Generation3dPreviewCamera::default() }),
         Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
-        Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview-test".into() }),
-        Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "procedural-preview-test".into(), node_hash: 7, output_json: "{}".into() }),
-        Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { window_id: "procedural-preview-test".into(), node_hash: 9, output_json: "{}".into() }),
+        Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() }),
+        Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 7, output_json: "{}".into() }),
+        Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 9, output_json: "{}".into() }),
         Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval {}),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
@@ -1192,7 +1192,7 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
         let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
             let session = FlowEvalSession::new();
-            let tree = generation3d_render_body(body_key, &snapshot, &config, None, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
+            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
             testkit::retire_flow_eval_session(session);
             let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("render json");
             println!("[STATS] surface example={example_id} body={body_key} bytes={} bound={bound}", rendered.len());
@@ -1453,7 +1453,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let mut addresses: Vec<(String, String)> = Vec::new();
     app.pending_effects(Some(&view)).await;
     for _ in 0..1000 {
-        let receipt = testkit::dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone() }), view.clone()).await.expect("flowEvalTick");
+        let receipt = testkit::dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view.clone()).await.expect("flowEvalTick");
         let settled = semio_framework_plugin::testkit::settle_extension_invocations(&mut *app, semio_framework_plugin::testkit::meta("local").instance_id, &semio_framework_plugin::testkit::meta("local"), &mut |pending| {
             addresses.push((pending.extension_id.clone(), pending.capability.clone()));
             crate::brep_extension::serve(pending)
@@ -1728,7 +1728,7 @@ async fn measure_hex_column_boot(app: &mut testkit::Generation3dApp, view: &semi
     let mut budget = BootBudget { turns: 0, turns_to_first_mesh: None, worst_turn_us: 0, total_turn_us: 0, round_trips: 0, ledger: semio_framework_os_flow::FlowEvalPublicationLedger::default(), steps: semio_framework_os_flow::FlowEvalStepLedger::default(), meshes: 0 };
     for _ in 0..1000 {
         let started = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock");
-        let receipt = testkit::dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone() }), view.clone()).await.expect("flowEvalTick");
+        let receipt = testkit::dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view.clone()).await.expect("flowEvalTick");
         let elapsed = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock").saturating_sub(started);
         budget.turns += 1;
         budget.worst_turn_us = budget.worst_turn_us.max(elapsed);
@@ -1865,7 +1865,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
         crate::seed_law_generations(&mut snapshot.generation);
         for (kind_id, body_key, _) in &windows {
             let session = FlowEvalSession::new();
-            let tree = generation3d_render_body(body_key, &snapshot, &config, None, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
+            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
             testkit::retire_flow_eval_session(session);
             let projection = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("render json");
             emitted.get_mut(kind_id).expect("window bucket").extend(crate::emitted_action_ids(&projection));

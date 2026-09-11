@@ -3,5 +3,6 @@ type Puzzle3dConfig {
   overlapBudget: Float! @state(class: CONFIG)
   objectKindWeights: [Puzzle3dFloatEntry!]! @state(class: CONFIG)
   vortexKindWeights: [Puzzle3dFloatEntry!]! @state(class: CONFIG)
+  activeExampleId: String! @state(class: CONFIG)
 }
 type Puzzle3dFloatEntry { key: String! value: Float! }

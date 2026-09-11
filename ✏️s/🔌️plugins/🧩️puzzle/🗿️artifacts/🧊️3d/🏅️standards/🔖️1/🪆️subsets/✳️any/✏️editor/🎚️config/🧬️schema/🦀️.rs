@@ -10,6 +10,10 @@ pub struct Puzzle3dConfig {
     #[state(config)] pub overlap_budget: f64,
     #[state(config)] pub object_kind_weights: HashMap<String, f64>,
     #[state(config)] pub vortex_kind_weights: HashMap<String, f64>,
+    /// 🏷️ The example id the document was last loaded from (`concrete-forest`,
+    /// `nakagin-capsule-tower`, empty for a blank document) — document identity, not a preference, and
+    /// the only thing `export_fixture` can name its download after.
+    #[state(config)] pub active_example_id: String,
 }
 
 pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor {

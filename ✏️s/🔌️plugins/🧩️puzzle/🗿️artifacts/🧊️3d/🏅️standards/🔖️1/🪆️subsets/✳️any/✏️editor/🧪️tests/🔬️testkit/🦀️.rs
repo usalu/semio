@@ -365,7 +365,7 @@ pub async fn settle(app: &mut Puzzle3dApp) -> Puzzle3dSettled {
         settled.effects.extend(app.take_typed_operation_effect());
         settled.events.extend(app.take_typed_operation_event());
         if let Some(completion) = app.take_typed_operation_completion().await.expect("take one typed operation completion witness") {
-            settled.completions.push(Puzzle3dCompletion { operation: completion.operation, ui_scope: completion.ui_scope, history_patch: completion.history_patch.is_some() });
+            settled.completions.push(Puzzle3dCompletion { operation: completion.operation, ui_scope: completion.ui_scope, history_patch: completion.history_patch });
         }
         settled.scope = app.take_typed_operation_ui_scope().or(settled.scope);
         acknowledge_local_interaction_pages(app);
@@ -395,7 +395,7 @@ pub struct Puzzle3dSettled {
 pub struct Puzzle3dCompletion {
     pub operation: u64,
     pub ui_scope: UiDirtyScope,
-    pub history_patch: bool,
+    pub history_patch: Option<semio_framework::kernel::HistoryPatch>,
 }
 
 /// 📏️ One continuation turn's byte grant. Deliberately one fixed envelope page, not a huge number: the
@@ -418,18 +418,37 @@ fn acknowledge_local_interaction_pages(app: &mut Puzzle3dApp) {
 /// 🔁️ Folds one settled turn's forwarded output into the invocation the shell observes, so a test reads
 /// the same `(requested_effects, events, ui_scope)` triple a client would after the continuation turns.
 async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    settle_into_reporting(app, result).await.0
+}
+
+/// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: [`settle_into`] plus the settle census it folded
+/// from, for laws that must read a channel the `InvocationResult` deliberately does NOT carry — above
+/// all the command-log delta. A typed operation never calls `record_command`: its edit reaches the log
+/// through `backfill_command_log` and the patch that carries it is minted by
+/// `take_typed_operation_completion`, so a MUTATING verb's row rides `AppFrame::OperationCompleted`
+/// while `InvocationResult::history_patch` keeps its own narrower meaning — the delta the ADMISSION
+/// itself recorded. Six import laws asserted the former on the latter and were green only because the
+/// row they read was the PREVIOUS command's un-delivered one (the one-command lag).
+async fn settle_into_reporting(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fault>) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
     let settled = settle(app).await;
-    result.map(|mut result| {
-        result.requested_effects.extend(settled.effects);
-        result.events.extend(settled.events);
+    let folded = result.map(|mut result| {
+        result.requested_effects.extend(settled.effects.iter().cloned());
+        result.events.extend(settled.events.iter().cloned());
         // 🧲️ A latest-wins command answers BEFORE it runs, so its own terminal `UiDirtyScope` only
         // exists on the completion lane; folding the last completion's scope in is what makes
         // `InvocationResult::ui_scope` mean the same thing for a coalesced verb as for a plain one.
-        if let Some(scope) = settled.scope.or_else(|| settled.completions.last().map(|completion| completion.ui_scope.clone())) {
+        if let Some(scope) = settled.scope.clone().or_else(|| settled.completions.last().map(|completion| completion.ui_scope.clone())) {
             result.ui_scope = scope;
         }
         result
-    })
+    });
+    (folded, settled)
+}
+
+/// 🧾️ How many command-log rows one settle published on the completion lane — the `historyUpserts` a
+/// browser client counts on its `AppFrame::OperationCompleted` frames.
+pub fn history_rows(settled: &Puzzle3dSettled) -> usize {
+    settled.completions.iter().filter_map(|completion| completion.history_patch.as_ref()).map(|patch| patch.upserts.len()).sum()
 }
 
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
@@ -445,6 +464,14 @@ async fn settle_into(app: &mut Puzzle3dApp, result: Result<InvocationResult, Fau
 /// the interaction snapshot never moved — the exact silent no-op shape wave B5 reported. [`settle_reserved`]
 /// plays that host half, and is a no-op for the clipboard routes that still commit inline.
 pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    dispatch_reporting(app, action, args, window_id).await.0
+}
+
+/// 🧾️ [`dispatch`] plus the settle census, for laws that must read the completion lane — above all
+/// [`history_rows`], the command-log delta a MUTATING verb publishes on
+/// `AppFrame::OperationCompleted` rather than on its accepted invocation. See
+/// [`settle_into_reporting`] for why the two channels stay separate.
+pub async fn dispatch_reporting(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
     let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
     app.ensure_window(window_id);
     // 🏛️ The host resolves its OWN session state first and only then forwards the verb — so the very
@@ -489,10 +516,10 @@ pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>,
             Ok(admitted) => settle_reserved(app, admitted).await,
             Err(fault) => Err(fault),
         };
-        return settle_into(app, reserved).await;
+        return settle_into_reporting(app, reserved).await;
     }
     let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta).await;
-    settle_into(app, typed).await
+    settle_into_reporting(app, typed).await
 }
 
 /// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
@@ -564,6 +591,41 @@ pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
     let tree = app.render(body_key, None, &view).await.expect("render");
+    rendered_body_value(tree)
+}
+
+/// 📌️ One APP-LEVEL PANEL body rendered exactly the way `plugin_refresh_ui` renders it:
+/// `ViewModel::for_panel()` over the live session, i.e. with NO `window_id` at all — the projection a
+/// panel actually receives, and the one a `render_body`/`render_window_refresh` call can never
+/// reproduce because both address a concrete instance. `focused_window_id` is the shell's last-focused
+/// pane, the only per-call carrier of "which window is the user looking at" a panel is given.
+pub async fn render_panel_body(app: &mut Puzzle3dApp, body_key: &str, focused_window_id: Option<&str>) -> Value {
+    if let Some(window_id) = focused_window_id {
+        app.ensure_window(window_id);
+    }
+    let mut view = app.view.clone();
+    view.focused_window_id = focused_window_id.map(str::to_string);
+    let tree = app.render(body_key, None, &view.for_panel()).await.expect("render");
+    rendered_body_value(tree)
+}
+
+/// 🪟️ One window INSTANCE rendered exactly the way `plugin_refresh_ui` renders it: the window KIND's
+/// own body key — the host sends `windowKinds[].n` for every instance, never a `<body>:<instance>`
+/// spelling — with the view narrowed at that one instance through `ViewModel::for_window_instance`.
+/// The `<body>:<instance>` form [`render_window`] uses is the OTHER host route
+/// (`plugin_render_surface`'s bound surface context), so a law about what a split pane publishes has
+/// to state THIS shape: it is the only one where the instance id reaches the guest through the view
+/// alone.
+pub async fn render_window_refresh(app: &mut Puzzle3dApp, body_key: &str, window_id: &str) -> Value {
+    app.ensure_window(window_id);
+    let view = app.window_view(window_id);
+    let tree = app.render(body_key, None, &view).await.expect("render");
+    rendered_body_value(tree)
+}
+
+/// 🖼️ The world-3d scene a rendered tree publishes, else the projected node JSON — the one projection
+/// every render probe in this testkit reads.
+fn rendered_body_value(tree: semio_framework_plugin::ComponentTree) -> Value {
     let mut stack = vec![&tree.root];
     let mut rendered_scene = None;
     while let Some(node) = stack.pop() {
@@ -923,6 +985,27 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget { surface_id: "world3d".into(), kind: "world3d".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: granularity.into(), ids: vec![id.to_string()] }], text: None }),
+        window_instance_id: None,
+        point: None,
+    };
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    app.context_menu(&request, &view).await
+}
+
+/// 🎯️ The menu a right-click on an UNSELECTED entity opens: the surface carries a `hits` entry and an
+/// empty `selection`, exactly what `World3dHost` sends when `resolveWorldContextMenuTarget` resolves a
+/// pointer target the document has not selected.
+pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{ContextMenuHit, ContextMenuRequest, ContextMenuSurfaceTarget, UiMenuRef};
+    let request = ContextMenuRequest {
+        menu: UiMenuRef { id: "world3d".into(), args: None },
+        surface: Some(ContextMenuSurfaceTarget {
+            surface_id: "world3d".into(),
+            kind: "world3d".into(),
+            hits: vec![ContextMenuHit { domain: domain.into(), id: id.to_string(), label: None }],
+            selection: Vec::new(),
+            text: None,
+        }),
         window_instance_id: None,
         point: None,
     };

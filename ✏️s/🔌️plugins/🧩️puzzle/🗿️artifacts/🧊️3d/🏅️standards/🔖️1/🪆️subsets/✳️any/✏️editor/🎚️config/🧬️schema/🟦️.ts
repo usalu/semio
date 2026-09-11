@@ -3,6 +3,7 @@ export interface Puzzle3dConfig {
   /** @state config */ overlapBudget: number;
   /** @state config */ objectKindWeights: Record<string, number>;
   /** @state config */ vortexKindWeights: Record<string, number>;
+  /** @state config */ activeExampleId: string;
 }
 export class Puzzle3dConfigGuardRefusal extends Error { constructor(readonly at: string, readonly why: string) { super(`${at}: ${why}`); } }
 const record = (value: unknown, at: string): Readonly<Record<string, unknown>> => {
@@ -13,10 +14,14 @@ const number = (value: unknown, at: string): number => {
   if (typeof value !== "number" || !Number.isFinite(value)) throw new Puzzle3dConfigGuardRefusal(at, "value is not a finite number");
   return value;
 };
+const text = (value: unknown, at: string): string => {
+  if (typeof value !== "string") throw new Puzzle3dConfigGuardRefusal(at, "value is not a string");
+  return value;
+};
 const weights = (value: unknown, at: string): Record<string, number> => Object.fromEntries(Object.entries(record(value, at)).map(([key, item]) => [key, number(item, `${at}.${key}`)]));
 export function parsePuzzle3dConfig(value: unknown, at = "$"): Puzzle3dConfig {
   const row = record(value, at);
   const fillCount = number(row.fillCount, `${at}.fillCount`);
   if (!Number.isSafeInteger(fillCount) || fillCount < 0) throw new Puzzle3dConfigGuardRefusal(`${at}.fillCount`, "value is not an unsigned integer");
-  return { fillCount, overlapBudget: number(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
+  return { fillCount, overlapBudget: number(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`), activeExampleId: text(row.activeExampleId, `${at}.activeExampleId`) };
 }

@@ -102,7 +102,7 @@ async fn an_unaddressed_flow_eval_tick_is_refused_not_over_capacity() {
     }
     .for_window_instance("procedural-main")
     .expect("flow window instance");
-    let refused = testkit::dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview".into() }), main).await;
+    let refused = testkit::dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() }), main).await;
     let detail = match refused {
         Ok(receipt) => format!("{:?}", receipt.lanes),
         Err(fault) => format!("{fault:?}"),

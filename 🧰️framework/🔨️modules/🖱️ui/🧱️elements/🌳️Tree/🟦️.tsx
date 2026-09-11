@@ -512,6 +512,15 @@ export type TreeHeaderAction = TreeSectionAction | TreeCheckboxAction;
 
 export type TreeDragRole = "sort" | "transfer";
 
+/** @emoji 📮️ DOM mirror of a row's transfer payload — the first (and for every catalogue/palette row, the
+ * only) MIME key and its bytes, exactly what a real `dragstart` would put on the `DataTransfer`. Same
+ * principle as the world host's `data-instances-json`: a native HTML5 drag cannot be driven by synthetic
+ * pointer moves, so without this the payload is unreadable outside a live OS drag. */
+export function treeRowDragPayloadAttributes(dragData: Record<string, string> | undefined): { readonly "data-drag-mime"?: string; readonly "data-drag-payload"?: string } {
+  const entry = Object.entries(dragData ?? {}).find(([, value]) => typeof value === "string" && value.length > 0);
+  return entry ? { "data-drag-mime": entry[0], "data-drag-payload": entry[1] } : {};
+}
+
 /** @emoji 🫳️ Which drag handles a tree row exposes under the default driver. */
 export function deriveTreeDragRoles(item: { readonly draggable?: boolean; readonly dragData?: Record<string, string>; readonly isDragHandle?: boolean }, paletteDragEnabled: boolean): readonly TreeDragRole[] {
   const roles: TreeDragRole[] = [];
@@ -605,17 +614,19 @@ export interface TreeCheckboxProps {
   ariaLabel?: string;
 }
 
-/** @emoji ☑️ Compact tree-row checkbox used as a property control or header action. */
+/**
+ * @emoji ☑️ Compact tree-row checkbox used as a property control or header action.
+ *
+ * The wrapper only stops the click from reaching the enclosing tree row; it must never
+ * `preventDefault()` it. Cancelling a checkbox's click runs the HTML "legacy-canceled activation
+ * behavior", which reverts the checkedness the pre-click steps had already applied and suppresses the
+ * native `change` event — so both a pointer click and the keyboard Space key left every window-option
+ * toggle (grid visible/snap, LOD automatic, selectable kinds) visually stuck on its old value.
+ *
+ * @see https://html.spec.whatwg.org/multipage/input.html#checkbox-state-(type=checkbox)
+ */
 export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel }) => (
-  <label
-    data-slot="tree-action-checkbox-wrapper"
-    className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center"
-    title={title}
-    onClick={(event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    }}
-  >
+  <label data-slot="tree-action-checkbox-wrapper" className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center" title={title} onClick={(event) => event.stopPropagation()}>
     <input
       data-slot="tree-action-checkbox"
       id={id}
@@ -626,6 +637,7 @@ export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheck
       disabled={disabled}
       onChange={(event) => {
         event.stopPropagation();
+        if (disabled) return;
         onCheckedChange(event.currentTarget.checked);
       }}
     />
@@ -1127,6 +1139,12 @@ interface TreeItemProps {
   onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
   onPointerCancel?: React.PointerEventHandler<HTMLDivElement>;
   layoutKind?: "default" | "property";
+  /** @emoji 🖱️ Whether this row carries an activation OF ITS OWN, as opposed to the selection handler the
+   * tree wires onto every row. Only the `property` layout reads it, and only for an EXPANDABLE row: there
+   * the label click folds the group, which is right for an inspector heading and wrong for a row that
+   * declares an action (the puzzle3d catalogue's object-kind rows nest their rim-vortex templates AND bind
+   * `activate` to `addObjectKind`). `onClick` cannot answer this — `TreeDataItemView` always passes one. */
+  activatable?: boolean;
   isHidden?: boolean;
   contextMenu?: ContextMenuItem[];
   /** @emoji 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
@@ -1137,6 +1155,8 @@ interface TreeItemProps {
   dragRoles?: readonly TreeDragRole[];
   /** @emoji 🫳️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
   transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
+  /** @emoji 📮️ The row's transfer payload by MIME, mirrored onto the row as `data-drag-mime`/`data-drag-payload` so the transferred bytes are readable from the DOM without opening a real drag. */
+  dragData?: Record<string, string>;
   /** @emoji 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
 }
@@ -1706,6 +1726,15 @@ TreeSection.displayName = "TreeSection";
 
 /**
  * SortableTreeItem holds the data fields for a SortableTreeItem record.
+ *
+ * 🖱️ `onClick` belongs to the `role="treeitem"` SHELL — the element that carries `id` and
+ * `aria-selected` — in every one of the four layouts, group rows included. A group row used to wire it to
+ * the `[data-slot="tree-label"]` span alone, so clicking anywhere else on the row (its padding, the gap
+ * before the row actions, the stretch a short label leaves empty) activated nothing, while the otherwise
+ * identical leaf row selected. Measured live on the puzzle3d serve: the outliner's object rows nest their
+ * vortices, which makes every one of them a group row, and a click on the row selected nothing at all. The
+ * fold chevron, the row actions and the drag handle each `stopPropagation`, so they keep owning their own
+ * clicks; `event.detail > 1` still yields the row to `onDoubleClick`.
  **/
 const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   id,
@@ -1771,6 +1800,10 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             style={style}
             className={itemShellClasses}
             {...surfaceDragProps}
+            onClick={(event) => {
+              if (event.detail > 1) return;
+              onClick?.(event);
+            }}
             onDoubleClick={(event) => {
               if (!onDoubleClick) return;
               event.preventDefault();
@@ -1802,17 +1835,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
                   {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                  <span
-                    data-slot="tree-label"
-                    className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
-                    style={treeItemLabelStyle}
-                    onClick={(e) => {
-                      if (e.detail > 1) return;
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onClick?.(e);
-                    }}
-                  >
+                  <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
                     {displayLabel as React.ReactNode}
                   </span>
                 </div>
@@ -1847,6 +1870,10 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           style={style}
           className={itemShellClasses}
           {...surfaceDragProps}
+          onClick={(event) => {
+            if (event.detail > 1) return;
+            onClick?.(event);
+          }}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -1878,17 +1905,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                <span
-                  data-slot="tree-label"
-                  className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
-                  style={treeItemLabelStyle}
-                  onClick={(e) => {
-                    if (e.detail > 1) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClick?.(e);
-                  }}
-                >
+                <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
                   {displayLabel as React.ReactNode}
                 </span>
               </div>
@@ -2021,6 +2038,18 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
 
 /**
  * Single tree item row with icon, label, and interaction handlers.
+ *
+ * 🖱️ Every `role="treeitem"` row here activates from the SHELL — the element carrying `id` — not from its
+ * label span, and every one of them publishes `aria-selected`. Both used to hold only for the leaf layout:
+ * an expandable row wired `onClick` to `[data-slot="tree-label"]` alone, so a click on the row's padding,
+ * on the gap before its row actions, or on the stretch a short label leaves empty did nothing at all, and
+ * no row of this component announced its selection to assistive tech or to a scripted reader. Measured live
+ * on the puzzle3d serve: the outliner's object rows nest their vortices, which makes every one of them an
+ * expandable row, and clicking one selected nothing. The fold chevron, the branch-navigation buttons, the
+ * row actions and the drag handles each `stopPropagation`, so they keep owning their own clicks, and
+ * `event.detail > 1` still yields the row to `onDoubleClick`. The `property` layout is deliberately
+ * different: there an expandable row's label FOLDS rather than selects, because an inspector group heading
+ * is not an entity.
  **/
 export const TreeItem: React.FC<TreeItemProps> = ({
   label,
@@ -2059,6 +2088,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onPointerUp,
   onPointerCancel,
   layoutKind = "default",
+  activatable = false,
   isHidden = false,
   contextMenu,
   headerControl,
@@ -2066,6 +2096,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   dragInitiation = "handle",
   dragRoles,
   transferPointerDown,
+  dragData,
   isDropReady = false,
 }) => {
   const localizedLabel = useIdLabel(id);
@@ -2169,7 +2200,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-slot="tree-property-item"
         data-hover-scope
         data-tree-row-kind={isExpandable ? "group" : "property"}
+        data-activatable={activatable ? "true" : undefined}
         role="treeitem"
+        aria-selected={isSelected}
         id={id}
         data-state={open ? "open" : "closed"}
         className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
@@ -2222,13 +2255,23 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               <span
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable && !activatable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                 style={treeItemLabelStyle}
+                // 🖱️ A row that DECLARES an activation fires it; folding belongs to the chevron button
+                // beside it (which stops propagation), exactly as in the default layout below, where the
+                // row shell carries `onClick` and the label folds nothing. This branch used to swallow
+                // every expandable row's activation into a fold and its own shell carries no `onClick`
+                // at all, so an expandable property row's action was unreachable by any click: the
+                // puzzle3d catalogue's object-kind rows are expandable (their rim-vortex templates are
+                // their children) and bind `activate` to `addObjectKind`, and battery #48 measured
+                // `catalogue-add-object-kind before=1 after=1` with no dispatch in the console while
+                // the drag-and-drop route into the same command passed. A row with no activation of its
+                // own keeps label-click-to-fold, which is the only thing that branch ever bought.
                 onClick={(event) => {
                   if (event.detail > 1) return;
                   event.preventDefault();
                   event.stopPropagation();
-                  if (isExpandable) {
+                  if (isExpandable && !activatable) {
                     setOpen(!open);
                     return;
                   }
@@ -2289,8 +2332,11 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-hover-scope
               data-tree-row-kind="group"
               data-tree-group
+              data-activatable={activatable ? "true" : undefined}
               data-draggable={draggable ? "true" : undefined}
+              {...treeRowDragPayloadAttributes(dragData)}
               role="treeitem"
+              aria-selected={isSelected}
               id={id}
               className={itemShellClasses}
               draggable={effectiveDraggable}
@@ -2299,6 +2345,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
+              onClick={(event) => {
+                if (event.detail > 1) return;
+                onClick?.(event);
+              }}
               onDoubleClick={(event) => {
                 if (!onDoubleClick) return;
                 event.preventDefault();
@@ -2336,17 +2386,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                   <div className={treeHeaderMainClassName}>
                     {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                    <span
-                      data-slot="tree-label"
-                      className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
-                      style={treeItemLabelStyle}
-                      onClick={(e) => {
-                        if (e.detail > 1) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onClick?.(e);
-                      }}
-                    >
+                    <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
                       {resolvedLabel as React.ReactNode}
                     </span>
                   </div>
@@ -2421,8 +2461,11 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-slot="tree-item-row"
         data-hover-scope
         data-tree-row-kind="leaf"
+        data-activatable={activatable ? "true" : undefined}
         data-draggable={draggable ? "true" : undefined}
+        {...treeRowDragPayloadAttributes(dragData)}
         role="treeitem"
+        aria-selected={isSelected}
         id={id}
         className={itemShellClasses}
         draggable={effectiveDraggable}
@@ -2941,8 +2984,10 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       dragRoles={dragRoles}
       dragInitiation="handle"
       transferPointerDown={palettePointerProps.onPointerDown}
+      dragData={item.dragData}
       isDropReady={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop)}
       layoutKind={propertyLayout ? "property" : undefined}
+      activatable={Boolean(item.onClick)}
       headerControl={hasControl && hasNestedTreeItems ? item.control : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
       onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}

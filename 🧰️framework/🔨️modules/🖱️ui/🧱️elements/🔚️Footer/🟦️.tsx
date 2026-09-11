@@ -10,7 +10,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
+import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Footer
@@ -25,7 +25,7 @@ export interface FooterProps {
   className?: string;
 }
 
-/** @emoji 🪟️ Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay) but anchored to the bottom edge with the border on top instead of the bottom. */
+/** @emoji 🪟️ Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay, BASE stacking level — see `Navbar`'s own note for why chrome must never paint above `z-panel`) but anchored to the bottom edge with the border on top instead of the bottom. */
 const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
@@ -49,7 +49,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
     </>
   );
   return (
-    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </footer>
   );

@@ -61,6 +61,7 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+  FRAMEWORK_HISTORY_BODY_KEY,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -202,6 +203,7 @@ import {
   type WorldInstanceRecord,
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
+import { WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
 import { loadPluginModule, pluginLoadProgressAt, SHARD_LIVENESS_POLICY, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -345,6 +347,19 @@ export function buildActiveExampleAction(controllerId: string, exampleId: string
   return { controllerId, action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: exampleId || "" } };
 }
 
+/** 🎨️ The example id the navbar must remember after one dispatch, given what it remembers now. Any
+ * `setActiveExample` carrying a non-empty `exampleId` teaches it — not only `NavbarExampleSelect`'s own
+ * `onValueChange`, because {@link navbarExampleIdFromHistoryUpserts} spends this memory on REDO, and a
+ * `Set Active Example` row can be redone that this shell dispatched from the palette, a context menu, a
+ * replayed shell command or the boot load. An empty `exampleId` means "the app's default document",
+ * which needs no memory at all (the popped-row branch already answers with `bootExampleId`), so it
+ * leaves the memory standing rather than erasing it. */
+export function rememberedExampleIdFromDispatchV1(action: { readonly action: string; readonly args?: unknown }, remembered: string): string {
+  if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID) return remembered;
+  const requested = typeof action.args === "object" && action.args !== null ? (action.args as { exampleId?: unknown }).exampleId : undefined;
+  return typeof requested === "string" && requested ? requested : remembered;
+}
+
 /** 🎨️ Navbar example id implied by a history upsert batch. Chrome-only rows leave the label alone
  * (`undefined`). A live Set Active Example row restores `rememberedExampleId`; a popped row returns
  * `bootExampleId`. */
@@ -369,6 +384,8 @@ export type LeftoverInteractionViewV1 = {
   readonly hover: Readonly<Record<string, { readonly channel: string; readonly ids: readonly string[] }>>;
   readonly activeMode: Readonly<Record<string, string>>;
   readonly activeGranularity: Readonly<Record<string, string>>;
+  readonly activeUtility?: string | null;
+  readonly brushPreviewJson?: string | null;
 };
 
 function leftoverStringRecord(value: unknown): Record<string, string> {
@@ -407,9 +424,11 @@ function leftoverHoverRecord(value: unknown): LeftoverInteractionViewV1["hover"]
 /** 🕹️ Peels leftover `Invocation.output.interactionView` — same leftover lane as history_patch. */
 export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInteractionViewV1 | null {
   if (!output || typeof output !== "object" || Array.isArray(output)) return null;
-  const raw = (output as { interactionView?: unknown }).interactionView;
+  const envelope = output as { interactionView?: unknown; brushPreviewJson?: unknown };
+  const raw = envelope.interactionView;
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const view = raw as Record<string, unknown>;
+  if (typeof envelope.brushPreviewJson === "string" && envelope.brushPreviewJson.length > 0) view.brushPreviewJson = envelope.brushPreviewJson;
   const selectedIds = Array.isArray(view.selectedIds) ? view.selectedIds.filter((id): id is string => typeof id === "string") : [];
   const hoverRaw = view.hoverTarget;
   const hoverTarget =
@@ -431,6 +450,8 @@ export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInte
     hover: leftoverHoverRecord(view.hover),
     activeMode: leftoverStringRecord(view.activeMode),
     activeGranularity: leftoverStringRecord(view.activeGranularity),
+    ...(typeof view.activeUtility === "string" ? { activeUtility: view.activeUtility } : {}),
+    ...(typeof view.brushPreviewJson === "string" && view.brushPreviewJson.length > 0 ? { brushPreviewJson: view.brushPreviewJson } : {}),
   };
 }
 
@@ -441,7 +462,13 @@ export function leftoverInteractionStateV1(view: LeftoverInteractionViewV1): {
   readonly activeMode: LeftoverInteractionViewV1["activeMode"];
   readonly activeGranularity: LeftoverInteractionViewV1["activeGranularity"];
 } {
-  return { selection: view.selection, hover: view.hover, activeMode: view.activeMode, activeGranularity: view.activeGranularity };
+  const vortex = view.selection.vortex;
+  const vortexEmpty = !vortex || vortex.ids.length === 0;
+  const selection =
+    !vortexEmpty || view.selectedIds.length === 0
+      ? view.selection
+      : { ...view.selection, vortex: { granularity: vortex?.granularity || view.activeGranularity.vortex || "object", ids: [...view.selectedIds], ...(vortex?.anchorId ? { anchorId: vortex.anchorId } : {}) } };
+  return { selection, hover: view.hover, activeMode: view.activeMode, activeGranularity: view.activeGranularity };
 }
 
 /** 🕹️ Leftover gumball pose for World3d — transformMode + target from the selected instance. */
@@ -1282,6 +1309,22 @@ export function panelAnchorForGroup(group: string): Anchor {
   return "top-right";
 }
 
+/**
+ * @emoji 🕰️ Panel tab ids the shell mounts as its own chrome, so an app-declared tab carrying one of them
+ * must never be mounted a second time out of `AppDefinition.panelTabs`. `framework.panel.history` is
+ * injected into EVERY app (`🔌️plugin/🦀️.rs` `AppBuilder::build_definition`) so the guest renders the
+ * history body, while the shell also builds that tab host-side; mounting both puts two identically-named
+ * tab buttons and two nodes with one DOM id in the same anchor, and the guest-rendered twin namespaces
+ * every child element as `panel:<key>/<id>` ({@link uiNodeToTreePanelConfig}), so `framework.history.entry.<seq>`
+ * stops resolving by its declared id.
+ */
+export const SHELL_OWNED_PANEL_TAB_IDS: readonly string[] = [FRAMEWORK_PANEL_TAB_HISTORY_ID];
+
+/** @emoji 🕰️ True when {@link SHELL_OWNED_PANEL_TAB_IDS} already covers this panel tab id — the one gate the dock's app-declared anchors filter on. */
+export function shellRendersPanelTabItself(panelTabId: string): boolean {
+  return SHELL_OWNED_PANEL_TAB_IDS.includes(panelTabId);
+}
+
 /** @emoji 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
 type FrameworkLayoutWindowSeed = {
   readonly windowId: string;
@@ -1944,6 +1987,19 @@ export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: numbe
  * interpolation for keys with `{{placeholders}}`. */
 export function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): UiLabel {
   return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
+}
+
+/**
+ * @emoji 🌐️ Points the shared port {@link shellLabel} reads at `locale`. A shell has TWO i18n ports: its own
+ * `ShellScope` instance, which `useUiTranslation`/`useLabel` resolve through, and this shared module port,
+ * which is the only thing a tree builder running outside hook context can read. Moving the scope instance
+ * alone relabels the hook-rendered chrome (fullscreen, the sync pill, the fold buttons) and pins every
+ * builder-produced label — the panel tab names, the Settings branch with its General/Theme/Hotkeys children,
+ * the Display/Tool/Command category names — at whatever language this module booted in, which renders one
+ * shell in two languages at once. Both ports move together or neither does.
+ */
+export function syncShellLabelLocale(locale: Parameters<typeof uiI18n.changeLanguage>[0]): void {
+  void uiI18n.changeLanguage(locale);
 }
 
 /** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`
@@ -2788,8 +2844,9 @@ export type Puzzle3dBrushMeshPage = {
  *   scene cannot re-drive an upload that already ran. */
 export class Puzzle3dBrushMeshRegistry {
   #residency = -1;
-  readonly #entries = new Map<string, string>();
+  readonly #entries = new Map<string, { readonly digest: string; readonly paged: boolean }>();
   readonly #repaged = new Map<string, number>();
+  readonly #refusedAlias = new Set<string>();
 
   /** 🔄️ Folds one published `meshResidency` in. Answers `true` exactly when the count went backwards —
    * the guest was re-instantiated and holds nothing this page uploaded — having dropped every claim. */
@@ -2800,6 +2857,7 @@ export class Puzzle3dBrushMeshRegistry {
     if (restarted) {
       this.#entries.clear();
       this.#repaged.clear();
+      this.#refusedAlias.clear();
     }
     return restarted;
   }
@@ -2810,13 +2868,42 @@ export class Puzzle3dBrushMeshRegistry {
   }
 
   holds(url: string, digest: string): boolean {
-    return this.#entries.get(url) === digest;
+    return this.#entries.get(url)?.digest === digest;
+  }
+
+  /** 🪢️ True when this guest holds that GEOMETRY, PAGED, under some id. Mesh ids are distinct identities
+   * to the collision engine, but the bytes behind them are content-addressed — every `dist/mesh/*.glb` in
+   * this repo is the same capsule — so a second id whose digest is already resident is announced by
+   * `{url, digest}` and aliased guest-side (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`)
+   * instead of being paged again. Only a PAGED entry answers: an entry that is itself an alias proves
+   * nothing about what the guest holds, so a chain of aliases can never stand in for the bytes. */
+  holdsDigest(digest: string): boolean {
+    if (digest.length === 0) return false;
+    for (const held of this.#entries.values()) {
+      if (held.paged && held.digest === digest) return true;
+    }
+    return false;
   }
 
   /** ✅️ Records an upload as this guest's, at the residency it was dispatched under. Called when the
    * run's LAST page goes out, never when it is queued: a queued run confirms nothing. */
   confirm(url: string, digest: string): void {
-    this.#entries.set(url, digest);
+    this.#entries.set(url, { digest, paged: true });
+    this.#refusedAlias.delete(url);
+  }
+
+  /** 🪢️ Records an identity carried by {@link holdsDigest} alone — the bytes crossed under a sibling id.
+   * Never proof for a third id ({@link holdsDigest} ignores it), and withdrawn the moment the guest says
+   * it cannot serve this identity ({@link claimReupload}), which is what stops a guest that refuses an
+   * alias from being handed the same alias forever instead of the bytes. */
+  alias(url: string, digest: string): void {
+    this.#entries.set(url, { digest, paged: false });
+  }
+
+  /** 🪢️ Whether this identity may still be announced by digest alone. False once the guest refused an
+   * alias for it — the next announcement pages the bytes. */
+  mayAlias(url: string): boolean {
+    return !this.#refusedAlias.has(url);
   }
 
   forget(url: string): void {
@@ -2829,6 +2916,7 @@ export class Puzzle3dBrushMeshRegistry {
   claimReupload(url: string, residency: number): boolean {
     if (!Number.isFinite(residency) || residency <= (this.#repaged.get(url) ?? -1)) return false;
     this.#repaged.set(url, residency);
+    if (this.#entries.get(url)?.paged === false) this.#refusedAlias.add(url);
     this.#entries.delete(url);
     return true;
   }
@@ -2836,6 +2924,7 @@ export class Puzzle3dBrushMeshRegistry {
   clear(): void {
     this.#entries.clear();
     this.#repaged.clear();
+    this.#refusedAlias.clear();
     this.#residency = -1;
   }
 
@@ -2914,6 +3003,56 @@ export function puzzle3dBrushMeshPages(url: string, surfaceId: string, positions
     });
   }
   return pages;
+}
+/** 🚚️ What the drain does with the page it just took off the queue. `adopt` means the run collapsed:
+ * a sibling identity already put this exact geometry into the guest, so the remaining pages of THIS
+ * identity were dropped and the announcement alone carries it. */
+export type Puzzle3dBrushMeshQueueStep =
+  | { readonly kind: "page"; readonly page: Puzzle3dBrushMeshPage }
+  | { readonly kind: "adopt"; readonly url: string; readonly digest: string }
+  | { readonly kind: "idle" };
+
+/** 🚚️ Takes the next unit of work off a brush-mesh page queue, in place. A page whose digest the guest
+ * already holds under ANY id collapses its whole remaining run into one `adopt` announcement — this is
+ * what keeps a scene of several ids over byte-identical geometry from paging the same 294 912 bytes
+ * once per id. Pure: the caller owns the dispatch and the registry. */
+export function puzzle3dBrushMeshQueueStep(queue: Puzzle3dBrushMeshPage[], adoptable: (page: Puzzle3dBrushMeshPage) => boolean): Puzzle3dBrushMeshQueueStep {
+  const page = queue.shift();
+  if (!page) return { kind: "idle" };
+  if (!adoptable(page)) return { kind: "page", page };
+  for (let index = queue.length - 1; index >= 0; index -= 1) {
+    if (queue[index]!.url === page.url) queue.splice(index, 1);
+  }
+  return { kind: "adopt", url: page.url, digest: page.digest };
+}
+
+/** ⏳️ Drains a brush-mesh page queue with BACK PRESSURE: exactly one command is ever outstanding, so a
+ * user action that arrives mid-run queues behind one page instead of behind the whole run. `dispatch`
+ * must settle on the dispatched command's own guest completion (`ComponentSceneHostProps.onAction`
+ * does); `live` false retires the drain without dispatching anything further. A run's LAST page — and a
+ * collapsed run's announcement — confirms the identity through `confirm`, never its enqueue. */
+export async function drainPuzzle3dBrushMeshQueue(
+  queue: Puzzle3dBrushMeshPage[],
+  registry: {
+    readonly holdsDigest: (digest: string) => boolean;
+    readonly mayAlias: (url: string) => boolean;
+    readonly alias: (url: string, digest: string) => void;
+    readonly confirm: (url: string, digest: string) => void;
+  },
+  dispatch: (args: Record<string, unknown>) => Promise<void>,
+  live: () => boolean,
+): Promise<void> {
+  while (live()) {
+    const step = puzzle3dBrushMeshQueueStep(queue, (page) => registry.mayAlias(page.url) && registry.holdsDigest(page.digest));
+    if (step.kind === "idle") return;
+    if (step.kind === "adopt") {
+      registry.alias(step.url, step.digest);
+      await dispatch({ url: step.url, digest: step.digest });
+      continue;
+    }
+    await dispatch(step.page);
+    if (step.page.page === step.page.pageCount - 1) registry.confirm(step.page.url, step.page.digest);
+  }
 }
 //#endregion 🥽️Puzzle3dBrushMeshUpload
 
@@ -3006,33 +3145,11 @@ function windowMeasureGroupHeaderSlider(measure: Extract<WindowMeasure, { kind: 
 }
 
 function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "select" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
-  return (
-    <Select id={measure.id} value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
-      <SelectTrigger id={measure.id} className="h-small w-full min-w-0" size="sm">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {measure.items.map((item) => (
-          <SelectItem key={item.id} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  return <WindowMeasureSelect measure={measure} onAction={onAction} />;
 }
 
 function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "toggle" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
-  const label = uiDataLabel(measure.label ?? measure.text ?? measure.id);
-  return (
-    <TreeCheckbox
-      id={measure.id}
-      checked={measure.pressed}
-      title={label}
-      ariaLabel={label}
-      onCheckedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
-    />
-  );
+  return <WindowMeasureToggle measure={measure} onAction={onAction} />;
 }
 
 function windowMeasureToggleIcon(measure: Extract<WindowMeasure, { kind: "toggle" }>): ReactNode {
@@ -4251,6 +4368,88 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
 //#region UiRefresh
 /** @emoji 🐢️ One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
 export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
+
+/** 🖼️ How much of the shell one direct browser-actor dispatch dirtied.
+ *
+ * The actor handoff answers with `{outcome, mutationCount}` and carries NO `UiDirtyScope` — the guest's
+ * own scope never crosses it — and a framework-reserved verb that commits inline (`paste`, `undo`, a
+ * gumball commit) publishes no `OperationCompleted` frame either, so this route is the one dispatch path
+ * with no scope of its own at all. An applied mutation therefore dirties everything: the honest answer
+ * when the only thing known is THAT the document changed. `refreshUi` is hash-conditional, so an
+ * unchanged section still costs no payload; what this buys is the changed window body being re-taken in
+ * the same turn instead of whenever some later, unrelated action happens to refresh (measured at +12 s
+ * for `paste` — ticket 26/09/02/PUZZLE-3D-END-TO-END wave B6 §3, fixed in wave B9 lane 4).
+ */
+export function browserActorDispatchUiScopeV1(result: { readonly outcome: "guest-applied" | "rejected"; readonly mutationCount: number }): UiDirtyScope {
+  return result.outcome === "guest-applied" && result.mutationCount > 0 ? { kind: "full" } : { kind: "none" };
+}
+
+/** 📏 Window-option verbs publish only the WindowConfig lane, so the actor handoff reports
+ * `mutationCount: 0`. Without this list the rail never re-takes measures after a successful toggle. */
+export const WINDOW_CONFIG_RAIL_ACTION_IDS: ReadonlySet<string> = new Set([
+  "focusSelection",
+  "setCamera",
+  "setChunkSize",
+  "setGridSnapEnabled",
+  "setGridSpacing",
+  "setGridVisible",
+  "setLodAutomatic",
+  "setLodDepthVariable",
+  "setLodManual",
+  "setPanelPage",
+  "setProjection",
+  "setProjectionParam",
+  "setProximityRadius",
+  "setSelectableKind",
+  "setSunAzimuth",
+  "setSunElevation",
+  "setSunIntensity",
+  "setTransformGumballFlag",
+  "setVortexDirection",
+  "setVortexShow",
+  "setVoxelDims",
+  "toggleSun",
+]);
+
+export function browserActorWindowConfigDispatchUiScopeV1(
+  result: { readonly outcome: "guest-applied" | "rejected"; readonly mutationCount: number },
+  actionId: string | undefined,
+): UiDirtyScope {
+  const dirty = browserActorDispatchUiScopeV1(result);
+  if (dirty.kind !== "none") return dirty;
+  if (result.outcome === "guest-applied" && actionId !== undefined && WINDOW_CONFIG_RAIL_ACTION_IDS.has(actionId)) return { kind: "full" };
+  return dirty;
+}
+
+/** 🏁️ What ONE typed-operation completion owes the shell — `null` for "owes no pass at all".
+ *
+ * A typed operation's admitting reply is only an ADMISSION: its edit is staged, published and logged on
+ * later continuations, so that reply reports `mutationCount: 0` and carries no scope worth reading. The
+ * completion frame (`AppFrame::OperationCompleted`) is the only carrier of the mutation's own
+ * `UiDirtyScope` and, since wave B21, of its history patch — so the refresh has to follow the COMPLETION,
+ * and it must be the completion's own scope rather than a guess keyed on a verb name (compare
+ * {@link WINDOW_CONFIG_RAIL_ACTION_IDS}, which only exists because the browser-actor route publishes no
+ * completion at all).
+ *
+ * The other half of the rule is what a completion does NOT owe. Every retained operation completes,
+ * including the View-kind turns a drain poll finishes while the document is untouched: measured on the
+ * live puzzle 3d shell at **18 completions in an idle 10 s window, 12 of them `{kind:"none"}`**, each
+ * running a host-effect pass and a `refreshUi` call for nothing. A completion whose scope is `none`,
+ * which carries no history patch and requests no effect is bookkeeping, and gets no pass.
+ *
+ * A patch with an empty scope is the one case that still owes a refresh: the row it mints belongs to the
+ * reserved history body ({@link FRAMEWORK_HISTORY_BODY_KEY}), and nothing else on the shell moved.
+ */
+export function typedOperationCompletionRefreshV1(completion: {
+  readonly uiScope: UiDirtyScope | undefined;
+  readonly historyPatch: unknown;
+  readonly requestedEffects: readonly unknown[];
+}): UiDirtyScope | null {
+  const scope = resolveUiDirtyScope(completion.uiScope);
+  if (scope.kind !== "none") return scope;
+  if (completion.historyPatch !== undefined) return { kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] };
+  return completion.requestedEffects.length > 0 ? scope : null;
+}
 
 function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));

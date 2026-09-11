@@ -9,7 +9,11 @@ use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_
 use crate::standards::v1::subsets::any::schema::generation_fixture_for;
 use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowMeasure, WindowOptions};
+
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW: &str = "generation3d-generate-preview";
@@ -53,6 +57,7 @@ pub fn render(
     labels: &Generation3dLabels,
     active_utility: &str,
     marks: &PreviewInteractionMarks,
+    session: &FlowEvalSession,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let payload = match selected_generation(generation) {
         // 🧹️ `generation_fixture_for` CLONES the document fixture, so the patched copy owns its own
@@ -62,7 +67,7 @@ pub fn render(
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);
-            let payload = preview_payload(generation_preview_text.unwrap_or_default(), &gen_fixture, cfg, None, marks);
+            let payload = preview_payload(generation_preview_text.unwrap_or_default(), &gen_fixture, cfg, Some(session), marks);
             gen_fixture.retire_cold();
             payload
         }

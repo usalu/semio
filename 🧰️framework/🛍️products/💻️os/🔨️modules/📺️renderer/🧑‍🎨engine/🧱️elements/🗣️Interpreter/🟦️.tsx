@@ -13,8 +13,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { createContext, memo, Profiler, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { packedTextLeaf } from "../🔌️PluginRuntime/packed-text.ts";
+import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
   Button,
   ContextMenuController,
@@ -387,12 +388,37 @@ function isWellFormedDocSchema(docSchema: string): boolean {
  * decodes it, and only to hand it straight through unmodified.
  *
  * `surfaceId`/`controllerId` no longer exist on `SurfaceProps` (six placement fields were dropped in
- * the `ui-w4-core` mirror regeneration) — the record's own `id` is the stable per-node identity now,
- * so it substitutes for both; `paneId`/`bindingId` have no contract equivalent and are simply absent
- * (both optional on `UiComponentSceneNode`). Returns `null`, never throws, on a malformed `docSchema`
- * or a decode failure — the caller renders a placeholder + logs the fault, per this ticket's own
- * "never throw, never drop the surrounding patch" rule for an unknown `doc_schema`. */
-function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps, assemble?: SurfaceSceneAssembler): UiComponentSceneNode | null {
+ * the `ui-w4-core` mirror regeneration). `surfaceId` is therefore the OWNING DOCUMENT's surface —
+ * exactly the `pluginSurfaceRef(instance, target.key)` key the plugin host's `surface_contexts` table
+ * is keyed by (`1:puzzle3d-main-perspective` / `1:puzzle3d-main-top`) — because a surface host's
+ * identity is the window it was mounted into, not its position in that window's node tree. Taking
+ * `record.id` for it instead collapsed BOTH panes of one app onto `"1"`: the id is a per-document
+ * DFS-order integer, so two windows of one program mint the same one and nothing downstream (a
+ * dispatch's `args.surfaceId`, `data-surface-id`, a per-pane probe) could tell them apart
+ * (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B20 defect 1). `controllerId` stays the record id — it
+ * scopes per-app host registries (catalogue drop preview) that are deliberately pane-independent.
+ * `paneId` carries the program's own authored surface id (`record.key`, set by `scene_surface`'s
+ * `try_id`), the one thing the contract really did drop; `bindingId` has no contract equivalent and is
+ * simply absent (both optional on `UiComponentSceneNode`). Returns `null`, never throws, on a
+ * malformed `docSchema` or a decode failure — the caller renders a placeholder + logs the fault, per
+ * this ticket's own "never throw, never drop the surrounding patch" rule for an unknown `doc_schema`. */
+/** 🪪️ The three identities one surface host is mounted under, and the one place they are decided.
+ *
+ * - `surfaceId` — the OWNING DOCUMENT's surface (`1:puzzle3d-main-perspective`), i.e. the plugin
+ *   host's own `surface_contexts` key. A surface host's identity is the WINDOW it renders in.
+ * - `controllerId` — the record id. Per-app registries keyed on it (the catalogue drop preview) are
+ *   deliberately pane-independent, so this one must NOT gain the window.
+ * - `paneId` — the program's own authored surface id, the `try_id` `scene_surface` set as the node's
+ *   `key`. It is what the dropped `SurfaceProps.surfaceId` used to carry, and is stable across
+ *   refreshes where the record id is not.
+ *
+ * Taking the record id for `surfaceId` collapsed every pane of one app onto `"1"` — a per-document
+ * DFS-order integer two windows of one program both mint (ticket 26/09/02/PUZZLE-3D-END-TO-END B20). */
+export function surfaceHostIdentityV1(surface: SurfaceId, key: string, recordId: UiNodeId): { readonly surfaceId: string; readonly controllerId: string; readonly paneId: string | undefined } {
+  return { surfaceId: String(surface), controllerId: String(recordId), paneId: key || undefined };
+}
+
+function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps, surface: SurfaceId, assemble?: SurfaceSceneAssembler): UiComponentSceneNode | null {
   if (!isWellFormedDocSchema(props.docSchema)) {
     console.error("[Interpreter] malformed Component::Surface docSchema", { nodeId: record.id, kind: props.kind, docSchema: props.docSchema });
     return null;
@@ -407,8 +433,7 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
   const sceneField = SURFACE_KIND_SCENE_FIELD[props.kind];
   const node: Record<string, unknown> = {
     type: "componentScene",
-    surfaceId: String(record.id),
-    controllerId: String(record.id),
+    ...surfaceHostIdentityV1(surface, record.key, record.id),
     componentKind: props.kind,
     menu: menuRefFromContract(record.menu),
   };
@@ -425,10 +450,11 @@ function renderComponentSceneHost(
   record: UiNodeRecord,
   props: SurfaceProps,
   onAction: (action: ActionDescriptor) => void,
+  surface: SurfaceId,
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
   assemble?: SurfaceSceneAssembler,
 ): ReactNode {
-  const node = surfacePropsToComponentSceneNode(record, props, assemble);
+  const node = surfacePropsToComponentSceneNode(record, props, surface, assemble);
   if (!node) {
     return (
       <p className="text-muted-foreground text-xs" data-unknown-surface-schema={props.docSchema}>
@@ -542,7 +568,7 @@ function world3dSurfaceLaneTexts(record: UiNodeRecord, state: UiDocumentState, d
       continue;
     }
     const text = surfaceSceneLaneText(state, child);
-    if (utf8ByteLength(text) === ref.bytes) {
+    if (utf8ByteLength(text) === ref.bytes || (text.length > 0 && lane.optional)) {
       rememberSurfaceSceneLane(cacheKey, ref.hash, text);
       texts.set(lane.bodyKey, text);
     }
@@ -652,23 +678,15 @@ export async function openSurfaceContextMenu(
   mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
   shellFallback: (() => ContextMenuItem[]) | undefined,
 ): Promise<SurfaceContextMenuResult> {
-  if (!requestContextMenu) {
-    return {
-      items: shellFallback?.() ?? [],
-      titleKey: surfaceContextMenuTitleKey(request),
-    };
-  }
+  const titleKey = surfaceContextMenuTitleKey(request);
+  if (!requestContextMenu) return { items: shellFallback?.() ?? [], titleKey };
   try {
-    const specs = await requestContextMenu(request);
-    return {
-      items: mapSpecs(specs),
-      titleKey: surfaceContextMenuTitleKey(request),
-    };
+    // 🖱️ An EMPTY plugin answer stays empty — it is the surface saying "nothing here", and the shell
+    // fallback is deliberately NOT substituted for it (law: "openSurfaceContextMenu keeps an empty
+    // plugin answer off the shell fallback"). The fallback is only for a surface with no resolver at all.
+    return { items: mapSpecs(await requestContextMenu(request)), titleKey };
   } catch {
-    return {
-      items: [],
-      titleKey: surfaceContextMenuTitleKey(request),
-    };
+    return { items: [], titleKey };
   }
 }
 
@@ -978,9 +996,14 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   const role = component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined;
   const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
 
+  // 🪪️ A section and a field carry the SAME stable DOM id every other interpreted node gets. Both
+  // wrappers accept `id` and both dropped it here, so an app that authored `ui::section(...).try_id(…)`
+  // / `ui::field(...).try_id(…)` — puzzle 3d's whole Settings panel does — rendered a tree whose only
+  // addressable node was the innermost control, with no row or section to reach from a keybinding, an
+  // introduction anchor, a scripted driver or assistive technology (ticket 26/09/02 wave B12).
   if (component.role === "section" || component.role === "group") {
     return (
-      <Section title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
+      <Section id={nodeDomId(store, record)} title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
         {describedBy}
         {children}
       </Section>
@@ -988,7 +1011,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   }
   if (component.role === "field") {
     return (
-      <Field label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
+      <Field id={nodeDomId(store, record)} label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
         {describedBy}
         {children}
       </Field>
@@ -1151,7 +1174,13 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
       onChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
-      onDelta={(delta) => dispatchTrigger(context, record, "delta", toUiValue(delta))}
+      // ➕️➖️ Only a node that DECLARES a `delta` binding gets the relative path. `Stepper`'s own
+      // contract is "reports a relative delta via `onDelta` when provided, otherwise falls back to
+      // computing an absolute `onChange`" — so supplying it unconditionally, as this did, sent every
+      // +/− click down a trigger most programs never bind and swallowed the gesture entirely: puzzle
+      // 3d's four Settings steppers all declare `Trigger::Change` only, and not one of their +/−
+      // buttons reached the guest (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12, browser-measured).
+      onDelta={(record.bindings ?? []).some((binding) => binding.trigger === "delta") ? (delta) => dispatchTrigger(context, record, "delta", toUiValue(delta)) : undefined}
     />
   );
 }
@@ -1220,7 +1249,7 @@ function nodeDomId(store: UiDocumentStore, record: UiNodeRecord): string {
 }
 //#endregion 🪪️StableDomIds
 
-function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue): TreeDataItem {
+function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[]): TreeDataItem {
   const { record, props } = node;
   const presence = overlay.byKey.get(record.key) ?? {};
   const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
@@ -1234,14 +1263,14 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
-    isSelected: presence.selected,
+    isSelected: Boolean(presence.selected) || leftoverTreeItemSelectedV1(record.key, leftoverIds),
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
     isHidden: props.dimmed ?? undefined,
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{controlRecords.filter((child) => child !== activatableControl).map((child) => <UiNodeView key={String(child.id)} store={store} id={child.id} context={context} />)}</> : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay)) : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined,
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
     actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
@@ -1251,6 +1280,8 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const revision = useUiDocumentRevision(store);
   const overlay = useContext(UiPresenceOverlayContext);
+  const leftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
+  const leftoverIds = leftover?.ids;
   const sections = useMemo((): TreeDataSection[] => {
     void revision;
     const state = store.getState();
@@ -1264,10 +1295,10 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds)),
       };
     });
-  }, [store, record, revision, context, overlay]);
+  }, [store, record, revision, context, overlay, leftoverIds]);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
     const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
     if (!dropBinding) return undefined;
@@ -1312,24 +1343,71 @@ function ImageView({ record }: { readonly record: UiNodeRecord }) {
  * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
  * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
  * this node's own record, and a tree larger than one reconcile page arrives across several patches. */
+function world3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
+  const state = store.getState();
+  const stack = [...(record.children ?? [])];
+  const parts: string[] = [];
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    const child = state.nodes.get(id);
+    if (!child) continue;
+    parts.push(`${id}:${String(child.key)}:${child.component.type === "text" && typeof child.component.value === "string" ? child.component.value.length : 0}`);
+    for (const nested of child.children ?? []) stack.push(nested);
+  }
+  return parts.join("|");
+}
+
+function useWorld3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
+  const childKey = (record.children ?? []).join(",");
+  return useSyncExternalStore(
+    (onChange) => {
+      const state = store.getState();
+      const ids: number[] = [];
+      const stack = [...(record.children ?? [])];
+      while (stack.length > 0) {
+        const id = stack.pop()!;
+        ids.push(id);
+        const child = state.nodes.get(id);
+        for (const nested of child?.children ?? []) stack.push(nested);
+      }
+      const unsubs = ids.map((id) => store.subscribeNode(id)(onChange));
+      return () => {
+        for (const unsub of unsubs) unsub();
+      };
+    },
+    () => world3dCarrierEpoch(store, record),
+    () => world3dCarrierEpoch(store, record),
+  );
+}
+
 function PagedSurfaceView({ record, component, context }: { readonly record: UiNodeRecord; readonly component: Extract<Component, { type: "surface" }>; readonly context: UiInterpreterContext }) {
   const store = context.store;
   const revision = useUiDocumentRevision(store);
+  const carrierEpoch = useWorld3dCarrierEpoch(store, record);
   const assemble = useCallback(
     (spine: Record<string, unknown>): Record<string, unknown> => {
       void revision;
+      void carrierEpoch;
       const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly World3dSceneLaneRef[]) : [];
-      return world3dSceneFromLanes(spine as unknown as World3dScene, world3dSurfaceLaneTexts(record, store.getState(), declared)) as unknown as Record<string, unknown>;
+      const texts = world3dSurfaceLaneTexts(record, store.getState(), declared);
+      const assembled = world3dSceneFromLanes(spine as unknown as World3dScene, texts) as unknown as Record<string, unknown>;
+      if (typeof console !== "undefined") {
+        const preview = assembled.brushPreviewJson;
+        const interaction = typeof assembled.interactionJson === "string" ? assembled.interactionJson : "";
+        const previewLane = declared.find((lane) => lane.lane === "brushPreview");
+        console.log("[DEBUG] puzzle3d.brushPreview.assemble", { recordKey: record.key, spinePreview: typeof spine.brushPreviewJson === "string" ? spine.brushPreviewJson.length : 0, assembledPreview: typeof preview === "string" ? preview.length : 0, collectedPreview: texts.get("framework.scene.world3d.brushPreview")?.length ?? 0, previewBytes: previewLane?.bytes ?? 0, interactionHasPreview: interaction.includes("brushPreviewJson"), declared: declared.map((lane) => lane.lane), carrierEpoch: carrierEpoch.length });
+      }
+      return assembled;
     },
-    [record, store, revision],
+    [record, store, revision, carrierEpoch],
   );
-  return <>{renderComponentSceneHost(record, component, context.onAction, context.requestContextMenu, assemble)}</>;
+  return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble)}</>;
 }
 
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
   if (component.kind === "world-3d") return <PagedSurfaceView record={record} component={component} context={context} />;
-  return <>{renderComponentSceneHost(record, component, context.onAction, context.requestContextMenu)}</>;
+  return <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
 }
 
 function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
@@ -1435,9 +1513,16 @@ export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterCo
  * re-rendering from here.
  */
 export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
+  // 🖱️ The shell publishes the plugin's on-demand menu resolver through `PluginSurfaceActionsContext`
+  // (ShellHost's `requestContextMenu`), and NO `<InterpretedUiNode>` call site has ever passed it as a
+  // prop — so every `ComponentSceneHost`'s `requestContextMenu` was `undefined` and its whole
+  // plugin-context-menu branch (`openSurfaceContextMenu`) was dead code in the React renderer: a
+  // right-click on a world/board/canvas surface only ever produced ShellHost's window-level fallback
+  // menu. Reading the context here wires every surface host at once, which is what that context is for.
+  const surfaceActions = usePluginSurfaceActions();
   const root = useUiDocumentRoot(store);
   if (root === null) return null;
-  return <UiNodeView store={store} id={root} context={{ store, onAction, onIntent, requestContextMenu }} />;
+  return <UiNodeView store={store} id={root} context={{ store, onAction, onIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} />;
 });
 //#endregion 🔖️UiInterpreter
 
@@ -1445,6 +1530,8 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onActi
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
+  await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
   await registerSurfaceSceneLaneTests(
     import.meta.vitest,

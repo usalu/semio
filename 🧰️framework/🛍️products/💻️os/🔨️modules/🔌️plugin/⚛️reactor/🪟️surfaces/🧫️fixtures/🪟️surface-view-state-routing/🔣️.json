@@ -1,0 +1,81 @@
+{
+  "domainId": "items",
+  "granularity": "item",
+  "pickedNodeKey": "item-1",
+  "instanceId": 1,
+  "base": {
+    "locale": "en",
+    "terminology": "native",
+    "activeModeId": "edit",
+    "windowInstances": [
+      { "id": "puzzle3d-main-perspective", "windowKindId": "main" },
+      { "id": "puzzle3d-main-top", "windowKindId": "main" }
+    ],
+    "activeUtilityByWindowId": {
+      "puzzle3d-main-perspective": "brush",
+      "puzzle3d-main-top": "measure"
+    }
+  },
+  "surfaces": [
+    {
+      "id": "1:inspection",
+      "bodyKey": "properties",
+      "view": {
+        "focusedWindowId": "puzzle3d-main-perspective",
+        "panelJson": "{\"inspection\":true}"
+      }
+    },
+    {
+      "id": "1:puzzle3d-main-perspective",
+      "bodyKey": "graph",
+      "view": {
+        "windowId": "puzzle3d-main-perspective",
+        "activeWindowKindId": "main",
+        "activeUtilityId": "brush",
+        "focusedWindowId": "puzzle3d-main-perspective",
+        "activeToolId": "fill",
+        "panelJson": "{\"world\":\"perspective\"}"
+      }
+    },
+    {
+      "id": "1:puzzle3d-main-top",
+      "bodyKey": "graph",
+      "view": {
+        "windowId": "puzzle3d-main-top",
+        "activeWindowKindId": "main",
+        "activeUtilityId": "measure",
+        "focusedWindowId": "puzzle3d-main-top",
+        "locale": "de",
+        "terminology": "reuse",
+        "panelJson": "{\"world\":\"top\"}"
+      }
+    },
+    {
+      "id": "1:window",
+      "bodyKey": "graph",
+      "view": {
+        "windowId": "puzzle3d-main-top",
+        "activeWindowKindId": "main",
+        "activeUtilityId": "measure",
+        "focusedWindowId": "puzzle3d-main-top",
+        "locale": "de",
+        "terminology": "reuse",
+        "panelJson": "{\"world\":\"top\"}"
+      }
+    }
+  ],
+  "inspectionSurface": "1:inspection",
+  "pickedSurface": "1:puzzle3d-main-perspective",
+  "aliasSurface": "1:window",
+  "aliasWindowSurface": "1:puzzle3d-main-top",
+  "refreshedView": {
+    "locale": "de",
+    "terminology": "reuse",
+    "windowId": "puzzle3d-main-top",
+    "activeWindowKindId": "main",
+    "activeUtilityId": "measure",
+    "focusedWindowId": "puzzle3d-main-top",
+    "activeToolId": "fill",
+    "panelJson": "{\"refresh\":true}"
+  }
+}

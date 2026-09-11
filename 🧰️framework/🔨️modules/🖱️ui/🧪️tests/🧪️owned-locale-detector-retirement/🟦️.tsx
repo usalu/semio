@@ -3608,6 +3608,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
     });
 
+    it("Panel announces which tab is open through aria-pressed, not only through its styling data attributes", () => {
+      // ♿️ `data-active`/`data-state` are CSS hooks; assistive technology reads neither, so every tab in a
+      // bar announced identically and "Fill is armed" / "the Document panel is open" was invisible to a
+      // screen reader — and unassertable for any consumer that is not reading class names.
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
+      const { container, rerender } = render(<Panel anchor="top-left" visible tabs={tabs} activeTabPath={["tab-b"]} />);
+      const pressed = (id: string): string | null => container.querySelector(`[data-slot="panel-tab-button"][id="${id}"]`)?.getAttribute("aria-pressed") ?? null;
+      expect(pressed("tab-b")).toBe("true");
+      expect(pressed("tab-a")).toBe("false");
+      rerender(<Panel anchor="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
+      expect(pressed("tab-a")).toBe("true");
+      expect(pressed("tab-b")).toBe("false");
+    });
+
     it("Panel only paints the active tab's fill/border while expanded — a folded button group shouldn't claim a tab is active", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
@@ -3769,6 +3784,52 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const side = chromeHostedOpenPanelPositionStyle("left-middle");
       expect(side.top).toBe("50%");
       expect(side.left).toBe("var(--spacing-single)");
+    });
+
+    // 🪜️ Ticket 26/09/02 wave B27 §1. A chrome-hosted panel deliberately unfolds INTO the navbar/footer
+    // band, so "does the chrome cover the dock?" is a question about two numbers and one stacking level,
+    // both of which this pins from the SAME tokens the CSS is generated from:
+    //   • the open panel's cap must land exactly on the band's own centered control row — the slot
+    //     `PanelChromeTabBar` empties while the panel is open — so the panel's BODY begins at or below
+    //     that row's end and no dock row is ever geometrically under a chrome control;
+    //   • the band must stack at the BASE level, below `z-panel`, or it paints over that cap regardless.
+    // The navbar carried a `z-navbar` class that `🎨️ui.css` has always overridden with
+    // `z-index: var(--z-base) !important`; three waves read the catalogue's folded (zero-box) rows as
+    // "the navbar covers them" partly because the source said something the browser never did.
+    it("keeps shell chrome at the base stacking level and lands an open chrome-hosted panel's cap exactly on the chrome control row", async () => {
+      const { render } = await import("@testing-library/react");
+      const { STYLING_METRICS, uiSpacingPx: spacingPx } = await import("@semio-tech/ui-styling");
+      const chrome = STYLING_METRICS.chrome;
+      expect(chrome.navbarHeightUiSpacing).toBe(chrome.footerHeightUiSpacing);
+      const band = chrome.navbarHeightUiSpacing;
+      const control = chrome.controlHeightUiSpacing;
+      const pad = chrome.paddingStandardUiSpacing;
+      const chromeControlRow = [pad, band - pad] as const;
+      const overhang = (band + control) / 2;
+      const capRow = [band - overhang, band - overhang + control] as const;
+      expect(capRow).toEqual(chromeControlRow);
+      expect(spacingPx(capRow[1])).toBe(spacingPx(band - pad));
+      expect(capRow[1]).toBeLessThanOrEqual(band);
+
+      const navbar = render(<Navbar items={[]} showFullscreenToggle={false} />);
+      const nav = navbar.container.querySelector('[data-slot="navbar"]') as HTMLElement;
+      expect(nav.className).toContain("z-base");
+      expect(nav.className).not.toContain("z-navbar");
+      navbar.unmount();
+
+      const footer = render(<Footer items={[]} />);
+      const foot = footer.container.querySelector('[data-slot="footer"]') as HTMLElement;
+      expect(foot.className).toContain("z-base");
+      expect(foot.className).not.toContain("z-navbar");
+      footer.unmount();
+
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "kinds", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })];
+      const dock = render(<Panel anchor="top-left" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["kinds"]} onVisibleChange={() => undefined} />);
+      const panel = dock.container.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(panel.className).toContain("z-panel");
+      expect(LEVELS.indexOf("panel")).toBeGreaterThan(LEVELS.indexOf("base"));
+      dock.unmount();
     });
 
     it("PanelChromeTabBar renders a width placeholder without tab chips while the panel is open", async () => {
@@ -6497,6 +6558,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(aborted).toEqual(["abort"]);
     });
 
+    it("Window keeps engagement options reachable while the Actions pane is folded", () => {
+      const pressed: string[] = [];
+      const { container } = render(
+        <Window
+          id="quick-actions-window"
+          active
+          engagement={{
+            options: [{ id: "shell-menu.action.openAddObjectDialog", label: "Add Object…", icon: { kind: "text", text: "+" }, onPress: () => pressed.push("open") }],
+          }}
+        >
+          <div>Body</div>
+        </Window>,
+      );
+      const quick = container.querySelector('[data-slot="window-engagement-quick-actions"]') as HTMLElement;
+      const trigger = container.querySelector('[id="shell-menu.action.openAddObjectDialog"]') as HTMLElement;
+      expect(quick).toBeTruthy();
+      expect(trigger).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-engagement-body"]')).toBeNull();
+      fireEvent.click(trigger);
+      expect(pressed).toEqual(["open"]);
+    });
+
     it("Window shows engagement and search as folded strips by default, same U-cutout surface as window options", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: uiDataLabel("Action") } }}>
@@ -6513,12 +6596,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(searchZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
+      // 🗣️ One engagement bar, two anchored panes: either toggle expands the status readout AND the command
+      // line together, so unfolding "Actions" can never leave the only typed input of the bar unmounted.
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       expect(container.querySelector('[data-slot="window-engagement-body"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-search-body"]')).toBeTruthy();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
     });
 
     it("Window merges the ad-hoc actionPane into the top-left Actions pane below the active engagement, sharing one toggle", () => {
@@ -6789,8 +6876,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.engagementWindow.engagement"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.engagementWindow.search"]')).toBeTruthy();
     });
 
     it("Window pane chrome uses semantic icons in U-cutout chips, never fold chevrons", () => {
@@ -7400,7 +7488,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 }
 
 export async function registerTests2(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: Record<string, any>, testSource: { directory: string; url: string }): Promise<void> {
-  const { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout } = dependencies;
+  const { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, treeRowDragPayloadAttributes, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout } = dependencies;
   const { describe, expect, it, vi } = vitest;
   
     describe("tree helpers", () => {
@@ -9386,6 +9474,27 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" }, isDragHandle: true }, true)).toEqual(["sort", "transfer"]);
       });
   
+      it("a transfer row mirrors its drag payload onto the DOM", () => {
+        expect(treeRowDragPayloadAttributes(undefined)).toEqual({});
+        expect(treeRowDragPayloadAttributes({ "application/x-semio-catalogue-item": "" })).toEqual({});
+        expect(treeRowDragPayloadAttributes({ "application/x-semio-catalogue-item": '{"objectKind":"b-l"}' })).toEqual({
+          "data-drag-mime": "application/x-semio-catalogue-item",
+          "data-drag-payload": '{"objectKind":"b-l"}',
+        });
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+              <TreeItem id="tooltip.manual" label="Kind" draggable dragRoles={["transfer"]} dragInitiation="handle" dragData={{ "application/x-semio-catalogue-item": '{"objectKind":"b-l"}' }} />
+            </TreeContext.Provider>
+          </UiDriverProvider>,
+        );
+        // 📮️ A native HTML5 drag cannot be driven by synthetic pointer moves, so the bytes a real
+        // `dragstart` would put on the `DataTransfer` have to be readable from the row itself.
+        expect(markup).toContain('data-drag-mime="application/x-semio-catalogue-item"');
+        expect(markup).toContain("data-drag-payload=");
+        expect(markup).toContain('data-draggable="true"');
+      });
+
       it("default driver keeps catalogue transfer on the move handle only", () => {
         const markup = renderToStaticMarkup(
           <UiDriverProvider driver={DEFAULT_UI_DRIVER}>

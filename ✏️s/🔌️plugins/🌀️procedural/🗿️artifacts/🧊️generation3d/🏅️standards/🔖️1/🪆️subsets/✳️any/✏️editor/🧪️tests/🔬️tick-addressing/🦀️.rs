@@ -38,6 +38,7 @@ struct DispatchCase {
     attached: Vec<AttachedWindow>,
     current_window_id: String,
     payload_window_id: String,
+    payload_window_kind: String,
     admitted: bool,
 }
 
@@ -97,7 +98,8 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
     for case in &fixture.dispatch {
         let mut app = app_with_registry().await;
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
-        let args = flow_eval_tick::window_args(&case.payload_window_id);
+        let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
+        let args = flow_eval_tick::window_args(&case.payload_window_id, &kind);
         let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::testkit::meta("local") };
         let outcome = match testkit::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
             Ok(()) => match semio_framework_plugin::testkit::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await {
@@ -151,5 +153,37 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded volume must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
     eprintln!("[DEBUG] self-dispatched tick chain finished: ticks={ticks} status={status_json} meshes={mesh_count}");
+    semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
+}
+
+/// ⚖️ LAW: generate-mode preview evaluation is the SAME addressed tick chain as edit preview, never
+/// a dead synchronous `FlowEvalSession::tick` inside `Generation3dPreviewCommandWork`.
+#[semio_framework_async_macros::async_test]
+async fn generate_preview_eval_emits_extension_or_rearms_flow_eval_tick() {
+    let _serial = test_support::lock();
+    let mut app = app_with_registry().await;
+    let (generations_view, preview_view) = testkit::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
+    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::testkit::meta("local") };
+    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
+    let receipt = testkit::settle(&mut app).await;
+    assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
+    app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration");
+    let receipt = testkit::settle(&mut app).await;
+    assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
+    let armed = armed_window_ids(&receipt.effects);
+    let pending = armed_window_ids(&app.pending_effects(Some(&generations_view)).await);
+    assert!(
+        armed.iter().any(|id| id == "generation3d-generate-preview") || pending.iter().any(|id| id == "generation3d-generate-preview"),
+        "addGeneration / pending_effects must re-arm flowEvalTick at the generate preview window, armed={armed:?} pending={pending:?}"
+    );
+    let args = flow_eval_tick::window_args("generation3d-generate-preview", generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW);
+    testkit::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("generate preview tick");
+    let tick = testkit::settle(&mut app).await;
+    assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "generate preview tick faulted: {:?}", tick.lanes);
+    let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id).await;
+    let rearmed = armed_window_ids(&tick.effects);
+    eprintln!("[DEBUG] generate preview tick: rearmed={rearmed:?} answered={answered}");
+    assert!(answered > 0 || rearmed.iter().any(|id| id == "generation3d-generate-preview"), "generate preview eval must emit ExtensionInvocation or re-arm flowEvalTick, not a dead sync tick");
+    let _ = preview_view;
     semio_framework_plugin::testkit::close_registered_fixture_app(&mut *app);
 }

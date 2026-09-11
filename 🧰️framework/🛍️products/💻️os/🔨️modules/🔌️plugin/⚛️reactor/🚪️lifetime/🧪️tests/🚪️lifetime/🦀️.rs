@@ -6,15 +6,15 @@ struct Owner {
 }
 impl terminal_owner::Sealed for Owner {}
 impl GuestLifetimeOwner for Owner {
-    fn terminal_is_empty(&self) -> Result<bool, &'static str> {
+    fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
         Ok(self.remaining == 0)
     }
-    fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, &'static str> {
+    fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
         if maximum_items == 0 {
             return Ok(GuestTerminalRelease::Pending);
         }
         if owner.as_ref().is_some_and(|owner| owner.remaining != 0) {
-            return Err("live test owner");
+            return Err(super::super::reactor_close_fault("live test owner"));
         }
         drop(owner.take());
         Ok(GuestTerminalRelease::Released)
@@ -54,10 +54,10 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     }
     impl terminal_owner::Sealed for DropOwner {}
     impl GuestLifetimeOwner for DropOwner {
-        fn terminal_is_empty(&self) -> Result<bool, &'static str> {
+        fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
             Ok(true)
         }
-        fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, &'static str> {
+        fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
             if maximum_items == 0 {
                 return Ok(GuestTerminalRelease::Pending);
             }
@@ -130,6 +130,60 @@ fn guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner() {
         ack(&mut cell);
         assert!(cell.is_released());
     }
+}
+
+/// 🔁️ LAW: a lifetime that has already minted its `Retired` receipt WAITS out a retracted terminal
+/// witness instead of faulting. The release ladder re-reads `terminal_is_empty` on every rung, and
+/// the native owner's witness sits on top of two `try_lock`s that answer "not empty" whenever
+/// another thread holds them — so a single contended read mid-release used to turn the close into
+/// `plugin.reactor-close-authority`, which the host surfaces as a trapped actor, a rolled-back
+/// hot-swap and a permanently revoked activation (ticket 26/09/02 wave B17; reproduced in the
+/// browser on :6013, `🗑️generated/probe-2026-09-11T13-14-30.md`). A retraction is a wait; only a
+/// structurally impossible release is a fault.
+#[test]
+fn a_retired_lifetime_waits_out_a_retracted_terminal_witness_instead_of_faulting() {
+    struct Contended {
+        empty: std::rc::Rc<std::cell::Cell<bool>>,
+    }
+    impl terminal_owner::Sealed for Contended {}
+    impl GuestLifetimeOwner for Contended {
+        fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
+            Ok(self.empty.get())
+        }
+        fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
+            if maximum_items == 0 {
+                return Ok(GuestTerminalRelease::Pending);
+            }
+            drop(owner.take());
+            Ok(GuestTerminalRelease::Released)
+        }
+    }
+    let fixture = fixture();
+    let empty = std::rc::Rc::new(std::cell::Cell::new(true));
+    let mut cell = GuestLifecycleCell::admit(open(), fixture["capturedGuestLifetime"].as_str().unwrap().parse().unwrap()).unwrap();
+    cell.install_owner(Contended { empty: empty.clone() }).unwrap_or_else(|_| panic!("fresh exact owner"));
+    for _ in 0..2 {
+        let receipt = cell.retained_receipt().unwrap();
+        cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
+        cell.finish_turn(Some(1), true).unwrap();
+        if cell.is_live() {
+            let request = ActorInstanceCloseRequest { lifetime: cell.lifetime(), request_sequence: fixture["closeRequestSequence"].as_u64().unwrap() };
+            cell.record_close_admission(request, fixture["closeGeneration"].as_str().unwrap().parse().unwrap()).unwrap();
+        }
+    }
+    assert!(cell.prepare_retired().unwrap(), "an empty witness mints the terminal receipt");
+    let retired = cell.retained_receipt().unwrap();
+    cell.stage_ack(ActorInstanceLifecycleAck { receipt: retired }).unwrap();
+    empty.set(false);
+    cell.release_owner_step(1, 4096).expect("a retracted witness is a wait, never a fault");
+    assert!(cell.owner().is_some(), "the wait must retain the structural owner");
+    assert_eq!(cell.finish_turn(Some(1), true).unwrap(), Some(retired), "the terminal receipt survives the wait");
+    assert!(cell.prepare_retired().unwrap(), "a minted terminal receipt is never un-retired");
+    empty.set(true);
+    cell.release_owner_step(1, 4096).unwrap();
+    assert!(cell.owner().is_none());
+    cell.finish_turn(Some(1), true).unwrap();
+    assert!(cell.is_released());
 }
 
 #[test]

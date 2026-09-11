@@ -7,17 +7,17 @@ use dsl::os_pack::json::Value;
 pub fn set_active_example(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
     let next = if example_id.is_empty() {
-        Some(empty_fixture())
+        Some((empty_fixture(), String::new()))
     } else if example_id == PUZZLE3D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
-        Some(default_fixture())
+        Some((default_fixture(), PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string()))
     } else if example_id == PUZZLE3D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
-        Some(nakagin_fixture())
+        Some((nakagin_fixture(), PUZZLE3D_EXAMPLE_NAKAGIN.to_string()))
     } else {
         None
     };
-    if let Some(fixture) = next {
+    if let Some((fixture, canonical_id)) = next {
         ctx.scene.fixture = fixture;
-        ctx.scene.runtime = Puzzle3dRuntime::default();
+        ctx.scene.runtime = Puzzle3dRuntime { active_example_id: canonical_id, ..Puzzle3dRuntime::default() };
     }
     resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
 }

@@ -47,7 +47,7 @@ pub fn apply(
     _doc: &ArtifactView<'_, Generation3dSnapshot>,
     _cfg: &ConfigView<'_, Generation3dConfig>,
     session: &mut FlowEvalSession,
-    preview_window_ids: &[&str],
+    preview_windows: &[(&str, &str)],
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
@@ -56,7 +56,7 @@ pub fn apply(
     if !session.invalidate_for_flow_extension_registry(generation) {
         return Ok(Emit::default());
     }
-    Ok(Emit { effects: preview_window_ids.iter().map(|window_id| super::flow_eval_tick::rearm(window_id, 105)).collect(), ..Default::default() })
+    Ok(Emit { effects: preview_windows.iter().map(|(window_id, window_kind_id)| super::flow_eval_tick::rearm(window_id, window_kind_id, 105)).collect(), ..Default::default() })
 }
 
 /// 🧩️ The `app_commands!` row. Its `handle(payload, doc, cfg, ctx)` signature is framework-fixed and
@@ -66,7 +66,7 @@ pub fn apply(
 /// one that re-arms. Reached only by the marks-free `handle`/`dispatch` fallbacks, which own no
 /// preview window to arm a chain into anyway.
 pub fn handle(payload: &SetContributions, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    apply(payload, doc, cfg, session, &[])
+    apply(payload, doc, cfg, session, &[] as &[(&str, &str)])
 }
 
 //#region 🧪️Tests

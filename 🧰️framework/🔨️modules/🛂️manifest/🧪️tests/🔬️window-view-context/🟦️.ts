@@ -29,6 +29,8 @@ export function testWindowViewContext(): void {
   assert.equal(panel.terminology, view.terminology);
   assert.equal(panel.activeModeId, view.activeModeId);
   assert.deepEqual(panel.activeUtilityByWindowId, view.activeUtilityByWindowId);
+  assert.equal(panel.focusedWindowId, view.focusedWindowId, "fails-before: an app-level panel that authors per-window settings loses the pane the user is looking at and retunes the roster's first entry");
+  assert.equal(windowViewContext(view, "left")?.focusedWindowId, view.focusedWindowId, "a windowed projection carries the focused pane alongside its own render target");
   assert.deepEqual(view, before);
   const windowOnly = windowViewContext(view, "left");
   assert.equal(windowOnly?.activeToolId, undefined, "fails-before: windowed dispatch without host overlay drops the armed tool");

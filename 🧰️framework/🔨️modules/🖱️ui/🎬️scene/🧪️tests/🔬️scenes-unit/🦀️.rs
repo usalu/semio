@@ -220,4 +220,15 @@ fn a_scene_without_lanes_still_publishes_its_whole_doc() {
     assert!(lanes.is_empty());
     assert_eq!(spine, scene);
 }
+#[test]
+fn world3d_empty_brush_preview_still_publishes_a_lane() {
+    let mut assembled = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+    assembled.brush_preview_json = Some(String::new());
+    let (spine, lanes) = assembled.split_lanes();
+    assert_eq!(spine.brush_preview_json.as_deref(), Some(""));
+    let preview = lanes.iter().find(|lane| lane.key == World3dSceneLane::BrushPreview.body_key()).expect("empty preview still splits");
+    assert_eq!(preview.payload, "");
+    assert!(spine.lanes.iter().any(|lane| lane.lane == "brushPreview" && lane.bytes == 0));
+}
+
 //#endregion 🚚️World3dSceneLanes

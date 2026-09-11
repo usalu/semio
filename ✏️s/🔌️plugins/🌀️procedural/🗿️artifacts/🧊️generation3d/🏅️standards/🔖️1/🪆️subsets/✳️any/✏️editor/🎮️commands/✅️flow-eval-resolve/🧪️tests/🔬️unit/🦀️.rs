@@ -23,7 +23,7 @@ fn eval_result_seeds_the_node_cache_and_rearms_the_tick_chain() {
     let output = Dictionary::new().insert("geometry", NeuralValue::Atom(Atom::String("brep:solid-1".into()))).insert("count", NeuralValue::Atom(Atom::Integer(3)));
     let node_hash = 0x5eed_c0de_u64;
     assert!(!cache.contains(node_hash), "the node must be uncached before the extension answers");
-    let emit = handle(&FlowEvalResolve { window_id: "procedural-preview-test".into(), node_hash, output_json: dsl::json::to_json_string(&output) }, &doc, &cfg, &mut session).expect("flowEvalResolve");
+    let emit = handle(&FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: dsl::json::to_json_string(&output) }, &doc, &cfg, &mut session).expect("flowEvalResolve");
     let cached = cache.get(node_hash).expect("the seeded node must be readable from the shared neural cache");
     assert_eq!(cached, output, "the extension output must round-trip through the shared neural cache");
     cached.retire_cold();

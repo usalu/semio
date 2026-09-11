@@ -642,7 +642,7 @@ impl World3dSceneLane {
             Self::Attractions => scene.attractions_json.take(),
             Self::TargetVolumes => scene.target_volumes_json.take(),
             Self::References => scene.references_json.take(),
-            Self::BrushPreview => scene.brush_preview_json.take(),
+            Self::BrushPreview => scene.brush_preview_json.clone(),
             Self::Interaction => scene.interaction_json.take(),
             Self::EngagementPreview => scene.engagement_preview_json.take(),
             Self::Lod => scene.lod_json.take(),

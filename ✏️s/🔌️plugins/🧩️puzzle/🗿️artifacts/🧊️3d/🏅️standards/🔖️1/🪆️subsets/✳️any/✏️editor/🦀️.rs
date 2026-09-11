@@ -211,12 +211,24 @@ pub struct Puzzle3dObject {
     pub reveal_index: Option<usize>,
 }
 
+/// 🗂️ The editor-side, untyped twin of the persisted `Puzzle3dMeta`: both catalog members stay
+/// opaque `DslValue`s here because the panels read them row-wise.
+///
+/// 🕳️ An ABSENT member must project as absent, never as `Null`: the persisted twin types
+/// `kindCompatibility` as a real `Vec` and refuses a `Null` for it, and
+/// `Puzzle3dPlaySnapshot::new`'s decode of the whole document is all-or-nothing — so one `null`
+/// member used to replace the ENTIRE typed authority with an empty document while the projection kept
+/// every object. Nothing reading the projection noticed (the world, the panels and the fixture delta
+/// all read `value()`), but `ArtifactApp::interaction_topology` reads the typed half, and
+/// `protocol::validate_state` prunes every selected id an empty topology does not contain — which is
+/// the first-pick-invisible Inspection wave B6 measured in the browser
+/// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dFixtureMeta {
-    #[value(default, rename = "kindCatalogs")]
+    #[value(default, rename = "kindCatalogs", skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<dsl::DslValue>,
-    #[value(default, rename = "kindCompatibility")]
+    #[value(default, rename = "kindCompatibility", skip_serializing_if = "Option::is_none")]
     pub kind_compatibility: Option<dsl::DslValue>,
 }
 
@@ -301,6 +313,15 @@ fn puzzle3d_fixture_from_doc(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Pu
 
 fn puzzle3d_fixture_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzle3dFixture {
     puzzle3d_fixture_from_snapshot(snapshot.typed())
+}
+
+/// 🔭️ The ONE read of a persisted projection every viewport-visible answer is derived from — the
+/// render's fixture, the semantic document delta's `before`, and the interaction topology the picks
+/// are validated against. Deliberately the untyped `Puzzle3dFixture` decode rather than the
+/// document's typed authority: the two are separate decodings of one document, and a disagreement
+/// between them shows up as a pick that paints and then silently vanishes rather than as an error.
+pub fn puzzle3d_fixture_from_projection(projection: &Value) -> Puzzle3dFixture {
+    dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
 }
 
 fn puzzle3d_mutations_between(before: &Puzzle3dFixture, after: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
@@ -898,28 +919,88 @@ pub fn puzzle3d_fill_tool_active(config: &Puzzle3dRuntime) -> bool {
     config.active_tool_id.as_deref() == Some(fill_tool::TOOL_ID)
 }
 
+/// 🪟️ The window INSTANCE one render/dispatch is addressed at, in the order the host actually
+/// carries it: an explicit `<body>:<instance>` body key, then `ViewModel::window_id` — the field
+/// `ViewModel::for_window_instance` stamps and the ONLY per-call carrier of the instance identity —
+/// then `ViewModel::focused_window_id`, then the caller's own fallback (a command's `windowId`
+/// argument, which may still spell a bare window KIND), then the live roster's first pane.
+///
+/// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B15: the focused-pane hop is what an APP-LEVEL PANEL
+/// resolves through. A panel body is never rendered FOR a window (`ViewModel::for_panel` clears
+/// `window_id` by design), so before it this function fell straight to the roster's first entry —
+/// which is the base window KIND, a pane nobody is looking at — and every Settings stepper baked THAT
+/// into its args (B12 §5.1 measured `setGridSpacing window=Some("puzzle3d-main")` live).
+///
+/// 🕹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B9: `ViewModel::active_utility_by_window_id`,
+/// the window-owned config partitions and the per-window options are ALL keyed by instance
+/// (`puzzle3d-main-perspective`), so resolving the roster's first pane before the host's own
+/// `window_id` published the FIRST pane's armed utility into every other pane's world lane.
+///
+/// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B18: a kind-valued `window_id` (`puzzle3d-main`)
+/// is not an addressing hit when an instance candidate exists — `suggestionsTick` otherwise looks
+/// the utility map up under the kind (`map_hit=false`) and never warms the brush preview cache.
+pub fn puzzle3d_window_id_is_kind(id: &str) -> bool {
+    id == main::WINDOW_KIND_ID
+}
+
+fn puzzle3d_first_instance_id<'a>(ids: impl IntoIterator<Item = Option<&'a str>>) -> Option<&'a str> {
+    ids.into_iter().flatten().find(|id| !id.is_empty() && !puzzle3d_window_id_is_kind(id))
+}
+
+fn puzzle3d_utility_map_hit<'a>(view: &'a semio_framework_plugin::ViewModel, wid: &str) -> Option<&'a String> {
+    view.active_utility_by_window_id.get(wid).or_else(|| {
+        if !puzzle3d_window_id_is_kind(wid) {
+            return None;
+        }
+        view.focused_window_id
+            .as_deref()
+            .and_then(|focused| view.active_utility_by_window_id.get(focused))
+            .or_else(|| {
+                view.active_utility_by_window_id.iter().find_map(|(key, utility)| {
+                    (key.starts_with(wid) && key.as_str() != wid && !utility.is_empty()).then_some(utility)
+                })
+            })
+    })
+}
+
+pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_plugin::ViewModel>, keyed: Option<&'a str>, fallback: Option<&'a str>, roster: &'a [String]) -> &'a str {
+    puzzle3d_first_instance_id([
+        keyed,
+        view_state.and_then(|view| view.window_id.as_deref()),
+        view_state.and_then(|view| view.focused_window_id.as_deref()),
+        fallback,
+        roster.iter().map(String::as_str).find(|id| !id.is_empty() && !puzzle3d_window_id_is_kind(id)),
+    ])
+    .or_else(|| keyed.filter(|id| !id.is_empty()))
+    .or_else(|| view_state.and_then(|view| view.window_id.as_deref()).filter(|id| !id.is_empty()))
+    .or_else(|| view_state.and_then(|view| view.focused_window_id.as_deref()).filter(|id| !id.is_empty()))
+    .or(fallback.filter(|id| !id.is_empty()))
+    .or_else(|| roster.first().map(String::as_str).filter(|id| !id.is_empty()))
+    .unwrap_or(main::WINDOW_KIND_ID)
+}
+
 /// 🛠️ The effective interaction id threaded through `Puzzle3dScene.active_utility`: the host-owned
 /// per-window utility from `ViewModel`, unless the mode-level fill tool is active
 /// (`active_tool_id`), in which case fill wins. Fill keeps its viewport interaction even though it is
 /// declared as a windowless tool, not a `WindowKindDefinition` utility.
+///
+/// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B18: `SET_ACTIVE_UTILITY` keys the map by window
+/// INSTANCE. A kind-valued lookup (`puzzle3d-main`) — `suggestionsTick` / `registerBrushMesh` when
+/// `view.window_id` is the kind — is a map miss (`map_hit=false`, `utility=` empty default), so the
+/// tick never arms `brush_live_target` and render publishes `preview=0`. Kind lookups fall through
+/// to the focused pane, then the first instance-prefixed map key.
 pub fn puzzle3d_scene_active_utility(config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> String {
     if puzzle3d_fill_tool_active(config) {
         return fill_tool::TOOL_ID.to_string();
     }
     window_id
-        .and_then(|wid| view_state.and_then(|view| view.active_utility_by_window_id.get(wid)))
+        .and_then(|wid| view_state.and_then(|view| puzzle3d_utility_map_hit(view, wid)))
         .or_else(|| view_state.and_then(|view| view.active_utility_id.as_ref()))
         .filter(|utility| !utility.is_empty())
         .cloned()
         .unwrap_or_else(|| PUZZLE3D_DEFAULT_UTILITY.to_string())
 }
 
-/// 🎯️ The vortex the brush/suggestion machinery currently targets: an explicit vortex selection, else
-/// the hovered vortex, else the first vortex of the hovered object. Reads the framework-owned `vortex`
-/// domain through [`Puzzle3dInteractionSnapshot`] (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), which render-time callers build from
-/// `ArtifactEditor::render_with_request_context`'s `InteractionView` and reducer callers build from
-/// their `Puzzle3dActionCtx`.
 pub fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
     if let Some(id) = interaction.selected_vortex_ids().first() {
         return Some(id.clone());
@@ -955,7 +1036,10 @@ impl Puzzle3dInteractionSnapshot {
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
         let selection = interaction.selection(PUZZLE3D_INTERACTION_DOMAIN);
         let hover = interaction.hover(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_HOVER_CHANNEL);
-        Self { granularity: selection.granularity.clone(), selected: selection.ids.clone(), hovered: hover.ids.clone() }
+        let leftover_ids = interaction.leftover_selected_ids();
+        let selected = if selection.ids.is_empty() { leftover_ids } else { selection.ids.clone() };
+        let granularity = if !selection.granularity.is_empty() { selection.granularity.clone() } else if !selected.is_empty() { PUZZLE3D_GRANULARITY_OBJECT.to_string() } else { selection.granularity.clone() };
+        Self { granularity, selected, hovered: hover.ids.clone() }
     }
 
     /// 🕹️ The retained-reducer twin — the same read from the raw `InteractionState`/hover map a
@@ -964,7 +1048,10 @@ impl Puzzle3dInteractionSnapshot {
     pub fn from_state(state: &protocol::InteractionState, hover: &semio_framework_plugin::app::InteractionHoverState) -> Self {
         let selection = state.selection.get(PUZZLE3D_INTERACTION_DOMAIN);
         let hovered = hover.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|hover| hover.channel == PUZZLE3D_HOVER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
-        Self { granularity: selection.map(|selection| selection.granularity.clone()).unwrap_or_default(), selected: selection.map(|selection| selection.ids.clone()).unwrap_or_default(), hovered }
+        let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
+        let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
+        let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE3D_GRANULARITY_OBJECT.to_string() });
+        Self { granularity, selected, hovered }
     }
 
     pub fn selected_ids(&self, granularity: &str) -> &[String] {
@@ -1350,9 +1437,11 @@ pub fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &st
 
 /// 🎯️ Mirrors the host's client-side zoom-to-selection framing math so a keybinding/engagement-token
 /// driven focus (which bypasses that host interception) still produces a sensible camera. Camera-only:
-/// writes `envelope.runtime.camera` (session-only per-window state), never the shared `fixture`.
+/// writes `envelope.runtime.camera` (session-only per-window state), never the shared `fixture`. An
+/// EMPTY `selected_object_ids` frames the whole document — same subject rule as
+/// `Puzzle3dFocusSelectionWork::frames`, so the retained lane and this one can never disagree.
 pub fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, selected_object_ids: &[String]) {
-    let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| selected_object_ids.contains(&object.id)).map(|object| object.origin).collect();
+    let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| selected_object_ids.is_empty() || selected_object_ids.contains(&object.id)).map(|object| object.origin).collect();
     if selected_origins.is_empty() {
         return;
     }
@@ -2134,6 +2223,28 @@ pub fn puzzle3d_suggestions_tick_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
+/// 🪟️ One per-window option repaints the world body it configures, the measures rail that binds every
+/// one of its controls, and the Settings panel — which mirrors four of the same fields and must never
+/// disagree with the rail about them. Nothing else: not the outliner, not the catalogue, not the
+/// inspector, not the history, not the labels.
+///
+/// 🐢️ These verbs fell through the table to [`Puzzle3dScopeClass::Chrome`], i.e. `UiDirtyScope::Full`,
+/// so ONE grid toggle re-rendered every window body (180 Nakagin instances), every panel body and the
+/// whole label overlay before the rail's own checkbox could show the new value. Measured on the live
+/// `:6013` shell (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12): 0.7 s idle, seconds under load — long
+/// enough that a second click lands on a control still rendering the value the user just left.
+pub fn puzzle3d_window_option_scope() -> UiDirtyScope {
+    UiDirtyScope::Partial {
+        window_bodies: vec![main::BODY_KEY.to_string()],
+        panel_bodies: vec![settings_panel::BODY_KEY.to_string()],
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: true,
+        labels: false,
+    }
+}
+
 /// 🔍️ The panel bodies a SELECTION change invalidates: the field inspector (it renders the selected
 /// entity's own fields, `panels::inspection::render`), the artifact outliner (it marks the selected
 /// rows) and the framework history panel (the framework records one command row per
@@ -2175,6 +2286,11 @@ pub enum Puzzle3dScopeClass {
     /// 🪣️ Committing a planned fill: a DOCUMENT edit that also moves the fill-count slider range, so
     /// it is [`Puzzle3dScopeClass::Document`] plus the fill tool's own measures.
     FillApply,
+    /// 🪟️ One per-window option from the measures rail or the Settings panel (grid, LOD, vortex, sun,
+    /// selectable kinds, projection, the four steppers). It publishes on the per-window `WindowConfig`
+    /// lane ONLY: the world body re-derives from it, the rail's own controls are bound to it, and the
+    /// Settings panel mirrors four of its fields — nothing else in the shell can move.
+    WindowOption,
     /// 🕹️ Selection changed: world body + [`puzzle3d_selection_panel_bodies`] + window measures.
     Selection,
     /// 📝️ Document edited: world body + [`puzzle3d_document_panel_bodies`] + window measures.
@@ -2192,6 +2308,7 @@ pub fn puzzle3d_scope(class: Puzzle3dScopeClass) -> UiDirtyScope {
         Puzzle3dScopeClass::FillBuild => puzzle3d_fill_build_scope(),
         Puzzle3dScopeClass::FillOptions => puzzle3d_fill_options_scope(),
         Puzzle3dScopeClass::SuggestionsTick => puzzle3d_suggestions_tick_scope(),
+        Puzzle3dScopeClass::WindowOption => puzzle3d_window_option_scope(),
         Puzzle3dScopeClass::Selection => {
             UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: puzzle3d_selection_panel_bodies(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
         }
@@ -2211,7 +2328,9 @@ pub fn puzzle3d_scope(class: Puzzle3dScopeClass) -> UiDirtyScope {
 /// `🧪️tests/🔬️unit/🦀️.rs` is what forces every MUTATING id to earn a narrower class.
 pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
     match action {
-        "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => Puzzle3dScopeClass::Viewport,
+        "setCamera" | "focusSelection" => Puzzle3dScopeClass::Viewport,
+        "setGridVisible" | "setGridSnapEnabled" | "setGridSpacing" | "setLodAutomatic" | "setLodDepthVariable" | "setLodManual" | "setVortexShow" | "setVortexDirection" | "toggleSun" | "setSunAzimuth" | "setSunElevation"
+        | "setSunIntensity" | "setSelectableKind" | "setTransformGumballFlag" | "setProximityRadius" | "setChunkSize" | "setVoxelDims" | "setProjection" | "setProjectionParam" => Puzzle3dScopeClass::WindowOption,
         "fillBuildTick" | "cancelFillBuild" => Puzzle3dScopeClass::FillBuild,
         "setObjectKindWeight" | "setVortexKindWeight" => Puzzle3dScopeClass::FillOptions,
         "suggestionsTick" => Puzzle3dScopeClass::SuggestionsTick,
@@ -2638,6 +2757,23 @@ struct Puzzle3dContextSelection {
 }
 
 impl Puzzle3dContextSelection {
+    fn bucket(&mut self, domain: &str) -> Option<&mut Vec<String>> {
+        match domain {
+            "node" | PUZZLE3D_GRANULARITY_OBJECT => Some(&mut self.object_ids),
+            PUZZLE3D_GRANULARITY_VORTEX => Some(&mut self.vortex_ids),
+            PUZZLE3D_GRANULARITY_ATTRACTION => Some(&mut self.attraction_ids),
+            PUZZLE3D_GRANULARITY_TARGET_VOLUME => Some(&mut self.target_volume_ids),
+            PUZZLE3D_GRANULARITY_REFERENCE => Some(&mut self.reference_ids),
+            _ => None,
+        }
+    }
+
+    /// 🎯️ `surface.hits` is the entity the pointer is actually over, `surface.selection` the entities the
+    /// document already holds selected. The hit WINS when it names a granularity the selection does not
+    /// carry, so a right-click on an unselected object opens that object's menu instead of the empty menu
+    /// that made the shell fallback take over the viewport (`📓️2026-09-11-wave-B1-battery-extension.md`
+    /// §5 defect 8). A hit inside the current selection changes nothing — the whole selection stays the
+    /// menu's subject, so "Delete (3 objects)" never silently narrows to the one row under the cursor.
     fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else {
@@ -2645,13 +2781,14 @@ impl Puzzle3dContextSelection {
         };
         for group in &surface.selection {
             let ids = group.ids.clone();
-            match group.domain.as_str() {
-                "node" | PUZZLE3D_GRANULARITY_OBJECT => out.object_ids.extend(ids),
-                PUZZLE3D_GRANULARITY_VORTEX => out.vortex_ids.extend(ids),
-                PUZZLE3D_GRANULARITY_ATTRACTION => out.attraction_ids.extend(ids),
-                PUZZLE3D_GRANULARITY_TARGET_VOLUME => out.target_volume_ids.extend(ids),
-                PUZZLE3D_GRANULARITY_REFERENCE => out.reference_ids.extend(ids),
-                _ => {}
+            if let Some(bucket) = out.bucket(group.domain.as_str()) {
+                bucket.extend(ids);
+            }
+        }
+        for hit in &surface.hits {
+            let id = hit.id.clone();
+            if let Some(bucket) = out.bucket(hit.domain.as_str()).filter(|bucket| bucket.is_empty()) {
+                bucket.push(id);
             }
         }
         out
@@ -2786,6 +2923,7 @@ struct Puzzle3dSessionState {
     document_tree: Option<(Puzzle3dDocumentTreeKey, Box<BuiltNode>)>,
     collision: Option<Puzzle3dCollisionSession>,
     fill: Option<Puzzle3dFillSession>,
+    brush_live_target: Option<String>,
 }
 
 impl Puzzle3dSessionState {
@@ -2797,6 +2935,7 @@ impl Puzzle3dSessionState {
             .saturating_add(self.document_tree.as_ref().map_or(0, |_| size_of::<BuiltNode>()))
             .saturating_add(self.collision.as_ref().map_or(0, Puzzle3dCollisionSession::bytes))
             .saturating_add(self.fill.as_ref().map_or(0, Puzzle3dFillSession::bytes))
+            .saturating_add(self.brush_live_target.as_ref().map_or(0, String::len))
     }
 }
 
@@ -2946,6 +3085,7 @@ fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, a
         if let Some(fill) = state.fill {
             session.install_fill_session(fill);
         }
+        session.set_brush_live_target(state.brush_live_target);
     }
     Some(lease)
 }
@@ -2953,9 +3093,9 @@ fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, a
 /// 🎟️ Returns the app's caches to their slot. A stale lease (the slot was retired or re-keyed mid-call)
 /// is rejected and the state simply dropped.
 fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp) {
-    let (collision, fill) = {
+    let (collision, fill, brush_live_target) = {
         let mut session = app.precompute.borrow_mut();
-        (Some(session.take_collision_session()), Some(session.take_fill_session()))
+        (Some(session.take_collision_session()), Some(session.take_fill_session()), session.brush_live_target().map(str::to_string))
     };
     let state = Puzzle3dSessionState {
         geometry: app.geometry_cache.lock().expect("geometry cache").take(),
@@ -2963,6 +3103,7 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp)
         document_tree: app.document_tree_cache.lock().expect("document cache").take(),
         collision,
         fill,
+        brush_live_target,
     };
     if let Ok(mut registry) = puzzle3d_session_registry().try_lock() {
         registry.check_in(lease, state);
@@ -3077,14 +3218,16 @@ impl Puzzle3dPlayApp {
     /// drag is tracked host-locally and reaches the app as one already-absolute committed delta, so
     /// there is no in-flight app-side pose for the render to prefer.
     fn render_fixture(&self, projection: &Value) -> Puzzle3dFixture {
-        dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
+        puzzle3d_fixture_from_projection(projection)
     }
 
     /// 🧾️ Rebuilds the transient render bundle for one `(projection, config, window)` triple, with the
     /// window instance's own view-local options materialized onto the runtime.
     fn scene_for(&self, projection: &Value, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: &str) -> Puzzle3dScene {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, Some(window_id));
-        scene_from_projection(projection, config.clone(), &active_utility)
+        let mut scene = scene_from_projection(projection, config.clone(), &active_utility);
+        main::frame_unset_camera(&mut scene, window_id);
+        scene
     }
 
     /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `ArtifactApp::handle` with
@@ -3184,7 +3327,7 @@ impl Puzzle3dActionPrologue {
     /// (`puzzle3d_operations_from_fixture_change`'s `before`).
     pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
-        let map_hit = window_id.and_then(|wid| view_state.and_then(|view| view.active_utility_by_window_id.get(wid))).is_some();
+        let map_hit = window_id.and_then(|wid| view_state.and_then(|view| puzzle3d_utility_map_hit(view, wid))).is_some();
         eprintln!("[DEBUG] puzzle3d.utility.publish action={action} window={window_id:?} utility={active_utility} map_hit={map_hit}");
         self.before = puzzle3d_action_document_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
@@ -3299,7 +3442,7 @@ impl Puzzle3dActionPrologue {
             effects.push(Effect::SetActiveTool { tool_id: fill_tool::TOOL_ID.into() });
         }
         if !is_direct_utility_switch && !is_direct_tool_switch && !next_is_fill_tool && next_active_utility != active_utility_initial {
-            effects.push(Effect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
+            effects.push(Effect::SetActiveUtility { window_id: wid.clone(), utility_id: next_active_utility });
         }
         // 🧮️ B1: only a REAL config change becomes a `Puzzle3dConfigMutation` — `PartialEq` (derived)
         // makes this cheap, and keeps a pure read-only action (e.g. a re-materialize/re-save of an
@@ -3307,9 +3450,9 @@ impl Puzzle3dActionPrologue {
         let shared_after = window_ownership::shared(&scene.runtime);
         let config_mutations = if shared_after != shared_before { vec![Puzzle3dConfigMutation::Snapshot { config: shared_after }] } else { Vec::new() };
         let window_after = window_ownership::Puzzle3dWindowConfig::from_runtime(&scene.runtime);
-        let window_config_mutations = if window_after != window_before { view_state.and_then(|view| window_ownership::addressed_config(view, window_after).ok()).into_iter().collect() } else { Vec::new() };
+        let window_config_mutations = if window_after != window_before { vec![window_ownership::addressed_config_for(&wid, window_after)] } else { Vec::new() };
         let transient_after = window_ownership::transient(&scene.runtime, view_state);
-        let window_transient = if transient_after != transient_before { view_state.and_then(|view| window_ownership::addressed_transient(view, transient_after).ok()).into_iter().collect() } else { Vec::new() };
+        let window_transient = if transient_after != transient_before { vec![window_ownership::addressed_transient_for(&wid, transient_after)] } else { Vec::new() };
         (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
     }
 
@@ -3591,7 +3734,8 @@ fn puzzle3d_retained_reduce(
         return Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None)], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addTargetVolume")), ..Default::default() });
     }
     let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
-    Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl(command, command.window_id(), snapshot, &runtime, view_state, &snapshot_interaction).0))
+    let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
+    Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl(command, Some(window_id), snapshot, &runtime, view_state, &snapshot_interaction).0))
 }
 
 /// 🧾️ The shared action prologue's three halves as this work's own stages, plus the one half that is
@@ -3697,8 +3841,22 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             return Err(Fault::from("puzzle3d-window-work-capacity"));
         }
         self.turns += 1;
+        let resolved_window_id = {
+            let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
+            let roster: Vec<String> = view.window_instances.iter().map(|instance| instance.id.clone()).collect();
+            puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &roster).to_string()
+        };
+        if let Some(view) = self.view_state.as_mut() {
+            if view.window_id.as_deref() != Some(resolved_window_id.as_str()) {
+                *view = view.for_window_instance(&resolved_window_id).unwrap_or_else(|| {
+                    let mut next = view.clone();
+                    next.window_id = Some(resolved_window_id.clone());
+                    next
+                });
+            }
+        }
         let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
-        let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-window-id-required"))?;
+        let window_id = resolved_window_id.as_str();
         let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
         let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
@@ -5413,6 +5571,18 @@ impl Puzzle3dSetActiveExampleWork {
         }
     }
 
+    /// 🏷️ The CANONICAL example id this command loads, for the alias the picker may have sent
+    /// (`concrete`/`nakagin`). Persisted on the shared config so `export_fixture` can name its
+    /// download after the example instead of one constant filename.
+    fn canonical_example_id(command: &Puzzle3dCommand) -> Option<&'static str> {
+        match command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or("") {
+            "" => Some(""),
+            PUZZLE3D_EXAMPLE_CONCRETE_FOREST | "concrete" => Some(PUZZLE3D_EXAMPLE_CONCRETE_FOREST),
+            PUZZLE3D_EXAMPLE_NAKAGIN | "nakagin" => Some(PUZZLE3D_EXAMPLE_NAKAGIN),
+            _ => None,
+        }
+    }
+
     fn compatibility_rows(target: &Puzzle3dFixture) -> &[dsl::DslValue] {
         target.meta.kind_compatibility.as_ref().and_then(dsl::DslValue::as_array).unwrap_or_default()
     }
@@ -5473,7 +5643,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         &mut self,
         command: &Puzzle3dCommand,
         snapshot: &Puzzle3dPlaySnapshot,
-        _config: &Puzzle3dConfig,
+        config: &Puzzle3dConfig,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
@@ -5631,9 +5801,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dSetActiveExampleStage::Publish => {
                 self.stage = Puzzle3dSetActiveExampleStage::Complete;
+                let example_id = Self::canonical_example_id(command).unwrap_or_default();
+                let config_mutations = if config.active_example_id == example_id {
+                    Vec::new()
+                } else {
+                    vec![Puzzle3dConfigMutation::Snapshot { config: Puzzle3dConfig { active_example_id: example_id.to_string(), ..config.clone() } }]
+                };
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
-                    config_mutations: Vec::new(),
+                    config_mutations,
                     ui_scope: puzzle3d_scope(Puzzle3dScopeClass::Chrome),
                     description: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION.into()),
                     coalesce_key: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY.into()),
@@ -5973,6 +6149,15 @@ impl Puzzle3dFocusSelectionWork {
         interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE3D_GRANULARITY_OBJECT).map(|selection| selection.ids.as_slice()).unwrap_or_default()
     }
 
+    /// 🎥️ Which objects this focus frames. An EMPTY selection frames the whole document rather than
+    /// completing with `Emit::default()` — a camera verb with nothing selected has an obvious subject
+    /// (everything), and the silent no-op made `f` a dead key on every boot before the user had picked
+    /// anything (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 14). Costs no extra capacity: the
+    /// two object scans this work already declares in `extent` run either way.
+    fn frames(&self, object_id: &str) -> bool {
+        self.selected.is_empty() || self.selected.contains(object_id)
+    }
+
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
         crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
@@ -6030,7 +6215,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     return Ok(Self::progress("puzzle3d-focus-selection-distance", "Measuring selection radius", "Auswahlradius wird gemessen"));
                 };
                 self.object_cursor += 1;
-                if self.selected.contains(&object.id) {
+                if self.frames(&object.id) {
                     self.center[0] += object.origin[0];
                     self.center[1] += object.origin[1];
                     self.center[2] += object.origin[2];
@@ -6044,7 +6229,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     return Ok(Self::progress("puzzle3d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
                 };
                 self.object_cursor += 1;
-                if self.selected.contains(&object.id) {
+                if self.frames(&object.id) {
                     let delta = [object.origin[0] - self.center[0], object.origin[1] - self.center[1], object.origin[2] - self.center[2]];
                     self.maximum_distance = self.maximum_distance.max((delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt());
                 }
@@ -6729,7 +6914,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
                 let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-fill-window-id-required"))?;
+                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 let active_utility = puzzle3d_scene_active_utility(&runtime, Some(view), Some(window_id));
                 let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), runtime, &active_utility);
                 let mut precompute = Puzzle3dPrecomputeSession::new();
@@ -6770,7 +6955,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
                 let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
+                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 self.prologue.scene_step(command.action_id(), snapshot, &runtime, Some(view), Some(window_id));
                 self.stage = Puzzle3dPrecomputeCommandStage::PrologueSync;
                 Ok(Self::progress("puzzle3d-action-scene", "Reading the document", "Dokument wird gelesen"))
@@ -6780,7 +6965,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
                 let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
+                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 let session = self.session();
                 let owed = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.sync_step(app, command.action_id(), &runtime, Some(view), Some(window_id)));
                 if !owed {
@@ -6805,7 +6990,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
-                let window_id = view.window_id.as_deref().or_else(|| command.window_id()).ok_or_else(|| Fault::from("puzzle3d-precompute-window-id-required"))?;
+                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 let session = self.session();
                 let (emit, ephemeral) = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.dispatch_step(app, command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.ephemeral = Some(ephemeral);
@@ -6924,7 +7109,7 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "transformEnd", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
@@ -7652,6 +7837,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "hoverSuggestion"
             | "engagementControlSelect"
             | "engagementInput" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
+            "exportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
+            "openImportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "importFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "addTargetVolume" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
@@ -7745,7 +7932,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let interaction = Puzzle3dInteractionSnapshot::from_interaction(interaction);
         let window = window_ownership::config_from_view(cfg);
         let runtime = window_ownership::runtime(cfg.snapshot, &window, &window_ownership::Puzzle3dWindowTransient::default(), view_state);
-        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(command, command.window_id(), doc.snapshot, &runtime, view_state, &interaction).0))
+        let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
+        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(command, Some(window_id), doc.snapshot, &runtime, view_state, &interaction).0))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -7753,8 +7941,14 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// catalogue kind) as one flat forest, except object-owned vortex markers whose parent is the
     /// object they mark — the one real nesting relationship this app's document carries, replacing
     /// what `hoveredVortexFullId`'s ad hoc highlighting used to do by hand.
+    /// 🔭️ Read off the SAME projection every render publishes (`puzzle3d_fixture_from_projection`),
+    /// never a second decoding of the document: `protocol::validate_state` prunes every selected id
+    /// this topology does not contain, so a universe narrower than what the viewport paints makes a
+    /// pick land on the leftover and then vanish — with no error anywhere. One authority is what
+    /// makes "the user can see it" and "the user can pick it" the same statement
+    /// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
     fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::InteractionTopology {
-        let snapshot = doc.snapshot.typed();
+        let snapshot = puzzle3d_fixture_from_projection(&puzzle3d_projection_value(doc.snapshot.value()));
         let mut ordered = Vec::new();
         for object in &snapshot.objects {
             ordered.push(semio_framework_plugin::TopologyNode { id: object.id.clone(), granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), parent: None });
@@ -7771,10 +7965,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         for reference in &snapshot.references {
             ordered.push(semio_framework_plugin::TopologyNode { id: reference.id.clone(), granularity: PUZZLE3D_GRANULARITY_REFERENCE.into(), parent: None });
         }
-        if let Some(catalogs) = &snapshot.meta.kind_catalogs {
-            for kind in &catalogs.objects {
-                ordered.push(semio_framework_plugin::TopologyNode { id: kind.id.clone(), granularity: PUZZLE3D_GRANULARITY_KIND.into(), parent: None });
-            }
+        for kind in puzzle3d_kind_ids(&snapshot, "objects") {
+            ordered.push(semio_framework_plugin::TopologyNode { id: kind, granularity: PUZZLE3D_GRANULARITY_KIND.into(), parent: None });
         }
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PUZZLE3D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
@@ -7985,7 +8177,7 @@ impl Puzzle3dPlayApp {
         let node = with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let (base_body_key, window_id_from_key) = body_key.split_once(':').map_or((body_key, None), |(b, w)| (b, Some(w)));
             let config = &runtime;
-            let wid = window_id_from_key.or_else(|| config.window_ids.first().map(String::as_str)).unwrap_or(main::WINDOW_KIND_ID);
+            let wid = puzzle3d_addressed_window_id(Some(view_state), window_id_from_key, None, &config.window_ids);
             let active_utility = puzzle3d_scene_active_utility(config, Some(view_state), Some(wid));
             let precompute_scene = app.scene_for(&puzzle3d_projection_value(doc.snapshot.value()), config, Some(view_state), wid);
             {
@@ -7999,7 +8191,8 @@ impl Puzzle3dPlayApp {
             // already-present object (the dragged one included).
             let fill_available = precompute.fill_available_count();
             let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&puzzle3d_projection_value(doc.snapshot.value())), &precompute, config.fill_count, fill_available, &app.fill_display_memo);
-            let envelope = Puzzle3dScene { fixture, runtime: config.clone(), active_utility };
+            let mut envelope = Puzzle3dScene { fixture, runtime: config.clone(), active_utility };
+            main::frame_unset_camera(&mut envelope, wid);
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
@@ -8181,7 +8374,16 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after fixture delta).
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
-            .mutation("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
+            // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog. Declared HERE, in
+            // front of every other create verb, because the shell fallback menu and the ribbon keep only
+            // the first `CONTEXT_MENU_PRIMARY_BUDGET` leaves at top level and fold the rest into "More ›" —
+            // the user-facing "Add Object…" row has to be the one that opens the declared dialog.
+            .action_with(ActionDefinition::bounded_catalog("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")), ActionKind::Shell).category("create"))
+            // 🌱️ The dialog's (and the catalogue row's / the viewport drop's) parametrized verb, never a
+            // user-facing menu row of its own: its `objectKind` select IS the dialog, so offering it in the
+            // palette/menu published a SECOND row carrying the identical "Add Object…" label that opened a
+            // bare action pane instead (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 7).
+            .action_with(ActionDefinition::bounded_catalog("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")), ActionKind::Mutation).category("create").in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
             .action_with(ActionDefinition::bounded_catalog("exportFixture", LocalizedLabel::native("Export", "Exportieren"), ActionKind::Shell).category("file"))
@@ -8209,8 +8411,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
-            // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
-            .shell_action("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")))
             // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))

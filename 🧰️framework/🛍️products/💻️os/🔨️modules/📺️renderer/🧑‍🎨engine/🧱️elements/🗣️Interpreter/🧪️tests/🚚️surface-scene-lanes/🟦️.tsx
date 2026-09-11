@@ -305,5 +305,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(leaves.every((packed: AnyRecord) => Object.keys(packed.component.dataAttributes ?? {}).length <= packChunks - 1)).toBe(true);
       console.info(`[DEBUG] a ${utf8ByteLength(laneTexts["framework.scene.world3d.instances"]!)}-byte instances lane in ${leaves.length} packed leaves projected to ${assembled.length} instances across ${collected.size} lanes`);
     });
+  it("keeps a spine brush preview when no lane text arrives", () => {
+      const preview = JSON.stringify({ targetVortexFullId: "seed-left-001:v0", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });
+      const assembled = world3dSceneFromLanes({ cameraJson: "{}", meshesJson: "", instancesJson: "", selectionJson: "{}", brushPreviewJson: preview }, new Map());
+      expect(assembled.brushPreviewJson).toBe(preview);
+    });
+
+    it("does not clobber a spine brush preview with an empty leftover lane", () => {
+      const preview = JSON.stringify({ targetVortexFullId: "seed-left-001:v0", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });
+      const declared = WORLD3D_SCENE_LANES.find((entry: any) => entry.lane === "brushPreview")!;
+      expect(declared.optional).toBe(true);
+      const assembled = world3dSceneFromLanes(
+        { cameraJson: "{}", meshesJson: "", instancesJson: "", selectionJson: "{}", brushPreviewJson: preview },
+        new Map([[declared.bodyKey, ""]]),
+      );
+      expect(assembled.brushPreviewJson).toBe(preview);
+    });
   });
 }

@@ -175,7 +175,6 @@ const Window: React.FC<WindowProps> = ({
     if (measuresFoldedProp === undefined) setMeasuresFoldedInternal(folded);
   };
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
-  const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
   // 🎛️ Controlled-with-default fold state for the bottom-left Utilities rail (default true).
   const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
   const utilityBarFolded = utilityBarFoldedProp ?? utilityBarFoldedInternal;
@@ -204,12 +203,19 @@ const Window: React.FC<WindowProps> = ({
   const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
   const searchVisible = !measuresExpanded && !!search;
-  const searchExpanded = searchVisible && !searchFolded;
+  // 🗣️ The engagement bar is ONE affordance laid out as two anchored panes — the top-left status/action
+  // pane and the top-middle command line — so both follow the same fold state. Giving the command line
+  // its own private `searchFolded` meant unfolding "Actions" left the typed input unmounted, i.e. the
+  // engagement bar's only input was unreachable unless the user found the second, separate toggle.
+  const searchExpanded = searchVisible && !actionsFolded;
+  const setEngagementBarFolded = (folded: boolean) => {
+    setActionsFolded(folded);
+    if (!folded && search?.input) queueMicrotask(() => focusActiveSearchInput());
+  };
 
   reactHostPort.useEffect(() => {
     if (!measuresExpanded) return;
     setActionsFolded(true);
-    setSearchFolded(true);
   }, [measuresExpanded, onActionsFoldedChange, actionsFoldedProp]);
 
   useShellKeydown(
@@ -234,7 +240,7 @@ const Window: React.FC<WindowProps> = ({
       if (event.defaultPrevented || event.isComposing) return;
       if (event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
       if (!shouldRouteKeysToWindowSearch(event.target)) return;
-      setSearchFolded(false);
+      setActionsFolded(false);
     },
     [active, search, searchExpanded],
   );
@@ -353,6 +359,19 @@ const Window: React.FC<WindowProps> = ({
               {measures}
             </Pane>
           ) : null}
+          {engagementVisible && !engagementExpanded && engagement?.options?.length ? (
+            <div
+              data-slot="window-engagement-quick-actions"
+              className={cn("pointer-events-auto absolute flex min-w-0 items-stretch", getLevelZClass("pane"))}
+              style={{ top: "calc(var(--size-medium) + (var(--spacing-single) * 2))", left: "var(--spacing-single)" }}
+            >
+              <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")}>
+                {engagement.options.map((option) => (
+                  <ActionGroupItem key={option.id} id={option.id} icon={option.icon} text={typeof option.label === "string" ? option.label : undefined} onClick={option.onPress} disabled={option.disabled} />
+                ))}
+              </ActionGroup>
+            </div>
+          ) : null}
           {engagementVisible ? (
             <Pane
               id={childElementId("framework.window", id, "engagement")}
@@ -361,7 +380,7 @@ const Window: React.FC<WindowProps> = ({
               icon={WINDOW_PANE_ACTIONS_ICON}
               label={actionLabel}
               folded={!engagementExpanded}
-              onFoldToggle={() => setActionsFolded(!actionsFolded)}
+              onFoldToggle={() => setEngagementBarFolded(!actionsFolded)}
               toggleId={childElementId("framework.window", id, "engagement", "toggle")}
               stackSlot="window-engagement-zone"
               bodySlot="window-engagement-body"
@@ -380,14 +399,7 @@ const Window: React.FC<WindowProps> = ({
               icon={WINDOW_PANE_SEARCH_ICON}
               label={searchLabel}
               folded={!searchExpanded}
-              onFoldToggle={() => {
-                if (searchExpanded) {
-                  setSearchFolded(true);
-                  return;
-                }
-                setSearchFolded(false);
-                if (search?.input) queueMicrotask(() => focusActiveSearchInput());
-              }}
+              onFoldToggle={() => setEngagementBarFolded(searchExpanded)}
               toggleId={childElementId("framework.window", id, "search", "toggle")}
               stackSlot="window-search-zone"
               bodySlot="window-search-body"

@@ -10,6 +10,16 @@ pub(crate) fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
     )
 }
 
+/// 🎲️ A `unit_cube_mesh_buffers` box nudged by `seed`, so a law needing geometry NO other law in the
+/// binary ever derived has it. The brush-mesh store is process-wide and content-addressed since wave
+/// B22 — a second id whose DIGEST is already resident adopts the resident page — so a law asserting
+/// "this process holds nothing for that geometry" must not reuse the shared cube, or it passes or fails
+/// by test order.
+pub(crate) fn seeded_cube_mesh_buffers(seed: f32) -> (Vec<f32>, Vec<u32>) {
+    let (positions, indices) = unit_cube_mesh_buffers();
+    (positions.iter().map(|value| value + seed).collect(), indices)
+}
+
 /// 🧊️ Same box as `unit_cube_mesh_buffers` but with outward-facing (CCW-from-outside) winding, needed
 /// for tests that rely on `CollisionShape::contains_point` actually reporting interior points as inside.
 pub(crate) fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {

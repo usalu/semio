@@ -3157,6 +3157,7 @@ impl ShellState {
                 locale: self.active_locale(),
                 terminology: self.active_terminology(),
                 window_id: None,
+                focused_window_id: Some(s_app.window_kinds.first().id.clone()),
                 window_instances: Vec::new(),
                 active_tool_id: None,
                 active_utility_by_window_id: HashMap::new(),
@@ -3197,6 +3198,7 @@ impl ShellState {
                     locale: self.active_locale(),
                     terminology: self.active_terminology(),
                     window_id: None,
+                    focused_window_id: self.active_window_id.clone(),
                     window_instances: Vec::new(),
                     active_tool_id: None,
                     active_utility_by_window_id: HashMap::new(),
@@ -3364,6 +3366,7 @@ impl ShellState {
             .map(|(id, window_kind_id)| semio_framework::ViewWindowInstance { id, window_kind_id })
             .collect();
         view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
+        view_state.focused_window_id = self.active_window_id.clone();
         view_state
     }
 
@@ -3486,6 +3489,7 @@ impl ShellState {
                                 locale: self.active_locale(),
                                 terminology: self.active_terminology(),
                                 window_id: Some(spawned.id.clone()),
+                                focused_window_id: Some(spawned.id.clone()),
                                 window_instances: vec![semio_framework::ViewWindowInstance { id: spawned.id.clone(), window_kind_id: app.window_kinds.first().id.clone() }],
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
@@ -5600,6 +5604,7 @@ impl ShellState {
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
+            focused_window_id: Some(app.window_kinds.first().id.clone()),
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
@@ -5639,6 +5644,7 @@ impl ShellState {
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
+            focused_window_id: Some(app.window_kinds.first().id.clone()),
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),

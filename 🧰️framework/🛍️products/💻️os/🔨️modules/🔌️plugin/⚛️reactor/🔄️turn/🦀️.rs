@@ -1054,7 +1054,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
 
     trace_turn_phase_retention("ingress");
-    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime).await?;
+    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget)).await?;
     let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
         route_exchange_output(instance, output, &mut effects);
@@ -1204,7 +1204,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         *trace = (streak, seen);
     });
 
-    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose().map_err(reactor_close_fault)?.flatten();
+    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose()?.flatten();
     let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
     let mut ui_patch_receipt = None;
     let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))

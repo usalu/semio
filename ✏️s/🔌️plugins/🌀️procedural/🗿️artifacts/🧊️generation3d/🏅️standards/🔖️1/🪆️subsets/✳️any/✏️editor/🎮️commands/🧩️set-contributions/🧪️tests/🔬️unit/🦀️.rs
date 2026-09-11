@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor::generation3d::testkit::{empty_history_view, retire_flow_eval_session};
+use semio_framework_artifact_flow_flow::neural::ColdRetire;
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 fn dispatch(pages: &[(&str, u64, u64)]) -> Vec<Result<(), String>> {

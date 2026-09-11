@@ -65,6 +65,85 @@ async fn drive_one_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRu
     }
 }
 
+/// 🧱️ Page counts the page-set law drives. The host splits at `COMMAND_PAGE_MAXIMUM_BYTES`, so an
+/// 8-page command is the shape a `registerBrushMesh`-scale payload reaches.
+const INGRESS_PAGE_SETS: [usize; 4] = [1, 2, 4, 8];
+
+/// ⏱️ Turns a page set may spend beyond one per page. The reactor wire admits exactly ONE page per
+/// turn, so `pages` is the protocol's own floor; the slack covers a single instance-authority
+/// contention retry (`plugin_exchange` hands the owner back when `try_lock` would block).
+const INGRESS_TURN_SLACK: usize = 1;
+
+/// 📤️ The production host owner for one multi-page command — the `CommandBatchDriver` a shard keeps
+/// per command, which hands out its next page only once the guest's status has been observed.
+async fn command_page_authority_driver(instance: u32, seq: u64, command: &protocol::AppCommand) -> semio_framework::kernel::CommandBatchDriver {
+    let encoded = protocol::encode_app_command(command).await.expect("the fixture command encodes");
+    let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().expect("fixed command batch authority");
+    envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command: encoded }).unwrap_or_else(|(fault, _)| panic!("admit fixture command: {fault:?}"));
+    let batch = semio_framework::kernel::CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit fixture batch: {fault:?}"));
+    semio_framework::kernel::CommandBatchDriver::new(seq, batch)
+}
+
+/// 🚚️ Drives a whole page set to its terminal ingress status exactly as a shard does: hand the owner's
+/// next page (the wire carries at most one per turn), observe the status it produced, repeat. Returns
+/// whether it completed, the turns it spent and the pages the owner declared.
+async fn drive_one_page_set(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, driver: &mut semio_framework::kernel::CommandBatchDriver) -> (bool, usize, usize) {
+    let mut turns = 0;
+    let mut declared = 0;
+    let mut carried = driver.next_page().expect("the host owner produces its first page");
+    loop {
+        declared = declared.max(carried.as_ref().map_or(0, |(cursor, _)| cursor.page_count as usize));
+        let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget()).await.expect("one native ingress turn");
+        turns += 1;
+        match result.command_ingress {
+            semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns, declared),
+            semio_framework::kernel::CommandIngressStatus::Fault { .. } => return (false, turns, declared),
+            ref pending if turns >= INGRESS_TURNS_PER_COMMAND => panic!("a page set did not reach a terminal ingress status in {turns} turns: {pending:?}"),
+            ref accepted @ (semio_framework::kernel::CommandIngressStatus::PageAccepted(_) | semio_framework::kernel::CommandIngressStatus::Backpressure(_)) => {
+                driver.observe(accepted, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).expect("the host owner accepts the status its own page produced");
+                carried = driver.next_page().expect("the host owner produces its pages");
+            }
+            _ => {}
+        }
+    }
+}
+
+/// ⚖️ LAW: a command's page set reaches its terminal ingress status in ONE TURN PER PAGE — the cost is
+/// the wire's own page count, never the number of internal moves the ingress owner makes.
+///
+/// 🐢️ Before ticket 26/09/02 wave B24 `plugin_exchange` answered `Pending` after EVERY move of
+/// `PluginCommandIngress::step` — `Encoded → Decoding`, the header, one read per decoded field, then
+/// `Decoded → Ready` — and each `Pending` costs the host a whole turn round trip. A one-page
+/// `CommandText` measured 4.006 turns over 320 commands and an `AppCommand::Command` five, so the real
+/// cost was `pages + k` with `k` set by the command's decode shape rather than by the wire. This law
+/// fails for every page count under that pacing, which is what makes it discriminating.
+#[semio_framework_async_macros::async_test]
+async fn a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page() {
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+    let instance = 4_022;
+    let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-set".into())]).await.lifecycle_receipt.expect("Captured receipt");
+    let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+    reactor_native_lifecycle_ack(&runtime, captured).await;
+    let mut census = Vec::new();
+    for (index, declared) in INGRESS_PAGE_SETS.into_iter().enumerate() {
+        let seq = 512 + index as u64;
+        let line = "p".repeat((declared - 1) * semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
+        let mut driver = command_page_authority_driver(instance, seq, &protocol::AppCommand::CommandText { seq, line }).await;
+        let (_, turns, pages) = drive_one_page_set(&runtime, &mut driver).await;
+        assert_eq!(pages, declared, "the fixture payload must produce exactly {declared} host pages");
+        census.push(format!("{declared}→{turns}"));
+        assert!(
+            turns <= declared + INGRESS_TURN_SLACK,
+            "a {declared}-page command spent {turns} turns reaching its terminal ingress status (ceiling {}) — the ingress is stepping a per-move ladder the host has to drive from outside",
+            declared + INGRESS_TURN_SLACK
+        );
+        assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "a {declared}-page command must leave no retained ingress owner");
+    }
+    eprintln!("[DEBUG] command page set turns: {}", census.join(" "));
+    reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
+}
+
 /// ⚖️ LAW: the prologue reserves EXACTLY the pages its command declares, and that reservation stays
 /// inside one guest-allocator growth unit.
 ///

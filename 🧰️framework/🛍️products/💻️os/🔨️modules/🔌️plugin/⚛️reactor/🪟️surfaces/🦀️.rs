@@ -7,59 +7,93 @@ pub(crate) struct SurfaceContext {
     pub(crate) view_state: ViewModel,
 }
 
+/// 🎭️ What a mounted surface IS, fixed at mount and replayed on every later host refresh: one
+/// concrete window instance, an app-level panel, or a reserved section.
+///
+/// 🧩️ A reserved section keeps the FULL, unnarrowed view it was mounted with — it is rendered for no
+/// window and for no panel, and no window closing prunes it, so a later host refresh must not
+/// re-narrow it either.
+enum SurfaceRole {
+    Window(String),
+    Panel,
+    Section,
+}
+
+impl SurfaceRole {
+    fn window_id(&self) -> Option<&str> {
+        match self {
+            Self::Window(id) => Some(id.as_str()),
+            _ => None,
+        }
+    }
+
+    fn project(&self, view: &ViewModel) -> Option<ViewModel> {
+        match self {
+            Self::Window(id) => view.for_window_instance(id),
+            Self::Panel => Some(view.for_panel()),
+            Self::Section => Some(view.clone()),
+        }
+    }
+}
+
+/// 🪟️ ONE mounted surface: its authored body, its role, and — the point of this type — its OWN
+/// projected host view.
 struct SurfaceBinding {
     surface: String,
     body_key: String,
-    window_id: Option<String>,
-    section: bool,
+    role: SurfaceRole,
+    view_state: ViewModel,
 }
 
 pub(crate) struct SurfaceContexts {
     slots: [Option<SurfaceBinding>; semio_framework_ui_contract::UI_RESIDENT_SLOTS],
+    /// 🪟️ The last host view this INSTANCE was mounted or refreshed with — diagnostics and
+    /// window-scoped background work only (`ArtifactApp::pending_effects`). Never the source a body
+    /// is rendered from: that is each binding's own [`SurfaceBinding::view_state`].
     view_state: Option<ViewModel>,
-    /// 🧩️ The last full, unnarrowed host view a reserved section surface was mounted with — kept apart
-    /// from `view_state` because every window/panel mount overwrites that one with its own projection,
-    /// which would make a section's own view depend on which surface happened to mount last.
-    section_view: Option<ViewModel>,
 }
 
 impl Default for SurfaceContexts {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), view_state: None, section_view: None }
+        Self { slots: std::array::from_fn(|_| None), view_state: None }
     }
 }
 
 impl SurfaceContexts {
+    /// 🪟️ Binds one concrete surface to its OWN projection of the host view it was mounted with.
+    ///
+    /// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B25: this used to store the raw view in ONE
+    /// shared field that every mount overwrote, and [`Self::get`] rebuilt a body's `ViewModel` from
+    /// whichever sibling mounted LAST — so the Inspection panel rendered against the last pane's
+    /// projection (wrong `focusedWindowId`/`panelJson`/`locale`) and the first pane rendered against
+    /// the leftover `window` alias's. The shell already sends a distinct context per surface
+    /// (`windowViewContext`/`panelViewContext`/`sectionViewContext`, `🛂️manifest/🟦️.ts`) and mounts
+    /// them across refresh generations; nothing but this type ever conflated them.
     pub(crate) fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
-        let section = UiRefreshSection::from_body_key(&body_key).is_some();
+        let role = if UiRefreshSection::from_body_key(&body_key).is_some() {
+            SurfaceRole::Section
+        } else {
+            match view_state.window_id.clone() {
+                Some(window) => SurfaceRole::Window(window),
+                None => SurfaceRole::Panel,
+            }
+        };
+        let projected = role.project(&view_state).ok_or("surface context names a window instance the host view does not carry")?;
         let index = self
             .slots
             .iter()
             .position(|slot| slot.as_ref().is_some_and(|context| context.surface == surface))
-            .or_else(|| self.slots.iter().position(|slot| slot.as_ref().is_none_or(|context| context.window_id.as_deref().is_some_and(|id| !view_state.window_instances.iter().any(|window| window.id == id)))))
+            .or_else(|| self.slots.iter().position(|slot| slot.as_ref().is_none_or(|context| context.role.window_id().is_some_and(|id| !view_state.window_instances.iter().any(|window| window.id == id)))))
             .ok_or("surface context capacity exhausted")?;
         self.prune_windows(&view_state);
-        let window_id = if section { None } else { view_state.window_id.clone() };
-        self.slots[index] = Some(SurfaceBinding { surface, body_key, window_id, section });
-        if section {
-            self.section_view = Some(view_state.clone());
-        }
+        self.slots[index] = Some(SurfaceBinding { surface, body_key, role, view_state: projected });
         self.view_state = Some(view_state);
         Ok(())
     }
 
     pub(crate) fn get(&self, surface: &str) -> Option<SurfaceContext> {
         let binding = self.slots.iter().flatten().find(|context| context.surface == surface)?;
-        if binding.section {
-            let view = self.section_view.as_ref().or(self.view_state.as_ref())?;
-            return Some(SurfaceContext { body_key: binding.body_key.clone(), view_state: view.clone() });
-        }
-        let view = self.view_state.as_ref()?;
-        let view_state = match binding.window_id.as_deref() {
-            Some(window) => view.for_window_instance(window)?,
-            None => view.for_panel(),
-        };
-        Some(SurfaceContext { body_key: binding.body_key.clone(), view_state })
+        Some(SurfaceContext { body_key: binding.body_key.clone(), view_state: binding.view_state.clone() })
     }
 
     /// 🪟️ The last host view this instance was refreshed or mounted with — the attached-window
@@ -69,14 +103,25 @@ impl SurfaceContexts {
         self.view_state.as_ref()
     }
 
+    /// 🔄️ Replays one fresh host view onto EVERY live binding through that binding's own role, so a
+    /// locale switch or a rearmed tool reaches every mounted surface without any of them borrowing a
+    /// sibling's window identity. Reserved sections are deliberately untouched (see [`SurfaceRole`]).
     pub(crate) fn update_view(&mut self, view: &ViewModel) {
         self.prune_windows(view);
+        for binding in self.slots.iter_mut().flatten() {
+            if matches!(binding.role, SurfaceRole::Section) {
+                continue;
+            }
+            if let Some(projected) = binding.role.project(view) {
+                binding.view_state = projected;
+            }
+        }
         self.view_state = Some(view.clone());
     }
 
     fn prune_windows(&mut self, view: &ViewModel) {
         for slot in &mut self.slots {
-            if slot.as_ref().and_then(|context| context.window_id.as_deref()).is_some_and(|id| !view.window_instances.iter().any(|window| window.id == id)) {
+            if slot.as_ref().and_then(|context| context.role.window_id()).is_some_and(|id| !view.window_instances.iter().any(|window| window.id == id)) {
                 *slot = None;
             }
         }
@@ -86,9 +131,6 @@ impl SurfaceContexts {
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
             *slot = None;
         }
-        if !self.slots.iter().flatten().any(|binding| binding.section) {
-            self.section_view = None;
-        }
         if self.slots.iter().all(Option::is_none) {
             self.view_state = None;
         }
@@ -97,6 +139,11 @@ impl SurfaceContexts {
     #[cfg(test)]
     fn len(&self) -> usize {
         self.slots.iter().flatten().count()
+    }
+
+    #[cfg(test)]
+    fn is_section(&self, surface: &str) -> bool {
+        self.slots.iter().flatten().any(|binding| binding.surface == surface && matches!(binding.role, SurfaceRole::Section))
     }
 }
 

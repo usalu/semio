@@ -324,6 +324,28 @@ mod tests {
     }
 
     #[test]
+    fn leftover_ids_overlay_when_vortex_selection_empty_wires_object_fields_and_lock_row() {
+        drain();
+        let (scene, mut interaction) = scene(&["seed-left-001".into()], 0);
+        interaction.granularity.clear();
+        interaction.selected = vec!["seed-left-001".into()];
+        let node = render(&scene, &interaction, labels()).expect("leftover.ids inspect");
+        let mut rows = Vec::new();
+        keys(&node, &mut rows);
+        assert!(
+            rows.iter().any(|key| key == "puzzle3d-play-inspector.object.id" || key.ends_with("puzzle3d-play-inspector.object.id")),
+            "leftover.ids must render namespaced object.id: {rows:?}"
+        );
+        assert!(
+            rows.iter().any(|key| key == "puzzle3d-play-inspector.object.locked" || key.ends_with("puzzle3d-play-inspector.object.locked")),
+            "leftover.ids must assemble namespaced object.locked flag_row: {rows:?}"
+        );
+        assert!(!rows.iter().any(|key| key.ends_with(".empty")), "leftover.ids must not keep the empty summary: {rows:?}");
+        drop(node);
+        drain();
+    }
+
+    #[test]
     fn leftover_vortex_granularity_unresolved_falls_back_to_object_fields() {
         drain();
         let (scene, mut interaction) = scene(&["seed-left-001".into()], 0);
@@ -359,6 +381,24 @@ mod tests {
         assert!(rows.iter().any(|key| key.ends_with("object.id")), "leftover selected vortex uuid must fall through to object.id: {rows:?}");
         assert!(rows.iter().any(|key| key.ends_with("object.locked")), "leftover selected vortex uuid must assemble object.locked: {rows:?}");
         assert!(!rows.iter().any(|key| key.ends_with(".empty")), "leftover selected vortex uuid must not keep the empty summary: {rows:?}");
+        drop(node);
+        drain();
+    }
+
+
+    #[test]
+    fn leftover_ids_name_object_empty_persist_vortex_paints_object_fields_and_lock_row() {
+        drain();
+        let (scene, mut interaction) = scene(&["seed-left-001".into()], 0);
+        interaction.granularity.clear();
+        interaction.selected = vec!["seed-left-001".into()];
+        interaction.hovered.clear();
+        let node = render(&scene, &interaction, labels()).expect("leftover.ids empty persist vortex");
+        let mut rows = Vec::new();
+        keys(&node, &mut rows);
+        assert!(rows.iter().any(|key| key.ends_with("object.id")), "leftover.ids must render object.id: {rows:?}");
+        assert!(rows.iter().any(|key| key.ends_with("object.locked")), "leftover.ids must assemble object.locked flag_row: {rows:?}");
+        assert!(!rows.iter().any(|key| key.ends_with(".empty")), "leftover.ids must not keep the empty summary: {rows:?}");
         drop(node);
         drain();
     }

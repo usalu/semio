@@ -584,6 +584,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+abstract properly
+
+violations e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx should not have code regarding brush (which is app specific tool such as in puzzle 3d)
+
+---
+
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧬️schema/🔣️.json
 
 ---

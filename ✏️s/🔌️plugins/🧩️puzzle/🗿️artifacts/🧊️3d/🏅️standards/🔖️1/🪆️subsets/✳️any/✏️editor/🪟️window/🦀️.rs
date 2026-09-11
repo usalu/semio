@@ -260,6 +260,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
         sun: window.sun.clone(),
         camera: window.camera.clone(),
         panel_pages: window.panel_pages.clone(),
+        active_example_id: shared.active_example_id.clone(),
         suggestion_menu: transient.suggestion_menu.clone(),
         engagement_input: transient.engagement_input.clone(),
         brush_candidate_index: transient.brush_candidate_index,
@@ -269,7 +270,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
 }
 
 pub fn shared(runtime: &Puzzle3dRuntime) -> Puzzle3dConfig {
-    Puzzle3dConfig { fill_count: runtime.fill_count, overlap_budget: runtime.overlap_budget, object_kind_weights: runtime.object_kind_weights.clone(), vortex_kind_weights: runtime.vortex_kind_weights.clone() }
+    Puzzle3dConfig { fill_count: runtime.fill_count, overlap_budget: runtime.overlap_budget, object_kind_weights: runtime.object_kind_weights.clone(), vortex_kind_weights: runtime.vortex_kind_weights.clone(), active_example_id: runtime.active_example_id.clone() }
 }
 
 /// 🫧️ The scratch this turn wants to retain, stamped with the activation it belongs to — read back by
@@ -283,14 +284,22 @@ pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConf
 pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> Puzzle3dWindowTransient { view.window::<Puzzle3dWindowTransientOwner>().cloned().unwrap_or_default() }
 pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Puzzle3dWindowTransient { snapshot.and_then(|value| value.get::<Puzzle3dWindowTransientOwner>()).cloned().unwrap_or_default() }
 
+pub fn addressed_config_for(window_id: &str, config: Puzzle3dWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
+    semio_framework_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(window_id, Puzzle3dWindowConfigMutation::Snapshot { config })
+}
+
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle3dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle3d-window-required"))?;
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(id, Puzzle3dWindowConfigMutation::Snapshot { config }))
+    Ok(addressed_config_for(id, config))
+}
+
+pub fn addressed_transient_for(window_id: &str, transient: Puzzle3dWindowTransient) -> semio_framework_plugin::WindowTransientMutation {
+    semio_framework_plugin::WindowTransientMutation::of::<Puzzle3dWindowTransientOwner>(window_id, Puzzle3dWindowTransientMutation::Snapshot { transient })
 }
 
 pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: Puzzle3dWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle3d-window-required"))?;
-    Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle3dWindowTransientOwner>(id, Puzzle3dWindowTransientMutation::Snapshot { transient }))
+    Ok(addressed_transient_for(id, transient))
 }
 
 #[cfg(test)]

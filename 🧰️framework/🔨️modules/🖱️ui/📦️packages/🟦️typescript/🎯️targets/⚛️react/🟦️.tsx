@@ -8540,9 +8540,9 @@ export interface SectionProps {
  **/
 const Section: React.FC<SectionProps> = ({ id, title, children, className = "" }) => {
   return (
-    <section id={id} className={`mb-8 ${className}`}>
+    <section id={id} className={`mb-8 ${className}`} aria-labelledby={id && title ? `${id}.title` : undefined}>
       {title && (
-        <h2 className="text-2xl font-semibold mb-4" id={id}>
+        <h2 className="text-2xl font-semibold mb-4" id={id ? `${id}.title` : undefined}>
           {title}
         </h2>
       )}
@@ -9081,6 +9081,7 @@ import {
   treeRowChromeClasses,
   treeRowChromeContentFillClasses,
   treeRowChromeShellClasses,
+  treeRowDragPayloadAttributes,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
@@ -9174,6 +9175,7 @@ export {
   treeRowChromeClasses,
   treeRowChromeContentFillClasses,
   treeRowChromeShellClasses,
+  treeRowDragPayloadAttributes,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
@@ -9355,6 +9357,7 @@ function PaneResizeHandle({
  * Props interface for the Pane component.
  **/
 export interface PaneProps {
+  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`, `<id>.pane.fold-control`) falls back to. */
   readonly id: string;
   readonly anchor: Anchor;
   /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
@@ -9503,6 +9506,7 @@ export const Pane: React.FC<PaneProps> = ({
     <LevelProvider level="pane">
       <div
         ref={setPaneRootRef}
+        id={id}
         {...surfaceActiveProps}
         data-slot={overlaySlot ?? "pane"}
         data-level="pane"
@@ -10917,5 +10921,5 @@ export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfigurat
 // #region 📮️Resizable Panels
 export * as ResizablePrimitive from "react-resizable-panels";if (import.meta.vitest) {
   const { registerTests2 } = await import("../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests2(import.meta.vitest, { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowDragPayloadAttributes, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout }, { directory: import.meta.dir, url: import.meta.url });
 }

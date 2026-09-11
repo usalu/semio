@@ -1,0 +1,62 @@
+{
+  "why": "Two panes of ONE puzzle3d document: each world surface must name the window it was mounted into, and must publish the selection it actually paints. Before wave B20 both panes reported data-surface-id=\"1\" (the per-document DFS record id, minted identically in every window) and published no selection at all — WorldInteractionRecord carries no selectedIds/hoverTarget, data-instances-json is the guest's geometry cache which never bakes selection, and data-status-json is the off-thread compute status.",
+  "panes": [
+    {
+      "window": "puzzle3d-main-perspective",
+      "documentSurface": "1:puzzle3d-main-perspective",
+      "recordId": 1,
+      "recordKey": "puzzle.3d.play.viewport",
+      "identity": { "surfaceId": "1:puzzle3d-main-perspective", "controllerId": "1", "paneId": "puzzle.3d.play.viewport" }
+    },
+    {
+      "window": "puzzle3d-main-top",
+      "documentSurface": "1:puzzle3d-main-top",
+      "recordId": 1,
+      "recordKey": "puzzle.3d.play.viewport",
+      "identity": { "surfaceId": "1:puzzle3d-main-top", "controllerId": "1", "paneId": "puzzle.3d.play.viewport" }
+    }
+  ],
+  "keylessPane": {
+    "documentSurface": "panel:puzzle3d-play-document",
+    "recordId": 7,
+    "recordKey": "",
+    "identity": { "surfaceId": "panel:puzzle3d-play-document", "controllerId": "7", "paneId": null }
+  },
+  "selectionPublication": {
+    "why": "selection is per DOCUMENT (both panes carry the same selectedIds), hover is per WINDOW (each pane publishes its own hoverTarget), and the armed utility is per window instance (wave B9).",
+    "guestSelectionJson": { "method": "rectangle", "ids": [], "granularity": "mesh", "gumballActive": false },
+    "leftoverOverlay": { "ids": ["seed-left-001"], "hoveredId": "seed-left-001:v0", "hoveredDomain": "vortex", "gumballActive": true, "gumballAnchorId": "seed-left-001", "activeUtility": "brush" },
+    "guestInteractionJson": { "activeUtility": "select" },
+    "published": {
+      "selectedIds": ["seed-left-001"],
+      "activeObjectId": null,
+      "targetVolumeIds": [],
+      "referenceSelectedId": null,
+      "hoverTarget": { "domain": "vortex", "id": "seed-left-001:v0" },
+      "hoveredVortexFullId": "seed-left-001:v0",
+      "hoveredKindId": null,
+      "gumballActive": true,
+      "gumballTarget": null,
+      "transformMode": "move",
+      "activeUtility": "brush"
+    },
+    "guestPublished": {
+      "why": "data-guest-selection-json is the guest's OWN unmerged lane. On this exact fixture the pane PAINTS seed-left-001 while the guest sent nothing, and before wave B23 no attribute anywhere separated those two readings — which is why six waves could not tell 'the guest lost the pick' from 'the host is painting it for the guest'.",
+      "selectedIds": [],
+      "activeObjectId": null,
+      "hoveredId": null,
+      "gumballActive": false
+    },
+    "guestCarriedPick": {
+      "why": "The other side of the discriminator: when the guest DID keep the pick, its own lane says so — so `data-guest-selection-json` separates the two readings in both directions, not only when the guest is empty.",
+      "guestSelectionJson": { "method": "pick", "ids": ["seed-left-001"], "activeObjectId": "seed-left-001", "hoveredId": "seed-left-001", "granularity": "object", "gumballActive": true },
+      "guestPublished": { "selectedIds": ["seed-left-001"], "activeObjectId": "seed-left-001", "hoveredId": "seed-left-001", "gumballActive": true }
+    },
+    "objectHoverPublished": {
+      "leftoverOverlay": { "ids": ["seed-left-001"], "hoveredId": "seed-left-001", "hoveredDomain": "object", "gumballActive": false, "gumballAnchorId": null },
+      "hoverTarget": { "domain": "object", "id": "seed-left-001" },
+      "hoveredVortexFullId": null,
+      "activeUtility": "select"
+    }
+  }
+}

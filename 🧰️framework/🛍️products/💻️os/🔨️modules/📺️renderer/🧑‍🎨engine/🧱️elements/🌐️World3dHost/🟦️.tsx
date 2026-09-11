@@ -117,7 +117,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -255,6 +255,7 @@ type WorldInteractionRecord = {
   readonly activeUtility?: string;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
+  readonly brushPreviewJson?: string;
   readonly voxelDims?: readonly [number, number, number];
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
@@ -835,10 +836,19 @@ export function worldCameraPoseApproxEqual(a: WorldCameraState, b: WorldCameraSt
   return vectorClose(a.position, b.position) && vectorClose(a.target, b.target) && Math.abs(a.zoom - b.zoom) <= epsilon;
 }
 
-/** 📸️ Compact DOM mirror of the live camera pose for `data-camera-json` — rounds every component to
+/** 📸️ Compact DOM mirror of one camera pose — rounds every component to
  * {@link WORLD_CAMERA_DOM_PRECISION} decimals so an unchanged pose re-renders to a byte-identical string and a
  * headless probe can diff orbit/pan/zoom without a pixel compare. Deliberately pose-only (no projection spec
- * object) to stay cheap enough for a per-render attribute. */
+ * object) to stay cheap enough for a per-render attribute.
+ *
+ * 🪟️ Two attributes carry it, and the difference is the whole point (ticket
+ * 26/09/02/PUZZLE-3D-END-TO-END wave B12): `data-camera-json` mirrors `sceneCamera` — the pose the
+ * PROGRAM published on this window instance's own `WindowConfig` lane — so a reader that watches it
+ * across an orbit is watching the lane round-trip, not this component's local state. It used to mirror
+ * `viewportCamera ?? sceneCamera`, i.e. the local gesture state, which moves for every drag whether or
+ * not `setCamera` ever reached the guest — so it could never tell "the camera works" from "the camera
+ * lane works". `data-viewport-camera-json` is that local live pose, kept as its own attribute for
+ * anything that genuinely wants the rig's current frame. */
 export function world3dCameraDomJson(camera: WorldCameraState & { readonly fov?: number }): string {
   const round = (value: number): number => (Number.isFinite(value) ? Number(value.toFixed(WORLD_CAMERA_DOM_PRECISION)) : 0);
   const vector = (values?: readonly number[]): readonly number[] | null => (values ? values.map(round) : null);
@@ -1229,6 +1239,7 @@ export type LeftoverWorldSelectionOverlayV1 = {
   readonly gumballActive: boolean;
   readonly gumballAnchorId: string | null;
   readonly activeUtility?: string | null;
+  readonly activeToolId?: string | null;
 };
 
 let leftoverWorldSelectionOverlay: LeftoverWorldSelectionOverlayV1 | null = null;
@@ -1251,13 +1262,58 @@ export function leftoverWorldSelectionOverlayV1(): LeftoverWorldSelectionOverlay
  * replacing the overlay with an utility-less one (that dropped the lane back to the guest's `select` and
  * disarmed Brush on the first pointer move after arming it).
  */
+export function leftoverOverlayArmedBrushUtilityV1(utility: string | null | undefined): utility is "brush" | "volumeBrush" {
+  return utility === "brush" || utility === "volumeBrush";
+}
+
 export function leftoverOverlayCarryingUtilityV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null): LeftoverWorldSelectionOverlayV1 {
-  return next.activeUtility === undefined ? { ...next, activeUtility: prior?.activeUtility ?? null } : next;
+  const nextUtility = next.activeUtility === undefined ? prior?.activeUtility ?? null : next.activeUtility;
+  const activeUtility = nextUtility === "select" && leftoverOverlayArmedBrushUtilityV1(prior?.activeUtility) ? prior?.activeUtility : nextUtility;
+  const carried = nextUtility === next.activeUtility && activeUtility === next.activeUtility ? next : { ...next, activeUtility };
+  const withTool = carried.activeToolId === undefined ? { ...carried, activeToolId: prior?.activeToolId ?? null } : carried;
+  const preview = typeof withTool.brushPreviewJson === "string" && withTool.brushPreviewJson.length > 0 ? withTool.brushPreviewJson : prior?.brushPreviewJson ?? null;
+  return preview === withTool.brushPreviewJson ? withTool : { ...withTool, brushPreviewJson: preview };
+}
+
+/** 🛠️ Fill is a mode-level tool, not a window utility — leftover `select` must not mask an armed fill tab. */
+export function leftoverOverlayArmedUtilityV1(leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): string | null | undefined {
+  return leftover?.activeToolId === "fill" ? "fill" : leftover?.activeUtility;
+}
+
+/** 🕹️ Hover leftover publishes empty `ids` — a first pick must keep leftover.ids, never fall back to hoveredId. */
+export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null): LeftoverWorldSelectionOverlayV1 {
+  const carried = leftoverOverlayCarryingUtilityV1(next, prior);
+  const utility = leftoverOverlayArmedBrushUtilityV1(prior?.activeUtility) && carried.hoveredId && carried.activeUtility === "select"
+    ? { ...carried, activeUtility: prior?.activeUtility }
+    : carried;
+  if (utility.ids.length > 0 || !prior?.ids.length) return utility;
+  return {
+    ...utility,
+    ids: prior.ids,
+    gumballActive: utility.gumballActive || prior.gumballActive,
+    gumballAnchorId: utility.gumballAnchorId ?? prior.gumballAnchorId ?? prior.ids[0] ?? null,
+  };
+}
+
+/** 📄️ Outliner/Inspection tree keys are the entity id; leftover.ids never use hoveredId. */
+export function leftoverTreeItemSelectedV1(itemId: string, leftoverIds: readonly string[] | undefined): boolean {
+  if (!leftoverIds?.length) return false;
+  return leftoverIds.some((id) => id === itemId || itemId.endsWith(`/${id}`) || itemId.endsWith(`.${id}`));
+}
+
+/** 🕹️ Wave B15: leftover after interactionSelect must include hoverTarget.id in selectedIds. */
+export function leftoverSelectIdsMustNameHoverPickV1(selectedIds: readonly string[] | undefined, hoverId: string | null | undefined): boolean {
+  return Boolean(hoverId) && (selectedIds ?? []).includes(hoverId);
+}
+
+export function subscribeLeftoverWorldSelectionV1(listener: () => void): () => void {
+  leftoverWorldSelectionListeners.add(listener);
+  return () => leftoverWorldSelectionListeners.delete(listener);
 }
 
 /** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape. */
 export function leftoverWorldOverlayAppliesV1(leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): boolean {
-  return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility));
+  return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility || leftover.activeToolId));
 }
 
 /** Vortex-domain leftover hover id (`objectId:vortexId`) for hoveredVortexFullId. */
@@ -1266,6 +1322,12 @@ export function leftoverHoveredVortexFullIdV1(leftover: Pick<LeftoverWorldSelect
   if (!id) return undefined;
   if (leftover.hoveredDomain && leftover.hoveredDomain !== "vortex") return undefined;
   return id.includes(":") ? id : undefined;
+}
+
+/** 🖌️ Armed leftover brush must not publish an empty interactionHover — that clears the guest hover
+ * map and the next SurfaceVisible / refreshUi re-projects preview=0 over the 252–313 byte lane. */
+export function leftoverBrushRetainGuestHoverV1(activeUtility: string | null | undefined, leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): string | undefined {
+  return leftoverOverlayArmedBrushUtilityV1(activeUtility ?? leftover?.activeUtility) ? leftoverHoveredVortexFullIdV1(leftover) : undefined;
 }
 
 export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
@@ -1283,7 +1345,7 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
 
 export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null): WorldInteractionRecord {
   const hoveredVortexFullId = leftoverHoveredVortexFullIdV1(leftover);
-  const activeUtility = leftover?.activeUtility;
+  const activeUtility = leftoverOverlayArmedUtilityV1(leftover);
   if (!hoveredVortexFullId && !activeUtility) return base;
   return {
     ...base,
@@ -1294,6 +1356,59 @@ export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord
 
 function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
   return mergeWorldSelectionWithLeftoverV1(base, leftoverWorldSelectionOverlay, instances);
+}
+
+/** 🔦️ What ONE pane publishes as `data-selection-json` — the state the pane actually PAINTS, after
+ * `mergeWorldSelectionWithLeftoverV1` has laid the host's leftover overlay over the guest's own
+ * `selectionJson` lane. Until this attribute existed the pane published its geometry, its camera and
+ * its interaction record but never its selection: `WorldInteractionRecord` carries neither
+ * `selectedIds` nor a hover target (it is the utility/brush/fill record), `data-instances-json` is the
+ * guest's geometry cache which deliberately never bakes selection into an instance
+ * (`world_instances_geometry_json`), and `data-status-json` is the off-thread COMPUTE status
+ * (`{computing,label}`) — so every outside reader of "what is selected in this pane" was reading
+ * fields that never held it (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B20 defect 1).
+ *
+ * 🪟️ Selection is per DOCUMENT and hover is per WINDOW, so `selectedIds` is the same list in every
+ * pane of one document while `hoverTarget` is whatever THIS pane resolved; `activeUtility` rides along
+ * because it is per window instance too (wave B9). */
+export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, interaction: WorldInteractionRecord): Record<string, unknown> {
+  const hoveredId = selection.hoveredId ?? null;
+  return {
+    selectedIds: selection.ids ?? [],
+    activeObjectId: selection.activeObjectId ?? null,
+    targetVolumeIds: selection.targetVolumeIds ?? [],
+    referenceSelectedId: selection.referenceSelectedId ?? null,
+    hoverTarget: hoveredId ? { domain: hoveredId.includes(":") ? "vortex" : "object", id: hoveredId } : null,
+    hoveredVortexFullId: interaction.hoveredVortexFullId ?? null,
+    hoveredKindId: selection.hoveredKindId ?? null,
+    gumballActive: Boolean(selection.gumballActive),
+    gumballTarget: selection.gumballTarget ?? null,
+    transformMode: selection.transformMode ?? null,
+    activeUtility: interaction.activeUtility ?? "select",
+  };
+}
+
+/** 🛰️ What the GUEST itself sent on this pane's own selection lane, BEFORE
+ * {@link mergeWorldSelectionWithLeftoverV1} lays the host's leftover overlay over it.
+ *
+ * `data-selection-json` publishes the merged result — the state the pane PAINTS — so a guest that
+ * renders from an empty interaction and a guest that renders from the picked one are byte-identical
+ * from outside as soon as the host's own leftover overlay carries the ids. That is precisely the
+ * divergence the selection-scoped defect family lives in (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
+ * B23): on wasm #48 the panes painted `selectedIds:["seed-left-001"]` while the guest's Inspection
+ * body rendered the empty-document summary in the same window of time, and no attribute anywhere
+ * separated "the guest has the pick" from "the host is painting it for the guest".
+ *
+ * Kept deliberately minimal — ids, hover, gumball — because its ONE job is to be comparable against
+ * `data-selection-json`'s same three fields. */
+export function worldSurfaceGuestSelectionDomV1(selectionJson: string | undefined): Record<string, unknown> {
+  const guest = parseSelection(selectionJson ?? "{}");
+  return {
+    selectedIds: guest.ids ?? [],
+    activeObjectId: guest.activeObjectId ?? null,
+    hoveredId: guest.hoveredId ?? null,
+    gumballActive: Boolean(guest.gumballActive),
+  };
 }
 
 export function parseJsonArray<T>(json: string | undefined): readonly T[] {
@@ -1575,7 +1690,7 @@ export function retainWorldBrushPreviewJsonV1(published: string | undefined, hov
   const next: Record<string, string> = { ...retained };
   const parsed = parseWorldBrushPreview(published);
   if (parsed?.targetVortexFullId && published) next[parsed.targetVortexFullId] = published;
-  if (published) return { json: published, retained: next };
+  if (parsed && published) return { json: published, retained: next };
   if (hoverId && next[hoverId]) return { json: next[hoverId], retained: next };
   return { json: "", retained: next };
 }
@@ -3157,31 +3272,6 @@ function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number,
   );
 }
 
-/** @emoji 🧊️ Invisible ground plane (Z-up XY plane, matching this world's up axis) that tracks the grid-snapped cursor while voxel-editing target volumes; Alt+click commits a volume there. */
-function WorldVoxelGroundPlane({ gridFactor, onHover, onPlace }: { readonly gridFactor: number; readonly onHover: (origin: readonly [number, number, number] | null) => void; readonly onPlace: (origin: readonly [number, number, number]) => void }) {
-  const snap = (value: number) => Math.round(value / gridFactor) * gridFactor;
-  return (
-    <mesh
-      onPointerMove={(event) => {
-        event.stopPropagation();
-        onHover([snap(event.point.x), snap(event.point.y), snap(event.point.z)]);
-      }}
-      onPointerOut={(event) => {
-        event.stopPropagation();
-        onHover(null);
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (!event.nativeEvent.altKey) return;
-        onPlace([snap(event.point.x), snap(event.point.y), snap(event.point.z)]);
-      }}
-    >
-      <planeGeometry args={[10000, 10000]} />
-      <meshBasicMaterial visible={false} />
-    </mesh>
-  );
-}
-
 /** @emoji 🧊️ Cursor-follow ghost box previewing the target volume that Alt+click would place, sized by the engagement's W/D/H steppers. */
 function WorldVoxelPreviewBox({ origin, dims, gridFactor }: { readonly origin: readonly [number, number, number]; readonly dims: readonly [number, number, number]; readonly gridFactor: number }) {
   return (
@@ -3994,6 +4084,25 @@ type World3dRelocateSession = {
 };
 //#endregion WorldRelocateGesture
 
+//#region WorldVolumeBrushGesture
+/** @emoji 🧊️ Grid-snapped ground origin a Volume Brush hover previews and an Alt+click commits, from the
+ * raw `raycastGroundPoint` hit. Always snaps (the guest re-snaps by its own `gridSpacing` anyway), so a
+ * placed target volume, a dropped catalogue object and a relocated object all land on one lattice.
+ * `null` when the pointer ray misses the ground plane, which is also what keeps the ghost box off screen. */
+export function world3dVolumeBrushOriginV1(ground: readonly [number, number, number] | null, gridFactor: number): [number, number, number] | null {
+  return ground ? snapWorldPointToGrid(ground, true, gridFactor) : null;
+}
+
+/** @emoji 🧊️ True when a Volume Brush pointer press must COMMIT a target volume instead of opening a
+ * marquee — the utility armed and Alt held. The gesture reads the ground through the host's own pointer
+ * handlers (like relocate and catalogue drop) rather than an invisible r3f plane inside the canvas, which
+ * the instance layer occluded on every click that landed on an object
+ * (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 12). */
+export function world3dVolumeBrushCommits(volumeBrushMode: boolean, altKey: boolean): boolean {
+  return volumeBrushMode && altKey;
+}
+//#endregion WorldVolumeBrushGesture
+
 function resolveCatalogueDropOrigin(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera | null, gridSnapEnabled: boolean, gridFactor: number): [number, number, number] | null {
   if (!camera) return null;
   const hit = raycastGroundPoint(clientX, clientY, hostRect, camera);
@@ -4593,9 +4702,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const retainedBrushPreviewByVortexRef = useRef<Record<string, string>>({});
   const brushPreviewJson = useMemo(() => {
-    const hover = leftoverHoveredVortexFullIdV1(leftoverWorldSelectionOverlayV1()) ?? parseInteraction(scene?.interactionJson).hoveredVortexFullId;
-    const decided = retainWorldBrushPreviewJsonV1(scene?.brushPreviewJson, hover, retainedBrushPreviewByVortexRef.current);
+    const interaction = parseInteraction(scene?.interactionJson);
+    const hover = leftoverHoveredVortexFullIdV1(leftoverWorldSelectionOverlayV1()) ?? interaction.hoveredVortexFullId;
+    const leftoverPreview = leftoverWorldSelectionOverlayV1()?.brushPreviewJson;
+    const published = leftoverPreview || scene?.brushPreviewJson || interaction.brushPreviewJson;
+    const decided = retainWorldBrushPreviewJsonV1(published, hover, retainedBrushPreviewByVortexRef.current);
     retainedBrushPreviewByVortexRef.current = decided.retained;
+    if (typeof console !== "undefined") {
+      console.log("[DEBUG] puzzle3d.brushPreview.bind", { published: published?.length ?? 0, spine: scene?.brushPreviewJson?.length ?? 0, interaction: interaction.brushPreviewJson?.length ?? 0, hover, decided: decided.json.length, windowInstanceId });
+    }
     return decided.json;
   }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson]);
   const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
@@ -4738,10 +4853,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       onAction({
         controllerId: node.controllerId,
         action,
-        args: { surfaceId: node.surfaceId, ...args },
+        args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
       });
     },
-    [node.controllerId, node.surfaceId, onAction],
+    [node.controllerId, node.surfaceId, onAction, windowInstanceId],
   );
 
   const adoptViewportCamera = useCallback(
@@ -4754,10 +4869,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
 
   // 🧭️ Syncs a completed user-driven camera gesture (orbit/pan/zoom end, gizmo view snap) to the plugin so
-  // the shell-side command-history panel has something to show — trailing-debounced like the 2D canvas'
-  // own camera sync (`CAMERA_SYNC_DEBOUNCE_MS`) so a scroll/wheel burst doesn't spam one dispatch per tick.
-  // Never wired into a programmatic camera change (auto-fit, scene-camera echo reattach) — only genuine
-  // user gestures call this.
+  // the guest owns one authoritative pose per window instance — the plugin re-derives every camera-dependent
+  // projection (LOD, vortex markers, sun) from it, and a reattaching pane adopts it instead of snapping back.
+  // `setCamera` is `ActionKind::View` publishing on the WindowConfig lane ONLY: it is per-window session view
+  // state, never a document edit and never an artifact-history row (the plugin runtime's `dispatch_emit`
+  // skips the command log for exactly this shape). Trailing-debounced like the 2D canvas' own camera sync
+  // (`CAMERA_SYNC_DEBOUNCE_MS`) so a scroll/wheel burst doesn't spam one dispatch per tick. Never wired into
+  // a programmatic camera change (auto-fit, scene-camera echo reattach) — only genuine user gestures call this.
   const cameraDispatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dispatchWorldCameraDebounced = useCallback(
     (state: WorldCameraState) => {
@@ -4868,7 +4986,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   // 🥽️ One GLB's collision geometry never fitted a single retained command: the shared puzzle contract
   // admits 8 192 raw JSON bytes and the Concrete Forest mesh alone encoded to 64 KB, so every upload is
-  // a page run (`puzzle3dBrushMeshPages`) drained one page per macrotask — the plugin stages the pages
+  // a page run (`puzzle3dBrushMeshPages`) — the plugin stages the pages
   // under `(url, digest)` and installs the mesh when the last one lands. A mesh THIS GUEST already holds
   // is re-announced by `{url, digest}` alone, which it serves from its own content-addressed store
   // instead of taking the bytes again.
@@ -4878,15 +4996,75 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // and voided by a fallen `meshResidency`. The claim used to live in a bare page-lifetime `Map` written
   // at enqueue time, so every activation after a guest restart re-announced seven identities the guest
   // held nothing for and the brush utility silently kept no collision geometry until a full reload.
+  //
+  // ⏳️ The run is a BACK-PRESSURED stream, never a burst. A macrotask drain (`setTimeout(drain, 0)`) put
+  // every page of every mesh into the actor's one command queue within a couple of hundred milliseconds
+  // and then left them there: browser-measured 2026-09-12 on wasm #47, 202 pages enqueued in 21 s, 40 of
+  // them settled over the next 420 s, and ONE user click that landed mid-run waited 44.3 s behind 15
+  // pages (`📓️2026-09-12-wave-B22-brush-mesh-upload.md`). Awaiting each page's own settle before the
+  // next is queued bounds what a user action can ever queue behind at ONE page, whatever the run's
+  // length — `onAction` settles on the dispatched action's typed-operation completion, which is exactly
+  // the "this page is in" signal the old fire-and-forget shape threw away.
+  //
+  // 🪢️ And a run is only ever paged ONCE PER DIGEST. Every `dist/mesh/*.glb` in this repo is the same
+  // 771 728-byte capsule, so a scene placing several object kinds paged byte-identical geometry once per
+  // mesh id — 72 commands each. A digest this page already put into THIS guest is announced by
+  // `{url, digest}` alone and the guest aliases its own derived page onto the new id
+  // (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`); a guest that cannot serve it answers
+  // on `meshReuploadUrls` and the claim is re-driven, so an optimistic announcement is self-healing.
   const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
   const brushMeshRunsRef = useRef(new Map<string, string>());
-  const brushMeshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const brushMeshDrainingRef = useRef(false);
+  const brushMeshLiveRef = useRef(true);
   const [brushMeshRevisions, setBrushMeshRevisions] = useState<{ readonly generation: number; readonly urls: Readonly<Record<string, number>> }>({ generation: 0, urls: {} });
+  /** 🥽️ `dispatch`'s awaitable twin for the one lane that needs back pressure — same envelope, but the
+   * caller can wait for the page to be IN before it queues the next one. */
+  const dispatchBrushMesh = useCallback(
+    (args: Record<string, unknown>) =>
+      Promise.resolve(
+        onAction({
+          controllerId: node.controllerId,
+          action: "registerBrushMesh",
+          args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
+        }),
+      ),
+    [node.controllerId, node.surfaceId, onAction, windowInstanceId],
+  );
+  const drainBrushMeshQueue = useCallback(async () => {
+    if (brushMeshDrainingRef.current) return;
+    brushMeshDrainingRef.current = true;
+    try {
+      await drainPuzzle3dBrushMeshQueue(
+        brushMeshQueueRef.current,
+        {
+          holdsDigest: (digest) => puzzle3dBrushMeshRegistry.holdsDigest(digest),
+          mayAlias: (url) => puzzle3dBrushMeshRegistry.mayAlias(url),
+          alias: (url, digest) => {
+            brushMeshRunsRef.current.delete(url);
+            puzzle3dBrushMeshRegistry.alias(url, digest);
+          },
+          confirm: (url, digest) => {
+            brushMeshRunsRef.current.delete(url);
+            puzzle3dBrushMeshRegistry.confirm(url, digest);
+          },
+        },
+        dispatchBrushMesh,
+        () => brushMeshLiveRef.current,
+      );
+    } finally {
+      brushMeshDrainingRef.current = false;
+    }
+  }, [dispatchBrushMesh]);
   const handleRegisterBrushMesh = useCallback(
     (url: string, positions: number[], indices: number[]) => {
       const digest = puzzle3dBrushMeshDigest(positions, indices);
       if (puzzle3dBrushMeshRegistry.holds(url, digest)) {
-        dispatch("registerBrushMesh", { url, digest });
+        void dispatchBrushMesh({ url, digest });
+        return;
+      }
+      if (puzzle3dBrushMeshRegistry.mayAlias(url) && puzzle3dBrushMeshRegistry.holdsDigest(digest)) {
+        puzzle3dBrushMeshRegistry.alias(url, digest);
+        void dispatchBrushMesh({ url, digest });
         return;
       }
       if (brushMeshRunsRef.current.get(url) === digest) return;
@@ -4894,25 +5072,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (pages.length === 0 || brushMeshQueueRef.current.length + pages.length > PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES) return;
       brushMeshRunsRef.current.set(url, digest);
       brushMeshQueueRef.current.push(...pages);
-      const drain = () => {
-        brushMeshTimerRef.current = null;
-        const page = brushMeshQueueRef.current.shift();
-        if (!page) return;
-        dispatch("registerBrushMesh", page);
-        if (page.page === page.pageCount - 1) {
-          brushMeshRunsRef.current.delete(page.url);
-          puzzle3dBrushMeshRegistry.confirm(page.url, page.digest);
-        }
-        if (brushMeshQueueRef.current.length > 0) brushMeshTimerRef.current = setTimeout(drain, 0);
-      };
-      if (brushMeshTimerRef.current === null) brushMeshTimerRef.current = setTimeout(drain, 0);
+      void drainBrushMeshQueue();
     },
-    [dispatch, node.surfaceId],
+    [dispatchBrushMesh, drainBrushMeshQueue, node.surfaceId],
   );
   useEffect(
     () => () => {
-      if (brushMeshTimerRef.current !== null) clearTimeout(brushMeshTimerRef.current);
-      brushMeshTimerRef.current = null;
+      brushMeshLiveRef.current = false;
       for (const page of brushMeshQueueRef.current.splice(0)) {
         brushMeshRunsRef.current.delete(page.url);
         puzzle3dBrushMeshRegistry.forget(page.url);
@@ -5139,15 +5305,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     }, 120);
   }, [brushMode, dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
-  const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild);
+  const leftoverArmedToolId = leftoverWorldSelectionOverlayV1()?.activeToolId;
+  const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild, leftoverArmedToolId);
   useEffect(() => {
     if (!fillBuildShouldTick) return;
+    console.warn(`[DEBUG] fillBuildTick hop armed utility=${activeUtility} tool=${leftoverArmedToolId ?? "none"} count=${interaction.fillBuild?.count ?? 0} done=${interaction.fillBuild?.done ?? false}`);
     return createInFlightSkippingInterval(() => {
       if (interactivePluginActionInFlight()) return undefined;
       if (!worldFillBuildHostTickAllowed(true, isolatedJobDriveIsActive(), takeIsolatedJobUiPoll())) return undefined;
       return dispatch("fillBuildTick");
     }, 120);
-  }, [activeUtility, dispatch, fillBuildShouldTick, interaction.fillBuild]);
+  }, [activeUtility, dispatch, fillBuildShouldTick, interaction.fillBuild, leftoverArmedToolId]);
 
   const selectionArgs = useCallback(() => world3dGumballSelectionArgsV1(selection), [selection]);
 
@@ -5179,6 +5347,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () =>
       createCoalescingActionDispatcher<string | null>((id) => {
         if (interactionDomainId) {
+          if (id == null && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldSelectionOverlayV1())) return;
           const target = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
           dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));
           return;
@@ -5186,13 +5355,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         if (id == null) dispatch("setHover", {});
         else dispatch("setHover", { objectId: id, mode: "mesh", id: 0 });
       }),
-    [dispatch, interactionDomainId, interactionGranularity],
+    [activeUtility, dispatch, interactionDomainId, interactionGranularity],
   );
 
   const dispatchVortexHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((fullId) => {
         if (interactionDomainId) {
+          if (!fullId && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldSelectionOverlayV1())) return;
           const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
           const args = world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id);
           console.warn(`[DEBUG] interactionHover dispatch domain=${interactionDomainId} gran=${target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex} id=${target?.id ?? "null"}`);
@@ -5202,7 +5372,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         if (!fullId) dispatch("worldVortexHover", {});
         else dispatch("worldVortexHover", { fullId });
       }),
-    [dispatch, interactionDomainId],
+    [activeUtility, dispatch, interactionDomainId],
   );
 
   const handleInstancePointerMove = useCallback(
@@ -5332,6 +5502,22 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     },
     [dispatch],
   );
+
+  /** 🧊️ The Volume Brush's ground read, from the host's own pointer coordinates — one raycast shared by
+   * the hover ghost and the Alt+click commit, so the box the user sees is exactly the volume that lands. */
+  const voxelGroundOriginAt = useCallback(
+    (clientX: number, clientY: number): [number, number, number] | null => {
+      const host = hostRef.current;
+      const camera = cameraRef.current;
+      if (!host || !camera) return null;
+      return world3dVolumeBrushOriginV1(raycastGroundPoint(clientX, clientY, host.getBoundingClientRect(), camera), gridFactor);
+    },
+    [gridFactor],
+  );
+
+  useEffect(() => {
+    if (!volumeBrushMode) setVoxelHoverOrigin(null);
+  }, [volumeBrushMode]);
 
   const pendingBrushPlaceRef = useRef(false);
   const handleBrushPlace = useCallback(() => {
@@ -5650,6 +5836,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
       if (relocateMode && beginRelocateDrag(event)) return;
+      if (world3dVolumeBrushCommits(volumeBrushMode, event.altKey)) {
+        const origin = voxelGroundOriginAt(event.clientX, event.clientY);
+        if (origin) {
+          setVoxelHoverOrigin(origin);
+          handleVoxelPlace(origin);
+          return;
+        }
+      }
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
@@ -5674,12 +5868,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [beginRelocateDrag, dispatch, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint],
+    [beginRelocateDrag, dispatch, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (updateRelocateDrag(event)) return;
+      if (volumeBrushMode) setVoxelHoverOrigin(voxelGroundOriginAt(event.clientX, event.clientY));
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
@@ -5706,7 +5901,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, local]);
     },
-    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag],
+    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
   );
 
   const finalizeMarqueeSelection = useCallback(() => {
@@ -5984,12 +6179,16 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       ref={hostRef}
       className="semio-world-3d-host relative h-full min-h-0 w-full overflow-hidden"
       data-surface-id={node.surfaceId}
+      data-window-instance-id={windowInstanceId || undefined}
+      data-selection-json={JSON.stringify(worldSurfaceSelectionDomV1(selection, interaction))}
+      data-guest-selection-json={JSON.stringify(worldSurfaceGuestSelectionDomV1(scene.selectionJson))}
       data-orbit-view-gizmo=""
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       data-meshes-json={scene.meshesJson ?? undefined}
       data-instances-json={scene.instancesJson ?? undefined}
       data-target-volumes-json={scene.targetVolumesJson ?? undefined}
-      data-camera-json={world3dCameraDomJson(cameraState)}
+      data-camera-json={world3dCameraDomJson(sceneCamera)}
+      data-viewport-camera-json={world3dCameraDomJson(cameraState)}
       data-vortices-json={scene.vorticesJson ?? undefined}
       data-brush-preview-json={brushPreviewJson}
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
@@ -6018,6 +6217,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           if ((selection.ids?.length ?? 0) > 0) selectionGroups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
           if ((selection.componentIds?.length ?? 0) > 0) selectionGroups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
           const hits = target ? [{ domain: target.kind, id: target.id }] : [];
+          console.warn(`[DEBUG] world3d-contextmenu request surface=${node.surfaceId} window=${windowInstanceId ?? "null"} hits=${JSON.stringify(hits)} groups=${JSON.stringify(selectionGroups)}`);
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
@@ -6029,6 +6229,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             mapWorldContextMenuSpecs,
             shellContextMenuFallback,
           );
+          console.warn(`[DEBUG] world3d-contextmenu reply items=${menu.items?.length ?? -1} surface=${node.surfaceId} window=${windowInstanceId ?? "null"} hits=${JSON.stringify(hits)} groups=${JSON.stringify(selectionGroups)} ownsSuggestion=${suggestionMenuOwnsThisWindow}`);
           setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
@@ -6203,7 +6404,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               onSelect={handleTargetVolumeSelect}
               onRelocate={handleTargetVolumeRelocate}
             />
-            {volumeBrushMode ? <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} /> : null}
             {volumeBrushMode && voxelHoverOrigin ? <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} /> : null}
             <WorldReferenceLayer
               references={references

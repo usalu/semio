@@ -12,6 +12,9 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 
 // #region 🏷️Field
 export interface FieldProps {
+  /** 🪪️ The field ROW's own DOM id, and the stem of its control's — the label associates with
+   * `${id}.control`, which is the id an authored `ui::field(...).try_child(control)` gives that child
+   * (see `stepper_field` in puzzle 3d's settings panel). */
   readonly id?: string;
   readonly label: React.ReactNode;
   readonly description?: React.ReactNode;
@@ -24,9 +27,9 @@ export interface FieldProps {
 /** @emoji 🏷️ Labelled form field wrapper with description and validation message. */
 export const Field: React.FC<FieldProps> = ({ id, label, description, required, error, className, children }) => {
   return (
-    <div className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">
+    <div id={id} className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">
       <div className="flex items-baseline gap-single min-w-0">
-        <label htmlFor={id} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
+        <label htmlFor={id ? `${id}.control` : undefined} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
           {label}
           {required ? <span className="text-destructive ms-half">*</span> : null}
         </label>

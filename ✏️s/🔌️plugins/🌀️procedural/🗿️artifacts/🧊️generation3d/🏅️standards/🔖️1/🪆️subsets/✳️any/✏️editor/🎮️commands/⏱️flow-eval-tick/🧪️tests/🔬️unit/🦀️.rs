@@ -11,5 +11,5 @@ async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
     let _serial = crate::editor::generation3d::test_support::lock();
     let mut app = app().await;
     let (view, _) = preview_views("procedural-preview-test", "procedural-preview-test-other");
-    dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(FlowEvalTick { window_id: view.window_id.clone().expect("preview window") }), view).await.expect("flowEvalTick");
+    dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(FlowEvalTick { window_id: view.window_id.clone().expect("preview window"), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view).await.expect("flowEvalTick");
 }

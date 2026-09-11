@@ -1091,6 +1091,7 @@ fn brush_mesh_geometry_is_admissible(positions: &[f32], indices: &[u32]) -> bool
 struct Puzzle3dBrushMeshStore {
     engines: store::EngineCache,
     handles: HashMap<String, store::EngineHandle>,
+    digests: HashMap<String, store::EngineHandle>,
 }
 
 fn brush_mesh_store() -> &'static Mutex<Puzzle3dBrushMeshStore> {
@@ -1098,7 +1099,7 @@ fn brush_mesh_store() -> &'static Mutex<Puzzle3dBrushMeshStore> {
     STORE.get_or_init(|| {
         let mut engines = store::EngineCache::new(BRUSH_MESH_CACHE_BYTES);
         engines.register(Puzzle3dMeshDecodeEngine);
-        Mutex::new(Puzzle3dBrushMeshStore { engines, handles: HashMap::new() })
+        Mutex::new(Puzzle3dBrushMeshStore { engines, handles: HashMap::new(), digests: HashMap::new() })
     })
 }
 
@@ -1126,10 +1127,12 @@ pub fn shared_brush_mesh_installs() -> u64 {
 /// a second document registering the same identity hits the cache instead of decoding again.
 pub(crate) fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Option<(Vec<f32>, Vec<u32>)> {
     let request = encode_brush_mesh_request(url, positions, indices)?;
+    let digest = brush_mesh_digest(positions, indices);
     let mut store = brush_mesh_store().try_lock().ok()?;
     let handle = store.engines.derive(<Puzzle3dMeshDecodeEngine as store::Engine>::ENGINE_ID, &request).ok()?;
     let geometry = store.engines.read(&handle).ok()?;
-    store.handles.insert(url.to_string(), handle);
+    store.handles.insert(url.to_string(), handle.clone());
+    store.digests.insert(digest, handle);
     BRUSH_MESH_INSTALLS.fetch_add(1, Ordering::Relaxed);
     decode_brush_mesh_geometry(&geometry)
 }
@@ -1139,6 +1142,22 @@ pub(crate) fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -
 pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
     let store = brush_mesh_store().try_lock().ok()?;
     let geometry = store.engines.read(store.handles.get(url)?).ok()?;
+    decode_brush_mesh_geometry(&geometry)
+}
+
+/// 🪢️ Geometry this process derived under ANY mesh id, keyed by the client's own digest, aliased onto
+/// `url` on the way out. A scene places several object kinds whose `meshUrl`s are distinct ids over
+/// byte-identical geometry — every `dist/mesh/*.glb` in this repo is the same 771 728-byte capsule —
+/// and keying the transfer by id alone made the client page the SAME 294 912 bytes once per id, 72
+/// commands each. The collision engine still keys its own `meshes` map by url (two ids stay two
+/// identities, `encode_brush_mesh_request`'s note), so only the TRANSFER is content-addressed: the
+/// second id adopts the first id's derived page and the wire carries nothing but the announcement.
+pub(crate) fn adopt_brush_mesh_by_digest(url: &str, digest: &str) -> Option<(Vec<f32>, Vec<u32>)> {
+    let mut store = brush_mesh_store().try_lock().ok()?;
+    let handle = store.digests.get(digest)?.clone();
+    let geometry = store.engines.read(&handle).ok()?;
+    store.handles.insert(url.to_string(), handle);
+    BRUSH_MESH_INSTALLS.fetch_add(1, Ordering::Relaxed);
     decode_brush_mesh_geometry(&geometry)
 }
 //#endregion 🥽️SharedBrushMeshes
@@ -1276,6 +1295,15 @@ pub fn stage_brush_mesh_page(url: &str, digest: &str, page: u32, page_count: u32
     let held = uploads.slots.iter().position(|slot| slot.url == url && slot.digest == digest);
     let index = match held {
         Some(index) if uploads.slots[index].next_page == page && uploads.slots[index].page_count == page_count => index,
+        // 🔁️ A page this run already admitted is a RETRANSMISSION, not a gap: the bytes are staged, the
+        // cursor is ahead of it, and nothing is missing. Dropping the run here made every duplicate cost
+        // the client the whole 72-page upload again, so a lane that retries one page paid for all of
+        // them. Acknowledged at the cursor it actually stands on, with no second append.
+        Some(index) if page != 0 && page < uploads.slots[index].next_page && uploads.slots[index].page_count == page_count => {
+            let slot = &mut uploads.slots[index];
+            slot.touched = sequence;
+            return Ok(Puzzle3dMeshUploadStep::Staged { next_page: slot.next_page, page_count: slot.page_count });
+        }
         Some(index) if page != 0 => {
             uploads.slots.swap_remove(index);
             return Err(Puzzle3dMeshUploadFault::Gap);
@@ -1782,10 +1810,10 @@ impl Puzzle3dCollision {
         if self.mesh_is_fallback.get(url) == Some(&false) && digest.is_none_or(|digest| self.mesh_sources.get(url).is_some_and(|mesh| brush_mesh_digest(&mesh.positions, &mesh.indices) == digest)) {
             return true;
         }
-        let Some((positions, indices)) = shared_brush_mesh(url) else { return false };
-        if digest.is_some_and(|digest| brush_mesh_digest(&positions, &indices) != digest) {
+        let resident = shared_brush_mesh(url).filter(|(positions, indices)| digest.is_none_or(|digest| brush_mesh_digest(positions, indices) == digest));
+        let Some((positions, indices)) = resident.or_else(|| digest.and_then(|digest| adopt_brush_mesh_by_digest(url, digest))) else {
             return false;
-        }
+        };
         self.install_collision_mesh(url.to_string(), &positions, &indices, false);
         true
     }
@@ -2528,6 +2556,12 @@ impl Puzzle3dPrecomputeSession {
     /// 8 192 raw bytes. `Ok(None)` is a closed, digest-verified, installed mesh; `Ok(Some(next))` is an
     /// open run waiting for page `next`. See [`stage_brush_mesh_page`].
     pub fn stage_mesh_page(&mut self, url: &str, digest: &str, page: u32, page_count: u32, positions: &[f32], indices: &[u32]) -> Result<Option<u32>, Puzzle3dMeshUploadFault> {
+        // 🪢️ A run that opens on geometry this process ALREADY derived — under this id or any other id
+        // with the same digest — closes on its first page and the remaining `pageCount - 1` commands are
+        // never needed. Checked at page 0 only, so a live run costs no store lookup per page.
+        if page == 0 && !digest.is_empty() && self.adopt_shared_mesh(url, Some(digest)) {
+            return Ok(None);
+        }
         match stage_brush_mesh_page(url, digest, page, page_count, positions, indices)? {
             Puzzle3dMeshUploadStep::Staged { next_page, .. } => Ok(Some(next_page)),
             Puzzle3dMeshUploadStep::Complete(positions, indices) => {

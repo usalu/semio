@@ -58,6 +58,7 @@ async fn a_capacity_filled_context_fits_the_bound() {
         locale: Locale::En,
         terminology: Terminology::Native,
         window_id: Some(identifier()),
+        focused_window_id: Some(identifier()),
         window_instances: (0..VIEW_CONTEXT_WINDOW_INSTANCES).map(|index| ViewWindowInstance { id: format!("{index}{}", identifier()), window_kind_id: identifier() }).collect(),
     };
     let encoded = serde_json::to_vec(&view).unwrap();

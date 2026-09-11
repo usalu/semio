@@ -66,8 +66,8 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::Stat
         if lane != store::HistoryLane::Document || O::MAXIMUM_PUBLICATION_BYTES == 0 || O::MAXIMUM_PUBLICATION_BYTES > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
             return Err("window config publication has an invalid lane or byte bound".into());
         }
-        Self::item_retained_bytes(mutation, description)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: O::MAXIMUM_PUBLICATION_BYTES })
+        let retained_bytes = Self::item_retained_bytes(mutation, description)?;
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
     }
 
     fn begin(

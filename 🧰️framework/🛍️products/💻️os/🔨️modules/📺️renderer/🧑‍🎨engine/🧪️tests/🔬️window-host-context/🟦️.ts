@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import Ajv from "ajv";
-import { leftoverInspectionRefreshScope, windowHostContextBindings } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, windowHostContextBindings } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import fixture from "../../🧫️fixtures/🔬️window-host-context/🔣️.json";
 
 type Binding = { readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string };
@@ -41,6 +41,9 @@ export function testWindowHostContext(): void {
   for (const row of fixture.inspectionRefresh) {
     const scope = leftoverInspectionRefreshScope(row.selectedIds);
     assert.equal(scope?.kind ?? null, row.kind);
+    const hash = leftoverInspectionPanelHash(row.selectedIds, "abc");
+    assert.equal(hash === undefined, row.omitHash);
+    assert.equal(hash === undefined, Boolean(row.selectedIds.length));
   }
   console.log(`[DEBUG] window-host-context bindings=${actual.length} inspection=${fixture.inspectionRefresh.length}`);
 }

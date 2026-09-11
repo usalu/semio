@@ -6,13 +6,14 @@ pub struct PluginInstanceCloseLease<PA: PluginApp> {
     instance_id: u32,
     cell: std::sync::Weak<RuntimeAppCell<PA>>,
     admitted: Option<std::sync::Arc<RuntimeCloseWorkerState<PA>>>,
+    terminal: Cell<bool>,
 }
 
 impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     pub(crate) fn allocation_identity(&self) -> (u32, usize) { (self.instance_id, self.cell.as_ptr().cast::<()>() as usize) }
 
     pub(super) fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
-        Self { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None }
+        Self { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None, terminal: Cell::new(false) }
     }
 
     pub(crate) fn preflight_close(&self, runtime: &PluginRuntime<PA>) -> Result<(), Fault> {
@@ -39,7 +40,18 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     }
 
     /// 🧾️ Verifies app and worker-session emptiness, not quarantine absence or a generic idle turn.
+    ///
+    /// The terminal witness LATCHES: emptiness is a fact about an allocation that has already been
+    /// handed over, so once observed it can never be retracted by a later poll. The close ladder
+    /// re-reads it on every release rung, and both non-terminal answers below are transient —
+    /// `TryLockError::WouldBlock` on the close cell or its worker pump means "another thread holds
+    /// it right now", not "the app is still live". Without the latch a single contended read after
+    /// the receipt was minted retracted the witness and killed the close
+    /// (ticket 26/09/02 wave B17; surfaced in the browser as `plugin.reactor-close-authority`).
     pub fn is_retired(&self) -> Result<bool, Fault> {
+        if self.terminal.get() {
+            return Ok(true);
+        }
         let Some(state) = self.admitted.as_ref() else { return Ok(false) };
         match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) {
             RuntimeCloseStatus::Fault(cause) => {
@@ -64,6 +76,7 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
         if cell.is_some() || pump.session.is_some() || pump.rejected.is_some() || pump.outcome.is_some() || pump.terminal || !pump.complete {
             return Err(plugin_internal_fault("captured app close reported terminal while retaining an owner"));
         }
+        self.terminal.set(true);
         Ok(true)
     }
 }
@@ -72,6 +85,6 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
 pub fn plugin_capture_instance_close<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<PluginInstanceCloseLease<PA>, Fault> {
     let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
     let cell = instances.get(instance_id).ok_or_else(|| plugin_internal_fault("cannot capture an absent app lifetime"))?;
-    Ok(PluginInstanceCloseLease { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None })
+    Ok(PluginInstanceCloseLease { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None, terminal: Cell::new(false) })
 }
 //#endregion 🚪️RuntimeInstanceCloseAuthority

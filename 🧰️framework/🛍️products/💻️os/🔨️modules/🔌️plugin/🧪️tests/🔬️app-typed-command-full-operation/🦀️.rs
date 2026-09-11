@@ -528,7 +528,7 @@ mod typed_command_full_operation_tests {
                     if delayed_ack {
                         let presented = mounted.take_result_page().unwrap();
                         assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                        assert!(!mounted.has_runnable_work());
+                        assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                         for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
                             assert!(mounted.take_result_page().is_none());
                         }
@@ -546,7 +546,7 @@ mod typed_command_full_operation_tests {
                     }
                     assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
                     assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                    assert!(!mounted.has_runnable_work());
+                    assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                     presented
                 } else {
                     mounted.result_page.as_ref().unwrap().clone()

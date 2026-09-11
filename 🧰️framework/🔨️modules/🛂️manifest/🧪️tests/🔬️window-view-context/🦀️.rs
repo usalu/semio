@@ -38,6 +38,8 @@ async fn window_view_context_uses_the_addressed_instance() {
     assert_eq!(panel.terminology, view.terminology);
     assert_eq!(panel.active_mode_id, view.active_mode_id);
     assert_eq!(panel.active_utility_by_window_id, view.active_utility_by_window_id);
+    assert_eq!(panel.focused_window_id, view.focused_window_id, "fails-before: an app-level panel that authors per-window settings loses the pane the user is looking at and retunes the roster's first entry");
+    assert_eq!(view.for_window_instance("left").unwrap().focused_window_id, view.focused_window_id, "a windowed projection carries the focused pane alongside its own render target");
     let window_only = view.for_window_instance("left").unwrap();
     assert!(window_only.active_tool_id.is_none(), "fails-before: windowed dispatch without host overlay drops the armed tool");
     for case in fixture["hostArmed"].as_array().unwrap() {

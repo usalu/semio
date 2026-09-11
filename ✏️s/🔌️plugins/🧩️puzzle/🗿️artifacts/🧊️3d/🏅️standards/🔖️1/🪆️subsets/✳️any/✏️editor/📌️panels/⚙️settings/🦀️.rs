@@ -23,9 +23,20 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, None)?;
-    let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: false }))
+fn stepper_window_args(window_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let text = semio_framework_plugin::UiText::try_from_str(window_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "settings window id admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "settings window map admission failed"))?;
+    builder.push("windowId".to_owned(), semio_framework_plugin::UiValue::Text(text)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "settings window map entry admission failed"))?;
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, Some(stepper_window_args(window_id)?))?;
+    // 🔢️ `uniform: true` — one window's own scalar setting, never a multi-selection aggregate.
+    // `uniform: false` renders the stepper as MIXED: a blank box with a placeholder instead of the
+    // value, and its internal base for a +/− bump is `defaultValue` (0), not the setting. Both halves
+    // were browser-visible (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12).
+    let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true }))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
     control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper binding admission failed"))?;
     ui::field(ui_label(label)?)
@@ -37,10 +48,8 @@ fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> 
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field admission failed"))
 }
 
-/// ⚙️ Renders the app settings for ONE window instance. `window_id` is not decoration: every stepper
-/// here dispatches without a `windowId` arg, so the edit lands on whichever window the host's ambient
-/// view currently names — the section title says which one, so a split layout cannot silently retune
-/// the pane the user is not looking at.
+/// ⚙️ Renders the app settings for ONE window instance. Every stepper tags that instance as `windowId`
+/// so a split layout cannot silently retune the pane the user is not looking at.
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let runtime = &envelope.runtime;
     ui::section(ui_label(if window_id.is_empty() { labels.settings.as_str().to_string() } else { format!("{} — {window_id}", labels.settings.as_str()) })?)
@@ -48,10 +57,10 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
         .default_open(true)
         .try_children(crate::editor::puzzle3d::ui_node_list([
-            stepper_field("puzzle3d-play-settings.overlap-budget", labels.overlap_budget.as_str(), runtime.overlap_budget, 0.05, "setBrushPlacementOverlapBudget"),
-            stepper_field("puzzle3d-play-settings.proximity-radius", labels.proximity_radius.as_str(), runtime.proximity_radius, 0.1, "setProximityRadius"),
-            stepper_field("puzzle3d-play-settings.chunk-size", labels.chunk_size.as_str(), runtime.chunk_size, 1.0, "setChunkSize"),
-            stepper_field("puzzle3d-play-settings.grid-spacing", labels.spacing.as_str(), runtime.grid_spacing, 0.5, "setGridSpacing"),
+            stepper_field("puzzle3d-play-settings.overlap-budget", labels.overlap_budget.as_str(), runtime.overlap_budget, 0.05, "setBrushPlacementOverlapBudget", window_id),
+            stepper_field("puzzle3d-play-settings.proximity-radius", labels.proximity_radius.as_str(), runtime.proximity_radius, 0.1, "setProximityRadius", window_id),
+            stepper_field("puzzle3d-play-settings.chunk-size", labels.chunk_size.as_str(), runtime.chunk_size, 1.0, "setChunkSize", window_id),
+            stepper_field("puzzle3d-play-settings.grid-spacing", labels.spacing.as_str(), runtime.grid_spacing, 0.5, "setGridSpacing", window_id),
         ])?)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings children admission failed"))?
         .try_build()

@@ -329,6 +329,9 @@ export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameter
 export const FRAMEWORK_PANEL_TAB_HISTORY_ID = "framework.panel.history";
 export const FRAMEWORK_PANEL_TAB_HISTORY_LABEL = "History";
 export const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID = "framework.panel.history";
+/** 🕰️ Mirrors Rust `FRAMEWORK_HISTORY_BODY_KEY` — the reserved panel body every renderer fetches for the
+ * command-history list, and the one surface a completion's history patch dirties on its own. */
+export const FRAMEWORK_HISTORY_BODY_KEY = "framework.body.history";
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
 
@@ -800,6 +803,11 @@ export type PluginViewState = {
   readonly terminology?: string;
   /** 🪟️ The window instance a render/action call targets — programs key per-window option state off this, never off `activeWindowKindId`. */
   readonly windowId?: string;
+  /** 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane, sent on every
+   * call and deliberately surviving {@link panelViewContext}. It is never the render target
+   * (`windowId` is); it is what lets an app-level panel that authors per-window settings address the
+   * pane the user last touched instead of the roster's first entry. */
+  readonly focusedWindowId?: string;
   /** 🪟️ The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
   readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
 };
@@ -874,7 +882,7 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
     return input;
   };
   const row = object(value);
-  const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId"];
+  const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = ["panelJson", "contributionsJson"];
   const allowed = new Set([...short, ...long, "locale", "terminology", "activeUtilityByWindowId", "windowInstances"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
@@ -908,7 +916,10 @@ export function windowViewContext(view: PluginViewState, windowId: string): Plug
   return { ...view, windowId: window.id, activeWindowKindId: window.windowKindId, activeUtilityId: utility && Object.hasOwn(utility, windowId) ? utility[windowId] : undefined };
 }
 
-/** 📌️ Projects app-level panels without binding their controls to a window. */
+/** 📌️ Projects app-level panels without binding their controls to a window. `focusedWindowId`
+ * deliberately survives: the panel is not RENDERED FOR a window, but a panel that authors per-window
+ * settings still has to know which pane the user is looking at, or its controls silently retune the
+ * roster's first entry (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured exactly that). */
 export function panelViewContext(view: PluginViewState): PluginViewState {
   return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined };
 }

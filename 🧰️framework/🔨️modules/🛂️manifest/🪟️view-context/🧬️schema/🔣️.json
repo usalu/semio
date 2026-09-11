@@ -24,6 +24,9 @@
     "windowId": {
       "$ref": "#/$defs/Identifier"
     },
+    "focusedWindowId": {
+      "$ref": "#/$defs/Identifier"
+    },
     "panelJson": {
       "type": "string",
       "maxLength": 65536

@@ -30,7 +30,8 @@
     "mapRemovalIsTerminal": false,
     "allExactOwnersRetiredIsTerminal": true
   },
-  "nativeCases": {"sameIdReplacementRejected": true, "overflowPreservesLiveOwner": true, "quarantineRemovalPreservesTerminalWitness": true, "repeatCloseKeepsReplacement": true, "scopeAfterSurfaceClear": true},
+  "nativeCases": {"sameIdReplacementRejected": true, "overflowPreservesLiveOwner": true, "quarantineRemovalPreservesTerminalWitness": true,
+    "contendedWitnessStaysTerminal": true, "repeatCloseKeepsReplacement": true, "scopeAfterSurfaceClear": true},
   "leaseFailures": ["postMessage-throw", "worker-error"],
   "publishedClose": {"granularity":"owner-transition", "owners": ["metadata", "credit", "handback"], "remaining": [["credit", "handback"], ["handback"], [], []], "complete": [false, false, false, true]},
   "leaseReceipts": [

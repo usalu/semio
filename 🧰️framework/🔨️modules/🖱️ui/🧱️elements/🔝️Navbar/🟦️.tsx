@@ -9,7 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
+import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { NavbarTrailingFullscreenSlot } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
@@ -40,6 +40,13 @@ export interface NavbarProps {
 
 /**
  * Navbar holds the data fields for a Navbar record.
+ *
+ * 🪜️ The band stacks at the BASE level, never above it. A chrome-hosted {@link Panel} unfolds INTO this
+ * band (see `chromeHostedOpenPanelPositionStyle`: its cap lands exactly on the centered `h-medium`
+ * control row, in the slot `PanelChromeTabBar` empties while the panel is open), so a navbar painting
+ * above `z-panel` would cover that cap and every row under it. `🎨️ui.css` has always forced
+ * `z-index: var(--z-base) !important` here; this class said `z-navbar` and was simply never the truth —
+ * a contradiction that cost ticket 26/09/02 three waves of "the navbar covers the catalogue".
  **/
 function Navbar({ items, className, showFullscreenToggle = true, onFullscreenToggle }: NavbarProps) {
   const parent = useSurface();
@@ -65,7 +72,7 @@ function Navbar({ items, className, showFullscreenToggle = true, onFullscreenTog
     </>
   );
   return (
-    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

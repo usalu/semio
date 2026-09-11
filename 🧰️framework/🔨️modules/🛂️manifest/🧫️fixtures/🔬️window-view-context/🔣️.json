@@ -10,6 +10,7 @@
     "locale": "de",
     "terminology": "native",
     "windowId": "left",
+    "focusedWindowId": "right",
     "windowInstances": [
       {
         "id": "left",

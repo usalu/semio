@@ -41,6 +41,7 @@ semio_framework_plugin::app_labels! {
         placement_occupied: native_en "That connection point is already taken", native_de "Dieser Verbindungspunkt ist bereits belegt", reuse_en "That connection point is already taken", reuse_de "Dieser Verbindungspunkt ist bereits belegt";
         nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
         selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
+        target_volume_origin_required: native_en "Point at the ground plane to place a target volume", native_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren", reuse_en "Point at the ground plane to place a target volume", reuse_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren";
         import_invalid: native_en "That file is not a puzzle 3D document", native_de "Diese Datei ist kein Puzzle-3D-Dokument", reuse_en "That file is not a puzzle 3D document", reuse_de "Diese Datei ist kein Puzzle-3D-Dokument";
         export_fixture: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
         import_fixture: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";

@@ -4,8 +4,14 @@ use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx, Puzzle3dTargetVo
 use dsl::os_pack::json::Value;
 use std::sync::atomic::Ordering;
 
+/// 📦️ Places one grid-snapped target volume at `args.origin`, sized by the utility's own W/D/H voxel
+/// dimensions. A dispatch that carries no usable `origin` answers with a localized notice instead of
+/// returning silently — the Volume Brush's Alt+click was indistinguishable from a dead gesture
+/// otherwise (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 12).
 pub fn add_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let Some(origin) = args.and_then(|value| value.get("origin")).and_then(value_as_vec3) else {
+        ctx.notice(|labels| labels.target_volume_origin_required.as_str());
+        ctx.abort = true;
         return;
     };
     let grid_spacing = ctx.scene.runtime.grid_spacing.max(0.1);

@@ -20,7 +20,7 @@ use crate::editor::puzzle3d::{
 };
 use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
-    WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
+    WindowEngagementInput, WindowEngagementOption, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
@@ -120,6 +120,84 @@ pub fn gumball_active(runtime: &Puzzle3dRuntime, active_utility: &str, interacti
 pub fn camera_json(runtime: &Puzzle3dRuntime) -> String {
     let camera = &runtime.camera;
     world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection)
+}
+
+/// 📷️ How many bounding-box spans the opening pose sits back from the document's centre — the guest
+/// twin of `World3dHost`'s own `autofitCameraFromInstances` seed (`span * 2.5`) narrowed by
+/// `world3dFrameCameraFromInstances`'s `padding / 2.5` (1.35 / 2.5), i.e. `2.5 * 0.54`.
+const PUZZLE3D_FRAMING_SPANS: f64 = 1.35;
+/// 📷️ Floor for the opening orbit radius, so a single-object or empty document still opens on a pose
+/// the user can orbit rather than one sitting inside the geometry — mirrors the host's own `1.4`.
+const PUZZLE3D_FRAMING_MINIMUM_DISTANCE: f64 = 1.4;
+
+/// 📷️ Whether this pane's camera is still the all-zero `Puzzle3dCamera::default()` no gesture and no
+/// stored `WindowConfig` has ever replaced. Position == target is degenerate in any pose — a camera
+/// standing exactly on what it looks at has no view direction at all — so it is the one reading that
+/// can never be a real user pose.
+pub fn camera_unset(camera: &crate::editor::puzzle3d::config::Puzzle3dCamera) -> bool {
+    camera.position == camera.target
+}
+
+/// 📷️ The axis-aligned centre and largest span of everything this document draws — objects,
+/// references and target volumes, since a fixture may legitimately carry no objects at all and still
+/// have something on screen to frame.
+fn framing_bounds(fixture: &Puzzle3dFixture) -> ([f64; 3], f64) {
+    let origins = fixture
+        .objects
+        .iter()
+        .map(|object| object.origin)
+        .chain(fixture.references.iter().map(|reference| reference.origin))
+        .chain(fixture.target_volumes.iter().map(|volume| volume.origin));
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    let mut seen = false;
+    for origin in origins {
+        seen = true;
+        for axis in 0..3 {
+            minimum[axis] = minimum[axis].min(origin[axis]);
+            maximum[axis] = maximum[axis].max(origin[axis]);
+        }
+    }
+    if !seen {
+        return ([0.0, 0.0, 0.0], 1.0);
+    }
+    let centre = [(minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5];
+    let span = (maximum[0] - minimum[0]).max(maximum[1] - minimum[1]).max(maximum[2] - minimum[2]).max(1.0);
+    (centre, span)
+}
+
+/// 📷️ The projection a pane opens under, from the display template its layout entry declares
+/// ([`TEMPLATE_TOP`] / [`TEMPLATE_PERSPECTIVE`], stitched in `🎭️modes/✏️edit/🦀️.rs`): the Top pane is
+/// an orthographic plan, every other instance keeps the three-point default.
+fn framing_projection(window_id: &str) -> semio_framework_plugin::WorldProjectionConfig {
+    let mut projection = semio_framework_plugin::WorldProjectionConfig::default();
+    if window_id == WINDOW_INSTANCE_TOP {
+        projection.kind = "orthographic".into();
+        projection.orthographic_view = "top".into();
+    }
+    projection
+}
+
+/// 📷️ The pose ONE pane opens on before any user gesture — framed on what the document actually
+/// holds, oriented by that pane's own display template. Without it `Puzzle3dCamera::default()` leaves
+/// every pane's published camera at all zeros until the first `setCamera` lands, so the world lane
+/// carries no view direction at boot and two panes of one document publish the SAME (zero) pose
+/// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B15; B12 §4.1 measured it live).
+pub fn framed_camera(window_id: &str, fixture: &Puzzle3dFixture) -> crate::editor::puzzle3d::config::Puzzle3dCamera {
+    let (target, span) = framing_bounds(fixture);
+    let projection = framing_projection(window_id);
+    let distance = (span * PUZZLE3D_FRAMING_SPANS).max(PUZZLE3D_FRAMING_MINIMUM_DISTANCE);
+    let (position, up) = semio_framework_plugin::world3d_projection_pose(&projection, target, distance);
+    crate::editor::puzzle3d::config::Puzzle3dCamera { position, target, zoom: 1.0, up: Some(up), projection }
+}
+
+/// 📷️ Gives a scene whose pane has never been framed its opening pose, and leaves a pane the user (or
+/// a stored `WindowConfig`) has already posed exactly as it is. Idempotent, so every call site on the
+/// render/measure/dispatch paths may run it unconditionally.
+pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
+    if camera_unset(&scene.runtime.camera) {
+        scene.runtime.camera = framed_camera(window_id, &scene.fixture);
+    }
 }
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
@@ -351,7 +429,7 @@ pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
 /// a picker the user reads at a glance shows a bounded page, and `cycleBrushCandidate` walks the rest.
 pub const PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE: usize = 8;
 
-pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, interaction: &Puzzle3dInteractionSnapshot) -> String {
+pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, interaction: &Puzzle3dInteractionSnapshot, brush_preview: Option<&str>) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
         let (pending, candidates) = if !menu.vortex_full_id.is_empty() {
@@ -422,6 +500,9 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     // `selectionJson`, so it is projected from the live `vortex`-domain hover here.
     if let (Some(object), Some(hovered)) = (value.as_object_mut(), interaction.hovered_vortex_full_id(&envelope.fixture)) {
         object.insert("hoveredVortexFullId".into(), json!(hovered));
+    }
+    if let (Some(object), Some(preview)) = (value.as_object_mut(), brush_preview.filter(|payload| !payload.is_empty())) {
+        object.insert("brushPreviewJson".into(), json!(preview));
     }
     value.to_string()
 }
@@ -575,8 +656,8 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
     scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
     scene.references_json = Some(world_references_json(&envelope.fixture));
-    scene.brush_preview_json = brush_preview;
-    scene.interaction_json = Some(world_interaction_json(envelope, precompute, interaction));
+    scene.interaction_json = Some(world_interaction_json(envelope, precompute, interaction, brush_preview.as_deref()));
+    scene.brush_preview_json = Some(brush_preview.unwrap_or_default());
     scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
@@ -595,16 +676,25 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework
 /// utility bar (declared via `.utility` + `.window_kind_utilities`); the fill-count slider, voxel
 /// steppers and brush placement picker are tagged [`WindowMeasure::Group`]s surfaced in the dedicated
-/// "Utility Options" rail, so what is left here is a bare command input plus a status line.
+/// "Utility Options" rail. The remaining chrome is the Add Object dialog opener, a command input, and a status line.
 pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowEngagement {
     let object_count = envelope.fixture.objects.len();
     let attraction_count = envelope.fixture.attractions.len();
     let active_utility = envelope.active_utility.as_str();
     let objects_label = labels.objects.as_str();
     let attractions_label = labels.attractions.as_str();
+    let object_word = labels.object.as_str();
+    let add_object_label = if object_word.eq_ignore_ascii_case("objekt") { format!("{object_word} hinzufügen…") } else { format!("Add {object_word}…") };
     WindowEngagement {
         session_active: Some(engagement_session_active(active_utility)),
-        options: None,
+        options: Some(vec![WindowEngagementOption {
+            id: "shell-menu.action.openAddObjectDialog".into(),
+            label: Some(add_object_label),
+            icon_id: Some("plus".into()),
+            pressed: None,
+            disabled: None,
+            action: Some(puzzle3d_action("openAddObjectDialog", None)),
+        }]),
         input: Some(WindowEngagementInput {
             id: Some("puzzle3d-engagement".into()),
             value: Some(envelope.runtime.engagement_input.clone()),

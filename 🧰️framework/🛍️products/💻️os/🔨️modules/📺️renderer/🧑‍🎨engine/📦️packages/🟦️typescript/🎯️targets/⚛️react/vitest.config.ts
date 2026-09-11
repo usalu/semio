@@ -17,6 +17,7 @@ const engineTestSuites = [
   engineSuite("🎮️browser-interactive-job-port"),
   engineSuite("🏛️space-administration", "tsx"),
   engineSuite("👥️scoped-presence", "tsx"),
+  engineSuite("🎚️window-measure-controls", "tsx"),
   engineSuite("📇️directory-home-bootstrap", "tsx"),
   engineSuite("📇️session-authority-notice", "tsx"),
   engineSuite("📡️actor-backbone"),

@@ -95,9 +95,10 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     assert!(contexts.get("7:left").is_none());
     for section in UiRefreshSection::ALL {
         assert!(contexts.get(&format!("7:{}", section.body_key())).is_some());
+        assert!(contexts.is_section(&format!("7:{}", section.body_key())));
         contexts.remove(&format!("7:{}", section.body_key()));
+        assert!(!contexts.is_section(&format!("7:{}", section.body_key())));
     }
-    assert!(contexts.section_view.is_none());
     contexts.remove("7:panel");
     assert_eq!(contexts.len(), 0);
     eprintln!("[DEBUG] reserved section surfaces retained the unnarrowed host view across sibling mounts and window closure");

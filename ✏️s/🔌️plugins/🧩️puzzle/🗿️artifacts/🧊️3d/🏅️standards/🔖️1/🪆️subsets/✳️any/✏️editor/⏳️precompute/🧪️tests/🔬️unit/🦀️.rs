@@ -1461,6 +1461,12 @@ fn a_gapped_or_mismatched_page_run_is_refused() {
 
 /// 🪪️ Wave W-M2: a mesh this process already paged is adopted by `(url, digest)` alone — the wire never
 /// carries the buffers twice — and a stale digest never adopts foreign bytes.
+///
+/// 🪢️ Wave B22 widens the second half: the transfer is CONTENT-addressed, so a mesh id this process
+/// never paged still adopts when its announced DIGEST is resident under another id. Every
+/// `dist/mesh/*.glb` in this repo is the same capsule, and keying the transfer by id alone made the
+/// client page byte-identical geometry once per id — 72 commands each. Only the transfer is shared: the
+/// collision engine still holds the two ids as two identities.
 #[test]
 fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
     let (positions, indices) = unit_cube_mesh_buffers();
@@ -1475,8 +1481,52 @@ fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
     let mut foreign = Puzzle3dCollision::new();
     assert!(!foreign.adopt_shared_mesh(url, Some(&"0".repeat(64))), "a stale digest never adopts foreign bytes");
     assert!(!foreign.has_mesh(url), "a refused adoption installs nothing");
+    let mut aliased = Puzzle3dCollision::new();
+    let sibling = "/test/adopt-by-digest-sibling.glb";
+    assert!(aliased.adopt_shared_mesh(sibling, Some(&digest)), "a second id over resident geometry adopts it instead of paging the bytes again");
+    assert!(aliased.has_mesh(sibling), "the aliased id is its own live collision identity");
+    assert!(shared_brush_mesh(sibling).is_some(), "the alias is resident for every later session too");
+    let (unseen, unseen_indices) = seeded_cube_mesh_buffers(97.0);
     let mut unknown = Puzzle3dCollision::new();
-    assert!(!unknown.adopt_shared_mesh("/test/never-uploaded.glb", Some(&digest)), "an id this process never paged has nothing to adopt");
+    assert!(!unknown.adopt_shared_mesh("/test/never-uploaded.glb", Some(&brush_mesh_digest(&unseen, &unseen_indices))), "geometry this process never derived has nothing to adopt, by id or by digest");
+}
+
+/// 🪢️ Wave B22, the reason the digest index exists: a page run that opens on geometry the process
+/// already holds closes on its FIRST page, so a second mesh id costs one command instead of the whole
+/// run. Browser-measured before this: 202 `registerBrushMesh` commands for one example switch.
+#[test]
+fn a_run_over_resident_geometry_closes_on_its_first_page() {
+    let (positions, indices) = seeded_cube_mesh_buffers(41.0);
+    let digest = brush_mesh_digest(&positions, &indices);
+    let mut session = Puzzle3dPrecomputeSession::new();
+    assert_eq!(session.stage_mesh_page("/test/b22-first.glb", &digest, 0, 1, &positions, &indices), Ok(None), "the first id pages its one-page run");
+    let mut second = Puzzle3dPrecomputeSession::new();
+    let half = positions.len() / 2;
+    assert_eq!(
+        second.stage_mesh_page("/test/b22-second.glb", &digest, 0, 8, &positions[..half], &[]),
+        Ok(None),
+        "a second id announcing resident geometry closes on page 0 — the other seven pages are never needed"
+    );
+    assert!(second.has_mesh("/test/b22-second.glb"), "the short-circuited run still installs live collision geometry");
+    assert!(!staged_brush_mesh_uploads().iter().any(|(url, _, _, _)| url == "/test/b22-second.glb"), "a run that never opened holds no staging slot");
+}
+
+/// 🔁️ Wave B22: a page the run already admitted is a retransmission, not a gap. Dropping the run on a
+/// duplicate made one retried page cost the client all 72 of them.
+#[test]
+fn a_retransmitted_page_is_acknowledged_without_dropping_the_run() {
+    let (positions, indices) = seeded_cube_mesh_buffers(53.0);
+    let digest = brush_mesh_digest(&positions, &indices);
+    let url = "/test/b22-retransmit.glb";
+    let half = positions.len() / 2;
+    assert!(matches!(stage_brush_mesh_page(url, &digest, 0, 3, &positions[..half], &[]), Ok(Puzzle3dMeshUploadStep::Staged { next_page: 1, page_count: 3 })));
+    assert!(matches!(stage_brush_mesh_page(url, &digest, 1, 3, &positions[half..], &[]), Ok(Puzzle3dMeshUploadStep::Staged { next_page: 2, page_count: 3 })));
+    assert!(
+        matches!(stage_brush_mesh_page(url, &digest, 1, 3, &positions[half..], &[]), Ok(Puzzle3dMeshUploadStep::Staged { next_page: 2, page_count: 3 })),
+        "a page already admitted is acknowledged at the cursor the run actually stands on"
+    );
+    assert!(matches!(stage_brush_mesh_page(url, &digest, 2, 3, &[], &indices), Ok(Puzzle3dMeshUploadStep::Complete(..))), "the run still closes on exactly the announced bytes after the retransmission");
+    assert_eq!(stage_brush_mesh_page(url, &digest, 2, 3, &[], &indices), Err(Puzzle3dMeshUploadFault::Gap), "a page for a run that is gone is still a gap");
 }
 
 /// 🚚️ Wave W-H: what a guest holds does not outlive the guest. A client whose own bookkeeping survived
@@ -1486,7 +1536,9 @@ fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
 /// retires the instant real geometry installs, so a steady state never carries a standing request.
 #[test]
 fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
-    let (positions, indices) = unit_cube_mesh_buffers();
+    // 🎲️ Geometry no other law derives: the store is content-addressed since B22, so the shared cube
+    // would be adoptable by digest and the refusal this law is about could never happen.
+    let (positions, indices) = seeded_cube_mesh_buffers(11.0);
     let digest = brush_mesh_digest(&positions, &indices);
     let url = "/test/reupload-requested.glb";
     let mut session = Puzzle3dPrecomputeSession::new();

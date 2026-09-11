@@ -64,13 +64,15 @@
   "inspectionRefresh": [
     {
       "selectedIds": [],
-      "kind": null
+      "kind": null,
+      "omitHash": false
     },
     {
       "selectedIds": [
         "seed-left-001"
       ],
-      "kind": "full"
+      "kind": "full",
+      "omitHash": true
     }
   ]
 }

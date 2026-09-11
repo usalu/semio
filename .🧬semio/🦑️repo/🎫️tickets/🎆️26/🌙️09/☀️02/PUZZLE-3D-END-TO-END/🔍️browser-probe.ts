@@ -14,7 +14,10 @@
  * Single-section flags (`--brush`, `--camera`, …) are listed in `STEP_FLAGS` below.
  *
  * Outputs: `probe-<stamp>.md` (prose timeline) and `probe-<stamp>.ndjson` (one JSON record per verdict
- * plus a final `battery PASS=n FAIL=n FAULTS=n` summary record). */
+ * plus a final `battery PASS=n FAIL=n FAULTS=n first-hard-fault-at=<s> guest-death-faults=n` summary
+ * record). Every group closes with a `guest-alive-<group>` verdict read off `data-plugin-recovery` and the
+ * world surfaces' `data-instances-json`, so a battery that measured a corpse says so at the group boundary
+ * rather than as a run of unexplained late FAILs. */
 import { chromium } from "playwright";
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -49,23 +52,37 @@ const t0 = Date.now();
 
 const consoleBuf: string[] = [];
 const faults: string[] = [];
+/** ☠️ The guest-death family B13 decoded out of `shard 0 worker fault [handler/turn] actor=puzzle#1`
+ * (`📓️2026-09-11-wave-B13-export-history-locale.md` §5): the reactor-close trap itself, the
+ * `registerBrushMesh` retry storm that precedes it, and the `Agent disconnected` banner the shell prints
+ * once the handle is gone. Every one of these means the actor behind the world surfaces is dead, so every
+ * later step measures a corpse — they are HARD, never collateral, wherever they appear in the console. */
+const GUEST_DEATH_RE = /reactor-close-authority|native close terminal unavailable|actor-activation\.revoked|Agent disconnected/i;
 const FAULT_RE =
-  /intake-budget-exhausted|fixed-capacity|section-root-mismatch|native-owner-required|terminal-fault|unreachable|shard .* (lost|terminated)|did not publish|missing field|malformed|admission failed|worker fault|\[semio-plugin panic\]|Credits \{|NodeCapacity|SemioFaultError/i;
+  /intake-budget-exhausted|fixed-capacity|section-root-mismatch|native-owner-required|terminal-fault|unreachable|shard .* (lost|terminated)|did not publish|missing field|malformed|admission failed|worker fault|\[semio-plugin panic\]|Credits \{|NodeCapacity|SemioFaultError|reactor-close-authority|native close terminal unavailable|actor-activation\.revoked|Agent disconnected/i;
 /** 💥️ The subset of {@link FAULT_RE} that means the runtime itself broke — a guest trap, a dead worker, a
  * plugin panic or a typed fault envelope. Everything else FAULT_RE matches (capacity notices, "did not
  * publish", "malformed", a repeat of an earlier storm) is COLLATERAL: real, worth counting, but never
  * independent evidence that the step under test failed. */
-const HARD_FAULT_RE = /worker fault|\bunreachable\b|\[semio-plugin panic\]|panicked at|SemioFaultError|terminal-fault|admission failed|shard .* (lost|terminated)|native-owner-required/i;
+const HARD_FAULT_RE =
+  /worker fault|\bunreachable\b|\[semio-plugin panic\]|panicked at|SemioFaultError|terminal-fault|admission failed|shard .* (lost|terminated)|native-owner-required|reactor-close-authority|native close terminal unavailable|actor-activation\.revoked|Agent disconnected/i;
 const hardFaults: string[] = [];
 const collateralFaults: string[] = [];
+const guestDeathFaults: string[] = [];
 const faultKeys = new Set<string>();
+/** ⏱️ Seconds into the run at which the FIRST hard fault landed, `null` while none has. The summary prints
+ * it so "the battery measured a dead guest from step three onward" is visible without reading the log. */
+let firstHardFaultAt: number | null = null;
 /** 💥️ Records one console line that matched {@link FAULT_RE}, classified and deduplicated by its first 60
  * characters so "one fault repeated 200×" stays distinguishable from "200 distinct faults". */
 const noteFault = (text: string) => {
   if (faults.length < 200) faults.push(text);
   faultKeys.add(text.slice(0, 60));
-  const bucket = HARD_FAULT_RE.test(text) ? hardFaults : collateralFaults;
+  const hard = HARD_FAULT_RE.test(text);
+  const bucket = hard ? hardFaults : collateralFaults;
   if (bucket.length < 200) bucket.push(text);
+  if (hard && firstHardFaultAt === null) firstHardFaultAt = Number(((Date.now() - t0) / 1000).toFixed(1));
+  if (GUEST_DEATH_RE.test(text) && guestDeathFaults.length < 200) guestDeathFaults.push(text);
 };
 /** 🩹️ Transient shell banners that appear under load and say nothing about the feature under test — the
  * probe used to filter these only inside `locked-refusal`; every notice consumer now shares this. */
@@ -84,11 +101,49 @@ page.on("console", (msg) => {
 });
 page.on("pageerror", (err) => noteFault(`pageerror: ${String(err).slice(0, 400)}`));
 
-log("navigating");
-await page.goto(`http://127.0.0.1:${port}/?plugin=puzzle3d`, { waitUntil: "domcontentloaded", timeout: 60000 });
+/** 🌊️ The Playwright errors a `page.evaluate` raises when the page navigated out from under it —
+ * `--reload-between-groups` crashed battery #46b on exactly this, because the reload and the next
+ * `snapshot()` raced at "reloading page before group mutate". */
+const NAVIGATION_RACE_RE = /Execution context was destroyed|Most likely the page has been closed|frame was detached|Cannot find context with specified id|navigation/i;
+/** 🧭️ Runs one `page.evaluate` through a navigation-safe retry: on a navigation race it waits for the new
+ * document's `domcontentloaded` and evaluates once more, and only then falls back. Every boot, snapshot and
+ * poll helper reads the page through this, so a reload can never take the run down with it. */
+const evalSafe = async <T>(body: () => T, fallback: T): Promise<T> => {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await page.evaluate(body);
+    } catch (error) {
+      if (!NAVIGATION_RACE_RE.test(String(error))) throw error;
+      log(`evaluate raced a navigation (attempt ${attempt + 1}) — awaiting domcontentloaded`);
+      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForTimeout(750);
+    }
+  }
+  return fallback;
+};
+/** 🔢️ Navigation-safe `locator.count()` — a reload mid-poll rejects the same way `page.evaluate` does. */
+const countSafe = async (locator: ReturnType<typeof page.locator>): Promise<number> => {
+  try {
+    return await locator.count();
+  } catch (error) {
+    if (!NAVIGATION_RACE_RE.test(String(error))) throw error;
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    return 0;
+  }
+};
+/** 🔁️ The one navigation this probe performs: a cold load of the puzzle3d serve, awaited to
+ * `domcontentloaded` on BOTH the goto and the settled load state before any evaluate runs against it. */
+const gotoShell = async (label: string) => {
+  await page.goto(`http://127.0.0.1:${port}/?plugin=puzzle3d`, { waitUntil: "domcontentloaded", timeout: 60000 }).catch((error) => log(`${label} goto: ${String(error).slice(0, 160)}`));
+  await page.waitForLoadState("domcontentloaded").catch(() => {});
+};
 
+log("navigating");
+await gotoShell("boot");
+
+const EMPTY_SNAPSHOT = { windows: [] as { id: string; w: number; h: number }[], canvases: 0, tabs: [] as (string | null)[], toggles: [] as string[], treeItems: 0, dialogs: [] as string[], body: "" };
 const snapshot = async () =>
-  page.evaluate(() => {
+  evalSafe(() => {
     const q = (sel: string) => Array.from(document.querySelectorAll(sel));
     return {
       windows: q('[data-slot="window"]').map((w) => ({
@@ -103,7 +158,7 @@ const snapshot = async () =>
       dialogs: q('[role="dialog"]').map((d) => (d as HTMLElement).innerText.slice(0, 80)),
       body: document.body ? document.body.innerText.slice(0, 500) : "",
     };
-  });
+  }, EMPTY_SNAPSHOT);
 
 /** 🚀️ Polls until two windows with two canvases exist, dismissing the intro dialog and the welcome tour on
  * the way. Reused verbatim by `--reload-between-groups` so a regrouped run boots exactly like a cold one. */
@@ -114,7 +169,7 @@ const waitForBoot = async (label: string, polls = 60) => {
     const s = await snapshot();
     if (s.dialogs.length && i % 3 === 0) {
       const skip = page.locator('[role="dialog"] button', { hasText: /skip/i }).first();
-      if (await skip.count()) {
+      if (await countSafe(skip)) {
         await skip.click({ timeout: 2000 }).catch(() => {});
         log(`${label} skipped intro dialog`);
       }
@@ -128,7 +183,7 @@ const waitForBoot = async (label: string, polls = 60) => {
   }
   if (ready) {
     const skip = page.locator("button", { hasText: /^\s*(x\s*)?skip\s*$/i }).first();
-    if (await skip.count()) {
+    if (await countSafe(skip)) {
       await skip.click({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(1500);
       log(`${label} dismissed welcome tour`);
@@ -136,6 +191,34 @@ const waitForBoot = async (label: string, polls = 60) => {
   }
   return ready;
 };
+
+/** 🫀️ The cheapest DOM proof that the guest actor behind the world surfaces is still alive, read straight
+ * off the two attributes the host already publishes: `ChromePanels`' `data-plugin-recovery` (the
+ * "This program crashed." card the shell swaps a dead program's body for) and `World3dHost`'s
+ * `data-instances-json` / `data-status-json` (`🌐️World3dHost/🟦️.tsx` — the scene payload stops arriving the
+ * moment the actor traps). No round trip to the guest, so it costs nothing when the guest is already gone. */
+const guestVitals = async () =>
+  evalSafe(
+    () => {
+      const q = (sel: string) => Array.from(document.querySelectorAll(sel));
+      return {
+        recovery: q("[data-plugin-recovery]").map((el) => el.getAttribute("data-plugin-recovery") ?? "?"),
+        surfaces: q("[data-instances-json]").map((el) => ({
+          surface: el.getAttribute("data-surface-id") ?? "?",
+          instances: (() => {
+            try {
+              return (JSON.parse(el.getAttribute("data-instances-json") || "[]") as unknown[]).length;
+            } catch {
+              return -1;
+            }
+          })(),
+          status: (el.getAttribute("data-status-json") || "").slice(0, 80),
+        })),
+        canvases: q("canvas").length,
+      };
+    },
+    { recovery: ["evaluate-unavailable"], surfaces: [] as { surface: string; instances: number; status: string }[], canvases: 0 },
+  );
 
 const booted = await waitForBoot("boot");
 await page.screenshot({ path: join(OUT, `probe-${stamp}-boot.png`) }).catch(() => {});
@@ -153,10 +236,16 @@ if (booted && interact) {
     }
     await page.screenshot({ path: join(OUT, `probe-${stamp}-${name}.png`) }).catch(() => {});
   };
-  const family = process.argv.includes("--reserved-family") || battery;
+  // 🧬️ The reserved-verb family — `--only=` counts as asking for it. `family`/`wantUndo` used to read
+  // argv ALONE, so `--only=example-switch,history-open,undo-unwind,undo-redo` registered the undo steps
+  // (`--only` overrides every gate) while leaving `wantUndo` FALSE: `example-switch` then picked
+  // `options.nth(1)` instead of Nakagin, emitted no `example-switch` verdict, `undo-unwind` passed
+  // vacuously against the document it never left, and `undo-redo` demanded a Nakagin that was never
+  // loaded. A lane and its flag must select the same behaviour or a lane's greens mean nothing.
+  const family = process.argv.includes("--reserved-family") || battery || (only?.has("undo-unwind") ?? false) || (only?.has("undo-redo") ?? false) || (only?.has("undo-once") ?? false);
   const exampleArg = process.argv.find((a) => a.startsWith("--example="))?.slice(10);
   const wantUndo = process.argv.includes("--undo") || family;
-  const wantExample = !!exampleArg || wantUndo;
+  const wantExample = !!exampleArg || wantUndo || (only?.has("example-switch") ?? false);
   /** 🧱️ Blast-radius buckets, executed in this order: `read` touches no document state, `mutate` makes
    * reversible document edits, `replace` swaps the document itself (example switch, undo/redo, import). */
   type StepGroup = "read" | "mutate" | "replace";
@@ -191,6 +280,8 @@ if (booted && interact) {
       hardFaults: hardFaults.length,
       collateralFaults: collateralFaults.length,
       distinctFaults: faultKeys.size,
+      guestDeathFaults: guestDeathFaults.length,
+      firstHardFaultAt,
     });
     log(line);
   };
@@ -217,28 +308,38 @@ if (booted && interact) {
     await dismissChrome();
   });
   add("example-switch", "§5", "replace", wantExample || battery, async () => {
-    const sel = page.locator("select").first();
-    if (await sel.count()) await sel.selectOption({ index: 1 });
-    else {
-      const combo = page.locator('[role="combobox"]').first();
-      await combo.click({ timeout: 3000 });
+    // 🎨️ THE example picker, by its own id (`NavbarExampleSelect id="playground.navbar.fixture"`,
+    // `🏛️ShellHost/🟦️.tsx`) — never `select`/`[role="combobox"]` `.first()`. The history panel the
+    // `history-open` step opens right before this one carries its own command-filter select, and a bare
+    // `page.locator("select").first()` reached THAT: battery #48's lane changed the history filter,
+    // never dispatched `setActiveExample`, and still scored `undo-unwind` green on a document that had
+    // never moved.
+    const picker = page.locator('[id="playground.navbar.fixture"]');
+    const native = picker.locator("select").or(page.locator('select[id="playground.navbar.fixture"]')).first();
+    const wanted = exampleArg ? new RegExp(exampleArg, "i") : /nakagin/i;
+    if (await countSafe(native)) {
+      await native.selectOption({ label: (await native.locator("option").allTextContents()).find((label) => wanted.test(label)) ?? "" }).catch(() => {});
+    } else {
+      const combo = (await countSafe(picker)) ? picker.first() : page.locator('[role="combobox"]').first();
+      await combo.click({ timeout: 3000 }).catch(() => {});
+      await page.waitForTimeout(400);
       const options = page.locator('[role="option"]');
-      const target = exampleArg
-        ? options.filter({ hasText: new RegExp(exampleArg, "i") }).first()
-        : wantUndo
-          ? options.filter({ hasText: /nakagin/i }).first()
-          : options.nth(1);
-      await target.click({ timeout: 3000 });
+      log(`example options=${JSON.stringify(await options.allTextContents()).slice(0, 300)} pickerPresent=${await countSafe(picker)}`);
+      const target = options.filter({ hasText: wanted }).first();
+      await ((await countSafe(target)) ? target : options.nth(1)).click({ timeout: 3000 }).catch(() => {});
     }
     const settleArg = process.argv.find((a) => a.startsWith("--settle="))?.slice(9);
     await page.waitForTimeout(settleArg ? Number(settleArg) * 1000 : 20000);
     const readExample = async () =>
-      page.evaluate(() => ((document.querySelector('[role="combobox"]') as HTMLElement | null)?.innerText || "").replace(/\n/g, " ").slice(0, 80));
+      evalSafe(() => {
+        const picker = (document.getElementById("playground.navbar.fixture") ?? document.querySelector('[role="combobox"]')) as HTMLElement | null;
+        return (picker?.innerText || "").replace(/\n/g, " ").slice(0, 80);
+      }, "");
     let afterExample = await readExample();
     log(`example after switch: ${afterExample}`);
     if (wantUndo) verdict("example-switch", /nakagin/i.test(afterExample), `example=${afterExample}`);
     if (wantUndo && !/nakagin/i.test(afterExample)) {
-      const combo = page.locator('[role="combobox"]').first();
+      const combo = ((await countSafe(page.locator('[id="playground.navbar.fixture"]'))) ? page.locator('[id="playground.navbar.fixture"]') : page.locator('[role="combobox"]')).first();
       await combo.click({ timeout: 3000 }).catch(() => {});
       const nakagin = page.locator('[role="option"]').filter({ hasText: /nakagin/i }).first();
       if (await nakagin.count()) await nakagin.click({ timeout: 3000 }).catch(() => {});
@@ -364,7 +465,11 @@ if (booted && interact) {
   const chromeState = async () =>
     page.evaluate(() => {
       const q = (sel: string) => Array.from(document.querySelectorAll(sel));
-      const combo = document.querySelector('[role="combobox"]') as HTMLElement | null;
+      // 🎨️ THE example picker by its own id (`NavbarExampleSelect id="playground.navbar.fixture"`), with
+      // the first combobox only as a fallback: the history panel carries a command-filter combobox of
+      // its own, so whichever of the two the DOM ordered first decided what a verdict called "the
+      // example".
+      const combo = (document.getElementById("playground.navbar.fixture") ?? document.querySelector('[role="combobox"]')) as HTMLElement | null;
       const notices = q('[role="status"], [role="alert"], [data-slot="notice"], [data-slot="toast"]').map((n) => (n as HTMLElement).innerText.replace(/\n/g, " ").slice(0, 160)).slice(0, 12);
       const menus = q('[role="menu"], [data-slot="context-menu"], [data-slot="dropdown-menu"]').map((m) => (m as HTMLElement).innerText.replace(/\n/g, " | ").slice(0, 200));
       const fileish = q("button, [role='menuitem']")
@@ -653,18 +758,21 @@ if (booted && interact) {
       return { rawLen: raw.length, open: parsed?.open ?? false, vortex: parsed?.vortexFullId ?? null, candidates: parsed?.candidates?.length ?? 0, menus, items };
     });
   const dumpInstances = async () =>
-    page.evaluate(() => {
-      const host = document.querySelector("#puzzle3d-main-perspective");
-      const el = host?.querySelector("[data-instances-json]") as HTMLElement | null;
-      const raw = el?.getAttribute("data-instances-json") || "[]";
-      let parsed: Array<{ id?: string }> = [];
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = [];
-      }
-      return { count: parsed.length, ids: parsed.slice(0, 16).map((o) => o.id ?? "?") };
-    });
+    evalSafe(
+      () => {
+        const host = document.querySelector("#puzzle3d-main-perspective");
+        const el = host?.querySelector("[data-instances-json]") as HTMLElement | null;
+        const raw = el?.getAttribute("data-instances-json") || "[]";
+        let parsed: Array<{ id?: string }> = [];
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          parsed = [];
+        }
+        return { count: parsed.length, ids: parsed.slice(0, 16).map((o) => o.id ?? "?") };
+      },
+      { count: 0, ids: [] as string[] },
+    );
   const waitBrushVortices = async () => {
     let last = { count: 0, ids: [] as string[], rawLen: 0 };
     for (let i = 0; i < 16; i++) {
@@ -864,62 +972,48 @@ if (booted && interact) {
     }
     return onscreen;
   };
-  const activateWorkspaceMenuOrdinal = async (ordinal: string) => {
-    await dismissChrome();
-    const c = page.locator("canvas").last();
-    const box = await c.boundingBox();
-    if (!box) throw new Error("no canvas");
-    await page.mouse.click(box.x + 200, box.y + 160, { button: "right" });
-    await page.waitForTimeout(500);
-    log(`menu before ${ordinal}: ${JSON.stringify(await chromeState()).slice(0, 500)}`);
-    const menuAction = ordinal === "4" ? "exportFixture" : "openImportFixture";
-    const byAction = page.locator(`[data-menu-action="${menuAction}"]`).last();
-    const byId = page.locator(`[id="shell-menu.action.${menuAction}"]`).last();
-    const dump = await page.evaluate((action) => {
-      const nodes = Array.from(document.querySelectorAll(`[data-menu-action="${action}"], [id="shell-menu.action.${action}"]`));
-      return nodes.map((el) => {
-        const b = el as HTMLButtonElement;
-        const cs = getComputedStyle(b);
-        return { id: b.id, action: b.getAttribute("data-menu-action"), disabled: b.disabled, pe: cs.pointerEvents, display: cs.display, text: (b.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 40) };
-      });
-    }, menuAction);
-    log(`menu nodes ${menuAction}: ${JSON.stringify(dump)}`);
-    if (await byAction.count()) {
-      await byAction.click({ force: true, timeout: 4000 }).catch(() => {});
-      await page.evaluate((action) => {
-        const el = document.querySelector(`[data-menu-action="${action}"]`) as HTMLButtonElement | null;
-        el?.click();
-      }, menuAction);
-      log(`menu data-action click ${menuAction}`);
-    } else if (await byId.count()) {
-      await byId.click({ force: true, timeout: 4000 }).catch(() => {});
-      log(`menu id click ${menuAction}`);
-    } else {
-    const clicked = await page.evaluate((label) => {
-      const buttons = Array.from(document.querySelectorAll("[role='menu'] button, [role='menuitem']"));
-      const dump = buttons.map((b) => {
-        const el = b as HTMLButtonElement;
-        return {
-          text: (el.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 60),
-          id: el.id || "",
-          disabled: el.disabled || el.getAttribute("aria-disabled") === "true",
-          role: el.getAttribute("role"),
-        };
-      });
-      const row = buttons.find((b) => new RegExp(label, "i").test(b.textContent ?? ""));
-      if (!row) return `missing:${dump.map((d) => d.text).join("|").slice(0, 200)}`;
-      (row as HTMLButtonElement).click();
-      return `clicked:${(row.textContent ?? "").trim()} disabled=${(row as HTMLButtonElement).disabled}`;
-    }, ordinal === "4" ? "export" : "import");
-    log(`menu dom click ${clicked}`);
+  /** 🗂️ The Actions pane of one window instance: its root text, the file-category action rows it
+   * carries and whether the pane is folded. `export-only`'s old route (right-click the canvas, then
+   * `[data-menu-action]`) can never work — `World3dHost.onContextMenu` calls `preventDefault()`
+   * synchronously, which is exactly how an inner surface CLAIMS the right-click, so `ShellHost`'s
+   * fallback menu (the only thing that ever renders `shell-menu.action.exportFixture`) is suppressed
+   * by design, and the guest's own viewport menu carries no file verbs. */
+  const actionPaneState = async () =>
+    evalSafe(
+      () => {
+        const root = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
+        const rows = Array.from(document.querySelectorAll<HTMLElement>('[id^="action."]')).map((row) => `${row.id}|${row.innerText.replace(/\s+/g, " ").trim().slice(0, 28)}`);
+        return { rootPresent: Boolean(root), folded: root?.getAttribute("data-folded") ?? null, rootText: root?.innerText.replace(/\n/g, " | ").slice(0, 200) ?? null, rows: rows.slice(0, 24) };
+      },
+      { rootPresent: false, folded: null as string | null, rootText: null as string | null, rows: [] as string[] },
+    );
+  /** 📤️ Drives one window action through the route a USER has: unfold the window's Actions pane
+   * (`framework.window.<window>.engagement.toggle`), then press the action's own row (`action.<id>`,
+   * `windowActionPaneSections` in `🛠️ShellHelpers/🟦️.tsx`). `exportFixture` and `openImportFixture` are
+   * both `ActionKind::Shell` with no declared args, so their row EXECUTES on one press — no staged
+   * form, no confirmation. Never folds an already-open pane: the toggle is pressed only while the row
+   * is absent, which is what the old fallback got wrong (it clicked the last button whose text was
+   * exactly "actions" and closed the pane it needed). */
+  const activateWindowFileAction = async (actionId: "exportFixture" | "openImportFixture") => {
+    await page.keyboard.press("Escape").catch(() => {});
+    const row = page.locator(`[id="action.${actionId}"]`);
+    const toggle = page.locator('[id="framework.window.puzzle3dMainPerspective.engagement.toggle"]').first();
+    if ((await countSafe(row)) === 0 && (await countSafe(toggle)) > 0) {
+      await toggle.click({ force: true, timeout: 4000 }).catch(() => {});
+      for (let attempt = 0; attempt < 10 && (await countSafe(row)) === 0; attempt++) await page.waitForTimeout(600);
     }
-    await page.waitForTimeout(400);
+    log(`action-pane ${actionId} rows=${await countSafe(row)} pane=${JSON.stringify(await actionPaneState()).slice(0, 700)}`);
+    await row.first().click({ force: true, timeout: 6000 }).catch((error) => log(`action-pane ${actionId} click failed ${String(error).slice(0, 120)}`));
   };
 
   const historyState = async () =>
     page.evaluate(() => {
       const q = (sel: string) => Array.from(document.querySelectorAll(sel));
-      const combo = document.querySelector('[role="combobox"]') as HTMLElement | null;
+      // 🎨️ THE example picker by its own id (`NavbarExampleSelect id="playground.navbar.fixture"`), with
+      // the first combobox only as a fallback: the history panel carries a command-filter combobox of
+      // its own, so whichever of the two the DOM ordered first decided what a verdict called "the
+      // example".
+      const combo = (document.getElementById("playground.navbar.fixture") ?? document.querySelector('[role="combobox"]')) as HTMLElement | null;
       const entries = q('[id^="framework.history.entry."]').map((r) => `${r.id}=${(r as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 80)}`);
       const sections = q('[id^="framework.history."]').map((r) => `${r.id}=${(r as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 60)}`).slice(0, 40);
       const tree = q('[data-slot="tree-item"], [role="treeitem"]').map((r) => `${r.id || "?"}=${(r as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 80)}`).slice(0, 40);
@@ -1360,50 +1454,32 @@ if (booted && interact) {
       log(`importexport chrome: ${JSON.stringify(await chromeState()).slice(0, 1000)}`);
       const censusBefore = await selectionState();
       log(`census before: ${JSON.stringify(censusBefore).slice(0, 600)}`);
-      let dest = join(OUT, `probe-${stamp}-export.json`);
-      let [download] = await Promise.all([
-        page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
-        activateWorkspaceMenuOrdinal("4"),
+      const dest = join(OUT, `probe-${stamp}-export.json`);
+      // 🏷️ The example the navbar picker currently names, as the export FILENAME it should produce —
+      // the example ids are exactly their labels lowercased and dash-joined
+      // (`PUZZLE3D_EXAMPLE_CONCRETE_FOREST = "concrete-forest"`,
+      // `PUZZLE3D_EXAMPLE_NAKAGIN = "nakagin-capsule-tower"`), so this stays a pure read of the chrome.
+      const activeExample = String((await chromeState()).example ?? "").replace(/\s+/g, " ").trim();
+      const expectedExportName = `${activeExample.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.json`;
+      const [download] = await Promise.all([
+        page.waitForEvent("download", { timeout: 20000 }).catch(() => null),
+        activateWindowFileAction("exportFixture"),
       ]);
-      log(`export download=${download ? download.suggestedFilename() : "none"}`);
-      if (!download) {
-        const actionsChip = page.locator('[id="framework.window.puzzle3dMainPerspective.actionPane.unfold"], button').filter({ hasText: /^actions$/i }).last();
-        if (await actionsChip.count()) await actionsChip.click({ timeout: 3000 }).catch(() => {});
-        await page.waitForTimeout(500);
-        const exportAction = page.locator('[id*="exportFixture"], button').filter({ hasText: /^export$/i }).first();
-        log(`action-pane export=${await page.locator('[id*="exportFixture"]').count()} textBtn=${await page.locator("button").filter({ hasText: /^export$/i }).count()}`);
-        const [paneDownload] = await Promise.all([
-          page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-          exportAction.click({ timeout: 4000 }).catch(() => {}),
-        ]);
-        if (paneDownload) {
-          download = paneDownload;
-          log(`export pane download=${paneDownload.suggestedFilename()}`);
-        }
-      }
+      log(`export download=${download ? download.suggestedFilename() : "none"} example=${activeExample} expected=${expectedExportName}`);
       if (download) {
         await download.saveAs(dest);
         log(`export saved ${dest}`);
-      } else {
-        const row = page.locator("[role='menu'] button, [role='menuitem']").filter({ hasText: /export/i }).first();
-        if (await row.count()) {
-          const [retry] = await Promise.all([
-            page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-            row.click({ timeout: 4000 }).catch(() => {}),
-          ]);
-          log(`export click retry=${retry ? retry.suggestedFilename() : "none"}`);
-          if (retry) {
-            await retry.saveAs(dest);
-            log(`export saved ${dest}`);
-          }
-        }
       }
       verdict("export-only", Boolean(download), `download=${download ? download.suggestedFilename() : "none"} dest=${dest}`);
+      verdict(
+        "export-names-the-example",
+        Boolean(download) && download?.suggestedFilename() === expectedExportName,
+        `download=${download ? download.suggestedFilename() : "none"} expected=${expectedExportName} — exporting Concrete Forest and Nakagin must not both land as one constant name`,
+      );
       await page.waitForTimeout(600);
-      await dismissChrome();
       let [chooser] = await Promise.all([
         page.waitForEvent("filechooser", { timeout: 25000 }).catch(() => null),
-        activateWorkspaceMenuOrdinal("5"),
+        activateWindowFileAction("openImportFixture"),
       ]);
       const fileOpenFx = consoleBuf.filter((l) => /requestFileOpen|RequestFileOpen|openImportFixture|importFixture|unmapped effect|request-file-open|import-picker/.test(l)).slice(-24);
       log(`import chooser=${chooser ? "yes" : "none"} fileOpenFx=${JSON.stringify(fileOpenFx).slice(0, 1200)}`);
@@ -1426,18 +1502,7 @@ if (booted && interact) {
         await chooser.setFiles(feed);
         log("import setFiles fixture");
       } else {
-        const row = page.locator("[role='menuitem'], button").filter({ hasText: /import/i }).first();
-        if (await row.count()) await row.click({ timeout: 4000 }).catch(() => {});
-        const execute = page.locator("button").filter({ hasText: /^execute$/i }).first();
-        if (await execute.count()) {
-          const payload = page.locator("textarea, [role='textbox']").first();
-          if (await payload.count()) {
-            const fs = await import("node:fs");
-            if (fs.existsSync(dest)) await payload.fill(fs.readFileSync(dest, "utf8").slice(0, 200000));
-          }
-          await execute.click({ timeout: 4000 }).catch(() => {});
-          log("import staged execute");
-        }
+        log("import missed the file chooser — `openImportFixture` never reached `requestFileOpen`");
       }
       await page.waitForTimeout(2000);
       await openHistory();
@@ -1460,10 +1525,17 @@ if (booted && interact) {
         const objects = Array.isArray(src.objects) ? src.objects : [];
         if (objects[0]) {
           const clone = JSON.parse(JSON.stringify(objects[0])) as Record<string, unknown>;
-          clone.id = `probe-distinct-${stamp}`;
+          const cloneId = `probe-distinct-${stamp}`;
+          clone.id = cloneId;
           clone.label = `Distinct ${String(clone.label ?? "import")}`;
           const origin = Array.isArray(clone.origin) ? clone.origin.map((n, i) => (i === 0 ? Number(n) + 4 : n)) : [4, 0, 0];
           clone.origin = origin;
+          // 🌀️ Re-key the clone's vortices onto its OWN id. A clone that keeps `seed-left-001:v0…` carries
+          // vortex ids the document already holds, which is not a second object the app can attract
+          // against — a "distinct" payload has to be distinct all the way down, not only at the object id.
+          if (Array.isArray(clone.vortices)) {
+            clone.vortices = (clone.vortices as Record<string, unknown>[]).map((vortex, index) => ({ ...vortex, id: `${cloneId}:v${index}` }));
+          }
           src.objects = [...objects, clone];
         } else {
           src.meta = { ...(src.meta ?? {}), probeDistinct: stamp };
@@ -1473,11 +1545,11 @@ if (booted && interact) {
         log(`distinct fixture objects=${(src.objects ?? []).length} dest=${distinct}`);
       }
       const instancesBeforeDistinct = await dumpInstances();
+      const historyBeforeDistinct = (await historyState()).entryCount;
       if (distinctReady) {
-        await dismissChrome();
         let [chooser2] = await Promise.all([
           page.waitForEvent("filechooser", { timeout: 25000 }).catch(() => null),
-          activateWorkspaceMenuOrdinal("5"),
+          activateWindowFileAction("openImportFixture"),
         ]);
         if (!chooser2) {
           const [late2] = await Promise.all([
@@ -1491,26 +1563,30 @@ if (booted && interact) {
           await chooser2.setFiles(distinct);
           log("distinct setFiles");
         } else {
-          const row = page.locator("[role='menuitem'], button").filter({ hasText: /import/i }).first();
-          if (await row.count()) await row.click({ timeout: 4000 }).catch(() => {});
-          const execute = page.locator("button").filter({ hasText: /^execute$/i }).first();
-          if (await execute.count()) {
-            const payload = page.locator("textarea, [role='textbox']").first();
-            if (await payload.count()) await payload.fill(fs.readFileSync(distinct, "utf8").slice(0, 200000));
-            await execute.click({ timeout: 4000 }).catch(() => {});
-            log("distinct staged execute");
-          } else {
-            log("distinct import path missed chooser and execute");
-          }
+          log("distinct import missed the file chooser — `openImportFixture` never reached `requestFileOpen`");
         }
-        await page.waitForTimeout(2000);
+        // 🕰️ POLLED: the ingress, the guest fold and the world republication are three round trips, so a
+        // single fixed sample cannot tell "the fold was an identity no-op" from "it had not landed yet".
+        for (let attempt = 0; attempt < 10 && (await dumpInstances()).count === instancesBeforeDistinct.count; attempt++) await page.waitForTimeout(1000);
         await openHistory();
       }
-      log(`distinct ingress hops=${JSON.stringify(consoleBuf.filter((l) => /\[DEBUG\] importFixture ingress/.test(l)).slice(-8)).slice(0, 1600)}`);
+      const distinctIngress = consoleBuf.filter((l) => /\[DEBUG\] puzzle3d\.import\./.test(l)).slice(-8);
+      log(`distinct ingress hops=${JSON.stringify(distinctIngress).slice(0, 1600)}`);
       {
         const afterDistinct = await dumpInstances();
         log(`distinct instances before=${JSON.stringify(instancesBeforeDistinct)} after=${JSON.stringify(afterDistinct)}`);
-        verdict("import-distinct", afterDistinct.count !== instancesBeforeDistinct.count || JSON.stringify(afterDistinct.ids) !== JSON.stringify(instancesBeforeDistinct.ids), `before=${instancesBeforeDistinct.count} after=${afterDistinct.count}`, 41);
+        verdict(
+          "import-distinct",
+          afterDistinct.count !== instancesBeforeDistinct.count || JSON.stringify(afterDistinct.ids) !== JSON.stringify(instancesBeforeDistinct.ids),
+          `before=${instancesBeforeDistinct.count} after=${afterDistinct.count} guestTaps=${JSON.stringify(distinctIngress).slice(0, 500)}`,
+          41,
+        );
+        const historyAfterDistinct = await historyState();
+        verdict(
+          "import-distinct-records-history",
+          historyAfterDistinct.entryCount > historyBeforeDistinct,
+          `before=${historyBeforeDistinct} after=${historyAfterDistinct.entryCount} entries=${JSON.stringify(historyAfterDistinct.entries.slice(-4)).slice(0, 400)} — a distinct exported file must record one undoable row`,
+        );
       }
       log(`distinct history after=${JSON.stringify(await historyState()).slice(0, 1200)}`);
       log(`distinct hop-census=${JSON.stringify(hopCensus())}`);
@@ -1548,15 +1624,82 @@ if (booted && interact) {
       ["puzzle3d-main-top", "puzzle3d-main-perspective"],
     );
   const cameraOf = async (id: string) => (await windowHostState()).find((w) => w.id === id)?.camera ?? null;
+  /** 📷️ Waits for ONE pane's published pose to leave `previous`, instead of guessing a fixed settle time.
+   * A camera gesture is trailing-debounced host-side (`CAMERA_SYNC_DEBOUNCE_MS`) and only then makes the
+   * `setCamera` round trip, so the old fixed 1.2 s/1.6 s waits sampled a pose that had not moved yet and
+   * read a false negative (wave B12 §4.1). Returns the last reading either way, so a real "never moved"
+   * still fails. */
+  const cameraSettled = async (id: string, previous: string | null, budgetMs = 5000) => {
+    const deadline = Date.now() + budgetMs;
+    let latest = await cameraOf(id);
+    while (latest === previous && Date.now() < deadline) {
+      await page.waitForTimeout(250);
+      latest = await cameraOf(id);
+    }
+    log(`camera settle ${id} moved=${latest !== previous} waitedMs=${budgetMs - Math.max(0, deadline - Date.now())}`);
+    return latest;
+  };
+  /** 🛰️ Orbits the Perspective pane's camera AWAY from wherever it currently stands, and returns the
+   * settled pose. The precondition every focus/zoom assertion needs: `focusSelection` frames the
+   * selection (`Puzzle3dFocusSelectionWork`), and framing a document the camera is ALREADY framing
+   * publishes a bit-identical pose — which reads exactly like "the camera write was dropped". Waves
+   * B11/B20 measured both `focus-selection` and `context-menu-zoom-moves-camera` on a freshly-framed
+   * pane, so both scored a true no-op as a defect. Orbit is Alt + right-drag
+   * (`resolveWorldOrbitMouseButtonsIdle`, see `camera-gestures`). */
+  const orbitPerspectiveAway = async () => {
+    const canvas = page.locator('[id="puzzle3d-main-perspective"] canvas, [id="framework.window.puzzle3d-main-perspective"] canvas').first();
+    const box = (await countSafe(canvas)) ? await canvas.boundingBox() : await page.locator("canvas").last().boundingBox();
+    if (!box) return null;
+    const before = await cameraOf("puzzle3d-main-perspective");
+    const cx = box.x + box.width * 0.5;
+    const cy = box.y + box.height * 0.35;
+    await page.keyboard.down("Alt").catch(() => {});
+    await page.mouse.move(cx, cy);
+    await page.mouse.down({ button: "right" });
+    await page.mouse.move(cx + 180, cy + 90, { steps: 20 });
+    await page.mouse.up({ button: "right" });
+    await page.keyboard.up("Alt").catch(() => {});
+    const after = await cameraSettled("puzzle3d-main-perspective", before);
+    await page.keyboard.press("Escape").catch(() => {});
+    log(`orbit-away moved=${after !== before} before=${String(before).slice(0, 100)} after=${String(after).slice(0, 100)}`);
+    return after;
+  };
+  /** 📷️ Whether a published pose is a real one — `Puzzle3dCamera::default()` is all zeros, i.e. a camera
+   * standing exactly where it looks, which is no view direction at all. */
+  const cameraIsPosed = (raw: string | null) => {
+    if (!raw) return false;
+    try {
+      const camera = JSON.parse(raw) as { position?: number[]; target?: number[] };
+      const position = camera.position ?? [];
+      const target = camera.target ?? [];
+      return position.length === 3 && position.some((axis, index) => Math.abs(axis - (target[index] ?? 0)) > 1e-6);
+    } catch {
+      return false;
+    }
+  };
+  /** 🪪️ Resolves an authored ui node id to the DOM id it actually carries. `uiNodeDomId` namespaces every
+   * node as `${surface}/${key}` (26/09/09/PROCEDURAL-3D-END-TO-END, `f39d4b0db3`), so an authored
+   * `puzzle3d-play-settings.grid-spacing.control` lands as `panel:<bodyKey>/puzzle3d-play-settings.grid-spacing.control`.
+   * Matching on the authored suffix keeps this probe independent of the surface prefix. */
+  const domIdForAuthoredId = async (authored: string) =>
+    page.evaluate((key: string) => {
+      const exact = document.getElementById(key);
+      if (exact) return key;
+      const hit = Array.from(document.querySelectorAll<HTMLElement>("[id]")).find((element) => element.id === key || element.id.endsWith(`/${key}`));
+      return hit?.id ?? null;
+    }, authored);
   const targetVolumeCount = async () => (await windowHostState()).find((w) => w.id === "puzzle3d-main-perspective")?.volumes ?? -1;
   /** 🕰️ History entry count WITHOUT touching undo/redo — `openHistory()` deliberately clicks
    * `#framework.history.undo` to expand its sections, which would mutate the document from a read-only step. */
-  const readHistoryEntryCount = async () => {
+  const readHistoryEntryIds = async () => {
     const tab = page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"], #framework.panel.history').first();
     if (await tab.count()) await tab.click({ timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(700);
-    return (await historyState()).entryCount;
+    await page.waitForTimeout(900);
+    return page.evaluate(() => Array.from(document.querySelectorAll('[id^="framework.history.entry."]')).map((r) => r.id));
   };
+  /** 🕰️ Entry ids present after an action that were not present before — paging-robust, unlike a raw count
+   * (the 21:28 coordination entry found the history panel's own row paging faked a 4→106 "regression"). */
+  const newHistoryEntries = (before: string[], after: string[]) => after.filter((id) => !before.includes(id));
   /** 🗂️ Opens a panel tab by id or visible text, logging the whole tab inventory on a miss so the next reader
    * gets the real id instead of another guess. */
   const openPanel = async (match: RegExp) => {
@@ -1628,12 +1771,23 @@ if (booted && interact) {
     if (!before) return { before: null, after: null };
     const loc = page.locator(`[id="${id}"]`).first();
     if (before.slot === "tree-action-checkbox" || (before.tag === "input" && before.checked !== null)) {
-      await page.evaluate((target: string) => {
-        const el = document.getElementById(target) as HTMLInputElement | null;
-        if (!el) return;
-        const label = (el.closest("label") ?? (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null)) as HTMLElement | null;
-        (label ?? el).click();
-      }, id);
+      await loc.click({ force: true, timeout: 4000 }).catch(() => {});
+      await page.waitForTimeout(900);
+      if ((await readMeasure(id))?.checked === before.checked) {
+        await loc.focus().catch(() => {});
+        await page.keyboard.press("Space").catch(() => {});
+        await page.waitForTimeout(900);
+      }
+      if ((await readMeasure(id))?.checked === before.checked) {
+        const wrapper = await page.evaluate((target: string) => {
+          const el = document.getElementById(target) as HTMLInputElement | null;
+          const label = el?.closest('[data-slot="tree-action-checkbox-wrapper"]') as HTMLElement | null;
+          if (!el) return null;
+          (label ?? el).click();
+          return { wrapper: Boolean(label), disabled: el.disabled };
+        }, id);
+        log(`nudge ${id} checkbox fell through to a synthetic wrapper click ${JSON.stringify(wrapper)}`);
+      }
     } else if (before.slot === "slider" || before.role === "slider") {
       const thumb = page.locator(`[id="${id}"] [role="slider"], [id="${id}"] input[type="range"]`).first();
       const handle = (await thumb.count()) ? thumb : loc;
@@ -1648,7 +1802,10 @@ if (booted && interact) {
       await page.waitForTimeout(500);
       const options = page.locator('[role="option"]');
       const n = await options.count();
-      if (n > 1) await options.nth(n - 1).click({ timeout: 3000 }).catch(() => {});
+      const texts = await options.allInnerTexts().catch(() => [] as string[]);
+      const different = texts.findIndex((text) => text.replace(/\n/g, " ").trim() !== (before.text ?? "").trim());
+      log(`nudge ${id} select options=${JSON.stringify(texts)} current=${before.text} picking=${different}`);
+      if (n > 0 && different >= 0) await options.nth(different).click({ timeout: 3000 }).catch(() => {});
       else await page.keyboard.press("Escape").catch(() => {});
     } else {
       await loc.click({ force: true, timeout: 4000 }).catch(() => {});
@@ -1677,7 +1834,11 @@ if (booted && interact) {
     verdict("window-both-present", Boolean(top?.present && persp?.present), `top=${top?.present} perspective=${persp?.present}`);
     verdict("window-one-canvas-each", top?.canvases === 1 && persp?.canvases === 1, `topCanvases=${top?.canvases} perspectiveCanvases=${persp?.canvases}`);
     verdict("window-same-document-both-views", (top?.instances ?? -1) > 0 && top?.instances === persp?.instances, `topInstances=${top?.instances} perspectiveInstances=${persp?.instances}`);
-    verdict("window-distinct-camera", Boolean(top?.camera && persp?.camera && top.camera !== persp.camera), `top=${String(top?.camera).slice(0, 130)} perspective=${String(persp?.camera).slice(0, 130)}`);
+    verdict(
+      "window-distinct-camera",
+      cameraIsPosed(top?.camera ?? null) && cameraIsPosed(persp?.camera ?? null) && top?.camera !== persp?.camera,
+      `top=${String(top?.camera).slice(0, 130)} perspective=${String(persp?.camera).slice(0, 130)} — both must be REAL guest-published poses (position !== target); all-zero defaults are two identical non-poses, not two framings (wave B12 §4.1)`,
+    );
     for (const w of state) {
       const loc = page.locator(`[id="${w.id}"], [id="framework.window.${w.id}"]`).first();
       if (await loc.count()) await loc.screenshot({ path: join(OUT, `probe-${stamp}-window-${w.id}.png`) }).catch(() => {});
@@ -1692,40 +1853,38 @@ if (booted && interact) {
     if (!box) throw new Error("no perspective canvas box");
     const cx = box.x + box.width * 0.5;
     const cy = box.y + box.height * 0.35;
-    const historyBefore = await readHistoryEntryCount();
+    const historyBefore = await readHistoryEntryIds();
     await dismissChrome();
     const initial = await windowHostState();
     const start = initial.find((w) => w.id === "puzzle3d-main-perspective")?.camera ?? null;
     const topBefore = initial.find((w) => w.id === "puzzle3d-main-top")?.camera ?? null;
     verdict("camera-json-attribute", Boolean(start), `data-camera-json=${String(start).slice(0, 170)}`);
-    const drag = async (button: "left" | "middle" | "right", modifier: string | null, dx: number, dy: number) => {
+    const drag = async (button: "left" | "middle" | "right", modifier: string | null, dx: number, dy: number, previous: string | null) => {
       if (modifier) await page.keyboard.down(modifier).catch(() => {});
       await page.mouse.move(cx, cy);
       await page.mouse.down({ button });
       await page.mouse.move(cx + dx, cy + dy, { steps: 20 });
       await page.mouse.up({ button });
       if (modifier) await page.keyboard.up(modifier).catch(() => {});
-      await page.waitForTimeout(1200);
+      const settled = await cameraSettled("puzzle3d-main-perspective", previous);
       await dismissChrome();
-      await page.waitForTimeout(500);
-      return cameraOf("puzzle3d-main-perspective");
+      return settled;
     };
-    const afterOrbit = await drag("right", "Alt", 160, 70);
+    const afterOrbit = await drag("right", "Alt", 160, 70, start);
     verdict("camera-orbit", Boolean(afterOrbit) && afterOrbit !== start, `before=${String(start).slice(0, 110)} after=${String(afterOrbit).slice(0, 110)}`);
-    const afterPan = await drag("right", "Shift", -130, 90);
+    const afterPan = await drag("right", "Shift", -130, 90, afterOrbit);
     verdict("camera-pan", Boolean(afterPan) && afterPan !== afterOrbit, `before=${String(afterOrbit).slice(0, 110)} after=${String(afterPan).slice(0, 110)}`);
     await page.mouse.move(cx, cy);
     await page.mouse.wheel(0, -700);
-    await page.waitForTimeout(1600);
-    const afterZoom = await cameraOf("puzzle3d-main-perspective");
+    const afterZoom = await cameraSettled("puzzle3d-main-perspective", afterPan);
     verdict("camera-zoom", Boolean(afterZoom) && afterZoom !== afterPan, `before=${String(afterPan).slice(0, 110)} after=${String(afterZoom).slice(0, 110)}`);
     const alive = await snapshot().catch(() => null);
     verdict("camera-lane-responsive", Boolean(alive && alive.windows.length >= 2), `windows=${alive?.windows.length ?? "unreachable"}`);
-    const historyAfter = await readHistoryEntryCount();
+    const historyAfter = await readHistoryEntryIds();
     verdict(
       "camera-emits-no-artifact-history",
-      historyAfter === historyBefore,
-      `historyEntries before=${historyBefore} after=${historyAfter} — checklist §2 declares setCamera emits no artifact mutations, but World3dHost's dispatchWorldCameraDebounced exists so "the shell-side command-history panel has something to show"; a non-zero delta needs the ticket to say which of the two is the contract`,
+      newHistoryEntries(historyBefore, historyAfter).length === 0,
+      `newEntries=${JSON.stringify(newHistoryEntries(historyBefore, historyAfter))} before=${historyBefore.length} after=${historyAfter.length} — checklist §2 declares setCamera emits no artifact mutations, but World3dHost's dispatchWorldCameraDebounced exists so "the shell-side command-history panel has something to show"; a non-zero delta needs the ticket to say which of the two is the contract`,
     );
     const topAfter = await cameraOf("puzzle3d-main-top");
     verdict("camera-per-window", topAfter === topBefore, `top before=${String(topBefore).slice(0, 110)} after=${String(topAfter).slice(0, 110)}`);
@@ -1759,7 +1918,7 @@ if (booted && interact) {
   add("window-options", "§4", "read", process.argv.includes("--windowoptions") || battery, async () => {
     await dismissChrome();
     await unfoldMeasures();
-    const historyBefore = await readHistoryEntryCount();
+    const historyBefore = await readHistoryEntryIds();
     await dismissChrome();
     await unfoldMeasures();
     let touched = 0;
@@ -1783,8 +1942,8 @@ if (booted && interact) {
       }
     }
     verdict("window-options-lane-responsive", true, `touched=${touched} windows=${(await snapshot()).windows.length}`);
-    const historyAfter = await readHistoryEntryCount();
-    verdict("window-options-emit-no-history", historyAfter === historyBefore, `historyEntries before=${historyBefore} after=${historyAfter} (WindowConfig lane, not Artifact)`);
+    const historyAfter = await readHistoryEntryIds();
+    verdict("window-options-emit-no-history", newHistoryEntries(historyBefore, historyAfter).length === 0, `newEntries=${JSON.stringify(newHistoryEntries(historyBefore, historyAfter))} before=${historyBefore.length} after=${historyAfter.length} (WindowConfig lane, not Artifact)`);
   });
 
   add("settings-panel", "§19", "read", process.argv.includes("--settings") || battery, async () => {
@@ -1792,64 +1951,86 @@ if (booted && interact) {
     const opened = await openPanel(/settings/i);
     verdict("settings-panel-opens", opened.opened, `tab=${opened.id} tabs=${JSON.stringify(opened.tabs).slice(0, 400)}`);
     if (!opened.opened) return;
+    // 🪪️ Authored ids are namespaced `${surface}/${key}` by `uiNodeDomId`, so every §19 locator matches on
+    // the AUTHORED suffix, never on a bare `^=` prefix (wave B12 §4.2 read the live ids off :6013).
     const steppers = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('[id^="puzzle3d-play-settings"]')).map((el) => ({ id: el.id, slot: el.getAttribute("data-slot"), value: (el as HTMLInputElement).value ?? null })),
+      Array.from(document.querySelectorAll<HTMLElement>('[id*="puzzle3d-play-settings."]'))
+        .filter((el) => el.id.endsWith(".control"))
+        .map((el) => ({ id: el.id, slot: el.getAttribute("data-slot"), value: (el as HTMLInputElement).value ?? null })),
     );
-    log(`settings steppers=${JSON.stringify(steppers)}`);
-    verdict("settings-steppers-present", steppers.length >= 4, `ids=${JSON.stringify(steppers.map((s) => s.id))}`);
-    const targetId = "puzzle3d-play-settings.grid-spacing";
+    const settingsIds = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[id*="puzzle3d-play-settings"]')).map((el) => el.id));
+    log(`settings steppers=${JSON.stringify(steppers)} allSettingsIds=${JSON.stringify(settingsIds)}`);
+    verdict("settings-steppers-present", steppers.length >= 4, `stepper controls=${JSON.stringify(steppers.map((s) => s.id))} allSettingsIds=${JSON.stringify(settingsIds).slice(0, 500)} openedTab=${opened.id}`);
+    const targetId = (await domIdForAuthoredId("puzzle3d-play-settings.grid-spacing.control")) ?? (await domIdForAuthoredId("puzzle3d-play-settings.grid-spacing"));
+    if (!targetId) {
+      verdict("settings-grid-spacing-bumps", false, "no grid-spacing stepper is addressable in the Settings panel at any surface prefix");
+      verdict("settings-value-reaches-window-rail", false, "no grid-spacing stepper to bump");
+      return;
+    }
     const before = await readMeasure(targetId);
+    // 🪜️ `Stepper`'s +/− is a press-and-hold driven from mousedown/mouseup, never a synthesized `click`.
     const plus = page.locator(`[id="${targetId}"]`).locator("xpath=..").locator('[data-slot="stepper-plus"]').first();
     const plusCount = await plus.count().catch(() => 0);
-    if (plusCount) await plus.click({ force: true, timeout: 4000 }).catch(() => {});
-    else {
+    if (plusCount) {
+      const box = await plus.boundingBox().catch(() => null);
+      if (box) {
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.waitForTimeout(120);
+        await page.mouse.up();
+      } else await plus.click({ force: true, timeout: 4000 }).catch(() => {});
+    } else {
       await page.locator(`[id="${targetId}"]`).first().focus().catch(() => {});
       await page.keyboard.press("ArrowUp").catch(() => {});
     }
     await page.waitForTimeout(2500);
     const after = await readMeasure(targetId);
-    verdict("settings-grid-spacing-bumps", Boolean(before) && JSON.stringify(before) !== JSON.stringify(after), `plusButtons=${plusCount} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`);
+    verdict("settings-grid-spacing-bumps", Boolean(before) && JSON.stringify(before) !== JSON.stringify(after), `targetId=${targetId} plusButtons=${plusCount} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`);
+    await unfoldMeasures();
     const railGrid = await readMeasure("puzzle3d-play-grid-spacing");
     verdict("settings-value-reaches-window-rail", Boolean(railGrid) && railGrid?.value === after?.value, `settings=${JSON.stringify(after)} windowRail=${JSON.stringify(railGrid)}`);
   });
 
   add("add-object-dialog", "§23", "read", process.argv.includes("--adddialog") || battery, async () => {
     await dismissChrome();
-    const direct = page.locator('[id="shell-menu.action.openAddObjectDialog"], [data-menu-action="openAddObjectDialog"]').first();
-    let trigger = direct;
-    if (!(await direct.count())) {
-      const byText = page.locator('button, [role="menuitem"]').filter({ hasText: /^\s*add object\s*$/i }).first();
-      if (await byText.count()) trigger = byText;
-      else {
-        const c = page.locator("canvas").last();
-        const box = await c.boundingBox();
-        if (box) await page.mouse.click(box.x + 200, box.y + 160, { button: "right" });
-        await page.waitForTimeout(800);
-        trigger = page.locator('[data-menu-action="openAddObjectDialog"], [role="menu"] button, [role="menuitem"]').filter({ hasText: /add object/i }).first();
-      }
-    }
-    const found = await trigger.count();
-    const menuDump = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('[role="menu"] button, [role="menuitem"]')).map((b) => `${b.id || "?"}=${(b as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 34)}`).slice(0, 24),
-    );
-    log(`add-object trigger=${found} menu=${JSON.stringify(menuDump)}`);
-    verdict("add-object-trigger-present", found > 0, `trigger=${found} menu=${JSON.stringify(menuDump).slice(0, 400)}`);
+    const instancesBefore = await dumpInstances();
+    const found = await page.evaluate(() => document.querySelectorAll('[id="shell-menu.action.openAddObjectDialog"]').length);
+    log(`add-object trigger=${found}`);
+    verdict("add-object-trigger-present", found > 0, `trigger=${found}`);
     if (!found) {
       await dismissChrome();
       return;
     }
-    await trigger.click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(2500);
-    const dialogs = await page.evaluate(() => Array.from(document.querySelectorAll('[role="dialog"]')).map((d) => (d as HTMLElement).innerText.replace(/\n/g, " | ").slice(0, 200)));
-    verdict("add-object-dialog-opens", dialogs.length > 0, `dialogs=${JSON.stringify(dialogs).slice(0, 400)}`);
-    const selectTrigger = page.locator('[role="dialog"] [role="combobox"], [role="dialog"] [data-slot="select-trigger"]').first();
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('[id="shell-menu.action.openAddObjectDialog"]'));
+      (buttons.at(-1) as HTMLButtonElement | undefined)?.click();
+    });
+    await page.locator('[data-slot="dialog-content"] #objectKind, [data-slot="dialog-title"]').first().waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    const dialogs = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[data-slot="dialog-content"], [role="dialog"]')).map(
+        (d) => `${d.id || d.getAttribute("data-slot")}=${(d as HTMLElement).innerText.replace(/\n/g, " | ").slice(0, 160)}`,
+      ),
+    );
+    const realDialog = dialogs.some((row) => /add object|objekt hinzufügen|choose the kind/i.test(row));
+    verdict("add-object-dialog-opens", realDialog, `dialogSurfaces=${JSON.stringify(dialogs).slice(0, 500)}`);
+    const selectTrigger = page.locator('[data-slot="dialog-content"] #objectKind, [data-slot="dialog-content"] [data-slot="select-trigger"]').first();
     if (await selectTrigger.count()) {
       await selectTrigger.click({ force: true, timeout: 4000 }).catch(() => {});
       await page.waitForTimeout(800);
       const options = await page.evaluate(() => Array.from(document.querySelectorAll('[role="option"]')).map((o) => (o as HTMLElement).innerText.trim().slice(0, 40)));
       log(`add-object kind options=${JSON.stringify(options)}`);
       verdict("add-object-kind-options-are-dynamic", options.length > 1, `options=${JSON.stringify(options)} — checklist §23 predicts a single hardcoded "Object"`);
+      const option = page.locator('[role="option"]').nth(options.length > 1 ? 1 : 0);
+      if (await option.count()) await option.click({ force: true, timeout: 4000 }).catch(() => {});
     } else verdict("add-object-kind-options-are-dynamic", false, "no kind select rendered inside the dialog");
+    const submit = page.locator('[data-slot="dialog-content"] #ui.dialog.submit, [data-slot="dialog-content"] button').filter({ hasText: /^(add|hinzufügen)/i }).first();
+    if (await submit.count()) await submit.click({ force: true, timeout: 4000 }).catch(() => {});
+    else await page.evaluate(() => (document.getElementById("ui.dialog.submit") as HTMLButtonElement | null)?.click());
+    await page.waitForTimeout(3500);
+    const instancesAfter = await dumpInstances();
+    log(`add-object instances before=${JSON.stringify(instancesBefore)} after=${JSON.stringify(instancesAfter)}`);
+    verdict("add-object-instance-count-increases", instancesAfter.count > instancesBefore.count, `before=${instancesBefore.count} after=${instancesAfter.count}`);
     await page.keyboard.press("Escape").catch(() => {});
     await dismissChrome();
   });
@@ -1858,15 +2039,22 @@ if (booted && interact) {
    * checklist §25's `document_json.contains("Baukomponenten")` assertion. */
   const readLocaleLabels = async () => {
     await openPanel(/document|artifact|outliner|puzzle3d-play-document/i);
-    return page.evaluate(() => {
-      const root = document.querySelector('[id^="puzzle3d-play-document"]') as HTMLElement | null;
-      return {
-        rootText: (root?.innerText || "").replace(/\n/g, " | ").slice(0, 400),
-        rails: Array.from(document.querySelectorAll('[id^="puzzle3d-play-grid"], [id^="puzzle3d-play-lod"]'))
-          .map((el) => `${el.id}=${(el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40)}`)
-          .slice(0, 12),
-      };
-    });
+    const read = async () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[id^="puzzle3d-play-document"]') as HTMLElement | null;
+        return {
+          rootText: (root?.innerText || "").replace(/\n/g, " | ").slice(0, 400),
+          rails: Array.from(document.querySelectorAll('[id^="puzzle3d-play-grid"], [id^="puzzle3d-play-lod"]'))
+            .map((el) => `${el.id}=${(el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40)}`)
+            .slice(0, 12),
+        };
+      });
+    let last = await read();
+    for (let i = 0; i < 8 && !last.rootText; i++) {
+      await page.waitForTimeout(1200);
+      last = await read();
+    }
+    return last;
   };
   add("locale-switch", "§25", "read", process.argv.includes("--locale") || battery, async () => {
     await dismissChrome();
@@ -1951,13 +2139,58 @@ if (booted && interact) {
     await dismissChrome();
     const toggle = page.locator('[id="framework.window.puzzle3dMainPerspective.engagement.toggle"]').first();
     const toggleCount = await toggle.count();
-    if (toggleCount) await toggle.click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(1200);
-    const input = page.locator('input[placeholder*="fill" i], input[placeholder*="brush" i], [role="textbox"][placeholder*="fill" i]').first();
+    // 💬️ The typed engagement field is NOT inside the top-left Actions pane: `Window` renders it in the
+    // top-middle `search` Pane (`framework.window.<window>.search`), as the `Search` element's own
+    // `Input` — whose id is the guest's `engagement.input.id`, or `ui.windowSearch.action` when the
+    // guest leaves it unnamed (`windowEngagementToSearchSpec` → `Search`). Wave B10 merged the two
+    // FOLD states (`searchExpanded = searchVisible && !actionsFolded`), not the two panes, so the old
+    // `[id^="…engagement"] input` scope could never match the field it was measuring, and the blind
+    // toggle click below FOLDED an already-open pane on every run that started with one.
+    const inputSelector =
+      '[id="framework.window.puzzle3dMainPerspective.search"] input, [id="framework.window.puzzle3dMainPerspective.search"] [role="textbox"], [id="framework.window.puzzle3dMainPerspective.search"] textarea, [id="ui.windowSearch.action"], input[placeholder*="fill" i], input[placeholder*="brush" i], [role="textbox"][placeholder*="fill" i]';
+    const foldState = async () =>
+      evalSafe(
+        () => {
+          const el = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
+          const search = document.getElementById("framework.window.puzzle3dMainPerspective.search");
+          const btn = document.getElementById("framework.window.puzzle3dMainPerspective.engagement.toggle");
+          const rect = btn?.getBoundingClientRect();
+          const top = rect ? document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) : null;
+          return {
+            folded: el?.getAttribute("data-folded") ?? null,
+            searchFolded: search?.getAttribute("data-folded") ?? null,
+            toggle: btn ? `${btn.tagName}|${btn.getAttribute("aria-pressed") ?? ""}|${btn.getAttribute("disabled") ?? ""}` : "absent",
+            rect: rect ? `${Math.round(rect.x)},${Math.round(rect.y)} ${Math.round(rect.width)}x${Math.round(rect.height)}` : "none",
+            covered: top ? !(btn?.contains(top) ?? false) : true,
+            top: top ? `${top.tagName}#${top.id || "-"}[${top.getAttribute("data-slot") ?? "-"}]` : "none",
+          };
+        },
+        { folded: null as string | null, searchFolded: null as string | null, toggle: "eval-failed", rect: "none", covered: true, top: "none" },
+      );
+    for (let attempt = 0; attempt < 6 && (await countSafe(page.locator(inputSelector))) === 0; attempt++) {
+      log(`[DEBUG] engagement fold attempt=${attempt} before=${JSON.stringify(await foldState())}`);
+      if (toggleCount) await toggle.click({ force: true, timeout: 4000 }).catch((error) => log(`[DEBUG] engagement toggle click failed ${String(error).slice(0, 120)}`));
+      await page.waitForTimeout(1200);
+      log(`[DEBUG] engagement fold attempt=${attempt} after=${JSON.stringify(await foldState())}`);
+    }
+    const pane = await page.evaluate(() => {
+      const root = document.getElementById("framework.window.puzzle3dMainPerspective.engagement");
+      const search = document.getElementById("framework.window.puzzle3dMainPerspective.search");
+      return {
+        rootPresent: Boolean(root),
+        searchPresent: Boolean(search),
+        rootText: (root as HTMLElement | null)?.innerText.replace(/\n/g, " | ").slice(0, 240) ?? null,
+        fields: Array.from(document.querySelectorAll('input, textarea, [role="textbox"], [contenteditable="true"]'))
+          .map((el) => `${el.id || "?"}|${el.getAttribute("type") ?? el.getAttribute("role") ?? el.tagName.toLowerCase()}|${el.getAttribute("placeholder") ?? ""}`)
+          .slice(0, 24),
+      };
+    });
+    log(`engagement pane=${JSON.stringify(pane)}`);
+    const input = page.locator(inputSelector).first();
     const inputCount = await input.count();
     const placeholder = inputCount ? await input.getAttribute("placeholder") : null;
     log(`engagement toggle=${toggleCount} input=${inputCount} placeholder=${placeholder}`);
-    verdict("engagement-input-present", inputCount > 0, `toggle=${toggleCount} input=${inputCount} placeholder=${placeholder}`);
+    verdict("engagement-input-present", inputCount > 0, `toggle=${toggleCount} input=${inputCount} placeholder=${placeholder} pane=${JSON.stringify(pane).slice(0, 400)}`);
     if (!inputCount) return;
     verdict("engagement-placeholder-has-no-dead-verbs", !/clear|rectangle|lasso/i.test(placeholder ?? ""), `placeholder=${placeholder} — checklist §14: clear/rectangle/lasso were dropped but stayed advertised`);
     const submit = async (text: string) => {
@@ -1982,23 +2215,335 @@ if (booted && interact) {
     await dismissChrome();
   });
 
+  /** 🧾️ The host-side selection truth for every world surface. `data-interaction-json` is
+   * `mergeWorldInteractionWithLeftoverV1(scene.interactionJson, leftoverWorldSelectionOverlayV1())`
+   * (`🌐️World3dHost/🟦️.tsx`), so it carries BOTH the guest-published selection and the host's leftover
+   * overlay — the one attribute that separates "the row click never dispatched" from "the guest answered
+   * with an empty InteractionView". */
+  const worldInteraction = async () =>
+    evalSafe(
+      () =>
+        Array.from(document.querySelectorAll<HTMLElement>("[data-interaction-json]")).map((element) => {
+          let selectedIds: string[] = [];
+          let hovered: string | null = null;
+          try {
+            // 🔦️ `data-selection-json` (wave B20) is the pane's PAINTED selection — the guest's
+            // `selectionJson` lane with the host leftover overlay merged over it. The interaction
+            // record carries neither `selectedIds` nor a hover target (it is the utility/brush/fill
+            // record), so reading it alone reported an empty selection on a pane that was painting one.
+            const painted = JSON.parse(element.getAttribute("data-selection-json") || "{}") as { selectedIds?: string[]; hoverTarget?: { id?: string } | null; hoveredVortexFullId?: string | null };
+            const parsed = JSON.parse(element.getAttribute("data-interaction-json") || "{}") as { selectedIds?: string[]; hoverTarget?: { id?: string } | null; hoveredVortexFullId?: string | null };
+            selectedIds = painted.selectedIds ?? parsed.selectedIds ?? [];
+            hovered = painted.hoverTarget?.id ?? painted.hoveredVortexFullId ?? parsed.hoverTarget?.id ?? parsed.hoveredVortexFullId ?? null;
+          } catch {
+            selectedIds = ["parse-failed"];
+          }
+          let selectedInstances: string[] = [];
+          try {
+            selectedInstances = (JSON.parse(element.getAttribute("data-instances-json") || "[]") as { id?: string; selected?: boolean }[]).filter((instance) => instance.selected).map((instance) => instance.id ?? "?");
+          } catch {
+            selectedInstances = ["parse-failed"];
+          }
+          return { surface: element.getAttribute("data-surface-id") ?? "?", window: element.getAttribute("data-window-instance-id") ?? "?", selectedIds: selectedIds.slice(0, 8), hovered, selectedInstances: selectedInstances.slice(0, 8) };
+        }),
+      [] as { surface: string; window: string; selectedIds: string[]; hovered: string | null; selectedInstances: string[] }[],
+    );
+  /** 🪜️ `ShellHost.applyLeftoverInteractionView` prints `[DEBUG] leftover InteractionView` the moment it
+   * turns a guest response's `output` into the leftover overlay. Its presence after a row click pins the
+   * failure to the RENDER hop; its absence pins it to the DISPATCH hop, which is the whole point of
+   * measuring it instead of guessing. */
+  const leftoverViewTail = (since: number) => consoleBuf.slice(since).filter((row) => row.includes("leftover InteractionView")).slice(-4);
+  /** 🔖️ Hands {@link clickTreeRowPoint}'s evaluate the row and part to measure — a page global rather than an
+   * argument so the helper body stays closure-free and {@link evalSafe} can retry it verbatim. */
+  const markTreeRowTarget = async (id: string, part: "label" | "background") => {
+    await page
+      .evaluate(([rowId, rowPart]) => {
+        (globalThis as unknown as { __semioProbeRow?: { id: string; part: string } }).__semioProbeRow = { id: rowId, part: rowPart };
+      }, [id, part] as const)
+      .catch(() => {});
+  };
+  /** 🖱️ Clicks one DOM point of a tree row by its viewport rect, so "the label text" and "the row
+   * background" are two separately measurable targets rather than one `force: true` guess at the centre.
+   *
+   * 🚫️ The BACKGROUND point is searched, never assumed: an outliner row carries a fold chevron on the left
+   * and its `Hide`/`Lock` row actions on the right, all of which `stopPropagation`. Clicking the row's
+   * right edge therefore LOCKED the object (measured live: the next selection was refused, and the row read
+   * "Unlock" afterwards). The search scans the row at mid-height and returns the first x that lies inside
+   * no descendant `button` — and, for `background`, outside `[data-slot="tree-label"]` as well. */
+  const clickTreeRowPoint = async (rowId: string, part: "label" | "background") => {
+    await markTreeRowTarget(rowId, part);
+    const spot = await evalSafe(
+      () => {
+        const marker = (globalThis as unknown as { __semioProbeRow?: { id: string; part: string } }).__semioProbeRow;
+        const row = marker ? document.getElementById(marker.id) : null;
+        if (!row) return null;
+        const rowRect = row.getBoundingClientRect();
+        const label = row.querySelector<HTMLElement>('[data-slot="tree-label"]');
+        const labelRect = label?.getBoundingClientRect() ?? null;
+        const kind = row.getAttribute("data-tree-row-kind");
+        const describe = (x: number, y: number) => {
+          const hit = document.elementFromPoint(x, y) as HTMLElement | null;
+          return hit ? `${hit.tagName.toLowerCase()}#${hit.id || "-"}[${hit.getAttribute("data-slot") ?? "-"}]${hit.closest(`#${CSS.escape(row.id)}`) === row ? "" : "@outside"}` : "nothing";
+        };
+        const shape = { kind, has: Boolean(labelRect), labelWidth: Math.round(labelRect?.width ?? 0), rowWidth: Math.round(rowRect.width) };
+        const y = rowRect.y + rowRect.height / 2;
+        if (marker?.part === "label" && labelRect && labelRect.width > 2) {
+          const labelY = labelRect.y + labelRect.height / 2;
+          const labelX = labelRect.x + labelRect.width / 2;
+          return { x: labelX, y: labelY, part: "label", hit: describe(labelX, labelY), ...shape };
+        }
+        const blockers = Array.from(row.querySelectorAll("button, [role='button'], input, a")).map((element) => element.getBoundingClientRect());
+        const free = (x: number) =>
+          !blockers.some((rect) => x >= rect.x - 3 && x <= rect.x + rect.width + 3) && !(labelRect && x >= labelRect.x - 3 && x <= labelRect.x + labelRect.width + 3) && document.elementFromPoint(x, y)?.closest(`#${CSS.escape(row.id)}`) === row;
+        for (let x = rowRect.x + 4; x < rowRect.x + rowRect.width - 4; x += 3) if (free(x)) return { x, y, part: "background", hit: describe(x, y), ...shape };
+        return { x: rowRect.x + rowRect.width / 2, y, part: "background-fallback", hit: describe(rowRect.x + rowRect.width / 2, y), ...shape };
+      },
+      null as { x: number; y: number; part: string; hit: string; kind: string | null; has: boolean; labelWidth: number; rowWidth: number } | null,
+    );
+    if (!spot) return null;
+    await page.mouse.click(spot.x, spot.y).catch(() => {});
+    return spot;
+  };
+  /** 🎯️ Selects the first object row through the outliner — checklist §6 says this `interactionSelect` path
+   * was never part of the viewport render/hover gap, so it isolates "the menu is wrong" from "nothing was
+   * selected" when a context-menu or keybinding step reads an empty selection.
+   *
+   * 🪜️ Clicks the row BACKGROUND first and its label second, reporting each separately: `Tree`'s group-row
+   * branches historically wired `onClick` only to `[data-slot="tree-label"]` while the leaf branch wired it
+   * to the whole `role="treeitem"` shell, so an object row (which nests its vortices, hence a group row)
+   * answered a centre click with nothing at all. */
+  const selectViaOutliner = async () => {
+    await openPanel(/document|artifact|outliner|puzzle3d-play-document/i);
+    // 🌳️ A tree ROW, not the first node whose id happens to start with the outliner's surface prefix —
+    // that one is the section wrapper, which owns no selection and swallowed the click. `treeitem`/
+    // `tree-item` is what the interpreter marks a selectable row with.
+    const rows = await page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLElement>('[role="treeitem"], [data-slot="tree-item"]'))
+        .filter((element) => element.id.includes("puzzle3d-play-document"))
+        .map((element) => ({ id: element.id, text: element.innerText.replace(/\n/g, " ").trim().slice(0, 40) })),
+    );
+    const fallback = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[id*="puzzle3d-play-document"]')).map((element) => element.id).slice(0, 40));
+    // 🌳️ An ENTITY row, not the tree root and not a group header: the root (`puzzle3d-play-document`) and
+    // the three group headers (`…/puzzle3d-play-document.objects|.references|.target-volumes`) are
+    // `treeitem`s too, and selecting one of them selects nothing (measured live on :6013, 16:27).
+    const entityRow = (id: string) => {
+      const leaf = id.split("/").pop() ?? "";
+      return id.includes("/") && !leaf.startsWith("puzzle3d-play-document.") && leaf !== "puzzle3d-play-document";
+    };
+    const targetId = rows.find((row) => entityRow(row.id))?.id ?? fallback.find(entityRow) ?? rows[0]?.id ?? fallback[0];
+    log(`selectViaOutliner treeRows=${JSON.stringify(rows).slice(0, 400)} target=${targetId ?? "none"} outlinerIds=${JSON.stringify(fallback).slice(0, 400)}`);
+    const attempt = async (part: "label" | "background") => {
+      if (!targetId) return { part, spot: null, interaction: [] as Awaited<ReturnType<typeof worldInteraction>>, leftover: [] as string[], ariaSelected: [] as string[] };
+      const consoleMark = consoleBuf.length;
+      const spot = await clickTreeRowPoint(targetId, part);
+      await page.waitForTimeout(2500);
+      const interaction = await worldInteraction();
+      const leftover = leftoverViewTail(consoleMark);
+      const state = await selectionState();
+      const ariaSelected = state.selected.filter((row) => row.startsWith("panel:") || row.startsWith("puzzle3d-play-"));
+      log(`selectViaOutliner ${part} spot=${JSON.stringify(spot)} interaction=${JSON.stringify(interaction).slice(0, 400)} leftoverLines=${JSON.stringify(leftover).slice(0, 400)} ariaSelected=${JSON.stringify(ariaSelected).slice(0, 200)}`);
+      return { part, spot, interaction, leftover, ariaSelected };
+    };
+    const landed = (result: Awaited<ReturnType<typeof attempt>>) =>
+      result.interaction.some((surface) => surface.selectedIds.length > 0 || surface.selectedInstances.length > 0) || result.ariaSelected.length > 0 || result.leftover.some((row) => !row.includes('"selectedIds":[]'));
+    // 🎯️ BACKGROUND first, deliberately: it is the strictly harder target (measured live, the object row's
+    // label span is 12 px of a 160 px row, which is why a centre click reached only the background), so a
+    // background landing proves the label one too and a background-only failure names the defect precisely.
+    const byBackground = await attempt("background");
+    const byLabel = landed(byBackground) ? null : await attempt("label");
+    const winner = landed(byBackground) ? byBackground : byLabel && landed(byLabel) ? byLabel : byBackground;
+    const sel = await selectionState();
+    const entities = sel.selected.filter((row) => row.startsWith("panel:") || row.startsWith("puzzle3d-play-"));
+    const selectedIds = winner.interaction.flatMap((surface) => surface.selectedIds);
+    // 🕹️ The world surface's own `data-status-json` is the app-side half of the evidence: if a row click
+    // never reaches the framework selection domain, the rail says "0 selected" there too, and the verdict
+    // can distinguish "the probe read the wrong DOM attribute" from "nothing was selected".
+    const status = sel.hosts.map((host) => `${host.surface}=${host.status.slice(0, 120)}`);
+    const hop = `rowKind=${winner.spot?.kind ?? "?"} labelWidth=${winner.spot?.labelWidth ?? 0}/${winner.spot?.rowWidth ?? 0} landedVia=${landed(byBackground) ? "background" : byLabel && landed(byLabel) ? "label" : "neither"} dispatchObserved=${byBackground.leftover.length + (byLabel?.leftover.length ?? 0) > 0} selectedIds=${JSON.stringify(selectedIds)}`;
+    log(`selectViaOutliner clicked=${targetId ?? "none"} entitySelected=${JSON.stringify(entities)} allAriaSelected=${JSON.stringify(sel.selected).slice(0, 300)} surfaceStatus=${JSON.stringify(status).slice(0, 400)} ${hop}`);
+    return {
+      rows: rows.length || fallback.length,
+      selected: entities.length + selectedIds.length + winner.interaction.reduce((total, surface) => total + surface.selectedInstances.length, 0),
+      raw: sel.selected,
+      clicked: targetId ?? null,
+      status,
+      hop,
+      selectedIds,
+    };
+  };
+
+  /** 🎯️ Projects one rendered instance's world position onto the Perspective pane's canvas, out of the two
+   * attributes the host already publishes there — `data-instances-json` (`WorldInstanceRecord.position`) and
+   * `data-viewport-camera-json` (`world3dCameraDomJson`: position/target/up/fov/projection). Replaces the
+   * `0.78 × 0.42` guess the context-menu step used to right-click, which lands on whatever the framing put
+   * there. Returns viewport pixels, or `null` when the instance sits behind the camera or the pane has not
+   * published a scene yet. */
+  const projectInstance = async (wantedId: string | null) => {
+    await page.evaluate((id) => {
+      (globalThis as unknown as { __semioProbePick?: string | null }).__semioProbePick = id;
+    }, wantedId).catch(() => {});
+    return evalSafe(
+      () => {
+        const wanted = (globalThis as unknown as { __semioProbePick?: string | null }).__semioProbePick ?? null;
+        const host = document.querySelector("#puzzle3d-main-perspective");
+        const surface = host?.querySelector("[data-instances-json]") as HTMLElement | null;
+        const canvas = host?.querySelector("canvas") as HTMLCanvasElement | null;
+        if (!surface || !canvas) return null;
+        let instances: { id?: string; position?: number[]; x?: number; y?: number; z?: number }[] = [];
+        try {
+          instances = JSON.parse(surface.getAttribute("data-instances-json") || "[]");
+        } catch {
+          return null;
+        }
+        const chosen = (wanted ? instances.find((instance) => Boolean(instance.id) && (instance.id === wanted || wanted.endsWith(`/${instance.id}`))) : undefined) ?? instances[0];
+        if (!chosen) return null;
+        const point = chosen.position ?? [chosen.x ?? 0, chosen.y ?? 0, chosen.z ?? 0];
+        let camera: { position?: number[]; target?: number[]; up?: number[]; fov?: number | null; projection?: string | null } = {};
+        try {
+          camera = JSON.parse(surface.getAttribute("data-viewport-camera-json") || surface.getAttribute("data-camera-json") || "{}");
+        } catch {
+          camera = {};
+        }
+        const eye = camera.position ?? [4, -4, 3];
+        const target = camera.target ?? [0, 0, 0];
+        const up = camera.up ?? [0, 0, 1];
+        const sub = (a: number[], b: number[]) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+        const cross = (a: number[], b: number[]) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+        const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        const norm = (a: number[]) => {
+          const length = Math.hypot(a[0], a[1], a[2]) || 1;
+          return [a[0] / length, a[1] / length, a[2] / length];
+        };
+        const forward = norm(sub(target, eye));
+        const right = norm(cross(forward, up));
+        const trueUp = cross(right, forward);
+        const relative = sub(point, eye);
+        const depth = dot(relative, forward);
+        if (!(depth > 0.0001)) return null;
+        const rect = canvas.getBoundingClientRect();
+        const aspect = rect.width / Math.max(1, rect.height);
+        const tanHalf = Math.tan((((camera.fov ?? 45) as number) * Math.PI) / 360);
+        const ndcX = dot(relative, right) / (depth * tanHalf * aspect);
+        const ndcY = dot(relative, trueUp) / (depth * tanHalf);
+        return {
+          id: chosen.id ?? "?",
+          x: rect.x + (ndcX * 0.5 + 0.5) * rect.width,
+          y: rect.y + (0.5 - ndcY * 0.5) * rect.height,
+          rect: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) },
+          instances: instances.length,
+          fov: camera.fov ?? 45,
+          projection: camera.projection ?? null,
+        };
+      },
+      null as { id: string; x: number; y: number; rect: { x: number; y: number; w: number; h: number }; instances: number; fov: number; projection: string | null } | null,
+    );
+  };
+  /** 🖱️ Hovers the projected point and widens into a small spiral until the pane reports a hovered or
+   * selected instance, so the context-menu step opens over a real object instead of empty space. Hover is
+   * read back off `data-interaction-json`/`data-instances-json`, never assumed. */
+  const landOnInstance = async (wantedId: string | null) => {
+    const projected = await projectInstance(wantedId);
+    if (!projected) return null;
+    const offsets = [0, 10, -10, 20, -20, 34, -34, 52, -52];
+    for (const dy of offsets) {
+      for (const dx of offsets) {
+        const x = projected.x + dx;
+        const y = projected.y + dy;
+        if (x < projected.rect.x || y < projected.rect.y || x > projected.rect.x + projected.rect.w || y > projected.rect.y + projected.rect.h) continue;
+        await page.mouse.move(x, y).catch(() => {});
+        await page.waitForTimeout(180);
+        const state = await worldInteraction();
+        if (state.some((surface) => Boolean(surface.hovered) || surface.selectedInstances.length > 0)) {
+          log(`landOnInstance hit id=${projected.id} at=${Math.round(x)},${Math.round(y)} offset=${dx},${dy} projected=${Math.round(projected.x)},${Math.round(projected.y)} instances=${projected.instances} fov=${projected.fov} projection=${projected.projection}`);
+          return { ...projected, x, y, hovered: true };
+        }
+      }
+    }
+    log(`landOnInstance no hover id=${projected.id} projected=${Math.round(projected.x)},${Math.round(projected.y)} rect=${JSON.stringify(projected.rect)} instances=${projected.instances} fov=${projected.fov} projection=${projected.projection}`);
+    return { ...projected, hovered: false };
+  };
+
   add("context-menu-rows", "§15", "mutate", process.argv.includes("--contextmenu") || battery, async () => {
     await dismissChrome();
     const framed = await frameForestTableAfterCensus();
-    await clickForestTable();
-    const canvas = page.locator("canvas").last();
-    await canvas.click({ position: { x: framed.table.x, y: framed.table.y }, timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(1500);
-    await canvas.click({ position: { x: framed.table.x, y: framed.table.y }, button: "right", timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(1500);
-    const rows = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('[role="menu"] button, [role="menuitem"]')).map((el) => ({
-        id: el.id || null,
-        action: el.getAttribute("data-menu-action"),
-        text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40),
-      })),
+    const picked = await selectViaOutliner();
+    verdict(
+      "context-menu-selection-precondition",
+      picked.rows > 0 && picked.selected > 0,
+      `outlinerRows=${picked.rows} clicked=${picked.clicked ?? "none"} selected=${picked.selected} ${picked.hop} surfaceStatus=${JSON.stringify(picked.status).slice(0, 300)}`,
     );
-    log(`context-menu rows=${JSON.stringify(rows).slice(0, 1400)}`);
+    // 🛰️ Precondition for `context-menu-zoom-moves-camera`, established BEFORE the menu opens (an
+    // Alt+right-drag on the canvas would dismiss an open menu): the row zooms to the SELECTION, and a
+    // pane already framing it republishes a bit-identical pose, which reads exactly like a dropped
+    // camera write. Orbit away so "the camera moved" is a question this step can actually answer.
+    await orbitPerspectiveAway();
+    const canvas = page.locator("canvas").last();
+    const box = await canvas.boundingBox();
+    // 🎯️ The projected position of a real instance when the pane publishes one; the old `0.78 × 0.42`
+    // fraction only as the last resort, so `context-menu-opens` measures the plugin's object rows rather
+    // than whatever empty space the framing left at that fraction.
+    const landing = await landOnInstance(picked.selectedIds[0] ?? picked.clicked);
+    const point = landing ? { x: landing.x, y: landing.y } : { x: (box?.x ?? 0) + framed.table.x, y: (box?.y ?? 0) + framed.table.y };
+    log(`context-menu point=${Math.round(point.x)},${Math.round(point.y)} via=${landing ? (landing.hovered ? "projected-hover" : "projected-blind") : "table-fraction"}`);
+    // 🖱️ A left click on empty canvas is a pick that CLEARS the selection, which is the very precondition
+    // the step just established through the outliner. Pick first only when the outliner landed nothing.
+    if (picked.selected === 0) {
+      await page.mouse.click(point.x, point.y).catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+    const consoleMark = consoleBuf.length;
+    await page.mouse.click(point.x, point.y, { button: "right" }).catch(() => {});
+    await page.waitForTimeout(1500);
+    const menuRows = async () =>
+      evalSafe(
+        () =>
+          Array.from(document.querySelectorAll('[role="menu"] button, [role="menuitem"], [data-slot="context-menu"] button, [data-slot="context-menu-item"]')).map((el) => ({
+            id: el.id || null,
+            action: el.getAttribute("data-menu-action"),
+            text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40),
+          })),
+        [] as { id: string | null; action: string | null; text: string }[],
+      );
+    // ⏳️ `World3dHost`'s `onContextMenu` AWAITS `openSurfaceContextMenu`, a round trip to the guest, before
+    // it calls `setContextMenu` — so the menu appears whenever that reply does, not on a fixed delay. One
+    // fixed 1.5 s wait measured rows=5 and rows=0 on two otherwise identical runs; poll instead.
+    let topRows = await menuRows();
+    let polls = 0;
+    for (; polls < 30 && topRows.length === 0; polls++) {
+      await page.waitForTimeout(1000);
+      topRows = await menuRows();
+    }
+    log(`context-menu opened after ${topRows.length ? `${polls} polls` : "30 polls with nothing"} rows=${topRows.length}`);
+    // 🗂️ `hide-show` and `lock-unlock` are authored INSIDE the `menu.group.hand` submenu — the guest's own
+    // law asserts that grouping (`✏️editor/🧪️tests/🔬️unit/🦀️.rs`, "hide/lock rows should be grouped under
+    // hand") — so a vocabulary read of the top level alone reports them missing when they are merely folded.
+    const groups = topRows.filter((row) => row.id?.startsWith("menu.group."));
+    const merged = new Map(topRows.filter((row) => row.id).map((row) => [row.id as string, row]));
+    for (const group of groups) {
+      await page.locator(`[id="${group.id}"]`).first().hover({ timeout: 2500 }).catch(() => {});
+      await page.waitForTimeout(900);
+      for (const row of await menuRows()) if (row.id) merged.set(row.id, row);
+    }
+    const rows = [...merged.values()];
+    log(`context-menu rows=${JSON.stringify(rows).slice(0, 1400)} groupsExpanded=${JSON.stringify(groups.map((group) => group.id))}`);
+    log(`context-menu selectionAtRightClick=${JSON.stringify(await worldInteraction()).slice(0, 300)} chrome=${JSON.stringify((await chromeState()).menus).slice(0, 400)}`);
+    log(`context-menu console tail=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /context.?menu/i.test(row)).slice(-8)).slice(0, 800)}`);
+    log(`[DEBUG] context-menu console ingress=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /world3d-contextmenu/i.test(row)).slice(0, 8)).slice(0, 1400)}`);
+    log(
+      `[DEBUG] context-menu dom=${JSON.stringify(
+        await evalSafe(
+          () => ({
+            menus: document.querySelectorAll('[role="menu"]').length,
+            items: document.querySelectorAll('[role="menuitem"]').length,
+            slots: Array.from(document.querySelectorAll("[data-slot]")).map((el) => el.getAttribute("data-slot") ?? "").filter((slot) => /menu/i.test(slot)).slice(0, 20),
+            poppers: document.querySelectorAll("[data-radix-popper-content-wrapper]").length,
+            states: Array.from(document.querySelectorAll("[data-state]")).filter((el) => /menu/i.test(el.getAttribute("data-slot") ?? el.className.toString())).map((el) => `${el.getAttribute("data-slot") ?? el.tagName}=${el.getAttribute("data-state")}`).slice(0, 20),
+          }),
+          { menus: -1, items: -1, slots: [] as string[], poppers: -1, states: [] as string[] },
+        ),
+      ).slice(0, 1200)}`,
+    );
+    log(`[DEBUG] context-menu console menuish=${JSON.stringify(consoleBuf.slice(consoleMark).filter((row) => /menu|dropped|surface|refus|Error|error/i.test(row)).slice(0, 14)).slice(0, 2200)}`);
     verdict("context-menu-opens", rows.length > 0, `rows=${rows.length}`);
     const ids = new Set(rows.map((r) => r.id));
     const missing = ["duplicate", "select-same-kind", "zoom", "delete", "hide-show", "lock-unlock"].filter((id) => !ids.has(id));
@@ -2008,14 +2553,25 @@ if (booted && interact) {
     if (zoom) {
       const hardBefore = hardFaults.length;
       const faultsBefore = faults.length;
-      const cameraBefore = await cameraOf("puzzle3d-main-perspective");
+      // 🪟️ BOTH panes, not just the one the menu opened over: `focusSelection` carries no `windowId`
+      // of its own, so the shell addresses it to `activeWindowIdRef` — if the OTHER pane moves, the
+      // camera write landed on the wrong window instance, which reads identically to "dropped" when
+      // only one pane is sampled (wave B20 defect 2).
+      const panesBefore = await windowHostState();
+      const cameraBefore = panesBefore.find((pane) => pane.id === "puzzle3d-main-perspective")?.camera ?? null;
+      const zoomMark = consoleBuf.length;
       await page.locator('[id="zoom"]').last().click({ force: true, timeout: 4000 }).catch(() => {});
       await page.waitForTimeout(3000);
-      const cameraAfter = await cameraOf("puzzle3d-main-perspective");
+      const panesAfter = await windowHostState();
+      const cameraAfter = panesAfter.find((pane) => pane.id === "puzzle3d-main-perspective")?.camera ?? null;
+      const movedPanes = panesAfter.filter((pane) => pane.camera !== (panesBefore.find((other) => other.id === pane.id)?.camera ?? null)).map((pane) => pane.id);
+      log(`zoom panes before=${JSON.stringify(panesBefore.map((pane) => ({ id: pane.id, surface: pane.surface, camera: String(pane.camera).slice(0, 90) })))}`);
+      log(`zoom panes after=${JSON.stringify(panesAfter.map((pane) => ({ id: pane.id, surface: pane.surface, camera: String(pane.camera).slice(0, 90) })))} moved=${JSON.stringify(movedPanes)}`);
+      log(`zoom console tail=${JSON.stringify(consoleBuf.slice(zoomMark).filter((row) => /focus|camera|window-required|windowConfig/i.test(row)).slice(-10)).slice(0, 1000)}`);
       verdict(
         "context-menu-zoom-moves-camera",
         Boolean(cameraBefore) && cameraBefore !== cameraAfter,
-        `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)} newFaults=${faults.length - faultsBefore} newHardFaults=${hardFaults.length - hardBefore}`,
+        `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)} movedPanes=${JSON.stringify(movedPanes)} newFaults=${faults.length - faultsBefore} newHardFaults=${hardFaults.length - hardBefore}`,
       );
     }
     await dismissChrome();
@@ -2034,18 +2590,66 @@ if (booted && interact) {
       );
     const before = await rowDump();
     log(`outliner rows before=${JSON.stringify(before).slice(0, 1400)}`);
-    const hideButton = page.locator('[role="treeitem"] button, [data-slot="tree-item"] button').filter({ hasText: /^(hide|verbergen)$/i }).first();
-    const hideByLabel = page.locator('[role="treeitem"] [aria-label*="Hide" i], [data-slot="tree-item"] [title*="Hide" i]').first();
+    const controls = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[id^="panel:puzzle3d-play-document/"] *'))
+        .filter((el) => el.matches('button, [role="button"], [data-slot^="tree-action"], a'))
+        .map((el) => ({ tag: el.tagName.toLowerCase(), id: el.id || null, slot: el.getAttribute("data-slot"), label: el.getAttribute("aria-label") ?? el.getAttribute("title"), text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 24) }))
+        .slice(0, 30),
+    );
+    log(`outliner row controls=${JSON.stringify(controls)}`);
+    const hideButton = page
+      .locator('[id^="panel:puzzle3d-play-document/"] button, [id^="panel:puzzle3d-play-document/"] [role="button"], [id^="panel:puzzle3d-play-document/"] [data-slot^="tree-action"]')
+      .filter({ hasText: /hide|verbergen/i })
+      .first();
+    const hideByLabel = page.locator('[id^="panel:puzzle3d-play-document/"] [aria-label*="Hide" i], [id^="panel:puzzle3d-play-document/"] [title*="Hide" i]').first();
     const hideCount = await hideButton.count();
     const labelCount = await hideByLabel.count();
     const target = hideCount ? hideButton : hideByLabel;
-    verdict("outliner-hide-control-present", hideCount + labelCount > 0, `byText=${hideCount} byLabel=${labelCount}`);
+    verdict("outliner-hide-control-present", hideCount + labelCount > 0, `byText=${hideCount} byLabel=${labelCount} controls=${JSON.stringify(controls).slice(0, 400)}`);
     if (!hideCount && !labelCount) return;
+    // 🙈️ Three independent observables per click, so a red says WHICH hop broke: what was actually
+    // clicked (an icon-only row action is easy to miss and easy to mis-hit), the object's own
+    // `scale` inside `data-instances-json` — `world_instances_geometry_json` emits `[0,0,0]` for a
+    // hidden object, so the WORLD lane answers even when the row text does not — and the dispatch
+    // console tail (wave B20 defect 3).
+    const clicked = await target.evaluate((el) => ({ tag: el.tagName.toLowerCase(), slot: el.getAttribute("data-slot"), label: el.getAttribute("aria-label") ?? el.getAttribute("title"), text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 40), row: el.closest('[role="treeitem"]')?.id ?? null })).catch(() => null);
+    const hiddenScales = async () =>
+      evalSafe(
+        () =>
+          Array.from(document.querySelectorAll<HTMLElement>("[data-instances-json]")).map((element) => {
+            try {
+              const rows = JSON.parse(element.getAttribute("data-instances-json") || "[]") as { id?: string; scale?: number[] }[];
+              return { surface: element.getAttribute("data-surface-id") ?? "?", hidden: rows.filter((row) => (row.scale ?? [1, 1, 1]).every((axis) => axis === 0)).map((row) => row.id ?? "?") };
+            } catch {
+              return { surface: element.getAttribute("data-surface-id") ?? "?", hidden: ["parse-failed"] };
+            }
+          }),
+        [] as { surface: string; hidden: string[] }[],
+      );
+    const hiddenBefore = await hiddenScales();
+    const hideMark = consoleBuf.length;
     await target.click({ force: true, timeout: 4000 }).catch(() => {});
-    await page.waitForTimeout(3000);
-    const afterHide = await rowDump();
-    verdict("outliner-hide-applies", JSON.stringify(afterHide) !== JSON.stringify(before), `beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))}`);
-    const showButton = page.locator('[role="treeitem"] button, [data-slot="tree-item"] button').filter({ hasText: /^(show|anzeigen|einblenden)$/i }).first();
+    // 🕰️ POLLED, not a fixed wait: the document mutation, its history patch and the `refreshUi` that
+    // repaints the panel are three separate round trips, so a single 3 s sample cannot tell "never
+    // repainted" from "had not repainted yet".
+    let afterHide = await rowDump();
+    for (let attempt = 0; attempt < 8 && JSON.stringify(afterHide) === JSON.stringify(before); attempt++) {
+      await page.waitForTimeout(1000);
+      afterHide = await rowDump();
+    }
+    const hiddenAfter = await hiddenScales();
+    log(`outliner hide clicked=${JSON.stringify(clicked)} worldHiddenBefore=${JSON.stringify(hiddenBefore)} worldHiddenAfter=${JSON.stringify(hiddenAfter)}`);
+    log(`outliner hide console tail=${JSON.stringify(consoleBuf.slice(hideMark).filter((row) => /selectionFlag|performInvocation|command ingress|ui-refresh|refreshUi|unchanged|dirty|scope|panel:|puzzle\.3d\.play\.document/i.test(row)).slice(-28)).slice(0, 4000)}`);
+    const hideApplied = JSON.stringify(afterHide) !== JSON.stringify(before);
+    verdict("outliner-hide-applies", hideApplied, `beforeHead=${JSON.stringify(before.slice(0, 3))} afterHead=${JSON.stringify(afterHide.slice(0, 3))} worldHidden=${JSON.stringify(hiddenAfter)} clicked=${JSON.stringify(clicked)}`);
+    if (!hideApplied) {
+      verdict("outliner-show-restores", false, "not reachable — the Hide row action itself never changed the row, so Show has nothing to restore");
+      return;
+    }
+    const showButton = page
+      .locator('[id^="panel:puzzle3d-play-document/"] button, [id^="panel:puzzle3d-play-document/"] [role="button"], [id^="panel:puzzle3d-play-document/"] [data-slot^="tree-action"]')
+      .filter({ hasText: /show|anzeigen|einblenden/i })
+      .first();
     const showCount = await showButton.count();
     log(`outliner show controls=${showCount}`);
     if (!showCount) {
@@ -2070,14 +2674,65 @@ if (booted && interact) {
     const beforeAdd = await dumpInstances();
     const row = page.locator('[id^="puzzle3d-play-kinds"] [role="treeitem"], [id^="puzzle3d-play-kinds"] [data-slot="tree-item"]').first();
     const rowCount = await row.count();
-    verdict("catalogue-kind-rows-present", rowCount > 0, `rows=${rowCount}`);
+    const rowDump = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[id^="puzzle3d-play-kinds"] [role="treeitem"], [id^="puzzle3d-play-kinds"] [data-slot="tree-item"]'))
+        .map((el) => ({
+          id: el.id || null,
+          draggable: (el as HTMLElement).draggable,
+          // 🖱️ `data-activatable` is the row's own declared activation reaching the DOM (`🌳️Tree/🟦️.tsx`,
+          // `TreeItemProps.activatable`) — the one observable that separates "the guest never authored
+          // the binding", "the binding was lost on the way in" and "the click was swallowed".
+          activatable: el.getAttribute("data-activatable"),
+          rowKind: el.getAttribute("data-tree-row-kind"),
+          text: (el as HTMLElement).innerText.replace(/\n/g, " ").trim().slice(0, 50),
+        }))
+        .slice(0, 20),
+    );
+    log(`catalogue rows=${JSON.stringify(rowDump)}`);
+    verdict("catalogue-kind-rows-present", rowCount > 0, `rows=${rowCount} dump=${JSON.stringify(rowDump).slice(0, 400)}`);
     if (rowCount) {
-      await row.click({ force: true, timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(3500);
-      const afterAdd = await dumpInstances();
-      verdict("catalogue-add-object-kind", afterAdd.count > beforeAdd.count, `before=${beforeAdd.count} after=${afterAdd.count}`);
+      // 🖱️ The row is EXPANDABLE (its rim-vortex templates are its children), so the click has to land
+      // on the row shell rather than on the fold chevron, which stops propagation — press the row's own
+      // label, and fall back to the shell. Both observables are recorded: whether the click reached the
+      // action channel at all (`performInvocation actionId:"addObjectKind"`), and whether the guest
+      // answered (the ingress lane, a refusal notice, a fault).
+      const addMark = consoleBuf.length;
+      const label = row.locator('[data-slot="tree-label"]').first();
+      // 🎯️ What is actually ON TOP of the row's label, before pressing it. `click({force:true})` skips
+      // the "receives pointer events" check, so an overlay covering the panel eats the press and the
+      // step reads exactly like "the row is not wired" — this separates the two for good.
+      const hit = await evalSafe(() => {
+        const target = document.querySelector('[id^="puzzle3d-play-kinds"] [role="treeitem"] [data-slot="tree-label"]') as HTMLElement | null;
+        if (!target) return null;
+        const box = target.getBoundingClientRect();
+        const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement | null;
+        return {
+          label: `${target.tagName.toLowerCase()}|${target.getAttribute("data-slot")}`,
+          top: top ? `${top.tagName.toLowerCase()}|${top.id || "?"}|${top.getAttribute("data-slot") ?? "?"}` : null,
+          covered: Boolean(top) && !target.contains(top) && top !== target,
+          activatableRow: top?.closest("[data-activatable]")?.getAttribute("data-activatable") ?? null,
+          // 🧭️ The covering element's own ancestry names the overlay that swallows the press — an
+          // anonymous `div` says nothing on its own, its chain says which chrome it belongs to.
+          topChain: (() => {
+            const chain: string[] = [];
+            for (let node = top; node && chain.length < 8; node = node.parentElement) {
+              chain.push(`${node.tagName.toLowerCase()}#${node.id || "-"}[${node.getAttribute("data-slot") ?? "-"}]{${(node.className || "").toString().slice(0, 60)}}`);
+            }
+            return chain;
+          })(),
+        };
+      }, null as { label: string; top: string | null; covered: boolean; activatableRow: string | null; topChain: string[] } | null);
+      log(`catalogue add hit-test=${JSON.stringify(hit)}`);
+      await ((await countSafe(label)) ? label : row).click({ force: true, timeout: 4000 }).catch(() => {});
+      let afterAdd = await dumpInstances();
+      for (let attempt = 0; attempt < 8 && afterAdd.count === beforeAdd.count; attempt++) {
+        await page.waitForTimeout(1000);
+        afterAdd = await dumpInstances();
+      }
+      log(`catalogue add console tail=${JSON.stringify(consoleBuf.slice(addMark).filter((line) => /addObjectKind|performInvocation|command ingress|dropped action|refus|fault|notice|window-required|puzzle3d-add-kind/i.test(line)).slice(-20)).slice(0, 3000)}`);
+      verdict("catalogue-add-object-kind", afterAdd.count > beforeAdd.count, `before=${beforeAdd.count} after=${afterAdd.count} ids=${JSON.stringify(afterAdd.ids).slice(0, 200)} hitTest=${JSON.stringify(hit).slice(0, 600)}`);
       const sel = await selectionState();
-      verdict("catalogue-add-selects-new-object", sel.selected.length > 0, `selected=${JSON.stringify(sel.selected).slice(0, 220)}`);
+      verdict("catalogue-add-selects-new-object", afterAdd.count > beforeAdd.count && sel.selected.some((row) => afterAdd.ids.some((objectId) => row.includes(objectId))), `added=${afterAdd.count - beforeAdd.count} selected=${JSON.stringify(sel.selected).slice(0, 220)} ids=${JSON.stringify(afterAdd.ids)}`);
     }
     const beforeDrop = await dumpInstances();
     const dropped = await page.evaluate(() => {
@@ -2112,17 +2767,6 @@ if (booted && interact) {
       await page.waitForTimeout(1500);
     };
     await select();
-    const beforeDelete = await dumpInstances();
-    await page.keyboard.press("Delete").catch(() => {});
-    await page.waitForTimeout(3000);
-    let afterDelete = await dumpInstances();
-    if (afterDelete.count === beforeDelete.count) {
-      await page.keyboard.press("Backspace").catch(() => {});
-      await page.waitForTimeout(3000);
-      afterDelete = await dumpInstances();
-    }
-    verdict("delete-selection", afterDelete.count < beforeDelete.count, `before=${beforeDelete.count} after=${afterDelete.count}`);
-    await select();
     const beforeDup = await dumpInstances();
     await page.keyboard.press("Meta+d").catch(() => {});
     await page.waitForTimeout(3000);
@@ -2136,11 +2780,31 @@ if (booted && interact) {
     const sel = await selectionState();
     verdict("duplicate-reselects-clone", afterDup.count > beforeDup.count && sel.selected.length > 0, `selected=${JSON.stringify(sel.selected).slice(0, 220)}`);
     await select();
+    // 🛰️ Two preconditions, both measured, both named in the verdict: something must BE selected (an
+    // empty-selection focus frames the whole document — wave B11) and the camera must not already be
+    // standing where the focus would put it (framing a framed pane republishes a bit-identical pose,
+    // which is indistinguishable from a dropped write — wave B20). Orbit away, then press `f`.
+    const focusSelected = (await worldInteraction()).flatMap((surface) => [...surface.selectedIds, ...surface.selectedInstances]);
+    await orbitPerspectiveAway();
     const cameraBefore = await cameraOf("puzzle3d-main-perspective");
     await page.keyboard.press("f").catch(() => {});
+    const cameraAfter = await cameraSettled("puzzle3d-main-perspective", cameraBefore, 8000);
+    verdict(
+      "focus-selection",
+      Boolean(cameraBefore) && cameraBefore !== cameraAfter,
+      `selected=${JSON.stringify(focusSelected).slice(0, 120)} before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)}`,
+    );
+    await select();
+    const beforeDelete = await dumpInstances();
+    await page.keyboard.press("Delete").catch(() => {});
     await page.waitForTimeout(3000);
-    const cameraAfter = await cameraOf("puzzle3d-main-perspective");
-    verdict("focus-selection", Boolean(cameraBefore) && cameraBefore !== cameraAfter, `before=${String(cameraBefore).slice(0, 100)} after=${String(cameraAfter).slice(0, 100)}`);
+    let afterDelete = await dumpInstances();
+    if (afterDelete.count === beforeDelete.count) {
+      await page.keyboard.press("Backspace").catch(() => {});
+      await page.waitForTimeout(3000);
+      afterDelete = await dumpInstances();
+    }
+    verdict("delete-selection", afterDelete.count < beforeDelete.count, `before=${beforeDelete.count} after=${afterDelete.count}`);
   });
 
   log(`plan: ${JSON.stringify(GROUP_ORDER.map((group) => ({ group, steps: plan.filter((entry) => entry.group === group).map((entry) => entry.name) })))}`);
@@ -2150,7 +2814,7 @@ if (booted && interact) {
     if (!entries.length) continue;
     if (ranGroup && reloadBetweenGroups) {
       log(`reloading page before group ${group}`);
-      await page.goto(`http://127.0.0.1:${port}/?plugin=puzzle3d`, { waitUntil: "domcontentloaded", timeout: 60000 }).catch(() => {});
+      await gotoShell(`reboot:${group}`);
       const rebooted = await waitForBoot(`reboot:${group}`, 40);
       currentStep = `reboot-${group}`;
       currentSection = "§0";
@@ -2162,18 +2826,29 @@ if (booted && interact) {
       currentSection = entry.section;
       await step(entry.name, entry.run);
     }
+    currentStep = `guest-alive-${group}`;
+    currentSection = "§0";
+    const vitals = await guestVitals();
+    const deaths = guestDeathFaults.length;
+    verdict(
+      `guest-alive-${group}`,
+      vitals.recovery.length === 0 && deaths === 0 && vitals.canvases >= 2 && vitals.surfaces.some((surface) => surface.instances > 0),
+      `recovery=${JSON.stringify(vitals.recovery)} canvases=${vitals.canvases} surfaces=${JSON.stringify(vitals.surfaces).slice(0, 240)} guestDeathFaults=${deaths} first=${(guestDeathFaults[0] ?? "none").slice(0, 160)} firstHardFaultAt=${firstHardFaultAt ?? "none"}`,
+    );
   }
   currentStep = "battery";
   currentSection = "§0";
   verdict("battery-hard-faults", hardFaults.length === 0, `hard=${hardFaults.length} collateral=${collateralFaults.length} distinct=${faultKeys.size} first=${(hardFaults[0] ?? "none").slice(0, 200)}`);
   verdict("battery-faults", faults.length === 0, `raw=${faults.length} hard=${hardFaults.length} collateral=${collateralFaults.length} distinct=${faultKeys.size}`);
-  const summaryLine = `battery PASS=${passCount} FAIL=${failCount} FAULTS=${faults.length}`;
+  const summaryLine = `battery PASS=${passCount} FAIL=${failCount} FAULTS=${faults.length} first-hard-fault-at=${firstHardFaultAt ?? "none"} guest-death-faults=${guestDeathFaults.length}`;
   emit({
     t: Number(((Date.now() - t0) / 1000).toFixed(1)),
     ts: new Date().toISOString(),
     summary: summaryLine,
     pass: passCount,
     fail: failCount,
+    firstHardFaultAt,
+    guestDeathFaults: guestDeathFaults.length,
     faults: faults.length,
     hardFaults: hardFaults.length,
     collateralFaults: collateralFaults.length,
@@ -2189,8 +2864,10 @@ const tail = consoleBuf.slice(-1200).join("\n");
 const verdictBlock = lines.filter((row) => row.includes("verdict ")).join("\n");
 writeFileSync(
   join(OUT, `probe-${stamp}.md`),
-  `# probe ${stamp} (interact=${interact} battery=${battery} only=${onlyArg ?? "-"} reloadBetweenGroups=${reloadBetweenGroups})\n\n## verdicts\n${verdictBlock || "(none)"}\n\n## timeline\n${lines.join("\n")}\n\n## faults (raw ${faults.length}, hard ${hardFaults.length}, collateral ${collateralFaults.length}, distinct ${faultKeys.size})\n\n### hard\n${hardFaults.slice(0, 60).join("\n") || "(none)"}\n\n### collateral\n${collateralFaults.slice(0, 60).join("\n") || "(none)"}\n\n## console tail\n\`\`\`\n${tail}\n\`\`\`\n`,
+  `# probe ${stamp} (interact=${interact} battery=${battery} only=${onlyArg ?? "-"} reloadBetweenGroups=${reloadBetweenGroups})\n\n## verdicts\n${verdictBlock || "(none)"}\n\n## timeline\n${lines.join("\n")}\n\n## faults (raw ${faults.length}, hard ${hardFaults.length}, collateral ${collateralFaults.length}, distinct ${faultKeys.size}, first-hard-fault-at ${firstHardFaultAt ?? "none"}, guest-death ${guestDeathFaults.length})\n\n### guest death\n${guestDeathFaults.slice(0, 20).join("\n") || "(none)"}\n\n### hard\n${hardFaults.slice(0, 60).join("\n") || "(none)"}\n\n### collateral\n${collateralFaults.slice(0, 60).join("\n") || "(none)"}\n\n## console tail\n\`\`\`\n${tail}\n\`\`\`\n`,
 );
-log(`done booted=${booted} faults=${faults.length} hard=${hardFaults.length} collateral=${collateralFaults.length} verdicts=${lines.filter((row) => row.includes("verdict ")).length} → 🗑️generated/probe-${stamp}.md + probe-${stamp}.ndjson`);
+log(
+  `done booted=${booted} faults=${faults.length} hard=${hardFaults.length} collateral=${collateralFaults.length} first-hard-fault-at=${firstHardFaultAt ?? "none"} guest-death-faults=${guestDeathFaults.length} verdicts=${lines.filter((row) => row.includes("verdict ")).length} → 🗑️generated/probe-${stamp}.md + probe-${stamp}.ndjson`,
+);
 await browser.close();
 process.exit(0);

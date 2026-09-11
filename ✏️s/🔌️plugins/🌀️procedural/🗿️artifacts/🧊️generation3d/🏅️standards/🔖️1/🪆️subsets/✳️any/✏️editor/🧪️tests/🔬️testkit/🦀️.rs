@@ -131,7 +131,8 @@ pub async fn drain_flow_eval_ticks_with_view(app: &mut Generation3dApp, view: &V
     let window_id = view.window_id.clone().expect("a drained tick view is narrowed to one preview window");
     app.pending_effects(Some(view)).await;
     for _ in 0..1000 {
-        let receipt = dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone() }), view.clone()).await.expect("flowEvalTick");
+        let window_kind_id = view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into());
+        let receipt = dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id }), view.clone()).await.expect("flowEvalTick");
         let answered = crate::brep_extension::settle(app, meta("local").instance_id).await;
         let rearmed = receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick"));
         if !rearmed && answered == 0 {
@@ -316,3 +317,15 @@ pub fn heap_probe(label: &str) -> (isize, isize) {
     (retained, peak)
 }
 //#endregion 🧮️HeapWitness
+
+/// 🏛 Generate-mode roster: generations + form + generate preview. The generations window is current.
+pub fn generate_shell_views(generations: &str, form: &str, preview: &str) -> (ViewModel, ViewModel) {
+    let roster = vec![
+        ViewWindowInstance { id: generations.into(), window_kind_id: crate::editor::generation3d::modes::generate::windows::generations::GENERATION_3D_PLAY_WINDOW_GENERATIONS.into() },
+        ViewWindowInstance { id: form.into(), window_kind_id: crate::editor::generation3d::modes::generate::windows::form::GENERATION_3D_PLAY_WINDOW_GENERATE_FORM.into() },
+        ViewWindowInstance { id: preview.into(), window_kind_id: crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+    ];
+    let view = ViewModel { window_instances: roster, ..Default::default() };
+    (view.for_window_instance(generations).expect("generations window instance"), view.for_window_instance(preview).expect("generate preview window instance"))
+}
+

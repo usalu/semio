@@ -375,7 +375,10 @@ export function world3dSceneFromLanes(spine: World3dScene, laneTexts: ReadonlyMa
   const assembled: Record<string, unknown> = { ...spine };
   for (const lane of WORLD3D_SCENE_LANES) {
     const text = laneTexts.get(lane.bodyKey);
-    if (text !== undefined) assembled[lane.field] = text;
+    if (text === undefined) continue;
+    const prior = assembled[lane.field];
+    if (lane.optional && text.length === 0 && typeof prior === "string" && prior.length > 0) continue;
+    assembled[lane.field] = text;
   }
   return assembled as World3dScene;
 }

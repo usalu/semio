@@ -132,6 +132,16 @@ fn catalog_kind_item(entry: &dsl::DslValue, icon_id: &str) -> semio_framework_pl
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
+/// 🛍️ The catalogue's placeable kinds, sectioned exactly like the outliner: the PRIMARY section opens
+/// with the panel and the secondary catalogs (vortex/cable/attraction kinds, which are templates rather
+/// than things a press places) stay folded — `📌️panels/🗿️artifact/🦀️.rs`'s `render_from` is the same
+/// `true, false, false, false`.
+///
+/// Every section used to declare `default_open: false`, so opening the Catalogue showed four empty
+/// headers and NO object-kind row had a layout box at all. A folded row still answers
+/// `querySelectorAll`, so a press aimed at it measured `{0,0,0,0}` and landed at the viewport origin —
+/// which is inside the navbar, and is why ticket 26/09/02 read this as "the navbar covers the catalogue"
+/// for three waves (wave B26 §5, corrected in wave B27 §1).
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
     let budget = &mut RowBudget::new(page_rows());
@@ -140,7 +150,7 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framew
     let cables = budget.nested(SECTIONS - 3, |share| paged_section(&format!("{ROOT}.cables"), entries("cables"), share, |entry, _| catalog_kind_item(entry, "plug")))?;
     let attractions = budget.nested(SECTIONS - 4, |share| paged_section(&format!("{ROOT}.attractions"), entries("attractions"), share, |entry, _| catalog_kind_item(entry, "link")))?;
     PanelTreeBuilder::new(ROOT)?
-        .section(format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), false, objects)?
+        .section(format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, objects)?
         .section(format!("{ROOT}.vortices"), Some(ui_label(labels.vortices.as_str())?), false, vortices)?
         .section(format!("{ROOT}.cables"), Some(ui_label(labels.cables.as_str())?), false, cables)?
         .section(format!("{ROOT}.attractions"), Some(ui_label(labels.attractions.as_str())?), false, attractions)?
